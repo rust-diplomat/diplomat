@@ -30,6 +30,10 @@ pub mod ffi {
         Min2,
     }
 
+    #[diplomat::demo(input(
+        grouping_strategy(label = "ICU4X Fixed Decimal Grouping Strategy"),
+        some_other_config(label = "Useless Config (Ignore)")
+    ))]
     pub struct FixedDecimalFormatterOptions {
         pub grouping_strategy: FixedDecimalGroupingStrategy,
         pub some_other_config: bool,
@@ -48,6 +52,7 @@ pub mod ffi {
     impl FixedDecimalFormatter {
         /// Creates a new [`FixedDecimalFormatter`] from locale data.
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::try_new, FnInStruct)]
+        #[diplomat::demo(default_constructor)]
         // TODO constructors: this should ideally be a constructor too
         pub fn try_new(
             locale: &Locale,

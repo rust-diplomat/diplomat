@@ -73,6 +73,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-example",
     "test-c-example",
+    "test-demo-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -126,6 +127,17 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
+npm install && npm run test
+'''
+
+
+[tasks.test-demo-example]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@shell"
+script = '''
+cd example/demo_gen
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
 npm install && npm run test
 '''
 
@@ -305,6 +317,7 @@ dependencies = [
     "gen-cpp-example",
     "gen-c-example",
     "gen-js-example",
+    "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
 ]
@@ -391,9 +404,17 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example js api
+generate_generic example js lib/api
 '''
 
+[tasks.gen-demo-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example demo_gen demo
+'''
 
 [tasks.gen-dart-feature]
 category = "Code generation"

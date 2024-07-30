@@ -11,6 +11,7 @@ pub mod ffi {
 
     impl DataProvider {
         #[diplomat::rust_link(icu_testdata::get_static_provider, Fn)]
+        #[diplomat::demo(default_constructor)]
         #[diplomat::attr(auto, named_constructor = "static")]
         pub fn new_static() -> Box<DataProvider> {
             #[allow(deprecated)]

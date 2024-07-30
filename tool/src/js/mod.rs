@@ -6,7 +6,7 @@ use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, Type
 
 use askama::Template;
 
-mod formatter;
+pub(crate) mod formatter;
 use formatter::JSFormatter;
 
 mod type_generation;
@@ -15,13 +15,13 @@ use type_generation::TyGenContext;
 mod layout;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
-enum FileType {
+pub(crate) enum FileType {
     Module,
     Typescript,
 }
 
 impl FileType {
-    fn is_typescript(&self) -> bool {
+    pub fn is_typescript(&self) -> bool {
         match self {
             FileType::Module => false,
             FileType::Typescript => true,

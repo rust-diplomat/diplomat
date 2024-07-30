@@ -1,7 +1,7 @@
 {
 	"name": "diplomat-wasm-js-feature-tests",
 	"version": "0.0.1",
-	"description": "Diplomat WASM with JS2 HIR Backend Feature Tests",
+	"description": "Diplomat WASM with JS HIR Backend Feature Tests",
 	"exports": {
 		".": {
 			"default": "./api/index.mjs",

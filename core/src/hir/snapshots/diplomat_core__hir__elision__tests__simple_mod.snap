@@ -107,6 +107,12 @@ TypeContext {
                             pattern: None,
                         },
                         special_method: None,
+                        demo_attrs: DemoInfo {
+                            enabled: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: {},
+                        },
                     },
                 },
             ],
@@ -120,6 +126,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -247,6 +259,12 @@ TypeContext {
                             pattern: None,
                         },
                         special_method: None,
+                        demo_attrs: DemoInfo {
+                            enabled: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: {},
+                        },
                     },
                 },
             ],
@@ -260,6 +278,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -296,6 +320,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [

@@ -5,6 +5,7 @@
 mod c;
 mod cpp;
 mod dart;
+mod demo_gen;
 mod js;
 mod kotlin;
 
@@ -50,6 +51,11 @@ pub fn gen(
         "cpp" => cpp::attr_support(),
         "dart" => dart::attr_support(),
         "js" => js::attr_support(),
+        "demo_gen" => {
+            // So renames and disables are carried across.
+            attr_validator.other_backend_names = vec!["js".to_string()];
+            demo_gen::attr_support()
+        }
         "kotlin" => kotlin::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
@@ -67,6 +73,19 @@ pub fn gen(
         "cpp" => cpp::run(&tcx),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
+        "demo_gen" => {
+            // TODO: Command Line Options.
+            // I.e., being able to replace this with just updating the imports:
+            gen(
+                entry,
+                "js",
+                &out_folder.join("js"),
+                docs_url_gen,
+                library_config,
+                silent,
+            )?;
+            demo_gen::run(&tcx, docs_url_gen)
+        }
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),
     };

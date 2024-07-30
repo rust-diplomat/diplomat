@@ -1,17 +1,19 @@
 {
-    "name": "diplomat-wasm-js-example",
+    "name": "demo",
     "version": "0.0.1",
-    "description": "Diplomat WASM with JS HIR Backend Example",
+    "description": "Diplomat WASM example. Also has automatic demo generation in /demo",
     "main": "./api/index.mjs",
     "exports": {
-        ".": "./api/index.mjs"
+        ".": "./api/index.mjs",
+        "./demo": "./api/demo/index.mjs"
     },
-    "type": "module",
-    "directories": {
-        "doc": "docs"
+    "ava": {
+        "files": [
+            "test/*.mjs"
+        ]
     },
     "scripts": {
-        "build": "tsc"
+        "test": "ava"
     },
     "repository": {
         "type": "git",
@@ -25,5 +27,8 @@
     "bugs": {
         "url": "https://github.com/rust-diplomat/diplomat/issues"
     },
-    "homepage": "https://github.com/rust-diplomat/diplomat#readme"
+    "homepage": "https://github.com/rust-diplomat/diplomat#readme",
+    "devDependencies": {
+        "ava": "^6.1.3"
+    }
 }

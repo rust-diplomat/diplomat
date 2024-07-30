@@ -1,5 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
+use std::collections::HashMap;
+
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -41,7 +43,48 @@ pub struct Attrs {
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
+
+    /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
+    /// List of attributes specific to automatic demo generation.
+    /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
+    pub demo_attrs: DemoInfo,
 }
+
+// #region: Demo specific attributes.
+
+/// For `#[diplomat::demo(input(...))]`, stored in [DemoInfo::input_cfg].
+#[non_exhaustive]
+#[derive(Clone, Default, Debug)]
+pub struct DemoInputCFG {
+    /// `#[diplomat(input(label = "..."))]`
+    /// Label that this input parameter should have. Let demo_gen pick a valid name if this is empty.
+    ///
+    /// For instance <label for="v">Number Here</label><input name="v"/>
+    pub label: String,
+}
+
+#[non_exhaustive]
+#[derive(Clone, Default, Debug)]
+pub struct DemoInfo {
+    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate.
+    /// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
+    /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
+    pub enabled: bool,
+
+    /// `#[diplomat::demo(default_constructor)]`
+    /// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
+    /// TODO: Should probably ignore other `Constructors` if a default has been set.
+    pub default_constructor: bool,
+
+    /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
+    pub external: bool,
+
+    /// `#[diplomat::demo(input(...))]`
+    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
+    pub input_cfg: HashMap<String, DemoInputCFG>,
+}
+
+// #endregion
 
 /// Attributes that mark methods as "special"
 #[non_exhaustive]
@@ -309,6 +352,60 @@ impl Attrs {
             }
         }
 
+        for attr in &ast.demo_attrs {
+            let path = attr.meta.path();
+            if let Some(path_ident) = path.get_ident() {
+                if path_ident == "external" {
+                    this.demo_attrs.external = true;
+                } else if path_ident == "default_constructor" {
+                    this.demo_attrs.default_constructor = true;
+                } else if path_ident == "enable" {
+                    this.demo_attrs.enabled = true;
+                } else if path_ident == "disable" {
+                    this.demo_attrs.enabled = false;
+                } else if path_ident == "input" {
+                    // TODO: Move this to AST.
+                    let meta_list = attr
+                        .meta
+                        .require_list()
+                        .expect("Could not get MetaList, expected #[diplomat::demo(input(...))]");
+
+                    meta_list
+                        .parse_nested_meta(|meta| {
+                            let mut input_cfg = DemoInputCFG::default();
+                            meta.parse_nested_meta(|input_meta| {
+                                if input_meta.path.is_ident("label") {
+                                    let value = input_meta.value()?;
+                                    let s: syn::LitStr = value.parse()?;
+                                    input_cfg.label = s.value();
+                                    Ok(())
+                                } else {
+                                    Err(input_meta.error(format!(
+                                        "Unsupported ident {:?}",
+                                        input_meta.path.get_ident()
+                                    )))
+                                }
+                            })
+                            .expect("Could not read input(arg_name(...)) ");
+
+                            this.demo_attrs.input_cfg.insert(
+                                meta.path
+                                    .get_ident()
+                                    .expect("Expected parameter name.")
+                                    .to_string(),
+                                input_cfg,
+                            );
+                            Ok(())
+                        })
+                        .expect("Could not read input(...)");
+                } else {
+                    panic!("Unknown demo_attr: {path_ident:?}");
+                }
+            } else {
+                panic!("Unknown demo_attr: {path:?}");
+            }
+        }
+
         this
     }
 
@@ -326,6 +423,7 @@ impl Attrs {
             rename: _,
             abi_rename: _,
             special_method,
+            demo_attrs: _,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -611,6 +709,7 @@ impl Attrs {
             abi_rename: Default::default(),
             // Never inherited
             special_method: None,
+            demo_attrs: Default::default(),
         }
     }
 }
