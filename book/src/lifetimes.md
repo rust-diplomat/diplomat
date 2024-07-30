@@ -31,11 +31,8 @@ mod ffi {
     }
 
     impl<'a> MyFancyIterator<'a> {
-        fn next(&mut self) -> u32 {
-            // We don't support Option of primitives in Diplomat currently
-            // Just default to 0. We could use a struct to represent this instead
-            // but it's not relevant to the example
-            self.0.next().copied().unwrap_or(0)
+        fn next(&mut self) -> Option<u32> {
+            self.0.next().copied()
         }
     }
 }
