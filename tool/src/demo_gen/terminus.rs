@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use diplomat_core::hir::{self, DemoInfo, Method, OpaqueDef, Type, TypeContext};
+use diplomat_core::hir::{self, DemoInfo, Method, OpaqueDef, StructDef, Type, TypeContext};
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
 
@@ -271,7 +271,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     return;
                 }
 
-                self.find_op_constructor(op, type_name.to_string(), node);
+                self.evaluate_op_constructors(op, type_name.to_string(), node);
             }
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
@@ -282,51 +282,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.terminus_info
-                    .imports
-                    .insert(
-                        self.formatter
-                            .fmt_import_statement(&type_name, false, "./js/".into()),
-                    );
-
-                let mut child = MethodDependency::new("".to_string());
-
-                #[derive(Template)]
-                #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
-                struct StructInfo {
-                    fields: Vec<String>,
-                    type_name: String,
-                }
-
-                let mut fields = Vec::new();
-
-                for field in st.fields.iter() {
-                    fields.push(
-                        self.formatter
-                            .fmt_param_name(field.name.as_str())
-                            .to_string(),
-                    );
-
-                    self.evaluate_param(
-                        &field.ty,
-                        field.name.to_string(),
-                        &mut child,
-                        st.attrs.demo_attrs.clone(),
-                    );
-                }
-
-                child.method_js = StructInfo {
-                    type_name: type_name.to_string(),
-                    fields,
-                }
-                .render()
-                .unwrap();
-
-                node.params.push(ParamInfo {
-                    type_name: type_name.to_string(),
-                    js: child.render().unwrap(),
-                    label: "".into(),
-                });
+                self.evaluate_struct_fields(st, type_name.to_string(), node);
             }
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
@@ -363,7 +319,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     }
 
     /// Find an opaque constructor that suits our purposes (see the `usable_constructor` variable), then evaluate it with [`RenderTerminusContext::evaluate_constructor`].
-    fn find_op_constructor(
+    fn evaluate_op_constructors(
         &mut self,
         op: &OpaqueDef,
         type_name: String,
@@ -426,6 +382,55 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 type_name: String::default(),
             });
         }
+    }
+
+    /// Search through each field in the struct, and find constructors for each.
+    fn evaluate_struct_fields(&mut self, st : &StructDef, type_name: String, node: &mut MethodDependency) {
+        self.terminus_info
+        .imports
+        .insert(
+            self.formatter
+                .fmt_import_statement(&type_name, false, "./js/".into()),
+        );
+
+        let mut child = MethodDependency::new("".to_string());
+
+        #[derive(Template)]
+        #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
+        struct StructInfo {
+            fields: Vec<String>,
+            type_name: String,
+        }
+
+        let mut fields = Vec::new();
+
+        for field in st.fields.iter() {
+            fields.push(
+                self.formatter
+                    .fmt_param_name(field.name.as_str())
+                    .to_string(),
+            );
+
+            self.evaluate_param(
+                &field.ty,
+                field.name.to_string(),
+                &mut child,
+                st.attrs.demo_attrs.clone(),
+            );
+        }
+
+        child.method_js = StructInfo {
+            type_name: type_name.to_string(),
+            fields,
+        }
+        .render()
+        .unwrap();
+
+        node.params.push(ParamInfo {
+            type_name: type_name.to_string(),
+            js: child.render().unwrap(),
+            label: "".into(),
+        });
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
