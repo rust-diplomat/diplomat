@@ -50,11 +50,11 @@ export class BorrowedFields {
 
     _fromFFI(ptr, aEdges) {
         const aDeref = ptr;
-        this.#a = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, aDeref, "string16");
+        this.#a = aDeref.getString("string16");
         const bDeref = ptr + 8;
-        this.#b = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, bDeref, "string8");
+        this.#b = bDeref.getString("string8");
         const cDeref = ptr + 16;
-        this.#c = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, cDeref, "string8");
+        this.#c = cDeref.getString("string8");
 
         return this;
     }
@@ -74,14 +74,14 @@ export class BorrowedFields {
         
         const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
-        const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_receive_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         try {
-            return new BorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges);
+            return new BorrowedFields()._fromFFI(diplomatReceive.buffer, xEdges);
         }
         
         finally {
@@ -89,7 +89,7 @@ export class BorrowedFields {
         
             utf8StrSlice.garbageCollect();
         
-            wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
+            diplomatReceive.free();
         }
     }
 }

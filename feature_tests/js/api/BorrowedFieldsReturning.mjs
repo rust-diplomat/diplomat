@@ -29,7 +29,7 @@ export class BorrowedFieldsReturning {
 
     _fromFFI(ptr, aEdges) {
         const bytesDeref = ptr;
-        this.#bytes = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, bytesDeref, "string8");
+        this.#bytes = bytesDeref.getString("string8");
 
         return this;
     }

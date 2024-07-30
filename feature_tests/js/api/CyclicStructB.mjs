@@ -37,15 +37,15 @@ export class CyclicStructB {
 
     static getA() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(1, 1);
-        const result = wasm.CyclicStructB_get_a(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructA()._fromFFI(diplomat_receive_buffer);
+            return new CyclicStructA()._fromFFI(diplomatReceive.buffer);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 1, 1);
+            diplomatReceive.free();
         }
     }
 }
