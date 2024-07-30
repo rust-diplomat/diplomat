@@ -49,7 +49,7 @@ mod ffi {
 }
 ```
 
-Enums exposed via Diplomat must be simple C-like enums. Structs may only contain fields which are [allowed](./types.md).
+Enums exposed via Diplomat must be simple C-like enums. They can have explicit discriminants. Structs may only contain fields which are themselves [allowed types](./types.md).
 
 In C++ the structs are translated to simple structs and the enums become simple enum classes. In JS the structs become objects with fields, and the enums are exposed as strings that get converted at the boundary.
 
@@ -72,11 +72,11 @@ mod ffi {
 }
 ```
 
-In case the enum is `#[non_exhaustive]`, you may need to supply a `needs_wildcard` argument, like so: `#[diplomat::enum_convert(my_library::SpeedSetting)]`.
+In case the enum is `#[non_exhaustive]`, you may need to supply a `needs_wildcard` argument, like so: `#[diplomat::enum_convert(my_library::SpeedSetting, needs_wildcard)]`.
 
 # Structs containing boxes
 
-By default, structs cannot contain output-only types like `Box<T>`. This can be opted in to by using `#[diplomat::out]`
+By default, structs cannot contain output-only types like `Box<T>`. This can be opted in to by using `#[diplomat::out]`, which will have the additional effect of making the struct an output-only type.
 
 
 ```rust
