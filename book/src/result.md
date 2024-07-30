@@ -22,7 +22,7 @@ mod ffi {
 On the C++ side, this will generate a method on `Thingy` with the signature
 
 ```cpp
-  static diplomat::result<Thingy, std::monostate> try_create(const std::string_view string);
+  static diplomat::result<std::unique_ptr<Thingy>, std::monostate> try_create(const std::string_view string);
 ```
 
 `diplomat::result` is a type that can be found in the generated [`diplomat_runtime.hpp`](https://github.com/rust-diplomat/diplomat/blob/main/tool/src/cpp/runtime.hpp) file. The most basic APIs are `.is_ok()` and `.is_err()`, returning `bool`s, and `.ok()` and `.err()` returning `std::option`s. There are further APIs for constructing and manipulating these that can be found in the header file.

@@ -33,17 +33,17 @@ struct MyCollection {
 }
 
 impl MyCollection {
-    fn new(name: String) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
             name, items: vec![]
         }
     }
 
-    fn push(&mut self, s: String) {
+    pub fn push(&mut self, s: String) {
         self.items.push(s)
     }
 
-    fn dump(&self) {
+    pub fn dump(&self) {
         println!("Collection {} with items {:?}", self.name, self.items);
     }
 }
@@ -84,13 +84,11 @@ For example, the generated C++ looks something like
 ```cpp
 class MyCollection {
  public:
-  static MyCollection create(const std::string_view s);
+  static std::unique_ptr<MyCollection> create(const std::string_view s);
   void push(const std::string_view s);
   void dump();
   // snip
  private:
-  // just a pointer with a custom destructor
-  std::unique_ptr<capi::MyCollection, MyCollectionDeleter> inner;
 };
 ```
 
