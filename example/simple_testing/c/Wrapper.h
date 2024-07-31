@@ -16,24 +16,65 @@ typedef struct Wrapper {
 #ifdef __cplusplus
 } // namespace capi
 #endif
-#include "diplomat_callback_structs.h"
 #include "TestingStruct.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
-int32_t Wrapper_test_multi_arg_callback(DiplomatCallback_int32_t f, int32_t x);
+typedef struct DiplomatCallback_Wrapper_test_multi_arg_callback_f {
+	const void* data;
+	int32_t(*run_callback)(const void*, int32_t);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_multi_arg_callback_f;
 
-void Wrapper_test_multiarg_void_callback(DiplomatCallback_void f);
+int32_t Wrapper_test_multi_arg_callback(DiplomatCallback_Wrapper_test_multi_arg_callback_f f, int32_t x);
 
-void Wrapper_test_mod_array(DiplomatCallback_void g);
+typedef struct DiplomatCallback_Wrapper_test_multiarg_void_callback_f {
+	const void* data;
+	void(*run_callback)(const void*, int32_t, DiplomatStringView);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_multiarg_void_callback_f;
 
-int32_t Wrapper_test_no_args(DiplomatCallback_void h);
+void Wrapper_test_multiarg_void_callback(DiplomatCallback_Wrapper_test_multiarg_void_callback_f f);
 
-int32_t Wrapper_test_cb_with_struct(DiplomatCallback_int32_t f);
+typedef struct DiplomatCallback_Wrapper_test_mod_array_g {
+	const void* data;
+	void(*run_callback)(const void*, DiplomatU8View);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_mod_array_g;
 
-int32_t Wrapper_test_multiple_cb_args(DiplomatCallback_int32_t f, DiplomatCallback_int32_t g);
+void Wrapper_test_mod_array(DiplomatCallback_Wrapper_test_mod_array_g g);
+
+typedef struct DiplomatCallback_Wrapper_test_no_args_h {
+	const void* data;
+	void(*run_callback)(const void*);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_no_args_h;
+
+int32_t Wrapper_test_no_args(DiplomatCallback_Wrapper_test_no_args_h h);
+
+typedef struct DiplomatCallback_Wrapper_test_cb_with_struct_f {
+	const void* data;
+	int32_t(*run_callback)(const void*, TestingStruct);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_cb_with_struct_f;
+
+int32_t Wrapper_test_cb_with_struct(DiplomatCallback_Wrapper_test_cb_with_struct_f f);
+
+typedef struct DiplomatCallback_Wrapper_test_multiple_cb_args_f {
+	const void* data;
+	int32_t(*run_callback)(const void*);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_multiple_cb_args_f;
+
+typedef struct DiplomatCallback_Wrapper_test_multiple_cb_args_g {
+	const void* data;
+	int32_t(*run_callback)(const void*, int32_t);
+	void (*destructor)(const void*);
+} DiplomatCallback_Wrapper_test_multiple_cb_args_g;
+
+int32_t Wrapper_test_multiple_cb_args(DiplomatCallback_Wrapper_test_multiple_cb_args_f f, DiplomatCallback_Wrapper_test_multiple_cb_args_g g);
 void Wrapper_destroy(Wrapper* self);
 
 #ifdef __cplusplus
