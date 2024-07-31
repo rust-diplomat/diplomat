@@ -33,35 +33,36 @@ int get_int_with_no_args() {
 }
 
 // ---------------------------------------------------------------- boilerplate for passing all the callbacks through to Rust
-int32_t get_int_with_no_args_wrap(void* unused) {
+int32_t get_int_with_no_args_wrap(const void* unused) {
     return get_int_with_no_args();
 }
-static struct DiplomatCallback_int32_t diplomat_callback_wrapper__get_int_with_no_args = { .run_callback = get_int_with_no_args };
+static struct DiplomatCallback_Wrapper_test_multiple_cb_args_f diplomat_callback_wrapper__get_int_with_no_args = { .run_callback = get_int_with_no_args };
 
-int32_t callback_wrap(void* unused, int32_t x) {
+int32_t callback_wrap(const void* unused, int32_t x) {
     return callback(x);
 }
-static struct DiplomatCallback_int32_t diplomat_callback_wrapper__callback = { .run_callback = callback_wrap };
+static struct DiplomatCallback_Wrapper_test_multi_arg_callback_f diplomat_callback_wrapper__callback = { .run_callback = callback_wrap };
+static struct DiplomatCallback_Wrapper_test_multiple_cb_args_g diplomat_callback_wrapper__callback_g = { .run_callback = callback_wrap };
 
-void multiarg_callback_wrap(void* unused, int32_t arg1, char* arg2) {
+void multiarg_callback_wrap(const void* unused, int32_t arg1, char* arg2) {
     multiarg_callback(arg1, arg2);
 }
-static struct DiplomatCallback_void diplomat_callback_wrapper__multiarg_callback = { .run_callback = multiarg_callback_wrap };
+static struct DiplomatCallback_Wrapper_test_multiarg_void_callback_f diplomat_callback_wrapper__multiarg_callback = { .run_callback = multiarg_callback_wrap };
 
-void mod_array_cb_wrap(void* unused, char* bytes) {
+void mod_array_cb_wrap(const void* unused, char* bytes) {
     mod_array_cb(bytes);
 }
-static struct DiplomatCallback_void diplomat_callback_wrapper__mod_array_cb = { .run_callback = mod_array_cb_wrap };
+static struct DiplomatCallback_Wrapper_test_mod_array_g diplomat_callback_wrapper__mod_array_cb = { .run_callback = mod_array_cb_wrap };
 
-void no_arg_cb_wrap(void* unused) {
+void no_arg_cb_wrap(const void* unused) {
     no_arg_cb();
 }
-static struct DiplomatCallback_void diplomat_callback_wrapper__no_arg_cb = { .run_callback = no_arg_cb_wrap };
+static struct DiplomatCallback_Wrapper_test_no_args_h diplomat_callback_wrapper__no_arg_cb = { .run_callback = no_arg_cb_wrap };
 
-int32_t deal_with_struct_wrap(void* unused, TestingStruct ts) {
+int32_t deal_with_struct_wrap(const void* unused, TestingStruct ts) {
     return deal_with_struct(ts);
 }
-static struct DiplomatCallback_int32_t diplomat_callback_wrapper__deal_with_struct = { .run_callback = deal_with_struct_wrap };
+static struct DiplomatCallback_Wrapper_test_cb_with_struct_f diplomat_callback_wrapper__deal_with_struct = { .run_callback = deal_with_struct_wrap };
 
 // -------------------------------------------------------------------------------------- main
 int main() {
@@ -78,6 +79,6 @@ int main() {
     res = Wrapper_test_cb_with_struct(diplomat_callback_wrapper__deal_with_struct);
     printf("Got %d back from summing the struct fields\n", res);
 
-    res = Wrapper_test_multiple_cb_args(diplomat_callback_wrapper__get_int_with_no_args, diplomat_callback_wrapper__callback);
+    res = Wrapper_test_multiple_cb_args(diplomat_callback_wrapper__get_int_with_no_args, diplomat_callback_wrapper__callback_g);
     printf("And now the result of combining the results of 2 callbacks: %d\n", res);
 }
