@@ -487,16 +487,13 @@ impl TypeName {
                 //     })]),
                 // });
 
-                // should be &DiplomatCallback<function_output_type>
-                syn::Type::Reference(TypeReference {
-                    and_token: syn::token::And(Span::call_site()),
-                    lifetime: None,
-                    mutability: None,
-                    elem: Box::new(syn::Type::Path(TypePath {
-                        qself: None,
-                        path: syn::Path {
-                            leading_colon: None,
-                            segments: Punctuated::from_iter(vec![PathSegment {
+                // should be DiplomatCallback<function_output_type>
+                syn::Type::Path(TypePath {
+                    qself: None,
+                    path: syn::Path {
+                        leading_colon: None,
+                        segments: Punctuated::from_iter(vec![
+                            PathSegment {
                                 ident: syn::parse_str("DiplomatCallback").unwrap(),
                                 arguments: PathArguments::AngleBracketed(
                                     AngleBracketedGenericArguments {
@@ -508,9 +505,9 @@ impl TypeName {
                                         gt_token: syn::token::Gt(Span::call_site()),
                                     },
                                 ),
-                            }]),
-                        },
-                    })),
+                            }
+                        ]),
+                    },
                 })
             }
         }
