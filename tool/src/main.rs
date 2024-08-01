@@ -8,7 +8,7 @@ use std::path::PathBuf;
     about = "Generate bindings to a target language"
 )]
 struct Opt {
-    /// The target language, "js", "c", "cpp", "dotnet" (C#), or "kotlin" (JVM)
+    /// The target language, "c", "cpp", "js", "demo_gen", or "kotlin" (JVM)
     #[clap()]
     target_language: String,
 
@@ -24,8 +24,7 @@ struct Opt {
     entry: PathBuf,
 
     /// The path to an optional config file to override code generation defaults.
-    /// This is currently used by the cpp generator to allow for code to be
-    /// different libraries.
+    /// This is currently used by kotlin and demo_gen.
     #[clap(short, long, value_parser)]
     library_config: Option<PathBuf>,
 

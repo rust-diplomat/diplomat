@@ -1,7 +1,8 @@
-use std::{collections::BTreeSet, fmt::Write};
+use std::{collections::BTreeSet, fmt::Write, path::Path};
 
 use askama::{self, Template};
 use diplomat_core::hir::{BackendAttrSupport, TypeContext};
+use serde::{Deserialize, Serialize};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
@@ -22,6 +23,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+struct DemoConfig {
+    test: Option<bool>,
+}
+
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
 /// Generate markup.
 ///
@@ -31,10 +37,16 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
+    library_config : Option<&Path>
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
+
+    let conf = library_config.map(|c| {
+        let str = std::fs::read_to_string(c).unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
+        toml::from_str::<DemoConfig>(&str).unwrap_or_else(| err | panic!("Parsing error in {c:?}: {err}"))
+    });
 
     struct TerminusExport {
         type_name: String,
