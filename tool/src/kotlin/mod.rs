@@ -3,8 +3,8 @@ use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo}
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic,
     Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef,
-    SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type,
-    TypeContext, TypeDef,
+    SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath, StructPathLike,
+    TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -236,7 +236,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_kt_to_c_for_type(&self, ty: &Type, name: Cow<'cx, str>) -> Cow<'cx, str> {
+    fn gen_kt_to_c_for_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
+        &self,
+        ty: &Type<P>,
+        name: Cow<'cx, str>,
+    ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self
                 .formatter

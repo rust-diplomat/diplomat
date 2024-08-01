@@ -1,6 +1,8 @@
 use std::collections::BTreeSet;
 
-use diplomat_core::hir::{self, DemoInfo, Method, OpaqueDef, StructDef, Type, TypeContext};
+use diplomat_core::hir::{
+    self, DemoInfo, Method, OpaqueDef, StructDef, StructPath, TyPosition, Type, TypeContext,
+};
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
 
@@ -206,9 +208,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     ///
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
-    fn evaluate_param(
+    fn evaluate_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
-        param_type: &Type,
+        param_type: &Type<P>,
         param_name: String,
         node: &mut MethodDependency,
         method_attrs: DemoInfo,
