@@ -23,9 +23,21 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
+/// TODO: Add this to the design doc.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 struct DemoConfig {
-    test: Option<bool>,
+    /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
+    /// TODO:
+    explicit_generation : Option<bool>,
+
+    /// Removes rendering/ folder 
+    /// TODO:
+    hide_default_renderer : Option<bool>,
+
+    /// If this is set, we do not generate the js/ folder.
+    /// TODO: I think this could actually be moved to diplomat.config.mjs, if we can grab the import path there.
+    /// Like import {} from cfg["js-path"] + "/"; Is that doable?
+    relative_js_path : Option<String>,
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
