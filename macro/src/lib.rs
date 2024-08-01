@@ -606,6 +606,55 @@ mod tests {
     }
 
     #[test]
+    fn slices() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo<'a> {
+                        a: &'a [u8],
+                        b: &'a [u16],
+                        c: &'a str,
+                        d: &'a DiplomatStr,
+                        e: &'a DiplomatStr16,
+                        f: &'a [DiplomatByte],
+                    }
+
+                    impl Foo {
+                        pub fn make(a: &'a [u8], b: &'a [u16], c: &'a str, d: &'a DiplomatStr, e: &'a DiplomatStr16, f: &'a [DiplomatByte]) -> Self {
+                            Foo {
+                                a, b, c, d, e, f,
+                            }
+                        }
+                        pub fn boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d: Box<DiplomatStr>, e: Box<DiplomatStr16>, f: Box<[DiplomatByte]>) -> Self {
+                            unimplemented!()
+                        }
+                        pub fn a(self) -> &[u8] {
+                            self.a
+                        }
+                        pub fn b(self) -> &[u16] {
+                            self.b
+                        }
+                        pub fn c(self) -> &str {
+                            self.c
+                        }
+                        pub fn d(self) -> &DiplomatStr {
+                            self.d
+                        }
+                        pub fn e(self) -> &DiplomatStr16 {
+                            self.e
+                        }
+                        pub fn f(self) -> &[DiplomatByte] {
+                            self.f
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
     fn method_taking_slice() {
         insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
