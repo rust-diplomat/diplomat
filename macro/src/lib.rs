@@ -15,38 +15,22 @@ fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
 
 fn param_ty(param: &ast::Param) -> syn::Type {
     match &param.ty {
-        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::UnvalidatedUtf8) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatStrSlice)
+        ast::TypeName::StrReference(lt @ Some(_lt), encoding, _) => {
+            // At the param boundary we MUST use FFI-safe diplomat slice types,
+            // not Rust stdlib types (which are not FFI-safe and must be converted)
+            encoding.get_diplomat_slice_type(&lt)
         }
-        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::UnvalidatedUtf16) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatStr16Slice)
+        ast::TypeName::StrReference(None, encoding, _) => encoding.get_diplomat_slice_type(&None),
+        ast::TypeName::StrSlice(encoding, _) => {
+            // At the param boundary we MUST use FFI-safe diplomat slice types,
+            // not Rust stdlib types (which are not FFI-safe and must be converted)
+            let inner = encoding.get_diplomat_slice_type(&Some(ast::Lifetime::Anonymous));
+            syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatSlice<#inner>)
         }
-        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::Utf8) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatUTF8StrSlice)
-        }
-        ast::TypeName::StrReference(None, ast::StringEncoding::UnvalidatedUtf8) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatOwnedStrSlice)
-        }
-        ast::TypeName::StrReference(None, ast::StringEncoding::UnvalidatedUtf16) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatOwnedStr16Slice)
-        }
-        ast::TypeName::StrReference(None, ast::StringEncoding::Utf8) => {
-            syn::parse_quote!(diplomat_runtime::DiplomatOwnedUTF8StrSlice)
-        }
-        ast::TypeName::StrSlice(ast::StringEncoding::Utf8) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatUtf8StrSlice>),
-        ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatStrSlice>),
-        ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatStr16Slice>),
-        ast::TypeName::PrimitiveSlice(Some((_lt, ast::Mutability::Immutable)), prim) => {
-            let prim = ast::TypeName::Primitive(*prim).to_syn();
-            syn::parse_quote!(diplomat_runtime::DiplomatSlice<#prim>)
-        }
-        ast::TypeName::PrimitiveSlice(Some((_lt, ast::Mutability::Mutable)), prim) => {
-            let prim = ast::TypeName::Primitive(*prim).to_syn();
-            syn::parse_quote!(diplomat_runtime::DiplomatSliceMut<#prim>)
-        }
-        ast::TypeName::PrimitiveSlice(None, prim) => {
-            let prim = ast::TypeName::Primitive(*prim).to_syn();
-            syn::parse_quote!(diplomat_runtime::DiplomatOwnedSlice<#prim>)
+        ast::TypeName::PrimitiveSlice(ltmt, prim, _) => {
+            // At the param boundary we MUST use FFI-safe diplomat slice types,
+            // not Rust stdlib types (which are not FFI-safe and must be converted)
+            prim.get_diplomat_slice_type(&ltmt)
         }
         _ => param.ty.to_syn(),
     }
@@ -55,9 +39,10 @@ fn param_ty(param: &ast::Param) -> syn::Type {
 fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
     let name = &param.name;
     match &param.ty {
-        ast::TypeName::StrReference(..)
-        | ast::TypeName::StrSlice(..)
-        | ast::TypeName::PrimitiveSlice(..)
+        // conversion only needed for slices that are specified as Rust types rather than diplomat_runtime types
+        ast::TypeName::StrReference(.., true)
+        | ast::TypeName::StrSlice(.., true)
+        | ast::TypeName::PrimitiveSlice(.., true)
         | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
         _ => None,
     }
@@ -125,6 +110,11 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
                 quote! { .into() },
             )
+        } else if let ast::TypeName::StrReference(_, _, true)
+        | ast::TypeName::PrimitiveSlice(_, _, true) = return_type
+        {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! { .into() })
         } else if let ast::TypeName::Ordering = return_type {
             let return_type_syn = return_type.to_syn();
             (quote! { -> #return_type_syn }, quote! { as i8 })
@@ -475,6 +465,9 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
+                    use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatByte, DiplomatOwnedSlice,
+                                           DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
+                                           DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUTF8StrSlice};
                     struct Foo<'a> {
                         a: &'a [u8],
                         b: &'a [u16],
@@ -490,7 +483,20 @@ mod tests {
                                 a, b, c, d, e, f,
                             }
                         }
+                        pub fn make_runtime_types(a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c: DiplomatUTF8StrSlice<'a>, d: DiplomatStrSlice<'a>, e: DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>) -> Self {
+                            Foo {
+                                a: a.into(),
+                                b: b.into(),
+                                c: c.into(),
+                                d: d.into(),
+                                e: e.into(),
+                                f: f.into(),
+                            }
+                        }
                         pub fn boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d: Box<DiplomatStr>, e: Box<DiplomatStr16>, f: Box<[DiplomatByte]>) -> Self {
+                            unimplemented!()
+                        }
+                        pub fn boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b: DiplomatOwnedSlice<u16>, c: DiplomatOwnedUTF8StrSlice, d: DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f: DiplomatOwnedSlice<DiplomatByte>) -> Self {
                             unimplemented!()
                         }
                         pub fn a(self) -> &[u8] {

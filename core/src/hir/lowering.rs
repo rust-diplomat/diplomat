@@ -698,12 +698,14 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(lifetime, encoding) => Ok(Type::Slice(Slice::Str(
-                lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
-                *encoding,
-            ))),
-            ast::TypeName::StrSlice(encoding) => Ok(Type::Slice(Slice::Strs(*encoding))),
-            ast::TypeName::PrimitiveSlice(lm, prim) => Ok(Type::Slice(Slice::Primitive(
+            ast::TypeName::StrReference(lifetime, encoding, _stdlib) => {
+                Ok(Type::Slice(Slice::Str(
+                    lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
+                    *encoding,
+                )))
+            }
+            ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::Slice(Slice::Strs(*encoding))),
+            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => Ok(Type::Slice(Slice::Primitive(
                 lm.as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
                 PrimitiveType::from_ast(*prim),
@@ -924,23 +926,23 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(None, _) | ast::TypeName::StrReference(None, _) => {
+            ast::TypeName::PrimitiveSlice(None, _, _stdlib)
+            | ast::TypeName::StrReference(None, _, _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "Owned slices cannot be returned".into(),
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(Some(l), encoding) => Ok(OutType::Slice(Slice::Str(
-                Some(ltl.lower_lifetime(l)),
-                *encoding,
-            ))),
-            ast::TypeName::StrSlice(..) => {
+            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(OutType::Slice(
+                Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
+            )),
+            ast::TypeName::StrSlice(.., _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "String slices can only be an input type".into(),
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim) => {
+            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
                 Ok(OutType::Slice(Slice::Primitive(
                     Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
                     PrimitiveType::from_ast(*prim),
