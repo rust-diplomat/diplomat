@@ -11,6 +11,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
+import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -18,6 +19,9 @@ public class Opaque {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+
+    List<Object> selfEdges = List.of();
+    
 
     static class OpaqueCleaner implements Runnable {
 
@@ -38,6 +42,7 @@ public class Opaque {
         var nativeInvoker = somelib_h.Opaque_new.makeInvoker();
         var nativeVal = nativeInvoker.apply();
         var returnVal = new Opaque();
+        
         returnVal.internal = nativeVal;
         var cleaner = new Opaque.OpaqueCleaner(nativeVal);
         returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
@@ -51,6 +56,7 @@ public class Opaque {
             var inputLen = inputMemSeg.byteSize();
             var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen - 1);
             var returnVal = new Opaque();
+            
             returnVal.internal = nativeVal;
             var cleaner = new Opaque.OpaqueCleaner(nativeVal);
             returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);

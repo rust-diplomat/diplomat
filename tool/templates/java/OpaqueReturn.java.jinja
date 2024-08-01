@@ -1,4 +1,7 @@
 var returnVal = new {{return_ty}}();
+{% for lifetime_edge in lifetime_edges %}
+{{lifetime_edge}}
+{% endfor %}
 returnVal.internal = nativeVal;
 var cleaner = new {{return_ty}}.{{return_ty}}Cleaner(nativeVal);
 returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);

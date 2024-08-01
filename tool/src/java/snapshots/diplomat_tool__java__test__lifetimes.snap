@@ -1,0 +1,297 @@
+---
+source: tool/src/java/mod.rs
+expression: res
+---
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
+import java.util.List;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class BorrowedFields {
+    String a;
+    String b;
+    String c;
+    
+
+    MemorySegment internal;
+    SegmentAllocator arena;
+    List<Object> selfEdges = List.of();
+    List<Object> aEdges = List.of();
+    
+
+    private BorrowedFields(SegmentAllocator arena) {
+        this.arena = arena
+    }
+
+    void initFromSegment(MemorySegment segment) {
+        this.internal = segment;
+
+        this.a = dev.diplomattest.somelib.ntv.BorrowedFields.a(segment);
+        this.b = dev.diplomattest.somelib.ntv.BorrowedFields.b(segment);
+        this.c = dev.diplomattest.somelib.ntv.BorrowedFields.c(segment);
+        
+    }
+    
+}
+
+
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
+import java.util.List;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class BorrowedFieldsReturning {
+    String bytes;
+    
+
+    MemorySegment internal;
+    SegmentAllocator arena;
+    List<Object> selfEdges = List.of();
+    List<Object> aEdges = List.of();
+    
+
+    private BorrowedFieldsReturning(SegmentAllocator arena) {
+        this.arena = arena
+    }
+
+    void initFromSegment(MemorySegment segment) {
+        this.internal = segment;
+
+        this.bytes = dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(segment);
+        
+    }
+    
+}
+
+
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
+import java.util.List;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class BorrowedFieldsWithBounds {
+    String fieldA;
+    String fieldB;
+    String fieldC;
+    
+
+    MemorySegment internal;
+    SegmentAllocator arena;
+    List<Object> selfEdges = List.of();
+    List<Object> aEdges = List.of();
+    List<Object> bEdges = List.of();
+    List<Object> cEdges = List.of();
+    
+
+    private BorrowedFieldsWithBounds(SegmentAllocator arena) {
+        this.arena = arena
+    }
+
+    void initFromSegment(MemorySegment segment) {
+        this.internal = segment;
+
+        this.fieldA = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldA(segment);
+        this.fieldB = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldB(segment);
+        this.fieldC = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldC(segment);
+        
+    }
+    
+}
+
+
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
+import java.lang.ref.Cleaner;
+import java.util.List;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class Bar {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    List<Object> selfEdges = List.of();
+    List<Object> bEdges = List.of();
+    List<Object> aEdges = List.of();
+    
+
+    static class BarCleaner implements Runnable {
+
+        MemorySegment segment;
+        BarCleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.Bar_destroy(this.segment);
+        }
+    }
+
+    Bar() {}
+    
+    
+}
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
+import java.lang.ref.Cleaner;
+import java.util.List;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class Foo {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    List<Object> selfEdges = List.of();
+    List<Object> aEdges = List.of();
+    
+
+    static class FooCleaner implements Runnable {
+
+        MemorySegment segment;
+        FooCleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.Foo_destroy(this.segment);
+        }
+    }
+
+    Foo() {}
+    
+    public static Foo new_(String x) {
+        
+        try (var arena = Arena.ofConfined()) {
+            var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
+            var xLen = xMemSeg.byteSize();
+            var nativeVal = somelib_h.Foo_new(xMemSeg, xLen - 1);
+            var returnVal = new Foo();
+            
+            returnVal.aEdges = List.of(x);
+            
+            returnVal.internal = nativeVal;
+            var cleaner = new Foo.FooCleaner(nativeVal);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    public static Foo newStatic(String x) {
+        
+        try (var arena = Arena.ofConfined()) {
+            var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
+            var xLen = xMemSeg.byteSize();
+            var nativeVal = somelib_h.Foo_new_static(xMemSeg, xLen - 1);
+            var returnVal = new Foo();
+            
+            returnVal.aEdges = List.of();
+            
+            returnVal.internal = nativeVal;
+            var cleaner = new Foo.FooCleaner(nativeVal);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    public static Foo extractFromFields(BorrowedFields fields) {
+        
+        var fieldsNative = fields.internal;
+        var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
+        var returnVal = new Foo();
+        
+        returnVal.aEdges = List.of(fields);
+        
+        returnVal.internal = nativeVal;
+        var cleaner = new Foo.FooCleaner(nativeVal);
+        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+        return returnVal;
+    }
+    
+    public static Foo extractFromBounds(BorrowedFieldsWithBounds bounds,String anotherString) {
+        
+        try (var arena = Arena.ofConfined()) {
+            var boundsNative = bounds.internal;
+            var anotherStringMemSeg = arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
+            var anotherStringLen = anotherStringMemSeg.byteSize();
+            var nativeVal = somelib_h.Foo_extract_from_bounds(boundsNative, anotherStringMemSeg, anotherStringLen - 1);
+            var returnVal = new Foo();
+            
+            returnVal.aEdges = List.of(bounds, bounds, anotherString);
+            
+            returnVal.internal = nativeVal;
+            var cleaner = new Foo.FooCleaner(nativeVal);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    
+    public Bar getBar() {
+        
+        
+        var nativeVal = somelib_h.Foo_get_bar(internal);
+        var returnVal = new Bar();
+        
+        returnVal.bEdges = List.of(this);
+        
+        returnVal.aEdges = List.of(this);
+        
+        returnVal.internal = nativeVal;
+        var cleaner = new Bar.BarCleaner(nativeVal);
+        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+        return returnVal;
+    }
+    
+    public BorrowedFieldsReturning asReturning() {
+        
+        var returnArena = (SegmentAllocator) Arena.ofAuto();
+        
+        var nativeVal = somelib_h.Foo_as_returning(returnArena, internal);
+        var returnVal = new BorrowedFieldsReturning(returnArena);
+        returnVal.aEdges = List.of(this);
+        returnVal.initFromSegment(nativeVal);
+        return returnVal;
+    }
+    
+}
+============================

@@ -9,11 +9,13 @@ import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class Opaque {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    List<Object> selfEdges = List.of();
 
     static class OpaqueCleaner implements Runnable {
 

@@ -11,6 +11,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
+import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -18,6 +19,9 @@ public class Opaque2 {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+
+    List<Object> selfEdges = List.of();
+    
 
     static class Opaque2Cleaner implements Runnable {
 

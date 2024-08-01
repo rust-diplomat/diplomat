@@ -16,7 +16,7 @@ pub(crate) struct JavaFormatter<'cx> {
     pub c: CFormatter<'cx>,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &[
+const INVALID_NAMES: &[&str] = &[
     "new", "static", "default", "private", "internal", "toString",
 ];
 
@@ -34,10 +34,18 @@ impl<'cx> JavaFormatter<'cx> {
         self.c.fmt_method_name(ty, method).into()
     }
 
+    pub fn fmt_field_name<'a>(&self, field: &'a hir::StructField) -> Cow<'a, str> {
+        let name = field.name.as_str().to_lower_camel_case();
+        if INVALID_NAMES.contains(&&*name) {
+            format!("{name}_").into()
+        } else {
+            name.into()
+        }
+    }
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
-        if INVALID_METHOD_NAMES.contains(&&*name) {
+        if INVALID_NAMES.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name

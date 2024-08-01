@@ -7,6 +7,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
+import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -14,6 +15,11 @@ public class {{type_name}} {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+
+    List<Object> selfEdges = List.of();
+    {% for edge in edges -%}
+    List<Object> {{edge}}Edges = List.of();
+    {% endfor %}
 
     static class {{type_name}}Cleaner implements Runnable {
 

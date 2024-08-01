@@ -6,8 +6,8 @@ use std::path::Path;
 
 use askama::Template;
 use diplomat_core::hir::{
-    self, EnumDef, EnumId, EnumVariant, FloatType, IntSizeType, IntType, Method, OpaqueDef,
-    OutType, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
+    self, EnumDef, EnumId, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic, Method,
+    OpaqueDef, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
     StructPathLike, SuccessType, TypeContext, TypeDef, TypeId,
 };
 use formatter::JavaFormatter;
@@ -135,8 +135,6 @@ pub fn run(
                 // let type_name = o.name.to_string();
 
                 // let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, GROUP, LIBRARY);
-
-                // files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
             _ => continue,
         }
@@ -179,6 +177,7 @@ pub(crate) struct StructTypeTpl<'a> {
     type_name: Cow<'a, str>,
     lib_name: Cow<'a, str>,
     domain: Cow<'a, str>,
+    edges: Vec<Cow<'a, str>>,
     fields: Vec<FieldTpl<'a>>,
     methods: Vec<Cow<'a, str>>,
 }
@@ -212,6 +211,7 @@ pub(crate) struct OpaqueTypeTpl<'a> {
     type_name: Cow<'a, str>,
     lib_name: Cow<'a, str>,
     domain: Cow<'a, str>,
+    edges: Vec<Cow<'a, str>>,
     static_methods: Vec<Cow<'a, str>>,
     class_methods: Vec<Cow<'a, str>>,
 }
@@ -219,6 +219,7 @@ pub(crate) struct OpaqueTypeTpl<'a> {
 #[derive(Template, Clone, Debug)]
 #[template(path = "java/OpaqueReturn.java.jinja", escape = "none")]
 pub(crate) struct OpaqueReturnTpl<'a> {
+    lifetime_edges: Vec<String>,
     return_ty: Cow<'a, str>,
 }
 
@@ -383,7 +384,11 @@ return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
         return_conversion.wrap_ok()
     }
 
-    fn gen_return_conversion(&self, ty: &ReturnType) -> Result<Cow<'cx, str>, String> {
+    fn gen_return_conversion(
+        &self,
+        ty: &ReturnType,
+        lifetime_edges: Vec<String>,
+    ) -> Result<Cow<'cx, str>, String> {
         let Config { lib_name, .. } = &self.tcx_config;
         let ret = match ty {
             ReturnType::Infallible(ref ret) => ret,
@@ -419,6 +424,7 @@ return string;"#,
             hir::Type::Opaque(o) => {
                 let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
                 OpaqueReturnTpl {
+                    lifetime_edges,
                     return_ty: ty_name.as_str().into(),
                 }
                 .render()
@@ -432,8 +438,10 @@ return string;"#,
             }
             hir::Type::Struct(s) => {
                 let ty_name = &self.tcx.resolve_type(s.id()).name();
+                let lifetime_edges = lifetime_edges.join("\n");
                 format!(
                     r#"var returnVal = new {ty_name}(returnArena);
+{lifetime_edges}
 returnVal.initFromSegment(nativeVal);
 return returnVal;"#
                 )
@@ -456,12 +464,14 @@ return returnVal;"#
         ty_name: &str,
         methods: &[Method],
     ) -> (Vec<Cow<'cx, str>>, Vec<Cow<'cx, str>>) {
-        let Config { domain, lib_name } = &self.tcx_config;
+        let Config { lib_name, .. } = &self.tcx_config;
         let mut static_methods = Vec::new();
         let mut class_methods = Vec::new();
         methods
             .iter()
             .filter_map(|method| -> Option<(bool, Cow<'cx, str>)> {
+                let mut visitor = method.borrowing_param_visitor(self.tcx);
+
                 let (method_name, is_valid_constructor) = match method.attrs.special_method {
                     // We need to reserve the default constructor for internal methods so a constructor
                     // must always have params
@@ -477,6 +487,76 @@ return returnVal;"#
                 };
 
                 let return_ty = self.formatter.fmt_return_type_java(&method.output);
+
+                if let Some(param) = &method.param_self {
+                    visitor.visit_param(&param.ty.clone().into(), "this");
+                }
+                let params = method
+                    .params
+                    .iter()
+                    .map(|diplomat_core::hir::Param { name, ty, .. }| {
+                        let name: Cow<str> = self.formatter.fmt_param_name(name.as_str()).into();
+                        visitor.visit_param(ty, name.as_ref());
+                        Param {
+                            name,
+                            ty: self.formatter.fmt_java_type(ty),
+                        }
+                    })
+                    .collect();
+                let lt_lookup = visitor.borrow_map();
+                let (lifetime_edges, boxed_return) = match &method.output {
+                    ReturnType::Fallible(SuccessType::OutType(o), _)
+                    | ReturnType::Nullable(SuccessType::OutType(o))
+                    | ReturnType::Infallible(SuccessType::OutType(o)) => {
+                        let boxed_return = match o {
+                            hir::Type::Slice(Slice::Str(None, _) | Slice::Primitive(None, _)) => {
+                                Some(ParamConversion {
+                                    converted_value: "boxArena".into(),
+                                    conversion_def: "var boxArena = Arena.ofConfined();".into(),
+                                })
+                            }
+                            hir::Type::Slice(
+                                Slice::Str(Some(_), _) | Slice::Primitive(Some(_), _),
+                            ) => Some(ParamConversion {
+                                converted_value: "arena".into(),
+                                conversion_def: "".into(),
+                            }),
+                            hir::Type::Struct(_) => Some(ParamConversion {
+                                converted_value: "returnArena".into(),
+                                conversion_def:
+                                    "var returnArena = (SegmentAllocator) Arena.ofAuto();".into(),
+                            }),
+                            _ => None,
+                        };
+                        let method_lts = &method.lifetime_env;
+                        let lifetime_edges = o
+                            .lifetimes()
+                            .filter_map(|lt| match lt {
+                                MaybeStatic::Static => None,
+                                MaybeStatic::NonStatic(lt) => Some(lt),
+                            })
+                            .filter_map(|lt| lt_lookup.get(&lt).map(|param| (lt, param)))
+                            .map(|(lt, param)| {
+                                let mut iter = param
+                                    .incoming_edges
+                                    .iter()
+                                    .map(|edge| edge.param_name.as_str());
+                                let first = iter.next().unwrap_or("").to_string();
+                                let edges = iter.fold(first, |mut accum, next| {
+                                    accum.push_str(", ");
+                                    accum.push_str(next);
+                                    accum
+                                });
+                                format!(
+                                    "returnVal.{}Edges = List.of({edges});",
+                                    method_lts.fmt_lifetime(lt)
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        (lifetime_edges, boxed_return)
+                    }
+                    _ => (Vec::new(), None),
+                };
                 let return_conversion = if method_name.is_none() {
                     OpaqueConstructorTpl {
                         return_ty: return_ty.clone(),
@@ -490,7 +570,7 @@ return returnVal;"#
                     })
                     .cown()
                 } else {
-                    match self.gen_return_conversion(&method.output) {
+                    match self.gen_return_conversion(&method.output, lifetime_edges) {
                         Ok(ok) => ok,
                         Err(err) => {
                             self.errors.push_error(format!(
@@ -526,40 +606,6 @@ return returnVal;"#
                         _ => false,
                     };
 
-                let params = method
-                    .params
-                    .iter()
-                    .map(|diplomat_core::hir::Param { name, ty, .. }| Param {
-                        name: self.formatter.fmt_param_name(name.as_str()).into(),
-                        ty: self.formatter.fmt_java_type(ty),
-                    })
-                    .collect();
-
-                let boxed_return = match &method.output {
-                    ReturnType::Fallible(SuccessType::OutType(o), _)
-                    | ReturnType::Nullable(SuccessType::OutType(o))
-                    | ReturnType::Infallible(SuccessType::OutType(o)) => match o {
-                        hir::Type::Slice(Slice::Str(None, _) | Slice::Primitive(None, _)) => {
-                            Some(ParamConversion {
-                                converted_value: "boxArena".into(),
-                                conversion_def: "var boxArena = Arena.ofConfined();".into(),
-                            })
-                        }
-                        hir::Type::Slice(Slice::Str(Some(_), _) | Slice::Primitive(Some(_), _)) => {
-                            Some(ParamConversion {
-                                converted_value: "arena".into(),
-                                conversion_def: "".into(),
-                            })
-                        }
-                        hir::Type::Struct(_) => Some(ParamConversion {
-                            converted_value: "returnArena".into(),
-                            conversion_def: "var returnArena = (SegmentAllocator) Arena.ofAuto();"
-                                .into(),
-                        }),
-                        _ => None,
-                    },
-                    _ => None,
-                };
                 let mut param_conversions: Vec<_> = boxed_return
                     .into_iter()
                     .chain(method.param_self.iter().map(|_| ParamConversion {
@@ -671,8 +717,8 @@ return returnVal;"#
         let fields = s
             .fields
             .iter()
-            .map(|StructField { name, ty, .. }| {
-                let name = name.as_str().into();
+            .map(|field @ StructField { ty, .. }| {
+                let name = self.formatter.fmt_field_name(field);
                 let struct_return = match ty {
                     hir::Type::Enum(enum_def) => Some(
                         format!("{}.fromInt", self.tcx.resolve_enum(enum_def.tcx_id).name).into(),
@@ -694,6 +740,16 @@ return returnVal;"#
                 }
             })
             .collect();
+        let edges = s
+            .lifetimes
+            .lifetimes()
+            .lifetimes()
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => None,
+                MaybeStatic::NonStatic(lt) => Some(lt),
+            })
+            .map(|lt| s.lifetimes.fmt_lifetime(lt))
+            .collect();
         let (methods, _) = self.gen_methods(ty, s.name.as_str(), &s.methods);
         (
             format!("{type_name}.java").into(),
@@ -701,6 +757,7 @@ return returnVal;"#
                 type_name: type_name.into(),
                 lib_name: lib_name.clone(),
                 domain: domain.clone(),
+                edges,
                 fields,
                 methods,
             }
@@ -713,10 +770,22 @@ return returnVal;"#
         let Config { domain, lib_name } = &self.tcx_config;
         let (static_methods, class_methods) = self.gen_methods(ty, o.name.as_str(), &o.methods);
 
+        let edges = o
+            .lifetimes
+            .lifetimes()
+            .lifetimes()
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => None,
+                MaybeStatic::NonStatic(lt) => Some(lt),
+            })
+            .map(|lt| o.lifetimes.fmt_lifetime(lt))
+            .collect();
+
         let opaque_tpl = OpaqueTypeTpl {
             type_name: o.name.to_string().into(),
             lib_name: lib_name.clone(),
             domain: domain.clone(),
+            edges,
             static_methods,
             class_methods,
         };
@@ -769,6 +838,7 @@ mod test {
             type_name: "Opaque2".into(),
             lib_name: "somelib".into(),
             domain: "dev.diplomattest".into(),
+            edges: Vec::new(),
             static_methods: Vec::new(),
             class_methods: Vec::new(),
         };
@@ -1009,6 +1079,112 @@ mod test {
                     }
                 }
 
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+
+        let formatter = JavaFormatter::new(&tcx);
+
+        let errors = ErrorStore::default();
+        let tcx_gen = TyGenContext {
+            tcx: &tcx,
+            tcx_config: Config {
+                domain: "dev.diplomattest".into(),
+                lib_name: "somelib".into(),
+            },
+            formatter: &formatter,
+            errors: &errors,
+        };
+
+        let mut res = String::new();
+        for (ty, def) in tcx.all_types() {
+            let rendered = match (ty, def) {
+                (_, TypeDef::Opaque(opaque)) => {
+                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque, ty);
+                    rendered
+                }
+                (_, TypeDef::Struct(struct_def)) => {
+                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
+                    rendered
+                }
+
+                (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, enum_id);
+                    rendered
+                }
+                _ => String::new(),
+            };
+
+            res.push_str(&rendered);
+            res.push_str("\n============================\n")
+        }
+        insta::assert_snapshot!(res);
+    }
+
+    #[test]
+    fn test_lifetimes() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            pub mod ffi {
+                use diplomat_runtime::DiplomatStr16;
+
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a DiplomatStr);
+
+                #[diplomat::opaque]
+                #[diplomat::transparent_convert]
+                pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
+
+                pub struct BorrowedFields<'a> {
+                    a: &'a DiplomatStr16,
+                    b: &'a DiplomatStr,
+                    c: &'a str,
+                }
+
+                pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
+                    field_a: &'a DiplomatStr16,
+                    field_b: &'b DiplomatStr,
+                    field_c: &'c str,
+                }
+
+                pub struct BorrowedFieldsReturning<'a> {
+                    bytes: &'a DiplomatStr,
+                }
+
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a DiplomatStr) -> Box<Self> {
+                        Box::new(Foo(x))
+                    }
+
+                    pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
+                        Box::new(Bar(self))
+                    }
+
+                    pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
+                        Box::new(Foo(x))
+                    }
+
+                    pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
+                        BorrowedFieldsReturning { bytes: self.0 }
+                    }
+
+                    pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
+                        Box::new(Foo(fields.b))
+                    }
+
+                    /// Test that the extraction logic correctly pins the right fields
+                    pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
+                        bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
+                        another_string: &'a DiplomatStr,
+                    ) -> Box<Self> {
+                        if bounds.field_b.is_empty() {
+                            Box::new(Self(another_string))
+                        } else {
+                            Box::new(Self(bounds.field_b))
+                        }
+                    }
+                }
             }
         };
 

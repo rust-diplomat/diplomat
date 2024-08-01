@@ -10,6 +10,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.foreign.SegmentAllocator;
+import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -25,8 +26,11 @@ public class MyStruct {
 
     MemorySegment internal;
     SegmentAllocator arena;
+    List<Object> selfEdges = List.of();
+    
 
     private MyStruct(SegmentAllocator arena) {
+        this.arena = arena
     }
 
     void initFromSegment(MemorySegment segment) {
@@ -48,6 +52,7 @@ public class MyStruct {
         var nativeInvoker = somelib_h.MyStruct_new.makeInvoker();
         var nativeVal = nativeInvoker.apply(returnArena);
         var returnVal = new MyStruct(returnArena);
+        
         returnVal.initFromSegment(nativeVal);
         return returnVal;
     }

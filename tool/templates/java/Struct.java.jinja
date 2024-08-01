@@ -6,6 +6,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.foreign.SegmentAllocator;
+import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -16,8 +17,13 @@ public class {{type_name}} {
 
     MemorySegment internal;
     SegmentAllocator arena;
+    List<Object> selfEdges = List.of();
+    {% for edge in edges -%}
+    List<Object> {{edge}}Edges = List.of();
+    {% endfor %}
 
     private {{type_name}}(SegmentAllocator arena) {
+        this.arena = arena
     }
 
     void initFromSegment(MemorySegment segment) {
