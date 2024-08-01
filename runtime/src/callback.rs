@@ -10,7 +10,7 @@ pub struct DiplomatCallback<ReturnType> {
     // function to actually run the callback
     pub run_callback: unsafe extern "C" fn(*const c_void, ...) -> ReturnType,
     // function to destroy this callback struct
-    destructor: Option<unsafe extern "C" fn(*const c_void)>,
+    pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
 }
 
 impl<ReturnType> Drop for DiplomatCallback<ReturnType> {
