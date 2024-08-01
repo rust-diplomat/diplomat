@@ -15,19 +15,19 @@
 
 
 
-MyString* MyString_new(const char* v_data, size_t v_len);
+MyString* MyString_new(DiplomatStringView v);
 
-MyString* MyString_new_unsafe(const char* v_data, size_t v_len);
+MyString* MyString_new_unsafe(DiplomatStringView v);
 
-MyString* MyString_new_owned(const char* v_data, size_t v_len);
+MyString* MyString_new_owned(DiplomatStringView v);
 
-MyString* MyString_new_from_first(DiplomatStringsView* v_data, size_t v_len);
+MyString* MyString_new_from_first(DiplomatStringsView v);
 
-void MyString_set_str(MyString* self, const char* new_str_data, size_t new_str_len);
+void MyString_set_str(MyString* self, DiplomatStringView new_str);
 
 void MyString_get_str(const MyString* self, DiplomatWrite* write);
 
-void MyString_string_transform(const char* foo_data, size_t foo_len, DiplomatWrite* write);
+void MyString_string_transform(DiplomatStringView foo, DiplomatWrite* write);
 
 
 void MyString_destroy(MyString* self);

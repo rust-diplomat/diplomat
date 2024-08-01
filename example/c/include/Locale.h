@@ -15,7 +15,7 @@
 
 
 
-Locale* icu4x_Locale_new_mv1(const char* name_data, size_t name_len);
+Locale* icu4x_Locale_new_mv1(DiplomatStringView name);
 
 
 void icu4x_Locale_destroy_mv1(Locale* self);

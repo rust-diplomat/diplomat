@@ -16,7 +16,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::OptionString* OptionString_new(const char* diplomat_str_data, size_t diplomat_str_len);
+    diplomat::capi::OptionString* OptionString_new(diplomat::capi::DiplomatStringView diplomat_str);
     
     typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;
     OptionString_write_result OptionString_write(const diplomat::capi::OptionString* self, diplomat::capi::DiplomatWrite* write);
@@ -32,8 +32,7 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<OptionString> OptionString::new_(std::string_view diplomat_str) {
-  auto result = diplomat::capi::OptionString_new(diplomat_str.data(),
-    diplomat_str.size());
+  auto result = diplomat::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
   return std::unique_ptr<OptionString>(OptionString::FromFFI(result));
 }
 
