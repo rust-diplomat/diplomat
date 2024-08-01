@@ -4,8 +4,7 @@ use std::collections::BTreeSet;
 use std::ops::Deref;
 
 use super::{
-    Attrs, ComputeId, Docs, Everywhere, Ident, InputOnly, IdentBuf, OutType, OutputOnly, SelfType, TyPosition,
-    Type, TypeContext,
+    Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, OutputOnly, SelfType, Type, TypeContext,
 };
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
@@ -229,11 +228,7 @@ impl ParamSelf {
 }
 
 impl Param {
-<<<<<<< HEAD
     pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>) -> Self {
-=======
-    pub(super) fn new(name: IdentBuf, ty: CanBeInputType) -> Self {
->>>>>>> 66c57b8 (Adding a wrapper for input-only types so that `Param`s can be both TyPosition InputOnly and Everywhere; propagating this through the tool)
         Self { name, ty }
     }
 }

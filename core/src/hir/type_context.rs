@@ -3,8 +3,8 @@
 use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
-    AttributeValidator, Attrs, CanBeInputType, EnumDef, LoweringContext, LoweringError,
-    MaybeStatic, OpaqueDef, OutStructDef, StructDef, TypeDef,
+    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
+    OutStructDef, StructDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
@@ -321,20 +321,12 @@ impl TypeContext {
                 }
 
                 for param in &method.params {
-                    match &param.ty {
-                        CanBeInputType::Everywhere(ty) => self.validate_ty_in_method(
-                            errors,
-                            Param::Input(param.name.as_str()),
-                            ty,
-                            method,
-                        ),
-                        CanBeInputType::InputOnly(ty) => self.validate_ty_in_method(
-                            errors,
-                            Param::Input(param.name.as_str()),
-                            ty,
-                            method,
-                        ),
-                    }
+                    self.validate_ty_in_method(
+                        errors,
+                        Param::Input(param.name.as_str()),
+                        &param.ty,
+                        method,
+                    )
                 }
 
                 method.output.with_contained_types(|out_ty| {
