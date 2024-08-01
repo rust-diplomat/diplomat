@@ -24,7 +24,10 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
   factory RenamedMyIterable(core.List<int> x) {
     final temp = _FinalizedArena();
     final (xData, xLength) = x._uint8AllocIn(temp.arena);
-    final result = _namespace_MyIterable_new(xData, xLength);
+    final x_struct = ffi.Struct.create<_SliceUint8>();
+    x_struct._data = xData;
+    x_struct._length = xLength;
+    final result = _namespace_MyIterable_new(x_struct);
     return RenamedMyIterable._fromFfi(result, []);
   }
 
@@ -42,9 +45,9 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
 external void _namespace_MyIterable_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('namespace_MyIterable_new')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'namespace_MyIterable_new')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint8)>(isLeaf: true, symbol: 'namespace_MyIterable_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_new(ffi.Pointer<ffi.Uint8> xData, int xLength);
+external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_new(_SliceUint8 x);
 
 @meta.ResourceIdentifier('namespace_MyIterable_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterable_iter')

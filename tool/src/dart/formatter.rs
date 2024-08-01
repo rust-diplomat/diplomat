@@ -155,10 +155,6 @@ impl<'tcx> DartFormatter<'tcx> {
         self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
     }
 
-    pub fn fmt_usize(&self, cast: bool) -> &'static str {
-        self.fmt_primitive_as_ffi(hir::PrimitiveType::IntSize(hir::IntSizeType::Usize), cast)
-    }
-
     pub fn fmt_type_as_ident(&self, ty: Option<&str>) -> String {
         ty.unwrap_or("Void")
             .replace(&self.fmt_opaque_as_ffi(), "Opaque")
@@ -263,7 +259,19 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
+    /// Get the FFI slice type corresponding to a slice
+    ///
+    /// Note: you probably want to call gen_slice() to ensure helpers get made
+    pub fn fmt_slice_type(&self, slice: &hir::Slice) -> &'static str {
+        match slice {
+            hir::Slice::Primitive(_, p) => self.fmt_prim_slice_type(*p),
+            hir::Slice::Str(_, encoding) => self.fmt_str_slice_type(*encoding),
+            hir::Slice::Strs(encoding) => self.fmt_str_slice_slice_type(*encoding),
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    fn fmt_prim_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Bool => "_SliceBool",
@@ -284,7 +292,7 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_str_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
+    fn fmt_str_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
         match encoding {
             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_SliceUtf8",
             hir::StringEncoding::UnvalidatedUtf16 => "_SliceUtf16",
@@ -292,7 +300,7 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_str_slice_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
+    fn fmt_str_slice_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
         match encoding {
             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_SliceSliceUtf8",
             hir::StringEncoding::UnvalidatedUtf16 => "_SliceSliceUtf16",

@@ -442,16 +442,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size
 
-                let param_element_type_ffi = self.gen_slice_element_ty(&slice);
-                param_types_ffi.push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
-                param_types_ffi_cast
-                    .push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
-                param_names_ffi.push(format!("{param_name}Data").into());
-
-                param_types_ffi.push(self.formatter.fmt_usize(false).into());
-                param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
-                param_names_ffi.push(format!("{param_name}Length").into());
-
                 let alloc = match param_borrow_kind {
                     ParamBorrowInfo::BorrowedSlice => {
                         // Slices borrowed in the return value use a custom arena
@@ -472,11 +462,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let dart_to_c =
                     self.gen_dart_to_c_for_type(&param.ty, param_name.clone(), None, Some(&alloc));
 
+                let ffi_slice = self.gen_slice(&slice);
+
+                param_types_ffi_cast.push(ffi_slice.into());
+                param_types_ffi.push(ffi_slice.into());
+                param_names_ffi.push(format!("{param_name}").into());
                 conversion_allocations.push(
                     format!("final ({param_name}Data, {param_name}Length) = {dart_to_c};").into(),
                 );
-                param_conversions.push(format!("{param_name}Data").into());
-                param_conversions.push(format!("{param_name}Length").into());
+                conversion_allocations
+                    .push(format!("final {param_name}_struct = ffi.Struct.create<{ffi_slice}>();").into());
+                conversion_allocations
+                    .push(format!("{param_name}_struct._data = {param_name}Data;").into());
+                conversion_allocations
+                    .push(format!("{param_name}_struct._length = {param_name}Length;").into());
+                param_conversions.push(format!("{param_name}_struct").into());
             } else {
                 let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
                 let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
@@ -1039,12 +1039,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
     /// Generates a Dart helper class for a slice type.
     fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
-        let slice_ty = match slice {
-            hir::Slice::Primitive(_, p) => self.formatter.fmt_slice_type(*p),
-            hir::Slice::Str(_, encoding) => self.formatter.fmt_str_slice_type(*encoding),
-            hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_slice_type(*encoding),
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
+        let slice_ty = self.formatter.fmt_slice_type(slice);
 
         let ffi_element_type = &self.gen_slice_element_ty(slice);
 
@@ -1076,10 +1071,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     ) => "Utf8Decoder().convert(_data.asTypedList(_length))",
                     hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "core.String.fromCharCodes(_data.asTypedList(_length))",
                     // special case: not typed lists for platform-specific integers, so cannot borrow
-                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false)",
+                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Bool) => "core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false)",
                     hir::Slice::Primitive(..) => "_data.asTypedList(_length)",
-                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => "core.Iterable.generate(_length).map((i) => core.String.fromCharCodes(_data.asTypedList(_length)[i].data.asTypedList(_data.asTypedList(_length)[i]._length)))",
-                    hir::Slice::Strs(..) => "core.Iterable.generate(_length).map((i) => Utf8Decoder().convert(_data.asTypedList(_length)[i].data.asTypedList(_data.asTypedList(_length)[i]._length)))",
+                    hir::Slice::Strs(..) => "core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false)",
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
