@@ -88,7 +88,80 @@ fn param_conversion(
     }
 }
 
-fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
+fn gen_cb_param_creation_fcts(
+    param: &ast::Param,
+    struct_name: &str,
+    method_name: &str,
+    all_cb_param_creation_fcts: &mut Vec<Item>,
+) {
+    match &param.ty {
+        ast::TypeName::Function(in_types, out_type) => {
+            // creating the diplomatcallback in C
+            let name = Ident::new(
+                &format!(
+                    "C_create_DC_{}_{}_{}",
+                    struct_name,
+                    method_name,
+                    &param.name.to_string()
+                ),
+                Span::call_site(),
+            );
+            let mut cb_param_list = vec![];
+            let mut cb_arg_type_list = vec![];
+            for (index, in_ty) in in_types.into_iter().enumerate() {
+                cb_param_list.push(Ident::new(&format!("arg{}", index), Span::call_site()));
+                cb_arg_type_list.push(in_ty.to_syn());
+            }
+            let cb_ret_type = out_type.to_syn();
+            let cb_params_with_types = cb_param_list
+                .iter()
+                .zip(cb_arg_type_list.iter())
+                .map(|(pname, pty)| {
+                    FnArg::Typed(PatType {
+                        attrs: vec![],
+                        pat: Box::new(Pat::Ident(PatIdent {
+                            attrs: vec![],
+                            by_ref: None,
+                            mutability: None,
+                            ident: pname.clone(),
+                            subpat: None,
+                        })),
+                        colon_token: syn::token::Colon(Span::call_site()),
+                        ty: Box::new(pty.clone()),
+                    })
+                })
+                .collect::<Vec<_>>();
+
+            println!("REEE: {:?}, {:?}", name, cb_params_with_types);
+            all_cb_param_creation_fcts.push(Item::Fn(syn::parse_quote! {
+                #[no_mangle]
+                pub unsafe extern "C" fn #name(
+                    callback: Option<unsafe extern "C" fn(#(#cb_arg_type_list,)*) -> #cb_ret_type>,
+                ) -> *mut DiplomatCallback<#cb_ret_type> {
+                    // define the callback runner
+                    unsafe extern "C" fn run_callback(data: *const c_void, #(#cb_params_with_types,)*) -> #cb_ret_type {
+                        unsafe {
+                            let cb = data.cast::<Option<unsafe extern "C" fn(#(#cb_arg_type_list,)*) -> #cb_ret_type>>();
+                            // unwrap and call the C function pointer
+                            (*cb).unwrap()(#(#cb_param_list,)*)
+                        }
+                    }
+                    let ret = DiplomatCallback::<#cb_ret_type> {
+                        data: Box::into_raw(Box::new(callback)) as _,
+                        run_callback: std::mem::transmute::<unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type,
+                            unsafe extern "C" fn(*const c_void, ...) -> #cb_ret_type>(run_callback),
+                        destructor: None, // no-op for C functions
+                    };
+                    Box::into_raw(Box::new(ret))
+                }
+            }));
+        }
+        // don't recurse through the types, b/c callbacks just appear as Method params
+        _ => {}
+    }
+}
+
+fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> (Item, Vec<Item>) {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
@@ -105,6 +178,16 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         if let Some(conversion) = param_conversion(&p.name, &p.ty, None) {
             all_params_conversion.push(conversion);
         }
+    });
+
+    let mut all_cb_param_creation_fcts = vec![];
+    m.params.iter().for_each(|p| {
+        gen_cb_param_creation_fcts(
+            p,
+            &self_ident.to_string(),
+            &method_ident.to_string(),
+            &mut all_cb_param_creation_fcts,
+        );
     });
 
     let this_ident = Pat::Ident(PatIdent {
