@@ -6,9 +6,9 @@ use std::path::Path;
 
 use askama::Template;
 use diplomat_core::hir::{
-    self, EnumDef, EnumId, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic, Method,
-    OpaqueDef, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
-    StructPathLike, SuccessType, TypeContext, TypeDef, TypeId,
+    self, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic, Method, OpaqueDef,
+    ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField, StructPathLike,
+    SuccessType, TypeContext, TypeDef, TypeId,
 };
 use formatter::JavaFormatter;
 
@@ -66,6 +66,7 @@ pub fn run(
         writeln!(lib_file, "#include \"{include}\"")?;
     }
 
+    // Here we try to build the following command
     // jextract \
     //   --include-dir /path/to/mylib/include \
     //   --output src \
@@ -88,11 +89,11 @@ pub fn run(
 
     println!("Running: {:?}", command);
 
-    // todo: delete directory
-
     match command.output() {
         Err(err) => match err.kind() {
             std::io::ErrorKind::NotFound => {
+                // note to guarantee a working link we link to a specific commit. But this should
+                // be updated when we check the validity of jextract
                 eprintln!("Check that jextract is in your path and all directories exist. See https://github.com/openjdk/jextract/blob/5715737be0a1a9de24cce3ee7190881cfc8b1350/doc/GUIDE.md");
                 return Err(err);
             }
@@ -124,20 +125,22 @@ pub fn run(
     };
 
     let files = FileMap::default();
-    for (_id, ty) in tcx.all_types() {
+    for (id, ty) in tcx.all_types() {
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
         }
 
-        match ty {
-            TypeDef::Opaque(_) => {
-                // let type_name = o.name.to_string();
-
-                // let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, GROUP, LIBRARY);
+        let (file, body) = match ty {
+            TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque, id),
+            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
+            TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def, id),
+            TypeDef::OutStruct(_) => unreachable!(""),
+            unknown => {
+                unreachable!("Encountered unknown variant: {unknown:?} while parsing all types")
             }
-            _ => continue,
-        }
+        };
+        files.add_file(format!("src/main/java/{file}"), body);
     }
 
     Ok(files)
@@ -681,7 +684,7 @@ return returnVal;"#
         (static_methods, class_methods)
     }
 
-    fn gen_enum_def(&self, e: &EnumDef, ty: EnumId) -> (Cow<str>, String) {
+    fn gen_enum_def(&self, e: &EnumDef, ty: TypeId) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = e.name.as_str();
         let variants = e
@@ -697,7 +700,7 @@ return returnVal;"#
                 },
             )
             .collect();
-        let (methods, _) = self.gen_methods(ty.into(), e.name.as_str(), &e.methods);
+        let (methods, _) = self.gen_methods(ty, e.name.as_str(), &e.methods);
         (
             format!("{type_name}.java").into(),
             EnumTypeTpl {
@@ -1033,8 +1036,8 @@ mod test {
                     let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
                     rendered
                 }
-                (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, enum_id);
+                (_, TypeDef::Enum(enum_def)) => {
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
                     rendered
                 }
                 _ => String::new(),
@@ -1109,8 +1112,8 @@ mod test {
                     rendered
                 }
 
-                (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, enum_id);
+                (_, TypeDef::Enum(enum_def)) => {
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
                     rendered
                 }
                 _ => String::new(),
@@ -1216,7 +1219,7 @@ mod test {
                 }
 
                 (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, enum_id);
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
                     rendered
                 }
                 _ => String::new(),
