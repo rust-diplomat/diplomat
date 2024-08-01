@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 use std::ops::Deref;
 
-use super::{Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Type, TypeContext};
+use super::{Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, SelfType, Type, TypeContext};
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
@@ -69,7 +69,7 @@ pub struct ParamSelf {
 #[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,
-    pub ty: Type,
+    pub ty: Type<InputOnly>,
 }
 
 impl SuccessType {
@@ -188,7 +188,7 @@ impl ParamSelf {
 }
 
 impl Param {
-    pub(super) fn new(name: IdentBuf, ty: Type) -> Self {
+    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>) -> Self {
         Self { name, ty }
     }
 }

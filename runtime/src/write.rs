@@ -166,7 +166,7 @@ pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
-/// [`diplomat_buffer_write_create()`].
+///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut u8 {
     if this.grow_failed {
@@ -182,7 +182,7 @@ pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut 
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
-/// [`diplomat_buffer_write_create()`].
+///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_write_len(this: &DiplomatWrite) -> usize {
     if this.grow_failed {
@@ -196,7 +196,7 @@ pub extern "C" fn diplomat_buffer_write_len(this: &DiplomatWrite) -> usize {
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
-/// [`diplomat_buffer_write_create()`].
+///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
 pub unsafe extern "C" fn diplomat_buffer_write_destroy(this: *mut DiplomatWrite) {
     let this = Box::from_raw(this);

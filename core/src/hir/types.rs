@@ -76,7 +76,9 @@ pub struct Borrow {
     pub mutability: Mutability,
 }
 
-impl Type {
+// This is implemented on InputOnly and Everywhere types. Could be extended
+// if we genericize .resolve() later.
+impl<P: TyPosition<StructPath = StructPath>> Type<P> {
     /// Return the number of fields and leaves that will show up in the [`LifetimeTree`]
     /// returned by [`Param::lifetime_tree`] and [`ParamSelf::lifetime_tree`].
     ///

@@ -1,11 +1,11 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
-    EnumVariant, IdentBuf, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn,
-    Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
-    OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
+    EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime, LifetimeEnv, LifetimeLowerer,
+    LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef,
+    OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
     ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
     Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
-    Type, TypeDef, TypeId,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -304,7 +304,7 @@ impl<'ast> LoweringContext<'ast> {
 
         for (name, ty, docs) in ast_struct.fields.iter() {
             let name = self.lower_ident(name, "struct field name");
-            let ty = self.lower_type(ty, &mut &ast_struct.lifetimes, item.in_path);
+            let ty = self.lower_type::<Everywhere>(ty, &mut &ast_struct.lifetimes, item.in_path);
 
             match (name, ty, &mut fields) {
                 (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
@@ -547,12 +547,12 @@ impl<'ast> LoweringContext<'ast> {
     /// Lowers an [`ast::TypeName`]s into a [`hir::Type`].
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
-    fn lower_type(
+    fn lower_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
         &mut self,
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-    ) -> Result<Type, ()> {
+    ) -> Result<Type<P>, ()> {
         match ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
@@ -1057,7 +1057,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type(&param.ty, ltl, in_path);
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
 
         Ok(Param::new(name?, ty?))
     }

@@ -81,7 +81,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::hir::{self, Method, StructDef, TyPosition, TypeContext};
+use crate::hir::{self, Method, StructDef, StructPath, TyPosition, TypeContext};
 
 use crate::hir::lifetimes::{Lifetime, LifetimeEnv, MaybeStatic};
 use crate::hir::ty_position::StructPathLike;
@@ -173,7 +173,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
     /// lifetime or lifetimes longer than it are used by this parameter. In other words, check if
     /// it is possible for data in the return type with this lifetime to have been borrowed from this parameter.
     /// If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
-    pub fn visit_param(&mut self, ty: &hir::Type, param_name: &str) -> ParamBorrowInfo<'tcx> {
+    pub fn visit_param<P: TyPosition<StructPath = StructPath>>(
+        &mut self,
+        ty: &hir::Type<P>,
+        param_name: &str,
+    ) -> ParamBorrowInfo<'tcx> {
         let mut is_borrowed = false;
         if self.used_method_lifetimes.is_empty() {
             if let hir::Type::Slice(..) = *ty {
