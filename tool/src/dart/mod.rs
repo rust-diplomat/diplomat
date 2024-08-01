@@ -438,6 +438,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             let alloc = if let hir::Type::Struct(..) = param.ty {
                 needs_temp_arena = true;
                 Some("temp.arena".to_string())
@@ -451,6 +452,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     CanBeInputType::InputOnly(ty) => self.gen_type_name(&ty),
                 }
             ));
+=======
+            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
+>>>>>>> 105f801 (refactoring after rebasing, getting rid of CanBeInputType)
 
             if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size

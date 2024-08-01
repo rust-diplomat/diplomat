@@ -1,13 +1,8 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-<<<<<<< HEAD
     Borrow, Callback, CallbackInstantiationFunctionality, IdentBuf, LinkedLifetimes, MaybeOwn,
     Mutability, NoCallback, OutStructId, ReturnableStructPath, StructDef, StructId, StructPath,
     TypeContext, TypeDef, TypeId,
-=======
-    Borrow, Callback, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
-    ReturnableStructPath, SetId, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
->>>>>>> 178b16e (AST Function type and lowering to HIR Callback)
 };
 use core::fmt::Debug;
 
@@ -98,11 +93,7 @@ where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
     const IN_OUT_STATUS: InputOrOutput;
-<<<<<<< HEAD
     type CallbackInstantiation: Debug + CallbackInstantiationFunctionality;
-=======
-    type CallbackInstantiation: Debug + SetId;
->>>>>>> 178b16e (AST Function type and lowering to HIR Callback)
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///

@@ -5,7 +5,7 @@ use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CanBeInputType, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
     SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
@@ -320,10 +320,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let mut returns_utf8_err = false;
 
         for param in method.params.iter() {
-            let decls = match &param.ty {
-                CanBeInputType::Everywhere(ty) => self.gen_ty_decl(&ty, param.name.as_str()),
-                CanBeInputType::InputOnly(ty) => self.gen_ty_decl(&ty, param.name.as_str()),
-            };
+            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
             if matches!(
                 param.ty,
