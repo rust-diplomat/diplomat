@@ -1,11 +1,12 @@
 use alloc::boxed::Box;
 use core::marker::PhantomData;
+use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
-
+use core::ptr::NonNull;
 /// This is equivalent to &[T], except it has a stable repr(C) layout
 #[repr(C)]
 pub struct DiplomatSlice<'a, T> {
-    // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation
+    // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation. It may be null if len is null
     ptr: *const T,
     // Invariant: the allocation contains at least `len` elements
     len: usize,
@@ -37,7 +38,13 @@ impl<'a, T> From<&'a [T]> for DiplomatSlice<'a, T> {
 impl<'a, T> From<DiplomatSlice<'a, T>> for &'a [T] {
     fn from(x: DiplomatSlice<'a, T>) -> Self {
         unsafe {
-            // Safety: carrying over safety variants from DiplomatSlice
+            // It's common in C-land to represent empty slices with NULL, which is not the case in Rust
+            // We normalize this
+            if x.ptr.is_null() {
+                debug_assert!(x.len == 0);
+                return &[];
+            }
+            // Safety: carrying over safety variants from DiplomatSlice, and we null-checked
             core::slice::from_raw_parts(x.ptr, x.len)
         }
     }
@@ -53,7 +60,7 @@ impl<'a, T> Deref for DiplomatSlice<'a, T> {
 /// This is equivalent to &mut [T], except it has a stable repr(C) layout
 #[repr(C)]
 pub struct DiplomatSliceMut<'a, T> {
-    // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation
+    // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation.  It may be null if len is null
     ptr: *mut T,
     // Invariant: the allocation contains at least `len` elements
     len: usize,
@@ -74,6 +81,10 @@ impl<'a, T> From<&'a mut [T]> for DiplomatSliceMut<'a, T> {
 impl<'a, T> From<DiplomatSliceMut<'a, T>> for &'a mut [T] {
     fn from(x: DiplomatSliceMut<'a, T>) -> Self {
         unsafe {
+            if x.ptr.is_null() {
+                debug_assert!(x.len == 0);
+                return &mut [];
+            }
             // Safety: carrying over safety variants from DiplomatSliceMut
             core::slice::from_raw_parts_mut(x.ptr, x.len)
         }
@@ -83,6 +94,10 @@ impl<'a, T> From<DiplomatSliceMut<'a, T>> for &'a mut [T] {
 impl<'a, T> Deref for DiplomatSliceMut<'a, T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
+        if self.ptr.is_null() {
+            debug_assert!(self.len == 0);
+            return &[];
+        }
         unsafe {
             // Safety: carrying over safety variants from DiplomatSliceMut
 
@@ -93,6 +108,10 @@ impl<'a, T> Deref for DiplomatSliceMut<'a, T> {
 
 impl<'a, T> DerefMut for DiplomatSliceMut<'a, T> {
     fn deref_mut(&mut self) -> &mut [T] {
+        if self.ptr.is_null() {
+            debug_assert!(self.len == 0);
+            return &mut [];
+        }
         unsafe {
             // Safety: carrying over safety variants from DiplomatSliceMut
 
@@ -103,20 +122,22 @@ impl<'a, T> DerefMut for DiplomatSliceMut<'a, T> {
 
 #[repr(C)]
 pub struct DiplomatOwnedSlice<T> {
-    // Invariant: ptr is a valid ptr to the beginning of an owned Box<[T]> allocation
+    // Invariant: ptr is a valid ptr to the beginning of an owned Box<[T]> allocation.  It may be null if len is null
     ptr: *mut T,
-    // Invariant: the allocation contains at least `len` elements
+    // Invariant: the allocation contains `len` elements
     len: usize,
     phantom: PhantomData<Box<[T]>>,
 }
 
 impl<T> Drop for DiplomatOwnedSlice<T> {
     fn drop(&mut self) {
-        unsafe {
-            // Safety: This is equivalent to a valid Box
-            drop(Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                self.ptr, self.len,
-            )));
+        if !self.ptr.is_null() {
+            unsafe {
+                // Safety: This is equivalent to a valid Box
+                drop(Box::from_raw(core::ptr::slice_from_raw_parts_mut(
+                    self.ptr, self.len,
+                )));
+            }
         }
     }
 }
@@ -135,7 +156,13 @@ impl<T> From<Box<[T]>> for DiplomatOwnedSlice<T> {
 
 impl<T> From<DiplomatOwnedSlice<T>> for Box<[T]> {
     fn from(x: DiplomatOwnedSlice<T>) -> Self {
+        let x = ManuallyDrop::new(x);
         unsafe {
+            if x.ptr.is_null() {
+                debug_assert!(x.len == 0);
+                let dangling = core::ptr::NonNull::dangling().as_ptr();
+                return Box::from_raw(core::ptr::slice_from_raw_parts_mut(dangling, x.len));
+            }
             // Safety: carrying over safety variants from DiplomatOwnedSlice
             Box::from_raw(core::ptr::slice_from_raw_parts_mut(x.ptr, x.len))
         }
@@ -145,6 +172,10 @@ impl<T> From<DiplomatOwnedSlice<T>> for Box<[T]> {
 impl<T> Deref for DiplomatOwnedSlice<T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
+        if self.ptr.is_null() {
+            debug_assert!(self.len == 0);
+            return &[];
+        }
         // Safety: The type invariants allow us to treat is as a valid Box<[T]>
         unsafe { core::slice::from_raw_parts(self.ptr, self.len) }
     }
@@ -152,6 +183,10 @@ impl<T> Deref for DiplomatOwnedSlice<T> {
 
 impl<T> DerefMut for DiplomatOwnedSlice<T> {
     fn deref_mut(&mut self) -> &mut [T] {
+        if self.ptr.is_null() {
+            debug_assert!(self.len == 0);
+            return &mut [];
+        }
         // Safety: The type invariants allow us to treat is as a valid Box<[T]>
         unsafe { core::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
@@ -203,11 +238,17 @@ impl From<DiplomatOwnedUTF8StrSlice> for Box<str> {
         let buf = Box::<[u8]>::from(x.0);
         let len = buf.len();
         let raw = Box::into_raw(buf);
+        let raw = if raw.is_null() {
+            debug_assert!(len == 0);
+            NonNull::<u8>::dangling().as_ptr()
+        } else {
+            raw as *mut u8
+        };
         unsafe {
             // We deconstructed the Box already so we don't have to worry about provenance
             // We're technically making an &mut [u8] here, because there isn't an easy route to construct
             // string types that are owned
-            let slice = core::slice::from_raw_parts_mut(raw as *mut u8, len);
+            let slice = core::slice::from_raw_parts_mut(raw, len);
             // We can assume this because of the invariant on DiplomatOwnedUTF8StrSlice
             let strslice = core::str::from_utf8_unchecked_mut(slice);
             Box::from_raw(strslice as *mut str)
