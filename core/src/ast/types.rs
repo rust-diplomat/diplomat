@@ -379,7 +379,7 @@ impl StringEncoding {
     /// Get the diplomat slice type when specified using diplomat_runtime types
     pub fn get_diplomat_slice_type(self, lt: &Option<Lifetime>) -> syn::Type {
         if let Some(ref lt) = *lt {
-            let lt = LifetimeGenericsListDisplay(&lt);
+            let lt = LifetimeGenericsListDisplay(lt);
 
             match self {
                 Self::UnvalidatedUtf8 => {
@@ -442,10 +442,8 @@ fn get_lifetime_from_syn_path(p: &syn::TypePath) -> Lifetime {
     if let syn::PathArguments::AngleBracketed(ref generics) =
         p.path.segments[p.path.segments.len() - 1].arguments
     {
-        if let Some(first) = generics.args.first() {
-            if let syn::GenericArgument::Lifetime(lt) = first {
-                return Lifetime::from(lt);
-            }
+        if let Some(syn::GenericArgument::Lifetime(lt)) = generics.args.first() {
+            return Lifetime::from(lt);
         }
     }
     Lifetime::Anonymous
@@ -485,11 +483,11 @@ impl TypeName {
     pub fn ffi_safe_version(&self) -> TypeName {
         match self {
             TypeName::StrReference(lt, encoding, true) => {
-                TypeName::StrReference(lt.clone(), encoding.clone(), false)
+                TypeName::StrReference(lt.clone(), *encoding, false)
             }
-            TypeName::StrSlice(encoding, true) => TypeName::StrSlice(encoding.clone(), false),
+            TypeName::StrSlice(encoding, true) => TypeName::StrSlice(*encoding, false),
             TypeName::PrimitiveSlice(ltmt, prim, true) => {
-                TypeName::PrimitiveSlice(ltmt.clone(), prim.clone(), false)
+                TypeName::PrimitiveSlice(ltmt.clone(), *prim, false)
             }
             TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
             _ => self.clone(),
@@ -555,9 +553,9 @@ impl TypeName {
             }
             TypeName::PrimitiveSlice(ltmt, primitive, is_stdlib_type) => {
                 if *is_stdlib_type {
-                    primitive.get_diplomat_slice_type(&ltmt)
+                    primitive.get_diplomat_slice_type(ltmt)
                 } else {
-                    primitive.get_rust_slice_type(&ltmt)
+                    primitive.get_rust_slice_type(ltmt)
                 }
             }
 
@@ -715,7 +713,7 @@ impl TypeName {
                     || is_runtime_type(p, "DiplomatStr16Slice")
                     || is_runtime_type(p, "DiplomatUtf8StrSlice")
                 {
-                    let lt = get_lifetime_from_syn_path(&p);
+                    let lt = get_lifetime_from_syn_path(p);
 
                     let encoding = if is_runtime_type(p, "DiplomatStrSlice") {
                         StringEncoding::UnvalidatedUtf8
@@ -736,13 +734,13 @@ impl TypeName {
                         } else {
                             Mutability::Mutable
                         };
-                        let lt = get_lifetime_from_syn_path(&p);
+                        let lt = get_lifetime_from_syn_path(p);
                         Some((lt, mutability))
                     } else {
                         None
                     };
 
-                    let ty = get_ty_from_syn_path(&p).expect("Expected type argument to DiplomatSlice/DiplomatSliceMut/DiplomatOwnedSlice");
+                    let ty = get_ty_from_syn_path(p).expect("Expected type argument to DiplomatSlice/DiplomatSliceMut/DiplomatOwnedSlice");
 
                     if let syn::Type::Path(p) = &ty {
                         if let Some(ident) = p.path.get_ident() {

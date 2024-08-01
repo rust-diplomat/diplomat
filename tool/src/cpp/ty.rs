@@ -524,7 +524,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into());
 
         NamedExpression {
-            var_name: var_name.into(),
+            var_name,
             expression,
         }
     }

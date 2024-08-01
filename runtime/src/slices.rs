@@ -15,11 +15,7 @@ pub struct DiplomatSlice<'a, T> {
 
 impl<'a, T> Clone for DiplomatSlice<'a, T> {
     fn clone(&self) -> Self {
-        Self {
-            ptr: self.ptr,
-            len: self.len,
-            phantom: PhantomData,
-        }
+        *self
     }
 }
 impl<'a, T> Copy for DiplomatSlice<'a, T> {}

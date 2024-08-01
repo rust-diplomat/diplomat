@@ -18,7 +18,7 @@ fn param_ty(param: &ast::Param) -> syn::Type {
         ast::TypeName::StrReference(lt @ Some(_lt), encoding, _) => {
             // At the param boundary we MUST use FFI-safe diplomat slice types,
             // not Rust stdlib types (which are not FFI-safe and must be converted)
-            encoding.get_diplomat_slice_type(&lt)
+            encoding.get_diplomat_slice_type(lt)
         }
         ast::TypeName::StrReference(None, encoding, _) => encoding.get_diplomat_slice_type(&None),
         ast::TypeName::StrSlice(encoding, _) => {
@@ -30,7 +30,7 @@ fn param_ty(param: &ast::Param) -> syn::Type {
         ast::TypeName::PrimitiveSlice(ltmt, prim, _) => {
             // At the param boundary we MUST use FFI-safe diplomat slice types,
             // not Rust stdlib types (which are not FFI-safe and must be converted)
-            prim.get_diplomat_slice_type(&ltmt)
+            prim.get_diplomat_slice_type(ltmt)
         }
         _ => param.ty.to_syn(),
     }
@@ -58,11 +58,11 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
     m.params.iter().for_each(|p| {
-        let ty = param_ty(&p);
+        let ty = param_ty(p);
         let name = &p.name;
         all_params_names.push(name);
         all_params.push(syn::parse_quote!(#name: #ty));
-        if let Some(conversion) = param_conversion(&p) {
+        if let Some(conversion) = param_conversion(p) {
             all_params_conversion.push(conversion);
         }
     });
@@ -484,12 +484,12 @@ mod tests {
                                            DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
                                            DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice};
                     struct Foo<'a> {
-                        a: &'a [u8],
-                        b: &'a [u16],
-                        c: &'a str,
-                        d: &'a DiplomatStr,
-                        e: &'a DiplomatStr16,
-                        f: &'a [DiplomatByte],
+                        a: DiplomatSlice<'a, u8>,
+                        b: DiplomatSlice<'a, u16>,
+                        c: DiplomatUtf8StrSlice<'a>,
+                        d: DiplomatStrSlice<'a>,
+                        e: DiplomatStr16Slice<'a>,
+                        f: DiplomatSlice<'a, DiplomatByte>,
                     }
 
                     impl Foo {
