@@ -28,7 +28,7 @@ impl<'a, T> From<&'a [T]> for DiplomatSlice<'a, T> {
     fn from(x: &'a [T]) -> Self {
         // Safe to construct since we're constructing it from a slice
         DiplomatSlice {
-            ptr: x as *const [T] as *const T,
+            ptr: x.as_ptr(),
             len: x.len(),
             phantom: PhantomData,
         }
@@ -71,7 +71,7 @@ impl<'a, T> From<&'a mut [T]> for DiplomatSliceMut<'a, T> {
     fn from(x: &'a mut [T]) -> Self {
         // Safe to construct since we're constructing it from a slice
         DiplomatSliceMut {
-            ptr: x as *mut [T] as *mut T,
+            ptr: x.as_mut_ptr(),
             len: x.len(),
             phantom: PhantomData,
         }
