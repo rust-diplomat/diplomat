@@ -139,8 +139,6 @@ fn gen_cb_param_creation_fcts(
                     })
                 })
                 .collect::<Vec<_>>();
-
-            println!("REEE: {:?}, {:?}", name, cb_params_with_types);
             all_cb_param_creation_fcts.push(Item::Fn(syn::parse_quote! {
                 #[no_mangle]
                 pub unsafe extern "C" fn #name(
