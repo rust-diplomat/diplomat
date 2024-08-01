@@ -5,7 +5,7 @@ use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CanBeInputType, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
     SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
@@ -320,23 +320,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let mut returns_utf8_err = false;
 
         for param in method.params.iter() {
-            let decls = match &param.ty {
-                CanBeInputType::Everywhere(ty) => self.gen_ty_decl(&ty, param.name.as_str()),
-                CanBeInputType::InputOnly(ty) => self.gen_ty_decl(&ty, param.name.as_str()),
-            };
+            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
             if matches!(
                 param.ty,
-                CanBeInputType::Everywhere(Type::Slice(hir::Slice::Str(
+                Type::Slice(hir::Slice::Str(
                     _,
                     hir::StringEncoding::Utf8
-                )))
+                ))
             ) || matches!(
                 param.ty,
-                CanBeInputType::InputOnly(Type::Slice(hir::Slice::Str(
+                Type::Slice(hir::Slice::Str(
                     _,
                     hir::StringEncoding::Utf8
-                )))
+                ))
             ) {
                 param_validations.push(format!(
                     "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
@@ -344,14 +341,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ));
                 returns_utf8_err = true;
             }
-            let conversion = match &param.ty {
-                CanBeInputType::Everywhere(ty) => {
-                    self.gen_cpp_to_c_for_type(&ty, param.name.as_str().into())
-                }
-                CanBeInputType::InputOnly(ty) => {
-                    self.gen_cpp_to_c_for_type(&ty, param.name.as_str().into())
-                }
-            };
+            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
             cpp_to_c_params.push(conversion);
         }
 

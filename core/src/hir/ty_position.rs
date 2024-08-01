@@ -1,6 +1,6 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, Callback, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
+    Borrow, Callback, IdentBuf, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
     ReturnableStructPath, SetId, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
@@ -108,6 +108,7 @@ where
     type StructPath: Debug + StructPathLike;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
+    fn build_callback(cb: Callback) -> Self::CallbackInstantiation;
 }
 
 /// Directionality of the type
@@ -156,6 +157,9 @@ impl TyPosition for Everywhere {
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::Struct(def)
     }
+    fn build_callback(_cb: Callback) -> Self::CallbackInstantiation {
+        panic!("Callbacks must be input-only");
+    }
 }
 
 impl TyPosition for OutputOnly {
@@ -168,6 +172,9 @@ impl TyPosition for OutputOnly {
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::OutStruct(def)
     }
+    fn build_callback(_cb: Callback) -> Self::CallbackInstantiation {
+        panic!("Callbacks must be input-only");
+    }
 }
 
 impl TyPosition for InputOnly {
@@ -179,6 +186,9 @@ impl TyPosition for InputOnly {
 
     fn wrap_struct_def<'tcx>(_def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         panic!("Input-only structs are not currently supported");
+    }
+    fn build_callback(cb: Callback) -> Self::CallbackInstantiation {
+        cb
     }
 }
 

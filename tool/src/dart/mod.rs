@@ -429,13 +429,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            param_decls_dart.push(format!(
-                "{} {param_name}",
-                match &param.ty {
-                    CanBeInputType::Everywhere(ty) => self.gen_type_name(&ty),
-                    CanBeInputType::InputOnly(ty) => self.gen_type_name(&ty),
-                }
-            ));
+            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
             param_names_ffi.push(param_name.clone());
             param_types_ffi.push(self.gen_type_name_ffi(&param.ty, false));
             param_types_ffi_cast.push(self.gen_type_name_ffi(&param.ty, true));

@@ -578,6 +578,8 @@ impl TypeName {
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
             TypeName::Function(_input_types, output_type) => {
+                let output_type = output_type.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
                 // original type
                 // let fn_type = syn::Type::ImplTrait(syn::TypeImplTrait {
                 //     impl_token: syn::Token![impl](Span::call_site()),
@@ -608,27 +610,27 @@ impl TypeName {
                 // });
 
                 // should be DiplomatCallback<function_output_type>
-                syn::Type::Path(TypePath {
-                    qself: None,
-                    path: syn::Path {
-                        leading_colon: None,
-                        segments: Punctuated::from_iter(vec![
-                            PathSegment {
-                                ident: syn::parse_str("DiplomatCallback").unwrap(),
-                                arguments: PathArguments::AngleBracketed(
-                                    AngleBracketedGenericArguments {
-                                        colon2_token: None,
-                                        lt_token: syn::token::Lt(Span::call_site()),
-                                        args: Punctuated::from_iter(vec![GenericArgument::Type(
-                                            output_type.to_syn(),
-                                        )]),
-                                        gt_token: syn::token::Gt(Span::call_site()),
-                                    },
-                                ),
-                            }
-                        ]),
-                    },
-                })
+                // syn::Type::Path(TypePath {
+                //     qself: None,
+                //     path: syn::Path {
+                //         leading_colon: None,
+                //         segments: Punctuated::from_iter(vec![
+                //             PathSegment {
+                //                 ident: syn::parse_str("DiplomatCallback").unwrap(),
+                //                 arguments: PathArguments::AngleBracketed(
+                //                     AngleBracketedGenericArguments {
+                //                         colon2_token: None,
+                //                         lt_token: syn::token::Lt(Span::call_site()),
+                //                         args: Punctuated::from_iter(vec![GenericArgument::Type(
+                //                             output_type.to_syn(),
+                //                         )]),
+                //                         gt_token: syn::token::Gt(Span::call_site()),
+                //                     },
+                //                 ),
+                //             }
+                //         ]),
+                //     },
+                // })
             }
         }
     }
@@ -908,7 +910,7 @@ impl TypeName {
                 if tr.bounds.len() > 1 {
                     todo!("Currently don't support implementing multiple traits");
                 }
-                if let Some(syn::TypeParamBound::Trait(TraitBound {
+                if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
                     path:
                         syn::Path {
                             segments: rel_segs, ..
@@ -935,7 +937,9 @@ impl TypeName {
                                 })
                                 .collect::<Vec<Box<TypeName>>>();
                             let out_type = match output_type {
-                                syn::ReturnType::Type(_, output_type) => TypeName::from_syn(output_type, self_path_type.clone()),
+                                syn::ReturnType::Type(_, output_type) => {
+                                    TypeName::from_syn(output_type, self_path_type.clone())
+                                }
                                 syn::ReturnType::Default => TypeName::Unit,
                             };
                             let ret = TypeName::Function(in_types, Box::new(out_type));
