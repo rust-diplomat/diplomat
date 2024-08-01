@@ -3,8 +3,8 @@
 use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
-    AttributeValidator, Attrs, CanBeInputType, EnumDef, LoweringContext, LoweringError,
-    MaybeStatic, OpaqueDef, OutStructDef, StructDef, TypeDef,
+    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
+    OutStructDef, StructDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links

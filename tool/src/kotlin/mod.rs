@@ -248,21 +248,20 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         name: Cow<'cx, str>,
     ) -> Cow<'cx, str> {
         match *ty {
-            CanBeInputType::Everywhere(Type::Primitive(prim)) => self
+            Type::Primitive(prim) => self
                 .formatter
                 .fmt_primitive_to_native_conversion(name.as_ref(), prim)
                 .into(),
-            CanBeInputType::Everywhere(Type::Opaque(ref op @ OpaquePath { owner, .. })) => {
+            Type::Opaque(ref op @ OpaquePath { owner, .. }) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 match owner.mutability {
                     Mutability::Immutable => format!("{name}{optional}.handle").into(),
                     Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
-            CanBeInputType::Everywhere(Type::Struct(_)) => format!("{name}.nativeStruct").into(),
-            CanBeInputType::Everywhere(Type::Enum(_)) => format!("{name}.toNative()").into(),
-            CanBeInputType::Everywhere(Type::Slice(Slice::Str(None, _)))
-            | CanBeInputType::Everywhere(Type::Slice(Slice::Primitive(None, _))) => {
+            Type::Struct(_) => format!("{name}.nativeStruct").into(),
+            Type::Enum(_) => format!("{name}.toNative()").into(),
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
@@ -944,8 +943,7 @@ retutnVal.option() ?: return null
                     };
                 }
 
-                CanBeInputType::Everywhere(Type::Struct(_))
-                | CanBeInputType::Everywhere(Type::Opaque(_)) => {
+                Type::Struct(_) | Type::Opaque(_) => {
                     visitor.visit_param(&param.ty, &param_name);
                 }
                 Type::Callback(Callback {
@@ -1056,10 +1054,10 @@ retutnVal.option() ?: return null
                     let index_type = match &method.params.first() {
                         Some(Param {
                             ty:
-                                CanBeInputType::Everywhere(Type::Primitive(
+                                Type::Primitive(
                                     prim @ PrimitiveType::Int(..)
                                     | prim @ PrimitiveType::IntSize(..),
-                                )),
+                                ),
                             ..
                         }) => self.formatter.fmt_primitive_as_kt(*prim),
                         _ => panic!("index type must be an integer type"),

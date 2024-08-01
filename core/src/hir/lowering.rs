@@ -838,11 +838,23 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
-            ast::TypeName::Function(_, _) => {
-                self.errors.push(LoweringError::Other(
-                    "Callbacks need to be input-only".into(),
-                ));
-                Err(())
+            ast::TypeName::Function(input_types, out_type) => {
+                let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
+                let params = input_types
+                    .iter()
+                    .map(|in_ty| {
+                        let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false);
+                        CallbackParam {
+                            ty: hir_in_ty.unwrap(),
+                        }
+                    })
+                    .collect::<Vec<CallbackParam>>();
+                Ok(Type::Callback(P::build_callback(Callback {
+                    id: callback_id,
+                    param_self: None,
+                    params,
+                    output: Box::new(self.lower_type(out_type, ltl, in_path)?),
+                })))
             }
         }
     }

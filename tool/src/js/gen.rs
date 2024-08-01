@@ -440,9 +440,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     } else {
                         None
                     };
-                method_info.param_conversions.push(match &param.ty {
-                    CanBeInputType::Everywhere(ty) => self.gen_js_to_c_for_type(
-                        &ty,
+                method_info
+                    .param_conversions
+                    .push(self.gen_js_to_c_for_type(
+                        &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,

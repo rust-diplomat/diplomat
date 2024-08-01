@@ -2,7 +2,7 @@
 
 use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
-    EnumPath, Everywhere, InputOnly, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
+    EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
     PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId,
 };
 use crate::ast;
@@ -12,12 +12,6 @@ use either::Either;
 
 /// Type that can only be used as an output.
 pub type OutType = Type<OutputOnly>;
-
-#[derive(Debug)]
-pub enum CanBeInputType {
-    InputOnly(Type<InputOnly>),
-    Everywhere(Type<Everywhere>),
-}
 
 /// Type that may be used as input or output.
 #[derive(Debug, Clone)]
@@ -111,23 +105,6 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
             Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
             Type::DiplomatOption(ty) => ty.field_leaf_lifetime_counts(tcx),
-        }
-    }
-}
-
-impl CanBeInputType {
-    pub fn field_leaf_lifetime_counts(&self, tcx: &TypeContext) -> (usize, usize) {
-        match self {
-            CanBeInputType::Everywhere(ty) => ty.field_leaf_lifetime_counts(tcx),
-            CanBeInputType::InputOnly(ty) => {
-                match ty {
-                    // reasoning for Callback: the Params have no lifetime field, so no need to
-                    // allocate per param. But, the callback itself has a lifetime
-                    // and might have a Self later, if it is a member function on an object
-                    Type::Callback(_) => (1, 1),
-                    _ => panic!("Only Type::Callback is InputOnly"),
-                }
-            }
         }
     }
 }
@@ -228,23 +205,5 @@ impl From<SelfType> for Type {
             SelfType::Struct(s) => Type::Struct(s),
             SelfType::Enum(e) => Type::Enum(e),
         }
-    }
-}
-
-impl From<SelfType> for CanBeInputType {
-    fn from(s: SelfType) -> CanBeInputType {
-        Type::from(s).into()
-    }
-}
-
-impl From<Type> for CanBeInputType {
-    fn from(t: Type) -> CanBeInputType {
-        CanBeInputType::Everywhere(t)
-    }
-}
-
-impl From<Type<InputOnly>> for CanBeInputType {
-    fn from(t: Type<InputOnly>) -> CanBeInputType {
-        CanBeInputType::InputOnly(t)
     }
 }
