@@ -13,194 +13,53 @@ fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
         .fold(quote!(), |prev, attr| quote!(#prev #attr))
 }
 
-fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
+fn param_ty(param: &ast::Param) -> syn::Type {
     match &param.ty {
-        ast::TypeName::StrReference(
-            ..,
-            ast::StringEncoding::UnvalidatedUtf8
-            | ast::StringEncoding::UnvalidatedUtf16
-            | ast::StringEncoding::Utf8,
-        )
-        | ast::TypeName::PrimitiveSlice(..)
-        | ast::TypeName::StrSlice(..) => {
-            let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
-                ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
-            } else if let ast::TypeName::StrReference(
-                _,
-                ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
-            ) = &param.ty
-            {
-                quote! { u8 }
-            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) =
-                &param.ty
-            {
-                quote! { u16 }
-            } else if let ast::TypeName::StrSlice(ast::StringEncoding::Utf8) = &param.ty {
-                // TODO: this is not an ABI-stable type!
-                quote! { &str }
-            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8) = &param.ty
-            {
-                // TODO: this is not an ABI-stable type!
-                quote! { &[u8] }
-            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) = &param.ty
-            {
-                // TODO: this is not an ABI-stable type!
-                quote! { &[u16] }
-            } else {
-                unreachable!()
-            };
-            expanded_params.push(FnArg::Typed(PatType {
-                attrs: vec![],
-                pat: Box::new(Pat::Ident(PatIdent {
-                    attrs: vec![],
-                    by_ref: None,
-                    mutability: None,
-                    ident: Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site()),
-                    subpat: None,
-                })),
-                colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(
-                    parse2({
-                        if let ast::TypeName::PrimitiveSlice(
-                            Some((_, ast::Mutability::Mutable)) | None,
-                            _,
-                        )
-                        | ast::TypeName::StrReference(None, ..) = &param.ty
-                        {
-                            quote! { *mut #data_type }
-                        } else {
-                            quote! { *const #data_type }
-                        }
-                    })
-                    .unwrap(),
-                ),
-            }));
-
-            expanded_params.push(FnArg::Typed(PatType {
-                attrs: vec![],
-                pat: Box::new(Pat::Ident(PatIdent {
-                    attrs: vec![],
-                    by_ref: None,
-                    mutability: None,
-                    ident: Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site()),
-                    subpat: None,
-                })),
-                colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(
-                    parse2(quote! {
-                        usize
-                    })
-                    .unwrap(),
-                ),
-            }));
+        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::UnvalidatedUtf8) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatStrSlice)
         }
-        o => {
-            expanded_params.push(FnArg::Typed(PatType {
-                attrs: vec![],
-                pat: Box::new(Pat::Ident(PatIdent {
-                    attrs: vec![],
-                    by_ref: None,
-                    mutability: None,
-                    ident: Ident::new(param.name.as_str(), Span::call_site()),
-                    subpat: None,
-                })),
-                colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(o.to_syn()),
-            }));
+        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::UnvalidatedUtf16) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatStr16Slice)
         }
+        ast::TypeName::StrReference(Some(_lt), ast::StringEncoding::Utf8) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatUTF8StrSlice)
+        }
+        ast::TypeName::StrReference(None, ast::StringEncoding::UnvalidatedUtf8) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatOwnedStrSlice)
+        }
+        ast::TypeName::StrReference(None, ast::StringEncoding::UnvalidatedUtf16) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatOwnedStr16Slice)
+        }
+        ast::TypeName::StrReference(None, ast::StringEncoding::Utf8) => {
+            syn::parse_quote!(diplomat_runtime::DiplomatOwnedUTF8StrSlice)
+        }
+        ast::TypeName::StrSlice(ast::StringEncoding::Utf8) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatUtf8StrSlice>),
+        ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatStrSlice>),
+        ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) => syn::parse_quote!(diplomat_runtime::DiplomatSlice<diplomat_runtime::DiplomatStr16Slice>),
+        ast::TypeName::PrimitiveSlice(Some((_lt, ast::Mutability::Immutable)), prim) => {
+            let prim = ast::TypeName::Primitive(*prim).to_syn();
+            syn::parse_quote!(diplomat_runtime::DiplomatSlice<#prim>)
+        }
+        ast::TypeName::PrimitiveSlice(Some((_lt, ast::Mutability::Mutable)), prim) => {
+            let prim = ast::TypeName::Primitive(*prim).to_syn();
+            syn::parse_quote!(diplomat_runtime::DiplomatSliceMut<#prim>)
+        }
+        ast::TypeName::PrimitiveSlice(None, prim) => {
+            let prim = ast::TypeName::Primitive(*prim).to_syn();
+            syn::parse_quote!(diplomat_runtime::DiplomatOwnedSlice<#prim>)
+        }
+        _ => param.ty.to_syn(),
     }
 }
 
-fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
+fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
+    let name = &param.name;
     match &param.ty {
         ast::TypeName::StrReference(..)
+        | ast::TypeName::StrSlice(..)
         | ast::TypeName::PrimitiveSlice(..)
-        | ast::TypeName::StrSlice(..) => {
-            let data_ident =
-                Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
-            let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
-
-            let tokens = if let ast::TypeName::PrimitiveSlice(lm, _) = &param.ty {
-                match lm {
-                    Some((_, ast::Mutability::Mutable)) => quote! {
-                        if #len_ident == 0 {
-                            &mut []
-                        } else {
-                            unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
-                        }
-                    },
-                    Some((_, ast::Mutability::Immutable)) => quote! {
-                        if #len_ident == 0 {
-                            &[]
-                        } else {
-                            unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
-                        }
-                    },
-                    None => quote! {
-                        if #len_ident == 0 {
-                            Default::default()
-                        } else {
-                            unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
-                        }
-                    },
-                }
-            } else if let ast::TypeName::StrReference(Some(_), encoding) = &param.ty {
-                let encode = match encoding {
-                    ast::StringEncoding::Utf8 => quote! {
-                        // The FFI guarantees this, by either validating, or communicating this requirement to the user.
-                        unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident)) }
-                    },
-                    _ => quote! {
-                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
-                    },
-                };
-                quote! {
-                    if #len_ident == 0 {
-                        Default::default()
-                    } else {
-                        #encode
-                    }
-                }
-            } else if let ast::TypeName::StrReference(None, encoding) = &param.ty {
-                let encode = match encoding {
-                    ast::StringEncoding::Utf8 => quote! {
-                        unsafe { core::str::from_boxed_utf8_unchecked(alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident))) }
-                    },
-                    _ => quote! {
-                        unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
-                    },
-                };
-                quote! {
-                    if #len_ident == 0 {
-                        Default::default()
-                    } else {
-                        #encode
-                    }
-                }
-            } else if let ast::TypeName::StrSlice(_) = &param.ty {
-                quote! {
-                    if #len_ident == 0 {
-                        &[]
-                    } else {
-                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
-                    }
-                }
-            } else {
-                unreachable!();
-            };
-            expanded_params.push(parse2(tokens).unwrap());
-        }
-        ast::TypeName::Result(_, _, _) => {
-            let param = &param.name;
-            expanded_params.push(parse2(quote!(#param.into())).unwrap());
-        }
-        _ => {
-            expanded_params.push(Expr::Path(ExprPath {
-                attrs: vec![],
-                qself: None,
-                path: Ident::new(param.name.as_str(), Span::call_site()).into(),
-            }));
-        }
+        | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
+        _ => None,
     }
 }
 
@@ -210,13 +69,17 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
 
     let mut all_params = vec![];
-    m.params.iter().for_each(|p| {
-        gen_params_at_boundary(p, &mut all_params);
-    });
 
-    let mut all_params_invocation = vec![];
+    let mut all_params_conversion = vec![];
+    let mut all_params_names = vec![];
     m.params.iter().for_each(|p| {
-        gen_params_invocation(p, &mut all_params_invocation);
+        let ty = param_ty(&p);
+        let name = &p.name;
+        all_params_names.push(name);
+        all_params.push(syn::parse_quote!(#name: #ty));
+        if let Some(conversion) = param_conversion(&p) {
+            all_params_conversion.push(conversion);
+        }
     });
 
     let this_ident = Pat::Ident(PatIdent {
@@ -306,7 +169,8 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
             #[no_mangle]
             #cfg
             extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-                #method_invocation(#(#all_params_invocation),*) #maybe_into
+                #(#all_params_conversion)*
+                #method_invocation(#(#all_params_names),*) #maybe_into
             }
         })
     } else {
@@ -314,7 +178,8 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
             #[no_mangle]
             #cfg
             extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-                let ret = #method_invocation(#(#all_params_invocation),*);
+                #(#all_params_conversion)*
+                let ret = #method_invocation(#(#all_params_names),*);
                 #(#write_flushes)*
                 ret #maybe_into
             }

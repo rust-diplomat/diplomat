@@ -56,133 +56,37 @@ mod ffi {
     use diplomat_runtime::*;
     #[no_mangle]
     extern "C" fn Foo_make(
-        a_diplomat_data: *const u8,
-        a_diplomat_len: usize,
-        b_diplomat_data: *const u16,
-        b_diplomat_len: usize,
-        c_diplomat_data: *const u8,
-        c_diplomat_len: usize,
-        d_diplomat_data: *const u8,
-        d_diplomat_len: usize,
-        e_diplomat_data: *const u16,
-        e_diplomat_len: usize,
-        f_diplomat_data: *const DiplomatByte,
-        f_diplomat_len: usize,
+        a: diplomat_runtime::DiplomatSlice<u8>,
+        b: diplomat_runtime::DiplomatSlice<u16>,
+        c: diplomat_runtime::DiplomatUTF8StrSlice,
+        d: diplomat_runtime::DiplomatStrSlice,
+        e: diplomat_runtime::DiplomatStr16Slice,
+        f: diplomat_runtime::DiplomatSlice<DiplomatByte>,
     ) -> Foo {
-        Foo::make(
-            if a_diplomat_len == 0 {
-                &[]
-            } else {
-                unsafe { core::slice::from_raw_parts(a_diplomat_data, a_diplomat_len) }
-            },
-            if b_diplomat_len == 0 {
-                &[]
-            } else {
-                unsafe { core::slice::from_raw_parts(b_diplomat_data, b_diplomat_len) }
-            },
-            if c_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    core::str::from_utf8_unchecked(core::slice::from_raw_parts(
-                        c_diplomat_data,
-                        c_diplomat_len,
-                    ))
-                }
-            },
-            if d_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe { core::slice::from_raw_parts(d_diplomat_data, d_diplomat_len) }
-            },
-            if e_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe { core::slice::from_raw_parts(e_diplomat_data, e_diplomat_len) }
-            },
-            if f_diplomat_len == 0 {
-                &[]
-            } else {
-                unsafe { core::slice::from_raw_parts(f_diplomat_data, f_diplomat_len) }
-            },
-        )
+        let a = a.into();
+        let b = b.into();
+        let c = c.into();
+        let d = d.into();
+        let e = e.into();
+        let f = f.into();
+        Foo::make(a, b, c, d, e, f)
     }
     #[no_mangle]
     extern "C" fn Foo_boxes(
-        a_diplomat_data: *mut u8,
-        a_diplomat_len: usize,
-        b_diplomat_data: *mut u16,
-        b_diplomat_len: usize,
-        c_diplomat_data: *mut u8,
-        c_diplomat_len: usize,
-        d_diplomat_data: *mut u8,
-        d_diplomat_len: usize,
-        e_diplomat_data: *mut u16,
-        e_diplomat_len: usize,
-        f_diplomat_data: *mut DiplomatByte,
-        f_diplomat_len: usize,
+        a: diplomat_runtime::DiplomatOwnedSlice<u8>,
+        b: diplomat_runtime::DiplomatOwnedSlice<u16>,
+        c: diplomat_runtime::DiplomatOwnedUTF8StrSlice,
+        d: diplomat_runtime::DiplomatOwnedStrSlice,
+        e: diplomat_runtime::DiplomatOwnedStr16Slice,
+        f: diplomat_runtime::DiplomatOwnedSlice<DiplomatByte>,
     ) -> Foo {
-        Foo::boxes(
-            if a_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                        a_diplomat_data,
-                        a_diplomat_len,
-                    ))
-                }
-            },
-            if b_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                        b_diplomat_data,
-                        b_diplomat_len,
-                    ))
-                }
-            },
-            if c_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    core::str::from_boxed_utf8_unchecked(alloc::boxed::Box::from_raw(
-                        core::ptr::slice_from_raw_parts_mut(c_diplomat_data, c_diplomat_len),
-                    ))
-                }
-            },
-            if d_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                        d_diplomat_data,
-                        d_diplomat_len,
-                    ))
-                }
-            },
-            if e_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                        e_diplomat_data,
-                        e_diplomat_len,
-                    ))
-                }
-            },
-            if f_diplomat_len == 0 {
-                Default::default()
-            } else {
-                unsafe {
-                    alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                        f_diplomat_data,
-                        f_diplomat_len,
-                    ))
-                }
-            },
-        )
+        let a = a.into();
+        let b = b.into();
+        let c = c.into();
+        let d = d.into();
+        let e = e.into();
+        let f = f.into();
+        Foo::boxes(a, b, c, d, e, f)
     }
     #[no_mangle]
     extern "C" fn Foo_a(this: Foo) -> &[u8] {
