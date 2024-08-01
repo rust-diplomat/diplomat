@@ -13,9 +13,9 @@
 //!
 //! Broadly speaking, the Nomicon defines the elision rules are such:
 //! 1. If there's a `&self` or `&mut self`, the lifetime of that borrow
-//! corresponds to elision in the output.
+//!    corresponds to elision in the output.
 //! 2. Otherwise, if there's exactly one lifetime in the input, then that lifetime
-//! corresponds to elision in the output.
+//!    corresponds to elision in the output.
 //! 3. If neither of these cases hold, then the output cannot contain elision.
 //!
 //! What the Nomicon doesn't tell you is that there are weird corner cases around
