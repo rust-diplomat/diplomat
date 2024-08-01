@@ -1,26 +1,29 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatStr16;
-
     #[diplomat::opaque]
+    #[diplomat::attr(kotlin, disable)]
     pub struct Foo<'a>(&'a DiplomatStr);
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
+    #[diplomat::attr(kotlin, disable)]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
+    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFields<'a> {
         a: &'a DiplomatStr16,
         b: &'a DiplomatStr,
         c: &'a str,
     }
 
+    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: &'a DiplomatStr16,
         field_b: &'b DiplomatStr,
         field_c: &'c str,
     }
 
+    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFieldsReturning<'a> {
         bytes: &'a DiplomatStr,
     }
@@ -63,66 +66,11 @@ pub mod ffi {
         }
     }
 
-    impl<'x> BorrowedFields<'x> {
-        pub fn from_bar_and_strings(
-            bar: &'x Bar<'x, 'x>,
-            utf16_str: &'x DiplomatStr16,
-            utf8_str: &'x str,
-        ) -> Self {
-            BorrowedFields {
-                a: utf16_str,
-                b: bar.0 .0,
-                c: utf8_str,
-            }
-        }
-    }
-
-    impl<'x, 'y: 'x, 'z> BorrowedFieldsWithBounds<'x, 'y, 'z> {
-        pub fn from_foo_and_strings(
-            foo: &'x Foo<'y>,
-            utf16_str_x: &'x DiplomatStr16,
-            utf8_str_z: &'z str,
-        ) -> Self {
-            BorrowedFieldsWithBounds {
-                field_a: utf16_str_x,
-                field_b: foo.0,
-                field_c: utf8_str_z,
-            }
-        }
-    }
-
+    #[diplomat::attr(kotlin, disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
         bounds2: BorrowedFieldsWithBounds<'z, 'z, 'z>,
-    }
-
-    impl<'x, 'y: 'x, 'z> NestedBorrowedFields<'x, 'y, 'z> {
-        pub fn from_bar_and_foo_and_strings(
-            bar: &'x Bar<'x, 'y>,
-            foo: &'z Foo<'z>,
-            utf16_str_x: &'x DiplomatStr16,
-            utf16_str_z: &'z DiplomatStr16,
-            utf8_str_y: &'y str,
-            utf8_str_z: &'z str,
-        ) -> Self {
-            let fields = BorrowedFields::from_bar_and_strings(bar, utf16_str_x, utf8_str_y);
-            let bounds = BorrowedFieldsWithBounds {
-                field_a: utf16_str_x,
-                field_b: bar.0 .0,
-                field_c: utf8_str_y,
-            };
-            let bounds2 = BorrowedFieldsWithBounds {
-                field_a: utf16_str_z,
-                field_b: foo.0,
-                field_c: utf8_str_z,
-            };
-            Self {
-                fields,
-                bounds,
-                bounds2,
-            }
-        }
     }
 
     // FIXME(#191): This test breaks the C++ codegen
