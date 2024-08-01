@@ -467,7 +467,7 @@ mod tests {
                 mod ffi {
                     use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatByte, DiplomatOwnedSlice,
                                            DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
-                                           DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUTF8StrSlice};
+                                           DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice};
                     struct Foo<'a> {
                         a: &'a [u8],
                         b: &'a [u16],
@@ -483,7 +483,7 @@ mod tests {
                                 a, b, c, d, e, f,
                             }
                         }
-                        pub fn make_runtime_types(a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c: DiplomatUTF8StrSlice<'a>, d: DiplomatStrSlice<'a>, e: DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>) -> Self {
+                        pub fn make_runtime_types(a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c: DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e: DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>) -> Self {
                             Foo {
                                 a: a.into(),
                                 b: b.into(),

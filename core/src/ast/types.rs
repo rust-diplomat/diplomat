@@ -389,7 +389,7 @@ impl StringEncoding {
                     syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatStr16Slice #lt)
                 }
                 Self::Utf8 => {
-                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatUTF8StrSlice #lt)
+                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatUtf8StrSlice #lt)
                 }
             }
         } else {
@@ -581,7 +581,7 @@ impl TypeName {
                     ) = TypeName::from_syn(&slice.elem, self_path_type.clone())
                     {
                         if is_stdlib_type {
-                            panic!("Slice-of-slice is only supported with DiplomatRuntime slice types (DiplomatStrSlice, DiplomatStr16Slice, DiplomatUTF8StrSlice)");
+                            panic!("Slice-of-slice is only supported with DiplomatRuntime slice types (DiplomatStrSlice, DiplomatStr16Slice, DiplomatUtf8StrSlice)");
                         }
                         return TypeName::StrSlice(encoding, true);
                     }
@@ -668,7 +668,7 @@ impl TypeName {
                     TypeName::StrReference(None, encoding, false)
                 } else if is_runtime_type(p, "DiplomatStrSlice")
                     || is_runtime_type(p, "DiplomatStr16Slice")
-                    || is_runtime_type(p, "DiplomatUTF8StrSlice")
+                    || is_runtime_type(p, "DiplomatUtf8StrSlice")
                 {
                     let lt = get_lifetime_from_syn_path(&p);
 
@@ -716,7 +716,7 @@ impl TypeName {
                                         false,
                                     )
                                 }
-                                "DiplomatUTF8StrSlice" => {
+                                "DiplomatUtf8StrSlice" => {
                                     return TypeName::StrSlice(StringEncoding::Utf8, false)
                                 }
                                 _ => {

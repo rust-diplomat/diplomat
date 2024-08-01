@@ -196,25 +196,25 @@ impl<T> DerefMut for DiplomatOwnedSlice<T> {
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
 #[derive(Copy, Clone)]
-pub struct DiplomatUTF8StrSlice<'a>(DiplomatSlice<'a, u8>);
+pub struct DiplomatUtf8StrSlice<'a>(DiplomatSlice<'a, u8>);
 
-impl<'a> From<&'a str> for DiplomatUTF8StrSlice<'a> {
+impl<'a> From<&'a str> for DiplomatUtf8StrSlice<'a> {
     fn from(x: &'a str) -> Self {
         // Safety: invariant upheld; obtained from `str`
         Self(x.as_bytes().into())
     }
 }
 
-impl<'a> From<DiplomatUTF8StrSlice<'a>> for &'a str {
-    fn from(x: DiplomatUTF8StrSlice<'a>) -> Self {
+impl<'a> From<DiplomatUtf8StrSlice<'a>> for &'a str {
+    fn from(x: DiplomatUtf8StrSlice<'a>) -> Self {
         unsafe {
-            // We can assume this because of the invariant on DiplomatUTF8StrSlice
+            // We can assume this because of the invariant on DiplomatUtf8StrSlice
             core::str::from_utf8_unchecked(<&[u8]>::from(x.0))
         }
     }
 }
 
-impl<'a> Deref for DiplomatUTF8StrSlice<'a> {
+impl<'a> Deref for DiplomatUtf8StrSlice<'a> {
     type Target = str;
     fn deref(&self) -> &str {
         (*self).into()
