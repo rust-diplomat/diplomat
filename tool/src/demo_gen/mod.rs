@@ -35,7 +35,7 @@ struct DemoConfig {
     hide_default_renderer : Option<bool>,
 
     /// If this is set, we do not generate the js/ folder.
-    /// TODO: I think this could actually be moved to diplomat.config.mjs, if we can grab the import path there.
+    /// TODO: I think this could actually be moved to diplomat.config.mjs, if we can grab the import path there. Then just make a "hide_js_output" option.
     /// Like import {} from cfg["js-path"] + "/"; Is that doable?
     relative_js_path : Option<String>,
 }
