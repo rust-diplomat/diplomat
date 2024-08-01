@@ -473,11 +473,11 @@ mod tests {
             mod ffi {
                 #[diplomat::opaque]
                 struct Opaque<'a> {
-                    s: &'a DiplomatStr,
+                    s: DiplomatStrSlice<'a>,
                 }
 
                 struct Struct<'a> {
-                    s: &'a DiplomatStr,
+                    s:  DiplomatStrSlice<'a>,
                 }
 
                 #[diplomat::out]
@@ -548,12 +548,12 @@ mod tests {
                 struct Input<'p, 'q> {
                     p_data: &'p Opaque,
                     q_data: &'q Opaque,
-                    name: &'static DiplomatStr,
+                    name: DiplomatStrSlice<'static>,
                     inner: Inner<'q>,
                 }
 
                 struct Inner<'a> {
-                    more_data: &'a DiplomatStr,
+                    more_data: DiplomatStrSlice<'a>,
                 }
 
                 struct Output<'p,'q> {

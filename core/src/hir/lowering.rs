@@ -298,16 +298,22 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Result<StructDef, ()> {
         let ast_struct = item.item;
         self.errors.set_item(ast_struct.name.as_str());
-        let name = self.lower_ident(&ast_struct.name, "struct name");
+        let struct_name = self.lower_ident(&ast_struct.name, "struct name")?;
 
         let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
 
         for (name, ty, docs) in ast_struct.fields.iter() {
-            let name = self.lower_ident(name, "struct field name");
+            let name = self.lower_ident(name, "struct field name")?;
+            if !ty.is_ffi_safe() {
+                let ffisafe = ty.ffi_safe_version();
+                self.errors.push(LoweringError::Other(format!(
+                    "Found FFI-unsafe type {ty} in struct field {struct_name}.{name}, consider using {ffisafe}",
+                )));
+            }
             let ty = self.lower_type::<Everywhere>(ty, &mut &ast_struct.lifetimes, item.in_path);
 
-            match (name, ty, &mut fields) {
-                (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
+            match (ty, &mut fields) {
+                (Ok(ty), Ok(fields)) => fields.push(StructField {
                     docs: docs.clone(),
                     name,
                     ty,
@@ -346,7 +352,7 @@ impl<'ast> LoweringContext<'ast> {
         };
         let def = StructDef::new(
             ast_struct.docs.clone(),
-            name?,
+            struct_name,
             fields?,
             methods,
             attrs,

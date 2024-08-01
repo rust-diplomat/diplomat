@@ -246,6 +246,21 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
         Item::Struct(s) => {
             let info = AttributeInfo::extract(&mut s.attrs);
 
+            if !info.opaque {
+                // This is validated by HIR, but it's also nice to validate it in the macro so that there
+                // are early error messages
+                for field in s.fields.iter() {
+                    let ty = ast::TypeName::from_syn(&field.ty, None);
+                    if !ty.is_ffi_safe() {
+                        let ffisafe = ty.ffi_safe_version();
+                        panic!(
+                            "Found non-FFI safe type inside struct: {}, try {}",
+                            ty, ffisafe
+                        );
+                    }
+                }
+            }
+
             // Normal opaque types don't need repr(transparent) because the inner type is
             // never referenced. #[diplomat::transparent_convert] handles adding repr(transparent)
             // on its own

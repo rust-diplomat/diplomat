@@ -406,6 +406,14 @@ impl StringEncoding {
             }
         }
     }
+
+    fn get_diplomat_slice_type_str(self) -> &'static str {
+        match self {
+            StringEncoding::Utf8 => "str",
+            StringEncoding::UnvalidatedUtf8 => "DiplomatStr",
+            StringEncoding::UnvalidatedUtf16 => "DiplomatStr16",
+        }
+    }
     /// Get slice type when specified using rust stdlib types
     pub fn get_rust_slice_type(self, lt: &Option<Lifetime>) -> syn::Type {
         let inner = match self {
@@ -419,6 +427,13 @@ impl StringEncoding {
             syn::parse_quote_spanned!(Span::call_site() => #lt #inner)
         } else {
             syn::parse_quote_spanned!(Span::call_site() => Box<#inner>)
+        }
+    }
+    pub fn get_rust_slice_type_str(self) -> &'static str {
+        match self {
+            StringEncoding::Utf8 => "DiplomatUtf8Str",
+            StringEncoding::UnvalidatedUtf8 => "DiplomatStrSlice",
+            StringEncoding::UnvalidatedUtf16 => "DiplomatStr16Slice",
         }
     }
 }
@@ -450,6 +465,36 @@ fn get_ty_from_syn_path(p: &syn::TypePath) -> Option<&syn::Type> {
 }
 
 impl TypeName {
+    /// Is this type safe to be passed across the FFI boundary?
+    pub fn is_ffi_safe(&self) -> bool {
+        match self {
+            TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
+            TypeName::Box(..) | TypeName::Option(..) |
+            // These are specified using FFI-safe diplomat_runtime types
+             TypeName::StrReference(.., false) | TypeName::StrSlice(.., false) |TypeName::PrimitiveSlice(.., false) => true,
+            // These are special anyway and shouldn't show up in structs
+            TypeName::Unit | TypeName::Write | TypeName::Result(..)
+            // This is basically only useful in return types
+            | TypeName::Ordering
+            // These are specified using Rust stdlib types and not safe across FFI
+             | TypeName::StrReference(.., true) | TypeName::StrSlice(.., true) | TypeName::PrimitiveSlice(.., true)  => false,
+        }
+    }
+
+    /// What's the FFI safe version of this type?
+    pub fn ffi_safe_version(&self) -> TypeName {
+        match self {
+            TypeName::StrReference(lt, encoding, true) => {
+                TypeName::StrReference(lt.clone(), encoding.clone(), false)
+            }
+            TypeName::StrSlice(encoding, true) => TypeName::StrSlice(encoding.clone(), false),
+            TypeName::PrimitiveSlice(ltmt, prim, true) => {
+                TypeName::PrimitiveSlice(ltmt.clone(), prim.clone(), false)
+            }
+            TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
+            _ => self.clone(),
+        }
+    }
     /// Converts the [`TypeName`] back into an AST node that can be spliced into a program.
     pub fn to_syn(&self) -> syn::Type {
         match self {
@@ -911,47 +956,50 @@ impl fmt::Display for TypeName {
                 write!(f, "Result<{ok}, {err}>")
             }
             TypeName::Write => "DiplomatWrite".fmt(f),
-            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8, _) => {
-                write!(
-                    f,
-                    "{}DiplomatStr",
-                    ReferenceDisplay(lifetime, &Mutability::Immutable)
-                )
+            TypeName::StrReference(lt, encoding, is_stdlib_type) => {
+                if let Some(lt) = lt {
+                    if *is_stdlib_type {
+                        let lt = ReferenceDisplay(lt, &Mutability::Immutable);
+                        let ty = encoding.get_diplomat_slice_type_str();
+                        write!(f, "{lt}{ty}")
+                    } else {
+                        let ty = encoding.get_rust_slice_type_str();
+                        let lt = LifetimeGenericsListDisplay(lt);
+                        write!(f, "{ty}{lt}")
+                    }
+                } else {
+                    match (encoding, is_stdlib_type) {
+                        (_, true) => write!(f, "Box<{}>", encoding.get_diplomat_slice_type_str()),
+                        (StringEncoding::Utf8, false) => "DiplomatOwnedUtf8Str".fmt(f),
+                        (StringEncoding::UnvalidatedUtf8, false) => "DiplomatOwnedStrSlice".fmt(f),
+                        (StringEncoding::UnvalidatedUtf16, false) => {
+                            "DiplomatOwnedStr16Slice".fmt(f)
+                        }
+                    }
+                }
             }
-            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf16, _) => {
-                write!(
-                    f,
-                    "{}DiplomatStr16",
-                    ReferenceDisplay(lifetime, &Mutability::Immutable)
-                )
+
+            TypeName::StrSlice(encoding, true) => {
+                let inner = encoding.get_rust_slice_type_str();
+
+                write!(f, "&[&{inner}]")
             }
-            TypeName::StrReference(Some(lifetime), StringEncoding::Utf8, _) => {
-                write!(
-                    f,
-                    "{}str",
-                    ReferenceDisplay(lifetime, &Mutability::Immutable)
-                )
+            TypeName::StrSlice(encoding, false) => {
+                let inner = encoding.get_diplomat_slice_type_str();
+                write!(f, "DiplomatSlice<{inner}>")
             }
-            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8, _) => {
-                write!(f, "Box<DiplomatStr>")
-            }
-            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16, _) => {
-                write!(f, "Box<DiplomatStr16>")
-            }
-            TypeName::StrReference(None, StringEncoding::Utf8, _) => {
-                write!(f, "Box<str>")
-            }
-            TypeName::StrSlice(StringEncoding::UnvalidatedUtf8, _) => {
-                write!(f, "&[&DiplomatStr]")
-            }
-            TypeName::StrSlice(StringEncoding::UnvalidatedUtf16, _) => {
-                write!(f, "&[&DiplomatStr16]")
-            }
-            TypeName::StrSlice(StringEncoding::Utf8, _) => {
-                write!(f, "&[&str]")
-            }
-            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ, _) => {
+
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ, true) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
+            }
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ, false) => {
+                let maybemut = if *mutability == Mutability::Immutable {
+                    ""
+                } else {
+                    "Mut"
+                };
+                let lt = LifetimeGenericsListPartialDisplay(lifetime);
+                write!(f, "DiplomatSlice{maybemut}<{lt}{typ}>")
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),

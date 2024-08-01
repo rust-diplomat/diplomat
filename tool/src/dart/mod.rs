@@ -470,8 +470,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 conversion_allocations.push(
                     format!("final ({param_name}Data, {param_name}Length) = {dart_to_c};").into(),
                 );
-                conversion_allocations
-                    .push(format!("final {param_name}_struct = ffi.Struct.create<{ffi_slice}>();").into());
+                conversion_allocations.push(
+                    format!("final {param_name}_struct = ffi.Struct.create<{ffi_slice}>();").into(),
+                );
                 conversion_allocations
                     .push(format!("{param_name}_struct._data = {param_name}Data;").into());
                 conversion_allocations
