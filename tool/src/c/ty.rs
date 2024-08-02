@@ -54,6 +54,8 @@ struct MethodTemplate<'a> {
 struct CallbackAndStructDef {
     name: String,
     params_types: String,
+    param_names: String,
+    param_types_and_names: String,
     return_type: String,
 }
 
@@ -354,16 +356,29 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             "void".into()
         };
         let mut params_types = Vec::<String>::new();
-        for in_ty in input_types.iter() {
-            params_types.push(self.gen_ty_name(&in_ty, header).into());
+        let mut param_names = Vec::<String>::new();
+        let mut param_types_and_names = Vec::<String>::new();
+        for (index, in_ty) in input_types.iter().enumerate() {
+            let cur_type = self.gen_ty_name(&in_ty, header);
+            let cur_arg = format!("arg{}", index);
+            params_types.push(cur_type.to_string().clone());
+            param_names.push(cur_arg.clone());
+            param_types_and_names.push(cur_type.to_string() + " " + &cur_arg);
         }
+        let (params_types, param_names, param_types_and_names) = if params_types.is_empty() {
+            ("".into(), "".into(), "".into())
+        } else {
+            (
+                params_types.join(", "),
+                param_names.join(", "),
+                param_types_and_names.join(", "),
+            )
+        };
         CallbackAndStructDef {
             name: cb_wrapper_type.into(),
-            params_types: if params_types.is_empty() {
-                "".into()
-            } else {
-                ", ".to_owned() + &params_types.join(", ")
-            },
+            params_types,
+            param_names,
+            param_types_and_names,
             return_type,
         }
     }
