@@ -25,12 +25,12 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 /// TODO: Add this to the design doc.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub(crate) struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
     pub explicit_generation : Option<bool>,
 
-    /// Removes rendering/ folder 
-    /// TODO:
+    /// Removes rendering/ folder
     pub hide_default_renderer : Option<bool>,
 
     /// The relative path to Javascript to use in `import` statements for demo files.
