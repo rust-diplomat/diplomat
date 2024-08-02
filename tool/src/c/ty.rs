@@ -54,6 +54,8 @@ struct MethodTemplate<'a> {
 struct CallbackAndStructDef {
     name: String,
     params_types: String,
+    param_names: String,
+    param_types_and_names: String,
     return_type: String,
 }
 
@@ -378,11 +380,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         &self,
         cb_wrapper_type: &str,
         input_types: Vec<&Type<OutputOnly>>,
-<<<<<<< HEAD
         output_type: &Option<Type>,
-=======
-        output_type: &Box<Option<Type>>,
->>>>>>> e068c57 (refactoring)
         header: &mut Header,
     ) -> CallbackAndStructDef {
         let return_type = if output_type.is_some() {
