@@ -1,6 +1,15 @@
 {% if is_for_cpp -%}
 extern "C" {
 {%- endif %}
+{% for cb_and_struct_def in cb_structs_and_defs %}
+typedef struct {{ cb_and_struct_def.name }} {
+    const void* data;
+    {{ cb_and_struct_def.return_type }} (*run_callback)(const void*{{ cb_and_struct_def.params_types }});
+    void (*destructor)(const void*);
+} {{ cb_and_struct_def.name }};
+
+{{ cb_and_struct_def.name }}* C_create_{{ cb_and_struct_def.name }}(const void* callback);
+{% endfor %}
 {% for method in methods %}
 {{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
 {% endfor %}

@@ -35,32 +35,32 @@ int get_int_with_no_args() {
 // -------------------------------------------------------------------------------------- main
 int main() {
     DiplomatCallback_Wrapper_test_multi_arg_callback_f *diplomat_callback_wrapper__callback =
-        C_create_DC_Wrapper_test_multi_arg_callback_f(callback);
+        C_create_DiplomatCallback_Wrapper_test_multi_arg_callback_f(callback);
     int32_t res = Wrapper_test_multi_arg_callback(*diplomat_callback_wrapper__callback, 5);
     printf("Result: %d\n", res);
 
     DiplomatCallback_Wrapper_test_multiarg_void_callback_f *diplomat_callback_wrapper__multiarg_callback =
-        C_create_DC_Wrapper_test_multiarg_void_callback_f(multiarg_callback);
+        C_create_DiplomatCallback_Wrapper_test_multiarg_void_callback_f(multiarg_callback);
     Wrapper_test_multiarg_void_callback(*diplomat_callback_wrapper__multiarg_callback);
 
     DiplomatCallback_Wrapper_test_mod_array_g* diplomat_callback_wrapper__mod_array_cb =
-        C_create_DC_Wrapper_test_mod_array_g(mod_array_cb);
+        C_create_DiplomatCallback_Wrapper_test_mod_array_g(mod_array_cb);
     Wrapper_test_mod_array(*diplomat_callback_wrapper__mod_array_cb);
 
     DiplomatCallback_Wrapper_test_no_args_h* diplomat_callback_wrapper__no_arg_cb =
-        C_create_DC_Wrapper_test_no_args_h(no_arg_cb);
+        C_create_DiplomatCallback_Wrapper_test_no_args_h(no_arg_cb);
     res = Wrapper_test_no_args(*diplomat_callback_wrapper__no_arg_cb);
     printf("Got %d back from Rust\n", res);
 
     DiplomatCallback_Wrapper_test_cb_with_struct_f* diplomat_callback_wrapper__deal_with_struct =
-        C_create_DC_Wrapper_test_cb_with_struct_f(deal_with_struct);
+        C_create_DiplomatCallback_Wrapper_test_cb_with_struct_f(deal_with_struct);
     res = Wrapper_test_cb_with_struct(*diplomat_callback_wrapper__deal_with_struct);
     printf("Got %d back from summing the struct fields\n", res);
 
     DiplomatCallback_Wrapper_test_multiple_cb_args_g* diplomat_callback_wrapper__callback_g = 
-        C_create_DC_Wrapper_test_multiple_cb_args_g(callback);
+        C_create_DiplomatCallback_Wrapper_test_multiple_cb_args_g(callback);
     DiplomatCallback_Wrapper_test_multiple_cb_args_f* diplomat_callback_wrapper__get_int_with_no_args = 
-        C_create_DC_Wrapper_test_multiple_cb_args_f(get_int_with_no_args);
+        C_create_DiplomatCallback_Wrapper_test_multiple_cb_args_f(get_int_with_no_args);
     res = Wrapper_test_multiple_cb_args(*diplomat_callback_wrapper__get_int_with_no_args, *diplomat_callback_wrapper__callback_g);
     printf("And now the result of combining the results of 2 callbacks: %d\n", res);
 }
