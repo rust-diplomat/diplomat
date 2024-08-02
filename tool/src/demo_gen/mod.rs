@@ -27,7 +27,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
-    /// TODO:
     pub explicit_generation : Option<bool>,
 
     /// Removes rendering/ folder 
@@ -73,6 +72,8 @@ pub(crate) fn run<'tcx>(
         termini: Vec::new(),
     };
 
+    let is_explicit = conf.and_then(|c| c.explicit_generation).unwrap_or(false);
+
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
 
@@ -91,7 +92,7 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable || !RenderTerminusContext::is_valid_terminus(method) {
+                if method.attrs.disable || !RenderTerminusContext::is_valid_terminus(method) || (is_explicit && !method.attrs.demo_attrs.generate) {
                     continue;
                 }
 

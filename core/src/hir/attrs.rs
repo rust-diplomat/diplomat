@@ -66,10 +66,8 @@ pub struct DemoInputCFG {
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct DemoInfo {
-    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate.
-    /// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
-    /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
-    pub enabled: bool,
+    /// `#[diplomat::demo(generate)]`. If automatic generation is disabled by default (see [`diplomat_tool::demo_gen::DemoConfig`]), then the below render terminus will be allowed to generate.
+    pub generate: bool,
 
     /// `#[diplomat::demo(default_constructor)]`
     /// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
@@ -359,10 +357,8 @@ impl Attrs {
                     this.demo_attrs.external = true;
                 } else if path_ident == "default_constructor" {
                     this.demo_attrs.default_constructor = true;
-                } else if path_ident == "enable" {
-                    this.demo_attrs.enabled = true;
-                } else if path_ident == "disable" {
-                    this.demo_attrs.enabled = false;
+                } else if path_ident == "generate" {
+                    this.demo_attrs.generate = true;
                 } else if path_ident == "input" {
                     // TODO: Move this to AST.
                     let meta_list = attr
