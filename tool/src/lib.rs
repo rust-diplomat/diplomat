@@ -80,7 +80,7 @@ pub fn gen(
             });
 
             // If we don't already have an import path set up, generate our own imports:
-            if !conf.clone().is_some_and(|c| c.relative_js_path.is_some()) {
+            if !conf.clone().is_some_and(|c| c.module_name.is_some() || c.relative_js_path.is_some()) {
                 gen(
                     entry,
                     "js",

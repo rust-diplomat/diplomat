@@ -35,6 +35,8 @@ pub(crate) struct DemoConfig {
 
     /// If we can grab from index.mjs through a module, override imports for index.mjs to the new module name.
     /// Will set [DemoConfig::relative_js_path] to a blank string, unless explicitly overridden.
+    /// 
+    /// Will not generate the js/ folder if this is set.
     pub module_name : Option<String>,
 
     /// The relative path to Javascript to use in `import` statements for demo files.
@@ -59,7 +61,7 @@ pub(crate) fn run<'tcx>(
 
     let unwrapped_conf = conf.unwrap_or_default();
 
-    let import_path_exists = unwrapped_conf.relative_js_path.is_some();
+    let import_path_exists = unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
 
     let import_path = unwrapped_conf.relative_js_path.unwrap_or(match unwrapped_conf.module_name {
         Some(_) => "".into(),
