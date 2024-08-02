@@ -536,8 +536,6 @@ impl<'ast> LoweringContext<'ast> {
             return Err(());
         }
 
-        println!("PARSED A METHOD {:?}", &hir_method);
-
         Ok(hir_method)
     }
 
@@ -853,8 +851,15 @@ impl<'ast> LoweringContext<'ast> {
                     id: callback_id,
                     param_self: None,
                     params,
-                    output: Box::new(self.lower_type(out_type, ltl, in_path)?),
+                    output: Box::new(match **out_type {
+                        ast::TypeName::Unit => None,
+                        _ => Some(self.lower_type(out_type, ltl, in_path)?),
+                    }),
                 })))
+            }
+            ast::TypeName::Unit => {
+                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                Err(())
             }
         }
     }

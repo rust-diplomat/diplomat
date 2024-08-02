@@ -107,7 +107,7 @@ fn gen_cb_param_creation_fcts(
             // creating the diplomatcallback in C
             let name = Ident::new(
                 &format!(
-                    "C_create_DC_{}_{}_{}",
+                    "C_create_DiplomatCallback_{}_{}_{}",
                     struct_name,
                     method_name,
                     &param.name.to_string()
