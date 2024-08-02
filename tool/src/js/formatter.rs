@@ -116,6 +116,12 @@ impl<'tcx> JSFormatter<'tcx> {
         )
     }
 
+    pub fn fmt_import_module(&self, type_name: &str, module_name: String, relative_path: String) -> String {
+        format!(
+            r#"import {{ {type_name} }} from "{relative_path}{module_name}""#
+        )
+    }
+
     pub fn fmt_export_statement(
         &self,
         type_name: &str,

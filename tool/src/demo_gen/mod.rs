@@ -33,6 +33,10 @@ pub(crate) struct DemoConfig {
     /// Removes rendering/ folder
     pub hide_default_renderer : Option<bool>,
 
+    /// If we can grab from index.mjs through a module, override imports for index.mjs to the new module name.
+    /// Will set [DemoConfig::relative_js_path] to a blank string, unless explicitly overridden.
+    pub module_name : Option<String>,
+
     /// The relative path to Javascript to use in `import` statements for demo files.
     /// If this is set, we do not generate the js/ folder.
     pub relative_js_path : Option<String>,
@@ -56,7 +60,13 @@ pub(crate) fn run<'tcx>(
     let unwrapped_conf = conf.unwrap_or_default();
 
     let import_path_exists = unwrapped_conf.relative_js_path.is_some();
-    let import_path = unwrapped_conf.relative_js_path.unwrap_or("./js/".into());
+
+    let import_path = unwrapped_conf.relative_js_path.unwrap_or(match unwrapped_conf.module_name {
+        Some(_) => "".into(),
+        None => "./js/".into()
+    });
+
+    let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
 
     struct TerminusExport {
         type_name: String,
@@ -122,7 +132,9 @@ pub(crate) fn run<'tcx>(
 
                         imports: BTreeSet::new(),
                     },
-                    relative_import_path: import_path.clone()
+
+                    relative_import_path: import_path.clone(),
+                    module_name: module_name.clone()
                 };
 
                 ctx.evaluate(type_name.clone().into(), method);

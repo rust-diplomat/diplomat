@@ -42,7 +42,9 @@ pub struct RenderTerminusContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
+
     pub relative_import_path : String,
+    pub module_name : String,
 }
 
 impl MethodDependency {
@@ -154,7 +156,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let type_n = type_name.clone();
         let format = self
             .formatter
-            .fmt_import_statement(&type_n, false, self.relative_import_path.clone());
+            .fmt_import_module(&type_n, self.module_name.clone(), self.relative_import_path.clone());
 
         self.terminus_info.imports.insert(format);
     }
@@ -345,9 +347,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             if usable_constructor {
                 self.terminus_info
                     .imports
-                    .insert(self.formatter.fmt_import_statement(
+                    .insert(self.formatter.fmt_import_module(
                         &type_name.clone(),
-                        false,
+                        self.module_name.clone(),
                         self.relative_import_path.clone(),
                     ));
 
@@ -398,7 +400,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             .imports
             .insert(
                 self.formatter
-                    .fmt_import_statement(&type_name, false, "./js/".into()),
+                    .fmt_import_module(&type_name, self.module_name.clone(), self.relative_import_path.clone()),
             );
 
         let mut child = MethodDependency::new("".to_string());
