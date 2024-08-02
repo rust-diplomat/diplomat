@@ -319,6 +319,16 @@ impl Mutability {
     }
 }
 
+/// For types like `Result`/`DiplomatResult`, `&[T]`/`DiplomatSlice<T>` which can be
+/// specified using (non-ffi-safe) Rust stdlib types, or FFI-safe `repr(C)` types from
+/// `diplomat_runtime`, this tracks which of the two were used.
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[allow(clippy::exhaustive_enums)] // This can only have two values
+pub enum StdlibOrDiplomat {
+    Stdlib,
+    Diplomat,
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
@@ -336,26 +346,30 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
-    /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type. If the bool is true, it's `Result`
-    Result(Box<TypeName>, Box<TypeName>, bool),
+    /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type.
+    Result(Box<TypeName>, Box<TypeName>, StdlibOrDiplomat),
     Write,
     /// A `&DiplomatStr` or `Box<DiplomatStr>` type.
     /// Owned strings don't have a lifetime.
     ///
-    /// If the bool is true, it's specified using Rust pointer types (&T, Box<T>),
-    /// if false, it's specified using DiplomatStrSlice, etc
-    StrReference(Option<Lifetime>, StringEncoding, bool),
+    /// If StdlibOrDiplomat::Stdlib, it's specified using Rust pointer types (&T, Box<T>),
+    /// if StdlibOrDiplomat::Diplomat, it's specified using DiplomatStrSlice, etc
+    StrReference(Option<Lifetime>, StringEncoding, StdlibOrDiplomat),
     /// A `&[T]` or `Box<[T]>` type, where `T` is a primitive.
     /// Owned slices don't have a lifetime or mutability.
     ///
-    /// If the bool is true, it's specified using Rust pointer types (&T, Box<T>),
-    /// if false, it's specified using DiplomatSlice/DiplomatOwnedSlice/DiplomatSliceMut
-    PrimitiveSlice(Option<(Lifetime, Mutability)>, PrimitiveType, bool),
+    /// If StdlibOrDiplomat::Stdlib, it's specified using Rust pointer types (&T, Box<T>),
+    /// if StdlibOrDiplomat::Diplomat, it's specified using DiplomatSlice/DiplomatOwnedSlice/DiplomatSliceMut
+    PrimitiveSlice(
+        Option<(Lifetime, Mutability)>,
+        PrimitiveType,
+        StdlibOrDiplomat,
+    ),
     /// `&[&DiplomatStr]`, etc. Equivalent to `&[&str]`
     ///
-    /// If the bool is true, it's specified as `&[&DiplomatFoo]`, if false it's specified
+    /// If StdlibOrDiplomat::Stdlib, it's specified as `&[&DiplomatFoo]`, if StdlibOrDiplomat::Diplomat it's specified
     /// as `DiplomatSlice<&DiplomatFoo>`
-    StrSlice(StringEncoding, bool),
+    StrSlice(StringEncoding, StdlibOrDiplomat),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -469,25 +483,27 @@ impl TypeName {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) | TypeName::Option(..) |
             // These are specified using FFI-safe diplomat_runtime types
-             TypeName::StrReference(.., false) | TypeName::StrSlice(.., false) |TypeName::PrimitiveSlice(.., false) => true,
+             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
             TypeName::Unit | TypeName::Write | TypeName::Result(..)
             // This is basically only useful in return types
             | TypeName::Ordering
             // These are specified using Rust stdlib types and not safe across FFI
-             | TypeName::StrReference(.., true) | TypeName::StrSlice(.., true) | TypeName::PrimitiveSlice(.., true)  => false,
+             | TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
         }
     }
 
     /// What's the FFI safe version of this type?
     pub fn ffi_safe_version(&self) -> TypeName {
         match self {
-            TypeName::StrReference(lt, encoding, true) => {
-                TypeName::StrReference(lt.clone(), *encoding, false)
+            TypeName::StrReference(lt, encoding, StdlibOrDiplomat::Stdlib) => {
+                TypeName::StrReference(lt.clone(), *encoding, StdlibOrDiplomat::Diplomat)
             }
-            TypeName::StrSlice(encoding, true) => TypeName::StrSlice(*encoding, false),
-            TypeName::PrimitiveSlice(ltmt, prim, true) => {
-                TypeName::PrimitiveSlice(ltmt.clone(), *prim, false)
+            TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib) => {
+                TypeName::StrSlice(*encoding, StdlibOrDiplomat::Diplomat)
+            }
+            TypeName::PrimitiveSlice(ltmt, prim, StdlibOrDiplomat::Stdlib) => {
+                TypeName::PrimitiveSlice(ltmt.clone(), *prim, StdlibOrDiplomat::Diplomat)
             }
             TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
             _ => self.clone(),
@@ -522,12 +538,12 @@ impl TypeName {
                 let underlying = underlying.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Option<#underlying>)
             }
-            TypeName::Result(ok, err, true) => {
+            TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
                 let ok = ok.to_syn();
                 let err = err.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Result<#ok, #err>)
             }
-            TypeName::Result(ok, err, false) => {
+            TypeName::Result(ok, err, StdlibOrDiplomat::Diplomat) => {
                 let ok = ok.to_syn();
                 let err = err.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatResult<#ok, #err>)
@@ -536,14 +552,14 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite)
             }
             TypeName::StrReference(lt, encoding, is_stdlib_type) => {
-                if *is_stdlib_type {
+                if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
                     encoding.get_rust_slice_type(lt)
                 } else {
                     encoding.get_diplomat_slice_type(lt)
                 }
             }
             TypeName::StrSlice(encoding, is_stdlib_type) => {
-                if *is_stdlib_type {
+                if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
                     let inner = encoding.get_rust_slice_type(&Some(Lifetime::Anonymous));
                     syn::parse_quote_spanned!(Span::call_site() => &[#inner])
                 } else {
@@ -552,7 +568,7 @@ impl TypeName {
                 }
             }
             TypeName::PrimitiveSlice(ltmt, primitive, is_stdlib_type) => {
-                if *is_stdlib_type {
+                if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
                     primitive.get_diplomat_slice_type(ltmt)
                 } else {
                     primitive.get_rust_slice_type(ltmt)
@@ -591,16 +607,20 @@ impl TypeName {
                         return TypeName::StrReference(
                             Some(lifetime),
                             StringEncoding::UnvalidatedUtf8,
-                            true,
+                            StdlibOrDiplomat::Stdlib,
                         );
                     } else if name == "DiplomatStr16" {
                         return TypeName::StrReference(
                             Some(lifetime),
                             StringEncoding::UnvalidatedUtf16,
-                            true,
+                            StdlibOrDiplomat::Stdlib,
                         );
                     } else if name == "str" {
-                        return TypeName::StrReference(Some(lifetime), StringEncoding::Utf8, true);
+                        return TypeName::StrReference(
+                            Some(lifetime),
+                            StringEncoding::Utf8,
+                            StdlibOrDiplomat::Stdlib,
+                        );
                     }
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
@@ -613,7 +633,7 @@ impl TypeName {
                             return TypeName::PrimitiveSlice(
                                 Some((lifetime, mutability)),
                                 primitive,
-                                true,
+                                StdlibOrDiplomat::Stdlib,
                             );
                         }
                     }
@@ -623,10 +643,10 @@ impl TypeName {
                         is_stdlib_type,
                     ) = TypeName::from_syn(&slice.elem, self_path_type.clone())
                     {
-                        if is_stdlib_type {
+                        if is_stdlib_type == StdlibOrDiplomat::Stdlib {
                             panic!("Slice-of-slice is only supported with DiplomatRuntime slice types (DiplomatStrSlice, DiplomatStr16Slice, DiplomatUtf8StrSlice)");
                         }
-                        return TypeName::StrSlice(encoding, true);
+                        return TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib);
                     }
                 }
                 TypeName::Reference(
@@ -658,17 +678,29 @@ impl TypeName {
                             if let TypeName::Primitive(p) =
                                 TypeName::from_syn(&slice.elem, self_path_type)
                             {
-                                TypeName::PrimitiveSlice(None, p, true)
+                                TypeName::PrimitiveSlice(None, p, StdlibOrDiplomat::Stdlib)
                             } else {
                                 panic!("Owned slices only support primitives.")
                             }
                         } else if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             if tpe.to_token_stream().to_string() == "DiplomatStr" {
-                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8, true)
+                                TypeName::StrReference(
+                                    None,
+                                    StringEncoding::UnvalidatedUtf8,
+                                    StdlibOrDiplomat::Stdlib,
+                                )
                             } else if tpe.to_token_stream().to_string() == "DiplomatStr16" {
-                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16, true)
+                                TypeName::StrReference(
+                                    None,
+                                    StringEncoding::UnvalidatedUtf16,
+                                    StdlibOrDiplomat::Stdlib,
+                                )
                             } else if tpe.to_token_stream().to_string() == "str" {
-                                TypeName::StrReference(None, StringEncoding::Utf8, true)
+                                TypeName::StrReference(
+                                    None,
+                                    StringEncoding::Utf8,
+                                    StdlibOrDiplomat::Stdlib,
+                                )
                             } else {
                                 TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
                             }
@@ -708,7 +740,7 @@ impl TypeName {
                         StringEncoding::Utf8
                     };
 
-                    TypeName::StrReference(None, encoding, false)
+                    TypeName::StrReference(None, encoding, StdlibOrDiplomat::Diplomat)
                 } else if is_runtime_type(p, "DiplomatStrSlice")
                     || is_runtime_type(p, "DiplomatStr16Slice")
                     || is_runtime_type(p, "DiplomatUtf8StrSlice")
@@ -723,7 +755,7 @@ impl TypeName {
                         StringEncoding::Utf8
                     };
 
-                    TypeName::StrReference(Some(lt), encoding, false)
+                    TypeName::StrReference(Some(lt), encoding, StdlibOrDiplomat::Diplomat)
                 } else if is_runtime_type(p, "DiplomatSlice")
                     || is_runtime_type(p, "DiplomatSliceMut")
                     || is_runtime_type(p, "DiplomatOwnedSlice")
@@ -750,21 +782,28 @@ impl TypeName {
                                 "DiplomatStrSlice" => {
                                     return TypeName::StrSlice(
                                         StringEncoding::UnvalidatedUtf8,
-                                        false,
+                                        StdlibOrDiplomat::Diplomat,
                                     )
                                 }
                                 "DiplomatStr16Slice" => {
                                     return TypeName::StrSlice(
                                         StringEncoding::UnvalidatedUtf16,
-                                        false,
+                                        StdlibOrDiplomat::Diplomat,
                                     )
                                 }
                                 "DiplomatUtf8StrSlice" => {
-                                    return TypeName::StrSlice(StringEncoding::Utf8, false)
+                                    return TypeName::StrSlice(
+                                        StringEncoding::Utf8,
+                                        StdlibOrDiplomat::Diplomat,
+                                    )
                                 }
                                 _ => {
                                     if let Ok(prim) = PrimitiveType::from_str(i) {
-                                        return TypeName::PrimitiveSlice(ltmut, prim, false);
+                                        return TypeName::PrimitiveSlice(
+                                            ltmut,
+                                            prim,
+                                            StdlibOrDiplomat::Diplomat,
+                                        );
                                     }
                                 }
                             }
@@ -785,7 +824,11 @@ impl TypeName {
                             TypeName::Result(
                                 Box::new(ok),
                                 Box::new(err),
-                                !is_runtime_type(p, "DiplomatResult"),
+                                if is_runtime_type(p, "DiplomatResult") {
+                                    StdlibOrDiplomat::Diplomat
+                                } else {
+                                    StdlibOrDiplomat::Stdlib
+                                },
                             )
                         } else {
                             panic!("Expected both type arguments for Result to be a type")
@@ -956,7 +999,7 @@ impl fmt::Display for TypeName {
             TypeName::Write => "DiplomatWrite".fmt(f),
             TypeName::StrReference(lt, encoding, is_stdlib_type) => {
                 if let Some(lt) = lt {
-                    if *is_stdlib_type {
+                    if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
                         let lt = ReferenceDisplay(lt, &Mutability::Immutable);
                         let ty = encoding.get_diplomat_slice_type_str();
                         write!(f, "{lt}{ty}")
@@ -967,30 +1010,44 @@ impl fmt::Display for TypeName {
                     }
                 } else {
                     match (encoding, is_stdlib_type) {
-                        (_, true) => write!(f, "Box<{}>", encoding.get_diplomat_slice_type_str()),
-                        (StringEncoding::Utf8, false) => "DiplomatOwnedUtf8Str".fmt(f),
-                        (StringEncoding::UnvalidatedUtf8, false) => "DiplomatOwnedStrSlice".fmt(f),
-                        (StringEncoding::UnvalidatedUtf16, false) => {
+                        (_, StdlibOrDiplomat::Stdlib) => {
+                            write!(f, "Box<{}>", encoding.get_diplomat_slice_type_str())
+                        }
+                        (StringEncoding::Utf8, StdlibOrDiplomat::Diplomat) => {
+                            "DiplomatOwnedUtf8Str".fmt(f)
+                        }
+                        (StringEncoding::UnvalidatedUtf8, StdlibOrDiplomat::Diplomat) => {
+                            "DiplomatOwnedStrSlice".fmt(f)
+                        }
+                        (StringEncoding::UnvalidatedUtf16, StdlibOrDiplomat::Diplomat) => {
                             "DiplomatOwnedStr16Slice".fmt(f)
                         }
                     }
                 }
             }
 
-            TypeName::StrSlice(encoding, true) => {
+            TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib) => {
                 let inner = encoding.get_rust_slice_type_str();
 
                 write!(f, "&[&{inner}]")
             }
-            TypeName::StrSlice(encoding, false) => {
+            TypeName::StrSlice(encoding, StdlibOrDiplomat::Diplomat) => {
                 let inner = encoding.get_diplomat_slice_type_str();
                 write!(f, "DiplomatSlice<{inner}>")
             }
 
-            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ, true) => {
+            TypeName::PrimitiveSlice(
+                Some((lifetime, mutability)),
+                typ,
+                StdlibOrDiplomat::Stdlib,
+            ) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
             }
-            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ, false) => {
+            TypeName::PrimitiveSlice(
+                Some((lifetime, mutability)),
+                typ,
+                StdlibOrDiplomat::Diplomat,
+            ) => {
                 let maybemut = if *mutability == Mutability::Immutable {
                     ""
                 } else {

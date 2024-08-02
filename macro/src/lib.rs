@@ -2,7 +2,7 @@ use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use syn::*;
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, StdlibOrDiplomat};
 
 mod enum_convert;
 mod transparent_convert;
@@ -40,9 +40,9 @@ fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
     let name = &param.name;
     match &param.ty {
         // conversion only needed for slices that are specified as Rust types rather than diplomat_runtime types
-        ast::TypeName::StrReference(.., true)
-        | ast::TypeName::StrSlice(.., true)
-        | ast::TypeName::PrimitiveSlice(.., true)
+        ast::TypeName::StrReference(.., StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
         _ => None,
     }
@@ -103,15 +103,15 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     };
 
     let (return_tokens, maybe_into) = if let Some(return_type) = &m.return_type {
-        if let ast::TypeName::Result(ok, err, true) = return_type {
+        if let ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) = return_type {
             let ok = ok.to_syn();
             let err = err.to_syn();
             (
                 quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
                 quote! { .into() },
             )
-        } else if let ast::TypeName::StrReference(_, _, true)
-        | ast::TypeName::PrimitiveSlice(_, _, true) = return_type
+        } else if let ast::TypeName::StrReference(_, _, StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
         {
             let return_type_syn = return_type.to_syn();
             (quote! { -> #return_type_syn }, quote! { .into() })
