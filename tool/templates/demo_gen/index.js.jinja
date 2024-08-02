@@ -1,4 +1,5 @@
-{%- for terminus in termini_exports -%}
+export * as lib from "{{js_out}}";
+{% for terminus in termini_exports -%}
 import * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
 export * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
 {% endfor %}

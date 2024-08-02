@@ -80,11 +80,13 @@ pub(crate) fn run<'tcx>(
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
+        pub js_out : String,
     }
 
     let mut out_info = IndexInfo {
         termini_exports: Vec::new(),
         termini: Vec::new(),
+        js_out: format!("{import_path}{module_name}"),
     };
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);

@@ -1,3 +1,4 @@
+export * as lib from "./js/index.mjs";
 import * as FixedDecimalFormatterDemo from "./FixedDecimalFormatter.mjs";
 export * as FixedDecimalFormatterDemo from "./FixedDecimalFormatter.mjs";
 import * as FixedDecimalDemo from "./FixedDecimal.mjs";
