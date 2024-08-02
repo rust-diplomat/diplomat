@@ -74,17 +74,23 @@ pub fn gen(
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
-            // TODO: Command Line Options.
-            // I.e., being able to replace this with just updating the imports:
-            gen(
-                entry,
-                "js",
-                &out_folder.join("js"),
-                docs_url_gen,
-                library_config,
-                silent,
-            )?;
-            demo_gen::run(&tcx, docs_url_gen, library_config)
+            let conf = library_config.map(|c| {
+                let str = std::fs::read_to_string(c).unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
+                toml::from_str::<demo_gen::DemoConfig>(&str).unwrap_or_else(| err | panic!("Parsing error in {c:?}: {err}"))
+            });
+
+            // If we don't already have an import path set up, generate our own imports:
+            if !conf.clone().is_some_and(|c| c.relative_js_path.is_some()) {
+                gen(
+                    entry,
+                    "js",
+                    &out_folder.join("js"),
+                    docs_url_gen,
+                    library_config,
+                    silent,
+                )?;
+            }
+            demo_gen::run(&tcx, docs_url_gen, conf)
         }
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),

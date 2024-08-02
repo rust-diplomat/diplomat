@@ -42,6 +42,7 @@ pub struct RenderTerminusContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
+    pub relative_import_path : String,
 }
 
 impl MethodDependency {
@@ -153,7 +154,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let type_n = type_name.clone();
         let format = self
             .formatter
-            .fmt_import_statement(&type_n, false, "./js/".into());
+            .fmt_import_statement(&type_n, false, self.relative_import_path.clone());
 
         self.terminus_info.imports.insert(format);
     }
@@ -347,7 +348,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     .insert(self.formatter.fmt_import_statement(
                         &type_name.clone(),
                         false,
-                        "./js/".into(),
+                        self.relative_import_path.clone(),
                     ));
 
                 let mut child =

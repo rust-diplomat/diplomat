@@ -25,19 +25,18 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 /// TODO: Add this to the design doc.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-struct DemoConfig {
+pub(crate) struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
     /// TODO:
-    explicit_generation : Option<bool>,
+    pub explicit_generation : Option<bool>,
 
     /// Removes rendering/ folder 
     /// TODO:
-    hide_default_renderer : Option<bool>,
+    pub hide_default_renderer : Option<bool>,
 
+    /// The relative path to Javascript to use in `import` statements for demo files.
     /// If this is set, we do not generate the js/ folder.
-    /// TODO: I think this could actually be moved to diplomat.config.mjs, if we can grab the import path there. Then just make a "hide_js_output" option.
-    /// Like import {} from cfg["js-path"] + "/"; Is that doable?
-    relative_js_path : Option<String>,
+    pub relative_js_path : Option<String>,
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
@@ -49,16 +48,13 @@ struct DemoConfig {
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
-    library_config : Option<&Path>
+    conf: Option<DemoConfig>
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
 
-    let conf = library_config.map(|c| {
-        let str = std::fs::read_to_string(c).unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
-        toml::from_str::<DemoConfig>(&str).unwrap_or_else(| err | panic!("Parsing error in {c:?}: {err}"))
-    });
+    let import_path = conf.and_then(|c| c.relative_js_path).unwrap_or("./js/".into());
 
     struct TerminusExport {
         type_name: String,
@@ -122,6 +118,7 @@ pub(crate) fn run<'tcx>(
 
                         imports: BTreeSet::new(),
                     },
+                    relative_import_path: import_path.clone()
                 };
 
                 ctx.evaluate(type_name.clone().into(), method);
