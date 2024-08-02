@@ -1,11 +1,12 @@
 use super::{
-    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
-    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
-    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
-    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
-    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
-    SelfParamLifetimeLowerer, SelfType, SetId, Slice, SpecialMethod, SpecialMethodPresence,
-    StructDef, StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback,
+    CallbackInstantiationFunctionality, CallbackParam, EnumDef, EnumPath, EnumVariant, Everywhere,
+    IdentBuf, InputOnly, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn,
+    Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
+    OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
+    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
+    Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -515,8 +516,6 @@ impl<'ast> LoweringContext<'ast> {
             return Err(());
         }
 
-        println!("PARSED A METHOD {:?}", &hir_method);
-
         Ok(hir_method)
     }
 
@@ -718,10 +717,6 @@ impl<'ast> LoweringContext<'ast> {
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
                 PrimitiveType::from_ast(*prim),
             ))),
-            ast::TypeName::Unit => {
-                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
-                Err(())
-            }
             ast::TypeName::Function(input_types, out_type) => {
                 let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
                 let params = input_types
@@ -737,8 +732,15 @@ impl<'ast> LoweringContext<'ast> {
                     id: callback_id,
                     param_self: None,
                     params,
-                    output: Box::new(self.lower_type(out_type, ltl, in_path)?),
+                    output: Box::new(match **out_type {
+                        ast::TypeName::Unit => None,
+                        _ => Some(self.lower_type(out_type, ltl, in_path)?),
+                    }),
                 })))
+            }
+            ast::TypeName::Unit => {
+                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                Err(())
             }
         }
     }
