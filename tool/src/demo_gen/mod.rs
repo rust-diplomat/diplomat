@@ -55,6 +55,7 @@ pub(crate) fn run<'tcx>(
 
     let unwrapped_conf = conf.unwrap_or_default();
 
+    let import_path_exists = unwrapped_conf.relative_js_path.is_some();
     let import_path = unwrapped_conf.relative_js_path.unwrap_or("./js/".into());
 
     struct TerminusExport {
@@ -183,6 +184,9 @@ pub(crate) fn run<'tcx>(
             "template.html".into(),
             include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
         );
+    }
+    
+    if !import_path_exists {
         files.add_file(
             "diplomat.config.mjs".into(),
             include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
