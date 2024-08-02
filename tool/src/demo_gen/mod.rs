@@ -53,7 +53,9 @@ pub(crate) fn run<'tcx>(
     let errors = ErrorStore::default();
     let files = FileMap::default();
 
-    let import_path = conf.and_then(|c| c.relative_js_path).unwrap_or("./js/".into());
+    let unwrapped_conf = conf.unwrap_or_default();
+
+    let import_path = unwrapped_conf.relative_js_path.unwrap_or("./js/".into());
 
     struct TerminusExport {
         type_name: String,
@@ -72,7 +74,7 @@ pub(crate) fn run<'tcx>(
         termini: Vec::new(),
     };
 
-    let is_explicit = conf.and_then(|c| c.explicit_generation).unwrap_or(false);
+    let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
@@ -166,25 +168,26 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.mjs".into(), out_info.render().unwrap());
 
-    // TODO: Avoid overwriting these files if one already exists (but update if that is a file present somewhere).
-    // I'm thinking of just putting these in their own folder for that.
-    // TODO: Some of these files should only be generated with certain command line options.
-    files.add_file(
-        "rendering.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
-    );
-    files.add_file(
-        "runtime.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
-    );
-    files.add_file(
-        "template.html".into(),
-        include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
-    );
-    files.add_file(
-        "diplomat.config.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
-    );
+    let hide_default_renderer = unwrapped_conf.hide_default_renderer.unwrap_or(false);
+
+    if !hide_default_renderer {
+        files.add_file(
+            "rendering.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
+        );
+        files.add_file(
+            "runtime.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
+        );
+        files.add_file(
+            "template.html".into(),
+            include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
+        );
+        files.add_file(
+            "diplomat.config.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
+        );
+    }
 
     (files, errors)
 }
