@@ -1,24 +1,20 @@
 #ifndef One_H
 #define One_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
-namespace capi {
-#endif
+#include "Two.d.h"
 
-typedef struct One One;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "Two.h"
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif
+#include "One.d.h"
+
+
+
+
+
 
 One* One_transitivity(const One* hold, const One* nohold);
 
@@ -41,10 +37,12 @@ One* One_diamond_and_nested_types(const One* a, const One* b, const One* c, cons
 One* One_implicit_bounds(const One* explicit_hold, const One* implicit_hold, const One* nohold);
 
 One* One_implicit_bounds_deep(const One* explicit_, const One* implicit_1, const One* implicit_2, const One* nohold);
+
+
 void One_destroy(One* self);
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif
-#endif
+
+
+
+
+#endif // One_H

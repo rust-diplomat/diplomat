@@ -45,11 +45,10 @@ pub mod ffi {
         g: MyEnum,
     }
 
-    #[diplomat::skip_if_ast]
     pub struct MyZst;
 
     impl Opaque {
-        #[diplomat::attr(supports = constructors, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
         }
@@ -103,17 +102,14 @@ pub mod ffi {
             *guard = format!("{number}");
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow<'a>(&'a self) -> &'a OpaqueMutexedString {
             self
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow_other<'a>(other: &'a OpaqueMutexedString) -> &'a OpaqueMutexedString {
             other
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow_self_or_other<'a>(
             &'a self,
             other: &'a OpaqueMutexedString,
@@ -144,7 +140,7 @@ pub mod ffi {
     }
 
     impl Utf16Wrap {
-        #[diplomat::attr(supports = constructors, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn from_utf16(input: &DiplomatStr16) -> Box<Self> {
             Box::new(Self(input.into()))
         }
@@ -155,10 +151,6 @@ pub mod ffi {
 
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
-        }
-
-        pub fn owned<'a>(&'a self) -> Box<DiplomatStr16> {
-            self.0.clone().into()
         }
     }
 
@@ -173,7 +165,7 @@ pub mod ffi {
     }
 
     impl MyStruct {
-        #[diplomat::attr(supports = constructors, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,
@@ -200,9 +192,30 @@ pub mod ffi {
             assert_eq!(self.g, MyEnum::B);
         }
 
-        #[diplomat::skip_if_ast]
         pub fn returns_zst_result() -> Result<(), MyZst> {
             Ok(())
+        }
+    }
+
+    // Test that cycles between structs work even when
+    // they reference each other in the methods
+    #[derive(Default)]
+    pub struct CyclicStructA {
+        pub a: CyclicStructB,
+    }
+    #[derive(Default)]
+    pub struct CyclicStructB {
+        pub field: u8,
+    }
+
+    impl CyclicStructA {
+        pub fn get_b() -> CyclicStructB {
+            Default::default()
+        }
+    }
+    impl CyclicStructB {
+        pub fn get_a() -> CyclicStructA {
+            Default::default()
         }
     }
 }

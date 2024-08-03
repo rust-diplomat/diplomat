@@ -1,0 +1,34 @@
+inline {##}
+{{- m.return_ty }} {##}
+{{- type_name }}::{{ m.method_name -}}
+(
+	{%- for param in m.param_decls %}
+		{%- if !loop.first %}, {% endif -%}
+		{{ param.type_name }} {{ param.var_name }}
+	{%- endfor -%}
+) {##}
+{%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
+{
+	{%- for validation in m.param_validations %}
+	{{ validation.replace('\n', "\n  ") }}
+	{%- endfor -%}
+	{%- if m.method.output.is_write() %}
+	std::string output;
+	diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+	{%- endif %}
+	{% if !m.method.output.is_ffi_unit() -%}
+	auto result = {##}
+	{%- endif -%}
+	{{ m.abi_name }}(
+		{%- for param in m.cpp_to_c_params %}
+		{%- if !loop.first %},
+		{% endif -%}
+		{{ param }}
+		{%- endfor -%}
+	);
+	{%- match m.c_to_cpp_return_expression %}
+	{%- when Some with (statement) %}
+	return {{ statement }};
+	{%- when None %}
+	{%- endmatch %}
+}

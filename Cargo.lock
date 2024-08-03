@@ -371,7 +371,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-runtime"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "log",
 ]
@@ -404,7 +404,6 @@ dependencies = [
  "displaydoc",
  "either",
  "insta",
- "lazy_static",
  "proc-macro2",
  "quote",
  "serde",

@@ -2,15 +2,8 @@
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
   {{ m.declaration }} {
-    {%- if m.needs_temp_arena %}
-    final temp = ffi2.Arena();
-    {%- endif %}
-
-    {%- for slice in m.slice_params %}
-    final {{slice.param_name}}View = {{slice.view_expr}};
-    {%- if slice.is_borrowed %}
-    final {{slice.param_name}}Arena = _FinalizedArena();
-    {%- endif %}
+    {%- for conversion_allocation in m.conversion_allocations %}
+    {{ conversion_allocation }}
     {%- endfor %}
 
     {%- for lifetime in m.lifetimes.all_lifetimes() %}
@@ -33,15 +26,12 @@
     {%- if !m.method.output.is_ffi_unit() %}
     final result = {% else %}
     {% endif -%}
-    _{{ m.c_method_name -}}(
+    _{{ m.abi_name -}}(
         {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
         {{ param }}
         {%- endfor -%}
     );
-    {%- if m.needs_temp_arena %}
-    temp.releaseAll();
-    {%- endif %}
     {%- match m.return_expression %}
     {%- when Some with (statement) %}
     {{statement.replace('\n', "\n    ")}}

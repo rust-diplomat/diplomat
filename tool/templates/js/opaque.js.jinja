@@ -1,0 +1,47 @@
+{%- if !docs.is_empty() %}
+/** {{docs}}
+*/
+{% endif -%}
+{%- if !typescript -%}
+
+const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.{{destructor}}(ptr);
+});
+
+{% endif -%}
+
+export class {{type_name}} {
+    {% if !typescript -%}
+    // Internal ptr reference:
+    #ptr = null;
+
+    // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
+    #selfEdge = [];
+    {%- for lifetime in lifetimes.all_lifetimes() %}
+    #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
+    {%- endfor %}
+    
+    constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+        {% for lifetime in lifetimes.all_lifetimes() %}
+        {% let lt = lifetimes.fmt_lifetime(lifetime) %}
+        this.#{{lt}}Edge = {{lt}}Edge;
+        {% endfor %}
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        // Unconditionally register to destroy when this object is ready to garbage collect.
+        {{type_name}}_box_destroy_registry.register(this, this.#ptr);
+    }
+
+    {%- endif %}
+
+    get ffiValue(){% if typescript %}: pointer;{% else %} {
+        return this.#ptr;
+    }
+    {%- endif -%}
+
+{%- for method in methods %}
+
+    {{method|indent(4)}}
+{%- endfor %}
+}

@@ -1,0 +1,14 @@
+{% if is_for_cpp -%}
+extern "C" {
+{%- endif %}
+{% for method in methods %}
+{{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
+{% endfor %}
+{%~ match dtor_name %}
+{% when Some with (dtor_name) ~%}
+void {{ dtor_name }}({{ ty_name }}* self);
+{%~ when None %}
+{%- endmatch %}
+{% if is_for_cpp -%}
+} // extern "C"
+{%- endif %}

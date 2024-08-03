@@ -22,40 +22,37 @@ final class MyString implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 
   factory MyString(String v) {
-    final temp = ffi2.Arena();
-    final vView = v.utf8View;
-    final result = _MyString_new(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._utf8AllocIn(temp.arena);
+    final result = _MyString_new(vData, vLength);
     return MyString._fromFfi(result, []);
   }
 
   factory MyString.unsafe(String v) {
-    final temp = ffi2.Arena();
-    final vView = v.utf8View;
-    final result = _MyString_new_unsafe(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._utf8AllocIn(temp.arena);
+    final result = _MyString_new_unsafe(vData, vLength);
     return MyString._fromFfi(result, []);
   }
 
   static MyString newOwned(String v) {
-    final vView = v.utf8View;
-    final result = _MyString_new_owned(vView.allocIn(_RustAlloc()), vView.length);
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._utf8AllocIn(_RustAlloc());
+    final result = _MyString_new_owned(vData, vLength);
     return MyString._fromFfi(result, []);
   }
 
   static MyString newFromFirst(core.List<core.String> v) {
-    final temp = ffi2.Arena();
-    final vView = v.utf8View;
-    final result = _MyString_new_from_first(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._utf8SliceAllocIn(temp.arena);
+    final result = _MyString_new_from_first(vData, vLength);
     return MyString._fromFfi(result, []);
   }
 
   set str(String newStr) {
-    final temp = ffi2.Arena();
-    final newStrView = newStr.utf8View;
-    _MyString_set_str(_ffi, newStrView.allocIn(temp), newStrView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (newStrData, newStrLength) = newStr._utf8AllocIn(temp.arena);
+    _MyString_set_str(_ffi, newStrData, newStrLength);
   }
 
   String get str {
@@ -64,9 +61,12 @@ final class MyString implements ffi.Finalizable {
     return write.finalize();
   }
 
-  String getBoxedStr() {
-    final result = _MyString_get_boxed_str(_ffi);
-    return result._toDart([]);
+  static String stringTransform(String foo) {
+    final temp = _FinalizedArena();
+    final (fooData, fooLength) = foo._utf8AllocIn(temp.arena);
+    final write = _Write();
+    _MyString_string_transform(fooData, fooLength, write._ffi);
+    return write.finalize();
   }
 }
 
@@ -105,7 +105,7 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Ui
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@meta.ResourceIdentifier('MyString_get_boxed_str')
-@ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_boxed_str')
+@meta.ResourceIdentifier('MyString_string_transform')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Uint8>, ffi.Size, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
-external _SliceUtf8 _MyString_get_boxed_str(ffi.Pointer<ffi.Opaque> self);
+external void _MyString_string_transform(ffi.Pointer<ffi.Uint8> fooData, int fooLength, ffi.Pointer<ffi.Opaque> write);

@@ -1,5 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
+use std::collections::HashMap;
+
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -41,7 +43,48 @@ pub struct Attrs {
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
+
+    /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
+    /// List of attributes specific to automatic demo generation.
+    /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
+    pub demo_attrs: DemoInfo,
 }
+
+// #region: Demo specific attributes.
+
+/// For `#[diplomat::demo(input(...))]`, stored in [DemoInfo::input_cfg].
+#[non_exhaustive]
+#[derive(Clone, Default, Debug)]
+pub struct DemoInputCFG {
+    /// `#[diplomat(input(label = "..."))]`
+    /// Label that this input parameter should have. Let demo_gen pick a valid name if this is empty.
+    ///
+    /// For instance <label for="v">Number Here</label><input name="v"/>
+    pub label: String,
+}
+
+#[non_exhaustive]
+#[derive(Clone, Default, Debug)]
+pub struct DemoInfo {
+    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate.
+    /// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
+    /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
+    pub enabled: bool,
+
+    /// `#[diplomat::demo(default_constructor)]`
+    /// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
+    /// TODO: Should probably ignore other `Constructors` if a default has been set.
+    pub default_constructor: bool,
+
+    /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
+    pub external: bool,
+
+    /// `#[diplomat::demo(input(...))]`
+    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
+    pub input_cfg: HashMap<String, DemoInputCFG>,
+}
+
+// #endregion
 
 /// Attributes that mark methods as "special"
 #[non_exhaustive]
@@ -104,6 +147,18 @@ pub enum AttributeContext<'a, 'b> {
     Module,
 }
 
+fn maybe_error_unsupported(
+    auto_found: bool,
+    attribute: &str,
+    backend: &str,
+    errors: &mut ErrorStore,
+) {
+    if !auto_found {
+        errors.push(LoweringError::Other(format!(
+            "`{attribute}` not supported in backend {backend}"
+        )));
+    }
+}
 impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
@@ -119,7 +174,9 @@ impl Attrs {
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
         for attr in &ast.attrs {
-            let satisfies = match validator.satisfies_cfg(&attr.cfg) {
+            let mut auto_found = false;
+            let mut auto_used = false;
+            let satisfies = match validator.satisfies_cfg(&attr.cfg, Some(&mut auto_found)) {
                 Ok(satisfies) => satisfies,
                 Err(e) => {
                     errors.push(e);
@@ -135,10 +192,6 @@ impl Attrs {
                                 errors.push(LoweringError::Other(
                                     "Duplicate `disable` attribute".into(),
                                 ));
-                            } else if !support.disabling {
-                                errors.push(LoweringError::Other(format!(
-                                    "`disable` not supported in backend {backend}"
-                                )))
                             } else {
                                 this.disable = true;
                             }
@@ -161,11 +214,10 @@ impl Attrs {
                         }
                     } else if path == "namespace" {
                         if !support.namespacing {
-                            errors.push(LoweringError::Other(format!(
-                                "`namespace` not supported in backend {backend}"
-                            )));
+                            maybe_error_unsupported(auto_found, "constructor", backend, errors);
                             continue;
                         }
+                        auto_used = true;
                         match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
@@ -193,45 +245,45 @@ impl Attrs {
                         }
                         let kind = if path == "constructor" {
                             if !support.constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "constructor not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "constructor", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
                             if !support.stringifiers {
-                                errors.push(LoweringError::Other(format!(
-                                    "stringifier not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "stringifier", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Stringifier
                         } else if path == "iterable" {
                             if !support.iterables {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterable not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "iterable", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Iterable
                         } else if path == "iterator" {
                             if !support.iterators {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterator not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "iterator", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Iterator
                         } else if path == "indexer" {
                             if !support.indexing {
-                                errors.push(LoweringError::Other(format!(
-                                    "indexing not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "indexer", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Indexer
                         } else {
                             if !support.comparators {
-                                errors.push(LoweringError::Other(format!(
-                                    "comparison overload not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "comparator", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Comparison
                         };
 
@@ -245,24 +297,29 @@ impl Attrs {
                         }
                         let kind = if path == "named_constructor" {
                             if !support.named_constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "named constructors not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "named_constructors",
+                                    backend,
+                                    errors,
+                                );
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
                             if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Getter
                         } else {
                             if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
+                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
+                                continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -279,14 +336,73 @@ impl Attrs {
                         }
                     } else {
                         errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
-                    )));
+                            "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
+                        )));
+                    }
+                    if auto_found && !auto_used {
+                        errors.push(LoweringError::Other(format!(
+                            "Diplomat attribute {path} gated on 'auto' but is not one that works with 'auto'"
+                        )));
                     }
                 } else {
                     errors.push(LoweringError::Other(format!(
                         "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
                     )));
                 }
+            }
+        }
+
+        for attr in &ast.demo_attrs {
+            let path = attr.meta.path();
+            if let Some(path_ident) = path.get_ident() {
+                if path_ident == "external" {
+                    this.demo_attrs.external = true;
+                } else if path_ident == "default_constructor" {
+                    this.demo_attrs.default_constructor = true;
+                } else if path_ident == "enable" {
+                    this.demo_attrs.enabled = true;
+                } else if path_ident == "disable" {
+                    this.demo_attrs.enabled = false;
+                } else if path_ident == "input" {
+                    // TODO: Move this to AST.
+                    let meta_list = attr
+                        .meta
+                        .require_list()
+                        .expect("Could not get MetaList, expected #[diplomat::demo(input(...))]");
+
+                    meta_list
+                        .parse_nested_meta(|meta| {
+                            let mut input_cfg = DemoInputCFG::default();
+                            meta.parse_nested_meta(|input_meta| {
+                                if input_meta.path.is_ident("label") {
+                                    let value = input_meta.value()?;
+                                    let s: syn::LitStr = value.parse()?;
+                                    input_cfg.label = s.value();
+                                    Ok(())
+                                } else {
+                                    Err(input_meta.error(format!(
+                                        "Unsupported ident {:?}",
+                                        input_meta.path.get_ident()
+                                    )))
+                                }
+                            })
+                            .expect("Could not read input(arg_name(...)) ");
+
+                            this.demo_attrs.input_cfg.insert(
+                                meta.path
+                                    .get_ident()
+                                    .expect("Expected parameter name.")
+                                    .to_string(),
+                                input_cfg,
+                            );
+                            Ok(())
+                        })
+                        .expect("Could not read input(...)");
+                } else {
+                    panic!("Unknown demo_attr: {path_ident:?}");
+                }
+            } else {
+                panic!("Unknown demo_attr: {path:?}");
             }
         }
 
@@ -307,6 +423,7 @@ impl Attrs {
             rename: _,
             abi_rename: _,
             special_method,
+            demo_attrs: _,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -592,43 +709,92 @@ impl Attrs {
             abi_rename: Default::default(),
             // Never inherited
             special_method: None,
+            demo_attrs: Default::default(),
         }
     }
 }
 
+/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Set this through an [`AttributeValidator`].
+///
+/// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
+///
+/// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
+/// ```ignore
+/// struct Sample {}
+/// impl Sample {
+///     #[diplomat::attr(constructor)]
+///     pub fn new() -> Box<Self> {
+///         Box::new(Sample{})
+///     }
+/// }
+///
+/// ```
+///
+/// It generates
+/// ```dart
+/// factory Sample()
+/// ```
+///
+/// If a backend does not support a specific `#[diplomat::attr(...)]`, it may error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    pub disabling: bool,
-    pub renaming: bool,
+    /// Namespacing types, e.g. C++ `namespace`.
     pub namespacing: bool,
-    pub constructors: bool,
-    pub named_constructors: bool,
-    pub fallible_constructors: bool,
-    pub accessors: bool,
-    pub stringifiers: bool,
-    pub comparators: bool,
+    /// Rust can directly acccess the memory of this language, like C and C++.
+    /// This is not supported in any garbage-collected language.
     pub memory_sharing: bool,
+    /// This language's structs are non-exhaustive by default, i.e. adding
+    /// fields is not a breaking change.
+    pub non_exhaustive_structs: bool,
+    /// Whether the language supports method overloading
+    pub method_overloading: bool,
+    /// Whether the language uses UTF-8 strings
+    pub utf8_strings: bool,
+    /// Whether the language uses UTF-16 strings
+    pub utf16_strings: bool,
+
+    // Special methods
+    /// Marking a method as a constructor to generate special constructor methods.
+    pub constructors: bool,
+    /// Marking a method as a named constructor to generate special named constructor methods.
+    pub named_constructors: bool,
+    /// Marking constructors as being able to return errors. This is possible in languages where
+    /// errors are thrown as exceptions (Dart), but not for example in C++, where errors are
+    /// returned as values (constructors usually have to return the type itself).
+    pub fallible_constructors: bool,
+    /// Marking methods as field getters and setters, see [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
+    pub accessors: bool,
+    /// Marking a method as the `to_string` method, which is special in this language.
+    pub stringifiers: bool,
+    /// Marking a method as the `compare_to` method, which is special in this language.
+    pub comparators: bool,
+    /// Marking a method as the `next` method, which is special in this language.
     pub iterators: bool,
+    /// Marking a method as the `iterator` method, which is special in this language.
     pub iterables: bool,
+    /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
-    // more to be added: namespace, etc
 }
 
 impl BackendAttrSupport {
     #[cfg(test)]
     fn all_true() -> Self {
         Self {
-            disabling: true,
-            renaming: true,
             namespacing: true,
+            memory_sharing: true,
+            non_exhaustive_structs: true,
+            method_overloading: true,
+            utf8_strings: true,
+            utf16_strings: true,
+
             constructors: true,
             named_constructors: true,
             fallible_constructors: true,
             accessors: true,
             stringifiers: true,
             comparators: true,
-            memory_sharing: true,
             iterators: true,
             iterables: true,
             indexing: true,
@@ -650,12 +816,21 @@ pub trait AttributeValidator {
     fn attrs_supported(&self) -> BackendAttrSupport;
 
     /// Provided, checks if type satisfies a `DiplomatBackendAttrCfg`
-    fn satisfies_cfg(&self, cfg: &DiplomatBackendAttrCfg) -> Result<bool, LoweringError> {
+    ///
+    /// auto_found helps check for `auto`, which is only allowed within `any` and at the top level. When `None`,
+    /// `auto` is not allowed.
+    fn satisfies_cfg(
+        &self,
+        cfg: &DiplomatBackendAttrCfg,
+        mut auto_found: Option<&mut bool>,
+    ) -> Result<bool, LoweringError> {
         Ok(match *cfg {
-            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c)?,
+            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c, None)?,
             DiplomatBackendAttrCfg::Any(ref cs) => {
+                #[allow(clippy::needless_option_as_deref)]
+                // False positive: we need this for reborrowing
                 for c in cs {
-                    if self.satisfies_cfg(c)? {
+                    if self.satisfies_cfg(c, auto_found.as_deref_mut())? {
                         return Ok(true);
                     }
                 }
@@ -663,11 +838,19 @@ pub trait AttributeValidator {
             }
             DiplomatBackendAttrCfg::All(ref cs) => {
                 for c in cs {
-                    if !self.satisfies_cfg(c)? {
+                    if !self.satisfies_cfg(c, None)? {
                         return Ok(false);
                     }
                 }
                 true
+            }
+            DiplomatBackendAttrCfg::Auto => {
+                if let Some(found) = auto_found {
+                    *found = true;
+                    return Ok(true);
+                } else {
+                    return Err(LoweringError::Other("auto in diplomat::attr() is only allowed at the top level and within `any`".into()));
+                }
             }
             DiplomatBackendAttrCfg::Star => true,
             DiplomatBackendAttrCfg::BackendName(ref n) => self.is_backend(n),
@@ -727,34 +910,41 @@ impl AttributeValidator for BasicAttributeValidator {
         Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
-                disabling,
-                renaming,
                 namespacing,
+                memory_sharing,
+                non_exhaustive_structs,
+                method_overloading,
+                utf8_strings,
+                utf16_strings,
+
                 constructors,
                 named_constructors,
                 fallible_constructors,
                 accessors,
                 stringifiers,
                 comparators,
-                memory_sharing,
                 iterators,
                 iterables,
                 indexing,
             } = self.support;
             match value {
-                "disabling" => disabling,
-                "renaming" => renaming,
                 "namespacing" => namespacing,
+                "memory_sharing" => memory_sharing,
+                "non_exhaustive_structs" => non_exhaustive_structs,
+                "method_overloading" => method_overloading,
+                "utf8_strings" => utf8_strings,
+                "utf16_strings" => utf16_strings,
+
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
                 "comparators" => comparators,
-                "memory_sharing" => memory_sharing,
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
+
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -778,17 +968,14 @@ mod tests {
     use std::fmt::Write;
 
     macro_rules! uitest_lowering_attr {
-        ($($file:tt)*) => {
+        ($attrs:expr, $($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
-            let custom_types = crate::ast::File::from(&parsed);
-            let env = custom_types.all_types();
 
             let mut output = String::new();
 
-
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
-            attr_validator.support = hir::BackendAttrSupport::all_true();
-            match hir::TypeContext::from_ast(&env, attr_validator) {
+            attr_validator.support = $attrs;
+            match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {
@@ -803,8 +990,41 @@ mod tests {
     }
 
     #[test]
+    fn test_auto() {
+        uitest_lowering_attr! { hir::BackendAttrSupport { comparators: true, ..Default::default()},
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+
+                #[diplomat::opaque]
+                #[diplomat::attr(auto, namespace = "should_not_show_up")]
+                struct Opaque;
+
+
+                impl Opaque {
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparator_static(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, iterator)]
+                    pub fn next(&mut self) -> Option<u8> {
+                        self.0.next()
+                    }
+                    #[diplomat::attr(auto, rename = "bar")]
+                    pub fn auto_doesnt_work_on_renames(&self) {
+                    }
+                    #[diplomat::attr(auto, disable)]
+                    pub fn auto_doesnt_work_on_disables(&self) {
+                    }
+                }
+
+            }
+        }
+    }
+
+    #[test]
     fn test_comparator() {
-        uitest_lowering_attr! {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
                 use std::cmp;
@@ -818,23 +1038,23 @@ mod tests {
 
 
                 impl Opaque {
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_static(other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_none(&self) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_othertype(other: Struct) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_badreturn(&self, other: &Opaque) -> u8 {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_correct(&self, other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
@@ -844,22 +1064,22 @@ mod tests {
                     pub fn ordering_wrong(&self, other: cmp::Ordering) {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_mut(&self, other: &mut Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_opt(&self, other: Option<&Opaque>) -> cmp::Ordering {
                         todo!()
                     }
                 }
 
                 impl Struct {
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_other(self, other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
@@ -870,7 +1090,7 @@ mod tests {
 
     #[test]
     fn test_iterator() {
-        uitest_lowering_attr! {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
 
@@ -881,14 +1101,14 @@ mod tests {
 
 
                 impl Opaque {
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
                         Box::new(OpaqueIterator(self.0.iter()))
                     }
                 }
 
                 impl OpaqueIterator {
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn next(&mut self) -> Option<u8> {
                         self.0.next()
                     }
@@ -898,12 +1118,12 @@ mod tests {
                 struct Broken;
 
                 impl Broken {
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_no_return(&self) {}
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_no_self() -> Box<BrokenIterator> { todo!() }
 
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_non_custom(&self) -> u8 { todo!() }
                 }
 
@@ -911,12 +1131,12 @@ mod tests {
                 struct BrokenIterator;
 
                 impl BrokenIterator {
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_return(&self) {}
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_self() -> Option<u8> { todo!() }
 
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_option(&self) -> u8 { todo!() }
                 }
             }

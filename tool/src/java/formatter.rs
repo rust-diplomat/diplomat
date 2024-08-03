@@ -1,19 +1,13 @@
 use std::borrow::Cow;
 
-use diplomat_core::{
-    ast::Ident,
-    hir::{
-        self, FloatType, IntType, OutType, PrimitiveType, ReturnType, Slice, StructPathLike,
-        SuccessType, TyPosition, Type, TypeContext, TypeId,
-    },
+use diplomat_core::hir::{
+    self, FloatType, IntType, PrimitiveType, ReturnType, Slice, StructPathLike, SuccessType,
+    TyPosition, Type, TypeContext,
 };
 use heck::ToLowerCamelCase;
 
-use crate::c2::CFormatter;
-
 pub(crate) struct JavaFormatter<'cx> {
     tcx: &'cx TypeContext,
-    pub c: CFormatter<'cx>,
 }
 
 const INVALID_NAMES: &[&str] = &[
@@ -24,14 +18,11 @@ const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'cx> JavaFormatter<'cx> {
     pub fn new(tcx: &'cx TypeContext) -> Self {
-        Self {
-            tcx,
-            c: CFormatter::new(tcx),
-        }
+        Self { tcx }
     }
 
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
+    pub fn fmt_c_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+        method.abi_name.as_str().into()
     }
 
     pub fn fmt_field_name<'a>(&self, field: &'a hir::StructField) -> Cow<'a, str> {
@@ -55,7 +46,7 @@ impl<'cx> JavaFormatter<'cx> {
     pub fn fmt_return_type_java<'a>(&self, return_ty: &'a ReturnType) -> Cow<'a, str> {
         match return_ty {
             ReturnType::Infallible(ref success) => self.fmt_success_type_java(success),
-            ReturnType::Fallible(ref success, _) => todo!(),
+            ReturnType::Fallible(_, _) => todo!(),
             ReturnType::Nullable(_) => todo!(),
         }
     }

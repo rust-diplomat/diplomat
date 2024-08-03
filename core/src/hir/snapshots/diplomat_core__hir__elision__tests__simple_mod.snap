@@ -46,6 +46,7 @@ TypeContext {
                         [],
                     ),
                     name: "new",
+                    abi_name: "OutStruct_new",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             BoundedLifetime {
@@ -106,6 +107,12 @@ TypeContext {
                             pattern: None,
                         },
                         special_method: None,
+                        demo_attrs: DemoInfo {
+                            enabled: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: {},
+                        },
                     },
                 },
             ],
@@ -119,6 +126,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -172,6 +185,7 @@ TypeContext {
                         [],
                     ),
                     name: "rustc_elision",
+                    abi_name: "Struct_rustc_elision",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             BoundedLifetime {
@@ -245,6 +259,12 @@ TypeContext {
                             pattern: None,
                         },
                         special_method: None,
+                        demo_attrs: DemoInfo {
+                            enabled: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: {},
+                        },
                     },
                 },
             ],
@@ -258,6 +278,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -294,6 +320,12 @@ TypeContext {
                     pattern: None,
                 },
                 special_method: None,
+                demo_attrs: DemoInfo {
+                    enabled: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: {},
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -310,6 +342,7 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
+            dtor_abi_name: "Opaque_destroy",
         },
     ],
     enums: [],

@@ -6,14 +6,13 @@ use std::path::Path;
 
 use askama::Template;
 use diplomat_core::hir::{
-    self, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic, Method, OpaqueDef,
-    ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField, StructPathLike,
-    SuccessType, TypeContext, TypeDef, TypeId,
+    self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic,
+    Method, OpaqueDef, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
+    StructPathLike, SuccessType, TypeContext, TypeDef, TypeId,
 };
 use formatter::JavaFormatter;
 
-use crate::c2::{self};
-use crate::common::{ErrorStore, FileMap};
+use crate::{c, ErrorStore, FileMap};
 
 const TMP_C_DIR: &str = "tmp";
 const LIBRARY: &str = "somelib"; // todo: build from conf. Ensure that name is not the same as any
@@ -23,17 +22,37 @@ const _TMP_LIB_NAME: &str = "dev/diplomattest/somelib"; // todo: build from conf
 const _JAVA_DIR: &str = "src/main/java/";
 
 mod formatter;
-pub fn run(
-    tcx: &TypeContext,
-    _conf_path: Option<&Path>,
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+    a.namespacing = false; // TODO
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = true;
+    a.utf8_strings = false;
+    a.utf16_strings = true;
+
+    a.constructors = false; // TODO
+    a.named_constructors = false; // TODO
+    a.fallible_constructors = false; // TODO
+    a.accessors = false;
+    a.stringifiers = false; // TODO
+    a.comparators = false; // TODO
+    a.iterators = false;
+    a.iterables = false;
+    a.indexing = false;
+
+    a
+}
+
+pub(crate) fn run<'a>(
+    tcx: &'a TypeContext,
+    conf_path: Option<&Path>,
     out_folder: &Path,
-) -> std::io::Result<FileMap> {
-    let files = FileMap::default();
-    let mut context = c2::CContext::new(tcx, files, false);
-    context.run();
+) -> (FileMap, ErrorStore<'a, String>) {
+    let (files, errors) = c::run(tcx);
 
-    let errors = context.errors.take_all();
-
+    let errors = errors.take_all();
     if !errors.is_empty() {
         eprintln!("Found errors when generating c  code");
         for error in errors {
@@ -41,10 +60,10 @@ pub fn run(
         }
     }
 
-    let out_files = context.files.take_files();
+    let out_files = files.take_files();
 
     let tmp_path = out_folder.join(TMP_C_DIR);
-    std::fs::create_dir(&tmp_path)?;
+    std::fs::create_dir(&tmp_path).expect("failed to create directory ");
     let mut include_files = HashSet::new();
     for (subpath, text) in out_files {
         let out_path = tmp_path.join(&subpath);
@@ -54,16 +73,18 @@ pub fn run(
         let parent = out_path
             .parent()
             .expect("Cannot create files at top level dir /");
-        std::fs::create_dir_all(parent)?;
-        let mut out_file = File::create(&out_path)?;
-        out_file.write_all(text.as_bytes())?;
+        std::fs::create_dir_all(parent).expect("failed to create parent");
+        let mut out_file = File::create(&out_path).expect("Failed to create out path");
+        out_file
+            .write_all(text.as_bytes())
+            .expect("failed to write files");
     }
 
     let lib_path = tmp_path.join(format!("{LIBRARY}.h"));
 
-    let mut lib_file = File::create(&lib_path)?;
+    let mut lib_file = File::create(&lib_path).expect("failed to create lib file");
     for include in include_files {
-        writeln!(lib_file, "#include \"{include}\"")?;
+        writeln!(lib_file, "#include \"{include}\"").expect("failed to write line in lib file");
     }
 
     // Here we try to build the following command
@@ -94,10 +115,9 @@ pub fn run(
             std::io::ErrorKind::NotFound => {
                 // note to guarantee a working link we link to a specific commit. But this should
                 // be updated when we check the validity of jextract
-                eprintln!("Check that jextract is in your path and all directories exist. See https://github.com/openjdk/jextract/blob/5715737be0a1a9de24cce3ee7190881cfc8b1350/doc/GUIDE.md");
-                return Err(err);
+                panic!("Check that jextract is in your path and all directories exist. See https://github.com/openjdk/jextract/blob/5715737be0a1a9de24cce3ee7190881cfc8b1350/doc/GUIDE.md");
             }
-            _ => return Err(err),
+            err => panic!("unexpected error {err}"),
         },
         Ok(ok) => {
             let stdout = String::from_utf8_lossy(&ok.stdout);
@@ -124,6 +144,7 @@ pub fn run(
         errors,
     };
 
+    let errors = ErrorStore::default();
     let files = FileMap::default();
     for (id, ty) in tcx.all_types() {
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
@@ -143,7 +164,7 @@ pub fn run(
         files.add_file(format!("src/main/java/{file}"), body);
     }
 
-    Ok(files)
+    (files, errors)
 }
 
 #[derive(Clone, Debug)]
@@ -637,11 +658,8 @@ return returnVal;"#
                         .into(),
                     })
                 }
-                let native_method: Cow<str> = format!(
-                    "{lib_name}_h.{}",
-                    self.formatter.fmt_c_method_name(ty_id, method)
-                )
-                .into();
+                let native_method: Cow<str> =
+                    format!("{lib_name}_h.{}", self.formatter.fmt_c_method_name(method)).into();
                 let make_invoker =
                     method.params.is_empty() && !write_return && method.param_self.is_none();
                 let native_invocation = if make_invoker {
@@ -832,9 +850,9 @@ mod test {
     use diplomat_core::hir::{TypeDef, TypeId};
     use quote::quote;
 
-    use crate::{common::ErrorStore, java::Config, test::new_tcx};
+    use crate::{java::Config, test::new_tcx, ErrorStore};
 
-    use super::{formatter::JavaFormatter, OpaqueTypeTpl, TyGenContext};
+    use super::{attr_support, formatter::JavaFormatter, OpaqueTypeTpl, TyGenContext};
     #[test]
     fn test_opaque_render() {
         let opaque_type = OpaqueTypeTpl {
@@ -914,8 +932,8 @@ mod test {
                 }
             }
         };
-
-        let tcx = new_tcx(tk_stream);
+        let support = attr_support();
+        let tcx = new_tcx(tk_stream, support);
 
         let formatter = JavaFormatter::new(&tcx);
 
@@ -1014,7 +1032,8 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
+        let validator = attr_support();
+        let tcx = new_tcx(tk_stream, validator);
 
         let formatter = JavaFormatter::new(&tcx);
 
@@ -1085,7 +1104,8 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
+        let validator = attr_support();
+        let tcx = new_tcx(tk_stream, validator);
 
         let formatter = JavaFormatter::new(&tcx);
 
@@ -1191,7 +1211,8 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
+        let validator = attr_support();
+        let tcx = new_tcx(tk_stream, validator);
 
         let formatter = JavaFormatter::new(&tcx);
 

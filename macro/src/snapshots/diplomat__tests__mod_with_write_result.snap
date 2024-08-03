@@ -21,6 +21,4 @@ mod ffi {
         to.flush();
         ret.into()
     }
-    #[no_mangle]
-    extern "C" fn Foo_destroy(this: Box<Foo>) {}
 }

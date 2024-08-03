@@ -21,12 +21,12 @@ final class Unnamespaced implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Unnamespaced_destroy));
 
-  factory Unnamespaced.make(AttrEnum e) {
+  factory Unnamespaced.make(RenamedAttrEnum e) {
     final result = _namespace_Unnamespaced_make(e.index);
     return Unnamespaced._fromFfi(result, []);
   }
 
-  void useNamespaced(AttrOpaque1 n) {
+  void useNamespaced(AttrOpaque1Renamed n) {
     _namespace_Unnamespaced_use_namespaced(_ffi, n._ffi);
   }
 }

@@ -1,0 +1,25 @@
+{%- for terminus in termini_exports -%}
+import * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
+export * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
+{% endfor %}
+
+export const RenderInfo = {
+    termini: {
+        {%- for terminus in termini %}
+        "{{terminus.type_name}}.{{terminus.function_name}}": {
+            func: {{terminus.type_name}}Demo.{{terminus.function_name}},
+            // For avoiding webpacking minifying issues:
+            funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
+            html: "rendering/{{terminus.type_name}}_{{terminus.function_name}}.html",
+            parameters: [
+                {% for param in terminus.out_params %}
+                {
+                    name: "{{param.label}}",
+                    type: "{{param.type_name}}"
+                }{% if !loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if !loop.last %},{% endif %}
+        {% endfor -%}
+    },
+};

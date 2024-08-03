@@ -1,69 +1,106 @@
 #ifndef MyString_HPP
 #define MyString_HPP
+
+#include "MyString.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "MyString.h"
 
-class MyString;
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    diplomat::capi::MyString* MyString_new(const char* v_data, size_t v_len);
+    
+    diplomat::capi::MyString* MyString_new_unsafe(const char* v_data, size_t v_len);
+    
+    diplomat::capi::MyString* MyString_new_owned(const char* v_data, size_t v_len);
+    
+    void MyString_set_str(diplomat::capi::MyString* self, const char* new_str_data, size_t new_str_len);
+    
+    void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
+    
+    void MyString_string_transform(const char* foo_data, size_t foo_len, diplomat::capi::DiplomatWrite* write);
+    
+    
+    void MyString_destroy(MyString* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
-/**
- * A destruction policy for using MyString with std::unique_ptr.
- */
-struct MyStringDeleter {
-  void operator()(capi::MyString* l) const noexcept {
-    capi::MyString_destroy(l);
+inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
+  auto result = diplomat::capi::MyString_new(v.data(),
+    v.size());
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+}
+
+inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString::new_unsafe(std::string_view v) {
+  if (!diplomat::capi::diplomat_is_str(v.data(), v.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
-};
-class MyString {
- public:
-  static MyString new_(const std::string_view v);
+  auto result = diplomat::capi::MyString_new_unsafe(v.data(),
+    v.size());
+  return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
+}
 
-  /**
-   * Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
-   */
-  static MyString new_unsafe(const std::string_view v);
-  static MyString new_owned(const std::string_view v);
-  void set_str(const std::string_view new_str);
-  template<typename W> void get_str_to_write(W& write) const;
-  std::string get_str() const;
-  inline const capi::MyString* AsFFI() const { return this->inner.get(); }
-  inline capi::MyString* AsFFIMut() { return this->inner.get(); }
-  inline explicit MyString(capi::MyString* i) : inner(i) {}
-  MyString() = default;
-  MyString(MyString&&) noexcept = default;
-  MyString& operator=(MyString&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::MyString, MyStringDeleter> inner;
-};
+inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {
+  auto result = diplomat::capi::MyString_new_owned(v.data(),
+    v.size());
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+}
 
+inline void MyString::set_str(std::string_view new_str) {
+  diplomat::capi::MyString_set_str(this->AsFFI(),
+    new_str.data(),
+    new_str.size());
+}
 
-inline MyString MyString::new_(const std::string_view v) {
-  return MyString(capi::MyString_new(v.data(), v.size()));
-}
-inline MyString MyString::new_unsafe(const std::string_view v) {
-  return MyString(capi::MyString_new_unsafe(v.data(), v.size()));
-}
-inline MyString MyString::new_owned(const std::string_view v) {
-  return MyString(capi::MyString_new_owned(v.data(), v.size()));
-}
-inline void MyString::set_str(const std::string_view new_str) {
-  capi::MyString_set_str(this->inner.get(), new_str.data(), new_str.size());
-}
-template<typename W> inline void MyString::get_str_to_write(W& write) const {
-  capi::DiplomatWrite write_writer = diplomat::WriteTrait<W>::Construct(write);
-  capi::MyString_get_str(this->inner.get(), &write_writer);
-}
 inline std::string MyString::get_str() const {
-  std::string diplomat_write_string;
-  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
-  capi::MyString_get_str(this->inner.get(), &diplomat_write_out);
-  return diplomat_write_string;
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::MyString_get_str(this->AsFFI(),
+    &write);
+  return output;
 }
-#endif
+
+inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_transform(std::string_view foo) {
+  if (!diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+  }
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::MyString_string_transform(foo.data(),
+    foo.size(),
+    &write);
+  return diplomat::Ok<std::string>(std::move(output));
+}
+
+inline const diplomat::capi::MyString* MyString::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::MyString*>(this);
+}
+
+inline diplomat::capi::MyString* MyString::AsFFI() {
+  return reinterpret_cast<diplomat::capi::MyString*>(this);
+}
+
+inline const MyString* MyString::FromFFI(const diplomat::capi::MyString* ptr) {
+  return reinterpret_cast<const MyString*>(ptr);
+}
+
+inline MyString* MyString::FromFFI(diplomat::capi::MyString* ptr) {
+  return reinterpret_cast<MyString*>(ptr);
+}
+
+inline void MyString::operator delete(void* ptr) {
+  diplomat::capi::MyString_destroy(reinterpret_cast<diplomat::capi::MyString*>(ptr));
+}
+
+
+#endif // MyString_HPP

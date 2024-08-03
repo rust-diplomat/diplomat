@@ -54,6 +54,9 @@ pub struct OpaqueDef {
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
     pub special_method_presence: SpecialMethodPresence,
+
+    /// The ABI name of the generated destructor
+    pub dtor_abi_name: IdentBuf,
 }
 
 /// The enum type.
@@ -120,6 +123,7 @@ impl OpaqueDef {
         attrs: Attrs,
         lifetimes: LifetimeEnv,
         special_method_presence: SpecialMethodPresence,
+        dtor_abi_name: IdentBuf,
     ) -> Self {
         Self {
             docs,
@@ -128,6 +132,7 @@ impl OpaqueDef {
             attrs,
             lifetimes,
             special_method_presence,
+            dtor_abi_name,
         }
     }
 }

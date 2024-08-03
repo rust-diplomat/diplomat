@@ -1,17 +1,16 @@
 import test from 'ava';
-import { OptionOpaque } from "diplomat-wasm-feature-tests";
-
+import { OptionOpaque } from "diplomat-wasm-js-feature-tests";
 test("Verify option methods", t => {
-    const o = OptionOpaque.new(5);
-    o.assert_integer(5);
-    const on = OptionOpaque.new_none();
-    t.assert(!on);
-    const s = OptionOpaque.new_struct();
-    s.a.assert_integer(101);
-    s.b.assert_char('餐');
+    const o = OptionOpaque.new_(5);
+    o.assertInteger(5);
+    const on = OptionOpaque.newNone();
+    t.assert(on === null);
+    const s = OptionOpaque.newStruct();
+    s.a.assertInteger(101);
+    s.b.assertChar('餐'.codePointAt(0));
     t.is(s.c, 904);
-    s.d.assert_integer(926535);
-    const sn = OptionOpaque.new_struct_nones();
+    s.d.assertInteger(926535);
+    const sn = OptionOpaque.newStructNones();
     t.assert(!sn.a);
     t.assert(!sn.b);
     t.is(sn.c, 908);

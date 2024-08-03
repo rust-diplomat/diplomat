@@ -23,17 +23,17 @@ pub mod ffi {
         bytes: &'a DiplomatStr,
     }
     impl<'a> Foo<'a> {
-        #[diplomat::attr(supports = constructors, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new(x: &'a DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
 
-        #[diplomat::attr(supports = accessors, getter = "bar")]
+        #[diplomat::attr(auto, getter = "bar")]
         pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
             Box::new(Bar(self))
         }
 
-        #[diplomat::attr(supports = constructors, named_constructor = "static")]
+        #[diplomat::attr(auto, named_constructor = "static")]
         pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
@@ -42,12 +42,12 @@ pub mod ffi {
             BorrowedFieldsReturning { bytes: self.0 }
         }
 
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b))
         }
 
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         /// Test that the extraction logic correctly pins the right fields
         pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
             bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
@@ -118,8 +118,7 @@ pub mod ffi {
 
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
-        #[diplomat::skip_if_ast]
-        #[diplomat::attr(supports = accessors, getter)]
+        #[diplomat::attr(auto, getter)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
         }
@@ -136,7 +135,7 @@ pub mod ffi {
     impl<'o> One<'o> {
         // Holds: [hold]
         #[allow(clippy::extra_unused_lifetimes)]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn transitivity<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd, 'x>(
             hold: &'x One<'e>,
             nohold: &One<'x>,
@@ -147,7 +146,7 @@ pub mod ffi {
 
         // Holds: [hold]
         #[allow(clippy::extra_unused_lifetimes)]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn cycle<'a: 'b, 'b: 'c, 'c: 'a, 'x>(
             hold: &Two<'x, 'b>,
             nohold: &'x One<'x>,
@@ -157,7 +156,7 @@ pub mod ffi {
         }
 
         // Holds: [a, b, c, d]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b + 'x, 'x, 'y>(
             a: &'x One<'a>,
             b: &'b One<'a>,
@@ -170,7 +169,7 @@ pub mod ffi {
         }
 
         // Holds: [hold]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn return_outlives_param<'short, 'long: 'short>(
             hold: &Two<'long, 'short>,
             nohold: &'short One<'short>,
@@ -180,7 +179,7 @@ pub mod ffi {
         }
 
         // Holds: [top, left, right, bottom]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn diamond_top<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -196,7 +195,7 @@ pub mod ffi {
         }
 
         // Holds: [left, bottom]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn diamond_left<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -211,7 +210,7 @@ pub mod ffi {
         }
 
         // Holds: [right, bottom]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn diamond_right<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -226,7 +225,7 @@ pub mod ffi {
         }
 
         // Holds: [bottom]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn diamond_bottom<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -238,7 +237,7 @@ pub mod ffi {
         }
 
         // Holds: [a, b, c, d]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn diamond_and_nested_types<'a, 'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(
             a: &One<'a>,
             b: &'y One<'b>,
@@ -257,7 +256,7 @@ pub mod ffi {
 
         // Holds: [implicit_hold, explicit_hold]
         #[allow(clippy::extra_unused_lifetimes)]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn implicit_bounds<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'x, 'y>(
             explicit_hold: &'d One<'x>, // implies that 'x: 'd
             implicit_hold: &One<'x>,
@@ -272,7 +271,7 @@ pub mod ffi {
 
         // Holds: [a, b, c]
         #[allow(clippy::needless_lifetimes)]
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn implicit_bounds_deep<'a, 'b, 'c, 'd, 'x>(
             explicit_: &'a One<'b>,
             implicit_1: &'b One<'c>,

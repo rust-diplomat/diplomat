@@ -1,100 +1,97 @@
 #ifndef Foo_HPP
 #define Foo_HPP
+
+#include "Foo.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
+#include "Bar.hpp"
+#include "BorrowedFields.hpp"
+#include "BorrowedFieldsReturning.hpp"
+#include "BorrowedFieldsWithBounds.hpp"
 #include "diplomat_runtime.hpp"
 
-#include "Foo.h"
 
-class Foo;
-class Bar;
-struct BorrowedFieldsReturning;
-struct BorrowedFields;
-struct BorrowedFieldsWithBounds;
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    diplomat::capi::Foo* Foo_new(const char* x_data, size_t x_len);
+    
+    diplomat::capi::Bar* Foo_get_bar(const diplomat::capi::Foo* self);
+    
+    diplomat::capi::Foo* Foo_new_static(const char* x_data, size_t x_len);
+    
+    diplomat::capi::BorrowedFieldsReturning Foo_as_returning(const diplomat::capi::Foo* self);
+    
+    diplomat::capi::Foo* Foo_extract_from_fields(diplomat::capi::BorrowedFields fields);
+    
+    diplomat::capi::Foo* Foo_extract_from_bounds(diplomat::capi::BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
+    
+    
+    void Foo_destroy(Foo* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
-/**
- * A destruction policy for using Foo with std::unique_ptr.
- */
-struct FooDeleter {
-  void operator()(capi::Foo* l) const noexcept {
-    capi::Foo_destroy(l);
-  }
-};
-class Foo {
- public:
-
-  /**
-   * Lifetimes: `x` must live at least as long as the output.
-   */
-  static Foo new_(const std::string_view x);
-
-  /**
-   * Lifetimes: `this` must live at least as long as the output.
-   */
-  Bar get_bar() const;
-
-  /**
-   * Lifetimes: `x` must live for the duration of the program.
-   */
-  static Foo new_static(const std::string_view x);
-
-  /**
-   * Lifetimes: `this` must live at least as long as the output.
-   */
-  BorrowedFieldsReturning as_returning() const;
-
-  /**
-   * Lifetimes: `fields` must live at least as long as the output.
-   */
-  static Foo extract_from_fields(BorrowedFields fields);
-
-  /**
-   * Test that the extraction logic correctly pins the right fields
-   * 
-   * Lifetimes: `bounds`, `another_string` must live at least as long as the output.
-   */
-  static Foo extract_from_bounds(BorrowedFieldsWithBounds bounds, const std::string_view another_string);
-  inline const capi::Foo* AsFFI() const { return this->inner.get(); }
-  inline capi::Foo* AsFFIMut() { return this->inner.get(); }
-  inline explicit Foo(capi::Foo* i) : inner(i) {}
-  Foo() = default;
-  Foo(Foo&&) noexcept = default;
-  Foo& operator=(Foo&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::Foo, FooDeleter> inner;
-};
-
-#include "Bar.hpp"
-#include "BorrowedFieldsReturning.hpp"
-#include "BorrowedFields.hpp"
-#include "BorrowedFieldsWithBounds.hpp"
-
-inline Foo Foo::new_(const std::string_view x) {
-  return Foo(capi::Foo_new(x.data(), x.size()));
+inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
+  auto result = diplomat::capi::Foo_new(x.data(),
+    x.size());
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
-inline Bar Foo::get_bar() const {
-  return Bar(capi::Foo_get_bar(this->inner.get()));
+
+inline std::unique_ptr<Bar> Foo::get_bar() const {
+  auto result = diplomat::capi::Foo_get_bar(this->AsFFI());
+  return std::unique_ptr<Bar>(Bar::FromFFI(result));
 }
-inline Foo Foo::new_static(const std::string_view x) {
-  return Foo(capi::Foo_new_static(x.data(), x.size()));
+
+inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
+  auto result = diplomat::capi::Foo_new_static(x.data(),
+    x.size());
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
+
 inline BorrowedFieldsReturning Foo::as_returning() const {
-  capi::BorrowedFieldsReturning diplomat_raw_struct_out_value = capi::Foo_as_returning(this->inner.get());
-  capi::DiplomatStringView diplomat_str_raw_out_value_bytes = diplomat_raw_struct_out_value.bytes;
-  std::string_view str(diplomat_str_raw_out_value_bytes.data, diplomat_str_raw_out_value_bytes.len);
-  return BorrowedFieldsReturning{ .bytes = std::move(str) };
+  auto result = diplomat::capi::Foo_as_returning(this->AsFFI());
+  return BorrowedFieldsReturning::FromFFI(result);
 }
-inline Foo Foo::extract_from_fields(BorrowedFields fields) {
-  BorrowedFields diplomat_wrapped_struct_fields = fields;
-  return Foo(capi::Foo_extract_from_fields(capi::BorrowedFields{ .a = { diplomat_wrapped_struct_fields.a.data(), diplomat_wrapped_struct_fields.a.size() }, .b = { diplomat_wrapped_struct_fields.b.data(), diplomat_wrapped_struct_fields.b.size() }, .c = { diplomat_wrapped_struct_fields.c.data(), diplomat_wrapped_struct_fields.c.size() } }));
+
+inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
+  auto result = diplomat::capi::Foo_extract_from_fields(fields.AsFFI());
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
-inline Foo Foo::extract_from_bounds(BorrowedFieldsWithBounds bounds, const std::string_view another_string) {
-  BorrowedFieldsWithBounds diplomat_wrapped_struct_bounds = bounds;
-  return Foo(capi::Foo_extract_from_bounds(capi::BorrowedFieldsWithBounds{ .field_a = { diplomat_wrapped_struct_bounds.field_a.data(), diplomat_wrapped_struct_bounds.field_a.size() }, .field_b = { diplomat_wrapped_struct_bounds.field_b.data(), diplomat_wrapped_struct_bounds.field_b.size() }, .field_c = { diplomat_wrapped_struct_bounds.field_c.data(), diplomat_wrapped_struct_bounds.field_c.size() } }, another_string.data(), another_string.size()));
+
+inline std::unique_ptr<Foo> Foo::extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string) {
+  auto result = diplomat::capi::Foo_extract_from_bounds(bounds.AsFFI(),
+    another_string.data(),
+    another_string.size());
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
-#endif
+
+inline const diplomat::capi::Foo* Foo::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::Foo*>(this);
+}
+
+inline diplomat::capi::Foo* Foo::AsFFI() {
+  return reinterpret_cast<diplomat::capi::Foo*>(this);
+}
+
+inline const Foo* Foo::FromFFI(const diplomat::capi::Foo* ptr) {
+  return reinterpret_cast<const Foo*>(ptr);
+}
+
+inline Foo* Foo::FromFFI(diplomat::capi::Foo* ptr) {
+  return reinterpret_cast<Foo*>(ptr);
+}
+
+inline void Foo::operator delete(void* ptr) {
+  diplomat::capi::Foo_destroy(reinterpret_cast<diplomat::capi::Foo*>(ptr));
+}
+
+
+#endif // Foo_HPP

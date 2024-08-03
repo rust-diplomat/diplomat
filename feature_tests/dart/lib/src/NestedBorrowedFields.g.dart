@@ -37,21 +37,21 @@ final class NestedBorrowedFields {
   }
 
   static NestedBorrowedFields fromBarAndFooAndStrings(Bar bar, Foo foo, String dstr16X, String dstr16Z, String utf8StrY, String utf8StrZ) {
-    final dstr16XView = dstr16X.utf16View;
     final dstr16XArena = _FinalizedArena();
-    final dstr16ZView = dstr16Z.utf16View;
+    final (dstr16XData, dstr16XLength) = dstr16X._utf16AllocIn(dstr16XArena.arena);
     final dstr16ZArena = _FinalizedArena();
-    final utf8StrYView = utf8StrY.utf8View;
+    final (dstr16ZData, dstr16ZLength) = dstr16Z._utf16AllocIn(dstr16ZArena.arena);
     final utf8StrYArena = _FinalizedArena();
-    final utf8StrZView = utf8StrZ.utf8View;
+    final (utf8StrYData, utf8StrYLength) = utf8StrY._utf8AllocIn(utf8StrYArena.arena);
     final utf8StrZArena = _FinalizedArena();
+    final (utf8StrZData, utf8StrZLength) = utf8StrZ._utf8AllocIn(utf8StrZArena.arena);
     // This lifetime edge depends on lifetimes: 'x, 'y
     core.List<Object> xEdges = [bar, dstr16XArena, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'y
     core.List<Object> yEdges = [bar, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [foo, dstr16ZArena, utf8StrZArena];
-    final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16XView.allocIn(dstr16XArena.arena), dstr16XView.length, dstr16ZView.allocIn(dstr16ZArena.arena), dstr16ZView.length, utf8StrYView.allocIn(utf8StrYArena.arena), utf8StrYView.length, utf8StrZView.allocIn(utf8StrZArena.arena), utf8StrZView.length);
+    final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16XData, dstr16XLength, dstr16ZData, dstr16ZLength, utf8StrYData, utf8StrYLength, utf8StrZData, utf8StrZLength);
     return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }
 

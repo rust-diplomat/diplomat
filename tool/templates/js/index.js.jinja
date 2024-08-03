@@ -1,0 +1,6 @@
+{% if typescript %}
+export { codepoint } from './diplomat-runtime';
+{% endif %}
+{% for export_stmt in exports %}
+{{export_stmt}}
+{% endfor %}

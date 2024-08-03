@@ -31,12 +31,12 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 /// Diplomat uses are:
 ///
 /// 1. `OpaquePath<Optional, MaybeOwn>`: Opaques in return types,
-/// which can be optional and either owned or borrowed.
+///    which can be optional and either owned or borrowed.
 /// 2. `OpaquePath<Optional, Borrow>`: Opaques in method parameters, which can
-/// be optional but must be borrowed, since most languages don't have a way to
-/// entirely give up ownership of a value.
+///    be optional but must be borrowed, since most languages don't have a way to
+///    entirely give up ownership of a value.
 /// 3. `OpaquePath<NonOptional, Borrow>`: Opaques in the `&self` position, which
-/// cannot be optional and must be borrowed for the same reason as above.
+///    cannot be optional and must be borrowed for the same reason as above.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct OpaquePath<Opt, Owner> {

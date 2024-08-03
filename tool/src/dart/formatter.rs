@@ -1,8 +1,6 @@
 //! This module contains functions for formatting types
 
-use crate::c2::CFormatter;
-use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -16,9 +14,8 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
-    c: CFormatter<'tcx>,
-    docs_url_generator: &'tcx DocsUrlGenerator,
-    strip_prefix: Option<String>,
+    tcx: &'tcx TypeContext,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
@@ -26,16 +23,8 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_generator: &'tcx DocsUrlGenerator,
-        strip_prefix: Option<String>,
-    ) -> Self {
-        Self {
-            c: CFormatter::new(tcx),
-            docs_url_generator,
-            strip_prefix,
-        }
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+        Self { tcx, docs_url_gen }
     }
 
     pub fn fmt_lifetime_edge_array(
@@ -54,7 +43,7 @@ impl<'tcx> DartFormatter<'tcx> {
         format!(
             "import '{path}'{}{};",
             if as_show_hide.is_some() { " " } else { "" },
-            if let Some(s) = as_show_hide { s } else { "" },
+            as_show_hide.unwrap_or_default(),
         )
         .into()
     }
@@ -68,46 +57,23 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
+        docs.to_markdown(self.docs_url_gen)
             .trim()
             .replace('\n', "\n/// ")
             .replace(" \n", "\n")
-            .replace(
-                &format!("`{}", self.strip_prefix.as_deref().unwrap_or("")),
-                "`",
-            )
-    }
-
-    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        self.c.fmt_dtor_name(id)
     }
 
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
+        let resolved = self.tcx.resolve_type(id);
 
-        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved
-                .name()
-                .as_str()
-                .strip_prefix(strip_prefix)
-                .unwrap_or(resolved.name().as_str())
-                .into()
-        } else {
-            resolved.name().as_str().into()
-        };
+        let candidate = resolved.name().as_str();
 
-        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+        if DISALLOWED_CORE_TYPES.contains(&candidate) {
             panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
 
-        resolved.attrs().rename.apply(candidate)
-    }
-
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
+        resolved.attrs().rename.apply(candidate.into())
     }
 
     /// Format an enum variant.
@@ -169,22 +135,6 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
-    }
-
-    pub fn fmt_string(&self) -> &'static str {
-        "String"
-    }
-
-    pub fn fmt_utf8_primitive(&self) -> &'static str {
-        "ffi.Uint8"
-    }
-
-    pub fn fmt_utf16_primitive(&self) -> &'static str {
-        "ffi.Uint16"
-    }
-
     pub fn fmt_void(&self) -> &'static str {
         "void"
     }
@@ -197,8 +147,12 @@ impl<'tcx> DartFormatter<'tcx> {
         format!("ffi.Pointer<{target}>")
     }
 
-    pub fn fmt_opaque(&self) -> &'static str {
-        "ffi.Opaque"
+    pub fn fmt_opaque_as_ffi(&self) -> String {
+        self.fmt_pointer("ffi.Opaque")
+    }
+
+    pub fn fmt_enum_as_ffi(&self, cast: bool) -> &'static str {
+        self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
     }
 
     pub fn fmt_usize(&self, cast: bool) -> &'static str {
@@ -207,13 +161,9 @@ impl<'tcx> DartFormatter<'tcx> {
 
     pub fn fmt_type_as_ident(&self, ty: Option<&str>) -> String {
         ty.unwrap_or("Void")
-            .replace(&self.fmt_pointer(self.fmt_opaque()), "Opaque")
+            .replace(&self.fmt_opaque_as_ffi(), "Opaque")
             .replace("ffi.", "")
             .replace('_', "")
-    }
-
-    pub fn fmt_enum_as_ffi(&self, cast: bool) -> &'static str {
-        self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType, cast: bool) -> &'static str {
@@ -247,6 +197,14 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_string_element_as_ffi(&self, encoding: hir::StringEncoding) -> &'static str {
+        match encoding {
+            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "ffi.Uint8",
+            hir::StringEncoding::UnvalidatedUtf16 => "ffi.Uint16",
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
     pub fn fmt_primitive_list_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::PrimitiveType;
         match prim {
@@ -259,25 +217,49 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_primitive_list_view(&self, prim: hir::PrimitiveType) -> &'static str {
+    pub fn fmt_string_type(&self, _encoding: hir::StringEncoding) -> &'static str {
+        "String"
+    }
+
+    pub fn fmt_string_list_type(&self, _encoding: hir::StringEncoding) -> &'static str {
+        "core.List<core.String>"
+    }
+
+    pub fn fmt_primitive_alloc_in(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Bool => ".boolView",
-            PrimitiveType::Char => ".uint32View",
-            PrimitiveType::Byte => "",
-            PrimitiveType::Int(IntType::I8) => ".int8View",
-            PrimitiveType::Int(IntType::U8) => ".uint8View",
-            PrimitiveType::Int(IntType::I16) => ".int16View",
-            PrimitiveType::Int(IntType::U16) => ".uint16View",
-            PrimitiveType::Int(IntType::I32) => ".int32View",
-            PrimitiveType::Int(IntType::U32) => ".uint32View",
-            PrimitiveType::Int(IntType::I64) => ".int64View",
-            PrimitiveType::Int(IntType::U64) => ".uint64View",
-            PrimitiveType::IntSize(IntSizeType::Usize) => ".usizeView",
-            PrimitiveType::IntSize(IntSizeType::Isize) => ".isizeView",
-            PrimitiveType::Float(FloatType::F32) => ".float32View",
-            PrimitiveType::Float(FloatType::F64) => ".float64View",
+            PrimitiveType::Bool => "_boolAllocIn",
+            PrimitiveType::Char => "_uint32AllocIn",
+            PrimitiveType::Byte => "_rawBytesAllocIn",
+            PrimitiveType::Int(IntType::I8) => "_int8AllocIn",
+            PrimitiveType::Int(IntType::U8) => "_uint8AllocIn",
+            PrimitiveType::Int(IntType::I16) => "_int16AllocIn",
+            PrimitiveType::Int(IntType::U16) => "_uint16AllocIn",
+            PrimitiveType::Int(IntType::I32) => "_int32AllocIn",
+            PrimitiveType::Int(IntType::U32) => "_uint32AllocIn",
+            PrimitiveType::Int(IntType::I64) => "_int64AllocIn",
+            PrimitiveType::Int(IntType::U64) => "_uint64AllocIn",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "_usizeAllocIn",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "_isizeAllocIn",
+            PrimitiveType::Float(FloatType::F32) => "_float32AllocIn",
+            PrimitiveType::Float(FloatType::F64) => "_float64AllocIn",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+        }
+    }
+
+    pub fn fmt_str_alloc_in(&self, encoding: hir::StringEncoding) -> &'static str {
+        match encoding {
+            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_utf8AllocIn",
+            hir::StringEncoding::UnvalidatedUtf16 => "_utf16AllocIn",
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    pub fn fmt_str_slice_alloc_in(&self, encoding: hir::StringEncoding) -> &'static str {
+        match encoding {
+            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_utf8SliceAllocIn",
+            hir::StringEncoding::UnvalidatedUtf16 => "_utf16SliceAllocIn",
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -302,11 +284,19 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_utf8_slice_type(&self) -> &'static str {
-        "_SliceUtf8"
+    pub fn fmt_str_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
+        match encoding {
+            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_SliceUtf8",
+            hir::StringEncoding::UnvalidatedUtf16 => "_SliceUtf16",
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
     }
 
-    pub fn fmt_utf16_slice_type(&self) -> &'static str {
-        "_SliceUtf16"
+    pub fn fmt_str_slice_slice_type(&self, encoding: hir::StringEncoding) -> &'static str {
+        match encoding {
+            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => "_SliceSliceUtf8",
+            hir::StringEncoding::UnvalidatedUtf16 => "_SliceSliceUtf16",
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
     }
 }
