@@ -14,7 +14,6 @@ use colored::*;
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
-use java::RunResult;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
