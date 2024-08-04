@@ -116,6 +116,7 @@ mod ffi {
         }
 
         #[diplomat::attr(auto, indexer)]
+        #[diplomat::attr(java, disable)]
         pub fn get(&self, i: usize) -> Option<f64> {
             self.0.get(i).copied()
         }

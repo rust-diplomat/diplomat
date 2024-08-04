@@ -25,7 +25,10 @@ impl<'cx> JavaFormatter<'cx> {
         method.abi_name.as_str().into()
     }
 
-    pub fn fmt_field_name<'a>(&self, field: &'a hir::StructField) -> Cow<'a, str> {
+    pub fn fmt_field_name<'a, TyP: TyPosition>(
+        &self,
+        field: &'a hir::StructField<TyP>,
+    ) -> Cow<'a, str> {
         let name = field.name.as_str().to_lower_camel_case();
         if INVALID_NAMES.contains(&&*name) {
             format!("{name}_").into()
@@ -46,8 +49,12 @@ impl<'cx> JavaFormatter<'cx> {
     pub fn fmt_return_type_java<'a>(&self, return_ty: &'a ReturnType) -> Cow<'a, str> {
         match return_ty {
             ReturnType::Infallible(ref success) => self.fmt_success_type_java(success),
-            ReturnType::Fallible(_, _) => todo!(),
-            ReturnType::Nullable(_) => todo!(),
+            ReturnType::Fallible(success, _) => {
+                todo!("Don't yet support fallible returns. Return type was: {success:?}")
+            }
+            ReturnType::Nullable(success) => {
+                todo!("Don't yet support Nullable returns. Return type was: {success:?}")
+            }
         }
     }
 

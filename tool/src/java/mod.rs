@@ -8,7 +8,7 @@ use askama::Template;
 use diplomat_core::hir::{
     self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic,
     Method, OpaqueDef, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
-    StructPathLike, SuccessType, TypeContext, TypeDef, TypeId,
+    StructPathLike, SuccessType, TyPosition, TypeContext, TypeDef, TypeId,
 };
 use formatter::JavaFormatter;
 
@@ -82,9 +82,11 @@ pub(crate) fn run<'a>(
 
     let lib_path = tmp_path.join(format!("{LIBRARY}.h"));
 
-    let mut lib_file = File::create(&lib_path).expect("failed to create lib file");
-    for include in include_files {
-        writeln!(lib_file, "#include \"{include}\"").expect("failed to write line in lib file");
+    {
+        let mut lib_file = File::create(&lib_path).expect("failed to create lib file");
+        for include in include_files {
+            writeln!(lib_file, "#include \"{include}\"").expect("failed to write line in lib file");
+        }
     }
 
     // Here we try to build the following command
@@ -108,6 +110,12 @@ pub(crate) fn run<'a>(
         .arg(LIBRARY)
         .arg(lib_path);
 
+    // cleanup tmp c files
+    let cleanup = || {
+        let mut command = std::process::Command::new("rm");
+        command.arg("-r").arg(tmp_path).output()
+    };
+
     println!("Running: {:?}", command);
 
     match command.output() {
@@ -115,9 +123,14 @@ pub(crate) fn run<'a>(
             std::io::ErrorKind::NotFound => {
                 // note to guarantee a working link we link to a specific commit. But this should
                 // be updated when we check the validity of jextract
+                //cleanup().expect("Failed to clean up temporary files");
+                (cleanup.clone())().expect("failed to clean up resources");
                 panic!("Check that jextract is in your path and all directories exist. See https://github.com/openjdk/jextract/blob/5715737be0a1a9de24cce3ee7190881cfc8b1350/doc/GUIDE.md");
             }
-            err => panic!("unexpected error {err}"),
+            err => {
+                (cleanup.clone())().expect("failed to clean up resources");
+                panic!("unexpected error {err}")
+            }
         },
         Ok(ok) => {
             let stdout = String::from_utf8_lossy(&ok.stdout);
@@ -127,6 +140,8 @@ pub(crate) fn run<'a>(
             println!("Std Err from jextract:\n{stderr}");
         }
     }
+
+    cleanup().expect("Failed to clean up temporary files");
 
     let java_formatter = JavaFormatter::new(tcx);
     let formatter = &java_formatter;
@@ -154,9 +169,9 @@ pub(crate) fn run<'a>(
 
         let (file, body) = match ty {
             TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque, id),
-            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
             TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def, id),
-            TypeDef::OutStruct(_) => unreachable!(""),
+            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
+            TypeDef::OutStruct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
             unknown => {
                 unreachable!("Encountered unknown variant: {unknown:?} while parsing all types")
             }
@@ -281,7 +296,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 format!(r#"var {name}Native = {name}.internal;"#).into(),
                 converted_value,
             ),
-            hir::Type::Enum(_) => todo!(),
+            hir::Type::Enum(_) => (
+                format!("var {name}Native = {name}.toInt();").into(),
+                format!("{name}Native").into(),
+            ),
+
             hir::Type::Slice(Slice::Str(borrow, StringEncoding::UnvalidatedUtf16)) => {
                 let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
                 (
@@ -491,9 +510,12 @@ return returnVal;"#
         let Config { lib_name, .. } = &self.tcx_config;
         let mut static_methods = Vec::new();
         let mut class_methods = Vec::new();
+        println!("Working on type {ty_name}");
         methods
             .iter()
+            .filter(|method| !method.attrs.disable)
             .filter_map(|method| -> Option<(bool, Cow<'cx, str>)> {
+                println!("Working on method {}", method.name);
                 let mut visitor = method.borrowing_param_visitor(self.tcx);
 
                 let (method_name, is_valid_constructor) = match method.attrs.special_method {
@@ -732,28 +754,32 @@ return returnVal;"#
             .expect("failed to render struct type"),
         )
     }
-    fn gen_struct_def(&self, s: &StructDef, ty: TypeId) -> (Cow<str>, String) {
+    fn gen_struct_def<TyP: TyPosition>(
+        &self,
+        s: &StructDef<TyP>,
+        ty: TypeId,
+    ) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = s.name.as_str();
         let fields = s
             .fields
             .iter()
-            .map(|field @ StructField { ty, .. }| {
+            .map(|field| {
                 let name = self.formatter.fmt_field_name(field);
-                let struct_return = match ty {
-                    hir::Type::Enum(enum_def) => Some(
+                let struct_return = match field.ty {
+                    hir::Type::Enum(ref enum_def) => Some(
                         format!("{}.fromInt", self.tcx.resolve_enum(enum_def.tcx_id).name).into(),
                     ),
-                    hir::Type::Struct(struct_def) => Some(
+                    hir::Type::Struct(ref struct_def) => Some(
                         format!(
                             "{}.fromSegment",
-                            self.tcx.resolve_struct(struct_def.tcx_id).name
+                            self.tcx.resolve_type(struct_def.id()).name()
                         )
                         .into(),
                     ),
                     _ => None,
                 };
-                let ty = self.formatter.fmt_java_type(ty);
+                let ty = self.formatter.fmt_java_type(&field.ty);
                 FieldTpl {
                     name,
                     ty,

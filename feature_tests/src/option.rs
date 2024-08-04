@@ -3,13 +3,16 @@ pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
 
     #[diplomat::opaque]
+    #[diplomat::attr(java, disable)]
     pub struct OptionOpaque(i32);
 
     #[diplomat::opaque]
+    #[diplomat::attr(java, disable)]
     pub struct OptionOpaqueChar(char);
 
     #[diplomat::opaque]
     #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(java, disable)]
     pub struct OptionString(String);
 
     impl OptionString {
@@ -30,6 +33,7 @@ pub mod ffi {
     }
 
     #[diplomat::out]
+    #[diplomat::attr(java, disable)]
     pub struct OptionStruct {
         a: Option<Box<OptionOpaque>>,
         b: Option<Box<OptionOpaqueChar>>,

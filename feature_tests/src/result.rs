@@ -1,6 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
 
+    #[diplomat::attr(java, disable)]
     #[diplomat::opaque]
     pub struct ResultOpaque(i32);
 
