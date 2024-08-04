@@ -6,6 +6,7 @@ mod c;
 mod cpp;
 mod dart;
 mod demo_gen;
+mod java;
 mod js;
 mod kotlin;
 
@@ -56,6 +57,7 @@ pub fn gen(
             attr_validator.other_backend_names = vec!["js".to_string()];
             demo_gen::attr_support()
         }
+        "java" => java::attr_support(),
         "kotlin" => kotlin::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
@@ -86,6 +88,8 @@ pub fn gen(
             )?;
             demo_gen::run(&tcx, docs_url_gen)
         }
+        "java" => java::run(&tcx, library_config, &out_folder), // we need to pass the out_folder
+        // to be able to run jextract
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),
     };
@@ -217,5 +221,28 @@ struct ErrorContextGuard<'a, 'tcx, E>(&'a ErrorStore<'tcx, E>, ErrorContext<'tcx
 impl<'a, 'tcx, E> Drop for ErrorContextGuard<'a, 'tcx, E> {
     fn drop(&mut self) {
         let _ = mem::replace(&mut *self.0.context.borrow_mut(), mem::take(&mut self.1));
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod test {
+
+    use diplomat_core::hir::{self, TypeContext};
+    use proc_macro2::TokenStream;
+
+    pub fn new_tcx(tk_stream: TokenStream, support: hir::BackendAttrSupport) -> TypeContext {
+        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+        let mut validator = hir::BasicAttributeValidator::new("test");
+        validator.support = support;
+
+        match hir::TypeContext::from_syn(&item, validator) {
+            Ok(context) => context,
+            Err(e) => {
+                for (_cx, err) in e {
+                    eprintln!("Lowering error: {}", err);
+                }
+                panic!("Failed to create context")
+            }
+        }
     }
 }

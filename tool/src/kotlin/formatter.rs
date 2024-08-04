@@ -354,28 +354,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
 #[cfg(test)]
 pub mod test {
-    use super::*;
-
-    use proc_macro2::TokenStream;
-    use quote::quote;
     use std::borrow::Cow;
 
-    pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+    use super::KotlinFormatter;
 
-        let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
-        attr_validator.support = super::super::attr_support();
-
-        match TypeContext::from_syn(&file, attr_validator) {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
-                }
-                panic!("Failed to create context")
-            }
-        }
-    }
+    use crate::kotlin::attr_support;
+    use crate::test::new_tcx;
+    use quote::quote;
 
     #[test]
     fn test_type_name() {
@@ -407,7 +392,7 @@ pub mod test {
 
             }
         };
-        let tcx = new_tcx(tk_stream);
+        let tcx = new_tcx(tk_stream, attr_support());
         let formatter = KotlinFormatter::new(&tcx, None);
         let opaques = tcx.opaques();
         assert!(!opaques.is_empty());

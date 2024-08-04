@@ -1,7 +1,5 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatStr16;
-
     #[diplomat::opaque]
     pub struct Foo<'a>(&'a DiplomatStr);
 

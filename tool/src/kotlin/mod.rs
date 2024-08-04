@@ -1501,8 +1501,8 @@ mod test {
 
     use crate::ErrorStore;
 
-    use super::formatter::test::new_tcx;
-    use super::{formatter::KotlinFormatter, TyGenContext};
+    use super::{attr_support, formatter::KotlinFormatter, TyGenContext};
+    use crate::test::new_tcx;
 
     #[test]
     fn test_enum() {
@@ -1538,7 +1538,7 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
+        let tcx = new_tcx(tk_stream, attr_support());
         let mut all_types = tcx.all_types();
         if let (_id, TypeDef::Enum(enum_def)) = all_types
             .next()
@@ -1602,7 +1602,7 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
+        let tcx = new_tcx(tk_stream, attr_support());
         let mut all_types = tcx.all_types();
         if let (_id, TypeDef::Struct(strct)) = all_types
             .next()
@@ -1631,12 +1631,21 @@ mod test {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::opaque]
-                struct MyOpaqueStruct<'b> {
+                pub struct MyOpaqueStruct<'b> {
                     a: SomeExternalType
                 }
 
                 #[diplomat::opaque]
-                struct InputStruct {
+                pub struct InputStruct {
+                }
+
+                pub struct OwnedStruct {
+                    int: i32,
+                }
+
+                pub struct OwndingStruct {
+                    a: OwnedStruct,
+                    b: OwnedStruct,
                 }
 
                 #[diplomat::opaque]
@@ -1707,12 +1716,10 @@ mod test {
 
             }
         };
-        let tcx = new_tcx(tk_stream);
-        let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
-            .next()
-            .expect("Failed to generate first opaque def")
-        {
+        let tcx = new_tcx(tk_stream, attr_support());
+        let all_types = tcx.all_types();
+        let mut res = String::new();
+        for (_, def) in all_types {
             let eror_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
             let mut ty_gen_cx = TyGenContext {
@@ -1722,11 +1729,35 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
             };
-            let type_name = opaque_def.name.to_string();
-            // test that we can render and that it doesn't panic
-            let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib");
-            insta::assert_snapshot!(result)
+            let result = match def {
+                TypeDef::Opaque(opaque_def) => {
+                    let type_name = opaque_def.name.to_string();
+                    // test that we can render and that it doesn't panic
+                    let (_, result) = ty_gen_cx.gen_opaque_def(
+                        opaque_def,
+                        &type_name,
+                        "dev.diplomattest",
+                        "somelib",
+                    );
+                    result
+                }
+
+                TypeDef::Struct(struct_def) => {
+                    let type_name = struct_def.name.to_string();
+                    // test that we can render and that it doesn't panic
+                    let (_, result) = ty_gen_cx.gen_struct_def(
+                        struct_def,
+                        &type_name,
+                        "dev.diplomattest",
+                        "somelib",
+                    );
+                    result
+                }
+                _ => String::new(),
+            };
+            res.push_str(&result);
+            res.push_str("\n=======================\n")
         }
+        insta::assert_snapshot!(res)
     }
 }

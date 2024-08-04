@@ -53,6 +53,7 @@ pub mod ffi {
             Box::new(Opaque("".into()))
         }
 
+        #[diplomat::attr(java, disable)]
         pub fn try_from_utf8(input: &DiplomatStr) -> Option<Box<Self>> {
             let s = std::str::from_utf8(input).ok()?;
             Some(Box::new(Self(s.into())))
@@ -77,6 +78,10 @@ pub mod ffi {
 
         pub fn returns_usize() -> usize {
             412
+        }
+
+        pub fn internal_len(&self) -> usize {
+            self.0.len()
         }
 
         pub fn returns_imported() -> ImportedStruct {
@@ -188,6 +193,7 @@ pub mod ffi {
             assert_eq!(self.g, MyEnum::B);
         }
 
+        #[diplomat::attr(java, disable)]
         pub fn returns_zst_result() -> Result<(), MyZst> {
             Ok(())
         }
