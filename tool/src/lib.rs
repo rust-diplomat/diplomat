@@ -84,7 +84,8 @@ pub fn gen(
             // If we don't already have an import path set up, generate our own imports:
             if !conf
                 .clone()
-                .is_some_and(|c| c.module_name.is_some() || c.relative_js_path.is_some())
+                .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
+                .unwrap_or(false)
             {
                 gen(
                     entry,
