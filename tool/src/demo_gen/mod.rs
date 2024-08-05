@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, fmt::Write, path::Path};
+use std::{collections::BTreeSet, fmt::Write};
 
 use askama::{self, Template};
 use diplomat_core::hir::{BackendAttrSupport, TypeContext};
