@@ -1,9 +1,10 @@
 import { RenderInfo, lib } from "../index.mjs";
-import { initialize } from "./rendering.mjs";
+import { TerminusRender } from "./rendering.mjs";
 
 let params = new URLSearchParams(window.location.search);
 
-initialize(lib);
-
 let func = params.get("func");
-document.getElementById("render").attachTerminus(RenderInfo.termini[func]);
+
+let terminus = new TerminusRender(lib, () => {}, RenderInfo.termini[func]);
+
+document.getElementById("render").appendChild(terminus);
