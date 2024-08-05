@@ -1,14 +1,12 @@
 var lib = undefined;
-var templateDoc = undefined;
 
-export function initialize(templateDocument, library) {
+export function initialize(library) {
     lib = library;
-    templateDoc = templateDocument;
 }
 
 function generateTemplate(className, variable, selector) {
     if (className[variable] === undefined) {
-        className[variable] = templateDoc.querySelector(selector).content;
+        className[variable] = document.querySelector(selector).content;
     }
 }
 

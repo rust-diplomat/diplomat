@@ -1,11 +1,9 @@
 import { RenderInfo, lib } from "../index.mjs";
 import { initialize } from "./rendering.mjs";
 
-let templates = document.getElementById("templates").contentDocument;
-initialize(templates, lib);
+let params = new URLSearchParams(window.location.search);
 
-let termini = document.querySelectorAll("terminus-render");
+initialize(lib);
 
-termini.forEach((t) => {
-    t.attachTerminus(RenderInfo.termini[t.getAttribute("func")]);
-});
+let func = params.get("func");
+document.getElementById("render").attachTerminus(RenderInfo.termini[func]);

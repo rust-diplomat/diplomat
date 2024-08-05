@@ -11,7 +11,6 @@ export const RenderInfo = {
             func: FixedDecimalFormatterDemo.formatWrite,
             // For avoiding webpacking minifying issues:
             funcName: "FixedDecimalFormatter.formatWrite",
-            html: "rendering/FixedDecimalFormatter_formatWrite.html",
             parameters: [
                 
                 {
@@ -41,7 +40,6 @@ export const RenderInfo = {
             func: FixedDecimalDemo.toString,
             // For avoiding webpacking minifying issues:
             funcName: "FixedDecimal.toString",
-            html: "rendering/FixedDecimal_toString.html",
             parameters: [
                 
                 {

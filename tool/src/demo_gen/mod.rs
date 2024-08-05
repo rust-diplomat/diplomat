@@ -147,8 +147,6 @@ pub(crate) fn run<'tcx>(
             }
         }
 
-        generate_default_renderer_files(&termini, &files);
-
         if !termini.is_empty() {
             let mut imports = BTreeSet::new();
             for file_type in FILE_TYPES {
@@ -210,22 +208,4 @@ pub(crate) fn run<'tcx>(
     }
 
     (files, errors)
-}
-
-fn generate_default_renderer_files(termini: &Vec<TerminusInfo>, files: &FileMap) {
-    #[derive(Template)]
-    #[template(path = "demo_gen/default_renderer/termini.html.jinja")]
-    struct TerminiHTML<'a> {
-        pub t: &'a TerminusInfo,
-    }
-
-    for terminus in termini {
-        files.add_file(
-            format!(
-                "rendering/{}_{}.html",
-                terminus.type_name, terminus.function_name
-            ),
-            TerminiHTML { t: terminus }.render().unwrap(),
-        );
-    }
 }
