@@ -1,4 +1,4 @@
-import { RenderInfo, lib } from "./index.mjs";
+import { RenderInfo, lib } from "../index.mjs";
 import { initialize } from "./rendering.mjs";
 
 let templates = document.getElementById("templates").contentDocument;

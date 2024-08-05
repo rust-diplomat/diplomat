@@ -189,15 +189,15 @@ pub(crate) fn run<'tcx>(
 
     if !hide_default_renderer {
         files.add_file(
-            "rendering.mjs".into(),
+            "rendering/rendering.mjs".into(),
             include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
         );
         files.add_file(
-            "runtime.mjs".into(),
+            "rendering/runtime.mjs".into(),
             include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
         );
         files.add_file(
-            "template.html".into(),
+            "rendering/template.html".into(),
             include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
         );
     }
