@@ -108,7 +108,7 @@ TypeContext {
                         },
                         special_method: None,
                         demo_attrs: DemoInfo {
-                            enabled: false,
+                            generate: false,
                             default_constructor: false,
                             external: false,
                             input_cfg: {},
@@ -127,7 +127,7 @@ TypeContext {
                 },
                 special_method: None,
                 demo_attrs: DemoInfo {
-                    enabled: false,
+                    generate: false,
                     default_constructor: false,
                     external: false,
                     input_cfg: {},
@@ -260,7 +260,7 @@ TypeContext {
                         },
                         special_method: None,
                         demo_attrs: DemoInfo {
-                            enabled: false,
+                            generate: false,
                             default_constructor: false,
                             external: false,
                             input_cfg: {},
@@ -279,7 +279,7 @@ TypeContext {
                 },
                 special_method: None,
                 demo_attrs: DemoInfo {
-                    enabled: false,
+                    generate: false,
                     default_constructor: false,
                     external: false,
                     input_cfg: {},
@@ -321,7 +321,7 @@ TypeContext {
                 },
                 special_method: None,
                 demo_attrs: DemoInfo {
-                    enabled: false,
+                    generate: false,
                     default_constructor: false,
                     external: false,
                     input_cfg: {},
