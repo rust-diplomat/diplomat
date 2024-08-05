@@ -28,20 +28,20 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[serde(rename_all = "kebab-case")]
 pub(crate) struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
-    pub explicit_generation : Option<bool>,
+    pub explicit_generation: Option<bool>,
 
     /// Removes rendering/ folder
-    pub hide_default_renderer : Option<bool>,
+    pub hide_default_renderer: Option<bool>,
 
     /// If we can grab from index.mjs through a module, override imports for index.mjs to the new module name.
     /// Will set [DemoConfig::relative_js_path] to a blank string, unless explicitly overridden.
-    /// 
+    ///
     /// Will not generate the js/ folder if this is set.
-    pub module_name : Option<String>,
+    pub module_name: Option<String>,
 
     /// The relative path to Javascript to use in `import` statements for demo files.
     /// If this is set, we do not generate the js/ folder.
-    pub relative_js_path : Option<String>,
+    pub relative_js_path: Option<String>,
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
@@ -53,7 +53,7 @@ pub(crate) struct DemoConfig {
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
-    conf: Option<DemoConfig>
+    conf: Option<DemoConfig>,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
@@ -61,12 +61,15 @@ pub(crate) fn run<'tcx>(
 
     let unwrapped_conf = conf.unwrap_or_default();
 
-    let import_path_exists = unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
+    let import_path_exists =
+        unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
 
-    let import_path = unwrapped_conf.relative_js_path.unwrap_or(match unwrapped_conf.module_name {
-        Some(_) => "".into(),
-        None => "./js/".into()
-    });
+    let import_path = unwrapped_conf
+        .relative_js_path
+        .unwrap_or(match unwrapped_conf.module_name {
+            Some(_) => "".into(),
+            None => "./js/".into(),
+        });
 
     let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
 
@@ -80,7 +83,7 @@ pub(crate) fn run<'tcx>(
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
-        pub js_out : String,
+        pub js_out: String,
     }
 
     let mut out_info = IndexInfo {
@@ -109,7 +112,10 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable || !RenderTerminusContext::is_valid_terminus(method) || (is_explicit && !method.attrs.demo_attrs.generate) {
+                if method.attrs.disable
+                    || !RenderTerminusContext::is_valid_terminus(method)
+                    || (is_explicit && !method.attrs.demo_attrs.generate)
+                {
                     continue;
                 }
 
@@ -138,7 +144,7 @@ pub(crate) fn run<'tcx>(
                     },
 
                     relative_import_path: import_path.clone(),
-                    module_name: module_name.clone()
+                    module_name: module_name.clone(),
                 };
 
                 ctx.evaluate(type_name.clone().into(), method);
@@ -199,7 +205,7 @@ pub(crate) fn run<'tcx>(
             include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
         );
     }
-    
+
     if !import_path_exists {
         files.add_file(
             "diplomat.config.mjs".into(),
