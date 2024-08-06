@@ -104,12 +104,15 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
         };
 
-        let methods = m.iter().flat_map(|method| context.generate_method(id, method)).collect::<Vec<_>>();
+        let mut methods = m.iter().flat_map(|method| context.generate_method(id, method)).collect::<Vec<_>>();
 
         for file_type in [FileType::Module, FileType::Typescript] {
             let ts = file_type.is_typescript();
 
-            // TODO: A lot of this could go faster if we cached info for typescript, instead of re-generating it.
+            for m in &mut methods {
+                m.typescript = ts;
+            }
+
             let contents = match type_def {
                 TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, id, &name, o, &methods),
@@ -121,11 +124,7 @@ pub(crate) fn run<'tcx>(
             let file_name = formatter.fmt_file_name(&name, &file_type);
 
             // Remove our self reference:
-            context.remove_import(formatter.fmt_import_statement(
-                &name,
-                ts,
-                "./".into(),
-            ));
+            context.remove_import(name.clone().into());
 
             files.add_file(file_name, context.generate_base(ts, contents));
         }

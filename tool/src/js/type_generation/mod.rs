@@ -29,15 +29,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     pub(super) fn generate_base(&self, typescript: bool, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js/base.js.jinja", escape = "none")]
-        struct BaseTemplate<'info> {
+        struct BaseTemplate {
             body: String,
             typescript: bool,
-            imports: &'info BTreeSet<String>,
+            imports: Vec<String>,
         }
+
+        let mut new_imports = Vec::new();
+        for import in self.imports.borrow().iter() {
+            new_imports.push(self.formatter.fmt_import_statement(import, typescript, "./".into()));
+        }
+
         BaseTemplate {
             body,
             typescript,
-            imports: &self.imports.borrow(),
+            imports: new_imports,
         }
         .render()
         .unwrap()
@@ -435,7 +441,7 @@ pub(super) struct MethodInfo<'info> {
 
     needs_slice_cleanup: bool,
 
-    typescript: bool,
+    pub typescript: bool,
 
     parameters: Vec<ParamInfo<'info>>,
     slice_params: Vec<SliceParam<'info>>,
