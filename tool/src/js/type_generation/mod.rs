@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use diplomat_core::hir::borrowing_param::{
@@ -22,7 +23,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub typescript: bool,
-    pub imports: BTreeSet<String>,
+    pub imports: RefCell<BTreeSet<String>>,
 }
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
@@ -37,15 +38,23 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         BaseTemplate {
             body,
             typescript: self.typescript,
-            imports: &self.imports,
+            imports: &self.imports.borrow(),
         }
         .render()
         .unwrap()
     }
 
+    pub(super) fn add_import(&self, import_str : String) {
+        self.imports.borrow_mut().insert(import_str);
+    }
+
+    pub(super) fn remove_import(&self, import_str : String) {
+        self.imports.borrow_mut().remove(&import_str);
+    }
+
     /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
     pub(super) fn gen_enum(
-        &mut self,
+        &self,
         enum_def: &'tcx EnumDef,
         type_id: TypeId,
         type_name: &str,
@@ -88,7 +97,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 
     pub(super) fn gen_opaque(
-        &mut self,
+        &self,
         opaque_def: &'tcx OpaqueDef,
         type_id: TypeId,
         type_name: &str,
@@ -133,7 +142,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 
     pub(super) fn gen_struct<P: hir::TyPosition>(
-        &mut self,
+        &self,
         struct_def: &'tcx hir::StructDef<P>,
         type_id: TypeId,
         is_out: bool,
@@ -255,7 +264,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     ///
     /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
     fn generate_method_body(
-        &mut self,
+        &self,
         type_id: TypeId,
         method: &'tcx Method,
         typescript: bool,
@@ -402,7 +411,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     ///
     /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
     fn generate_special_method_body(
-        &mut self,
+        &self,
         special_method_presence: &SpecialMethodPresence,
         typescript: bool,
     ) -> String {

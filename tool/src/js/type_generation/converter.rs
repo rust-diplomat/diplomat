@@ -34,7 +34,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region C to JS
     /// Given a type from Rust, convert it into something Typescript will understand.
     /// We use this to double-check our Javascript work as well.
-    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&mut self, ty: &Type<P>) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(primitive) => self.formatter.fmt_primitive_as_ffi(primitive).into(),
             Type::Opaque(ref op) => {
@@ -42,7 +42,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
+                self.add_import(self.formatter.fmt_import_statement(
                     &type_name,
                     self.typescript,
                     "./".into(),
@@ -64,7 +64,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
+                self.add_import(self.formatter.fmt_import_statement(
                     &type_name,
                     self.typescript,
                     "./".into(),
@@ -81,7 +81,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
+                self.add_import(self.formatter.fmt_import_statement(
                     &type_name,
                     self.typescript,
                     "./".into(),
@@ -102,7 +102,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
-    pub(super) fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'tcx, str> {
+    pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
             SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
@@ -273,7 +273,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region Return Types
 
     /// Give us a Typescript return type from [`ReturnType`]
-    pub(super) fn gen_js_return_type_str(&mut self, return_type: &ReturnType) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_return_type_str(&self, return_type: &ReturnType) -> Cow<'tcx, str> {
         match *return_type {
             // -> () or a -> Result<(), Error>.
             ReturnType::Infallible(SuccessType::Unit)
@@ -317,7 +317,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     /// This basically handles the conversions from whatever the WASM gives us to a JS-friendly type.
     /// We access [`super::MethodInfo`] to handle allocation and cleanup.
     pub(super) fn gen_c_to_js_for_return_type(
-        &mut self,
+        &self,
         method_info: &mut super::MethodInfo,
         lifetime_environment: &LifetimeEnv,
     ) -> Option<Cow<'tcx, str>> {
@@ -441,7 +441,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             // Because we don't add Result<_, Error> types to imports, we do that here:
                             if !self.typescript {
                                 let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                                self.imports.insert(self.formatter.fmt_import_statement(
+                                self.add_import(self.formatter.fmt_import_statement(
                                     &type_name,
                                     false,
                                     "./".into(),

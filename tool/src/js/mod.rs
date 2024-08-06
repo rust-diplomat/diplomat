@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, cell::RefCell};
 use std::collections::BTreeSet;
 
 use crate::{ErrorStore, FileMap};
@@ -94,7 +94,7 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter,
                 errors: &errors,
                 typescript: file_type.is_typescript(),
-                imports: BTreeSet::new(),
+                imports: RefCell::new(BTreeSet::new()),
             };
 
             // TODO: A lot of this could go faster if we cached info for typescript, instead of re-generating it.
@@ -109,7 +109,7 @@ pub(crate) fn run<'tcx>(
             let file_name = formatter.fmt_file_name(&name, &file_type);
 
             // Remove our self reference:
-            context.imports.remove(&formatter.fmt_import_statement(
+            context.remove_import(formatter.fmt_import_statement(
                 &name,
                 context.typescript,
                 "./".into(),
