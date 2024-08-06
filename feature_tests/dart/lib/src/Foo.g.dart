@@ -25,13 +25,9 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo(String x) {
     final xArena = _FinalizedArena();
-    final (xData, xLength) = x._utf8AllocIn(xArena.arena);
-    final x_struct = ffi.Struct.create<_SliceUtf8>();
-    x_struct._data = xData;
-    x_struct._length = xLength;
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [xArena];
-    final result = _Foo_new(x_struct);
+    final result = _Foo_new(x._utf8AllocIn(xArena.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -46,13 +42,9 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.static_(String x) {
     final temp = _FinalizedArena();
-    final (xData, xLength) = x._utf8AllocIn(temp.arena);
-    final x_struct = ffi.Struct.create<_SliceUtf8>();
-    x_struct._data = xData;
-    x_struct._length = xLength;
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [];
-    final result = _Foo_new_static(x_struct);
+    final result = _Foo_new_static(x._utf8AllocIn(temp.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -75,13 +67,9 @@ final class Foo implements ffi.Finalizable {
   factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
     final temp = _FinalizedArena();
     final anotherStringArena = _FinalizedArena();
-    final (anotherStringData, anotherStringLength) = anotherString._utf8AllocIn(anotherStringArena.arena);
-    final anotherString_struct = ffi.Struct.create<_SliceUtf8>();
-    anotherString_struct._data = anotherStringData;
-    anotherString_struct._length = anotherStringLength;
     // This lifetime edge depends on lifetimes: 'a, 'y, 'z
     core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
-    final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString_struct);
+    final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString._utf8AllocIn(anotherStringArena.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
 }

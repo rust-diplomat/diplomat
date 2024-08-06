@@ -27,11 +27,7 @@ final class Locale implements ffi.Finalizable {
   /// Construct an [`Locale`] from a locale identifier represented as a string.
   factory Locale(String name) {
     final temp = _FinalizedArena();
-    final (nameData, nameLength) = name._utf8AllocIn(temp.arena);
-    final name_struct = ffi.Struct.create<_SliceUtf8>();
-    name_struct._data = nameData;
-    name_struct._length = nameLength;
-    final result = _icu4x_Locale_new_mv1(name_struct);
+    final result = _icu4x_Locale_new_mv1(name._utf8AllocIn(temp.arena));
     return Locale._fromFfi(result, []);
   }
 }

@@ -39,9 +39,20 @@ impl<'tcx> DartFormatter<'tcx> {
         format!("{name}.g.dart")
     }
 
-    pub fn fmt_import(&self, path: &str, as_show_hide: Option<&str>) -> Cow<'static, str> {
+    pub fn fmt_import(
+        &self,
+        path: &str,
+        as_show_hide: Option<&str>,
+        ignore_warning: Option<&str>,
+    ) -> Cow<'static, str> {
+        let ignore = if let Some(ignore) = ignore_warning {
+            format!("// ignore: {ignore}\n")
+        } else {
+            Default::default()
+        };
+
         format!(
-            "import '{path}'{}{};",
+            "{ignore}import '{path}'{}{};",
             if as_show_hide.is_some() { " " } else { "" },
             as_show_hide.unwrap_or_default(),
         )
@@ -225,14 +236,13 @@ impl<'tcx> DartFormatter<'tcx> {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Bool => "_boolAllocIn",
-            PrimitiveType::Char => "_uint32AllocIn",
-            PrimitiveType::Byte => "_rawBytesAllocIn",
+            PrimitiveType::Byte => unreachable!("custom handling"),
             PrimitiveType::Int(IntType::I8) => "_int8AllocIn",
             PrimitiveType::Int(IntType::U8) => "_uint8AllocIn",
             PrimitiveType::Int(IntType::I16) => "_int16AllocIn",
             PrimitiveType::Int(IntType::U16) => "_uint16AllocIn",
             PrimitiveType::Int(IntType::I32) => "_int32AllocIn",
-            PrimitiveType::Int(IntType::U32) => "_uint32AllocIn",
+            PrimitiveType::Int(IntType::U32) | PrimitiveType::Char => "_uint32AllocIn",
             PrimitiveType::Int(IntType::I64) => "_int64AllocIn",
             PrimitiveType::Int(IntType::U64) => "_uint64AllocIn",
             PrimitiveType::IntSize(IntSizeType::Usize) => "_usizeAllocIn",

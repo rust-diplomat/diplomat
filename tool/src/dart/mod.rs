@@ -61,13 +61,6 @@ pub(crate) fn run<'cx>(
         formatter: &formatter,
     };
 
-    // Needed for `_utf(8/16)SliceAllocIn`, defined in `init.dart`
-    context.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
-    context.gen_slice(&hir::Slice::Str(
-        None,
-        hir::StringEncoding::UnvalidatedUtf16,
-    ));
-
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
@@ -90,15 +83,23 @@ pub(crate) fn run<'cx>(
     directives.insert(formatter.fmt_import(
         "dart:core",
         Some("show int, double, bool, String, Object, override"),
+        Some("unused_shown_name"),
     ));
-    directives.insert(formatter.fmt_import("dart:convert", None));
-    directives.insert(formatter.fmt_import("dart:math", None));
-    directives.insert(formatter.fmt_import("dart:core", Some("as core")));
-    directives.insert(formatter.fmt_import("dart:ffi", Some("as ffi")));
-    directives
-        .insert(formatter.fmt_import("package:ffi/ffi.dart", Some("as ffi2 show Arena, calloc")));
-    directives.insert(formatter.fmt_import("dart:typed_data", None));
-    directives.insert(formatter.fmt_import("package:meta/meta.dart", Some("as meta")));
+    directives.insert(formatter.fmt_import("dart:core", Some("as core"), Some("unused_import")));
+
+    directives.insert(formatter.fmt_import("dart:ffi", Some("as ffi"), None));
+    directives.insert(formatter.fmt_import(
+        "package:ffi/ffi.dart",
+        Some("as ffi2 show Arena, calloc"),
+        None,
+    ));
+    directives.insert(formatter.fmt_import("package:meta/meta.dart", Some("as meta"), None));
+
+    // For DiplomatWrite and slices
+    directives.insert(formatter.fmt_import("dart:convert", None, None));
+
+    // For slices
+    directives.insert(formatter.fmt_import("dart:typed_data", None, Some("unused_import")));
 
     files.add_file(
         formatter.fmt_file_name("lib"),
@@ -259,11 +260,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
-                let (dart_to_c, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
-                    // We do not need to handle lifetime transitivity here: Methods already resolve
-                    // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
-                    // are explicitly specified on methods.
-                    let alloc = if let Some(lt) = slice.lifetime() {
+                // We do not need to handle lifetime transitivity here: Methods already resolve
+                // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
+                // are explicitly specified on methods.
+                let alloc = if let &hir::Type::Slice(slice) = &field.ty {
+                    if let Some(lt) = slice.lifetime() {
                         let MaybeStatic::NonStatic(lt) = lt else {
                             panic!("'static not supported in Dart");
                         };
@@ -273,34 +274,27 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         ))
                     } else {
                         None
-                    };
-
-                    let expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None, alloc.as_deref());
-
-                    let ret = vec![
-                        format!("final ({name}Data, {name}Length) = {expr};"),
-                        format!("struct.{name}._length = {name}Length;"),
-                        format!("struct.{name}._data = {name}Data;"),
-                    ];
-                    (ret, None)
+                    }
+                } else if let &hir::Type::Struct(..) = &field.ty {
+                    Some("temp".into())
                 } else {
-                    let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
-                        StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
-                            |param_info| StructBorrowContext {
-                                use_env: &ty.lifetimes,
-                                param_info,
-                                is_method: false,
-                            },
-                        )
-                    } else {
-                        None
-                    };
-                    let dart_to_c = self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info.as_ref(), Some("temp"));
-                    (vec![format!(
-                        "struct.{name} = {};",
-                        dart_to_c
-                    )], struct_borrow_info.map(|s| s.param_info))
+                    None
                 };
+
+                let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                    StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
+                        |param_info| StructBorrowContext {
+                            use_env: &ty.lifetimes,
+                            param_info,
+                            is_method: false,
+                        },
+                    )
+                } else {
+                    None
+                };
+
+
+                let dart_to_c = self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info.as_ref(), alloc.as_deref());
 
                 FieldInfo {
                     name,
@@ -310,7 +304,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     dart_type_name,
                     c_to_dart,
                     dart_to_c,
-                    maybe_struct_borrow_info
+                    param_info: struct_borrow_info.map(|i| i.param_info),
                 }
             })
             .collect::<Vec<_>>();
@@ -431,88 +425,64 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
         }
 
-        let mut conversion_allocations = Vec::new();
+        let mut arenas = Vec::new();
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
+            param_names_ffi.push(param_name.clone());
+            param_types_ffi.push(self.gen_type_name_ffi(&param.ty, false));
+            param_types_ffi_cast.push(self.gen_type_name_ffi(&param.ty, true));
 
-            if let hir::Type::Slice(slice) = param.ty {
-                // Two args on the ABI: pointer and size
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-                let alloc = match param_borrow_kind {
+            let alloc = if let hir::Type::Struct(..) = param.ty {
+                needs_temp_arena = true;
+                Some("temp.arena".to_string())
+            } else if let hir::Type::Slice(s) = param.ty {
+                match param_borrow_kind {
                     ParamBorrowInfo::BorrowedSlice => {
                         // Slices borrowed in the return value use a custom arena
-                        conversion_allocations
-                            .push(format!("final {param_name}Arena = _FinalizedArena();").into());
-                        format!("{param_name}Arena.arena")
+                        arenas.push(format!("final {param_name}Arena = _FinalizedArena();").into());
+                        Some(format!("{param_name}Arena.arena"))
                     }
+                    // Owned slices use the Rust allocator
+                    ParamBorrowInfo::TemporarySlice if s.lifetime().is_none() => None,
                     ParamBorrowInfo::TemporarySlice => {
                         // Everyone else uses the temporary arena that keeps stuff alive until the method is called
                         needs_temp_arena = true;
-                        "temp.arena".into()
+                        Some("temp.arena".into())
                     }
                     _ => unreachable!(
                         "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                     ),
-                };
-
-                let dart_to_c =
-                    self.gen_dart_to_c_for_type(&param.ty, param_name.clone(), None, Some(&alloc));
-
-                let ffi_slice = self.gen_slice(&slice);
-
-                param_types_ffi_cast.push(ffi_slice.into());
-                param_types_ffi.push(ffi_slice.into());
-                param_names_ffi.push(format!("{param_name}").into());
-                conversion_allocations.push(
-                    format!("final ({param_name}Data, {param_name}Length) = {dart_to_c};").into(),
-                );
-                conversion_allocations.push(
-                    format!("final {param_name}_struct = ffi.Struct.create<{ffi_slice}>();").into(),
-                );
-                conversion_allocations
-                    .push(format!("{param_name}_struct._data = {param_name}Data;").into());
-                conversion_allocations
-                    .push(format!("{param_name}_struct._length = {param_name}Length;").into());
-                param_conversions.push(format!("{param_name}_struct").into());
+                }
             } else {
-                let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
-                let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
+                None
+            };
 
-                let alloc = if let hir::Type::Struct(..) = param.ty {
-                    needs_temp_arena = true;
-                    Some("temp.arena")
-                } else {
-                    None
-                };
+            let struct_borrow_info = if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind
+            {
+                Some(StructBorrowContext {
+                    use_env: &method.lifetime_env,
+                    param_info,
+                    is_method: true,
+                })
+            } else {
+                None
+            };
 
-                let struct_borrow_info =
-                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
-                        Some(StructBorrowContext {
-                            use_env: &method.lifetime_env,
-                            param_info,
-                            is_method: true,
-                        })
-                    } else {
-                        None
-                    };
-                param_types_ffi.push(param_type_ffi);
-                param_types_ffi_cast.push(param_type_ffi_cast);
-                param_conversions.push(self.gen_dart_to_c_for_type(
-                    &param.ty,
-                    param_name.clone(),
-                    struct_borrow_info.as_ref(),
-                    alloc,
-                ));
-                param_names_ffi.push(param_name);
-            }
+            param_conversions.push(self.gen_dart_to_c_for_type(
+                &param.ty,
+                param_name,
+                struct_borrow_info.as_ref(),
+                alloc.as_deref(),
+            ));
         }
 
         if needs_temp_arena {
-            conversion_allocations.insert(0, "final temp = _FinalizedArena();".into());
+            arenas.insert(0, "final temp = _FinalizedArena();".into());
         }
 
         if method.output.is_write() {
@@ -549,7 +519,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 "set {}({params})",
                 self.formatter.fmt_accessor_name(name, method)
             ),
-            Some(SpecialMethod::Stringifier) => "@override\n  String toString()".into(),
+            Some(SpecialMethod::Stringifier) => "@core.override\n  String toString()".into(),
             Some(SpecialMethod::Comparison) => format!("int compareTo({type_name} other)"),
             Some(SpecialMethod::Iterator) => format!("{return_ty} _iteratorNext({params})"),
             Some(SpecialMethod::Iterable) => format!("{return_ty} get iterator"),
@@ -586,7 +556,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_names_ffi,
             return_type_ffi,
             return_type_ffi_cast,
-            conversion_allocations,
+            arenas,
             param_conversions,
             return_expression,
             lifetimes: &method.lifetime_env,
@@ -814,21 +784,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info, alloc.unwrap())
             }
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
-            Type::Slice(s) => format!(
-                "{dart_name}.{alloc_in}({alloc})",
-                alloc_in = match s {
+            Type::Slice(s) => {
+                self.gen_slice(&s);
+                let alloc_in = match s {
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Byte) => {
+                        "asUint8List()._uint8AllocIn"
+                    }
                     hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(p),
                     hir::Slice::Str(_, encoding) => self.formatter.fmt_str_alloc_in(encoding),
                     hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_alloc_in(encoding),
                     _ => unreachable!("unknown AST/HIR variant"),
-                },
-                alloc = if s.lifetime().is_none() {
+                };
+                let alloc = if s.lifetime().is_none() {
                     "_RustAlloc()"
                 } else {
                     alloc.expect("need allocator for slice")
-                }
-            )
-            .into(),
+                };
+                format!("{dart_name}.{alloc_in}({alloc})",).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1042,82 +1015,145 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
         let slice_ty = self.formatter.fmt_slice_type(slice);
 
+        if self.helper_classes.contains_key(slice_ty) {
+            return slice_ty;
+        }
+
+        #[derive(askama::Template)]
+        #[template(path = "dart/slice.dart.jinja", escape = "none")]
+        struct SliceTemplate<'a> {
+            slice_ty: &'a str,
+            ffi_element_type: &'a str,
+            dart_ty: &'a str,
+            to_dart: &'a str,
+            owned_free: &'a str,
+            borrowed_free: &'a str,
+            alloc_in_ident: &'a str,
+            from_dart: Vec<Cow<'a, str>>,
+        }
+
         let ffi_element_type = &self.gen_slice_element_ty(slice);
 
-        self.helper_classes
-            .entry(slice_ty.into())
-            .or_insert_with(|| {
-                #[derive(askama::Template)]
-                #[template(path = "dart/slice.dart.jinja", escape = "none")]
-                struct SliceTemplate<'a> {
-                    slice_ty: &'a str,
-                    ffi_element_type: &'a str,
-                    dart_ty: &'a str,
-                    to_dart: &'a str,
-                    owned_free: &'a str,
-                    borrowed_free: &'a str,
-                }
+        let dart_ty = match slice {
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
+            hir::Slice::Str(.., encoding) => self.formatter.fmt_string_type(*encoding),
+            hir::Slice::Strs(.., encoding) => self.formatter.fmt_string_list_type(*encoding),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
 
-                let dart_ty = match slice {
-                    hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
-                    hir::Slice::Str(.., encoding) => self.formatter.fmt_string_type(*encoding),
-                    hir::Slice::Strs(.., encoding) => self.formatter.fmt_string_list_type(*encoding),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
+        let to_dart = &match slice {
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => "Utf8Decoder().convert(_data.asTypedList(_length))",
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "core.String.fromCharCodes(_data.asTypedList(_length))",
+            // special case: not typed lists for platform-specific integers, so cannot borrow
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Bool) => "core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false)",
+            hir::Slice::Primitive(..) => "_data.asTypedList(_length)",
+            hir::Slice::Strs(..) => "core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false)",
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
 
-                let to_dart = &match slice {
-                    hir::Slice::Str(
-                        _,
-                        hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-                    ) => "Utf8Decoder().convert(_data.asTypedList(_length))",
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "core.String.fromCharCodes(_data.asTypedList(_length))",
-                    // special case: not typed lists for platform-specific integers, so cannot borrow
-                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Bool) => "core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false)",
-                    hir::Slice::Primitive(..) => "_data.asTypedList(_length)",
-                    hir::Slice::Strs(..) => "core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false)",
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
+        let alloc_in_ident = match slice {
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(*p),
+            hir::Slice::Str(_, e) => self.formatter.fmt_str_alloc_in(*e),
+            hir::Slice::Strs(e) => self.formatter.fmt_str_slice_alloc_in(*e),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
 
-                let owned_free: Cow<str> = match slice {
-                    hir::Slice::Str(
-                        _,
-                        hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-                    ) => "_diplomat_free(_data.cast(), _length, 1);".into(),
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "_diplomat_free(_data.cast(), _length * 2, 2);".into(),
-                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "_diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());".into(),
-                    hir::Slice::Primitive(_, p) => {
-                        let (size, align) = match p {
-                            hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => ("", "1"),
-                            hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => (" * 2", "2"),
-                            hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => (" * 4", "4"),
-                            hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => (" * 8", "8"),
-                            hir::PrimitiveType::IntSize(..) => ("* ffi.sizeOf<ffi.Size>()", "ffi.sizeOf<ffi.Size>()"),
-                            hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-                        };
-                        format!("_rustFree.attach(r, (pointer: _data.cast(), bytes: _length{size}, align: {align}));").into()
-                    }
-                    hir::Slice::Strs(..) => "// unsupported".into(),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                  };
+        let from_dart: Vec<Cow<str>> = match slice {
+            // Strings
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => vec![
+                    "final encoded = Utf8Encoder().convert(this);".into(), 
+                    "slice._data = alloc(encoded.length)..asTypedList(encoded.length).setRange(0, encoded.length, encoded);".into(),
+                    "slice._length = encoded.length;".into(),
+                ],
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => vec![
+                "slice._data = alloc(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);".into(),
+                "slice._length = length;".into(),
+            ],
+            // Typed lists
+            hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::I8 | hir::IntType::I16 | hir::IntType::I32 | hir::IntType::I64) | hir::PrimitiveType::Float(..) | hir::PrimitiveType::Char) => vec![
+                "slice._data = alloc(length)..asTypedList(length).setRange(0, length, this);".into(),
+                "slice._length = length;".into(),
+            ],
+            hir::Slice::Primitive(_, hir::PrimitiveType::Int128(_)) => panic!("i128 not supported in Dart"),
+            // Manual construction
+            _ => vec![
+                "slice._data = alloc(length);".into(),
+                "for (var i = 0; i < length; i++) {".into(),
+                format!(
+                    "  slice._data[i] = {};",
+                    match slice {
+                        hir::Slice::Primitive(_, hir::PrimitiveType::Bool) =>  Cow::Borrowed("this[i]"),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(hir::IntSizeType::Usize)) => "this[i] < 0 ? 0 : this[i]".into(),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(hir::IntSizeType::Isize)) => "this[i]".into(),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U8)) => format!("this[i].clamp(0, {})", u8::MAX).into(),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U16)) => format!("this[i].clamp(0, {})", u16::MAX).into(),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U32)) => format!("this[i].clamp(0, {})", u32::MAX).into(),
+                        hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U64)) => format!("this[i].clamp(0, {})", u64::MAX).into(),
+                        hir::Slice::Strs(e) => {
+                            self.gen_slice(&hir::Slice::Str(None, *e));
+                            format!("this[i].{}(alloc);", self.formatter.fmt_str_alloc_in(*e)).into()
+                        },
+                        _ => unreachable!("unknown AST/HIR variant"),
+                    }).into(),
+                "}".into(),
+                "slice._length = length;".into(),
+            ],
+        };
 
-                let borrowed_free = match slice {
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Bool | hir::PrimitiveType::Char | hir::PrimitiveType::Int(..) | hir::PrimitiveType::Float(..)) => {
-                        "_nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive"
-                    },
-                    _ => "// Lifetime edges will be cleaned up",
-                };
+        let owned_free: Cow<str> = match slice {
+        hir::Slice::Str(
+            _,
+            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+        ) => "_diplomat_free(_data.cast(), _length, 1);".into(),
+        hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "_diplomat_free(_data.cast(), _length * 2, 2);".into(),
+        hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "_diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());".into(),
+        hir::Slice::Primitive(_, p) => {
+            let (size, align) = match p {
+                hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => ("", "1"),
+                hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => (" * 2", "2"),
+                hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => (" * 4", "4"),
+                hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => (" * 8", "8"),
+                hir::PrimitiveType::IntSize(..) => ("* ffi.sizeOf<ffi.Size>()", "ffi.sizeOf<ffi.Size>()"),
+                hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            };
+            format!("_rustFree.attach(r, (pointer: _data.cast(), bytes: _length{size}, align: {align}));").into()
+        }
+        hir::Slice::Strs(..) => "// unsupported".into(),
+        _ => unreachable!("unknown AST/HIR variant"),
+        };
 
-                SliceTemplate {
-                    slice_ty,
-                    ffi_element_type,
-                    dart_ty,
-                    to_dart,
-                    owned_free: &owned_free,
-                    borrowed_free,
-                }
-                .render()
-                .unwrap()
-            });
+        let borrowed_free = match slice {
+            hir::Slice::Primitive(
+                _,
+                hir::PrimitiveType::Bool
+                | hir::PrimitiveType::Char
+                | hir::PrimitiveType::Int(..)
+                | hir::PrimitiveType::Float(..),
+            ) => "_nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive",
+            _ => "// Lifetime edges will be cleaned up",
+        };
+
+        self.helper_classes.insert(
+            slice_ty.to_string(),
+            SliceTemplate {
+                slice_ty,
+                ffi_element_type,
+                dart_ty,
+                to_dart,
+                owned_free: &owned_free,
+                borrowed_free,
+                from_dart,
+                alloc_in_ident,
+            }
+            .render()
+            .unwrap(),
+        );
 
         slice_ty
     }
@@ -1227,7 +1263,7 @@ struct MethodInfo<'a> {
     return_type_ffi_cast: Cow<'a, str>,
 
     /// All slice parameters conversion code
-    conversion_allocations: Vec<Cow<'a, str>>,
+    arenas: Vec<Cow<'a, str>>,
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
@@ -1251,9 +1287,9 @@ struct FieldInfo<'a, P: TyPosition> {
     ffi_cast_type_name: Cow<'a, str>,
     dart_type_name: Cow<'a, str>,
     c_to_dart: Cow<'a, str>,
-    dart_to_c: Vec<String>,
+    dart_to_c: Cow<'a, str>,
     /// If this is a struct field that borrows, the borrowing information for that field.
-    maybe_struct_borrow_info: Option<StructBorrowInfo<'a>>,
+    param_info: Option<StructBorrowInfo<'a>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)

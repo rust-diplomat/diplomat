@@ -23,6 +23,7 @@ final class {{slice_ty}} extends ffi.Struct {
   @override
   int get hashCode => _length.hashCode;
 
+  // ignore: unused_element
   {{dart_ty}} _toDart(core.List<Object> lifetimeEdges) {
     final r = {{ to_dart }};
     if (lifetimeEdges.isEmpty) {
@@ -31,5 +32,16 @@ final class {{slice_ty}} extends ffi.Struct {
       {{ borrowed_free }}
     }
     return r;
+  }
+}
+
+extension on {{ dart_ty }} {
+  // ignore: unused_element
+  {{slice_ty}} {{alloc_in_ident}}(ffi.Allocator alloc) {
+    final slice = ffi.Struct.create<{{slice_ty}}>();
+    {% for from_dart in from_dart -%}
+    {{ from_dart }}
+    {% endfor -%}
+    return slice;
   }
 }

@@ -23,51 +23,30 @@ final class MyString implements ffi.Finalizable {
 
   factory MyString(String v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._utf8AllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceUtf8>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _MyString_new(v_struct);
+    final result = _MyString_new(v._utf8AllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
 
   factory MyString.unsafe(String v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._utf8AllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceUtf8>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _MyString_new_unsafe(v_struct);
+    final result = _MyString_new_unsafe(v._utf8AllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
 
   static MyString newOwned(String v) {
-    final temp = _FinalizedArena();
-    final (vData, vLength) = v._utf8AllocIn(_RustAlloc());
-    final v_struct = ffi.Struct.create<_SliceUtf8>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _MyString_new_owned(v_struct);
+    final result = _MyString_new_owned(v._utf8AllocIn(_RustAlloc()));
     return MyString._fromFfi(result, []);
   }
 
   static MyString newFromFirst(core.List<core.String> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._utf8SliceAllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceSliceUtf8>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _MyString_new_from_first(v_struct);
+    final result = _MyString_new_from_first(v._utf8SliceAllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
 
   set str(String newStr) {
     final temp = _FinalizedArena();
-    final (newStrData, newStrLength) = newStr._utf8AllocIn(temp.arena);
-    final newStr_struct = ffi.Struct.create<_SliceUtf8>();
-    newStr_struct._data = newStrData;
-    newStr_struct._length = newStrLength;
-    _MyString_set_str(_ffi, newStr_struct);
+    _MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
   }
 
   String get str {
@@ -78,12 +57,8 @@ final class MyString implements ffi.Finalizable {
 
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
-    final (fooData, fooLength) = foo._utf8AllocIn(temp.arena);
-    final foo_struct = ffi.Struct.create<_SliceUtf8>();
-    foo_struct._data = fooData;
-    foo_struct._length = fooLength;
     final write = _Write();
-    _MyString_string_transform(foo_struct, write._ffi);
+    _MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
     return write.finalize();
   }
 }

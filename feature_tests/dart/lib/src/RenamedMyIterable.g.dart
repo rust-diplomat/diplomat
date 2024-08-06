@@ -23,11 +23,7 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
 
   factory RenamedMyIterable(core.List<int> x) {
     final temp = _FinalizedArena();
-    final (xData, xLength) = x._uint8AllocIn(temp.arena);
-    final x_struct = ffi.Struct.create<_SliceUint8>();
-    x_struct._data = xData;
-    x_struct._length = xLength;
-    final result = _namespace_MyIterable_new(x_struct);
+    final result = _namespace_MyIterable_new(x._uint8AllocIn(temp.arena));
     return RenamedMyIterable._fromFfi(result, []);
   }
 

@@ -28,21 +28,13 @@ final class Opaque implements ffi.Finalizable {
 
   static Opaque? tryFromUtf8(String input) {
     final temp = _FinalizedArena();
-    final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
-    final input_struct = ffi.Struct.create<_SliceUtf8>();
-    input_struct._data = inputData;
-    input_struct._length = inputLength;
-    final result = _Opaque_try_from_utf8(input_struct);
+    final result = _Opaque_try_from_utf8(input._utf8AllocIn(temp.arena));
     return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
 
   static Opaque fromStr(String input) {
     final temp = _FinalizedArena();
-    final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
-    final input_struct = ffi.Struct.create<_SliceUtf8>();
-    input_struct._data = inputData;
-    input_struct._length = inputLength;
-    final result = _Opaque_from_str(input_struct);
+    final result = _Opaque_from_str(input._utf8AllocIn(temp.arena));
     return Opaque._fromFfi(result, []);
   }
 
