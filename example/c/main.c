@@ -33,9 +33,7 @@ int main(int argc, char *argv[]) {
 
     print_decimal(fd);
 
-    DiplomatStringView bn = {"bn", 2};
-
-    Locale* locale = icu4x_Locale_new_mv1(bn);
+    Locale* locale = icu4x_Locale_new_mv1((DiplomatStringView){.data = "bn", .len = 2});
 
     DataProvider* data_provider = icu4x_DataProvider_new_static_mv1();
 
