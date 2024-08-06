@@ -298,16 +298,22 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Result<StructDef, ()> {
         let ast_struct = item.item;
         self.errors.set_item(ast_struct.name.as_str());
-        let name = self.lower_ident(&ast_struct.name, "struct name");
+        let struct_name = self.lower_ident(&ast_struct.name, "struct name")?;
 
         let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
 
         for (name, ty, docs) in ast_struct.fields.iter() {
-            let name = self.lower_ident(name, "struct field name");
+            let name = self.lower_ident(name, "struct field name")?;
+            if !ty.is_ffi_safe() {
+                let ffisafe = ty.ffi_safe_version();
+                self.errors.push(LoweringError::Other(format!(
+                    "Found FFI-unsafe type {ty} in struct field {struct_name}.{name}, consider using {ffisafe}",
+                )));
+            }
             let ty = self.lower_type::<Everywhere>(ty, &mut &ast_struct.lifetimes, item.in_path);
 
-            match (name, ty, &mut fields) {
-                (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
+            match (ty, &mut fields) {
+                (Ok(ty), Ok(fields)) => fields.push(StructField {
                     docs: docs.clone(),
                     name,
                     ty,
@@ -346,7 +352,7 @@ impl<'ast> LoweringContext<'ast> {
         };
         let def = StructDef::new(
             ast_struct.docs.clone(),
-            name?,
+            struct_name,
             fields?,
             methods,
             attrs,
@@ -698,12 +704,14 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(lifetime, encoding) => Ok(Type::Slice(Slice::Str(
-                lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
-                *encoding,
-            ))),
-            ast::TypeName::StrSlice(encoding) => Ok(Type::Slice(Slice::Strs(*encoding))),
-            ast::TypeName::PrimitiveSlice(lm, prim) => Ok(Type::Slice(Slice::Primitive(
+            ast::TypeName::StrReference(lifetime, encoding, _stdlib) => {
+                Ok(Type::Slice(Slice::Str(
+                    lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
+                    *encoding,
+                )))
+            }
+            ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::Slice(Slice::Strs(*encoding))),
+            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => Ok(Type::Slice(Slice::Primitive(
                 lm.as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
                 PrimitiveType::from_ast(*prim),
@@ -924,23 +932,23 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(None, _) | ast::TypeName::StrReference(None, _) => {
+            ast::TypeName::PrimitiveSlice(None, _, _stdlib)
+            | ast::TypeName::StrReference(None, _, _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "Owned slices cannot be returned".into(),
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(Some(l), encoding) => Ok(OutType::Slice(Slice::Str(
-                Some(ltl.lower_lifetime(l)),
-                *encoding,
-            ))),
-            ast::TypeName::StrSlice(..) => {
+            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(OutType::Slice(
+                Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
+            )),
+            ast::TypeName::StrSlice(.., _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "String slices can only be an input type".into(),
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim) => {
+            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
                 Ok(OutType::Slice(Slice::Primitive(
                     Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
                     PrimitiveType::from_ast(*prim),

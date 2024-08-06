@@ -15,7 +15,7 @@
 
 
 
-OptionString* OptionString_new(const char* diplomat_str_data, size_t diplomat_str_len);
+OptionString* OptionString_new(DiplomatStringView diplomat_str);
 
 typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;
 OptionString_write_result OptionString_write(const OptionString* self, DiplomatWrite* write);

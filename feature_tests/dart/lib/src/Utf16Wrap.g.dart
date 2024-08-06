@@ -24,7 +24,10 @@ final class Utf16Wrap implements ffi.Finalizable {
   factory Utf16Wrap(String input) {
     final temp = _FinalizedArena();
     final (inputData, inputLength) = input._utf16AllocIn(temp.arena);
-    final result = _Utf16Wrap_from_utf16(inputData, inputLength);
+    final input_struct = ffi.Struct.create<_SliceUtf16>();
+    input_struct._data = inputData;
+    input_struct._length = inputLength;
+    final result = _Utf16Wrap_from_utf16(input_struct);
     return Utf16Wrap._fromFfi(result, []);
   }
 
@@ -48,9 +51,9 @@ final class Utf16Wrap implements ffi.Finalizable {
 external void _Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('Utf16Wrap_from_utf16')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, ffi.Size)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf16)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(ffi.Pointer<ffi.Uint16> inputData, int inputLength);
+external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(_SliceUtf16 input);
 
 @meta.ResourceIdentifier('Utf16Wrap_get_debug_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_get_debug_str')

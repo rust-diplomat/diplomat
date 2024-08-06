@@ -10,19 +10,19 @@ pub mod ffi {
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
     pub struct BorrowedFields<'a> {
-        a: &'a DiplomatStr16,
-        b: &'a DiplomatStr,
-        c: &'a str,
+        a: DiplomatStr16Slice<'a>,
+        b: DiplomatStrSlice<'a>,
+        c: DiplomatUtf8StrSlice<'a>,
     }
 
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
-        field_a: &'a DiplomatStr16,
-        field_b: &'b DiplomatStr,
-        field_c: &'c str,
+        field_a: DiplomatStr16Slice<'a>,
+        field_b: DiplomatStrSlice<'b>,
+        field_c: DiplomatUtf8StrSlice<'c>,
     }
 
     pub struct BorrowedFieldsReturning<'a> {
-        bytes: &'a DiplomatStr,
+        bytes: DiplomatStrSlice<'a>,
     }
     impl<'a> Foo<'a> {
         #[diplomat::attr(auto, constructor)]
@@ -41,12 +41,14 @@ pub mod ffi {
         }
 
         pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
-            BorrowedFieldsReturning { bytes: self.0 }
+            BorrowedFieldsReturning {
+                bytes: self.0.into(),
+            }
         }
 
         #[diplomat::attr(auto, named_constructor)]
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
-            Box::new(Foo(fields.b))
+            Box::new(Foo(fields.b.into()))
         }
 
         #[diplomat::attr(auto, named_constructor)]
@@ -58,7 +60,7 @@ pub mod ffi {
             if bounds.field_b.is_empty() {
                 Box::new(Self(another_string))
             } else {
-                Box::new(Self(bounds.field_b))
+                Box::new(Self(bounds.field_b.into()))
             }
         }
     }
@@ -70,9 +72,9 @@ pub mod ffi {
             utf8_str: &'x str,
         ) -> Self {
             BorrowedFields {
-                a: dstr16,
-                b: bar.0 .0,
-                c: utf8_str,
+                a: dstr16.into(),
+                b: bar.0 .0.into(),
+                c: utf8_str.into(),
             }
         }
     }
@@ -84,9 +86,9 @@ pub mod ffi {
             utf8_str_z: &'z str,
         ) -> Self {
             BorrowedFieldsWithBounds {
-                field_a: dstr16_x,
-                field_b: foo.0,
-                field_c: utf8_str_z,
+                field_a: dstr16_x.into(),
+                field_b: foo.0.into(),
+                field_c: utf8_str_z.into(),
             }
         }
     }

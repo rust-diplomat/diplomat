@@ -26,9 +26,12 @@ final class Foo implements ffi.Finalizable {
   factory Foo(String x) {
     final xArena = _FinalizedArena();
     final (xData, xLength) = x._utf8AllocIn(xArena.arena);
+    final x_struct = ffi.Struct.create<_SliceUtf8>();
+    x_struct._data = xData;
+    x_struct._length = xLength;
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [xArena];
-    final result = _Foo_new(xData, xLength);
+    final result = _Foo_new(x_struct);
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -44,9 +47,12 @@ final class Foo implements ffi.Finalizable {
   factory Foo.static_(String x) {
     final temp = _FinalizedArena();
     final (xData, xLength) = x._utf8AllocIn(temp.arena);
+    final x_struct = ffi.Struct.create<_SliceUtf8>();
+    x_struct._data = xData;
+    x_struct._length = xLength;
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [];
-    final result = _Foo_new_static(xData, xLength);
+    final result = _Foo_new_static(x_struct);
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -70,9 +76,12 @@ final class Foo implements ffi.Finalizable {
     final temp = _FinalizedArena();
     final anotherStringArena = _FinalizedArena();
     final (anotherStringData, anotherStringLength) = anotherString._utf8AllocIn(anotherStringArena.arena);
+    final anotherString_struct = ffi.Struct.create<_SliceUtf8>();
+    anotherString_struct._data = anotherStringData;
+    anotherString_struct._length = anotherStringLength;
     // This lifetime edge depends on lifetimes: 'a, 'y, 'z
     core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
-    final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherStringData, anotherStringLength);
+    final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString_struct);
     return Foo._fromFfi(result, [], aEdges);
   }
 }
@@ -83,9 +92,9 @@ final class Foo implements ffi.Finalizable {
 external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('Foo_new')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_new(ffi.Pointer<ffi.Uint8> xData, int xLength);
+external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
 
 @meta.ResourceIdentifier('Foo_get_bar')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
@@ -93,9 +102,9 @@ external ffi.Pointer<ffi.Opaque> _Foo_new(ffi.Pointer<ffi.Uint8> xData, int xLen
 external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
 
 @meta.ResourceIdentifier('Foo_new_static')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new_static')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new_static')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_new_static(ffi.Pointer<ffi.Uint8> xData, int xLength);
+external ffi.Pointer<ffi.Opaque> _Foo_new_static(_SliceUtf8 x);
 
 @meta.ResourceIdentifier('Foo_as_returning')
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
@@ -108,6 +117,6 @@ external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> s
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
 
 @meta.ResourceIdentifier('Foo_extract_from_bounds')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, _SliceUtf8)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, ffi.Pointer<ffi.Uint8> anotherStringData, int anotherStringLength);
+external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, _SliceUtf8 anotherString);

@@ -24,35 +24,50 @@ final class MyString implements ffi.Finalizable {
   factory MyString(String v) {
     final temp = _FinalizedArena();
     final (vData, vLength) = v._utf8AllocIn(temp.arena);
-    final result = _MyString_new(vData, vLength);
+    final v_struct = ffi.Struct.create<_SliceUtf8>();
+    v_struct._data = vData;
+    v_struct._length = vLength;
+    final result = _MyString_new(v_struct);
     return MyString._fromFfi(result, []);
   }
 
   factory MyString.unsafe(String v) {
     final temp = _FinalizedArena();
     final (vData, vLength) = v._utf8AllocIn(temp.arena);
-    final result = _MyString_new_unsafe(vData, vLength);
+    final v_struct = ffi.Struct.create<_SliceUtf8>();
+    v_struct._data = vData;
+    v_struct._length = vLength;
+    final result = _MyString_new_unsafe(v_struct);
     return MyString._fromFfi(result, []);
   }
 
   static MyString newOwned(String v) {
     final temp = _FinalizedArena();
     final (vData, vLength) = v._utf8AllocIn(_RustAlloc());
-    final result = _MyString_new_owned(vData, vLength);
+    final v_struct = ffi.Struct.create<_SliceUtf8>();
+    v_struct._data = vData;
+    v_struct._length = vLength;
+    final result = _MyString_new_owned(v_struct);
     return MyString._fromFfi(result, []);
   }
 
   static MyString newFromFirst(core.List<core.String> v) {
     final temp = _FinalizedArena();
     final (vData, vLength) = v._utf8SliceAllocIn(temp.arena);
-    final result = _MyString_new_from_first(vData, vLength);
+    final v_struct = ffi.Struct.create<_SliceSliceUtf8>();
+    v_struct._data = vData;
+    v_struct._length = vLength;
+    final result = _MyString_new_from_first(v_struct);
     return MyString._fromFfi(result, []);
   }
 
   set str(String newStr) {
     final temp = _FinalizedArena();
     final (newStrData, newStrLength) = newStr._utf8AllocIn(temp.arena);
-    _MyString_set_str(_ffi, newStrData, newStrLength);
+    final newStr_struct = ffi.Struct.create<_SliceUtf8>();
+    newStr_struct._data = newStrData;
+    newStr_struct._length = newStrLength;
+    _MyString_set_str(_ffi, newStr_struct);
   }
 
   String get str {
@@ -64,8 +79,11 @@ final class MyString implements ffi.Finalizable {
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
     final (fooData, fooLength) = foo._utf8AllocIn(temp.arena);
+    final foo_struct = ffi.Struct.create<_SliceUtf8>();
+    foo_struct._data = fooData;
+    foo_struct._length = fooLength;
     final write = _Write();
-    _MyString_string_transform(fooData, fooLength, write._ffi);
+    _MyString_string_transform(foo_struct, write._ffi);
     return write.finalize();
   }
 }
@@ -76,29 +94,29 @@ final class MyString implements ffi.Finalizable {
 external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('MyString_new')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new(ffi.Pointer<ffi.Uint8> vData, int vLength);
+external ffi.Pointer<ffi.Opaque> _MyString_new(_SliceUtf8 v);
 
 @meta.ResourceIdentifier('MyString_new_unsafe')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_unsafe')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_unsafe')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(ffi.Pointer<ffi.Uint8> vData, int vLength);
+external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(_SliceUtf8 v);
 
 @meta.ResourceIdentifier('MyString_new_owned')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_owned')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_owned')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_owned(ffi.Pointer<ffi.Uint8> vData, int vLength);
+external ffi.Pointer<ffi.Opaque> _MyString_new_owned(_SliceUtf8 v);
 
 @meta.ResourceIdentifier('MyString_new_from_first')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<_SliceUtf8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_from_first')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'MyString_new_from_first')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(ffi.Pointer<_SliceUtf8> vData, int vLength);
+external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(_SliceSliceUtf8 v);
 
 @meta.ResourceIdentifier('MyString_set_str')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_set_str')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'MyString_set_str')
 // ignore: non_constant_identifier_names
-external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Uint8> newStrData, int newStrLength);
+external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 newStr);
 
 @meta.ResourceIdentifier('MyString_get_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
@@ -106,6 +124,6 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Ui
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @meta.ResourceIdentifier('MyString_string_transform')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Uint8>, ffi.Size, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
+@ffi.Native<ffi.Void Function(_SliceUtf8, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
-external void _MyString_string_transform(ffi.Pointer<ffi.Uint8> fooData, int fooLength, ffi.Pointer<ffi.Opaque> write);
+external void _MyString_string_transform(_SliceUtf8 foo, ffi.Pointer<ffi.Opaque> write);

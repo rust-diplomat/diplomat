@@ -25,17 +25,9 @@ mod ffi {
     #[no_mangle]
     extern "C" fn Bar_destroy<'b, 'a: 'b>(this: Box<Bar<'b, 'a>>) {}
     #[no_mangle]
-    extern "C" fn Foo_new<'a>(x_diplomat_data: *const u8, x_diplomat_len: usize) -> Box<Foo<'a>> {
-        Foo::new(if x_diplomat_len == 0 {
-            Default::default()
-        } else {
-            unsafe {
-                core::str::from_utf8_unchecked(core::slice::from_raw_parts(
-                    x_diplomat_data,
-                    x_diplomat_len,
-                ))
-            }
-        })
+    extern "C" fn Foo_new<'a>(x: diplomat_runtime::DiplomatUtf8StrSlice<'a>) -> Box<Foo<'a>> {
+        let x = x.into();
+        Foo::new(x)
     }
     #[no_mangle]
     extern "C" fn Foo_get_bar<'a: 'b, 'b>(this: &'b Foo<'a>) -> Box<Bar<'b, 'a>> {

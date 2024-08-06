@@ -43,11 +43,17 @@ final class BorrowedFields {
   static BorrowedFields fromBarAndStrings(Bar bar, String dstr16, String utf8Str) {
     final dstr16Arena = _FinalizedArena();
     final (dstr16Data, dstr16Length) = dstr16._utf16AllocIn(dstr16Arena.arena);
+    final dstr16_struct = ffi.Struct.create<_SliceUtf16>();
+    dstr16_struct._data = dstr16Data;
+    dstr16_struct._length = dstr16Length;
     final utf8StrArena = _FinalizedArena();
     final (utf8StrData, utf8StrLength) = utf8Str._utf8AllocIn(utf8StrArena.arena);
+    final utf8Str_struct = ffi.Struct.create<_SliceUtf8>();
+    utf8Str_struct._data = utf8StrData;
+    utf8Str_struct._length = utf8StrLength;
     // This lifetime edge depends on lifetimes: 'x
     core.List<Object> xEdges = [bar, dstr16Arena, utf8StrArena];
-    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16Data, dstr16Length, utf8StrData, utf8StrLength);
+    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16_struct, utf8Str_struct);
     return BorrowedFields._fromFfi(result, xEdges);
   }
 
@@ -75,6 +81,6 @@ final class BorrowedFields {
 }
 
 @meta.ResourceIdentifier('BorrowedFields_from_bar_and_strings')
-@ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
+@ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Uint16> dstr16Data, int dstr16Length, ffi.Pointer<ffi.Uint8> utf8StrData, int utf8StrLength);
+external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, _SliceUtf16 dstr16, _SliceUtf8 utf8Str);

@@ -20,7 +20,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const diplomat::capi::Bar* bar, const diplomat::capi::Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char16_t* dstr16_z_data, size_t dstr16_z_len, const char* utf8_str_y_data, size_t utf8_str_y_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    diplomat::capi::NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const diplomat::capi::Bar* bar, const diplomat::capi::Foo* foo, diplomat::capi::DiplomatString16View dstr16_x, diplomat::capi::DiplomatString16View dstr16_z, diplomat::capi::DiplomatStringView utf8_str_y, diplomat::capi::DiplomatStringView utf8_str_z);
     
     
     } // extern "C"
@@ -36,14 +36,10 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
   }
   auto result = diplomat::capi::NestedBorrowedFields_from_bar_and_foo_and_strings(bar.AsFFI(),
     foo.AsFFI(),
-    dstr16_x.data(),
-    dstr16_x.size(),
-    dstr16_z.data(),
-    dstr16_z.size(),
-    utf8_str_y.data(),
-    utf8_str_y.size(),
-    utf8_str_z.data(),
-    utf8_str_z.size());
+    {dstr16_x.data(), dstr16_x.size()},
+    {dstr16_z.data(), dstr16_z.size()},
+    {utf8_str_y.data(), utf8_str_y.size()},
+    {utf8_str_z.data(), utf8_str_z.size()});
   return diplomat::Ok<NestedBorrowedFields>(NestedBorrowedFields::FromFFI(result));
 }
 

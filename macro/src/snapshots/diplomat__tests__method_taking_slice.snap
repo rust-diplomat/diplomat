@@ -13,11 +13,8 @@ mod ffi {
     }
     use diplomat_runtime::*;
     #[no_mangle]
-    extern "C" fn Foo_from_slice(s_diplomat_data: *const f64, s_diplomat_len: usize) {
-        Foo::from_slice(if s_diplomat_len == 0 {
-            &[]
-        } else {
-            unsafe { core::slice::from_raw_parts(s_diplomat_data, s_diplomat_len) }
-        })
+    extern "C" fn Foo_from_slice(s: diplomat_runtime::DiplomatSlice<f64>) {
+        let s = s.into();
+        Foo::from_slice(s)
     }
 }

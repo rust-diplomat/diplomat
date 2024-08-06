@@ -29,14 +29,20 @@ final class Opaque implements ffi.Finalizable {
   static Opaque? tryFromUtf8(String input) {
     final temp = _FinalizedArena();
     final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
-    final result = _Opaque_try_from_utf8(inputData, inputLength);
+    final input_struct = ffi.Struct.create<_SliceUtf8>();
+    input_struct._data = inputData;
+    input_struct._length = inputLength;
+    final result = _Opaque_try_from_utf8(input_struct);
     return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
 
   static Opaque fromStr(String input) {
     final temp = _FinalizedArena();
     final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
-    final result = _Opaque_from_str(inputData, inputLength);
+    final input_struct = ffi.Struct.create<_SliceUtf8>();
+    input_struct._data = inputData;
+    input_struct._length = inputLength;
+    final result = _Opaque_from_str(input_struct);
     return Opaque._fromFfi(result, []);
   }
 
@@ -83,14 +89,14 @@ external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
 external ffi.Pointer<ffi.Opaque> _Opaque_new();
 
 @meta.ResourceIdentifier('Opaque_try_from_utf8')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Opaque_try_from_utf8')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_try_from_utf8')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(ffi.Pointer<ffi.Uint8> inputData, int inputLength);
+external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(_SliceUtf8 input);
 
 @meta.ResourceIdentifier('Opaque_from_str')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Opaque_from_str')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_from_str')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Opaque_from_str(ffi.Pointer<ffi.Uint8> inputData, int inputLength);
+external ffi.Pointer<ffi.Opaque> _Opaque_from_str(_SliceUtf8 input);
 
 @meta.ResourceIdentifier('Opaque_get_debug_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Opaque_get_debug_str')

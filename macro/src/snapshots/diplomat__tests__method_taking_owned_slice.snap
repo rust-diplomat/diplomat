@@ -13,16 +13,8 @@ mod ffi {
     }
     use diplomat_runtime::*;
     #[no_mangle]
-    extern "C" fn Foo_fill_slice(s_diplomat_data: *mut u16, s_diplomat_len: usize) {
-        Foo::fill_slice(if s_diplomat_len == 0 {
-            Default::default()
-        } else {
-            unsafe {
-                alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                    s_diplomat_data,
-                    s_diplomat_len,
-                ))
-            }
-        })
+    extern "C" fn Foo_fill_slice(s: diplomat_runtime::DiplomatOwnedSlice<u16>) {
+        let s = s.into();
+        Foo::fill_slice(s)
     }
 }

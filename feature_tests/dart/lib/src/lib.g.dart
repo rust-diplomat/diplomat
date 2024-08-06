@@ -427,6 +427,42 @@ final class _ResultVoidOpaque extends ffi.Struct {
   external bool isOk;
 }
 
+final class _SliceBool extends ffi.Struct {
+  external ffi.Pointer<ffi.Bool> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceBool || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<bool> _toDart(core.List<Object> lifetimeEdges) {
+    final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
+    if (lifetimeEdges.isEmpty) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
 final class _SliceDouble extends ffi.Struct {
   external ffi.Pointer<ffi.Double> _data;
 
@@ -458,6 +494,222 @@ final class _SliceDouble extends ffi.Struct {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+final class _SliceInt16 extends ffi.Struct {
+  external ffi.Pointer<ffi.Int16> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceInt16 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+    final r = _data.asTypedList(_length);
+    if (lifetimeEdges.isEmpty) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+final class _SliceIsize extends ffi.Struct {
+  external ffi.Pointer<ffi.IntPtr> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceIsize || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+    final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
+    if (lifetimeEdges.isEmpty) {
+      _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());
+    } else {
+      // Lifetime edges will be cleaned up
+    }
+    return r;
+  }
+}
+
+final class _SliceSliceUtf8 extends ffi.Struct {
+  external ffi.Pointer<_SliceUtf8> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceSliceUtf8 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<core.String> _toDart(core.List<Object> lifetimeEdges) {
+    final r = core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false);
+    if (lifetimeEdges.isEmpty) {
+      // unsupported
+    } else {
+      // Lifetime edges will be cleaned up
+    }
+    return r;
+  }
+}
+
+final class _SliceUint16 extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint16> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceUint16 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+    final r = _data.asTypedList(_length);
+    if (lifetimeEdges.isEmpty) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+final class _SliceUint8 extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceUint8 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+    final r = _data.asTypedList(_length);
+    if (lifetimeEdges.isEmpty) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+final class _SliceUsize extends ffi.Struct {
+  external ffi.Pointer<ffi.Size> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceUsize || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+    final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
+    if (lifetimeEdges.isEmpty) {
+      _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());
+    } else {
+      // Lifetime edges will be cleaned up
     }
     return r;
   }

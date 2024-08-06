@@ -17,7 +17,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::BorrowedFields BorrowedFields_from_bar_and_strings(const diplomat::capi::Bar* bar, const char16_t* dstr16_data, size_t dstr16_len, const char* utf8_str_data, size_t utf8_str_len);
+    diplomat::capi::BorrowedFields BorrowedFields_from_bar_and_strings(const diplomat::capi::Bar* bar, diplomat::capi::DiplomatString16View dstr16, diplomat::capi::DiplomatStringView utf8_str);
     
     
     } // extern "C"
@@ -29,10 +29,8 @@ inline diplomat::result<BorrowedFields, diplomat::Utf8Error> BorrowedFields::fro
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
   auto result = diplomat::capi::BorrowedFields_from_bar_and_strings(bar.AsFFI(),
-    dstr16.data(),
-    dstr16.size(),
-    utf8_str.data(),
-    utf8_str.size());
+    {dstr16.data(), dstr16.size()},
+    {utf8_str.data(), utf8_str.size()});
   return diplomat::Ok<BorrowedFields>(BorrowedFields::FromFFI(result));
 }
 

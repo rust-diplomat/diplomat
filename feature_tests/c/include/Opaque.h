@@ -19,9 +19,9 @@
 
 Opaque* Opaque_new(void);
 
-Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
+Opaque* Opaque_try_from_utf8(DiplomatStringView input);
 
-Opaque* Opaque_from_str(const char* input_data, size_t input_len);
+Opaque* Opaque_from_str(DiplomatStringView input);
 
 void Opaque_get_debug_str(const Opaque* self, DiplomatWrite* write);
 

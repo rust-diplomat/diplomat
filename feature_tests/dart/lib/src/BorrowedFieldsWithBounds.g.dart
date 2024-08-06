@@ -45,15 +45,21 @@ final class BorrowedFieldsWithBounds {
   static BorrowedFieldsWithBounds fromFooAndStrings(Foo foo, String dstr16X, String utf8StrZ) {
     final dstr16XArena = _FinalizedArena();
     final (dstr16XData, dstr16XLength) = dstr16X._utf16AllocIn(dstr16XArena.arena);
+    final dstr16X_struct = ffi.Struct.create<_SliceUtf16>();
+    dstr16X_struct._data = dstr16XData;
+    dstr16X_struct._length = dstr16XLength;
     final utf8StrZArena = _FinalizedArena();
     final (utf8StrZData, utf8StrZLength) = utf8StrZ._utf8AllocIn(utf8StrZArena.arena);
+    final utf8StrZ_struct = ffi.Struct.create<_SliceUtf8>();
+    utf8StrZ_struct._data = utf8StrZData;
+    utf8StrZ_struct._length = utf8StrZLength;
     // This lifetime edge depends on lifetimes: 'x, 'y, 'z
     core.List<Object> xEdges = [foo, dstr16XArena, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'y, 'z
     core.List<Object> yEdges = [foo, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [utf8StrZArena];
-    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16XData, dstr16XLength, utf8StrZData, utf8StrZLength);
+    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X_struct, utf8StrZ_struct);
     return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }
 
@@ -97,6 +103,6 @@ final class BorrowedFieldsWithBounds {
 }
 
 @meta.ResourceIdentifier('BorrowedFieldsWithBounds_from_foo_and_strings')
-@ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
+@ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, ffi.Pointer<ffi.Uint16> dstr16XData, int dstr16XLength, ffi.Pointer<ffi.Uint8> utf8StrZData, int utf8StrZLength);
+external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf8 utf8StrZ);
