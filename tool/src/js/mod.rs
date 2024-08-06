@@ -96,11 +96,11 @@ pub(crate) fn run<'tcx>(
             imports: RefCell::new(BTreeSet::new()),
         };
 
-        let (m, special_method_presence) = match type_def {
-            TypeDef::Enum(e) => (&e.methods, &e.special_method_presence),
-            TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence),
-            TypeDef::Struct(s) => (&s.methods, &s.special_method_presence),
-            TypeDef::OutStruct(s) => (&s.methods, &s.special_method_presence),
+        let (m, special_method_presence, fields, fields_out) = match type_def {
+            TypeDef::Enum(e) => (&e.methods, &e.special_method_presence, None, None),
+            TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence, None, None),
+            TypeDef::Struct(s) => (&s.methods, &s.special_method_presence, Some(context.generate_fields(s)), None),
+            TypeDef::OutStruct(s) => (&s.methods, &s.special_method_presence, None, Some(context.generate_fields(s))),
             _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
         };
 
@@ -119,8 +119,8 @@ pub(crate) fn run<'tcx>(
             let contents = match type_def {
                 TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods, &special_method),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, id, &name, o, &methods, &special_method),
-                TypeDef::Struct(s) => context.gen_struct(ts, id, &name, s, &methods, &special_method, false, true),
-                TypeDef::OutStruct(s) => context.gen_struct(ts, id, &name, s, &methods, &special_method, true, false),
+                TypeDef::Struct(s) => context.gen_struct(ts, id, &name, s, &fields.clone().unwrap(), &methods, &special_method, false, true),
+                TypeDef::OutStruct(s) => context.gen_struct(ts, id, &name, s, &fields_out.clone().unwrap(), &methods, &special_method, true, false),
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
 

@@ -143,20 +143,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    pub(super) fn gen_struct<P: hir::TyPosition>(
-        &self,
-        typescript: bool,
-
-        type_id: TypeId,
-        type_name: &str,
-        
-        struct_def: &'tcx hir::StructDef<P>,
-        methods: &Vec<MethodInfo>,
-        special_method : &SpecialMethodInfo,
-        
-        is_out: bool,
-        mutable: bool,
-    ) -> String {
+    pub(super) fn generate_fields<P: hir::TyPosition>(&self, 
+        struct_def: &'tcx hir::StructDef<P>) -> Vec<FieldInfo<P>> {
         let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.tcx,
@@ -226,7 +214,24 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 maybe_struct_borrow_info
             }
         }).collect::<Vec<_>>();
+        fields
+    }
 
+    pub(super) fn gen_struct<P: hir::TyPosition>(
+        &self,
+        typescript: bool,
+
+        type_id: TypeId,
+        type_name: &str,
+        
+        struct_def: &'tcx hir::StructDef<P>,
+        fields: &Vec<FieldInfo<P>>,
+        methods: &Vec<MethodInfo>,
+        special_method : &SpecialMethodInfo,
+        
+        is_out: bool,
+        mutable: bool,
+    ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
         struct ImplTemplate<'a, P: hir::TyPosition> {
@@ -237,7 +242,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             has_default_constructor: bool,
 
             lifetimes: &'a LifetimeEnv,
-            fields: Vec<FieldInfo<'a, P>>,
+            fields: &'a Vec<FieldInfo<'a, P>>,
             methods: &'a Vec<MethodInfo<'a>>,
             special_method : &'a SpecialMethodInfo<'a>,
 
@@ -473,7 +478,8 @@ pub(super) struct SpecialMethodInfo<'a> {
     pub typescript: bool,
 }
 
-struct FieldInfo<'info, P: hir::TyPosition> {
+#[derive(Clone)]
+pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
     field_type: &'info Type<P>,
     js_type_name: Cow<'info, str>,
