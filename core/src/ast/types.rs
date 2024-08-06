@@ -429,7 +429,7 @@ impl StringEncoding {
         }
     }
     /// Get slice type when specified using rust stdlib types
-    pub fn get_rust_slice_type(self, lt: &Option<Lifetime>) -> syn::Type {
+    pub fn get_stdlib_slice_type(self, lt: &Option<Lifetime>) -> syn::Type {
         let inner = match self {
             Self::UnvalidatedUtf8 => quote::quote!(DiplomatStr),
             Self::UnvalidatedUtf16 => quote::quote!(DiplomatStr16),
@@ -443,7 +443,7 @@ impl StringEncoding {
             syn::parse_quote_spanned!(Span::call_site() => Box<#inner>)
         }
     }
-    pub fn get_rust_slice_type_str(self) -> &'static str {
+    pub fn get_stdlib_slice_type_str(self) -> &'static str {
         match self {
             StringEncoding::Utf8 => "DiplomatUtf8Str",
             StringEncoding::UnvalidatedUtf8 => "DiplomatStrSlice",
@@ -553,14 +553,14 @@ impl TypeName {
             }
             TypeName::StrReference(lt, encoding, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                    encoding.get_rust_slice_type(lt)
+                    encoding.get_stdlib_slice_type(lt)
                 } else {
                     encoding.get_diplomat_slice_type(lt)
                 }
             }
             TypeName::StrSlice(encoding, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                    let inner = encoding.get_rust_slice_type(&Some(Lifetime::Anonymous));
+                    let inner = encoding.get_stdlib_slice_type(&Some(Lifetime::Anonymous));
                     syn::parse_quote_spanned!(Span::call_site() => &[#inner])
                 } else {
                     let inner = encoding.get_diplomat_slice_type(&Some(Lifetime::Anonymous));
@@ -571,7 +571,7 @@ impl TypeName {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
                     primitive.get_diplomat_slice_type(ltmt)
                 } else {
-                    primitive.get_rust_slice_type(ltmt)
+                    primitive.get_stdlib_slice_type(ltmt)
                 }
             }
 
@@ -1004,7 +1004,7 @@ impl fmt::Display for TypeName {
                         let ty = encoding.get_diplomat_slice_type_str();
                         write!(f, "{lt}{ty}")
                     } else {
-                        let ty = encoding.get_rust_slice_type_str();
+                        let ty = encoding.get_stdlib_slice_type_str();
                         let lt = LifetimeGenericsListDisplay(lt);
                         write!(f, "{ty}{lt}")
                     }
@@ -1027,7 +1027,7 @@ impl fmt::Display for TypeName {
             }
 
             TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib) => {
-                let inner = encoding.get_rust_slice_type_str();
+                let inner = encoding.get_stdlib_slice_type_str();
 
                 write!(f, "&[&{inner}]")
             }
@@ -1218,7 +1218,7 @@ impl PrimitiveType {
     }
 
     /// Get the type for a slice of this, as specified using Rust stdlib types
-    pub fn get_rust_slice_type(self, lt: &Option<(Lifetime, Mutability)>) -> syn::Type {
+    pub fn get_stdlib_slice_type(self, lt: &Option<(Lifetime, Mutability)>) -> syn::Type {
         let primitive = self.to_ident();
 
         if let Some((ref lt, ref mtbl)) = lt {
