@@ -22,6 +22,14 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     Enum(EnumPath),
     Slice(Slice),
+    /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
+    ///
+    /// In some cases this can be specified as `Option<T>`, but under the hood it gets translated to
+    /// the DiplomatOption FFI-compatible union type.
+    ///
+    /// This is *different* from `Option<&T>` and `Option<Box<T>` for an opaque `T`: That is represented as
+    /// a nullable pointer.
+    DiplomatOption(Box<Type<P>>),
 }
 
 /// Type that can appear in the `self` position.
@@ -89,6 +97,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
+            Type::DiplomatOption(ty) => ty.field_leaf_lifetime_counts(tcx),
             Type::Opaque(_) | Type::Slice(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
