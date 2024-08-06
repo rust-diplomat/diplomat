@@ -1,8 +1,7 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, LifetimeEnv, OpaqueOwner, PrimitiveType, ReturnType,
-    ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    self, borrowing_param::StructBorrowInfo, LifetimeEnv, Method, OpaqueOwner, PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type
 };
 use std::fmt::Write;
 
@@ -42,11 +41,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.add_import(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(opaque_id).attrs().disable {
                     self.errors
@@ -64,11 +59,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.add_import(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -81,11 +72,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.add_import(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(enum_id).attrs().disable {
                     self.errors
@@ -319,15 +306,15 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     pub(super) fn gen_c_to_js_for_return_type(
         &self,
         method_info: &mut super::MethodInfo,
-        lifetime_environment: &LifetimeEnv,
+        method: &Method,
     ) -> Option<Cow<'tcx, str>> {
-        let return_type = &method_info.method.unwrap().output;
+        let return_type = &method.output;
 
         // Conditions for allocating a diplomat buffer:
         // 1. Function returns an Option<> or Result<>.
         // 2. Infallible function returns a slice.
         // 3. Infallible function returns a struct.
-        match *return_type {
+        match return_type {
             // -> ()
             ReturnType::Infallible(SuccessType::Unit) => None,
 
@@ -367,7 +354,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 Some(
                     format!(
                         "return {};",
-                        self.gen_c_to_js_for_type(o, result.into(), lifetime_environment)
+                        self.gen_c_to_js_for_type(o, result.into(), &method.lifetime_env)
                     )
                     .into(),
                 )
@@ -438,24 +425,17 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     "if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
                     match return_type {
                         ReturnType::Fallible(_, Some(e)) => {
-                            // Because we don't add Result<_, Error> types to imports, we do that here:
-                            if !self.typescript {
-                                let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                                self.add_import(self.formatter.fmt_import_statement(
-                                    &type_name,
-                                    false,
-                                    "./".into(),
-                                ));
-                            }
+                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                            self.add_import(type_name.into());
 
                             let receive_deref = self.gen_c_to_js_deref_for_type(
-                                e,
+                                &e,
                                 "diplomatReceive.buffer".into(),
                                 0,
                             );
                             let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                             let cause =
-                                self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
+                                self.gen_c_to_js_for_type(&e, receive_deref, &method.lifetime_env);
                             format!(
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
                             message = match e {
@@ -506,7 +486,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             );
                             format!(
                                 "{err_check}return {};",
-                                self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment)
+                                self.gen_c_to_js_for_type(o, ptr_deref, &method.lifetime_env)
                             )
                         }
                         _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),

@@ -22,12 +22,11 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
-    pub typescript: bool,
     pub imports: RefCell<BTreeSet<String>>,
 }
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
-    pub(super) fn generate_base(&self, body: String) -> String {
+    pub(super) fn generate_base(&self, typescript: bool, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js/base.js.jinja", escape = "none")]
         struct BaseTemplate<'info> {
@@ -37,7 +36,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
         BaseTemplate {
             body,
-            typescript: self.typescript,
+            typescript,
             imports: &self.imports.borrow(),
         }
         .render()
@@ -55,22 +54,14 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
     pub(super) fn gen_enum(
         &self,
-        enum_def: &'tcx EnumDef,
+        typescript: bool,
+
         type_id: TypeId,
         type_name: &str,
+        
+        enum_def: &'tcx EnumDef,
+        methods: &Vec<MethodInfo>,
     ) -> String {
-        let mut methods = enum_def
-            .methods
-            .iter()
-            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
-            .collect::<Vec<_>>();
-
-        let special_method_body =
-            self.generate_special_method_body(&enum_def.special_method_presence, self.typescript);
-        if !special_method_body.is_empty() {
-            methods.push(special_method_body);
-        }
-
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -81,15 +72,17 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             doc_str: String,
 
-            methods: Vec<String>,
+            methods: &'a Vec<MethodInfo<'a>>, 
         }
 
         ImplTemplate {
             enum_def,
             formatter: self.formatter,
             type_name,
-            typescript: self.typescript,
+            typescript,
+
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
+            
             methods,
         }
         .render()
@@ -98,21 +91,14 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
     pub(super) fn gen_opaque(
         &self,
-        opaque_def: &'tcx OpaqueDef,
+        typescript: bool,
+
         type_id: TypeId,
         type_name: &str,
-    ) -> String {
-        let mut methods = opaque_def
-            .methods
-            .iter()
-            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
-            .collect::<Vec<_>>();
 
-        let special_method_body =
-            self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
-        if !special_method_body.is_empty() {
-            methods.push(special_method_body);
-        }
+        opaque_def : &'tcx OpaqueDef,
+        methods: &Vec<MethodInfo>,
+    ) -> String {
 
         let destructor = opaque_def.dtor_abi_name.as_str();
 
@@ -123,19 +109,23 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript: bool,
 
             lifetimes: &'a LifetimeEnv,
-            methods: Vec<String>,
             destructor: &'a str,
 
             docs: String,
+            
+            methods: &'a Vec<MethodInfo<'a>>,
         }
 
         ImplTemplate {
             type_name,
-            methods,
-            destructor,
-            typescript: self.typescript,
-            docs: self.formatter.fmt_docs(&opaque_def.docs),
+            typescript,
+
             lifetimes: &opaque_def.lifetimes,
+            destructor,
+            
+            docs: self.formatter.fmt_docs(&opaque_def.docs),
+            
+            methods,
         }
         .render()
         .unwrap()
@@ -143,10 +133,15 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
     pub(super) fn gen_struct<P: hir::TyPosition>(
         &self,
-        struct_def: &'tcx hir::StructDef<P>,
+        typescript: bool,
+
         type_id: TypeId,
-        is_out: bool,
         type_name: &str,
+        
+        struct_def: &'tcx hir::StructDef<P>,
+        methods: &Vec<MethodInfo>,
+        
+        is_out: bool,
         mutable: bool,
     ) -> String {
         let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
@@ -219,42 +214,34 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             }
         }).collect::<Vec<_>>();
 
-        let mut methods = struct_def
-            .methods
-            .iter()
-            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
-            .collect::<Vec<_>>();
-
-        let special_method_body =
-            self.generate_special_method_body(&struct_def.special_method_presence, self.typescript);
-        if !special_method_body.is_empty() {
-            methods.push(special_method_body);
-        }
-
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
         struct ImplTemplate<'a, P: hir::TyPosition> {
             type_name: &'a str,
-            mutable: bool,
-            typescript: bool,
 
+            typescript: bool,
+            mutable: bool,
             has_default_constructor: bool,
-            fields: Vec<FieldInfo<'a, P>>,
-            methods: Vec<String>,
-            docs: String,
+
             lifetimes: &'a LifetimeEnv,
+            fields: Vec<FieldInfo<'a, P>>,
+            methods: &'a Vec<MethodInfo<'a>>,
+
+            docs: String,
         }
 
         ImplTemplate {
             type_name,
-            mutable,
-            typescript: self.typescript,
 
+            typescript,
+            mutable,
             has_default_constructor: is_out,
+
+            lifetimes: &struct_def.lifetimes,
             fields,
             methods,
+
             docs: self.formatter.fmt_docs(&struct_def.docs),
-            lifetimes: &struct_def.lifetimes,
         }
         .render()
         .unwrap()
@@ -263,12 +250,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// Generate a string Javascript representation of a given method.
     ///
     /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
-    fn generate_method_body(
+    pub(super) fn generate_method(
         &self,
         type_id: TypeId,
         method: &'tcx Method,
-        typescript: bool,
-    ) -> Option<String> {
+    ) -> Option<MethodInfo> {
         if method.attrs.disable {
             return None;
         }
@@ -280,12 +266,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             method.name.as_str().into(),
         );
 
-        let abi_name = method.abi_name.as_str();
+        let abi_name = String::from(method.abi_name.as_str());
 
         let mut method_info = MethodInfo {
             abi_name,
-            typescript,
-            method: Some(method),
+            method_output_is_ffi_unit: method.output.is_ffi_unit(),
             needs_slice_cleanup: false,
             ..Default::default()
         };
@@ -380,7 +365,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         method_info.return_type = format!(": {}", self.gen_js_return_type_str(&method.output));
 
         method_info.return_expression =
-            self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
+            self.gen_c_to_js_for_return_type(&mut method_info, &method);
 
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);
@@ -403,25 +388,17 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             _ => self.formatter.fmt_method_name(method),
         };
 
-        Some(method_info.render().unwrap())
+        Some(method_info)
     }
 
     /// If a special method exists inside a structure, opaque, or enum through [`SpecialMethodPresence`],
     /// We need to make sure Javascript can access it.
     ///
     /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
-    fn generate_special_method_body(
+    pub(super) fn generate_special_method(
         &self,
         special_method_presence: &SpecialMethodPresence,
-        typescript: bool,
-    ) -> String {
-        #[derive(Template)]
-        #[template(path = "js/iterator.js.jinja", escape = "none")]
-        struct SpecialMethodInfo<'a> {
-            iterator: Option<Cow<'a, str>>,
-            typescript: bool,
-        }
-
+    ) -> SpecialMethodInfo {
         let mut iterator = None;
 
         if let Some(ref val) = special_method_presence.iterator {
@@ -430,10 +407,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         SpecialMethodInfo {
             iterator,
-            typescript,
+            typescript: false,
         }
-        .render()
-        .unwrap()
     }
 }
 
@@ -451,11 +426,12 @@ struct SliceParam<'a> {
 
 #[derive(Default, Template)]
 #[template(path = "js/method.js.jinja", escape = "none")]
-struct MethodInfo<'info> {
-    method: Option<&'info Method>,
+pub(super) struct MethodInfo<'info> {
+    method_output_is_ffi_unit : bool,
     method_decl: String,
+
     /// Native C method name
-    abi_name: &'info str,
+    abi_name: String,
 
     needs_slice_cleanup: bool,
 
@@ -473,6 +449,13 @@ struct MethodInfo<'info> {
 
     alloc_expressions: Vec<Cow<'info, str>>,
     cleanup_expressions: Vec<Cow<'info, str>>,
+}
+
+#[derive(Template)]
+#[template(path = "js/iterator.js.jinja", escape = "none")]
+pub(super) struct SpecialMethodInfo<'a> {
+    iterator: Option<Cow<'a, str>>,
+    typescript: bool,
 }
 
 struct FieldInfo<'info, P: hir::TyPosition> {
