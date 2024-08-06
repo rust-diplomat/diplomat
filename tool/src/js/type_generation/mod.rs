@@ -470,7 +470,7 @@ pub(super) struct MethodInfo<'info> {
 #[template(path = "js/iterator.js.jinja", escape = "none")]
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
-    typescript: bool,
+    pub typescript: bool,
 }
 
 struct FieldInfo<'info, P: hir::TyPosition> {

@@ -106,7 +106,7 @@ pub(crate) fn run<'tcx>(
 
         let mut methods = m.iter().flat_map(|method| context.generate_method(id, method)).collect::<Vec<_>>();
         
-        let special_method = context.generate_special_method(special_method_presence);
+        let mut special_method = context.generate_special_method(special_method_presence);
 
         for file_type in [FileType::Module, FileType::Typescript] {
             let ts = file_type.is_typescript();
@@ -114,6 +114,7 @@ pub(crate) fn run<'tcx>(
             for m in &mut methods {
                 m.typescript = ts;
             }
+            special_method.typescript = ts;
 
             let contents = match type_def {
                 TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods, &special_method),

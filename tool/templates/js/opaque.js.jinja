@@ -43,6 +43,6 @@ export class {{type_name}} {
 {%- for method in methods %}
 
     {{method|indent(4)}}
-{%- endfor %}
-    {{ special_method|indent(4) }}
+{%- endfor ~%}
+    {{~ special_method|indent(4) -}}
 }
