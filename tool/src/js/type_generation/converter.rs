@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, LifetimeEnv, Method, OpaqueOwner, PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type
+    self, borrowing_param::StructBorrowInfo, LifetimeEnv, Method, OpaqueOwner, PrimitiveType,
+    ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -429,13 +430,13 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             self.add_import(type_name.into());
 
                             let receive_deref = self.gen_c_to_js_deref_for_type(
-                                &e,
+                                e,
                                 "diplomatReceive.buffer".into(),
                                 0,
                             );
                             let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                             let cause =
-                                self.gen_c_to_js_for_type(&e, receive_deref, &method.lifetime_env);
+                                self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
                             format!(
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
                             message = match e {

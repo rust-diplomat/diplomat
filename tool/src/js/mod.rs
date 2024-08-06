@@ -1,5 +1,5 @@
-use std::{borrow::Cow, cell::RefCell};
 use std::collections::BTreeSet;
+use std::{borrow::Cow, cell::RefCell};
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, TypeDef};
@@ -88,7 +88,6 @@ pub(crate) fn run<'tcx>(
 
         let name = formatter.fmt_type_name(id);
 
-        
         let context = TyGenContext {
             tcx,
             formatter: &formatter,
@@ -99,13 +98,26 @@ pub(crate) fn run<'tcx>(
         let (m, special_method_presence, fields, fields_out) = match type_def {
             TypeDef::Enum(e) => (&e.methods, &e.special_method_presence, None, None),
             TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence, None, None),
-            TypeDef::Struct(s) => (&s.methods, &s.special_method_presence, Some(context.generate_fields(s)), None),
-            TypeDef::OutStruct(s) => (&s.methods, &s.special_method_presence, None, Some(context.generate_fields(s))),
+            TypeDef::Struct(s) => (
+                &s.methods,
+                &s.special_method_presence,
+                Some(context.generate_fields(s)),
+                None,
+            ),
+            TypeDef::OutStruct(s) => (
+                &s.methods,
+                &s.special_method_presence,
+                None,
+                Some(context.generate_fields(s)),
+            ),
             _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
         };
 
-        let mut methods = m.iter().flat_map(|method| context.generate_method(id, method)).collect::<Vec<_>>();
-        
+        let mut methods = m
+            .iter()
+            .flat_map(|method| context.generate_method(id, method))
+            .collect::<Vec<_>>();
+
         let mut special_method = context.generate_special_method(special_method_presence);
 
         for file_type in [FileType::Module, FileType::Typescript] {
@@ -117,10 +129,30 @@ pub(crate) fn run<'tcx>(
             special_method.typescript = ts;
 
             let contents = match type_def {
-                TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods, &special_method),
-                TypeDef::Opaque(o) => context.gen_opaque(ts, id, &name, o, &methods, &special_method),
-                TypeDef::Struct(s) => context.gen_struct(ts, id, &name, s, &fields.clone().unwrap(), &methods, &special_method, false, true),
-                TypeDef::OutStruct(s) => context.gen_struct(ts, id, &name, s, &fields_out.clone().unwrap(), &methods, &special_method, true, false),
+                TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods, &special_method),
+                TypeDef::Opaque(o) => {
+                    context.gen_opaque(ts, &name, o, &methods, &special_method)
+                }
+                TypeDef::Struct(s) => context.gen_struct(
+                    ts,
+                    &name,
+                    s,
+                    &fields.clone().unwrap(),
+                    &methods,
+                    &special_method,
+                    false,
+                    true,
+                ),
+                TypeDef::OutStruct(s) => context.gen_struct(
+                    ts,
+                    &name,
+                    s,
+                    &fields_out.clone().unwrap(),
+                    &methods,
+                    &special_method,
+                    true,
+                    false,
+                ),
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
 

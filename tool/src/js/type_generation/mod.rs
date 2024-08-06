@@ -37,7 +37,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         let mut new_imports = Vec::new();
         for import in self.imports.borrow().iter() {
-            new_imports.push(self.formatter.fmt_import_statement(import, typescript, "./".into()));
+            new_imports.push(
+                self.formatter
+                    .fmt_import_statement(import, typescript, "./".into()),
+            );
         }
 
         BaseTemplate {
@@ -49,11 +52,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    pub(super) fn add_import(&self, import_str : String) {
+    pub(super) fn add_import(&self, import_str: String) {
         self.imports.borrow_mut().insert(import_str);
     }
 
-    pub(super) fn remove_import(&self, import_str : String) {
+    pub(super) fn remove_import(&self, import_str: String) {
         self.imports.borrow_mut().remove(&import_str);
     }
 
@@ -62,12 +65,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_id: TypeId,
         type_name: &str,
-        
+
         enum_def: &'tcx EnumDef,
         methods: &Vec<MethodInfo>,
-        special_method : &SpecialMethodInfo,
+        special_method: &SpecialMethodInfo,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
@@ -79,8 +81,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             doc_str: String,
 
-            methods: &'a Vec<MethodInfo<'a>>, 
-            special_method : &'a SpecialMethodInfo<'a>,
+            methods: &'a Vec<MethodInfo<'a>>,
+            special_method: &'a SpecialMethodInfo<'a>,
         }
 
         ImplTemplate {
@@ -90,7 +92,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
-            
+
             methods,
             special_method,
         }
@@ -102,14 +104,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_id: TypeId,
         type_name: &str,
 
-        opaque_def : &'tcx OpaqueDef,
+        opaque_def: &'tcx OpaqueDef,
         methods: &Vec<MethodInfo>,
-        special_method : &SpecialMethodInfo,
+        special_method: &SpecialMethodInfo,
     ) -> String {
-
         let destructor = opaque_def.dtor_abi_name.as_str();
 
         #[derive(Template)]
@@ -122,9 +122,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             destructor: &'a str,
 
             docs: String,
-            
+
             methods: &'a Vec<MethodInfo<'a>>,
-            special_method : &'a SpecialMethodInfo<'a>,
+            special_method: &'a SpecialMethodInfo<'a>,
         }
 
         ImplTemplate {
@@ -133,18 +133,20 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             lifetimes: &opaque_def.lifetimes,
             destructor,
-            
+
             docs: self.formatter.fmt_docs(&opaque_def.docs),
-            
+
             methods,
-            special_method
+            special_method,
         }
         .render()
         .unwrap()
     }
 
-    pub(super) fn generate_fields<P: hir::TyPosition>(&self, 
-        struct_def: &'tcx hir::StructDef<P>) -> Vec<FieldInfo<P>> {
+    pub(super) fn generate_fields<P: hir::TyPosition>(
+        &self,
+        struct_def: &'tcx hir::StructDef<P>,
+    ) -> Vec<FieldInfo<P>> {
         let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.tcx,
@@ -221,14 +223,13 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_id: TypeId,
         type_name: &str,
-        
+
         struct_def: &'tcx hir::StructDef<P>,
         fields: &Vec<FieldInfo<P>>,
         methods: &Vec<MethodInfo>,
-        special_method : &SpecialMethodInfo,
-        
+        special_method: &SpecialMethodInfo,
+
         is_out: bool,
         mutable: bool,
     ) -> String {
@@ -244,7 +245,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
             methods: &'a Vec<MethodInfo<'a>>,
-            special_method : &'a SpecialMethodInfo<'a>,
+            special_method: &'a SpecialMethodInfo<'a>,
 
             docs: String,
         }
@@ -384,8 +385,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         method_info.return_type = format!(": {}", self.gen_js_return_type_str(&method.output));
 
-        method_info.return_expression =
-            self.gen_c_to_js_for_return_type(&mut method_info, &method);
+        method_info.return_expression = self.gen_c_to_js_for_return_type(&mut method_info, method);
 
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);
@@ -447,7 +447,7 @@ struct SliceParam<'a> {
 #[derive(Default, Template)]
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
-    method_output_is_ffi_unit : bool,
+    method_output_is_ffi_unit: bool,
     method_decl: String,
 
     /// Native C method name
