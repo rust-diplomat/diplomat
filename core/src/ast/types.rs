@@ -481,15 +481,21 @@ impl TypeName {
     pub fn is_ffi_safe(&self) -> bool {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
-            TypeName::Box(..) | TypeName::Option(..) |
+            TypeName::Box(..)
             // These are specified using FFI-safe diplomat_runtime types
-             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
+            | TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
             TypeName::Unit | TypeName::Write | TypeName::Result(..)
             // This is basically only useful in return types
             | TypeName::Ordering
             // These are specified using Rust stdlib types and not safe across FFI
-             | TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
+            | TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
+             TypeName::Option(inner, stdlib) => match **inner {
+                // Option<&T>/Option<Box<T>> are the ffi-safe way to specify options
+                TypeName::Reference(..) | TypeName::Box(..) => *stdlib == StdlibOrDiplomat::Stdlib,
+                // For other types (primitives, structs, enums) you should use DiplomatOption
+                _ => *stdlib == StdlibOrDiplomat::Diplomat,
+             }
         }
     }
 
