@@ -89,7 +89,7 @@ pub(crate) fn run<'tcx>(
         let name = formatter.fmt_type_name(id);
 
         
-        let mut context = TyGenContext {
+        let context = TyGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
@@ -105,6 +105,8 @@ pub(crate) fn run<'tcx>(
         };
 
         let mut methods = m.iter().flat_map(|method| context.generate_method(id, method)).collect::<Vec<_>>();
+        
+        let special_method = context.generate_special_method(special_method_presence);
 
         for file_type in [FileType::Module, FileType::Typescript] {
             let ts = file_type.is_typescript();
@@ -114,10 +116,10 @@ pub(crate) fn run<'tcx>(
             }
 
             let contents = match type_def {
-                TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods),
-                TypeDef::Opaque(o) => context.gen_opaque(ts, id, &name, o, &methods),
-                TypeDef::Struct(s) => context.gen_struct(ts, id, &name, s, &methods, false, true),
-                TypeDef::OutStruct(s) => context.gen_struct(ts, id, &name, s, &methods, true, false),
+                TypeDef::Enum(e) => context.gen_enum(ts, id, &name, e, &methods, &special_method),
+                TypeDef::Opaque(o) => context.gen_opaque(ts, id, &name, o, &methods, &special_method),
+                TypeDef::Struct(s) => context.gen_struct(ts, id, &name, s, &methods, &special_method, false, true),
+                TypeDef::OutStruct(s) => context.gen_struct(ts, id, &name, s, &methods, &special_method, true, false),
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
 

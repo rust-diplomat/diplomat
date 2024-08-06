@@ -67,6 +67,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         
         enum_def: &'tcx EnumDef,
         methods: &Vec<MethodInfo>,
+        special_method : &SpecialMethodInfo,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
@@ -79,6 +80,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             doc_str: String,
 
             methods: &'a Vec<MethodInfo<'a>>, 
+            special_method : &'a SpecialMethodInfo<'a>,
         }
 
         ImplTemplate {
@@ -90,6 +92,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
             
             methods,
+            special_method,
         }
         .render()
         .unwrap()
@@ -104,6 +107,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         opaque_def : &'tcx OpaqueDef,
         methods: &Vec<MethodInfo>,
+        special_method : &SpecialMethodInfo,
     ) -> String {
 
         let destructor = opaque_def.dtor_abi_name.as_str();
@@ -120,6 +124,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             docs: String,
             
             methods: &'a Vec<MethodInfo<'a>>,
+            special_method : &'a SpecialMethodInfo<'a>,
         }
 
         ImplTemplate {
@@ -132,6 +137,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             docs: self.formatter.fmt_docs(&opaque_def.docs),
             
             methods,
+            special_method
         }
         .render()
         .unwrap()
@@ -146,6 +152,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         
         struct_def: &'tcx hir::StructDef<P>,
         methods: &Vec<MethodInfo>,
+        special_method : &SpecialMethodInfo,
         
         is_out: bool,
         mutable: bool,
@@ -232,6 +239,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             lifetimes: &'a LifetimeEnv,
             fields: Vec<FieldInfo<'a, P>>,
             methods: &'a Vec<MethodInfo<'a>>,
+            special_method : &'a SpecialMethodInfo<'a>,
 
             docs: String,
         }
@@ -246,6 +254,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             lifetimes: &struct_def.lifetimes,
             fields,
             methods,
+            special_method,
 
             docs: self.formatter.fmt_docs(&struct_def.docs),
         }
