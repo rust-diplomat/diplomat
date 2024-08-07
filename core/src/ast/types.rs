@@ -483,6 +483,8 @@ impl TypeName {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) | TypeName::Option(..) |
+            // can only be passed across the FFI boundary; callbacks are input-only
+            TypeName::Function(..) |
             // These are specified using FFI-safe diplomat_runtime types
              TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs

@@ -26,12 +26,7 @@ fn param_ty(param: &ast::Param) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             let inner = encoding.get_diplomat_slice_type(&Some(ast::Lifetime::Anonymous));
             syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatSlice<#inner>)
-        },
-        ast::TypeName::Function(..) => {
-            // rename the cbwrapper param
-            let name = param.name;
-            syn::parse_quote_spanned!(Span::call_site() => #name_cb_wrap)
-        },
+        }
         ast::TypeName::PrimitiveSlice(ltmt, prim, _) => {
             // At the param boundary we MUST use FFI-safe diplomat slice types,
             // not Rust stdlib types (which are not FFI-safe and must be converted)
@@ -50,7 +45,7 @@ fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
         | ast::TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
         ast::TypeName::Function(in_types, out_type) => {
-            let cb_wrap_ident = Ident::new(&format!("{}_cb_wrap", param.name), Span::call_site());
+            let cb_wrap_ident = &param.name;
             let mut cb_param_list = vec![];
             let mut cb_arg_type_list = vec![];
             for (index, in_ty) in in_types.into_iter().enumerate() {
@@ -60,13 +55,13 @@ fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
             let cb_ret_type = out_type.to_syn();
 
             let tokens = quote! {
-                move | #(#cb_param_list,)* | unsafe {
+                let #cb_wrap_ident = move | #(#cb_param_list,)* | unsafe {
                     std::mem::transmute::<unsafe extern "C" fn (*const c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
                         (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*)
-                }
+                };
             };
             Some(parse2(tokens).unwrap())
-        },
+        }
         _ => None,
     }
 }
@@ -176,31 +171,27 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         .collect::<Vec<_>>();
 
     let cfg = cfgs_to_stream(&m.attrs.cfg);
-
-    (
-        if write_flushes.is_empty() {
-            Item::Fn(syn::parse_quote! {
-                #[no_mangle]
-                #cfg
-                extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-                    #(#all_params_conversion)*
-                    #method_invocation(#(#all_params_names),*) #maybe_into
-                }
-            })
-        } else {
-            Item::Fn(syn::parse_quote! {
-                #[no_mangle]
-                #cfg
-                extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-                    #(#all_params_conversion)*
-                    let ret = #method_invocation(#(#all_params_names),*);
-                    #(#write_flushes)*
-                    ret #maybe_into
-                }
-            })
-        },
-        all_cb_param_creation_fcts,
-    )
+    if write_flushes.is_empty() {
+        Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            #cfg
+            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+                #(#all_params_conversion)*
+                #method_invocation(#(#all_params_names),*) #maybe_into
+            }
+        })
+    } else {
+        Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            #cfg
+            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+                #(#all_params_conversion)*
+                let ret = #method_invocation(#(#all_params_names),*);
+                #(#write_flushes)*
+                ret #maybe_into
+            }
+        })
+    }
 }
 
 struct AttributeInfo {
