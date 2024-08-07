@@ -23,71 +23,42 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.bool(core.List<bool> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._boolAllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceBool>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_bool(v_struct);
+    final result = _Float64Vec_new_bool(v._boolAllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.i16(core.List<int> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._int16AllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceInt16>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_i16(v_struct);
+    final result = _Float64Vec_new_i16(v._int16AllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.u16(core.List<int> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._uint16AllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceUint16>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_u16(v_struct);
+    final result = _Float64Vec_new_u16(v._uint16AllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.isize(core.List<int> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._isizeAllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceIsize>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_isize(v_struct);
+    final result = _Float64Vec_new_isize(v._isizeAllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.usize(core.List<int> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._usizeAllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceUsize>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_usize(v_struct);
+    final result = _Float64Vec_new_usize(v._usizeAllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._rawBytesAllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceUint8>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_f64_be_bytes(v_struct);
+    final result = _Float64Vec_new_f64_be_bytes(v.asUint8List()._uint8AllocIn(temp.arena));
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec(core.List<double> v) {
-    final temp = _FinalizedArena();
-    final (vData, vLength) = v._float64AllocIn(_RustAlloc());
-    final v_struct = ffi.Struct.create<_SliceDouble>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    final result = _Float64Vec_new_from_owned(v_struct);
+    final result = _Float64Vec_new_from_owned(v._float64AllocIn(_RustAlloc()));
     return Float64Vec._fromFfi(result, []);
   }
 
@@ -100,23 +71,15 @@ final class Float64Vec implements ffi.Finalizable {
 
   void fillSlice(core.List<double> v) {
     final temp = _FinalizedArena();
-    final (vData, vLength) = v._float64AllocIn(temp.arena);
-    final v_struct = ffi.Struct.create<_SliceDouble>();
-    v_struct._data = vData;
-    v_struct._length = vLength;
-    _Float64Vec_fill_slice(_ffi, v_struct);
+    _Float64Vec_fill_slice(_ffi, v._float64AllocIn(temp.arena));
   }
 
   void setValue(core.List<double> newSlice) {
     final temp = _FinalizedArena();
-    final (newSliceData, newSliceLength) = newSlice._float64AllocIn(temp.arena);
-    final newSlice_struct = ffi.Struct.create<_SliceDouble>();
-    newSlice_struct._data = newSliceData;
-    newSlice_struct._length = newSliceLength;
-    _Float64Vec_set_value(_ffi, newSlice_struct);
+    _Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
   }
 
-  @override
+  @core.override
   String toString() {
     final write = _Write();
     _Float64Vec_to_string(_ffi, write._ffi);

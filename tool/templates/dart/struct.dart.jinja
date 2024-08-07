@@ -66,9 +66,7 @@ final class {{type_name}}
   ) {
     final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
-    {%- for statement in field.dart_to_c %}
-    {{statement}}
-    {%- endfor %}
+    struct.{{field.name}} = {{field.dart_to_c}};
     {%- endfor %}
     return struct;
   }
@@ -110,7 +108,7 @@ final class {{type_name}}
   core.List<Object> get _fieldsForLifetime{{ltname.to_uppercase()}} => [
     {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
         {%- if !loop.first %}, {% endif -%}
-        {%- if let Some(st) = field.maybe_struct_borrow_info -%}
+        {%- if let Some(st) = field.param_info -%}
           {%- for def_lt in self::iter_def_lifetimes_matching_use_lt(l, st) -%}
           {%- if !loop.first %}, {% endif -%}
           ...{{field.name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
