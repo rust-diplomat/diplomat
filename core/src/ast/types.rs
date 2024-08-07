@@ -581,34 +581,6 @@ impl TypeName {
                 let output_type = output_type.to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
-                // original type
-                // let fn_type = syn::Type::ImplTrait(syn::TypeImplTrait {
-                //     impl_token: syn::Token![impl](Span::call_site()),
-                //     bounds: Punctuated::from_iter(vec![syn::TypeParamBound::Trait(TraitBound {
-                //         paren_token: None,
-                //         modifier: syn::TraitBoundModifier::None,
-                //         lifetimes: None,
-                //         path: syn::Path {
-                //             leading_colon: None,
-                //             segments: Punctuated::from_iter(vec![PathSegment {
-                //                 ident: syn::Ident::new("Fn", Span::call_site()),
-                //                 arguments: PathArguments::Parenthesized(
-                //                     ParenthesizedGenericArguments {
-                //                         paren_token: syn::token::Paren::default(),
-                //                         inputs: input_types
-                //                             .iter()
-                //                             .map(|in_ty| in_ty.to_syn())
-                //                             .collect(),
-                //                         output: syn::ReturnType::Type(
-                //                             syn::Token![->](Span::call_site()),
-                //                             Box::new(output_type.to_syn()),
-                //                         ),
-                //                     },
-                //                 ),
-                //             }]),
-                //         },
-                //     })]),
-                // });
             }
         }
     }

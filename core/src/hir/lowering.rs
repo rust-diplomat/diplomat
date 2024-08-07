@@ -1,12 +1,11 @@
 use super::{
-    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback,
-    CallbackInstantiationFunctionality, CallbackParam, EnumDef, EnumPath, EnumVariant, Everywhere,
-    IdentBuf, InputOnly, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn,
-    Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
-    OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
-    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
-    Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
-    TyPosition, Type, TypeDef, TypeId,
+    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
+    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
+    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
+    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
+    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -718,7 +717,6 @@ impl<'ast> LoweringContext<'ast> {
                 PrimitiveType::from_ast(*prim),
             ))),
             ast::TypeName::Function(input_types, out_type) => {
-                let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
                 let params = input_types
                     .iter()
                     .map(|in_ty| {
@@ -729,7 +727,6 @@ impl<'ast> LoweringContext<'ast> {
                     })
                     .collect::<Vec<CallbackParam>>();
                 Ok(Type::Callback(P::build_callback(Callback {
-                    id: callback_id,
                     param_self: None,
                     params,
                     output: Box::new(match **out_type {
@@ -1093,13 +1090,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name")?;
-        let mut ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path)?;
-        match ty {
-            Type::<InputOnly>::Callback(ref mut cb) => {
-                cb.set_id(&name);
-            }
-            _ => {}
-        }
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path)?;
 
         Ok(Param::new(name, ty))
     }
