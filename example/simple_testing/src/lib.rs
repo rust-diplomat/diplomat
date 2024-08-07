@@ -21,20 +21,6 @@ impl Wrapper {
     }
 }  
 
-impl TesterTrait for DiplomatTraitStruct_TesterTrait {
-    fn test_trait_fn(&self, x: i32) -> i32 {
-        unsafe {
-            ((*self.vtable).run_test_trait_fn_callback)(self.data, x)
-        }
-    }
-
-    fn test_void_trait_fn(&self) {
-        unsafe {
-            ((*self.vtable).run_test_void_trait_fn_callback)(self.data);
-        }
-    }
-}
-
 // }
 
 
@@ -58,6 +44,20 @@ impl Drop for DiplomatTraitStruct_TesterTrait {
         unsafe {
             let destructor = (*self.vtable).destructor;
             (destructor)(self.data);
+        }
+    }
+}
+
+impl TesterTrait for DiplomatTraitStruct_TesterTrait {
+    fn test_trait_fn(&self, x: i32) -> i32 {
+        unsafe {
+            ((*self.vtable).run_test_trait_fn_callback)(self.data, x)
+        }
+    }
+
+    fn test_void_trait_fn(&self) {
+        unsafe {
+            ((*self.vtable).run_test_void_trait_fn_callback)(self.data);
         }
     }
 }
