@@ -310,7 +310,8 @@ impl<'ast> LoweringContext<'ast> {
                     "Found FFI-unsafe type {ty} in struct field {struct_name}.{name}, consider using {ffisafe}",
                 )));
             }
-            let ty = self.lower_type::<Everywhere>(ty, &mut &ast_struct.lifetimes, item.in_path);
+            let ty =
+                self.lower_type::<Everywhere>(ty, &mut &ast_struct.lifetimes, false, item.in_path);
 
             match (ty, &mut fields) {
                 (Ok(ty), Ok(fields)) => fields.push(StructField {
@@ -550,13 +551,14 @@ impl<'ast> LoweringContext<'ast> {
         methods
     }
 
-    /// Lowers an [`ast::TypeName`]s into a [`hir::Type`].
+    /// Lowers an [`ast::TypeName`]s into a [`hir::Type`] (for non-output types)
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     fn lower_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
         &mut self,
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
+        in_struct: bool,
         in_path: &ast::Path,
     ) -> Result<Type<P>, ()> {
         match ty {
@@ -646,7 +648,7 @@ impl<'ast> LoweringContext<'ast> {
             });
                 Err(())
             }
-            ast::TypeName::Option(opt_ty) => {
+            ast::TypeName::Option(opt_ty, stdlib) => {
                 match opt_ty.as_ref() {
                     ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref()
                     {
@@ -654,6 +656,10 @@ impl<'ast> LoweringContext<'ast> {
                             .resolve(in_path, self.env)
                         {
                             ast::CustomType::Opaque(opaque) => {
+                                if *stdlib == ast::StdlibOrDiplomat::Diplomat {
+                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)")));
+                                    return Err(());
+                                }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
@@ -851,11 +857,15 @@ impl<'ast> LoweringContext<'ast> {
                     Err(())
                 }
             },
-            ast::TypeName::Option(opt_ty) => match opt_ty.as_ref() {
+            ast::TypeName::Option(opt_ty, stdlib) => match opt_ty.as_ref() {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
+                                if *stdlib == ast::StdlibOrDiplomat::Diplomat {
+                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)")));
+                                    return Err(());
+                                }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
@@ -888,6 +898,10 @@ impl<'ast> LoweringContext<'ast> {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
+                                if *stdlib == ast::StdlibOrDiplomat::Diplomat {
+                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<Box<T>>, please use Option<Box<T>> (DiplomatOption is for primitives, structs, and enums)")));
+                                    return Err(());
+                                }
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
                                     &opaque.lifetimes,
@@ -1065,7 +1079,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, false, in_path);
 
         Ok(Param::new(name?, ty?))
     }
@@ -1134,7 +1148,7 @@ impl<'ast> LoweringContext<'ast> {
                     _ => Err(()),
                 }
             }
-            ty @ ast::TypeName::Option(value_ty) => match &**value_ty {
+            ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
                     .lower_out_type(ty, &mut return_ltl, in_path, false, true)
                     .map(SuccessType::OutType)
