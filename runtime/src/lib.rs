@@ -17,6 +17,9 @@ pub use slices::{
     DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice,
 };
 
+mod callback;
+pub use callback::DiplomatCallback;
+
 mod result;
 pub use result::DiplomatResult;
 

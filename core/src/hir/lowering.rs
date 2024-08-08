@@ -1,11 +1,11 @@
 use super::{
-    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
-    EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime, LifetimeEnv, LifetimeLowerer,
-    LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef,
-    OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
-    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
-    Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
-    TyPosition, Type, TypeDef, TypeId,
+    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
+    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
+    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
+    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
+    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -716,6 +716,25 @@ impl<'ast> LoweringContext<'ast> {
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
                 PrimitiveType::from_ast(*prim),
             ))),
+            ast::TypeName::Function(input_types, out_type) => {
+                let params = input_types
+                    .iter()
+                    .map(|in_ty| {
+                        let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false);
+                        CallbackParam {
+                            ty: hir_in_ty.unwrap(),
+                        }
+                    })
+                    .collect::<Vec<CallbackParam>>();
+                Ok(Type::Callback(P::build_callback(Callback {
+                    param_self: None,
+                    params,
+                    output: Box::new(match **out_type {
+                        ast::TypeName::Unit => None,
+                        _ => Some(self.lower_type(out_type, ltl, in_path)?),
+                    }),
+                })))
+            }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
@@ -958,6 +977,12 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
+            ast::TypeName::Function(_, _) => {
+                self.errors.push(LoweringError::Other(
+                    "Function types can only be an input type".into(),
+                ));
+                Err(())
+            }
         }
     }
 
@@ -1064,10 +1089,10 @@ impl<'ast> LoweringContext<'ast> {
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
-        let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
+        let name = self.lower_ident(&param.name, "param name")?;
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path)?;
 
-        Ok(Param::new(name?, ty?))
+        Ok(Param::new(name, ty))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.
