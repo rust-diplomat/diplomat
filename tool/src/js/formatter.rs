@@ -43,6 +43,66 @@ const RESERVED: &[&str] = &[
     "with",
 ];
 
+/// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const RESERVED_TYPES: &[&str] = &[
+    "Infinity",
+    "NaN",
+    "Object",
+    "Function",
+    "Boolean",
+    "Symbol",
+    "Error",
+    "AggregateError",
+    "EvalError",
+    "RangeError",
+    "ReferenceError",
+    "SyntaxError",
+    "TypeError",
+    "URIError",
+    "InternalError",
+    "Number",
+    "BigInt",
+    "Math",
+    "Date",
+    "String",
+    "RegExp",
+    "Array",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "BigInt64Array",
+    "BigUint64Array",
+    "Float16Array",
+    "Float32Array",
+    "Float64Array",
+    "Map",
+    "Set",
+    "WeakMap",
+    "WeakSet",
+    "ArrayBuffer",
+    "SharedArrayBuffer",
+    "DataView",
+    "Atomics",
+    "JSON",
+    "WeakRef",
+    "FinalizationRegistry",
+    "Iterator",
+    "AsyncIterator",
+    "Promise",
+    "GeneratorFunction",
+    "AsyncGeneratorFunction",
+    "Generator",
+    "AsyncGenerator",
+    "AsyncFunction",
+    "Reflect",
+    "Proxy",
+    "Intl",
+];
+
 /// Helper class for us to format JS identifiers from the HIR.
 pub(crate) struct JSFormatter<'tcx> {
     /// Per [`CFormatter`]'s documentation we use it for support.
@@ -60,10 +120,17 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let type_def = self.tcx.resolve_type(id);
 
-        type_def
+        let name = type_def
             .attrs()
             .rename
-            .apply(type_def.name().as_str().into())
+            .apply(type_def.name().as_str().into());
+
+        
+        if RESERVED_TYPES.contains(&&*name) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
     }
 
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
