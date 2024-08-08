@@ -126,10 +126,10 @@ impl<'tcx> JSFormatter<'tcx> {
             .apply(type_def.name().as_str().into());
 
         if RESERVED_TYPES.contains(&&*name) {
-            format!("{name}_").into()
-        } else {
-            name
+            panic!("{name} is not an allowed type. Please rename.")
         }
+
+        name
     }
 
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
