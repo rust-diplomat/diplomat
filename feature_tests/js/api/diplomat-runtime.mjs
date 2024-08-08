@@ -219,8 +219,8 @@ export class DiplomatReceiveBuf {
      * @param {string} sliceType The slice type we expect to be used. 
      * @returns A slice of the `sliceType` provided.
      */
-    getSlice(sliceType) {
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+    static getSlice(wasm, buffer, sliceType) {
+        const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
 
         var arrayType;
         switch (sliceType) {
@@ -258,7 +258,7 @@ export class DiplomatReceiveBuf {
             default:
                 console.error("Unrecognized bufferType ", bufferType);
         }
-        return arrayType.from(new arrayType(this.#wasm.memory.buffer, ptr, size));
+        return arrayType.from(new arrayType(wasm.memory.buffer, ptr, size));
     }
 
     /**
@@ -267,9 +267,8 @@ export class DiplomatReceiveBuf {
      * @param {number} buffer Buffer to use. Only used by `getStrings`, other wise {@link DiplomatReceiveBuf.buffer} is used.
      * @returns {string} String with encoding of the provided `stringEncoding`.
      */
-    getString(stringEncoding, buffer=null) {
-        let buf = buffer === null? this.#buffer : buffer;
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, buf, 2);
+    static getString(wasm, buffer, stringEncoding) {
+        const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
         switch (stringEncoding) {
             case "string8":
                 return readString8(wasm, ptr, size);
@@ -286,8 +285,8 @@ export class DiplomatReceiveBuf {
      * @param {string} stringEncoding `string8` or `string16`. 
      * @returns {Array[string]} An array of strings with the encoding of the provided `stringEncoding`.
      */
-    getStrings(stringEncoding) {
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+    static getStrings(wasm, buffer, stringEncoding) {
+        const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
 
         let strings = [];
         for (var arrayPtr = ptr; arrayPtr < size; arrayPtr += 1) {

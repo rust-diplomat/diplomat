@@ -193,12 +193,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"{variable_name}.getSlice("{}")"#,
+                        r#"diplomatRuntime.DiplomatReceiveBuf.getSlice(wasm, {variable_name}, "{}")"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"{variable_name}.getString("string{}")"#,
+                        r#"diplomatRuntime.DiplomatReceiveBuf.getString(wasm, {variable_name}, "string{}")"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -211,7 +211,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"{variable_name}.getStrings("string{}")"#,
+                            r#"diplomatRuntime.DiplomatReceiveBuf.getStrings(wasm, {variable_name}, "string{}")"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,
