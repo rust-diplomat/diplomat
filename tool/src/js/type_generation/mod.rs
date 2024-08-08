@@ -68,8 +68,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         type_name: &str,
 
         enum_def: &'tcx EnumDef,
-        methods: &Vec<MethodInfo>,
-        special_method: &SpecialMethodInfo,
+        methods: &MethodsInfo,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
@@ -81,8 +80,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             doc_str: String,
 
-            methods: &'a Vec<MethodInfo<'a>>,
-            special_method: &'a SpecialMethodInfo<'a>,
+            methods: &'a MethodsInfo<'a>,
         }
 
         ImplTemplate {
@@ -94,7 +92,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
 
             methods,
-            special_method,
         }
         .render()
         .unwrap()
@@ -107,8 +104,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         type_name: &str,
 
         opaque_def: &'tcx OpaqueDef,
-        methods: &Vec<MethodInfo>,
-        special_method: &SpecialMethodInfo,
+        methods: &MethodsInfo,
     ) -> String {
         let destructor = opaque_def.dtor_abi_name.as_str();
 
@@ -123,8 +119,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             docs: String,
 
-            methods: &'a Vec<MethodInfo<'a>>,
-            special_method: &'a SpecialMethodInfo<'a>,
+            methods: &'a MethodsInfo<'a>,
         }
 
         ImplTemplate {
@@ -137,7 +132,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             docs: self.formatter.fmt_docs(&opaque_def.docs),
 
             methods,
-            special_method,
         }
         .render()
         .unwrap()
@@ -227,8 +221,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         struct_def: &'tcx hir::StructDef<P>,
         fields: &Vec<FieldInfo<P>>,
-        methods: &Vec<MethodInfo>,
-        special_method: &SpecialMethodInfo,
+        methods: &MethodsInfo,
 
         is_out: bool,
         mutable: bool,
@@ -244,8 +237,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
-            methods: &'a Vec<MethodInfo<'a>>,
-            special_method: &'a SpecialMethodInfo<'a>,
+            methods: &'a MethodsInfo<'a>,
 
             docs: String,
         }
@@ -260,7 +252,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             lifetimes: &struct_def.lifetimes,
             fields,
             methods,
-            special_method,
 
             docs: self.formatter.fmt_docs(&struct_def.docs),
         }
@@ -476,6 +467,11 @@ pub(super) struct MethodInfo<'info> {
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,
+}
+
+pub(super) struct MethodsInfo<'a> {
+    pub methods: Vec<MethodInfo<'a>>,
+    pub special_methods: SpecialMethodInfo<'a>
 }
 
 #[derive(Clone)]

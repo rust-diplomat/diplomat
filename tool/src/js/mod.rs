@@ -10,7 +10,7 @@ pub(crate) mod formatter;
 use formatter::JSFormatter;
 
 mod type_generation;
-use type_generation::TyGenContext;
+use type_generation::{MethodsInfo, TyGenContext};
 
 mod layout;
 
@@ -113,33 +113,33 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
         };
 
-        let mut methods = m
+        let mut methods_info = MethodsInfo {
+            methods: m
             .iter()
             .flat_map(|method| context.generate_method(id, method))
-            .collect::<Vec<_>>();
-
-        let mut special_method = context.generate_special_method(special_method_presence);
+            .collect::<Vec<_>>(),
+            special_methods: context.generate_special_method(special_method_presence),
+        };
 
         for file_type in [FileType::Module, FileType::Typescript] {
             let ts = file_type.is_typescript();
 
-            for m in &mut methods {
+            for m in &mut methods_info.methods {
                 m.typescript = ts;
             }
-            special_method.typescript = ts;
+            methods_info.special_methods.typescript = ts;
 
             let contents = match type_def {
-                TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods, &special_method),
+                TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods_info),
                 TypeDef::Opaque(o) => {
-                    context.gen_opaque(ts, &name, o, &methods, &special_method)
+                    context.gen_opaque(ts, &name, o, &methods_info)
                 }
                 TypeDef::Struct(s) => context.gen_struct(
                     ts,
                     &name,
                     s,
                     &fields.clone().unwrap(),
-                    &methods,
-                    &special_method,
+                    &methods_info,
                     false,
                     true,
                 ),
@@ -148,8 +148,7 @@ pub(crate) fn run<'tcx>(
                     &name,
                     s,
                     &fields_out.clone().unwrap(),
-                    &methods,
-                    &special_method,
+                    &methods_info,
                     true,
                     false,
                 ),
