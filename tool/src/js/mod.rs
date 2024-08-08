@@ -115,9 +115,9 @@ pub(crate) fn run<'tcx>(
 
         let mut methods_info = MethodsInfo {
             methods: m
-            .iter()
-            .flat_map(|method| context.generate_method(id, method))
-            .collect::<Vec<_>>(),
+                .iter()
+                .flat_map(|method| context.generate_method(id, method))
+                .collect::<Vec<_>>(),
             special_methods: context.generate_special_method(special_method_presence),
         };
 
@@ -131,18 +131,10 @@ pub(crate) fn run<'tcx>(
 
             let contents = match type_def {
                 TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods_info),
-                TypeDef::Opaque(o) => {
-                    context.gen_opaque(ts, &name, o, &methods_info)
+                TypeDef::Opaque(o) => context.gen_opaque(ts, &name, o, &methods_info),
+                TypeDef::Struct(s) => {
+                    context.gen_struct(ts, &name, s, &fields.clone().unwrap(), &methods_info, false)
                 }
-                TypeDef::Struct(s) => context.gen_struct(
-                    ts,
-                    &name,
-                    s,
-                    &fields.clone().unwrap(),
-                    &methods_info,
-                    false,
-                    true,
-                ),
                 TypeDef::OutStruct(s) => context.gen_struct(
                     ts,
                     &name,
@@ -150,7 +142,6 @@ pub(crate) fn run<'tcx>(
                     &fields_out.clone().unwrap(),
                     &methods_info,
                     true,
-                    false,
                 ),
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };

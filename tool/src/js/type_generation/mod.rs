@@ -224,7 +224,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         methods: &MethodsInfo,
 
         is_out: bool,
-        mutable: bool,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -246,8 +245,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             type_name,
 
             typescript,
-            mutable,
             has_default_constructor: is_out,
+            mutable: !is_out,
 
             lifetimes: &struct_def.lifetimes,
             fields,
@@ -471,7 +470,7 @@ pub(super) struct SpecialMethodInfo<'a> {
 
 pub(super) struct MethodsInfo<'a> {
     pub methods: Vec<MethodInfo<'a>>,
-    pub special_methods: SpecialMethodInfo<'a>
+    pub special_methods: SpecialMethodInfo<'a>,
 }
 
 #[derive(Clone)]
