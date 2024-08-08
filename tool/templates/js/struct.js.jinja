@@ -100,8 +100,9 @@ export class {{type_name}} {
     {%- endfor -%}
     {%- endif %}
 
-{%- for method in methods %}
+{%- for method in methods.methods %}
 
     {{ method|indent(4) }}
-{%- endfor %}
+{%- endfor ~%}
+    {{~ methods.special_methods|indent(4) -}}
 }

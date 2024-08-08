@@ -1,4 +1,3 @@
-{%- let method = method.unwrap() -%}
 {{method_decl}}(
 {%- for param in parameters -%}
     {{- param.name -}}
@@ -36,7 +35,7 @@
     {%- endfor -%}
 
 
-    {%~ if !method.output.is_ffi_unit() %}const result = {% endif %}wasm.{{ abi_name }}(
+    {%~ if !method_output_is_ffi_unit %}const result = {% endif %}wasm.{{ abi_name }}(
         {%- for param in param_conversions -%}
         {%- if !loop.first %}, {% endif -%}
         {{ param }}
