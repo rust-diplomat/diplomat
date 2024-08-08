@@ -13,8 +13,8 @@ fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
         .fold(quote!(), |prev, attr| quote!(#prev #attr))
 }
 
-fn param_ty(param: &ast::Param) -> syn::Type {
-    match &param.ty {
+fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
+    match &param_ty {
         ast::TypeName::StrReference(lt @ Some(_lt), encoding, _) => {
             // At the param boundary we MUST use FFI-safe diplomat slice types,
             // not Rust stdlib types (which are not FFI-safe and must be converted)
@@ -32,30 +32,72 @@ fn param_ty(param: &ast::Param) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             prim.get_diplomat_slice_type(ltmt)
         }
-        _ => param.ty.to_syn(),
+        _ => param_ty.to_syn(),
     }
 }
 
-fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
-    let name = &param.name;
-    match &param.ty {
+fn orig_syn(ty: &ast::TypeName) -> syn::Type {
+    match ty {
+        ast::TypeName::StrReference(lt, encoding, ..) => encoding.get_stdlib_slice_type(lt),
+        ast::TypeName::StrSlice(encoding, ..) => {
+            let inner = encoding.get_stdlib_slice_type(&Some(ast::Lifetime::Anonymous));
+            syn::parse_quote_spanned!(Span::call_site() => &[#inner])
+        }
+        ast::TypeName::PrimitiveSlice(ltmt, primitive, ..) => primitive.get_stdlib_slice_type(ltmt),
+        ast::TypeName::Function(input_types, output_type) => {
+            let input_types: Vec<syn::Type> = input_types
+                .into_iter()
+                .map(|in_ty| orig_syn(in_ty))
+                .collect();
+            let output_type = orig_syn(output_type);
+            syn::parse_quote_spanned!(Span::call_site() => impl Fn(#(#input_types,)*) -> #output_type>)
+        }
+        _ => ty.to_syn(),
+    }
+}
+
+fn param_conversion(
+    name: &ast::Ident,
+    param_type: &ast::TypeName,
+    cast_to: Option<&syn::Type>,
+) -> Option<proc_macro2::TokenStream> {
+    match &param_type {
         // conversion only needed for slices that are specified as Rust types rather than diplomat_runtime types
         ast::TypeName::StrReference(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
+        | ast::TypeName::Result(..) => Some(if let Some(cast_to) = cast_to {
+            quote!(let #name: #cast_to = #name.into();)
+        } else {
+            quote!(let #name = #name.into();)
+        }),
         ast::TypeName::Function(in_types, out_type) => {
-            let cb_wrap_ident = &param.name;
+            let cb_wrap_ident = &name;
             let mut cb_param_list = vec![];
+            let mut cb_params_and_types_list = vec![];
             let mut cb_arg_type_list = vec![];
+            let mut all_params_conversion = vec![];
             for (index, in_ty) in in_types.into_iter().enumerate() {
-                cb_param_list.push(Ident::new(&format!("arg{}", index), Span::call_site()));
-                cb_arg_type_list.push(in_ty.to_syn());
+                let param_ident_str = format!("arg{}", index);
+                let orig_type = orig_syn(in_ty);
+                let param_converted_type = param_ty(in_ty);
+                if let Some(conversion) = param_conversion(
+                    &ast::Ident::from(param_ident_str.clone()),
+                    in_ty,
+                    Some(&param_converted_type),
+                ) {
+                    all_params_conversion.push(conversion);
+                }
+                let param_ident = Ident::new(&param_ident_str, Span::call_site());
+                cb_arg_type_list.push(param_converted_type);
+                cb_params_and_types_list.push(quote!(#param_ident: #orig_type));
+                cb_param_list.push(param_ident);
             }
             let cb_ret_type = out_type.to_syn();
 
             let tokens = quote! {
-                let #cb_wrap_ident = move | #(#cb_param_list,)* | unsafe {
+                let #cb_wrap_ident = move | #(#cb_params_and_types_list,)* | unsafe {
+                    #(#all_params_conversion)*
                     std::mem::transmute::<unsafe extern "C" fn (*const c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
                         (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*)
                 };
@@ -76,11 +118,11 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
     m.params.iter().for_each(|p| {
-        let ty = param_ty(p);
+        let ty = param_ty(&p.ty);
         let name = &p.name;
         all_params_names.push(name);
         all_params.push(syn::parse_quote!(#name: #ty));
-        if let Some(conversion) = param_conversion(p) {
+        if let Some(conversion) = param_conversion(&p.name, &p.ty, None) {
             all_params_conversion.push(conversion);
         }
     });

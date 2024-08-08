@@ -4,22 +4,9 @@ extern "C" {
 {% for cb_and_struct_def in cb_structs_and_defs %}
 typedef struct {{ cb_and_struct_def.name }} {
     const void* data;
-    {{ cb_and_struct_def.return_type }} (*run_callback)({{ cb_and_struct_def.return_type }}(*cb_pointer)({{ cb_and_struct_def.params_types }}){% if cb_and_struct_def.params_types != "" %}, {{ cb_and_struct_def.params_types }} {% endif %});
+    {{ cb_and_struct_def.return_type }} (*run_callback)(const void*{% if cb_and_struct_def.params_types != "" %}, {{ cb_and_struct_def.params_types }} {% endif %});
     void (*destructor)(const void*);
 } {{ cb_and_struct_def.name }};
-
-{{ cb_and_struct_def.return_type }} run_create_{{ cb_and_struct_def.name }}_callback({{ cb_and_struct_def.return_type }}(*cb_pointer)({{ cb_and_struct_def.params_types }}){% if cb_and_struct_def.params_types != "" %}, {{ cb_and_struct_def.param_types_and_names }} {% endif %}) {
-    return cb_pointer({{ cb_and_struct_def.param_names }});
-}
-
-{{ cb_and_struct_def.name }} C_create_{{ cb_and_struct_def.name }}({{ cb_and_struct_def.return_type }}(*cb_pointer)({{ cb_and_struct_def.params_types }})) {
-    {{ cb_and_struct_def.name }} ret = {
-        cb_pointer,
-        run_create_{{ cb_and_struct_def.name }}_callback,
-        // no destructor
-    };
-    return ret;
-}
 {% endfor %}
 {% for method in methods %}
 {{ method.return_ty }} {{ method.abi_name }}({{ method.params }});

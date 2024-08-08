@@ -24,7 +24,7 @@ mod ffi {
         pub fn test_mod_array(g: impl Fn(&[u8])) {
             let bytes: Vec<u8> = vec![0x11, 0x22];
             println!("Pre callback: {:?}", bytes);
-            g(bytes.as_slice());
+            g(bytes.as_slice().into());
             println!("Back in Rust post callback: {:?}", bytes);
         }
 
