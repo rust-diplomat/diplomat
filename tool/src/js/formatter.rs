@@ -125,7 +125,6 @@ impl<'tcx> JSFormatter<'tcx> {
             .rename
             .apply(type_def.name().as_str().into());
 
-        
         if RESERVED_TYPES.contains(&&*name) {
             format!("{name}_").into()
         } else {
