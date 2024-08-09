@@ -2,7 +2,7 @@
 
 use super::lifetimes::LifetimeEnv;
 use super::{
-    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type,
+    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type, Callback,
 };
 use crate::ast::Docs;
 
@@ -19,6 +19,17 @@ pub enum TypeDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
     Opaque(&'tcx OpaqueDef),
     Enum(&'tcx EnumDef),
+    Trait(&'tcx TraitDef),
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct TraitDef { // TyPosition: InputOnly
+    pub docs: Docs,
+    pub name: IdentBuf,
+    pub fcts: Vec<Callback>,
+    pub attrs: Attrs, // do we need this?
+    pub lifetimes: LifetimeEnv,
 }
 
 /// Structs that can only be returned from methods.
@@ -92,6 +103,24 @@ pub struct EnumVariant {
     pub name: IdentBuf,
     pub discriminant: isize,
     pub attrs: Attrs,
+}
+
+impl TraitDef {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        fcts: Vec<Callback>,
+        attrs: Attrs,
+        lifetimes: LifetimeEnv,
+    ) -> Self {
+        Self {
+            docs,
+            name,
+            fcts,
+            attrs,
+            lifetimes,
+        }
+    }
 }
 
 impl<P: TyPosition> StructDef<P> {
@@ -176,6 +205,12 @@ impl<'a> From<&'a EnumDef> for TypeDef<'a> {
     }
 }
 
+impl<'a> From<&'a TraitDef> for TypeDef<'a> {
+    fn from(x: &'a TraitDef) -> Self {
+        TypeDef::Trait(x)
+    }
+}
+
 impl<'tcx> TypeDef<'tcx> {
     pub fn name(&self) -> &'tcx IdentBuf {
         match *self {
@@ -183,6 +218,7 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.name,
             Self::Opaque(ty) => &ty.name,
             Self::Enum(ty) => &ty.name,
+            Self::Trait(ty) => &ty.name,
         }
     }
 
@@ -192,6 +228,7 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.docs,
             Self::Opaque(ty) => &ty.docs,
             Self::Enum(ty) => &ty.docs,
+            Self::Trait(ty) => &ty.docs,
         }
     }
     pub fn methods(&self) -> &'tcx [Method] {
@@ -200,6 +237,7 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.methods,
             Self::Opaque(ty) => &ty.methods,
             Self::Enum(ty) => &ty.methods,
+            Self::Trait(_) => &[],
         }
     }
 
@@ -209,6 +247,7 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.attrs,
             Self::Opaque(ty) => &ty.attrs,
             Self::Enum(ty) => &ty.attrs,
+            Self::Trait(ty) => &ty.attrs,
         }
     }
 
@@ -218,6 +257,15 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.special_method_presence,
             Self::Opaque(ty) => &ty.special_method_presence,
             Self::Enum(ty) => &ty.special_method_presence,
+            Self::Trait(_) => {
+                // traits don't have any methods at all, so there is no
+                // special method presence
+                &SpecialMethodPresence {
+                    comparator: false,
+                    iterator: None,
+                    iterable: None,
+                }
+            }
         }
     }
 }

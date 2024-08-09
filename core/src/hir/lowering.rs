@@ -182,6 +182,13 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Vec<OpaqueDef>, ()> {
         self.lower_all(ast_defs, Self::lower_opaque)
     }
+    pub(super) fn lower_all_traits(
+        &mut self,
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Trait>>,
+    ) -> Result<Vec<TraitDef>, ()> {
+        // self.lower_all(ast_defs, Self::lower_trait)
+        Ok(Vec::new())
+    }
 
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
         let ast_enum = item.item;
