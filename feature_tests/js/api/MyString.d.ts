@@ -12,7 +12,7 @@ export class MyString {
 
     static newOwned(v: string): MyString;
 
-    static newFromFirst(v: Array<String>): MyString;
+    static newFromFirst(v: Array<string>): MyString;
 
     set str(newStr: string);
 

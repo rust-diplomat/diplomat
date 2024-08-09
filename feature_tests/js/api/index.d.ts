@@ -62,6 +62,8 @@ export { Float64Vec } from "./Float64Vec"
 
 export { MyString } from "./MyString"
 
+export { StringList } from "./StringList"
+
 export { Opaque } from "./Opaque"
 
 export { OpaqueMutexedString } from "./OpaqueMutexedString"
