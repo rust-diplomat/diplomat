@@ -498,7 +498,8 @@ mod tests {
 
             let mut output = String::new();
 
-            let attr_validator = hir::BasicAttributeValidator::new("tests");
+            let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+            attr_validator.support.option = true;
             match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {

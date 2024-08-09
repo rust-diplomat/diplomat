@@ -698,6 +698,9 @@ impl<'ast> LoweringContext<'ast> {
                                     self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
                                     return Err(());
                                 }
+                                if !self.attr_validator.attrs_supported().option {
+                                    self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
+                                }
                                 let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
                                 Ok(Type::DiplomatOption(Box::new(inner)))
                             }
@@ -707,6 +710,12 @@ impl<'ast> LoweringContext<'ast> {
                         if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
                             self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
                             return Err(());
+                        }
+                        if !self.attr_validator.attrs_supported().option {
+                            self.errors.push(LoweringError::Other(
+                                "Options of structs/enums/primitives not supported by this backend"
+                                    .into(),
+                            ));
                         }
                         Ok(Type::DiplomatOption(Box::new(Type::Primitive(
                             PrimitiveType::from_ast(*prim),
@@ -986,26 +995,36 @@ impl<'ast> LoweringContext<'ast> {
                         Err(())
                     }
                 },
-                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
-                    .resolve(in_path, self.env)
-                {
-                    ast::CustomType::Opaque(_) => {
-                        self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
-                        Err(())
-                    }
-                    _ => {
-                        if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
-                            self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
-                            return Err(());
+                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                    match path.resolve(in_path, self.env) {
+                        ast::CustomType::Opaque(_) => {
+                            self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                            Err(())
                         }
-                        let inner = self.lower_out_type(opt_ty, ltl, in_path, in_struct, true)?;
-                        Ok(Type::DiplomatOption(Box::new(inner)))
+                        _ => {
+                            if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                                self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                return Err(());
+                            }
+                            if !self.attr_validator.attrs_supported().option {
+                                self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
+                            }
+                            let inner =
+                                self.lower_out_type(opt_ty, ltl, in_path, in_struct, true)?;
+                            Ok(Type::DiplomatOption(Box::new(inner)))
+                        }
                     }
-                },
+                }
                 ast::TypeName::Primitive(prim) => {
                     if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
                         self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
                         return Err(());
+                    }
+                    if !self.attr_validator.attrs_supported().option {
+                        self.errors.push(LoweringError::Other(
+                            "Options of structs/enums/primitives not supported by this backend"
+                                .into(),
+                        ));
                     }
                     Ok(Type::DiplomatOption(Box::new(Type::Primitive(
                         PrimitiveType::from_ast(*prim),
