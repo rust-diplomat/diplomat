@@ -28,7 +28,7 @@ export class StringList {
 
     static new_(v) {
         
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
+        const vSlice = diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8");
         const result = wasm.StringList_new(vSlice.ptr, vSlice.size);
     
         try {
