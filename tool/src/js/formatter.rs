@@ -126,7 +126,7 @@ impl<'tcx> JSFormatter<'tcx> {
             .apply(type_def.name().as_str().into());
 
         if RESERVED_TYPES.contains(&&*name) {
-            panic!("{name} is not an allowed type. Please rename.")
+            panic!("{name} is not an allowed type in JS. Please rename.")
         }
 
         name
