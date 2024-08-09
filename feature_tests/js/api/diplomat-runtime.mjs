@@ -294,9 +294,8 @@ export class DiplomatReceiveBuf {
      * @param {number} buffer Buffer to use. Only used by `getStrings`, other wise {@link DiplomatReceiveBuf.buffer} is used.
      * @returns {string} String with encoding of the provided `stringEncoding`.
      */
-    getString(stringEncoding, buffer=null) {
-        let buf = buffer === null? this.#buffer : buffer;
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, buf, 2);
+    getString(stringEncoding) {
+        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
         switch (stringEncoding) {
             case "string8":
                 return readString8(wasm, ptr, size);
@@ -317,9 +316,17 @@ export class DiplomatReceiveBuf {
         const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
 
         let strings = [];
-        for (var arrayPtr = ptr; arrayPtr < size; arrayPtr += 1) {
-            var out = stringFromPtr(stringEncoding, arrayPtr);
-            strings.push(out);
+        for (var arrayPtr = ptr; arrayPtr < size; arrayPtr++) {
+            const [strPtr, strSize] = new Uint32Array(this.#wasm.memory.buffer, arrayPtr, 2);
+            switch (stringEncoding) {
+                case "string8":
+                    strings.push(readString8(this.#wasm, strPtr, strSize));
+                case "string16":
+                    strings.push(readString16(this.#wasm, strPtr, strSize));
+                default:
+                    console.error("Unrecognized stringEncoding ", stringEncoding);
+                    break;
+            }
         }
         return strings;
     }

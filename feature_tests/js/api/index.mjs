@@ -60,8 +60,6 @@ export { Float64Vec } from "./Float64Vec.mjs"
 
 export { MyString } from "./MyString.mjs"
 
-export { StringList } from "./StringList.mjs"
-
 export { Opaque } from "./Opaque.mjs"
 
 export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
