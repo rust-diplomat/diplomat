@@ -315,9 +315,10 @@ export class DiplomatReceiveBuf {
     getStrings(stringEncoding) {
         const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
 
-        let strings = [];
-        for (var arrayPtr = ptr; arrayPtr < size; arrayPtr++) {
-            const [strPtr, strSize] = new Uint32Array(this.#wasm.memory.buffer, arrayPtr, 2);
+        let strsArray = new Uint32Array(this.#wasm.memory.buffer, ptr, size);
+
+        for (let arrayPtr = 0; arrayPtr < strsArray.length; arrayPtr += 2) {
+            const [strPtr, strSize] = [strsArray[arrayPtr], strsArray[arrayPtr + 1]];
             switch (stringEncoding) {
                 case "string8":
                     strings.push(readString8(this.#wasm, strPtr, strSize));
