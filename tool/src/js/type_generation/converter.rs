@@ -85,7 +85,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
-            Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
+            Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
