@@ -43,25 +43,6 @@ mod ffi {
     }
 
     #[diplomat::opaque]
-    struct StringList(Vec<String>);
-
-    impl StringList {
-        #[diplomat::attr(auto, constructor)]
-        pub fn new(v : &[DiplomatStrSlice]) -> Box<StringList> {
-            Box::new(
-                Self(
-                    v.iter().map(|s| String::from_utf8(s.to_vec()).unwrap()).collect()
-                )
-            )
-        }
-
-        #[diplomat::attr(auto, getter = "str")]
-        pub fn get_str(&self, write : &mut DiplomatWrite) {
-            let _infallible = write!(write, "{}", self.0.join(" "));
-        }
-    }
-
-    #[diplomat::opaque]
     struct Float64Vec(Vec<f64>);
 
     impl Float64Vec {
