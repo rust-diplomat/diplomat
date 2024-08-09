@@ -657,7 +657,7 @@ impl<'ast> LoweringContext<'ast> {
                         {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)")));
+                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
@@ -687,6 +687,31 @@ impl<'ast> LoweringContext<'ast> {
                             Err(())
                         }
                     },
+                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                        match path.resolve(in_path, self.env) {
+                            ast::CustomType::Opaque(_) => {
+                                self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                                Err(())
+                            }
+                            _ => {
+                                if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                                    self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                    return Err(());
+                                }
+                                let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
+                                Ok(Type::DiplomatOption(Box::new(inner)))
+                            }
+                        }
+                    }
+                    ast::TypeName::Primitive(prim) => {
+                        if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                            self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                            return Err(());
+                        }
+                        Ok(Type::DiplomatOption(Box::new(Type::Primitive(
+                            PrimitiveType::from_ast(*prim),
+                        ))))
+                    }
                     ast::TypeName::Box(box_ty) => {
                         // we could see whats in the box here too
                         self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));
@@ -895,7 +920,7 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)")));
+                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
@@ -931,7 +956,7 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other(format!("found DiplomatOption<Box<T>>, please use Option<Box<T>> (DiplomatOption is for primitives, structs, and enums)")));
+                                    self.errors.push(LoweringError::Other("found DiplomatOption<Box<T>>, please use Option<Box<T>> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                                 let lifetimes = ltl.lower_generics(
@@ -961,6 +986,31 @@ impl<'ast> LoweringContext<'ast> {
                         Err(())
                     }
                 },
+                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
+                    .resolve(in_path, self.env)
+                {
+                    ast::CustomType::Opaque(_) => {
+                        self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                        Err(())
+                    }
+                    _ => {
+                        if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                            self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                            return Err(());
+                        }
+                        let inner = self.lower_out_type(opt_ty, ltl, in_path, in_struct, true)?;
+                        Ok(Type::DiplomatOption(Box::new(inner)))
+                    }
+                },
+                ast::TypeName::Primitive(prim) => {
+                    if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                        self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                        return Err(());
+                    }
+                    Ok(Type::DiplomatOption(Box::new(Type::Primitive(
+                        PrimitiveType::from_ast(*prim),
+                    ))))
+                }
                 _ => {
                     self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
                     Err(())
