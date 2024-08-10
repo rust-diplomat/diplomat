@@ -1103,8 +1103,8 @@ mod test {
                     }
 
                     #[diplomat::skip_if_ast]
-                    pub fn get_boxed_str(&self) -> Box<str> {
-                        self.0.as_str().into()
+                    pub fn get_boxed_str<'a>(&'a self) -> &'a str {
+                        self.0.as_str()
                     }
                 }
 
@@ -1114,11 +1114,6 @@ mod test {
                 impl Float64Vec {
                     pub fn new(v: &[f64]) -> Box<Float64Vec> {
                         Box::new(Self(v.to_vec()))
-                    }
-
-                    #[diplomat::attr(supports = accessors, getter = "asBoxedSlice")]
-                    pub fn as_boxed_slice(&self) -> Box<[f64]> {
-                        self.0.clone().into()
                     }
 
                     #[diplomat::attr(supports = accessors, getter = "asSlice")]
