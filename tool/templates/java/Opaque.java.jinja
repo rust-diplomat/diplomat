@@ -10,6 +10,7 @@ import java.lang.ref.Cleaner;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class {{type_name}} {
 
@@ -34,6 +35,18 @@ public class {{type_name}} {
     }
 
     {{type_name}}() {}
+    {{type_name}}(MemorySegment handle, List<Object> selfEdges 
+    {%- for edge in edges -%}
+    , List<Object> {{edge}}Edges
+    {%- endfor -%}
+    ) {
+        this.internal = handle;
+        this.selfEdges = selfEdges;
+        {% for edge in edges -%}
+        this.{{edge}}Edges = {{edge}}Edges;
+        {% endfor %}
+
+    }
     {% for method in static_methods %}
     {{method|indent(4)}}
     {% endfor %}

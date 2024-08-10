@@ -60,9 +60,9 @@ class MyStruct internal constructor (
             
             val returnVal = lib.MyStruct_returns_zst_result();
             if (returnVal.isOk == 1.toByte()) {
-                return Unit.ok()
+                Unit.ok()
             } else {
-                return MyZst().err()
+                MyZst().err()
             }
         }
     }

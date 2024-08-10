@@ -6,6 +6,7 @@ pub mod ffi {
     #[derive(Clone)]
     #[diplomat::opaque]
     #[diplomat::attr(*, rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(java, disable)]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
@@ -37,8 +38,10 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(java, disable)]
     pub struct AttrOpaque2;
 
+    #[diplomat::attr(java, disable)]
     pub enum AttrEnum {
         A,
         B,
@@ -49,6 +52,7 @@ pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "")]
     #[diplomat::attr(*, rename = "Unnamespaced")]
+    #[diplomat::attr(java, disable)]
     pub struct Unnamespaced;
 
     impl Unnamespaced {

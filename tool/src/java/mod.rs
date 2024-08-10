@@ -1,16 +1,17 @@
-use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use std::{borrow::Cow, iter::once};
 
 use askama::Template;
 use diplomat_core::hir::{
-    self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeStatic,
-    Method, OpaqueDef, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
-    StructPathLike, SuccessType, TyPosition, TypeContext, TypeDef, TypeId,
+    self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeOwn,
+    MaybeStatic, Method, OpaqueDef, OpaqueOwner, OpaquePath, ReturnType, Slice, SpecialMethod,
+    StringEncoding, StructDef, StructPathLike, SuccessType, TyPosition, TypeContext, TypeDef,
 };
 use formatter::JavaFormatter;
+use serde::Deserialize;
 
 use crate::{c, ErrorStore, FileMap};
 
@@ -50,6 +51,11 @@ pub(crate) fn run<'a>(
     conf_path: Option<&Path>,
     out_folder: &Path,
 ) -> (FileMap, ErrorStore<'a, String>) {
+    let conf_path = conf_path.expect("Java library needs to be called with config");
+    let conf_str = std::fs::read_to_string(conf_path)
+        .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
+    let tcx_config = toml::from_str::<Config>(&conf_str)
+        .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
     let (files, errors) = c::run(tcx);
 
     let errors = errors.take_all();
@@ -103,7 +109,7 @@ pub(crate) fn run<'a>(
         .arg("--include-dir")
         .arg(&tmp_path)
         .arg("--output")
-        .arg(out_folder)
+        .arg(out_folder.join("src/main/java/"))
         .arg("--target-package")
         .arg(package)
         .arg("--library")
@@ -147,11 +153,6 @@ pub(crate) fn run<'a>(
     let formatter = &java_formatter;
     let error_store = ErrorStore::default();
     let errors = &error_store;
-    let tcx_config = Config {
-        domain: "dev.diplomattest".into(),
-        lib_name: "somelib".into(),
-    };
-
     let ty_gen_cx = TyGenContext {
         tcx,
         tcx_config,
@@ -159,27 +160,53 @@ pub(crate) fn run<'a>(
         errors,
     };
 
+    let Config {
+        ref domain,
+        ref lib_name,
+    } = ty_gen_cx.tcx_config;
+    let domain_path = domain.replace(".", "/");
+
     let errors = ErrorStore::default();
     let files = FileMap::default();
-    for (id, ty) in tcx.all_types() {
+    for (_id, ty) in tcx.all_types() {
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
         }
 
         let (file, body) = match ty {
-            TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque, id),
-            TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def, id),
-            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
-            TypeDef::OutStruct(struct_def) => ty_gen_cx.gen_struct_def(struct_def, id),
+            TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque),
+            TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def),
+            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
+            TypeDef::OutStruct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
             unknown => {
                 unreachable!("Encountered unknown variant: {unknown:?} while parsing all types")
             }
         };
-        files.add_file(format!("src/main/java/{file}"), body);
+        files.add_file(
+            format!("src/main/java/{domain_path}/{lib_name}/{file}",),
+            body,
+        );
     }
 
+    let lib_file = LibFile {
+        domain: domain.clone(),
+        lib_name: lib_name.clone(),
+    }
+    .render()
+    .expect("Failed to render Lib.java file");
+    files.add_file(
+        format!("src/main/java/{domain_path}/{lib_name}/Lib.java"),
+        lib_file,
+    );
     (files, errors)
+}
+
+#[derive(Template, Clone, Debug)]
+#[template(path = "java/Lib.java.jinja", escape = "none")]
+struct LibFile<'a> {
+    domain: Cow<'a, str>,
+    lib_name: Cow<'a, str>,
 }
 
 #[derive(Clone, Debug)]
@@ -201,7 +228,6 @@ pub(crate) struct MethodTpl<'a> {
     is_static: bool,
     return_ty: Cow<'a, str>,
     native_method: Cow<'a, str>,
-    make_invoker: bool,
     native_invocation: Cow<'a, str>,
     params: Vec<Param<'a>>,
     param_conversions: Vec<ParamConversion<'a>>,
@@ -224,7 +250,8 @@ pub(crate) struct StructTypeTpl<'a> {
 #[derive(Clone, Debug)]
 struct FieldTpl<'a> {
     name: Cow<'a, str>,
-    field_transform: Option<Cow<'a, str>>,
+    native_name: Cow<'a, str>,
+    field_val: Cow<'a, str>,
     ty: Cow<'a, str>,
 }
 
@@ -255,10 +282,26 @@ pub(crate) struct OpaqueTypeTpl<'a> {
     class_methods: Vec<Cow<'a, str>>,
 }
 
+#[derive(Debug, Clone)]
+struct LifetimeTpl<'a> {
+    name: Cow<'a, str>,
+    edges: Vec<Cow<'a, str>>,
+}
+
+#[derive(Template, Clone, Debug)]
+#[template(path = "java/StructReturn.java.jinja", escape = "none")]
+pub(crate) struct StructReturnTpl<'a> {
+    lifetimes: Vec<LifetimeTpl<'a>>,
+    return_self_edges: Option<Cow<'a, str>>,
+    return_ty: Cow<'a, str>,
+}
+
 #[derive(Template, Clone, Debug)]
 #[template(path = "java/OpaqueReturn.java.jinja", escape = "none")]
 pub(crate) struct OpaqueReturnTpl<'a> {
-    lifetime_edges: Vec<String>,
+    lifetimes: Vec<LifetimeTpl<'a>>,
+    owned_return: bool,
+    return_self_edges: Option<Cow<'a, str>>,
     return_ty: Cow<'a, str>,
 }
 
@@ -268,6 +311,7 @@ pub(crate) struct OpaqueConstructorTpl<'a> {
     return_ty: Cow<'a, str>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
 struct Config<'cx> {
     domain: Cow<'cx, str>,
     lib_name: Cow<'cx, str>,
@@ -287,11 +331,17 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> ParamConversion<'b> {
         let diplomat_core::hir::Param { name, ty, .. } = param;
         // let java_ty = self.formatter.fmt_java_type(ty);
-        let converted_value: Cow<'b, str> = format!("{name}Native").into();
         let name = self.formatter.fmt_param_name(name.as_str());
+        let converted_value: Cow<'b, str> = format!("{name}Native").into();
         let (conversion, converted_value) = match ty {
-            hir::Type::Primitive(_) => (name.into(), converted_value),
-            hir::Type::Opaque(_) => (format!("{name}.internal").into(), converted_value),
+            hir::Type::Primitive(_) => (
+                format!("var {name}Native = {name};").into(),
+                converted_value,
+            ),
+            hir::Type::Opaque(_) => (
+                format!("var {name}Native = {name}.internal;").into(),
+                converted_value,
+            ),
             hir::Type::Struct(_) => (
                 format!(r#"var {name}Native = {name}.internal;"#).into(),
                 converted_value,
@@ -329,7 +379,7 @@ var {name}Len = {name}MemSeg.byteSize();"#
             }
             hir::Type::Slice(Slice::Primitive(borrow, p)) => {
                 let primitive_ty = match p {
-                    hir::PrimitiveType::Bool => "JAVA_BOOLEAN",
+                    hir::PrimitiveType::Bool => "JAVA_BYTE", // BYTE is the smallest
                     hir::PrimitiveType::Char => "JAVA_INT",
                     hir::PrimitiveType::Byte => "JAVA_BYTE",
                     hir::PrimitiveType::Int(IntType::I8 | IntType::U8) => "JAVA_BYTE",
@@ -344,14 +394,23 @@ var {name}Len = {name}MemSeg.byteSize();"#
                     hir::PrimitiveType::Float(hir::FloatType::F64) => "JAVA_DOUBLE",
                 };
                 let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
-                (
-                    format!(
+                let conversion = match p {
+                    hir::PrimitiveType::Bool => format!(
+                        r#"var {name}Len = {name}.length;
+byte[] {name}ByteArray = new byte[{name}Len];
+for (int i = 0; i < {name}Len; i++) {{
+    {name}ByteArray[i] = (byte) ({name}[i] ? 1 : 0);
+}}
+var {name}MemSeg = {arena_name}.allocateFrom({primitive_ty}, {name}ByteArray);"#
+                    )
+                    .into(),
+                    _ => format!(
                         r#"var {name}Len = {name}.length;
 var {name}MemSeg = {arena_name}.allocateFrom({primitive_ty}, {name});"#
                     )
                     .into(),
-                    format!("{name}MemSeg, {name}Len").into(),
-                )
+                };
+                (conversion, format!("{name}MemSeg, {name}Len").into())
             }
             hir::Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => (
                 format!(
@@ -411,7 +470,7 @@ var {name}Len = {name}.length;"#
                     hir::PrimitiveType::Float(FloatType::F64) => "F64",
                 };
 
-                let java_primitive_ty = self.formatter.fmt_primitive(p);
+                let java_primitive_ty = self.formatter.fmt_native_primitive(p);
                 format!(
                     r#"var data = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.data(nativeVal);
 var len = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.len(nativeVal);
@@ -430,7 +489,8 @@ return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
     fn gen_return_conversion(
         &self,
         ty: &ReturnType,
-        lifetime_edges: Vec<String>,
+        lifetimes: Vec<LifetimeTpl>,
+        return_self_edges: Option<Cow<str>>,
     ) -> Result<Cow<'cx, str>, String> {
         let Config { lib_name, .. } = &self.tcx_config;
         let ret = match ty {
@@ -465,10 +525,13 @@ return string;"#,
         let return_statment: Cow<'cx, str> = match o {
             hir::Type::Primitive(_) => "return nativeVal;".into(),
             hir::Type::Opaque(o) => {
+                let owned_return: bool = o.owner.is_owned();
                 let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
                 OpaqueReturnTpl {
-                    lifetime_edges,
+                    lifetimes,
                     return_ty: ty_name.as_str().into(),
+                    owned_return,
+                    return_self_edges,
                 }
                 .render()
                 .unwrap_or_else(|err| {
@@ -481,13 +544,15 @@ return string;"#,
             }
             hir::Type::Struct(s) => {
                 let ty_name = &self.tcx.resolve_type(s.id()).name();
-                let lifetime_edges = lifetime_edges.join("\n");
-                format!(
-                    r#"var returnVal = new {ty_name}(returnArena);
-{lifetime_edges}
-returnVal.initFromSegment(nativeVal);
-return returnVal;"#
-                )
+                StructReturnTpl {
+                    lifetimes,
+                    return_ty: ty_name.as_str().into(),
+                    return_self_edges,
+                }
+                .render()
+                .unwrap_or_else(|err| {
+                    panic!("Failed to render return val for type {ty_name}. Cause: {err}")
+                })
                 .into()
             }
             hir::Type::Enum(e) => {
@@ -503,7 +568,6 @@ return returnVal;"#
 
     fn gen_methods(
         &self,
-        ty_id: TypeId,
         ty_name: &str,
         methods: &[Method],
     ) -> (Vec<Cow<'cx, str>>, Vec<Cow<'cx, str>>) {
@@ -550,7 +614,7 @@ return returnVal;"#
                     })
                     .collect();
                 let lt_lookup = visitor.borrow_map();
-                let (lifetime_edges, boxed_return) = match &method.output {
+                let (lifetime_edges, return_self_edges, boxed_return) = match &method.output {
                     ReturnType::Fallible(SuccessType::OutType(o), _)
                     | ReturnType::Nullable(SuccessType::OutType(o))
                     | ReturnType::Infallible(SuccessType::OutType(o)) => {
@@ -574,34 +638,56 @@ return returnVal;"#
                             }),
                             _ => None,
                         };
-                        let method_lts = &method.lifetime_env;
+
+                        let self_lt = match o {
+                            hir::Type::Opaque(ref o) => match o.owner {
+                                MaybeOwn::Borrow(hir::Borrow {
+                                    lifetime: MaybeStatic::NonStatic(lifetime),
+                                    ..
+                                }) => Some(lifetime),
+                                _ => None,
+                            },
+                            _ => None,
+                        };
+                        let return_self_edges: Option<Cow<str>> = self_lt
+                            .map(|lifetime| lt_lookup.get(&lifetime))
+                            .flatten()
+                            .map(|param| {
+                                param
+                                    .incoming_edges
+                                    .iter()
+                                    .map(|lt| self.formatter.fmt_param_name(&lt.param_name))
+                                    .mk_str_iter(", ")
+                                    .into()
+                            });
                         let lifetime_edges = o
                             .lifetimes()
                             .filter_map(|lt| match lt {
                                 MaybeStatic::Static => None,
-                                MaybeStatic::NonStatic(lt) => Some(lt),
+                                MaybeStatic::NonStatic(lt)
+                                    if !(Some(lt).as_ref() == self_lt.as_ref()) =>
+                                {
+                                    Some(lt)
+                                }
+                                _ => None,
                             })
-                            .filter_map(|lt| lt_lookup.get(&lt).map(|param| (lt, param)))
-                            .map(|(lt, param)| {
-                                let mut iter = param
+                            .filter_map(|lt| lt_lookup.get(&lt).map(|info| (info, lt)))
+                            .map(|(lifetime_info, lt)| {
+                                let edges = lifetime_info
                                     .incoming_edges
                                     .iter()
-                                    .map(|edge| edge.param_name.as_str());
-                                let first = iter.next().unwrap_or("").to_string();
-                                let edges = iter.fold(first, |mut accum, next| {
-                                    accum.push_str(", ");
-                                    accum.push_str(next);
-                                    accum
-                                });
-                                format!(
-                                    "returnVal.{}Edges = List.of({edges});",
-                                    method_lts.fmt_lifetime(lt)
-                                )
+                                    .map(|edge| edge.param_name.as_str())
+                                    .map(|param| self.formatter.fmt_param_name(param).into())
+                                    .collect::<Vec<_>>();
+                                LifetimeTpl {
+                                    name: method.lifetime_env.fmt_lifetime(lt),
+                                    edges,
+                                }
                             })
                             .collect::<Vec<_>>();
-                        (lifetime_edges, boxed_return)
+                        (lifetime_edges, return_self_edges, boxed_return)
                     }
-                    _ => (Vec::new(), None),
+                    _ => (Vec::new(), None, None),
                 };
                 let return_conversion = if method_name.is_none() {
                     OpaqueConstructorTpl {
@@ -616,7 +702,11 @@ return returnVal;"#
                     })
                     .cown()
                 } else {
-                    match self.gen_return_conversion(&method.output, lifetime_edges) {
+                    match self.gen_return_conversion(
+                        &method.output,
+                        lifetime_edges,
+                        return_self_edges,
+                    ) {
                         Ok(ok) => ok,
                         Err(err) => {
                             self.errors.push_error(format!(
@@ -682,13 +772,7 @@ return returnVal;"#
                 }
                 let native_method: Cow<str> =
                     format!("{lib_name}_h.{}", self.formatter.fmt_c_method_name(method)).into();
-                let make_invoker =
-                    method.params.is_empty() && !write_return && method.param_self.is_none();
-                let native_invocation = if make_invoker {
-                    "nativeInvoker.apply".into()
-                } else {
-                    native_method.clone()
-                };
+                let native_invocation = native_method.clone();
                 let native_return_void = matches!(
                     method.output,
                     ReturnType::Infallible(SuccessType::Unit | SuccessType::Write)
@@ -699,7 +783,6 @@ return returnVal;"#
                     return_ty,
                     native_method,
                     native_invocation,
-                    make_invoker,
                     params,
                     param_conversions,
                     return_conversion,
@@ -724,7 +807,7 @@ return returnVal;"#
         (static_methods, class_methods)
     }
 
-    fn gen_enum_def(&self, e: &EnumDef, ty: TypeId) -> (Cow<str>, String) {
+    fn gen_enum_def(&self, e: &EnumDef) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = e.name.as_str();
         let variants = e
@@ -740,7 +823,7 @@ return returnVal;"#
                 },
             )
             .collect();
-        let (methods, _) = self.gen_methods(ty, e.name.as_str(), &e.methods);
+        let (methods, _) = self.gen_methods(e.name.as_str(), &e.methods);
         (
             format!("{type_name}.java").into(),
             EnumTypeTpl {
@@ -754,36 +837,117 @@ return returnVal;"#
             .expect("failed to render struct type"),
         )
     }
-    fn gen_struct_def<TyP: TyPosition>(
-        &self,
-        s: &StructDef<TyP>,
-        ty: TypeId,
-    ) -> (Cow<str>, String) {
+    fn gen_struct_def<TyP: TyPosition>(&self, s: &StructDef<TyP>) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = s.name.as_str();
         let fields = s
             .fields
             .iter()
-            .map(|field| {
+            .map(|ref field| {
                 let name = self.formatter.fmt_field_name(field);
-                let struct_return = match field.ty {
-                    hir::Type::Enum(ref enum_def) => Some(
-                        format!("{}.fromInt", self.tcx.resolve_enum(enum_def.tcx_id).name).into(),
-                    ),
-                    hir::Type::Struct(ref struct_def) => Some(
-                        format!(
-                            "{}.fromSegment",
-                            self.tcx.resolve_type(struct_def.id()).name()
-                        )
-                        .into(),
-                    ),
-                    _ => None,
+                let native_name = field.name.as_str().into();
+                let native_val =
+                    format!("{domain}.{lib_name}.ntv.{type_name}.{native_name}(structSegment)");
+                let field_val = match &field.ty {
+                    hir::Type::Enum(ref enum_def) => format!(
+                        "{}.fromInt({native_val})",
+                        self.tcx.resolve_enum(enum_def.tcx_id).name
+                    )
+                    .into(),
+                    hir::Type::Struct(struct_path) => {
+                        let ty_name = self.tcx.resolve_type(struct_path.id()).name().as_str();
+                        let lt_env = &s.lifetimes;
+                        let lt_edges = struct_path
+                            .lifetimes()
+                            .lifetimes()
+                            .filter_map(|lt| match lt {
+                                MaybeStatic::Static => None,
+                                MaybeStatic::NonStatic(lt) => Some(lt),
+                            })
+                            .map(|lt| {
+                                let lt_edges = lt_env
+                                    .all_longer_lifetimes(&lt)
+                                    .map(|lt| lt_env.fmt_lifetime(lt))
+                                    .map(|lt| format!("{lt}Edges"))
+                                    .collect::<Vec<_>>();
+                                match lt_edges.len() {
+                                    0 => "List.of()".into(),
+                                    1 => lt_edges.join(", ").cown(),
+                                    _ => format!(
+                                        "Stream.concat({}).toList()",
+                                        lt_edges
+                                            .iter()
+                                            .map(|edge| format!("{edge}.stream()"))
+                                            .mk_str_iter(", ")
+                                    )
+                                    .cown(),
+                                }
+                            });
+                        let args = once("arena".into())
+                            .chain(once(format!("{native_val}").cown()))
+                            .chain(lt_edges)
+                            .mk_str_iter(", ");
+
+                        format!("new {ty_name}({args})").cown()
+                    }
+                    hir::Type::Primitive(_) => native_val.clone().into(),
+                    hir::Type::Slice(Slice::Str(
+                        _,
+                        StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8,
+                    )) => format!("SliceUtils.readUtf8({native_val})").into(),
+                    hir::Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
+                        format!("SliceUtils.readUtf16({native_val})").into()
+                    }
+                    hir::Type::Slice(_) => {
+                        todo!("Failed to generate field: {name} for struct {}", s.name)
+                    }
+                    hir::Type::Opaque(OpaquePath {
+                        ref lifetimes,
+                        ref owner,
+                        tcx_id,
+                        ..
+                    }) => {
+                        let ty_name = self.tcx.resolve_opaque(*tcx_id).name.as_str();
+                        let lt_env = &s.lifetimes;
+                        let self_edges: Cow<str> = match owner.lifetime() {
+                            Some(MaybeStatic::Static) => "List.of()".into(),
+                            Some(MaybeStatic::NonStatic(lt)) => {
+                                let stream_edges = lt_env
+                                    .all_longer_lifetimes(lt)
+                                    .map(|lt| lt_env.fmt_lifetime(lt))
+                                    .map(|lt| format!("{lt}Edges.stream()"))
+                                    .mk_str_iter(", ");
+                                format!("Stream.concat({stream_edges}).toList()").into()
+                            }
+                            None => unreachable!("Struct cannot have owned opaque as field."),
+                        };
+                        let lt_edges = lifetimes
+                            .lifetimes()
+                            .filter_map(|lt| match lt {
+                                MaybeStatic::Static => None,
+                                MaybeStatic::NonStatic(lt) => Some(lt),
+                            })
+                            .map(|lt| {
+                                let lt_edges = lt_env
+                                    .all_longer_lifetimes(&lt)
+                                    .map(|lt| lt_env.fmt_lifetime(lt))
+                                    .map(|lt| format!("{lt}Edges.stream()"))
+                                    .mk_str_iter(", ");
+
+                                format!("Stream.concat({lt_edges}).toList()")
+                            })
+                            .mk_str_iter(", ");
+                        format!("new {ty_name}(arena, {native_val}, {self_edges}, {lt_edges})")
+                            .cown()
+                    }
+                    _ => todo!(),
                 };
                 let ty = self.formatter.fmt_java_type(&field.ty);
                 FieldTpl {
                     name,
+                    native_name,
                     ty,
-                    field_transform: struct_return,
+                    field_val,
                 }
             })
             .collect();
@@ -797,7 +961,7 @@ return returnVal;"#
             })
             .map(|lt| s.lifetimes.fmt_lifetime(lt))
             .collect();
-        let (methods, _) = self.gen_methods(ty, s.name.as_str(), &s.methods);
+        let (methods, _) = self.gen_methods(s.name.as_str(), &s.methods);
         (
             format!("{type_name}.java").into(),
             StructTypeTpl {
@@ -813,9 +977,9 @@ return returnVal;"#
         )
     }
 
-    fn gen_opaque_def(&self, o: &OpaqueDef, ty: TypeId) -> (Cow<str>, String) {
+    fn gen_opaque_def(&self, o: &OpaqueDef) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
-        let (static_methods, class_methods) = self.gen_methods(ty, o.name.as_str(), &o.methods);
+        let (static_methods, class_methods) = self.gen_methods(o.name.as_str(), &o.methods);
 
         let edges = o
             .lifetimes
@@ -866,6 +1030,24 @@ trait PostFixCown {
 impl PostFixCown for String {
     fn cown<'a>(self) -> Cow<'a, str> {
         Cow::Owned(self)
+    }
+}
+
+trait JoinStrIterator: Sized {
+    fn mk_str_iter<S: std::fmt::Display + Copy>(self, sep: S) -> String;
+}
+
+impl<T, I> JoinStrIterator for I
+where
+    I: IntoIterator<Item = T>,
+    T: std::fmt::Display,
+{
+    fn mk_str_iter<S: std::fmt::Display + Copy>(self, sep: S) -> String {
+        let mut iter = self.into_iter();
+        match iter.next() {
+            Some(t) => iter.fold(format!("{t}"), |accum, next| format!("{accum}{sep}{next}")),
+            None => String::new(),
+        }
     }
 }
 
@@ -978,7 +1160,7 @@ mod test {
         for (ty, def) in tcx.all_types() {
             let rendered = match def {
                 TypeDef::Opaque(opaque) => {
-                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque, ty);
+                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque);
                     rendered
                 }
                 _ => String::new(),
@@ -1078,11 +1260,11 @@ mod test {
         for (ty, def) in tcx.all_types() {
             let rendered = match (ty, def) {
                 (_, TypeDef::Struct(struct_def)) => {
-                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
+                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def);
                     rendered
                 }
                 (_, TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def);
                     rendered
                 }
                 _ => String::new(),
@@ -1150,16 +1332,16 @@ mod test {
         for (ty, def) in tcx.all_types() {
             let rendered = match (ty, def) {
                 (_, TypeDef::Opaque(opaque)) => {
-                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque, ty);
+                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque);
                     rendered
                 }
                 (_, TypeDef::Struct(struct_def)) => {
-                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
+                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def);
                     rendered
                 }
 
                 (_, TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def);
                     rendered
                 }
                 _ => String::new(),
@@ -1257,16 +1439,16 @@ mod test {
         for (ty, def) in tcx.all_types() {
             let rendered = match (ty, def) {
                 (_, TypeDef::Opaque(opaque)) => {
-                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque, ty);
+                    let (_, rendered) = tcx_gen.gen_opaque_def(opaque);
                     rendered
                 }
                 (_, TypeDef::Struct(struct_def)) => {
-                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
+                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def);
                     rendered
                 }
 
                 (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
-                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def, ty);
+                    let (_, rendered) = tcx_gen.gen_enum_def(enum_def);
                     rendered
                 }
                 _ => String::new(),

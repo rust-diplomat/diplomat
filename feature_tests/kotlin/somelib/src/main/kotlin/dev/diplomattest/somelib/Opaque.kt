@@ -12,6 +12,7 @@ internal interface OpaqueLib: Library {
     fun Opaque_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Opaque_assert_struct(handle: Pointer, s: MyStructNative): Unit
     fun Opaque_returns_usize(): Long
+    fun Opaque_internal_len(handle: Pointer): Long
     fun Opaque_returns_imported(): ImportedStructNative
     fun Opaque_cmp(): Byte
 }
@@ -101,6 +102,12 @@ class Opaque internal constructor (
         
         val returnVal = lib.Opaque_assert_struct(handle, s.nativeStruct);
         
+    }
+    
+    fun internalLen(): ULong {
+        
+        val returnVal = lib.Opaque_internal_len(handle);
+        return returnVal.toULong()
     }
 
 }

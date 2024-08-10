@@ -1,3 +1,14 @@
-var returnVal = new {{return_ty}}(returnArena);
-returnVal.initFromSegment(nativeVal);
+{% for lifetime in lifetimes %}
+List<Object> {{lifetime.name}}Edges = List.of(
+{%- for edge in lifetime.edges -%}
+{% if loop.first %}{% else %}, {% endif %}{{edge}}
+{%- endfor -%}
+);
+{%- endfor %}
+
+var returnVal = new {{return_ty}}(returnArena, nativeVal
+{%- for lifetime in lifetimes -%}
+, {{lifetime.name}}Edges
+{%- endfor -%}
+);
 return returnVal;

@@ -1,8 +1,25 @@
-var returnVal = new {{return_ty}}();
-{% for lifetime_edge in lifetime_edges %}
-{{lifetime_edge}}
-{% endfor %}
-returnVal.internal = nativeVal;
+List<Object> selfEdges = 
+{%- match return_self_edges %}
+{%- when Some with (self_edges) %} List.of({{self_edges}});
+{%- when None %} List.of();
+{%- endmatch %}
+
+
+{% for lifetime in lifetimes %}
+List<Object> {{lifetime.name}}Edges = List.of(
+{%- for edge in lifetime.edges -%}
+{% if loop.first %}{% else %}, {% endif %}{{edge}}
+{%- endfor -%}
+);
+
+{%- endfor %}
+var returnVal = new {{return_ty}}(nativeVal, selfEdges
+{%- for lifetime in lifetimes -%}
+, {{lifetime.name}}Edges
+{%- endfor -%}
+);
+{% if owned_return -%}
 var cleaner = new {{return_ty}}.{{return_ty}}Cleaner(nativeVal);
 returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+{%- endif %}
 return returnVal;

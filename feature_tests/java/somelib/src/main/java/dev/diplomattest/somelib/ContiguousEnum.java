@@ -10,48 +10,34 @@ import java.lang.foreign.SegmentAllocator;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
-public enum MyEnum {
-    A,
-    B,
+public enum ContiguousEnum {
     C,
     D,
     E,
     F,
     ;
 
-    static MyEnum fromInt(int i) {
+    static ContiguousEnum fromInt(int i) {
         switch (i) {
-            case -2 -> {
-                return MyEnum.A;
-            }
-            case -1 -> {
-                return MyEnum.B;
-            }
             case 0 -> {
-                return MyEnum.C;
+                return ContiguousEnum.C;
             }
             case 1 -> {
-                return MyEnum.D;
+                return ContiguousEnum.D;
             }
             case 2 -> {
-                return MyEnum.E;
+                return ContiguousEnum.E;
             }
             case 3 -> {
-                return MyEnum.F;
+                return ContiguousEnum.F;
             }
             
         }
-        throw new RuntimeException("Unexpected int for MyEnum:" + i);
+        throw new RuntimeException("Unexpected int for ContiguousEnum:" + i);
     }
 
     int toInt() {
         switch (this) {
-            case A -> {
-                return -2;
-            }
-            case B -> {
-                return -1;
-            }
             case C -> {
                 return 0;
             }
@@ -66,14 +52,8 @@ public enum MyEnum {
             }
             
         }
-        throw new RuntimeException("Unexpected variant for MyEnum:" + this);
+        throw new RuntimeException("Unexpected variant for ContiguousEnum:" + this);
     }
 
-    
-    public static MyEnum getA() {
-        
-        var nativeVal = somelib_h.MyEnum_get_a();
-        return MyEnum.fromInt(nativeVal);
-    }
     
 }

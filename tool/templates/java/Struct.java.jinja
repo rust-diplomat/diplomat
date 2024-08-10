@@ -9,6 +9,7 @@ import java.lang.foreign.SegmentAllocator;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class {{type_name}} {
     {% for field in fields -%}
@@ -23,20 +24,24 @@ public class {{type_name}} {
     {% endfor %}
 
     private {{type_name}}(SegmentAllocator arena) {
-        this.arena = arena
+        this.arena = arena;
     }
 
-    void initFromSegment(MemorySegment segment) {
-        this.internal = segment;
+    {{type_name}}(SegmentAllocator arena, MemorySegment structSegment
+    {%- for edge in edges -%}
+    , List<Object> {{edge}}Edges
+    {%- endfor -%}
+    ) {
+        this.arena = arena;
+        this.selfEdges = selfEdges;
+        {% for edge in edges -%}
+        this.{{edge}}Edges = {{edge}}Edges;
+        {% endfor %}
 
         {% for field in fields -%}
-        this.{{field.name}} = {% match field.field_transform -%}
-        {% when Some with (transform) -%}
-        {{transform}}({{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment));
-        {% when None -%}
-        {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment);
-        {% endmatch -%}
+        this.{{field.name}} = {{field.field_val}};
         {% endfor %}
+
     }
     {% for method in methods %}
     {{method|indent(4)}}

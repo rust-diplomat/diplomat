@@ -69,7 +69,7 @@ impl<'cx> JavaFormatter<'cx> {
 
     pub fn fmt_native_type<'a, P: TyPosition>(&self, ty: &'a Type<P>) -> Cow<'a, str> {
         match ty {
-            Type::Primitive(ref p) => self.fmt_primitive(p),
+            Type::Primitive(ref p) => self.fmt_native_primitive(p),
             Type::Opaque(_) => todo!(),
             Type::Struct(_) => todo!(),
             Type::Enum(_) => todo!(),
@@ -79,20 +79,20 @@ impl<'cx> JavaFormatter<'cx> {
     }
     pub fn fmt_java_type<'a, P: TyPosition>(&self, ty: &'a Type<P>) -> Cow<'a, str> {
         match ty {
-            hir::Type::Primitive(ref p) => self.fmt_primitive(p),
+            hir::Type::Primitive(ref p) => self.fmt_java_primitive(p),
             hir::Type::Opaque(o) => self.tcx.resolve_opaque(o.tcx_id).name.to_string().into(),
             hir::Type::Struct(s) => self.tcx.resolve_type(s.id()).name().to_string().into(),
             hir::Type::Enum(e) => self.tcx.resolve_enum(e.tcx_id).name.to_string().into(),
             hir::Type::Slice(Slice::Str(_, _)) => "String".into(),
             hir::Type::Slice(Slice::Primitive(_, p)) => {
-                format!("{}[]", self.fmt_primitive(p)).into()
+                format!("{}[]", self.fmt_java_primitive(p)).into()
             }
             hir::Type::Slice(Slice::Strs(_)) => "String []".into(),
             ty => todo!("haven't implemented, {ty:?}"),
         }
     }
 
-    pub fn fmt_primitive<'a>(&self, ty: &'a PrimitiveType) -> Cow<'a, str> {
+    pub fn fmt_java_primitive<'a>(&self, ty: &'a PrimitiveType) -> Cow<'a, str> {
         match ty {
             PrimitiveType::Bool => "boolean",
             PrimitiveType::Char => "int",
@@ -105,6 +105,14 @@ impl<'cx> JavaFormatter<'cx> {
             PrimitiveType::Int128(_) => panic!("128 not supported by java"),
             PrimitiveType::Float(FloatType::F32) => "float",
             PrimitiveType::Float(FloatType::F64) => "double",
+        }
+        .into()
+    }
+
+    pub fn fmt_native_primitive<'a>(&self, ty: &'a PrimitiveType) -> Cow<'a, str> {
+        match ty {
+            PrimitiveType::Bool => "byte".into(),
+            ref p => self.fmt_java_primitive(p),
         }
         .into()
     }
