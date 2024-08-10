@@ -30,7 +30,7 @@ impl<'cx> JavaFormatter<'cx> {
         field: &'a hir::StructField<TyP>,
     ) -> Cow<'a, str> {
         let name = field.name.as_str().to_lower_camel_case();
-        if INVALID_NAMES.contains(&&*name) {
+        if INVALID_NAMES.contains(&&*name) || DISALLOWED_CORE_TYPES.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name.into()
@@ -39,7 +39,7 @@ impl<'cx> JavaFormatter<'cx> {
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
-        if INVALID_NAMES.contains(&&*name) {
+        if INVALID_NAMES.contains(&&*name) || DISALLOWED_CORE_TYPES.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name
@@ -67,16 +67,6 @@ impl<'cx> JavaFormatter<'cx> {
         }
     }
 
-    pub fn fmt_native_type<'a, P: TyPosition>(&self, ty: &'a Type<P>) -> Cow<'a, str> {
-        match ty {
-            Type::Primitive(ref p) => self.fmt_native_primitive(p),
-            Type::Opaque(_) => todo!(),
-            Type::Struct(_) => todo!(),
-            Type::Enum(_) => todo!(),
-            Type::Slice(_) => todo!(),
-            _ => todo!(),
-        }
-    }
     pub fn fmt_java_type<'a, P: TyPosition>(&self, ty: &'a Type<P>) -> Cow<'a, str> {
         match ty {
             hir::Type::Primitive(ref p) => self.fmt_java_primitive(p),

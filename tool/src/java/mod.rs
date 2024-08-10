@@ -227,7 +227,6 @@ pub(crate) struct MethodTpl<'a> {
     method_name: Option<Cow<'a, str>>,
     is_static: bool,
     return_ty: Cow<'a, str>,
-    native_method: Cow<'a, str>,
     native_invocation: Cow<'a, str>,
     params: Vec<Param<'a>>,
     param_conversions: Vec<ParamConversion<'a>>,
@@ -250,7 +249,6 @@ pub(crate) struct StructTypeTpl<'a> {
 #[derive(Clone, Debug)]
 struct FieldTpl<'a> {
     name: Cow<'a, str>,
-    native_name: Cow<'a, str>,
     field_val: Cow<'a, str>,
     ty: Cow<'a, str>,
 }
@@ -292,7 +290,6 @@ struct LifetimeTpl<'a> {
 #[template(path = "java/StructReturn.java.jinja", escape = "none")]
 pub(crate) struct StructReturnTpl<'a> {
     lifetimes: Vec<LifetimeTpl<'a>>,
-    return_self_edges: Option<Cow<'a, str>>,
     return_ty: Cow<'a, str>,
 }
 
@@ -547,7 +544,6 @@ return string;"#,
                 StructReturnTpl {
                     lifetimes,
                     return_ty: ty_name.as_str().into(),
-                    return_self_edges,
                 }
                 .render()
                 .unwrap_or_else(|err| {
@@ -780,7 +776,6 @@ return string;"#,
                     method_name,
                     is_static: method.param_self.is_none() && !is_valid_constructor,
                     return_ty,
-                    native_method,
                     native_invocation,
                     params,
                     param_conversions,
@@ -844,7 +839,7 @@ return string;"#,
             .iter()
             .map(|field| {
                 let name = self.formatter.fmt_field_name(field);
-                let native_name = field.name.as_str().into();
+                let native_name = field.name.as_str();
                 let native_val =
                     format!("{domain}.{lib_name}.ntv.{type_name}.{native_name}(structSegment)");
                 let field_val = match &field.ty {
@@ -944,7 +939,6 @@ return string;"#,
                 let ty = self.formatter.fmt_java_type(&field.ty);
                 FieldTpl {
                     name,
-                    native_name,
                     ty,
                     field_val,
                 }
@@ -1011,10 +1005,6 @@ trait PostFix: Sized {
     fn wrap_ok<E>(self) -> Result<Self, E> {
         Ok(self)
     }
-    fn wrap_err<O>(self) -> Result<O, Self> {
-        Err(self)
-    }
-
     fn wrap_some(self) -> Option<Self> {
         Some(self)
     }
@@ -1156,7 +1146,7 @@ mod test {
         };
 
         let mut res = String::new();
-        for (ty, def) in tcx.all_types() {
+        for (_ty, def) in tcx.all_types() {
             let rendered = match def {
                 TypeDef::Opaque(opaque) => {
                     let (_, rendered) = tcx_gen.gen_opaque_def(opaque);
@@ -1446,7 +1436,7 @@ mod test {
                     rendered
                 }
 
-                (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
+                (TypeId::Enum(_), TypeDef::Enum(enum_def)) => {
                     let (_, rendered) = tcx_gen.gen_enum_def(enum_def);
                     rendered
                 }
