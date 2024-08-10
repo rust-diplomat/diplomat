@@ -2,8 +2,8 @@
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
   {{ m.declaration }} {
-    {%- for conversion_allocation in m.conversion_allocations %}
-    {{ conversion_allocation }}
+    {%- for arena in m.arenas %}
+    {{ arena }}
     {%- endfor %}
 
     {%- for lifetime in m.lifetimes.all_lifetimes() %}

@@ -28,26 +28,18 @@ final class BorrowedFields {
   // ignore: unused_element
   _BorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsFfi>();
-    final (aData, aLength) = a._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    struct.a._length = aLength;
-    struct.a._data = aData;
-    final (bData, bLength) = b._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    struct.b._length = bLength;
-    struct.b._data = bData;
-    final (cData, cLength) = c._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    struct.c._length = cLength;
-    struct.c._data = cData;
+    struct.a = a._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.b = b._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.c = c._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     return struct;
   }
 
   static BorrowedFields fromBarAndStrings(Bar bar, String dstr16, String utf8Str) {
     final dstr16Arena = _FinalizedArena();
-    final (dstr16Data, dstr16Length) = dstr16._utf16AllocIn(dstr16Arena.arena);
     final utf8StrArena = _FinalizedArena();
-    final (utf8StrData, utf8StrLength) = utf8Str._utf8AllocIn(utf8StrArena.arena);
     // This lifetime edge depends on lifetimes: 'x
     core.List<Object> xEdges = [bar, dstr16Arena, utf8StrArena];
-    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16Data, dstr16Length, utf8StrData, utf8StrLength);
+    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16._utf16AllocIn(dstr16Arena.arena), utf8Str._utf8AllocIn(utf8StrArena.arena));
     return BorrowedFields._fromFfi(result, xEdges);
   }
 
@@ -75,6 +67,6 @@ final class BorrowedFields {
 }
 
 @meta.ResourceIdentifier('BorrowedFields_from_bar_and_strings')
-@ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
+@ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Uint16> dstr16Data, int dstr16Length, ffi.Pointer<ffi.Uint8> utf8StrData, int utf8StrLength);
+external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, _SliceUtf16 dstr16, _SliceUtf8 utf8Str);

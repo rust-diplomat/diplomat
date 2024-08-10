@@ -20,17 +20,17 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::Foo* Foo_new(const char* x_data, size_t x_len);
+    diplomat::capi::Foo* Foo_new(diplomat::capi::DiplomatStringView x);
     
     diplomat::capi::Bar* Foo_get_bar(const diplomat::capi::Foo* self);
     
-    diplomat::capi::Foo* Foo_new_static(const char* x_data, size_t x_len);
+    diplomat::capi::Foo* Foo_new_static(diplomat::capi::DiplomatStringView x);
     
     diplomat::capi::BorrowedFieldsReturning Foo_as_returning(const diplomat::capi::Foo* self);
     
     diplomat::capi::Foo* Foo_extract_from_fields(diplomat::capi::BorrowedFields fields);
     
-    diplomat::capi::Foo* Foo_extract_from_bounds(diplomat::capi::BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
+    diplomat::capi::Foo* Foo_extract_from_bounds(diplomat::capi::BorrowedFieldsWithBounds bounds, diplomat::capi::DiplomatStringView another_string);
     
     
     void Foo_destroy(Foo* self);
@@ -40,8 +40,7 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
-  auto result = diplomat::capi::Foo_new(x.data(),
-    x.size());
+  auto result = diplomat::capi::Foo_new({x.data(), x.size()});
   return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
@@ -51,8 +50,7 @@ inline std::unique_ptr<Bar> Foo::get_bar() const {
 }
 
 inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
-  auto result = diplomat::capi::Foo_new_static(x.data(),
-    x.size());
+  auto result = diplomat::capi::Foo_new_static({x.data(), x.size()});
   return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
@@ -68,8 +66,7 @@ inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
 
 inline std::unique_ptr<Foo> Foo::extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string) {
   auto result = diplomat::capi::Foo_extract_from_bounds(bounds.AsFFI(),
-    another_string.data(),
-    another_string.size());
+    {another_string.data(), another_string.size()});
   return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 

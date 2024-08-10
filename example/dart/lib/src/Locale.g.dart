@@ -27,8 +27,7 @@ final class Locale implements ffi.Finalizable {
   /// Construct an [`Locale`] from a locale identifier represented as a string.
   factory Locale(String name) {
     final temp = _FinalizedArena();
-    final (nameData, nameLength) = name._utf8AllocIn(temp.arena);
-    final result = _icu4x_Locale_new_mv1(nameData, nameLength);
+    final result = _icu4x_Locale_new_mv1(name._utf8AllocIn(temp.arena));
     return Locale._fromFfi(result, []);
   }
 }
@@ -39,6 +38,6 @@ final class Locale implements ffi.Finalizable {
 external void _icu4x_Locale_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('icu4x_Locale_new_mv1')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'icu4x_Locale_new_mv1')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'icu4x_Locale_new_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _icu4x_Locale_new_mv1(ffi.Pointer<ffi.Uint8> nameData, int nameLength);
+external ffi.Pointer<ffi.Opaque> _icu4x_Locale_new_mv1(_SliceUtf8 name);

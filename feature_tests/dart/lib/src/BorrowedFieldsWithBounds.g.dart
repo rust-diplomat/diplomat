@@ -30,30 +30,22 @@ final class BorrowedFieldsWithBounds {
   // ignore: unused_element
   _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const [], core.List<core.List<Object>> bAppendArray = const [], core.List<core.List<Object>> cAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsWithBoundsFfi>();
-    final (fieldAData, fieldALength) = fieldA._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    struct.fieldA._length = fieldALength;
-    struct.fieldA._data = fieldAData;
-    final (fieldBData, fieldBLength) = fieldB._utf8AllocIn(bAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(bAppendArray).arena : temp);
-    struct.fieldB._length = fieldBLength;
-    struct.fieldB._data = fieldBData;
-    final (fieldCData, fieldCLength) = fieldC._utf8AllocIn(cAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(cAppendArray).arena : temp);
-    struct.fieldC._length = fieldCLength;
-    struct.fieldC._data = fieldCData;
+    struct.fieldA = fieldA._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.fieldB = fieldB._utf8AllocIn(bAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(bAppendArray).arena : temp);
+    struct.fieldC = fieldC._utf8AllocIn(cAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(cAppendArray).arena : temp);
     return struct;
   }
 
   static BorrowedFieldsWithBounds fromFooAndStrings(Foo foo, String dstr16X, String utf8StrZ) {
     final dstr16XArena = _FinalizedArena();
-    final (dstr16XData, dstr16XLength) = dstr16X._utf16AllocIn(dstr16XArena.arena);
     final utf8StrZArena = _FinalizedArena();
-    final (utf8StrZData, utf8StrZLength) = utf8StrZ._utf8AllocIn(utf8StrZArena.arena);
     // This lifetime edge depends on lifetimes: 'x, 'y, 'z
     core.List<Object> xEdges = [foo, dstr16XArena, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'y, 'z
     core.List<Object> yEdges = [foo, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [utf8StrZArena];
-    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16XData, dstr16XLength, utf8StrZData, utf8StrZLength);
+    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }
 
@@ -97,6 +89,6 @@ final class BorrowedFieldsWithBounds {
 }
 
 @meta.ResourceIdentifier('BorrowedFieldsWithBounds_from_foo_and_strings')
-@ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
+@ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, ffi.Pointer<ffi.Uint16> dstr16XData, int dstr16XLength, ffi.Pointer<ffi.Uint8> utf8StrZData, int utf8StrZLength);
+external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf8 utf8StrZ);

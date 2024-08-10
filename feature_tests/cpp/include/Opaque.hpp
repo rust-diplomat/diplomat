@@ -20,9 +20,9 @@ namespace capi {
     
     diplomat::capi::Opaque* Opaque_new(void);
     
-    diplomat::capi::Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
+    diplomat::capi::Opaque* Opaque_try_from_utf8(diplomat::capi::DiplomatStringView input);
     
-    diplomat::capi::Opaque* Opaque_from_str(const char* input_data, size_t input_len);
+    diplomat::capi::Opaque* Opaque_from_str(diplomat::capi::DiplomatStringView input);
     
     void Opaque_get_debug_str(const diplomat::capi::Opaque* self, diplomat::capi::DiplomatWrite* write);
     
@@ -49,8 +49,7 @@ inline std::unique_ptr<Opaque> Opaque::new_() {
 }
 
 inline std::unique_ptr<Opaque> Opaque::try_from_utf8(std::string_view input) {
-  auto result = diplomat::capi::Opaque_try_from_utf8(input.data(),
-    input.size());
+  auto result = diplomat::capi::Opaque_try_from_utf8({input.data(), input.size()});
   return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
 }
 
@@ -58,8 +57,7 @@ inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::fr
   if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
-  auto result = diplomat::capi::Opaque_from_str(input.data(),
-    input.size());
+  auto result = diplomat::capi::Opaque_from_str({input.data(), input.size()});
   return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));
 }
 

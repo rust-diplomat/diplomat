@@ -95,13 +95,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let ty_name = self.formatter.fmt_type_name(self.id);
         let mut fields = vec![];
         for field in def.fields.iter() {
-            self.gen_ty_decl(
-                &field.ty,
-                field.name.as_str(),
-                true,
-                &mut decl_header,
-                &mut fields,
-            );
+            fields.push(self.gen_ty_decl(&field.ty, field.name.as_str(), &mut decl_header));
         }
 
         StructTemplate {
@@ -167,17 +161,11 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
-            self.gen_ty_decl(&self_ty, "self", false, header, &mut param_decls);
+            param_decls.push(self.gen_ty_decl(&self_ty, "self", header))
         }
 
         for param in &method.params {
-            self.gen_ty_decl(
-                &param.ty,
-                param.name.as_str(),
-                false,
-                header,
-                &mut param_decls,
-            );
+            param_decls.push(self.gen_ty_decl(&param.ty, param.name.as_str(), header));
         }
 
         let return_ty: Cow<str> = match method.output {
@@ -290,60 +278,16 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;\n{fn_name}_result")
     }
 
-    /// Generates a list of decls for a given type, returned as (type, name)
-    ///
-    /// Might return multiple in the case of slices and strings. The `is_struct` parameter
-    /// affects whether the decls are generated for a struct field or method
+    /// Generates a decl for a given type, returned as (type, name)
     fn gen_ty_decl<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         ident: &'a str,
-        is_struct: bool,
         header: &mut Header,
-        out: &mut Vec<(Cow<'tcx, str>, Cow<'a, str>)>,
-    ) {
+    ) -> (Cow<'tcx, str>, Cow<'a, str>) {
         let param_name = self.formatter.fmt_param_name(ident);
-        match ty {
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) if !is_struct => {
-                out.push(("const char*".into(), format!("{param_name}_data").into()));
-                out.push(("size_t".into(), format!("{param_name}_len").into()));
-            }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16))
-                if !is_struct =>
-            {
-                out.push((
-                    "const char16_t*".into(),
-                    format!("{param_name}_data").into(),
-                ));
-                out.push(("size_t".into(), format!("{param_name}_len").into()));
-            }
-            Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
-                let prim = self.formatter.fmt_primitive_as_c(*p);
-                let ptr_type = self.formatter.fmt_ptr(
-                    &prim,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
-                out.push((
-                    format!("{ptr_type}").into(),
-                    format!("{param_name}_data").into(),
-                ));
-                out.push(("size_t".into(), format!("{param_name}_len").into()));
-            }
-            Type::Slice(hir::Slice::Strs(encoding)) => {
-                out.push((
-                    format!("{}*", self.formatter.fmt_strs_view_name(*encoding)).into(),
-                    format!("{param_name}_data").into(),
-                ));
-                out.push(("size_t".into(), format!("{param_name}_len").into()));
-            }
-            _ => {
-                let ty = self.gen_ty_name(ty, header);
-                out.push((ty, param_name));
-            }
-        }
+        let ty = self.gen_ty_name(ty, header);
+        (ty, param_name)
     }
 
     // Generate the C code for referencing a particular type.

@@ -2,6 +2,7 @@ use std::{collections::BTreeSet, fmt::Write};
 
 use askama::{self, Template};
 use diplomat_core::hir::{BackendAttrSupport, TypeContext};
+use serde::{Deserialize, Serialize};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
@@ -17,8 +18,30 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // For automagical construction detection:
     a.constructors = true;
     a.fallible_constructors = true;
+    a.named_constructors = true;
 
     a
+}
+
+/// TODO: Add this to the design doc.
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct DemoConfig {
+    /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
+    pub explicit_generation: Option<bool>,
+
+    /// Removes rendering/ folder
+    pub hide_default_renderer: Option<bool>,
+
+    /// If we can grab from index.mjs through a module, override imports for index.mjs to the new module name.
+    /// Will set [DemoConfig::relative_js_path] to a blank string, unless explicitly overridden.
+    ///
+    /// Will not generate the js/ folder if this is set.
+    pub module_name: Option<String>,
+
+    /// The relative path to Javascript to use in `import` statements for demo files.
+    /// If this is set, we do not generate the js/ folder.
+    pub relative_js_path: Option<String>,
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
@@ -30,10 +53,25 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
+    conf: Option<DemoConfig>,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
+
+    let unwrapped_conf = conf.unwrap_or_default();
+
+    let import_path_exists =
+        unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
+
+    let import_path = unwrapped_conf
+        .relative_js_path
+        .unwrap_or(match unwrapped_conf.module_name {
+            Some(_) => "".into(),
+            None => "./js/".into(),
+        });
+
+    let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
 
     struct TerminusExport {
         type_name: String,
@@ -45,12 +83,16 @@ pub(crate) fn run<'tcx>(
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
+        pub js_out: String,
     }
 
     let mut out_info = IndexInfo {
         termini_exports: Vec::new(),
         termini: Vec::new(),
+        js_out: format!("{import_path}{module_name}"),
     };
+
+    let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
@@ -70,7 +112,10 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable || !RenderTerminusContext::is_valid_terminus(method) {
+                if method.attrs.disable
+                    || !RenderTerminusContext::is_valid_terminus(method)
+                    || (is_explicit && !method.attrs.demo_attrs.generate)
+                {
                     continue;
                 }
 
@@ -97,6 +142,9 @@ pub(crate) fn run<'tcx>(
 
                         imports: BTreeSet::new(),
                     },
+
+                    relative_import_path: import_path.clone(),
+                    module_name: module_name.clone(),
                 };
 
                 ctx.evaluate(type_name.clone().into(), method);
@@ -104,8 +152,6 @@ pub(crate) fn run<'tcx>(
                 termini.push(ctx.terminus_info);
             }
         }
-
-        generate_default_renderer_files(&termini, &files);
 
         if !termini.is_empty() {
             let mut imports = BTreeSet::new();
@@ -143,43 +189,29 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.mjs".into(), out_info.render().unwrap());
 
-    // TODO: Avoid overwriting these files if one already exists (but update if that is a file present somewhere).
-    // I'm thinking of just putting these in their own folder for that.
-    // TODO: Some of these files should only be generated with certain command line options.
-    files.add_file(
-        "rendering.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
-    );
-    files.add_file(
-        "runtime.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
-    );
-    files.add_file(
-        "template.html".into(),
-        include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
-    );
-    files.add_file(
-        "diplomat.config.mjs".into(),
-        include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
-    );
+    let hide_default_renderer = unwrapped_conf.hide_default_renderer.unwrap_or(false);
 
-    (files, errors)
-}
-
-fn generate_default_renderer_files(termini: &Vec<TerminusInfo>, files: &FileMap) {
-    #[derive(Template)]
-    #[template(path = "demo_gen/default_renderer/termini.html.jinja")]
-    struct TerminiHTML<'a> {
-        pub t: &'a TerminusInfo,
-    }
-
-    for terminus in termini {
+    if !hide_default_renderer {
         files.add_file(
-            format!(
-                "rendering/{}_{}.html",
-                terminus.type_name, terminus.function_name
-            ),
-            TerminiHTML { t: terminus }.render().unwrap(),
+            "rendering/rendering.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
+        );
+        files.add_file(
+            "rendering/runtime.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
+        );
+        files.add_file(
+            "rendering/template.html".into(),
+            include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
         );
     }
+
+    if !import_path_exists {
+        files.add_file(
+            "diplomat.config.mjs".into(),
+            include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
+        );
+    }
+
+    (files, errors)
 }

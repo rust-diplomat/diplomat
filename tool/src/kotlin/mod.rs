@@ -1566,6 +1566,7 @@ mod test {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
+                use diplomat_runtime::DiplomatSlice;
 
 
                 #[diplomat::opaque]
@@ -1590,7 +1591,7 @@ mod test {
                     j: DiplomatChar,
                     k: f32,
                     l: f64,
-                    m: &'b [f64],
+                    m: DiplomatSlice<'b, f64>,
                     n: &'b Opaque,
                 }
 

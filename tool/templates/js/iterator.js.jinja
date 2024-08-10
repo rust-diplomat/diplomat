@@ -1,4 +1,5 @@
 {%- if let Some(it) = iterator %}
+
 next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
     const out = this.#iteratorNext();
 
@@ -6,5 +7,5 @@ next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
         value: out,
         done: out === null,
     };
-}{% endif -%}
+}{% endif %}
 {% endif -%}

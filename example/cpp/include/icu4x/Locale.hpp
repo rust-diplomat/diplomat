@@ -16,7 +16,7 @@ namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::Locale* icu4x_Locale_new_mv1(const char* name_data, size_t name_len);
+    icu4x::capi::Locale* icu4x_Locale_new_mv1(diplomat::capi::DiplomatStringView name);
     
     
     void icu4x_Locale_destroy_mv1(Locale* self);
@@ -26,8 +26,7 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<icu4x::Locale> icu4x::Locale::new_(std::string_view name) {
-  auto result = icu4x::capi::icu4x_Locale_new_mv1(name.data(),
-    name.size());
+  auto result = icu4x::capi::icu4x_Locale_new_mv1({name.data(), name.size()});
   return std::unique_ptr<icu4x::Locale>(icu4x::Locale::FromFFI(result));
 }
 

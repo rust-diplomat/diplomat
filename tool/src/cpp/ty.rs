@@ -18,12 +18,6 @@ struct NamedExpression<'a> {
     expression: Cow<'a, str>,
 }
 
-/// An expression associated with a variable name having the given suffix.
-struct PartiallyNamedExpression<'a> {
-    suffix: Cow<'a, str>,
-    expression: Cow<'a, str>,
-}
-
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedType<'a> {
     var_name: Cow<'a, str>,
@@ -227,7 +221,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .flat_map(|field| self.gen_cpp_to_c_for_field("", field))
+            .map(|field| self.gen_cpp_to_c_for_field("", field))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
@@ -335,13 +329,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ));
                 returns_utf8_err = true;
             }
-            let conversions =
-                self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into(), true);
-            cpp_to_c_params.extend(
-                conversions
-                    .into_iter()
-                    .map(|PartiallyNamedExpression { expression, .. }| expression),
-            );
+            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
+            cpp_to_c_params.push(conversion);
         }
 
         if method.output.is_write() {
@@ -529,79 +518,35 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         &self,
         cpp_struct_access: &str,
         field: &'a hir::StructField<P>,
-    ) -> Vec<NamedExpression<'a>> {
+    ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), false)
-            .into_iter()
-            .map(
-                |PartiallyNamedExpression { suffix, expression }| NamedExpression {
-                    var_name: format!("{var_name}{suffix}").into(),
-                    expression,
-                },
-            )
-            .collect()
+        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into());
+
+        NamedExpression {
+            var_name,
+            expression,
+        }
     }
 
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
     ///
-    /// Returns `PartiallyNamedExpression`s whose `suffix` is either empty, `_data`, or `_size` for
+    /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
-        is_method_call: bool,
-    ) -> Vec<PartiallyNamedExpression<'a>> {
+    ) -> Cow<'a, str> {
         match *ty {
-            Type::Primitive(..) => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: cpp_name.clone(),
-                }]
-            }
+            Type::Primitive(..) => cpp_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into(),
-                }]
+                format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
             }
-            Type::Opaque(..) => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: format!("{cpp_name}.AsFFI()").into(),
-                }]
-            }
-            Type::Struct(..) => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: format!("{cpp_name}.AsFFI()").into(),
-                }]
-            }
-            Type::Enum(..) => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: format!("{cpp_name}.AsFFI()").into(),
-                }]
-            }
-            Type::Slice(..) if is_method_call => {
-                vec![
-                    PartiallyNamedExpression {
-                        suffix: "_data".into(),
-                        expression: format!("{cpp_name}.data()").into(),
-                    },
-                    PartiallyNamedExpression {
-                        suffix: "_size".into(),
-                        expression: format!("{cpp_name}.size()").into(),
-                    },
-                ]
-            }
-            Type::Slice(..) => {
-                vec![PartiallyNamedExpression {
-                    suffix: "".into(),
-                    expression: format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
-                }]
-            }
+            Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
