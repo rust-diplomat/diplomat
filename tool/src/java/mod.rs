@@ -29,18 +29,18 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.namespacing = false; // TODO
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
-    a.method_overloading = true;
+    a.method_overloading = false;
     a.utf8_strings = false;
     a.utf16_strings = true;
 
     a.constructors = false; // TODO
     a.named_constructors = false; // TODO
-    a.fallible_constructors = false; // TODO
-    a.accessors = false;
-    a.stringifiers = false; // TODO
+    a.fallible_constructors = false;
+    a.accessors = false; // TODO
+    a.stringifiers = false;
     a.comparators = false; // TODO
-    a.iterators = false;
-    a.iterables = false;
+    a.iterators = false; // TODO
+    a.iterables = false; // TODO
     a.indexing = false;
 
     a
