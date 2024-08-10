@@ -34,6 +34,8 @@ public:
 
   inline static size_t returns_usize();
 
+  inline size_t internal_len() const;
+
   inline static ImportedStruct returns_imported();
 
   inline static int8_t cmp();

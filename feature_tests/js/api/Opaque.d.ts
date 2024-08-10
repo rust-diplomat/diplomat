@@ -20,6 +20,8 @@ export class Opaque {
 
     static returnsUsize(): number;
 
+    internalLen(): number;
+
     static returnsImported(): ImportedStruct;
 
     static cmp(): number;

@@ -84,7 +84,6 @@ pub mod ffi {
             self.0.len()
         }
 
-        #[diplomat::attr(java, disable)]
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }

@@ -14,6 +14,7 @@ import java.lang.ref.Cleaner;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class Opaque {
 
@@ -36,14 +37,21 @@ public class Opaque {
     }
 
     Opaque() {}
+    Opaque(MemorySegment handle, List<Object> selfEdges) {
+        this.internal = handle;
+        this.selfEdges = selfEdges;
+        
+
+    }
     
     public static Opaque new_() {
         
-        var nativeInvoker = somelib_h.Opaque_new.makeInvoker();
-        var nativeVal = nativeInvoker.apply();
-        var returnVal = new Opaque();
+        var nativeVal = somelib_h.Opaque_new();
+        List<Object> selfEdges = List.of();
         
-        returnVal.internal = nativeVal;
+        
+        
+        var returnVal = new Opaque(nativeVal, selfEdges);
         var cleaner = new Opaque.OpaqueCleaner(nativeVal);
         returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
@@ -55,9 +63,11 @@ public class Opaque {
             var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_8);
             var inputLen = inputMemSeg.byteSize();
             var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen - 1);
-            var returnVal = new Opaque();
+            List<Object> selfEdges = List.of();
             
-            returnVal.internal = nativeVal;
+            
+            
+            var returnVal = new Opaque(nativeVal, selfEdges);
             var cleaner = new Opaque.OpaqueCleaner(nativeVal);
             returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
@@ -66,8 +76,7 @@ public class Opaque {
     
     public static long returnsUsize() {
         
-        var nativeInvoker = somelib_h.Opaque_returns_usize.makeInvoker();
-        var nativeVal = nativeInvoker.apply();
+        var nativeVal = somelib_h.Opaque_returns_usize();
         return nativeVal;
     }
     
@@ -84,8 +93,7 @@ public class Opaque {
         
         var writeable = somelib_h.diplomat_buffer_write_create(0);
         somelib_h.Opaque_get_debug_str(internal, writeable);
-        var buffer = DiplomatWrite.buf(writeable);
-        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        var string = SliceUtils. readUtf8FromWriteable(writeable);
         somelib_h.diplomat_buffer_write_destroy(writeable);
         return string;
     }

@@ -61,6 +61,11 @@ final class Opaque implements ffi.Finalizable {
     return result;
   }
 
+  int internalLen() {
+    final result = _Opaque_internal_len(_ffi);
+    return result;
+  }
+
   static ImportedStruct returnsImported() {
     final result = _Opaque_returns_imported();
     return ImportedStruct._fromFfi(result);
@@ -106,6 +111,11 @@ external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'Opaque_returns_usize')
 // ignore: non_constant_identifier_names
 external int _Opaque_returns_usize();
+
+@meta.ResourceIdentifier('Opaque_internal_len')
+@ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Opaque_internal_len')
+// ignore: non_constant_identifier_names
+external int _Opaque_internal_len(ffi.Pointer<ffi.Opaque> self);
 
 @meta.ResourceIdentifier('Opaque_returns_imported')
 @ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')

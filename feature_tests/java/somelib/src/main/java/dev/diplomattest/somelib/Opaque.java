@@ -76,6 +76,16 @@ public class Opaque {
         return nativeVal;
     }
     
+    public static ImportedStruct returnsImported() {
+        
+        var returnArena = (SegmentAllocator) Arena.ofAuto();
+        var nativeVal = somelib_h.Opaque_returns_imported(returnArena);
+        
+        
+        var returnVal = new ImportedStruct(returnArena, nativeVal);
+        return returnVal;
+    }
+    
     public static byte cmp() {
         
         var nativeVal = somelib_h.Opaque_cmp();
@@ -88,8 +98,7 @@ public class Opaque {
         
         var writeable = somelib_h.diplomat_buffer_write_create(0);
         somelib_h.Opaque_get_debug_str(internal, writeable);
-        var buffer = DiplomatWrite.buf(writeable);
-        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        var string = SliceUtils. readUtf8FromWriteable(writeable);
         somelib_h.diplomat_buffer_write_destroy(writeable);
         return string;
     }

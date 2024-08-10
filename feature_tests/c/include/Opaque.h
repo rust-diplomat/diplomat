@@ -29,6 +29,8 @@ void Opaque_assert_struct(const Opaque* self, MyStruct s);
 
 size_t Opaque_returns_usize(void);
 
+size_t Opaque_internal_len(const Opaque* self);
+
 ImportedStruct Opaque_returns_imported(void);
 
 int8_t Opaque_cmp(void);

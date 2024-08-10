@@ -14,6 +14,7 @@ import java.lang.ref.Cleaner;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class Opaque2 {
 
@@ -36,6 +37,12 @@ public class Opaque2 {
     }
 
     Opaque2() {}
+    Opaque2(MemorySegment handle, List<Object> selfEdges) {
+        this.internal = handle;
+        this.selfEdges = selfEdges;
+        
+
+    }
     
     
 }

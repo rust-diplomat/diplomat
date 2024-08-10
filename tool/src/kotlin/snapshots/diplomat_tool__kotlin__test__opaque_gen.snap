@@ -2,7 +2,7 @@
 source: tool/src/kotlin/mod.rs
 expression: res
 ---
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Library
 import com.sun.jna.Native
@@ -38,7 +38,7 @@ class OwndingStruct internal constructor (
 }
 
 =======================
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Library
 import com.sun.jna.Native
@@ -71,7 +71,7 @@ class OwnedStruct internal constructor (
 }
 
 =======================
-package dev.gigapixel.somelib;
+package dev.diplomattest.somelib;
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -104,7 +104,7 @@ class BorrowWrapper internal constructor (
 }
 
 =======================
-package dev.gigapixel.somelib;
+package dev.diplomattest.somelib;
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -135,7 +135,7 @@ class InputStruct internal constructor (
 }
 
 =======================
-package dev.gigapixel.somelib;
+package dev.diplomattest.somelib;
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer

@@ -30,6 +30,8 @@ namespace capi {
     
     size_t Opaque_returns_usize(void);
     
+    size_t Opaque_internal_len(const diplomat::capi::Opaque* self);
+    
     diplomat::capi::ImportedStruct Opaque_returns_imported(void);
     
     int8_t Opaque_cmp(void);
@@ -76,6 +78,11 @@ inline void Opaque::assert_struct(MyStruct s) const {
 
 inline size_t Opaque::returns_usize() {
   auto result = diplomat::capi::Opaque_returns_usize();
+  return result;
+}
+
+inline size_t Opaque::internal_len() const {
+  auto result = diplomat::capi::Opaque_internal_len(this->AsFFI());
   return result;
 }
 

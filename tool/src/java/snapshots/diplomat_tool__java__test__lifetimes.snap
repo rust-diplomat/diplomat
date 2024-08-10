@@ -13,6 +13,7 @@ import java.lang.foreign.SegmentAllocator;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class BorrowedFields {
     String a;
@@ -27,16 +28,20 @@ public class BorrowedFields {
     
 
     private BorrowedFields(SegmentAllocator arena) {
-        this.arena = arena
+        this.arena = arena;
     }
 
-    void initFromSegment(MemorySegment segment) {
-        this.internal = segment;
-
-        this.a = dev.diplomattest.somelib.ntv.BorrowedFields.a(segment);
-        this.b = dev.diplomattest.somelib.ntv.BorrowedFields.b(segment);
-        this.c = dev.diplomattest.somelib.ntv.BorrowedFields.c(segment);
+    BorrowedFields(SegmentAllocator arena, MemorySegment structSegment, List<Object> aEdges) {
+        this.arena = arena;
+        this.selfEdges = selfEdges;
+        this.aEdges = aEdges;
         
+
+        this.a = SliceUtils.readUtf16(dev.diplomattest.somelib.ntv.BorrowedFields.a(structSegment));
+        this.b = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFields.b(structSegment));
+        this.c = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFields.c(structSegment));
+        
+
     }
     
 }
@@ -54,6 +59,7 @@ import java.lang.foreign.SegmentAllocator;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class BorrowedFieldsReturning {
     String bytes;
@@ -66,14 +72,18 @@ public class BorrowedFieldsReturning {
     
 
     private BorrowedFieldsReturning(SegmentAllocator arena) {
-        this.arena = arena
+        this.arena = arena;
     }
 
-    void initFromSegment(MemorySegment segment) {
-        this.internal = segment;
-
-        this.bytes = dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(segment);
+    BorrowedFieldsReturning(SegmentAllocator arena, MemorySegment structSegment, List<Object> aEdges) {
+        this.arena = arena;
+        this.selfEdges = selfEdges;
+        this.aEdges = aEdges;
         
+
+        this.bytes = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(structSegment));
+        
+
     }
     
 }
@@ -91,6 +101,7 @@ import java.lang.foreign.SegmentAllocator;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class BorrowedFieldsWithBounds {
     String fieldA;
@@ -107,16 +118,22 @@ public class BorrowedFieldsWithBounds {
     
 
     private BorrowedFieldsWithBounds(SegmentAllocator arena) {
-        this.arena = arena
+        this.arena = arena;
     }
 
-    void initFromSegment(MemorySegment segment) {
-        this.internal = segment;
-
-        this.fieldA = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldA(segment);
-        this.fieldB = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldB(segment);
-        this.fieldC = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.fieldC(segment);
+    BorrowedFieldsWithBounds(SegmentAllocator arena, MemorySegment structSegment, List<Object> aEdges, List<Object> bEdges, List<Object> cEdges) {
+        this.arena = arena;
+        this.selfEdges = selfEdges;
+        this.aEdges = aEdges;
+        this.bEdges = bEdges;
+        this.cEdges = cEdges;
         
+
+        this.fieldA = SliceUtils.readUtf16(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(structSegment));
+        this.fieldB = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(structSegment));
+        this.fieldC = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(structSegment));
+        
+
     }
     
 }
@@ -135,6 +152,7 @@ import java.lang.ref.Cleaner;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class Bar {
 
@@ -159,6 +177,14 @@ public class Bar {
     }
 
     Bar() {}
+    Bar(MemorySegment handle, List<Object> selfEdges, List<Object> bEdges, List<Object> aEdges) {
+        this.internal = handle;
+        this.selfEdges = selfEdges;
+        this.bEdges = bEdges;
+        this.aEdges = aEdges;
+        
+
+    }
     
     
 }
@@ -175,6 +201,7 @@ import java.lang.ref.Cleaner;
 import java.util.List;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 public class Foo {
 
@@ -198,6 +225,13 @@ public class Foo {
     }
 
     Foo() {}
+    Foo(MemorySegment handle, List<Object> selfEdges, List<Object> aEdges) {
+        this.internal = handle;
+        this.selfEdges = selfEdges;
+        this.aEdges = aEdges;
+        
+
+    }
     
     public static Foo new_(String x) {
         
@@ -205,11 +239,12 @@ public class Foo {
             var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
             var xLen = xMemSeg.byteSize();
             var nativeVal = somelib_h.Foo_new(xMemSeg, xLen - 1);
-            var returnVal = new Foo();
+            List<Object> selfEdges = List.of();
             
-            returnVal.aEdges = List.of(x);
             
-            returnVal.internal = nativeVal;
+            
+            List<Object> aEdges = List.of(x);
+            var returnVal = new Foo(nativeVal, selfEdges, aEdges);
             var cleaner = new Foo.FooCleaner(nativeVal);
             returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
@@ -222,11 +257,12 @@ public class Foo {
             var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
             var xLen = xMemSeg.byteSize();
             var nativeVal = somelib_h.Foo_new_static(xMemSeg, xLen - 1);
-            var returnVal = new Foo();
+            List<Object> selfEdges = List.of();
             
-            returnVal.aEdges = List.of();
             
-            returnVal.internal = nativeVal;
+            
+            List<Object> aEdges = List.of();
+            var returnVal = new Foo(nativeVal, selfEdges, aEdges);
             var cleaner = new Foo.FooCleaner(nativeVal);
             returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
@@ -237,11 +273,12 @@ public class Foo {
         
         var fieldsNative = fields.internal;
         var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
-        var returnVal = new Foo();
+        List<Object> selfEdges = List.of();
         
-        returnVal.aEdges = List.of(fields);
         
-        returnVal.internal = nativeVal;
+        
+        List<Object> aEdges = List.of(fields);
+        var returnVal = new Foo(nativeVal, selfEdges, aEdges);
         var cleaner = new Foo.FooCleaner(nativeVal);
         returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
@@ -254,11 +291,12 @@ public class Foo {
             var anotherStringMemSeg = arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
             var anotherStringLen = anotherStringMemSeg.byteSize();
             var nativeVal = somelib_h.Foo_extract_from_bounds(boundsNative, anotherStringMemSeg, anotherStringLen - 1);
-            var returnVal = new Foo();
+            List<Object> selfEdges = List.of();
             
-            returnVal.aEdges = List.of(bounds, bounds, anotherString);
             
-            returnVal.internal = nativeVal;
+            
+            List<Object> aEdges = List.of(bounds, bounds, anotherString);
+            var returnVal = new Foo(nativeVal, selfEdges, aEdges);
             var cleaner = new Foo.FooCleaner(nativeVal);
             returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
@@ -270,13 +308,13 @@ public class Foo {
         
         
         var nativeVal = somelib_h.Foo_get_bar(internal);
-        var returnVal = new Bar();
+        List<Object> selfEdges = List.of();
         
-        returnVal.bEdges = List.of(this);
         
-        returnVal.aEdges = List.of(this);
         
-        returnVal.internal = nativeVal;
+        List<Object> bEdges = List.of(this);
+        List<Object> aEdges = List.of(this);
+        var returnVal = new Bar(nativeVal, selfEdges, bEdges, aEdges);
         var cleaner = new Bar.BarCleaner(nativeVal);
         returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
@@ -287,9 +325,10 @@ public class Foo {
         var returnArena = (SegmentAllocator) Arena.ofAuto();
         
         var nativeVal = somelib_h.Foo_as_returning(returnArena, internal);
-        var returnVal = new BorrowedFieldsReturning(returnArena);
-        returnVal.aEdges = List.of(this);
-        returnVal.initFromSegment(nativeVal);
+        
+        List<Object> aEdges = List.of(this);
+        
+        var returnVal = new BorrowedFieldsReturning(returnArena, nativeVal, aEdges);
         return returnVal;
     }
     

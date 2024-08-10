@@ -113,8 +113,7 @@ public class MyString {
             var fooLen = fooMemSeg.byteSize();
             var writeable = somelib_h.diplomat_buffer_write_create(0);
             somelib_h.MyString_string_transform(fooMemSeg, fooLen - 1, writeable);
-            var buffer = DiplomatWrite.buf(writeable);
-            var string = buffer.getString(0, StandardCharsets.UTF_8);
+            var string = SliceUtils. readUtf8FromWriteable(writeable);
             somelib_h.diplomat_buffer_write_destroy(writeable);
             return string;
         }
@@ -137,8 +136,7 @@ public class MyString {
         
         var writeable = somelib_h.diplomat_buffer_write_create(0);
         somelib_h.MyString_get_str(internal, writeable);
-        var buffer = DiplomatWrite.buf(writeable);
-        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        var string = SliceUtils. readUtf8FromWriteable(writeable);
         somelib_h.diplomat_buffer_write_destroy(writeable);
         return string;
     }

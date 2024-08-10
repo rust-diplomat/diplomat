@@ -309,6 +309,7 @@ dependencies = [
     "gen-js-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
+    "gen-java-feature",
 ]
 
 [tasks.gen-example]

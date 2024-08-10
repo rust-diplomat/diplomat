@@ -181,6 +181,7 @@ class SliceUtils {
         });
         return diplomatStrsData;
     }
+
     static MemorySegment strs8(SegmentAllocator arena, String [] strings) {
         var diplomatStrsData = DiplomatStringView.allocateArray(strings.length, arena);
         var layout = DiplomatStringView.layout();
@@ -197,5 +198,15 @@ class SliceUtils {
             }
         });
         return diplomatStrsData;
+    }
+
+    static String readUtf8FromWriteable(MemorySegment writeable) {
+        var buffer = DiplomatWrite.buf(writeable);
+        var len = DiplomatWrite.len(writeable);
+        var bytes = new byte[(int) len];
+        for (var i = 0; i < len; i++) {
+            bytes[i] = buffer.get(JAVA_BYTE, i);
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }

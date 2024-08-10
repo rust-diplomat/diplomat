@@ -506,8 +506,7 @@ return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
             */
             SuccessType::Write => {
                 let write_return: Cow<'cx, str> = format!(
-                    r#"var buffer = DiplomatWrite.buf(writeable);
-var string = buffer.getString(0, StandardCharsets.UTF_8);
+                    r#"var string = SliceUtils. readUtf8FromWriteable(writeable);
 {}_h.diplomat_buffer_write_destroy(writeable);
 return string;"#,
                     lib_name

@@ -104,6 +104,16 @@ export class Opaque {
         finally {}
     }
 
+    internalLen() {
+        const result = wasm.Opaque_internal_len(this.ffiValue);
+    
+        try {
+            return result;
+        }
+        
+        finally {}
+    }
+
     static returnsImported() {
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
