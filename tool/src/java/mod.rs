@@ -1084,12 +1084,12 @@ mod test {
                     }
 
                     #[diplomat::skip_if_ast]
-                    pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
+                    pub fn new_from_first<'a>(v: &[DiplomatStrSlice]) -> Box<MyString> {
                         Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
                     }
 
                     #[diplomat::attr(supports = accessors, setter = "str")]
-                    pub fn set_str(&mut self, new_str: &DiplomatStr) {
+                    pub fn set_str<'a>(&'a mut self, new_str: DiplomatStrSlice<'a>) {
                         self.0 = String::from_utf8(new_str.to_owned()).unwrap();
                     }
 
@@ -1347,19 +1347,19 @@ mod test {
                 pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
                 pub struct BorrowedFields<'a> {
-                    a: &'a DiplomatStr16,
-                    b: &'a DiplomatStr,
-                    c: &'a str,
+                    a: DiplomatStr16Slice<'a>,
+                    b: DiplomatStrSlice<'a>,
+                    c: DiplomatStrSlice<'a>,
                 }
 
                 pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
-                    field_a: &'a DiplomatStr16,
-                    field_b: &'b DiplomatStr,
-                    field_c: &'c str,
+                    field_a: DiplomatStr16Slice<'a>,
+                    field_b: DiplomatStrSlice<'b>,
+                    field_c: DiplomatStrSlice<'c>,
                 }
 
                 pub struct BorrowedFieldsReturning<'a> {
-                    bytes: &'a DiplomatStr,
+                    bytes: DiplomatStrSlice<'a>,
                 }
 
                 impl<'a> Foo<'a> {
