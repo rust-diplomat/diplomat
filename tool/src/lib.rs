@@ -88,7 +88,7 @@ pub fn gen(
             )?;
             demo_gen::run(&tcx, docs_url_gen)
         }
-        "java" => java::run(&tcx, library_config, &out_folder), // we need to pass the out_folder
+        "java" => java::run(&tcx, library_config, out_folder), // we need to pass the out_folder
         // to be able to run jextract
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),

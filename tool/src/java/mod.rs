@@ -650,8 +650,7 @@ return string;"#,
                             _ => None,
                         };
                         let return_self_edges: Option<Cow<str>> = self_lt
-                            .map(|lifetime| lt_lookup.get(&lifetime))
-                            .flatten()
+                            .and_then(|lifetime| lt_lookup.get(&lifetime))
                             .map(|param| {
                                 param
                                     .incoming_edges
@@ -665,7 +664,7 @@ return string;"#,
                             .filter_map(|lt| match lt {
                                 MaybeStatic::Static => None,
                                 MaybeStatic::NonStatic(lt)
-                                    if !(Some(lt).as_ref() == self_lt.as_ref()) =>
+                                    if Some(lt).as_ref() != self_lt.as_ref() =>
                                 {
                                     Some(lt)
                                 }
@@ -843,7 +842,7 @@ return string;"#,
         let fields = s
             .fields
             .iter()
-            .map(|ref field| {
+            .map(|field| {
                 let name = self.formatter.fmt_field_name(field);
                 let native_name = field.name.as_str().into();
                 let native_val =
@@ -884,7 +883,7 @@ return string;"#,
                                 }
                             });
                         let args = once("arena".into())
-                            .chain(once(format!("{native_val}").cown()))
+                            .chain(once(native_val.to_string().cown()))
                             .chain(lt_edges)
                             .mk_str_iter(", ");
 

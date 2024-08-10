@@ -112,9 +112,8 @@ impl<'cx> JavaFormatter<'cx> {
     pub fn fmt_native_primitive<'a>(&self, ty: &'a PrimitiveType) -> Cow<'a, str> {
         match ty {
             PrimitiveType::Bool => "byte".into(),
-            ref p => self.fmt_java_primitive(p),
+            p => self.fmt_java_primitive(p),
         }
-        .into()
     }
 
     pub fn fmt_param_name(&self, name: &str) -> String {
