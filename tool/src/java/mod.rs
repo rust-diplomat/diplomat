@@ -122,8 +122,6 @@ pub(crate) fn run<'a>(
         command.arg("-r").arg(tmp_path).output()
     };
 
-    println!("Running: {:?}", command);
-
     match command.output() {
         Err(err) => match err.kind() {
             std::io::ErrorKind::NotFound => {
@@ -569,12 +567,10 @@ return string;"#,
         let Config { lib_name, .. } = &self.tcx_config;
         let mut static_methods = Vec::new();
         let mut class_methods = Vec::new();
-        println!("Working on type {ty_name}");
         methods
             .iter()
             .filter(|method| !method.attrs.disable)
             .filter_map(|method| -> Option<(bool, Cow<'cx, str>)> {
-                println!("Working on method {}", method.name);
                 let mut visitor = method.borrowing_param_visitor(self.tcx);
 
                 let (method_name, is_valid_constructor) = match method.attrs.special_method {
