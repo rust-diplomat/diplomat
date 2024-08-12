@@ -11,7 +11,6 @@ pub mod ffi {
 
     impl FixedDecimal {
         /// Construct an [`FixedDecimal`] from an integer.
-        #[diplomat::demo(input(v(label = "ICU4XFixedDecimal Value")))]
         #[diplomat::attr(auto, constructor)]
         pub fn new(
             #[diplomat::demo(input(label = "ICU4XFixedDecimal Value"))]
