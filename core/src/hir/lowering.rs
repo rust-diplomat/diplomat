@@ -302,7 +302,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
 
-        for (name, ty, docs) in ast_struct.fields.iter() {
+        for (name, ty, docs, attrs) in ast_struct.fields.iter() {
             let name = self.lower_ident(name, "struct field name")?;
             if !ty.is_ffi_safe() {
                 let ffisafe = ty.ffi_safe_version();
@@ -317,6 +317,7 @@ impl<'ast> LoweringContext<'ast> {
                     docs: docs.clone(),
                     name,
                     ty,
+                    attrs: self.attr_validator.attr_from_ast(attrs, &Attrs::default(), &mut self.errors)
                 }),
                 _ => fields = Err(()),
             }
@@ -385,7 +386,7 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
 
-            for (name, ty, docs) in ast_out_struct.fields.iter() {
+            for (name, ty, docs, attrs) in ast_out_struct.fields.iter() {
                 let name = self.lower_ident(name, "out-struct field name");
                 let ty = self.lower_out_type(
                     ty,
@@ -400,6 +401,7 @@ impl<'ast> LoweringContext<'ast> {
                         docs: docs.clone(),
                         name,
                         ty,
+                        attrs: self.attr_validator.attr_from_ast(attrs, &Attrs::default(), &mut self.errors)
                     }),
                     _ => fields = Err(()),
                 }
