@@ -314,14 +314,6 @@ export class DiplomatSliceStr extends DiplomatSlice {
     toString() {
         return this.getValue();
     }
-
-    [Symbol.toPrimitive]() {
-        return this.getValue();
-    }
-
-    valueOf() {
-        return this.getValue();
-    }
 }
 
 export class DiplomatSliceStrings extends DiplomatSlice {
