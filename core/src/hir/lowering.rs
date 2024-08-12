@@ -719,14 +719,14 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Function(input_types, out_type) => {
                 let mut params: Vec<CallbackParam> = Vec::new();
                 for in_ty in input_types.iter() {
-                    let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false).unwrap();
+                    let hir_in_ty = self
+                        .lower_out_type(in_ty, ltl, in_path, false, false)
+                        .unwrap();
                     if hir_in_ty.lifetimes().next().is_some() {
                         self.errors.push(LoweringError::Other("Callback parameters can't be borrowed, and therefore can't have lifetimes".into()));
                         return Err(());
                     }
-                    params.push(CallbackParam {
-                        ty: hir_in_ty,
-                    })
+                    params.push(CallbackParam { ty: hir_in_ty })
                 }
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,

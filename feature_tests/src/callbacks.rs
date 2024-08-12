@@ -35,10 +35,7 @@ mod ffi {
         }
         #[cfg(supports = "callbacks")]
         pub fn test_cb_with_struct(f: impl Fn(TestingStruct) -> i32) -> i32 {
-            let arg = TestingStruct {
-                x: 1,
-                y: 5,
-            };
+            let arg = TestingStruct { x: 1, y: 5 };
             f(arg)
         }
         #[cfg(supports = "callbacks")]
@@ -46,5 +43,4 @@ mod ffi {
             f() + g(5)
         }
     }
-
 }

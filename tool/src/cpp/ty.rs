@@ -5,8 +5,8 @@ use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
-    SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
+    Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 
@@ -324,16 +324,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             param_decls.push(decls);
             if matches!(
                 param.ty,
-                Type::Slice(hir::Slice::Str(
-                    _,
-                    hir::StringEncoding::Utf8
-                ))
+                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) || matches!(
                 param.ty,
-                Type::Slice(hir::Slice::Str(
-                    _,
-                    hir::StringEncoding::Utf8
-                ))
+                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) {
                 param_validations.push(format!(
                     "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
