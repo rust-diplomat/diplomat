@@ -57,7 +57,7 @@ fn param_conversion(
             let mut cb_params_and_types_list = vec![];
             let mut cb_arg_type_list = vec![];
             let mut all_params_conversion = vec![];
-            for (index, in_ty) in in_types.into_iter().enumerate() {
+            for (index, in_ty) in in_types.iter().enumerate() {
                 let param_ident_str = format!("arg{}", index);
                 let orig_type = in_ty.to_syn();
                 let param_converted_type = param_ty(in_ty);
