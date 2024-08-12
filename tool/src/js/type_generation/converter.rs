@@ -537,19 +537,25 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
             Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
-            Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
-                match encoding {
-                    hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
-                        format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
+            Type::Slice(slice) => if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
+                panic!("'static lifetimes are not supported in JS backend.")
+            } else {
+                match slice {
+                    hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding) => {
+                        match encoding {
+                            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                                format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
+                            }
+                            _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
+                        }
                     }
-                    _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
-                }
-            }
-            Type::Slice(hir::Slice::Primitive(_, p)) => format!(
-                r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
-                self.formatter.fmt_primitive_list_view(p)
-            )
-            .into(),
+                    hir::Slice::Primitive(_, p) => format!(
+                        r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
+                        self.formatter.fmt_primitive_list_view(p)
+                    ),
+                    _ => unreachable!("Unknown Slice variant {ty:?}")
+                }.into()
+            },
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
         }
     }
