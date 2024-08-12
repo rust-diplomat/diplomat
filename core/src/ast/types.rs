@@ -23,6 +23,8 @@ pub enum CustomType {
     Opaque(OpaqueStruct),
     /// A fieldless enum.
     Enum(Enum),
+    /// A trait
+    Trait(Trait),
 }
 
 impl CustomType {
@@ -32,6 +34,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.name,
             CustomType::Opaque(strct) => &strct.name,
             CustomType::Enum(enm) => &enm.name,
+            CustomType::Trait(trt) => &trt.name,
         }
     }
 
@@ -41,6 +44,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
             CustomType::Enum(enm) => &enm.methods,
+            CustomType::Trait(trt) => &[],
         }
     }
 
@@ -49,6 +53,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.attrs,
             CustomType::Opaque(strct) => &strct.attrs,
             CustomType::Enum(enm) => &enm.attrs,
+            CustomType::Trait(trt) => &trt.attrs,
         }
     }
 
@@ -58,6 +63,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.docs,
             CustomType::Opaque(strct) => &strct.docs,
             CustomType::Enum(enm) => &enm.docs,
+            CustomType::Trait(trt) => &trt.attrs,
         }
     }
 
