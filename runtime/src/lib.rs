@@ -24,7 +24,8 @@ mod result;
 pub use result::DiplomatResult;
 
 /// A type to represent Option<T> over FFI. Prefer using Option<T> with boxes and reference
-/// types, and in return types, use this in structs/fn args.
+/// types, and in return types, use this in structs/fn args. The macro will perform autoconversions
+/// between these types when found in args (but not in structs)
 pub type DiplomatOption<T> = DiplomatResult<T, ()>;
 
 /// Like [`char`], but unvalidated.
