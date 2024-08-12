@@ -1,6 +1,7 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                #[diplomat :: opaque] #[cfg(feature = \"foo\")] struct Foo {}\n                                #[cfg(feature = \"foo\")] impl Foo\n                                { pub fn bar(s : u8) { unimplemented! () } }\n                            }\n                        }).to_token_stream().to_string())"
+assertion_line: 841
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                #[diplomat::opaque] #[cfg(feature = \"foo\")] struct Foo {}\n                                #[cfg(feature = \"foo\")] impl Foo\n                                { pub fn bar(s: u8) { unimplemented!() } }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[cfg(feature = "foo")]
@@ -11,6 +12,7 @@ mod ffi {
             unimplemented!()
         }
     }
+    use core::ffi::c_void;
     use diplomat_runtime::*;
     #[no_mangle]
     #[cfg(feature = "foo")]
@@ -21,4 +23,3 @@ mod ffi {
     #[cfg(feature = "foo")]
     extern "C" fn Foo_destroy(this: Box<Foo>) {}
 }
-

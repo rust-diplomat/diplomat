@@ -39,39 +39,56 @@ pub struct Method {
 }
 
 pub trait CallbackInstantiationFunctionality {
-    fn get_input_types(&self) -> Vec<&Type<OutputOnly>>; // the types of the parameters
-    fn get_output_type(&self) -> &Box<Option<Type>>;
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr>; // the types of the parameters
+    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr>;
 }
 
 #[derive(Debug)]
 #[non_exhaustive]
 // Note: we do not support borrowing across callbacks
 pub struct Callback {
-    // pub lifetime_env: LifetimeEnv,
     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
     pub params: Vec<CallbackParam>,
     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+}
+
+#[derive(Debug, Clone)]
+pub enum TyPositionErr {
+    OnlyAllowedForInputTypes,
+    OnlyAllowedForOutputTypes,
 }
 
 // uninstantiatable; represents no callback allowed
 #[derive(Debug, Clone)]
 pub enum NoCallback {}
 
-impl CallbackInstantiationFunctionality for Callback {
-    fn get_input_types(&self) -> Vec<&Type<OutputOnly>> {
-        self.params.iter().map(|p| &p.ty).collect()
+impl NoCallback {
+    // error with iterator specified, so that it can be
+    // returned for the input type iterator
+    fn internal_get_input_types_iter(
+        &self,
+    ) -> Result<std::array::IntoIter<&Type<OutputOnly>, 0>, TyPositionErr> {
+        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, TyPositionErr>(
+            TyPositionErr::OnlyAllowedForInputTypes,
+        )
     }
-    fn get_output_type(&self) -> &Box<Option<Type>> {
-        &self.output
+}
+
+impl CallbackInstantiationFunctionality for Callback {
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr> {
+        Ok(self.params.iter().map(|p| &p.ty))
+    }
+    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr> {
+        Ok(&self.output)
     }
 }
 
 impl CallbackInstantiationFunctionality for NoCallback {
-    fn get_input_types(&self) -> Vec<&Type<OutputOnly>> {
-        panic!("Shouldn't be trying to get the input types when no callback is allowed");
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr> {
+        self.internal_get_input_types_iter()
     }
-    fn get_output_type(&self) -> &Box<Option<Type>> {
-        panic!("Shouldn't be trying to get the output type when no callback is allowed");
+    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr> {
+        Err(TyPositionErr::OnlyAllowedForInputTypes)
     }
 }
 

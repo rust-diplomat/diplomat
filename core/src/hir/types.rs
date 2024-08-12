@@ -32,7 +32,6 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
-    // TODO add Callbacks later
 }
 
 #[derive(Copy, Clone, Debug)]

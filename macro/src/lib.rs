@@ -856,4 +856,49 @@ mod tests {
             .to_string()
         ));
     }
+
+    #[test]
+    fn callback_arguments() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    pub struct Wrapper {
+                        cant_be_empty: bool,
+                    }
+                    pub struct TestingStruct {
+                        x: i32,
+                        y: i32,
+                    }
+                    impl Wrapper {
+                        pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
+                            f(10 + x)
+                        }
+                        pub fn test_multiarg_void_callback(f: impl Fn(i32, &str)) {
+                            f(-10, "hello it's a string\0");
+                        }
+                        pub fn test_mod_array(g: impl Fn(&[u8])) {
+                            let bytes: Vec<u8> = vec![0x11, 0x22];
+                            g(bytes.as_slice().into());
+                        }
+                        pub fn test_no_args(h: impl Fn()) -> i32 {
+                            h();
+                            -5
+                        }
+                        pub fn test_cb_with_struct(f: impl Fn(TestingStruct) -> i32) -> i32 {
+                            let arg = TestingStruct {
+                                x: 1,
+                                y: 5,
+                            };
+                            f(arg)
+                        }
+                        pub fn test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32) -> i32 {
+                            f() + g(5)
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
 }
