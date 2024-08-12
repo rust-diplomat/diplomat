@@ -572,9 +572,9 @@ impl TypeName {
             }
             TypeName::PrimitiveSlice(ltmt, primitive, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                    primitive.get_diplomat_slice_type(ltmt)
-                } else {
                     primitive.get_stdlib_slice_type(ltmt)
+                } else {
+                    primitive.get_diplomat_slice_type(ltmt)
                 }
             }
 

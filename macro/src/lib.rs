@@ -36,26 +36,6 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
     }
 }
 
-fn orig_syn(ty: &ast::TypeName) -> syn::Type {
-    match ty {
-        ast::TypeName::StrReference(lt, encoding, ..) => encoding.get_stdlib_slice_type(lt),
-        ast::TypeName::StrSlice(encoding, ..) => {
-            let inner = encoding.get_stdlib_slice_type(&Some(ast::Lifetime::Anonymous));
-            syn::parse_quote_spanned!(Span::call_site() => &[#inner])
-        }
-        ast::TypeName::PrimitiveSlice(ltmt, primitive, ..) => primitive.get_stdlib_slice_type(ltmt),
-        ast::TypeName::Function(input_types, output_type) => {
-            let input_types: Vec<syn::Type> = input_types
-                .into_iter()
-                .map(|in_ty| orig_syn(in_ty))
-                .collect();
-            let output_type = orig_syn(output_type);
-            syn::parse_quote_spanned!(Span::call_site() => impl Fn(#(#input_types,)*) -> #output_type>)
-        }
-        _ => ty.to_syn(),
-    }
-}
-
 fn param_conversion(
     name: &ast::Ident,
     param_type: &ast::TypeName,
@@ -79,7 +59,7 @@ fn param_conversion(
             let mut all_params_conversion = vec![];
             for (index, in_ty) in in_types.into_iter().enumerate() {
                 let param_ident_str = format!("arg{}", index);
-                let orig_type = orig_syn(in_ty);
+                let orig_type = in_ty.to_syn();
                 let param_converted_type = param_ty(in_ty);
                 if let Some(conversion) = param_conversion(
                     &ast::Ident::from(param_ident_str.clone()),
@@ -381,9 +361,6 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
         custom_type.methods().iter().for_each(|m| {
             let gen_m = gen_custom_type_method(custom_type, m);
             new_contents.push(gen_m);
-            // gen_cb_creates.iter().for_each(|cb_create| {
-            //     new_contents.push(cb_create.clone());
-            // });
         });
 
         if let ast::CustomType::Opaque(opaque) = custom_type {

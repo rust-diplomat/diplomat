@@ -39,8 +39,8 @@ pub struct Method {
 }
 
 pub trait CallbackInstantiationFunctionality {
-    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr>; // the types of the parameters
-    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr>;
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()>; // the types of the parameters
+    fn get_output_type(&self) -> Result<&Option<Type>, ()>;
 }
 
 #[derive(Debug)]
@@ -52,12 +52,6 @@ pub struct Callback {
     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
 }
 
-#[derive(Debug, Clone)]
-pub enum TyPositionErr {
-    OnlyAllowedForInputTypes,
-    OnlyAllowedForOutputTypes,
-}
-
 // uninstantiatable; represents no callback allowed
 #[derive(Debug, Clone)]
 pub enum NoCallback {}
@@ -67,28 +61,26 @@ impl NoCallback {
     // returned for the input type iterator
     fn internal_get_input_types_iter(
         &self,
-    ) -> Result<std::array::IntoIter<&Type<OutputOnly>, 0>, TyPositionErr> {
-        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, TyPositionErr>(
-            TyPositionErr::OnlyAllowedForInputTypes,
-        )
+    ) -> Result<std::array::IntoIter<&Type<OutputOnly>, 0>, ()> {
+        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, ()>(())
     }
 }
 
 impl CallbackInstantiationFunctionality for Callback {
-    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr> {
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
         Ok(self.params.iter().map(|p| &p.ty))
     }
-    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr> {
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
         Ok(&self.output)
     }
 }
 
 impl CallbackInstantiationFunctionality for NoCallback {
-    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, TyPositionErr> {
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
         self.internal_get_input_types_iter()
     }
-    fn get_output_type(&self) -> Result<&Option<Type>, TyPositionErr> {
-        Err(TyPositionErr::OnlyAllowedForInputTypes)
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+        Err(())
     }
 }
 

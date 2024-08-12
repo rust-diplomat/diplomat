@@ -1,6 +1,6 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 544
+assertion_line: 524
 expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                use\n                                diplomat_runtime::{\n                                    DiplomatStr, DiplomatStr16, DiplomatByte,\n                                    DiplomatOwnedSlice, DiplomatOwnedStr16Slice,\n                                    DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,\n                                    DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice,\n                                    DiplomatStrSlice, DiplomatUtf8StrSlice\n                                }; struct Foo<'a>\n                                {\n                                    a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c:\n                                    DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e:\n                                    DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>,\n                                } impl Foo\n                                {\n                                    pub fn\n                                    make(a: &'a [u8], b: &'a [u16], c: &'a str, d: &'a\n                                    DiplomatStr, e: &'a DiplomatStr16, f: &'a [DiplomatByte]) ->\n                                    Self { Foo { a, b, c, d, e, f, } } pub fn\n                                    make_runtime_types(a: DiplomatSlice<'a, u8>, b:\n                                    DiplomatSlice<'a, u16>, c: DiplomatUtf8StrSlice<'a>, d:\n                                    DiplomatStrSlice<'a>, e: DiplomatStr16Slice<'a>, f:\n                                    DiplomatSlice<'a, DiplomatByte>) -> Self\n                                    {\n                                        Foo\n                                        {\n                                            a: a.into(), b: b.into(), c: c.into(), d: d.into(), e:\n                                            e.into(), f: f.into(),\n                                        }\n                                    } pub fn\n                                    boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d:\n                                    Box<DiplomatStr>, e: Box<DiplomatStr16>, f:\n                                    Box<[DiplomatByte]>) -> Self { unimplemented!() } pub fn\n                                    boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b:\n                                    DiplomatOwnedSlice<u16>, c: DiplomatOwnedUTF8StrSlice, d:\n                                    DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f:\n                                    DiplomatOwnedSlice<DiplomatByte>) -> Self\n                                    { unimplemented!() } pub fn a(self) -> &[u8] { self.a } pub\n                                    fn b(self) -> &[u16] { self.b } pub fn c(self) -> &str\n                                    { self.c } pub fn d(self) -> &DiplomatStr { self.d } pub fn\n                                    e(self) -> &DiplomatStr16 { self.e } pub fn f(self) ->\n                                    &[DiplomatByte] { self.f }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
@@ -145,11 +145,11 @@ mod ffi {
         Foo::boxes_runtime_types(a, b, c, d, e, f)
     }
     #[no_mangle]
-    extern "C" fn Foo_a(this: Foo) -> diplomat_runtime::DiplomatSlice<u8> {
+    extern "C" fn Foo_a(this: Foo) -> &[u8] {
         this.a().into()
     }
     #[no_mangle]
-    extern "C" fn Foo_b(this: Foo) -> diplomat_runtime::DiplomatSlice<u16> {
+    extern "C" fn Foo_b(this: Foo) -> &[u16] {
         this.b().into()
     }
     #[no_mangle]
@@ -165,7 +165,7 @@ mod ffi {
         this.e().into()
     }
     #[no_mangle]
-    extern "C" fn Foo_f(this: Foo) -> diplomat_runtime::DiplomatSlice<DiplomatByte> {
+    extern "C" fn Foo_f(this: Foo) -> &[DiplomatByte] {
         this.f().into()
     }
 }
