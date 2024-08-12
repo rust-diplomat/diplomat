@@ -17,7 +17,6 @@
 
 
 
-
 typedef struct ResultOpaque_new_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
 ResultOpaque_new_result ResultOpaque_new(int32_t i);
 

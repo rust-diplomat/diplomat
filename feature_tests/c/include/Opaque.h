@@ -17,7 +17,6 @@
 
 
 
-
 Opaque* Opaque_new(void);
 
 Opaque* Opaque_try_from_utf8(DiplomatStringView input);

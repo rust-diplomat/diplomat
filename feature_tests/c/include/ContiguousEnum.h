@@ -20,5 +20,4 @@
 
 
 
-
 #endif // ContiguousEnum_H

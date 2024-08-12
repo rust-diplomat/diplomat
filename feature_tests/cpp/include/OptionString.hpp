@@ -16,7 +16,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::OptionString* OptionString_new(diplomat::capi::DiplomatStringView diplomat_str);
     
     typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;

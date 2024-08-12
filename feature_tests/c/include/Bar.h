@@ -16,7 +16,6 @@
 
 
 
-
 const Foo* Bar_foo(const Bar* self);
 
 

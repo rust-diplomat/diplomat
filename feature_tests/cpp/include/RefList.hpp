@@ -17,7 +17,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::RefList* RefList_node(const diplomat::capi::RefListParameter* data);
     
     

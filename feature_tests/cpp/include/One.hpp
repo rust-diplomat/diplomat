@@ -17,7 +17,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::One* One_transitivity(const diplomat::capi::One* hold, const diplomat::capi::One* nohold);
     
     diplomat::capi::One* One_cycle(const diplomat::capi::Two* hold, const diplomat::capi::One* nohold);

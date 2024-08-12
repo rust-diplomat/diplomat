@@ -15,7 +15,6 @@
 
 
 
-
 MyStruct MyStruct_new(void);
 
 uint8_t MyStruct_into_a(MyStruct self);

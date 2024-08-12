@@ -15,7 +15,6 @@
 
 
 
-
 typedef struct DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f {
     const void* data;
     int32_t (*run_callback)(const void*, int32_t );

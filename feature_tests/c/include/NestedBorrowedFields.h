@@ -17,7 +17,6 @@
 
 
 
-
 NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar* bar, const Foo* foo, DiplomatString16View dstr16_x, DiplomatString16View dstr16_z, DiplomatStringView utf8_str_y, DiplomatStringView utf8_str_z);
 
 

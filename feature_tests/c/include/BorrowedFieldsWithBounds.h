@@ -16,7 +16,6 @@
 
 
 
-
 BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo* foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z);
 
 

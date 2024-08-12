@@ -15,7 +15,6 @@
 
 
 
-
 MyString* MyString_new(DiplomatStringView v);
 
 MyString* MyString_new_unsafe(DiplomatStringView v);

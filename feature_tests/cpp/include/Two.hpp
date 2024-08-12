@@ -17,7 +17,6 @@ namespace capi {
     extern "C" {
     
     
-    
     void Two_destroy(Two* self);
     
     } // extern "C"

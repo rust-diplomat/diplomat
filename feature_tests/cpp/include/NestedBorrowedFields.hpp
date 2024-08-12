@@ -20,7 +20,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const diplomat::capi::Bar* bar, const diplomat::capi::Foo* foo, diplomat::capi::DiplomatString16View dstr16_x, diplomat::capi::DiplomatString16View dstr16_z, diplomat::capi::DiplomatStringView utf8_str_y, diplomat::capi::DiplomatStringView utf8_str_z);
     
     

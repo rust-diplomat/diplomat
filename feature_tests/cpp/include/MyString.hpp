@@ -16,7 +16,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::MyString* MyString_new(diplomat::capi::DiplomatStringView v);
     
     diplomat::capi::MyString* MyString_new_unsafe(diplomat::capi::DiplomatStringView v);

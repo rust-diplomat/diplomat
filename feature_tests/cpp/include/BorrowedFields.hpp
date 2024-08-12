@@ -17,7 +17,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::BorrowedFields BorrowedFields_from_bar_and_strings(const diplomat::capi::Bar* bar, diplomat::capi::DiplomatString16View dstr16, diplomat::capi::DiplomatStringView utf8_str);
     
     

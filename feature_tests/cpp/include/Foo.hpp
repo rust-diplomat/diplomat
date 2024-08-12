@@ -20,7 +20,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    
     diplomat::capi::Foo* Foo_new(diplomat::capi::DiplomatStringView x);
     
     diplomat::capi::Bar* Foo_get_bar(const diplomat::capi::Foo* self);

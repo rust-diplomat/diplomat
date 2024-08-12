@@ -17,7 +17,6 @@ namespace capi {
     extern "C" {
     
     
-    
     void RefListParameter_destroy(RefListParameter* self);
     
     } // extern "C"
