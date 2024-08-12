@@ -1,5 +1,5 @@
-use std::borrow::Cow;
 use std::collections::BTreeSet;
+use std::{borrow::Cow, cell::RefCell};
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, TypeDef};
@@ -10,7 +10,7 @@ pub(crate) mod formatter;
 use formatter::JSFormatter;
 
 mod type_generation;
-use type_generation::TyGenContext;
+use type_generation::{MethodsInfo, TyGenContext};
 
 mod layout;
 
@@ -89,34 +89,70 @@ pub(crate) fn run<'tcx>(
 
         let name = formatter.fmt_type_name(id);
 
-        for file_type in [FileType::Module, FileType::Typescript] {
-            let mut context = TyGenContext {
-                tcx,
-                formatter: &formatter,
-                errors: &errors,
-                typescript: file_type.is_typescript(),
-                imports: BTreeSet::new(),
-            };
+        let context = TyGenContext {
+            tcx,
+            formatter: &formatter,
+            errors: &errors,
+            imports: RefCell::new(BTreeSet::new()),
+        };
 
-            // TODO: A lot of this could go faster if we cached info for typescript, instead of re-generating it.
+        let (m, special_method_presence, fields, fields_out) = match type_def {
+            TypeDef::Enum(e) => (&e.methods, &e.special_method_presence, None, None),
+            TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence, None, None),
+            TypeDef::Struct(s) => (
+                &s.methods,
+                &s.special_method_presence,
+                Some(context.generate_fields(s)),
+                None,
+            ),
+            TypeDef::OutStruct(s) => (
+                &s.methods,
+                &s.special_method_presence,
+                None,
+                Some(context.generate_fields(s)),
+            ),
+            _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
+        };
+
+        let mut methods_info = MethodsInfo {
+            methods: m
+                .iter()
+                .flat_map(|method| context.generate_method(id, method))
+                .collect::<Vec<_>>(),
+            special_methods: context.generate_special_method(special_method_presence),
+        };
+
+        for file_type in [FileType::Module, FileType::Typescript] {
+            let ts = file_type.is_typescript();
+
+            for m in &mut methods_info.methods {
+                m.typescript = ts;
+            }
+            methods_info.special_methods.typescript = ts;
+
             let contents = match type_def {
-                TypeDef::Enum(e) => context.gen_enum(e, id, &name),
-                TypeDef::Opaque(o) => context.gen_opaque(o, id, &name),
-                TypeDef::Struct(s) => context.gen_struct(s, id, false, &name, true),
-                TypeDef::OutStruct(s) => context.gen_struct(s, id, true, &name, false),
+                TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods_info),
+                TypeDef::Opaque(o) => context.gen_opaque(ts, &name, o, &methods_info),
+                TypeDef::Struct(s) => {
+                    context.gen_struct(ts, &name, s, &fields.clone().unwrap(), &methods_info, false)
+                }
+                TypeDef::OutStruct(s) => context.gen_struct(
+                    ts,
+                    &name,
+                    s,
+                    &fields_out.clone().unwrap(),
+                    &methods_info,
+                    true,
+                ),
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
 
             let file_name = formatter.fmt_file_name(&name, &file_type);
 
             // Remove our self reference:
-            context.imports.remove(&formatter.fmt_import_statement(
-                &name,
-                context.typescript,
-                "./".into(),
-            ));
+            context.remove_import(name.clone().into());
 
-            files.add_file(file_name, context.generate_base(contents));
+            files.add_file(file_name, context.generate_base(ts, contents));
         }
 
         exports.push(

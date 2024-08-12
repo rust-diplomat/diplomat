@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, LifetimeEnv, OpaqueOwner, PrimitiveType, ReturnType,
-    ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    self, borrowing_param::StructBorrowInfo, LifetimeEnv, Method, OpaqueOwner, PrimitiveType,
+    ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -34,7 +34,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region C to JS
     /// Given a type from Rust, convert it into something Typescript will understand.
     /// We use this to double-check our Javascript work as well.
-    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&mut self, ty: &Type<P>) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(primitive) => self.formatter.fmt_primitive_as_ffi(primitive).into(),
             Type::Opaque(ref op) => {
@@ -42,11 +42,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(opaque_id).attrs().disable {
                     self.errors
@@ -64,11 +60,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -81,11 +73,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.imports.insert(self.formatter.fmt_import_statement(
-                    &type_name,
-                    self.typescript,
-                    "./".into(),
-                ));
+                self.add_import(type_name.clone().into());
 
                 if self.tcx.resolve_type(enum_id).attrs().disable {
                     self.errors
@@ -97,12 +85,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
-            Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
+            Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
 
-    pub(super) fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'tcx, str> {
+    pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
             SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
@@ -273,7 +261,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region Return Types
 
     /// Give us a Typescript return type from [`ReturnType`]
-    pub(super) fn gen_js_return_type_str(&mut self, return_type: &ReturnType) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_return_type_str(&self, return_type: &ReturnType) -> Cow<'tcx, str> {
         match *return_type {
             // -> () or a -> Result<(), Error>.
             ReturnType::Infallible(SuccessType::Unit)
@@ -317,17 +305,17 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     /// This basically handles the conversions from whatever the WASM gives us to a JS-friendly type.
     /// We access [`super::MethodInfo`] to handle allocation and cleanup.
     pub(super) fn gen_c_to_js_for_return_type(
-        &mut self,
+        &self,
         method_info: &mut super::MethodInfo,
-        lifetime_environment: &LifetimeEnv,
+        method: &Method,
     ) -> Option<Cow<'tcx, str>> {
-        let return_type = &method_info.method.unwrap().output;
+        let return_type = &method.output;
 
         // Conditions for allocating a diplomat buffer:
         // 1. Function returns an Option<> or Result<>.
         // 2. Infallible function returns a slice.
         // 3. Infallible function returns a struct.
-        match *return_type {
+        match return_type {
             // -> ()
             ReturnType::Infallible(SuccessType::Unit) => None,
 
@@ -367,7 +355,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 Some(
                     format!(
                         "return {};",
-                        self.gen_c_to_js_for_type(o, result.into(), lifetime_environment)
+                        self.gen_c_to_js_for_type(o, result.into(), &method.lifetime_env)
                     )
                     .into(),
                 )
@@ -438,15 +426,8 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     "if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
                     match return_type {
                         ReturnType::Fallible(_, Some(e)) => {
-                            // Because we don't add Result<_, Error> types to imports, we do that here:
-                            if !self.typescript {
-                                let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                                self.imports.insert(self.formatter.fmt_import_statement(
-                                    &type_name,
-                                    false,
-                                    "./".into(),
-                                ));
-                            }
+                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                            self.add_import(type_name.into());
 
                             let receive_deref = self.gen_c_to_js_deref_for_type(
                                 e,
@@ -455,7 +436,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             );
                             let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                             let cause =
-                                self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
+                                self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
                             format!(
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
                             message = match e {
@@ -506,7 +487,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             );
                             format!(
                                 "{err_check}return {};",
-                                self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment)
+                                self.gen_c_to_js_for_type(o, ptr_deref, &method.lifetime_env)
                             )
                         }
                         _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
@@ -546,14 +527,20 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
             Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
-            Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
-                match encoding {
-                    hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
-                        format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
-                    }
-                    _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
+            Type::Slice(hir::Slice::Str(_, encoding)) => match encoding {
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                    format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
                 }
-            }
+                _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
+            },
+            Type::Slice(hir::Slice::Strs(encoding)) => format!(
+                r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
+                match encoding {
+                    hir::StringEncoding::UnvalidatedUtf16 => "string16",
+                    _ => "string8",
+                }
+            )
+            .into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => format!(
                 r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
                 self.formatter.fmt_primitive_list_view(p)

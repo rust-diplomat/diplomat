@@ -260,7 +260,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 );
             }
             Type::Slice(hir::Slice::Strs(..)) => {
-                self.append_out_param(param_name, "Array<String>".to_string(), node, attrs);
+                self.append_out_param(param_name, "Array<string>".to_string(), node, attrs);
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
