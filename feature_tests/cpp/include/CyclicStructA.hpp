@@ -20,7 +20,6 @@ namespace capi {
     
     diplomat::capi::CyclicStructB CyclicStructA_get_b(void);
     
-    
     } // extern "C"
 } // namespace capi
 } // namespace

@@ -20,7 +20,6 @@ namespace capi {
     
     diplomat::capi::RefList* RefList_node(const diplomat::capi::RefListParameter* data);
     
-    
     void RefList_destroy(RefList* self);
     
     } // extern "C"

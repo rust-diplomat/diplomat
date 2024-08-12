@@ -19,32 +19,21 @@ namespace capi {
     
     
     diplomat::capi::OptionOpaque* OptionOpaque_new(int32_t i);
-    
     diplomat::capi::OptionOpaque* OptionOpaque_new_none(void);
-    
     typedef struct OptionOpaque_returns_result {union {diplomat::capi::OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
     OptionOpaque_returns_result OptionOpaque_returns(void);
-    
     typedef struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;} OptionOpaque_option_isize_result;
     OptionOpaque_option_isize_result OptionOpaque_option_isize(const diplomat::capi::OptionOpaque* self);
-    
     typedef struct OptionOpaque_option_usize_result {union {size_t ok; }; bool is_ok;} OptionOpaque_option_usize_result;
     OptionOpaque_option_usize_result OptionOpaque_option_usize(const diplomat::capi::OptionOpaque* self);
-    
     typedef struct OptionOpaque_option_i32_result {union {int32_t ok; }; bool is_ok;} OptionOpaque_option_i32_result;
     OptionOpaque_option_i32_result OptionOpaque_option_i32(const diplomat::capi::OptionOpaque* self);
-    
     typedef struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;} OptionOpaque_option_u32_result;
     OptionOpaque_option_u32_result OptionOpaque_option_u32(const diplomat::capi::OptionOpaque* self);
-    
     diplomat::capi::OptionStruct OptionOpaque_new_struct(void);
-    
     diplomat::capi::OptionStruct OptionOpaque_new_struct_nones(void);
-    
     void OptionOpaque_assert_integer(const diplomat::capi::OptionOpaque* self, int32_t i);
-    
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
-    
     
     void OptionOpaque_destroy(OptionOpaque* self);
     

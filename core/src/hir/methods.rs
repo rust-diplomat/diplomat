@@ -56,16 +56,6 @@ pub struct Callback {
 #[derive(Debug, Clone)]
 pub enum NoCallback {}
 
-impl NoCallback {
-    // error with iterator specified, so that it can be
-    // returned for the input type iterator
-    fn internal_get_input_types_iter(
-        &self,
-    ) -> Result<std::array::IntoIter<&Type<OutputOnly>, 0>, ()> {
-        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, ()>(())
-    }
-}
-
 impl CallbackInstantiationFunctionality for Callback {
     fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
         Ok(self.params.iter().map(|p| &p.ty))
@@ -77,7 +67,7 @@ impl CallbackInstantiationFunctionality for Callback {
 
 impl CallbackInstantiationFunctionality for NoCallback {
     fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
-        self.internal_get_input_types_iter()
+        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, ()>(())
     }
     fn get_output_type(&self) -> Result<&Option<Type>, ()> {
         Err(())

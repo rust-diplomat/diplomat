@@ -717,6 +717,11 @@ impl<'ast> LoweringContext<'ast> {
                 PrimitiveType::from_ast(*prim),
             ))),
             ast::TypeName::Function(input_types, out_type) => {
+                if !self.attr_validator.attrs_supported().callbacks {
+                    self.errors.push(LoweringError::Other(
+                        "Callback arguments are not supported by this backend".into(),
+                    ));
+                }
                 let mut params: Vec<CallbackParam> = Vec::new();
                 for in_ty in input_types.iter() {
                     let hir_in_ty = self
