@@ -22,6 +22,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     Enum(EnumPath),
     Slice(Slice),
+    Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
 }
 
 /// Type that can appear in the `self` position.
@@ -89,7 +90,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(_) | Type::Slice(_) => (1, 1),
+            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }

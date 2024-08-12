@@ -4,7 +4,8 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, OpaqueOwner, ReturnableStructDef, StructPathLike, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, OpaqueOwner, OutputOnly, ReturnableStructDef,
+    StructPathLike, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -37,6 +38,7 @@ struct OpaqueTemplate<'a> {
 #[template(path = "c/impl.h.jinja", escape = "none")]
 struct ImplTemplate<'a> {
     methods: Vec<MethodTemplate<'a>>,
+    cb_structs_and_defs: Vec<CallbackAndStructDef>,
     is_for_cpp: bool,
     ty_name: Cow<'a, str>,
     dtor_name: Option<&'a str>,
@@ -46,6 +48,13 @@ struct MethodTemplate<'a> {
     return_ty: Cow<'a, str>,
     params: String,
     abi_name: &'a str,
+}
+
+#[derive(Clone)]
+struct CallbackAndStructDef {
+    name: String,
+    params_types: String,
+    return_type: String,
 }
 
 /// The context used for generating a particular type
@@ -94,8 +103,15 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id);
         let mut fields = vec![];
+        let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
-            fields.push(self.gen_ty_decl(&field.ty, field.name.as_str(), &mut decl_header));
+            fields.push(self.gen_ty_decl(
+                &field.ty,
+                field.name.as_str(),
+                &mut decl_header,
+                None,
+                &mut cb_structs_and_defs, // for now this gets ignored, there are no callbacks in struct fields
+            ));
         }
 
         StructTemplate {
@@ -112,6 +128,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     pub(crate) fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.clone(), self.is_for_cpp);
         let mut methods = vec![];
+        let mut cb_structs_and_defs = vec![];
         for method in ty.methods() {
             if method.attrs.disable {
                 // Skip method if disabled
@@ -121,7 +138,9 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 self.tcx.fmt_type_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
-            methods.push(self.gen_method(method, &mut impl_header));
+            let (method_chunk, callback_defs) = self.gen_method(method, &mut impl_header);
+            methods.push(method_chunk);
+            cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
         let ty_name = self.formatter.fmt_type_name(self.id);
@@ -134,6 +153,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         ImplTemplate {
             ty_name,
             methods,
+            cb_structs_and_defs,
             dtor_name,
             is_for_cpp: self.is_for_cpp,
         }
@@ -152,20 +172,37 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         impl_header
     }
 
-    fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header) -> MethodTemplate<'tcx> {
+    fn gen_method(
+        &self,
+        method: &'tcx hir::Method,
+        header: &mut Header,
+    ) -> (MethodTemplate<'tcx>, Vec<CallbackAndStructDef>) {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let abi_name = method.abi_name.as_str();
         // Right now these are the same, but we may eventually support renaming
         // and should be sure to use method_name when naming the result type
         let method_name = abi_name;
         let mut param_decls = Vec::new();
+        let mut cb_structs_and_defs = vec![];
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
-            param_decls.push(self.gen_ty_decl(&self_ty, "self", header))
+            param_decls.push(self.gen_ty_decl(
+                &self_ty,
+                "self",
+                header,
+                Some(abi_name.into()),
+                &mut cb_structs_and_defs,
+            ))
         }
 
         for param in &method.params {
-            param_decls.push(self.gen_ty_decl(&param.ty, param.name.as_str(), header));
+            param_decls.push(self.gen_ty_decl(
+                &param.ty,
+                param.name.as_str(),
+                header,
+                Some(abi_name.into()),
+                &mut cb_structs_and_defs,
+            ));
         }
 
         let return_ty: Cow<str> = match method.output {
@@ -218,11 +255,14 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             params.push_str("void");
         }
 
-        MethodTemplate {
-            abi_name,
-            return_ty,
-            params,
-        }
+        (
+            MethodTemplate {
+                abi_name,
+                return_ty,
+                params,
+            },
+            cb_structs_and_defs,
+        )
     }
 
     fn gen_result_ty(
@@ -284,13 +324,68 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         ty: &Type<P>,
         ident: &'a str,
         header: &mut Header,
+        method_abi_name: Option<String>,
+        cb_structs_and_defs: &mut Vec<CallbackAndStructDef>,
     ) -> (Cow<'tcx, str>, Cow<'a, str>) {
         let param_name = self.formatter.fmt_param_name(ident);
-        let ty = self.gen_ty_name(ty, header);
-        (ty, param_name)
+        match ty {
+            Type::Callback(some_cb) => {
+                let cb_wrapper_type = "DiplomatCallback_".to_owned()
+                    + method_abi_name.unwrap().as_str()
+                    + "_"
+                    + ident;
+                let input_types = some_cb.get_input_types().unwrap().collect();
+                let output_type = Box::new(some_cb.get_output_type().unwrap().clone());
+                // this call generates any imports needed for param + output type(s)
+                cb_structs_and_defs.push(self.gen_cb_param_wrapper_struct(
+                    &cb_wrapper_type,
+                    input_types,
+                    &output_type,
+                    header,
+                ));
+                (
+                    cb_wrapper_type.clone().into(),
+                    format!("{}_cb_wrap", param_name).into(),
+                )
+            }
+            _ => {
+                let ty = self.gen_ty_name(ty, header);
+                (ty, param_name)
+            }
+        }
     }
 
-    // Generate the C code for referencing a particular type.
+    fn gen_cb_param_wrapper_struct(
+        &self,
+        cb_wrapper_type: &str,
+        input_types: Vec<&Type<OutputOnly>>,
+        output_type: &Option<Type>,
+        header: &mut Header,
+    ) -> CallbackAndStructDef {
+        let return_type = if output_type.is_some() {
+            self.gen_ty_name(&(*output_type).clone().unwrap(), header)
+                .into()
+        } else {
+            "void".into()
+        };
+        let mut params_types = Vec::<String>::new();
+        for in_ty in input_types.iter() {
+            let cur_type = self.gen_ty_name(in_ty, header);
+            params_types.push(cur_type.to_string().clone());
+        }
+        let params_types = if params_types.is_empty() {
+            "".into()
+        } else {
+            params_types.join(", ")
+        };
+        CallbackAndStructDef {
+            name: cb_wrapper_type.into(),
+            params_types,
+            return_type,
+        }
+    }
+
+    // Generate the C code for referencing a particular type in the input position (i.e., not return types).
     // Handles adding imports and such as necessary
     fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'tcx, str> {
         let ty_name = match *ty {
@@ -341,7 +436,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
                 &_ => unreachable!("unknown AST/HIR variant"),
             },
-            _ => unreachable!("unknown AST/HIR variant"),
+            _ => unreachable!("{}", format!("unknown AST/HIR variant: {:?}", ty)),
         };
 
         ty_name

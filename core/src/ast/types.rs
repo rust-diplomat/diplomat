@@ -378,6 +378,7 @@ pub enum TypeName {
     ///
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
+    Function(Vec<Box<TypeName>>, Box<TypeName>),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -482,6 +483,8 @@ impl TypeName {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) | TypeName::Option(..) |
+            // can only be passed across the FFI boundary; callbacks are input-only
+            TypeName::Function(..) |
             // These are specified using FFI-safe diplomat_runtime types
              TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
@@ -569,13 +572,18 @@ impl TypeName {
             }
             TypeName::PrimitiveSlice(ltmt, primitive, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                    primitive.get_diplomat_slice_type(ltmt)
-                } else {
                     primitive.get_stdlib_slice_type(ltmt)
+                } else {
+                    primitive.get_diplomat_slice_type(ltmt)
                 }
             }
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
+            TypeName::Function(_input_types, output_type) => {
+                let output_type = output_type.to_syn();
+                // should be DiplomatCallback<function_output_type>
+                syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+            }
         }
     }
 
@@ -849,6 +857,51 @@ impl TypeName {
                     todo!("Tuples are not currently supported")
                 }
             }
+            syn::Type::ImplTrait(tr) => {
+                let trait_bound = tr.bounds.first();
+                if tr.bounds.len() > 1 {
+                    todo!("Currently don't support implementing multiple traits");
+                }
+                if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
+                    path:
+                        syn::Path {
+                            segments: rel_segs, ..
+                        },
+                    ..
+                })) = trait_bound
+                {
+                    let path_seg = &rel_segs[0];
+                    if path_seg.ident.eq("Fn") {
+                        // we're in a function type
+                        // get input and output args
+                        if let syn::PathArguments::Parenthesized(
+                            syn::ParenthesizedGenericArguments {
+                                inputs: input_types,
+                                output: output_type,
+                                ..
+                            },
+                        ) = &path_seg.arguments
+                        {
+                            let in_types = input_types
+                                .iter()
+                                .map(|in_ty| {
+                                    Box::new(TypeName::from_syn(in_ty, self_path_type.clone()))
+                                })
+                                .collect::<Vec<Box<TypeName>>>();
+                            let out_type = match output_type {
+                                syn::ReturnType::Type(_, output_type) => {
+                                    TypeName::from_syn(output_type, self_path_type.clone())
+                                }
+                                syn::ReturnType::Default => TypeName::Unit,
+                            };
+                            let ret = TypeName::Function(in_types, Box::new(out_type));
+                            return ret;
+                        }
+                        panic!("Unsupported function type: {:?}", &path_seg.arguments);
+                    }
+                }
+                panic!("Unsupported trait type");
+            }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
@@ -1058,6 +1111,13 @@ impl fmt::Display for TypeName {
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),
+            TypeName::Function(input_types, out_type) => {
+                write!(f, "fn (")?;
+                for in_typ in input_types.iter() {
+                    write!(f, "{in_typ}")?;
+                }
+                write!(f, ")->{out_type}")
+            }
         }
     }
 }

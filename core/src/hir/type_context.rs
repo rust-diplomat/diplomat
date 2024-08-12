@@ -326,7 +326,7 @@ impl TypeContext {
                         Param::Input(param.name.as_str()),
                         &param.ty,
                         method,
-                    );
+                    )
                 }
 
                 method.output.with_contained_types(|out_ty| {

@@ -13,8 +13,8 @@ fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
         .fold(quote!(), |prev, attr| quote!(#prev #attr))
 }
 
-fn param_ty(param: &ast::Param) -> syn::Type {
-    match &param.ty {
+fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
+    match &param_ty {
         ast::TypeName::StrReference(lt @ Some(_lt), encoding, _) => {
             // At the param boundary we MUST use FFI-safe diplomat slice types,
             // not Rust stdlib types (which are not FFI-safe and must be converted)
@@ -32,18 +32,58 @@ fn param_ty(param: &ast::Param) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             prim.get_diplomat_slice_type(ltmt)
         }
-        _ => param.ty.to_syn(),
+        _ => param_ty.to_syn(),
     }
 }
 
-fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
-    let name = &param.name;
-    match &param.ty {
+fn param_conversion(
+    name: &ast::Ident,
+    param_type: &ast::TypeName,
+    cast_to: Option<&syn::Type>,
+) -> Option<proc_macro2::TokenStream> {
+    match &param_type {
         // conversion only needed for slices that are specified as Rust types rather than diplomat_runtime types
         ast::TypeName::StrReference(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::Result(..) => Some(quote!(let #name = #name.into();)),
+        | ast::TypeName::Result(..) => Some(if let Some(cast_to) = cast_to {
+            quote!(let #name: #cast_to = #name.into();)
+        } else {
+            quote!(let #name = #name.into();)
+        }),
+        ast::TypeName::Function(in_types, out_type) => {
+            let cb_wrap_ident = &name;
+            let mut cb_param_list = vec![];
+            let mut cb_params_and_types_list = vec![];
+            let mut cb_arg_type_list = vec![];
+            let mut all_params_conversion = vec![];
+            for (index, in_ty) in in_types.iter().enumerate() {
+                let param_ident_str = format!("arg{}", index);
+                let orig_type = in_ty.to_syn();
+                let param_converted_type = param_ty(in_ty);
+                if let Some(conversion) = param_conversion(
+                    &ast::Ident::from(param_ident_str.clone()),
+                    in_ty,
+                    Some(&param_converted_type),
+                ) {
+                    all_params_conversion.push(conversion);
+                }
+                let param_ident = Ident::new(&param_ident_str, Span::call_site());
+                cb_arg_type_list.push(param_converted_type);
+                cb_params_and_types_list.push(quote!(#param_ident: #orig_type));
+                cb_param_list.push(param_ident);
+            }
+            let cb_ret_type = out_type.to_syn();
+
+            let tokens = quote! {
+                let #cb_wrap_ident = move | #(#cb_params_and_types_list,)* | unsafe {
+                    #(#all_params_conversion)*
+                    std::mem::transmute::<unsafe extern "C" fn (*const c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
+                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*)
+                };
+            };
+            Some(parse2(tokens).unwrap())
+        }
         _ => None,
     }
 }
@@ -58,11 +98,11 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
     m.params.iter().for_each(|p| {
-        let ty = param_ty(p);
+        let ty = param_ty(&p.ty);
         let name = &p.name;
         all_params_names.push(name);
         all_params.push(syn::parse_quote!(#name: #ty));
-        if let Some(conversion) = param_conversion(p) {
+        if let Some(conversion) = param_conversion(&p.name, &p.ty, None) {
             all_params_conversion.push(conversion);
         }
     });
@@ -153,7 +193,6 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         .collect::<Vec<_>>();
 
     let cfg = cfgs_to_stream(&m.attrs.cfg);
-
     if write_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
@@ -241,6 +280,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.push(parse2(quote! { use diplomat_runtime::*; }).unwrap());
+    new_contents.push(parse2(quote! { use core::ffi::c_void; }).unwrap());
 
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
@@ -319,7 +359,8 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
 
     for custom_type in module.declared_types.values() {
         custom_type.methods().iter().for_each(|m| {
-            new_contents.push(gen_custom_type_method(custom_type, m));
+            let gen_m = gen_custom_type_method(custom_type, m);
+            new_contents.push(gen_m);
         });
 
         if let ast::CustomType::Opaque(opaque) = custom_type {
@@ -784,6 +825,51 @@ mod tests {
                     impl Foo {
                         pub fn bar(s: u8) {
                             unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn callback_arguments() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    pub struct Wrapper {
+                        cant_be_empty: bool,
+                    }
+                    pub struct TestingStruct {
+                        x: i32,
+                        y: i32,
+                    }
+                    impl Wrapper {
+                        pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
+                            f(10 + x)
+                        }
+                        pub fn test_multiarg_void_callback(f: impl Fn(i32, &str)) {
+                            f(-10, "hello it's a string\0");
+                        }
+                        pub fn test_mod_array(g: impl Fn(&[u8])) {
+                            let bytes: Vec<u8> = vec![0x11, 0x22];
+                            g(bytes.as_slice().into());
+                        }
+                        pub fn test_no_args(h: impl Fn()) -> i32 {
+                            h();
+                            -5
+                        }
+                        pub fn test_cb_with_struct(f: impl Fn(TestingStruct) -> i32) -> i32 {
+                            let arg = TestingStruct {
+                                x: 1,
+                                y: 5,
+                            };
+                            f(arg)
+                        }
+                        pub fn test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32) -> i32 {
+                            f() + g(5)
                         }
                     }
                 }
