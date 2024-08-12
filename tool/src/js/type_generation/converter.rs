@@ -85,7 +85,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
-            Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
+            Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
@@ -541,7 +541,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 panic!("'static not supported for JS backend.")
             } else {
                 match slice {
-                    hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding) => {
+                    hir::Slice::Str(_, encoding) => {
                         match encoding {
                             hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
                                 format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
@@ -549,6 +549,13 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
                         }
                     }
+                    hir::Slice::Strs(encoding) => format!(
+                        r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
+                        match encoding {
+                            hir::StringEncoding::UnvalidatedUtf16 => "string16",
+                            _ => "string8",
+                        }
+                    ),
                     hir::Slice::Primitive(_, p) => format!(
                         r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
                         self.formatter.fmt_primitive_list_view(p)

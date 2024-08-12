@@ -71,7 +71,7 @@ export class MyString {
 
     static newFromFirst(v) {
         
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
+        const vSlice = diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8");
         const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
     
         try {

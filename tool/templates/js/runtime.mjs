@@ -128,6 +128,33 @@ export class DiplomatBuf {
     return new DiplomatBuf(ptr, list.length, () => wasm.diplomat_free(ptr, byteLength, elementSize));
     }
 
+    
+    static strs = (wasm, strings, encoding) => {
+        let encodeStr = (encoding === "string16") ? DiplomatBuf.str16 : DiplomatBuf.str8;
+
+        const byteLength = strings.length * 4 * 2;
+
+        const ptr = wasm.diplomat_alloc(byteLength, 4);
+
+        const destination = new Uint32Array(wasm.memory.buffer, ptr, byteLength);
+
+        const stringsAlloc = [];
+
+        for (let i = 0; i < strings.length; i++) {
+            stringsAlloc.push(encodeStr(wasm, strings[i]));
+
+            destination[2 * i] = stringsAlloc[i].ptr;
+            destination[(2 * i) + 1] = stringsAlloc[i].size;
+        }
+
+        return new DiplomatBuf(ptr, strings.length, () => {
+            wasm.diplomat_free(ptr, byteLength, 4);
+            for (let i = 0; i < stringsAlloc.length; i++) {
+                stringsAlloc[i].free();
+            }
+        });
+    }
+
     /**
      * Generated code calls one of methods these for each allocation, to either
      * free directly after the FFI call, to leak (to create a &'static), or to
