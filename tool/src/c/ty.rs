@@ -359,7 +359,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         &self,
         cb_wrapper_type: &str,
         input_types: Vec<&Type<OutputOnly>>,
-        output_type: &Box<Option<Type>>,
+        output_type: &Option<Type>,
         header: &mut Header,
     ) -> CallbackAndStructDef {
         let return_type = if output_type.is_some() {
@@ -370,7 +370,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         };
         let mut params_types = Vec::<String>::new();
         for in_ty in input_types.iter() {
-            let cur_type = self.gen_ty_name(&in_ty, header);
+            let cur_type = self.gen_ty_name(in_ty, header);
             params_types.push(cur_type.to_string().clone());
         }
         let params_types = if params_types.is_empty() {

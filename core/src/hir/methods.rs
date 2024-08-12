@@ -39,7 +39,9 @@ pub struct Method {
 }
 
 pub trait CallbackInstantiationFunctionality {
+    #[allow(clippy::result_unit_err)]
     fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()>; // the types of the parameters
+    #[allow(clippy::result_unit_err)]
     fn get_output_type(&self) -> Result<&Option<Type>, ()>;
 }
 
@@ -54,6 +56,7 @@ pub struct Callback {
 
 // uninstantiatable; represents no callback allowed
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum NoCallback {}
 
 impl CallbackInstantiationFunctionality for Callback {
