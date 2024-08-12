@@ -284,7 +284,6 @@ export class DiplomatSliceStr extends DiplomatSlice {
         let encoding;
         switch (stringEncoding) {
             case "string8":
-                this.#decoder = new TextDecoder('utf-8');
                 encoding = Uint8Array;
             case "string16":
                 encoding = Uint16Array;
@@ -293,14 +292,18 @@ export class DiplomatSliceStr extends DiplomatSlice {
                 break;
         }
         super(wasm, buffer, encoding, lifetimeEdges);
+
+        if (stringEncoding === "string8") {
+            this.#decoder = new TextDecoder('utf-8');
+        }
     }
 
     getValue() {
         switch (this.bufferType) {
             case Uint8Array:
-                return this.#decoder.decode(super());
+                return this.#decoder.decode(super.getValue());
             case Uint16Array:
-                return String.fromCharCode.apply(null, super());
+                return String.fromCharCode.apply(null, super.getValue());
             default:
                 return null;
         }

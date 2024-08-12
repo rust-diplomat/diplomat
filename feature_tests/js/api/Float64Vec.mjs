@@ -134,7 +134,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_as_slice(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatReceiveBuf.getSlice(wasm, diplomatReceive.buffer, "f64");
+            return new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, diplomatReceive.buffer, "f64", aEdges);
         }
         
         finally {
@@ -189,7 +189,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatReceiveBuf.getSlice(wasm, diplomatReceive.buffer, "f64");
+            return new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, diplomatReceive.buffer, "f64", aEdges);
         }
         
         finally {

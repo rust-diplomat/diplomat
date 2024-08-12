@@ -106,7 +106,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatReceiveBuf.getString(wasm, diplomatReceive.buffer, "string8");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
         }
         
         finally {

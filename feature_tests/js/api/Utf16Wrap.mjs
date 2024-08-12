@@ -66,7 +66,7 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatReceiveBuf.getString(wasm, diplomatReceive.buffer, "string16");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string16", aEdges);
         }
         
         finally {

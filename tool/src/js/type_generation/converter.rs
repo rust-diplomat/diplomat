@@ -195,7 +195,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         let hir::MaybeStatic::NonStatic(lifetime) = lt else {
                             panic!("'static not supported in JS");
                         };
-                        lifetime_environment.fmt_lifetime(lifetime)
+                        format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
                     },
                     _ => "[]".into(),
                 };
