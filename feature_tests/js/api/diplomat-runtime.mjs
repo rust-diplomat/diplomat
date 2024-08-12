@@ -285,8 +285,10 @@ export class DiplomatSliceStr extends DiplomatSlice {
         switch (stringEncoding) {
             case "string8":
                 encoding = Uint8Array;
+                break;
             case "string16":
                 encoding = Uint16Array;
+                break;
             default:
                 console.error("Unrecognized stringEncoding ", stringEncoding);
                 break;
