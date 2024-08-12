@@ -317,7 +317,11 @@ impl<'ast> LoweringContext<'ast> {
                     docs: docs.clone(),
                     name,
                     ty,
-                    attrs: self.attr_validator.attr_from_ast(attrs, &Attrs::default(), &mut self.errors)
+                    attrs: self.attr_validator.attr_from_ast(
+                        attrs,
+                        &Attrs::default(),
+                        &mut self.errors,
+                    ),
                 }),
                 _ => fields = Err(()),
             }
@@ -401,7 +405,11 @@ impl<'ast> LoweringContext<'ast> {
                         docs: docs.clone(),
                         name,
                         ty,
-                        attrs: self.attr_validator.attr_from_ast(attrs, &Attrs::default(), &mut self.errors)
+                        attrs: self.attr_validator.attr_from_ast(
+                            attrs,
+                            &Attrs::default(),
+                            &mut self.errors,
+                        ),
                     }),
                     _ => fields = Err(()),
                 }
@@ -991,13 +999,17 @@ impl<'ast> LoweringContext<'ast> {
                             true,
                         );
 
-                        let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
+                        let attrs = self.attr_validator.attr_from_ast(
+                            &self_param.attrs,
+                            &Attrs::default(),
+                            &mut self.errors,
+                        );
 
                         Ok((
-                            ParamSelf::new(SelfType::Struct(StructPath::new(
-                                type_lifetimes,
-                                tcx_id,
-                            )), attrs),
+                            ParamSelf::new(
+                                SelfType::Struct(StructPath::new(type_lifetimes, tcx_id)),
+                                attrs,
+                            ),
                             param_ltl,
                         ))
                     }
@@ -1030,16 +1042,23 @@ impl<'ast> LoweringContext<'ast> {
                         &opaque.lifetimes,
                         true,
                     );
-                    
-                    let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
+
+                    let attrs = self.attr_validator.attr_from_ast(
+                        &self_param.attrs,
+                        &Attrs::default(),
+                        &mut self.errors,
+                    );
 
                     Ok((
-                        ParamSelf::new(SelfType::Opaque(OpaquePath::new(
-                            lifetimes,
-                            NonOptional,
-                            borrow,
-                            tcx_id,
-                        )), attrs),
+                        ParamSelf::new(
+                            SelfType::Opaque(OpaquePath::new(
+                                lifetimes,
+                                NonOptional,
+                                borrow,
+                                tcx_id,
+                            )),
+                            attrs,
+                        ),
                         param_ltl,
                     ))
                 } else {
@@ -1049,8 +1068,12 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::CustomType::Enum(enm) => {
                 let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
-                
-                let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
+
+                let attrs = self.attr_validator.attr_from_ast(
+                    &self_param.attrs,
+                    &Attrs::default(),
+                    &mut self.errors,
+                );
 
                 Ok((
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id)), attrs),
@@ -1076,8 +1099,9 @@ impl<'ast> LoweringContext<'ast> {
         let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
-        let attrs = self.attr_validator
-                    .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
 
         Ok(Param::new(name?, ty?, attrs))
     }

@@ -231,7 +231,7 @@ pub struct SelfParam {
     pub path_type: PathType,
 
     /// Associated attributes with this self parameter. Used in Demo Generation, mostly.
-    pub attrs : Attrs,
+    pub attrs: Attrs,
 }
 
 impl SelfParam {
@@ -250,7 +250,7 @@ impl SelfParam {
                 .as_ref()
                 .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
             path_type,
-            attrs: Attrs::from_attrs(&rec.attrs)
+            attrs: Attrs::from_attrs(&rec.attrs),
         }
     }
 }
@@ -266,7 +266,7 @@ pub struct Param {
     pub ty: TypeName,
 
     /// Parameter attributes (like #[diplomat::demo(label = "Out")])
-    pub attrs : Attrs,
+    pub attrs: Attrs,
 }
 
 impl Param {
@@ -289,7 +289,7 @@ impl Param {
         Param {
             name: (&ident.ident).into(),
             ty: TypeName::from_syn(&t.ty, Some(self_path_type)),
-            attrs
+            attrs,
         }
     }
 }

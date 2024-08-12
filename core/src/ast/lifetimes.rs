@@ -126,7 +126,10 @@ impl LifetimeEnv {
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds
     /// defined in the struct generics, as well as implicit lifetime bounds in
     /// the struct's fields. For example, the field `&'a Foo<'b>` implies `'b: 'a`.
-    pub fn from_struct_item(strct: &syn::ItemStruct, fields: &[(Ident, TypeName, Docs, Attrs)]) -> Self {
+    pub fn from_struct_item(
+        strct: &syn::ItemStruct,
+        fields: &[(Ident, TypeName, Docs, Attrs)],
+    ) -> Self {
         let mut this = LifetimeEnv::new();
         this.extend_generics(&strct.generics);
         for (_, typ, _, _) in fields {

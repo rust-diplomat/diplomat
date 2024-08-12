@@ -62,7 +62,7 @@ pub enum ReturnType {
 #[non_exhaustive]
 pub struct ParamSelf {
     pub ty: SelfType,
-    pub attrs : Attrs,
+    pub attrs: Attrs,
 }
 
 /// A parameter in a method.
@@ -71,7 +71,7 @@ pub struct ParamSelf {
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
-    pub attrs : Attrs,
+    pub attrs: Attrs,
 }
 
 impl SuccessType {
@@ -170,7 +170,7 @@ impl ReturnType {
 }
 
 impl ParamSelf {
-    pub(super) fn new(ty: SelfType, attrs : Attrs) -> Self {
+    pub(super) fn new(ty: SelfType, attrs: Attrs) -> Self {
         Self { ty, attrs }
     }
 
@@ -190,7 +190,7 @@ impl ParamSelf {
 }
 
 impl Param {
-    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs : Attrs) -> Self {
+    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs: Attrs) -> Self {
         Self { name, ty, attrs }
     }
 }

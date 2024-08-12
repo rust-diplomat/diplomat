@@ -377,7 +377,6 @@ impl Attrs {
                             }
                         })
                         .expect("Could not read input(...)");
-                    
                 } else {
                     panic!("Unknown demo_attr: {path_ident:?}");
                 }
