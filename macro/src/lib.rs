@@ -51,6 +51,11 @@ fn param_conversion(
         } else {
             quote!(let #name = #name.into();)
         }),
+        // Convert Option<struct/enum/primitive> and DiplomatOption<opaque>
+        // simplify the check by just checking is_ffi_safe()
+        ast::TypeName::Option(..) if !param_type.is_ffi_safe() => {
+            Some(quote!(let #name = #name.into();))
+        }
         ast::TypeName::Function(in_types, out_type) => {
             let cb_wrap_ident = &name;
             let mut cb_param_list = vec![];
