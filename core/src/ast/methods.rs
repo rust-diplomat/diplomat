@@ -260,6 +260,9 @@ pub struct Param {
 
     /// The type of the parameter.
     pub ty: TypeName,
+
+    /// Parameter attributes (like #[diplomat::demo(label = "Out")])
+    pub attrs : Attrs,
 }
 
 impl Param {
@@ -277,9 +280,12 @@ impl Param {
             _ => panic!("Unexpected param type"),
         };
 
+        let attrs = Attrs::from_attrs(&t.attrs);
+
         Param {
             name: (&ident.ident).into(),
             ty: TypeName::from_syn(&t.ty, Some(self_path_type)),
+            attrs
         }
     }
 }

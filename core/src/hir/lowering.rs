@@ -1067,7 +1067,11 @@ impl<'ast> LoweringContext<'ast> {
         let name = self.lower_ident(&param.name, "param name");
         let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
 
-        Ok(Param::new(name?, ty?))
+        // No parent attrs because parameters do not have a strictly clear parent.
+        let attrs = self.attr_validator
+                    .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
+
+        Ok(Param::new(name?, ty?, attrs))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.

@@ -70,6 +70,7 @@ pub struct ParamSelf {
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
+    pub attrs : Attrs,
 }
 
 impl SuccessType {
@@ -188,8 +189,8 @@ impl ParamSelf {
 }
 
 impl Param {
-    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>) -> Self {
-        Self { name, ty }
+    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs : Attrs) -> Self {
+        Self { name, ty, attrs }
     }
 }
 
