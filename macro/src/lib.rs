@@ -151,9 +151,10 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 quote! { .into() },
             )
         } else if let ast::TypeName::StrReference(_, _, StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
         {
-            let return_type_syn = return_type.to_syn();
+            let return_type_syn = return_type.ffi_safe_version().to_syn();
             (quote! { -> #return_type_syn }, quote! { .into() })
         } else if let ast::TypeName::Ordering = return_type {
             let return_type_syn = return_type.to_syn();

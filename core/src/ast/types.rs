@@ -508,7 +508,7 @@ impl TypeName {
             TypeName::PrimitiveSlice(ltmt, prim, StdlibOrDiplomat::Stdlib) => {
                 TypeName::PrimitiveSlice(ltmt.clone(), *prim, StdlibOrDiplomat::Diplomat)
             }
-            TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
+            TypeName::Ordering => TypeName::Primitive(PrimitiveType::i8),
             _ => self.clone(),
         }
     }
