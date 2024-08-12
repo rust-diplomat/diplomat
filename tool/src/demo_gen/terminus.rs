@@ -181,11 +181,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = attrs
             .and_then(|attrs| {
-                let label = attrs
-                    .input_cfg
-                    .get(&param_name)
-                    .map(|cfg| cfg.label.clone())
-                    .unwrap_or_default();
+                let label = attrs.input_cfg.label;
 
                 if label.is_empty() {
                     None
@@ -218,9 +214,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         param_type: &Type<P>,
         param_name: String,
         node: &mut MethodDependency,
-        method_attrs: DemoInfo,
+        param_attrs: DemoInfo,
     ) {
-        let attrs = Some(method_attrs);
+        let attrs = Some(param_attrs);
 
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
@@ -428,7 +424,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 &field.ty,
                 field.name.to_string(),
                 &mut child,
-                st.attrs.demo_attrs.clone(),
+                field.attrs.demo_attrs.clone(),
             );
         }
 
@@ -452,7 +448,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         if param_self.is_some() {
             let ty = param_self.unwrap().ty.clone().into();
-            self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
+            self.evaluate_param(&ty, "self".into(), node, param_self.attrs.demo_attrs.clone());
         }
 
         for param in method.params.iter() {
@@ -460,7 +456,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 &param.ty,
                 self.formatter.fmt_param_name(param.name.as_str()).into(),
                 node,
-                method.attrs.demo_attrs.clone(),
+                param.attrs.demo_attrs.clone(),
             );
         }
 

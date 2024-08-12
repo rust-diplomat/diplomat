@@ -13,7 +13,10 @@ pub mod ffi {
         /// Construct an [`FixedDecimal`] from an integer.
         #[diplomat::demo(input(v(label = "ICU4XFixedDecimal Value")))]
         #[diplomat::attr(auto, constructor)]
-        pub fn new(v: i32) -> Box<FixedDecimal> {
+        pub fn new(
+            #[diplomat::demo(input(label = "ICU4XFixedDecimal Value"))]
+            v: i32
+        ) -> Box<FixedDecimal> {
             Box::new(FixedDecimal(fixed_decimal::FixedDecimal::from(v)))
         }
 

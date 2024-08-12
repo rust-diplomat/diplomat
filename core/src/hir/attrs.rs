@@ -77,9 +77,8 @@ pub struct DemoInfo {
     /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
     pub external: bool,
 
-    /// `#[diplomat::demo(input(...))]`
-    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
-    pub input_cfg: HashMap<String, DemoInputCFG>,
+    /// `#[diplomat::demo(input(...))]` represents configuration options for anywhere we might expect user input.
+    pub input_cfg: DemoInputCFG,
 }
 
 // #endregion
@@ -360,7 +359,6 @@ impl Attrs {
                 } else if path_ident == "generate" {
                     this.demo_attrs.generate = true;
                 } else if path_ident == "input" {
-                    // TODO: Move this to AST.
                     let meta_list = attr
                         .meta
                         .require_list()
@@ -368,32 +366,20 @@ impl Attrs {
 
                     meta_list
                         .parse_nested_meta(|meta| {
-                            let mut input_cfg = DemoInputCFG::default();
-                            meta.parse_nested_meta(|input_meta| {
-                                if input_meta.path.is_ident("label") {
-                                    let value = input_meta.value()?;
-                                    let s: syn::LitStr = value.parse()?;
-                                    input_cfg.label = s.value();
-                                    Ok(())
-                                } else {
-                                    Err(input_meta.error(format!(
-                                        "Unsupported ident {:?}",
-                                        input_meta.path.get_ident()
-                                    )))
-                                }
-                            })
-                            .expect("Could not read input(arg_name(...)) ");
-
-                            this.demo_attrs.input_cfg.insert(
-                                meta.path
-                                    .get_ident()
-                                    .expect("Expected parameter name.")
-                                    .to_string(),
-                                input_cfg,
-                            );
-                            Ok(())
+                            if meta.path.is_ident("label") {
+                                let value = meta.value()?;
+                                let s: syn::LitStr = value.parse()?;
+                                this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else {
+                                Err(meta.error(format!(
+                                    "Unsupported ident {:?}",
+                                    meta.path.get_ident()
+                                )))
+                            }
                         })
                         .expect("Could not read input(...)");
+                    
                 } else {
                     panic!("Unknown demo_attr: {path_ident:?}");
                 }
