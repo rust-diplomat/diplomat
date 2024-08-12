@@ -62,6 +62,7 @@ pub enum ReturnType {
 #[non_exhaustive]
 pub struct ParamSelf {
     pub ty: SelfType,
+    pub attrs : Attrs,
 }
 
 /// A parameter in a method.
@@ -169,8 +170,8 @@ impl ReturnType {
 }
 
 impl ParamSelf {
-    pub(super) fn new(ty: SelfType) -> Self {
-        Self { ty }
+    pub(super) fn new(ty: SelfType, attrs : Attrs) -> Self {
+        Self { ty, attrs }
     }
 
     /// Return the number of fields and leaves that will show up in the [`BorrowingFieldVisitor`].

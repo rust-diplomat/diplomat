@@ -229,6 +229,9 @@ pub struct SelfParam {
     /// The type of the parameter, which will be a named reference to
     /// the associated struct,
     pub path_type: PathType,
+
+    /// Associated attributes with this self parameter. Used in Demo Generation, mostly.
+    pub attrs : Attrs,
 }
 
 impl SelfParam {
@@ -247,6 +250,7 @@ impl SelfParam {
                 .as_ref()
                 .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
             path_type,
+            attrs: Attrs::from_attrs(&rec.attrs)
         }
     }
 }

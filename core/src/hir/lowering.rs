@@ -991,11 +991,13 @@ impl<'ast> LoweringContext<'ast> {
                             true,
                         );
 
+                        let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
+
                         Ok((
                             ParamSelf::new(SelfType::Struct(StructPath::new(
                                 type_lifetimes,
                                 tcx_id,
-                            ))),
+                            )), attrs),
                             param_ltl,
                         ))
                     }
@@ -1028,6 +1030,8 @@ impl<'ast> LoweringContext<'ast> {
                         &opaque.lifetimes,
                         true,
                     );
+                    
+                    let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
 
                     Ok((
                         ParamSelf::new(SelfType::Opaque(OpaquePath::new(
@@ -1035,7 +1039,7 @@ impl<'ast> LoweringContext<'ast> {
                             NonOptional,
                             borrow,
                             tcx_id,
-                        ))),
+                        )), attrs),
                         param_ltl,
                     ))
                 } else {
@@ -1045,9 +1049,11 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::CustomType::Enum(enm) => {
                 let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
+                
+                let attrs = self.attr_validator.attr_from_ast(&self_param.attrs, &Attrs::default(), &mut self.errors);
 
                 Ok((
-                    ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
+                    ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id)), attrs),
                     self_param_ltl.no_self_ref(),
                 ))
             }
