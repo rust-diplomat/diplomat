@@ -190,15 +190,25 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
             Type::Slice(slice) => {
+                let edges = match slice.lifetime() {
+                    Some(lt) => {
+                        let hir::MaybeStatic::NonStatic(lifetime) = lt else {
+                            panic!("'static not supported in JS");
+                        };
+                        lifetime_environment.fmt_lifetime(lifetime)
+                    },
+                    _ => "[]".into(),
+                };
+
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"diplomatRuntime.DiplomatReceiveBuf.getSlice(wasm, {variable_name}, "{}")"#,
+                        r#"new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, {variable_name}, "{}", {edges})"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"diplomatRuntime.DiplomatReceiveBuf.getString(wasm, {variable_name}, "string{}")"#,
+                        r#"new diplomatRuntime.DiplomatSliceStr(wasm, {variable_name},  "string{}", {edges})"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -211,7 +221,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"diplomatRuntime.DiplomatReceiveBuf.getStrings(wasm, {variable_name}, "string{}")"#,
+                            r#"new diplomatRuntime.DiplomatSliceStrings(wasm, {variable_name}, "string{}", {edges})"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,
