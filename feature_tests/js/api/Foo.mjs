@@ -70,23 +70,6 @@ export class Foo {
         finally {}
     }
 
-    static newStatic(x) {
-        
-        const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
-        
-        // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];
-        const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
-    
-        try {
-            return new Foo(result, [], aEdges);
-        }
-        
-        finally {
-            xSlice.free();
-        }
-    }
-
     asReturning() {
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
