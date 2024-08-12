@@ -18,7 +18,9 @@ namespace capi {
     
     
     int8_t MyEnum_into_value(diplomat::capi::MyEnum self);
+    
     diplomat::capi::MyEnum MyEnum_get_a(void);
+    
     
     } // extern "C"
 } // namespace capi

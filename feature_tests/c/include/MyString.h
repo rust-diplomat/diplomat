@@ -17,12 +17,19 @@
 
 
 MyString* MyString_new(DiplomatStringView v);
+
 MyString* MyString_new_unsafe(DiplomatStringView v);
+
 MyString* MyString_new_owned(DiplomatStringView v);
+
 MyString* MyString_new_from_first(DiplomatStringsView v);
+
 void MyString_set_str(MyString* self, DiplomatStringView new_str);
+
 void MyString_get_str(const MyString* self, DiplomatWrite* write);
+
 void MyString_string_transform(DiplomatStringView foo, DiplomatWrite* write);
+
 
 void MyString_destroy(MyString* self);
 

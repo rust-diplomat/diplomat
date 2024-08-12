@@ -17,7 +17,9 @@
 
 
 int8_t MyEnum_into_value(MyEnum self);
+
 MyEnum MyEnum_get_a(void);
+
 
 
 

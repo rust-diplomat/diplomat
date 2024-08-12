@@ -18,11 +18,17 @@ namespace capi {
     
     
     diplomat::capi::MyString* MyString_new(diplomat::capi::DiplomatStringView v);
+    
     diplomat::capi::MyString* MyString_new_unsafe(diplomat::capi::DiplomatStringView v);
+    
     diplomat::capi::MyString* MyString_new_owned(diplomat::capi::DiplomatStringView v);
+    
     void MyString_set_str(diplomat::capi::MyString* self, diplomat::capi::DiplomatStringView new_str);
+    
     void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
+    
     void MyString_string_transform(diplomat::capi::DiplomatStringView foo, diplomat::capi::DiplomatWrite* write);
+    
     
     void MyString_destroy(MyString* self);
     

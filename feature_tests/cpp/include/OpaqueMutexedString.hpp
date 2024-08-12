@@ -19,13 +19,21 @@ namespace capi {
     
     
     diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
+    
     void OpaqueMutexedString_change(const diplomat::capi::OpaqueMutexedString* self, size_t number);
+    
     const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow(const diplomat::capi::OpaqueMutexedString* self);
+    
     const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_other(const diplomat::capi::OpaqueMutexedString* other);
+    
     const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const diplomat::capi::OpaqueMutexedString* self, const diplomat::capi::OpaqueMutexedString* other);
+    
     size_t OpaqueMutexedString_get_len_and_add(const diplomat::capi::OpaqueMutexedString* self, size_t other);
+    
     diplomat::capi::DiplomatStringView OpaqueMutexedString_dummy_str(const diplomat::capi::OpaqueMutexedString* self);
+    
     diplomat::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const diplomat::capi::OpaqueMutexedString* self);
+    
     
     void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
     

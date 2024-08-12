@@ -7,10 +7,10 @@ typedef struct {{ cb_and_struct_def.name }} {
     {{ cb_and_struct_def.return_type }} (*run_callback)(const void*{% if cb_and_struct_def.params_types != "" %}, {{ cb_and_struct_def.params_types }} {% endif %});
     void (*destructor)(const void*);
 } {{ cb_and_struct_def.name }};
-{% endfor %}
+{%- endfor %}
 {% for method in methods %}
 {{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
-{%- endfor %}
+{% endfor %}
 {%~ match dtor_name %}
 {% when Some with (dtor_name) ~%}
 void {{ dtor_name }}({{ ty_name }}* self);

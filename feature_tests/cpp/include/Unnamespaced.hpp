@@ -20,7 +20,9 @@ namespace capi {
     
     
     diplomat::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::RenamedAttrEnum _e);
+    
     void namespace_Unnamespaced_use_namespaced(const diplomat::capi::Unnamespaced* self, const ns::capi::AttrOpaque1Renamed* _n);
+    
     
     void namespace_Unnamespaced_destroy(Unnamespaced* self);
     

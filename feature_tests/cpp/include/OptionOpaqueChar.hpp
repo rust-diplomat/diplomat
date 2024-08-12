@@ -19,6 +19,7 @@ namespace capi {
     
     void OptionOpaqueChar_assert_char(const diplomat::capi::OptionOpaqueChar* self, char32_t ch);
     
+    
     void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
     
     } // extern "C"

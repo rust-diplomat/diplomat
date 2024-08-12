@@ -18,8 +18,11 @@ namespace capi {
     
     
     diplomat::capi::Utf16Wrap* Utf16Wrap_from_utf16(diplomat::capi::DiplomatString16View input);
+    
     void Utf16Wrap_get_debug_str(const diplomat::capi::Utf16Wrap* self, diplomat::capi::DiplomatWrite* write);
+    
     diplomat::capi::DiplomatString16View Utf16Wrap_borrow_cont(const diplomat::capi::Utf16Wrap* self);
+    
     
     void Utf16Wrap_destroy(Utf16Wrap* self);
     
