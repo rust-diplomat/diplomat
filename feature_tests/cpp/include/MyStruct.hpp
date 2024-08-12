@@ -18,6 +18,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::MyStruct MyStruct_new(void);
     
     uint8_t MyStruct_into_a(diplomat::capi::MyStruct self);

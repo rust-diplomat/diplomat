@@ -871,7 +871,7 @@ impl TypeName {
                 })) = trait_bound
                 {
                     let path_seg = &rel_segs[0];
-                    if path_seg.ident.eq("Fn".into()) {
+                    if path_seg.ident.eq("Fn") {
                         // we're in a function type
                         // get input and output args
                         if let syn::PathArguments::Parenthesized(

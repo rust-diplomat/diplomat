@@ -17,6 +17,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::OptionOpaque* OptionOpaque_new(int32_t i);
     
     diplomat::capi::OptionOpaque* OptionOpaque_new_none(void);

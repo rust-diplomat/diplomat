@@ -15,6 +15,7 @@
 
 
 
+
 Float64Vec* Float64Vec_new(DiplomatF64View v);
 
 Float64Vec* Float64Vec_new_bool(DiplomatBoolView v);

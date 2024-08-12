@@ -15,6 +15,7 @@
 
 
 
+
 OptionString* OptionString_new(DiplomatStringView diplomat_str);
 
 typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;

@@ -1,5 +1,5 @@
-#ifndef Wrapper_D_H
-#define Wrapper_D_H
+#ifndef CallbackWrapper_D_H
+#define CallbackWrapper_D_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,12 +11,12 @@
 
 
 
-typedef struct Wrapper {
+typedef struct CallbackWrapper {
   bool cant_be_empty;
-} Wrapper;
+} CallbackWrapper;
 
 
 
 
 
-#endif // Wrapper_D_H
+#endif // CallbackWrapper_D_H

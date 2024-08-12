@@ -18,6 +18,7 @@ namespace ns {
 namespace capi {
     extern "C" {
     
+    
     ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
     
     uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);

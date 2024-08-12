@@ -16,6 +16,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::Float64Vec* Float64Vec_new(diplomat::capi::DiplomatF64View v);
     
     diplomat::capi::Float64Vec* Float64Vec_new_bool(diplomat::capi::DiplomatBoolView v);

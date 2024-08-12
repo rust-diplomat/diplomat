@@ -19,6 +19,7 @@
 
 
 
+
 Foo* Foo_new(DiplomatStringView x);
 
 Bar* Foo_get_bar(const Foo* self);

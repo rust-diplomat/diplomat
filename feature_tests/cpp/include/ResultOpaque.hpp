@@ -18,6 +18,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     typedef struct ResultOpaque_new_result {union {diplomat::capi::ResultOpaque* ok; diplomat::capi::ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
     ResultOpaque_new_result ResultOpaque_new(int32_t i);
     

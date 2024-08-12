@@ -16,6 +16,7 @@
 
 
 
+
 OptionOpaque* OptionOpaque_new(int32_t i);
 
 OptionOpaque* OptionOpaque_new_none(void);

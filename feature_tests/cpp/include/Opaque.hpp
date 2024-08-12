@@ -18,6 +18,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::Opaque* Opaque_new(void);
     
     diplomat::capi::Opaque* Opaque_try_from_utf8(diplomat::capi::DiplomatStringView input);

@@ -16,6 +16,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::Utf16Wrap* Utf16Wrap_from_utf16(diplomat::capi::DiplomatString16View input);
     
     void Utf16Wrap_get_debug_str(const diplomat::capi::Utf16Wrap* self, diplomat::capi::DiplomatWrite* write);

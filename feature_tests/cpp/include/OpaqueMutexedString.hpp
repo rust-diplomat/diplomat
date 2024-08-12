@@ -17,6 +17,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    
     diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
     
     void OpaqueMutexedString_change(const diplomat::capi::OpaqueMutexedString* self, size_t number);

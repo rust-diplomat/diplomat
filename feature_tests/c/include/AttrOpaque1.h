@@ -17,6 +17,7 @@
 
 
 
+
 AttrOpaque1* namespace_AttrOpaque1_new(void);
 
 uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
