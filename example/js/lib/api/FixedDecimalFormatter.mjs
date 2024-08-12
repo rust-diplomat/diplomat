@@ -40,10 +40,10 @@ export class FixedDecimalFormatter {
 
     static tryNew(locale, provider, options) {
         
-        let slice_cleanup_callbacks = [];
+        let functionCleanup = new diplomatRuntime.CleanupArena();
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(functionCleanup, {}));
     
         try {
             if (!diplomatReceive.resultFlag) {
@@ -53,9 +53,7 @@ export class FixedDecimalFormatter {
         }
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanup.free();
         
             diplomatReceive.free();
         }

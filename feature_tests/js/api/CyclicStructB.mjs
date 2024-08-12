@@ -17,7 +17,7 @@ export class CyclicStructB {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanup,
         appendArrayMap
     ) {
         return [this.#field]

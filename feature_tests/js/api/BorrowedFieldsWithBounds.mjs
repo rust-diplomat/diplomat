@@ -38,16 +38,10 @@ export class BorrowedFieldsWithBounds {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanup,
         appendArrayMap
     ) {
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(fieldA); } fieldA.garbageCollect(); } : fieldA.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[bAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[bAppendArray]) { appendArrayMap[bAppendArray].push(fieldB); } fieldB.garbageCollect(); } : fieldB.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[cAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[cAppendArray]) { appendArrayMap[cAppendArray].push(fieldC); } fieldC.garbageCollect(); } : fieldC.free);
-        
-        return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)]
+        return [(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanup).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)), (appendArrayMap["bAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["bAppendArray"]) : functionCleanup).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)), (appendArrayMap["cAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["cAppendArray"]) : functionCleanup).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC))]
     }
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {

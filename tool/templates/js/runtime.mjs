@@ -408,8 +408,17 @@ export class DiplomatReceiveBuf {
     }
 }
 
+/**
+ * For cleaning up slices inside struct _intoFFI functions.
+ * Based somewhat on how the Dart backend handles slice cleanup.
+ * 
+ * We want to ensure a slice only lasts as long as its struct, so we have a `functionCleanup` CleanupArena that we use in each method for any slice that needs to be cleaned up. It lasts only as long as the function is called for.
+ * 
+ * Then we have `createWith`, which is meant for longer lasting slices. It takes an array of edges and will last as long as those edges do. Cleanup is only called later.
+ */
 export class CleanupArena {
     #items = [];
+
     #edgeArray = [];
     
     constructor() {
@@ -417,6 +426,7 @@ export class CleanupArena {
     
     alloc(item) {
         this.#items.push(item);
+        return item;
     }
 
     createWith(edgeArray) {

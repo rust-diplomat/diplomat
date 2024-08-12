@@ -307,7 +307,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
                 let slice_expr =
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some("functionCleanup"));
+                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None);
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,

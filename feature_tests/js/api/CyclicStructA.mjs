@@ -17,10 +17,10 @@ export class CyclicStructA {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanup,
         appendArrayMap
     ) {
-        return [...this.#a._intoFFI(slice_cleanup_callbacks, {})]
+        return [...this.#a._intoFFI(functionCleanup, {})]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

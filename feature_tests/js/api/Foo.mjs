@@ -89,41 +89,37 @@ export class Foo {
 
     static extractFromFields(fields) {
         
-        let slice_cleanup_callbacks = [];
+        let functionCleanup = new diplomatRuntime.CleanupArena();
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [aEdges],}));
+        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanup, {aAppendArray: [aEdges],}));
     
         try {
             return new Foo(result, [], aEdges);
         }
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanup.free();
         }
     }
 
     static extractFromBounds(bounds, anotherString) {
         
-        const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
+        let functionCleanup = new diplomatRuntime.CleanupArena();
         
-        let slice_cleanup_callbacks = [];
+        const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(slice_cleanup_callbacks, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanup, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
             return new Foo(result, [], aEdges);
         }
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanup.free();
         
             anotherStringSlice.garbageCollect();
         }
