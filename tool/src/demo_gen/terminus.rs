@@ -447,8 +447,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let param_self = method.param_self.as_ref();
 
         if param_self.is_some() {
-            let ty = param_self.unwrap().ty.clone().into();
-            self.evaluate_param(&ty, "self".into(), node, param_self.attrs.demo_attrs.clone());
+            let s = param_self.unwrap();
+
+            let ty = s.ty.clone().into();
+            self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
         }
 
         for param in method.params.iter() {

@@ -1,7 +1,5 @@
 //! #[diplomat::attr] and other attributes
 
-use std::collections::HashMap;
-
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
