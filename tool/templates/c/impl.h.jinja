@@ -1,7 +1,7 @@
 {% if is_for_cpp -%}
 extern "C" {
 {%- endif %}
-{% for cb_and_struct_def in cb_structs_and_defs %}
+{%- for cb_and_struct_def in cb_structs_and_defs %}
 typedef struct {{ cb_and_struct_def.name }} {
     const void* data;
     {{ cb_and_struct_def.return_type }} (*run_callback)(const void*{% if cb_and_struct_def.params_types != "" %}, {{ cb_and_struct_def.params_types }} {% endif %});
