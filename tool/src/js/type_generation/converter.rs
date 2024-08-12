@@ -118,7 +118,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             .formatter
                             .fmt_lifetime_edge_array(lt, lifetime_environment)
                             .into_owned(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 } else {
                     "[]".into()
@@ -133,7 +133,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                                 .fmt_lifetime_edge_array(lt, lifetime_environment)
                         )
                         .unwrap(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
@@ -156,7 +156,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             write!(edges, ", {}Edges", lifetime_environment.fmt_lifetime(lt))
                                 .unwrap()
                         }
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
@@ -193,7 +193,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let edges = match slice.lifetime() {
                     Some(lt) => {
                         let hir::MaybeStatic::NonStatic(lifetime) = lt else {
-                            panic!("'static not supported in JS");
+                            panic!("'static not supported for JS backend");
                         };
                         format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
                     },
@@ -538,7 +538,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
             Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
             Type::Slice(slice) => if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
-                panic!("'static lifetimes are not supported in JS backend.")
+                panic!("'static not supported for JS backend.")
             } else {
                 match slice {
                     hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding) => {

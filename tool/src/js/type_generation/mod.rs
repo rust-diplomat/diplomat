@@ -171,7 +171,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
                 let post_cleanup_statement = if let Some(lt) = slice.lifetime() {
                     let hir::MaybeStatic::NonStatic(lt) = lt else {
-                        panic!("'static not supported in JS2 backend");
+                        panic!("'static not supported in JS backend");
                     };
                     format!(
                         "(appendArrayMap[{lt_name}AppendArray] || []).length > 0 ? () => {{ for (let lifetime of appendArrayMap[{lt_name}AppendArray]) {{ appendArrayMap[{lt_name}AppendArray].push({field_name}); }} {field_name}.garbageCollect(); }} : {field_name}.free",
@@ -528,7 +528,7 @@ fn iter_fields_with_lifetimes_from_set<'a, P: hir::TyPosition>(
     ) -> bool {
         ty.lifetimes().any(|lt| {
             let hir::MaybeStatic::NonStatic(lt) = lt else {
-                panic!("'static not supported in JS2 backend");
+                panic!("'static not supported in JS backend");
             };
             lt == *lifetime
         })
