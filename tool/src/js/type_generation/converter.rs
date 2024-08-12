@@ -196,7 +196,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             panic!("'static not supported for JS backend");
                         };
                         format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
-                    },
+                    }
                     _ => "[]".into(),
                 };
 
@@ -531,44 +531,49 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
-        alloc : Option<&str>,
+        alloc: Option<&str>,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap()),
-            Type::Slice(slice) => if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
-                panic!("'static not supported for JS backend.")
-            } else {
-                let base_statement = match slice {
-                    hir::Slice::Str(_, encoding) => {
-                        match encoding {
-                            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
-                                format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
-                            }
-                            _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
-                        }
-                    }
-                    hir::Slice::Strs(encoding) => format!(
-                        r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
-                        match encoding {
-                            hir::StringEncoding::UnvalidatedUtf16 => "string16",
-                            _ => "string8",
-                        }
-                    ),
-                    hir::Slice::Primitive(_, p) => format!(
-                        r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
-                        self.formatter.fmt_primitive_list_view(p)
-                    ),
-                    _ => unreachable!("Unknown Slice variant {ty:?}")
-                }.into();
-                if let Some(a) = alloc {
-                    format!("{a}.alloc({base_statement})").into()
+            Type::Struct(..) => {
+                self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap())
+            }
+            Type::Slice(slice) => {
+                if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
+                    panic!("'static not supported for JS backend.")
                 } else {
-                    base_statement
+                    let base_statement = match slice {
+                        hir::Slice::Str(_, encoding) => match encoding {
+                            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                                format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})")
+                            }
+                            _ => {
+                                format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})")
+                            }
+                        },
+                        hir::Slice::Strs(encoding) => format!(
+                            r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
+                            match encoding {
+                                hir::StringEncoding::UnvalidatedUtf16 => "string16",
+                                _ => "string8",
+                            }
+                        ),
+                        hir::Slice::Primitive(_, p) => format!(
+                            r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
+                            self.formatter.fmt_primitive_list_view(p)
+                        ),
+                        _ => unreachable!("Unknown Slice variant {ty:?}"),
+                    }
+                    .into();
+                    if let Some(a) = alloc {
+                        format!("{a}.alloc({base_statement})").into()
+                    } else {
+                        base_statement
+                    }
                 }
-            },
+            }
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
         }
     }

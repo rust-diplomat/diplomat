@@ -367,7 +367,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
-                        alloc
+                        alloc,
                     ));
             }
 
