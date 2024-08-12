@@ -10,7 +10,7 @@
     {% endfor -%}
 
     {%- if needs_slice_cleanup %}
-    let slice_cleanup_callbacks = [];
+    let functionCleanup = new diplomatRuntime.CleanupArena([]);
     {% endif -%}
 
     {%- for alloc_stmt in alloc_expressions %}
@@ -52,9 +52,7 @@
     
     finally {
     {%- if needs_slice_cleanup %}
-        for (let cleanup of slice_cleanup_callbacks) {
-            cleanup();
-        }
+        functionCleanup.free();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}

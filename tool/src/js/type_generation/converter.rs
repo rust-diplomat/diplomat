@@ -531,16 +531,17 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        alloc : Option<&str>,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
+            Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap()),
             Type::Slice(slice) => if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                 panic!("'static not supported for JS backend.")
             } else {
-                match slice {
+                let base_statement = match slice {
                     hir::Slice::Str(_, encoding) => {
                         match encoding {
                             hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
@@ -561,7 +562,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         self.formatter.fmt_primitive_list_view(p)
                     ),
                     _ => unreachable!("Unknown Slice variant {ty:?}")
-                }.into()
+                }.into();
+                if let Some(a) = alloc {
+                    format!("{a}.alloc({base_statement})").into()
+                } else {
+                    base_statement
+                }
             },
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
         }
@@ -571,6 +577,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         &self,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        allocator: &str,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
@@ -595,7 +602,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
-        format!("...{js_name}._intoFFI(slice_cleanup_callbacks, {{{params}}})").into()
+        format!("...{js_name}._intoFFI({allocator}, {{{params}}})").into()
     }
     // #endregion
 }

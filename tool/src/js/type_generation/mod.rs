@@ -162,42 +162,40 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 &struct_def.lifetimes
             );
 
-            let (js_to_c, maybe_post_cleanup_info, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
-                let slice_expr = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), None);
-
-                // We do not need to handle lifetime transitivity here: Methods already resolve
-                // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
-                // are explicitly specified on methods.
-
-                let post_cleanup_statement = if let Some(lt) = slice.lifetime() {
+            let alloc = if let &hir::Type::Slice(slice) = &field.ty {
+                if let Some(lt) = slice.lifetime() {
                     let hir::MaybeStatic::NonStatic(lt) = lt else {
                         panic!("'static not supported in JS backend");
                     };
-                    format!(
-                        "(appendArrayMap[{lt_name}AppendArray] || []).length > 0 ? () => {{ for (let lifetime of appendArrayMap[{lt_name}AppendArray]) {{ appendArrayMap[{lt_name}AppendArray].push({field_name}); }} {field_name}.garbageCollect(); }} : {field_name}.free",
-                        lt_name = struct_def.lifetimes.fmt_lifetime(lt),
-                    )
-                } else {
-                    // We take ownership
-                    "".into()
-                };
-
-                (format!("{slice_expr}"), Some(post_cleanup_statement), None)
-            } else {
-                let borrow_info = if let hir::Type::Struct(path) = &field.ty {
-                    StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
-                        |param_info| StructBorrowContext {
-                            use_env: &struct_def.lifetimes,
-                            param_info,
-                            is_method: false
-                        }
+                    Some(
+                        format!(
+                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanup)"#,
+                            lt_name = struct_def.lifetimes.fmt_lifetime(lt),
+                        )
                     )
                 } else {
                     None
-                };
-
-                (self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), borrow_info.as_ref()).into(), None, borrow_info.map(|s| s.param_info))
+                }
+            } else if let &hir::Type::Struct(..) = &field.ty {
+                Some("functionCleanup".into())
+            } else {
+                // We take ownership
+                None
             };
+
+            let maybe_struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
+                    |param_info| StructBorrowContext {
+                        use_env: &struct_def.lifetimes,
+                        param_info,
+                        is_method: false
+                    }
+                )
+            } else {
+                None
+            };
+
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()).into();
 
             FieldInfo {
                 field_name,
@@ -205,9 +203,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 js_type_name,
                 c_to_js_deref,
                 c_to_js,
-                post_cleanup_statement: maybe_post_cleanup_info,
                 js_to_c,
-                maybe_struct_borrow_info
+                maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
             }
         }).collect::<Vec<_>>();
         fields
@@ -310,7 +307,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
                 let slice_expr =
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
+                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some("functionCleanup"));
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -347,9 +344,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     slice_expr,
                 });
             } else {
-                if let hir::Type::Struct(..) = param.ty {
+                let alloc = if let hir::Type::Struct(..) = param.ty {
                     method_info.needs_slice_cleanup = true;
-                }
+                    Some("functionCleanup")
+                } else {
+                    None
+                };
 
                 let struct_borrow_info =
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
@@ -367,6 +367,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
+                        alloc
                     ));
             }
 
@@ -481,7 +482,6 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     c_to_js: Cow<'info, str>,
     c_to_js_deref: Cow<'info, str>,
     js_to_c: String,
-    post_cleanup_statement: Option<String>,
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 }
 

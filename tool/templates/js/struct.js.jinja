@@ -33,16 +33,9 @@ export class {{type_name}} {
     {%- endif -%}
     {% endif %}
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanup,
         appendArrayMap
     ) {
-        {%- for field in fields -%}
-        {%- match field.post_cleanup_statement -%}
-        {% when Some with (cleanup) %}
-        slice_cleanup_callbacks.push({{cleanup}});
-        {% when None -%}
-        {%- endmatch -%}
-        {%- endfor %}
         return [
             {%- for field in fields -%}
             {{field.js_to_c}}

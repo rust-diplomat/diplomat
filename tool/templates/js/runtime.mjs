@@ -408,4 +408,27 @@ export class DiplomatReceiveBuf {
     }
 }
 
+export class CleanupArena {
+    #items = [];
+    #edgeArray = [];
+    
+    constructor() {
+    }
+    
+    alloc(item) {
+        this.#items.push(item);
+    }
+
+    createWith(edgeArray) {
+        this.#edgeArray = edgeArray;
+        DiplomatBufferFinalizer.register(this, this.free);
+    }
+
+    free() {
+        this.#items.forEach((i) => {
+            i.free();
+        });
+    }
+}
+
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());
