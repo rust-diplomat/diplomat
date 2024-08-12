@@ -6,7 +6,7 @@ use core::ffi::c_void;
 pub struct DiplomatCallback<ReturnType> {
     // any data required to run the callback; e.g. a pointer to the
     // callback wrapper object in the foreign runtime + the runtime itself
-    pub data: *const c_void,
+    pub data: *mut c_void,
     // function to actually run the callback
     pub run_callback: unsafe extern "C" fn(*const c_void, ...) -> ReturnType,
     // function to destroy this callback struct
