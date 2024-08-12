@@ -23,5 +23,4 @@ BorrowedFields BorrowedFields_from_bar_and_strings(const Bar* bar, DiplomatStrin
 
 
 
-
 #endif // BorrowedFields_H

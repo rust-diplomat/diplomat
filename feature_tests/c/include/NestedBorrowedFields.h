@@ -24,5 +24,4 @@ NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar
 
 
 
-
 #endif // NestedBorrowedFields_H

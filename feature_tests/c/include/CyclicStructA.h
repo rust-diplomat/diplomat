@@ -23,5 +23,4 @@ CyclicStructB CyclicStructA_get_b(void);
 
 
 
-
 #endif // CyclicStructA_H
