@@ -4,7 +4,7 @@
 {{import_stmt}}
 {% endfor -%}
 {%- if typescript -%}
-import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
+import type { pointer, codepoint, DiplomatSliceStr, DiplomatSliceStrings, DiplomatSlicePrimitive } from "./diplomat-runtime.d.ts";
 {%- else -%}
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";

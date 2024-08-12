@@ -232,7 +232,7 @@ export class DiplomatSlice {
     }
 }
 
-export class DiplomatPrimitiveSlice extends DiplomatSlice {
+export class DiplomatSlicePrimitive extends DiplomatSlice {
     constructor(wasm, buffer, sliceType, lifetimeEdges) {
         const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
 
@@ -309,6 +309,18 @@ export class DiplomatSliceStr extends DiplomatSlice {
             default:
                 return null;
         }
+    }
+
+    toString() {
+        return this.getValue();
+    }
+
+    [Symbol.toPrimitive]() {
+        return this.getValue();
+    }
+
+    valueOf() {
+        return this.getValue();
     }
 }
 

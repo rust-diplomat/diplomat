@@ -13,3 +13,19 @@
 /// A `String` can be constructed from a `codepoint` using `String.fromCodePoint()`. 
 export type codepoint = number;
 export type pointer = number;
+
+export class DiplomatSlice {
+	getValue() : any;
+}
+
+export class DiplomatSliceStr extends DiplomatSlice {
+	getValue() : string;
+}
+
+export class DiplomatSliceStrings extends DiplomatSlice {
+	getValue() : Array<DiplomatSliceStr>;
+}
+
+export class DiplomatSlicePrimitive<T> extends DiplomatSlice {
+
+}
