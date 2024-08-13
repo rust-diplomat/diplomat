@@ -438,7 +438,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             let cause =
                                 self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
                             format!(
-                            "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
+                            "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
                             message = match e {
                                 Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
                                 Type::Struct(s) if match s.resolve(self.tcx) {
