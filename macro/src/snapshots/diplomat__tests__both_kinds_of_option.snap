@@ -49,9 +49,7 @@ mod ffi {
         Foo::diplo_option_u8(x)
     }
     #[no_mangle]
-    extern "C" fn Foo_diplo_option_ref(
-        x: diplomat_runtime::DiplomatOption<&Foo>,
-    ) -> diplomat_runtime::DiplomatOption<&Foo> {
+    extern "C" fn Foo_diplo_option_ref(x: Option<&Foo>) -> diplomat_runtime::DiplomatOption<&Foo> {
         let x = x.into();
         Foo::diplo_option_ref(x).into()
     }
@@ -66,7 +64,9 @@ mod ffi {
         Foo::diplo_option_struct(x)
     }
     #[no_mangle]
-    extern "C" fn Foo_option_u8(x: Option<u8>) -> diplomat_runtime::DiplomatResult<u8, ()> {
+    extern "C" fn Foo_option_u8(
+        x: diplomat_runtime::DiplomatOption<u8>,
+    ) -> diplomat_runtime::DiplomatResult<u8, ()> {
         let x = x.into();
         Foo::option_u8(x).ok_or(()).into()
     }
@@ -80,7 +80,7 @@ mod ffi {
     }
     #[no_mangle]
     extern "C" fn Foo_option_struct(
-        x: Option<CustomStruct>,
+        x: diplomat_runtime::DiplomatOption<CustomStruct>,
     ) -> diplomat_runtime::DiplomatResult<CustomStruct, ()> {
         let x = x.into();
         Foo::option_struct(x).ok_or(()).into()

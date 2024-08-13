@@ -32,6 +32,9 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             prim.get_diplomat_slice_type(ltmt)
         }
+        ast::TypeName::Option(..) if !param_ty.is_ffi_safe() => {
+            param_ty.ffi_safe_version().to_syn()
+        }
         _ => param_ty.to_syn(),
     }
 }
