@@ -30,6 +30,9 @@ pub enum Type<P: TyPosition = Everywhere> {
     ///
     /// This is *different* from `Option<&T>` and `Option<Box<T>` for an opaque `T`: That is represented as
     /// a nullable pointer.
+    ///
+    /// This does not get used when the user writes `-> Option<T>` (for non-opaque T):
+    /// that will always use [`ReturnType::Nullable`](crate::hir::ReturnType::Nullable).
     DiplomatOption(Box<Type<P>>),
 }
 
