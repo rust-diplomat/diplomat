@@ -436,6 +436,10 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
                 &_ => unreachable!("unknown AST/HIR variant"),
             },
+            Type::DiplomatOption(ref s) => {
+                let inner = self.gen_ty_name(s, header);
+                self.formatter.fmt_optional_type_name(s, &inner).into()
+            }
             _ => unreachable!("{}", format!("unknown AST/HIR variant: {:?}", ty)),
         };
 
