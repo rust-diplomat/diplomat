@@ -23,9 +23,10 @@ pub use callback::DiplomatCallback;
 mod result;
 pub use result::DiplomatResult;
 
-/// A type to represent Option<T> over FFI. Prefer using Option<T> with boxes and reference
-/// types, and in return types, use this in structs/fn args. The macro will perform autoconversions
-/// between these types when found in args (but not in structs)
+/// A type to represent Option<T> over FFI.
+/// 
+/// Used internally to handle `Option<T>` arguments and return types, and needs to be
+/// used explicitly for optional struct fields.
 pub type DiplomatOption<T> = DiplomatResult<T, ()>;
 
 /// Like [`char`], but unvalidated.
