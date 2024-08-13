@@ -750,7 +750,7 @@ pub struct BackendAttrSupport {
     pub utf8_strings: bool,
     /// Whether the language uses UTF-16 strings
     pub utf16_strings: bool,
-    /// Whether the language supports returning or using slices with 'static lifetimes.
+    /// Whether the language supports using slices with 'static lifetimes.
     pub static_slices: bool,
 
     // Special methods
