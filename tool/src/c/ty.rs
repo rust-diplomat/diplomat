@@ -387,7 +387,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     // Generate the C code for referencing a particular type in the input position (i.e., not return types).
     // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'tcx, str> {
+    pub fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'tcx, str> {
         let ty_name = match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
