@@ -45,6 +45,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
     pub enum OptionEnum {
         Foo,
         Bar,
@@ -111,19 +112,21 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum>  {
+        pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum> {
             arg
         }
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_input_struct(arg: Option<OptionInputStruct>) -> Option<OptionInputStruct> {
+        pub fn accepts_option_input_struct(
+            arg: Option<OptionInputStruct>,
+        ) -> Option<OptionInputStruct> {
             arg
         }
         #[diplomat::attr(not(supports = option), disable)]
         pub fn returns_option_input_struct() -> OptionInputStruct {
             OptionInputStruct {
-                a: Some(1).into(),
+                a: Some(6).into(),
                 b: None.into(),
-                c: Some(OptionEnum::Foo).into(),
+                c: Some(OptionEnum::Bar).into(),
             }
         }
     }

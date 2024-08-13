@@ -8,7 +8,7 @@
     }
 
 #define simple_assert(name, condition) \
-    if (!condition) { \
+    if (!(condition)) { \
         std::cout << __FILE__ ":" << __LINE__ << ": " << name << ": " #condition " failed" << std::endl; \
         exit(1); \
     }

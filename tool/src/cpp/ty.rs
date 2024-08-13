@@ -677,10 +677,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }
             Type::DiplomatOption(ref inner) => {
-                let conversion =
-                    self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
-                format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt")
-                    .into()
+                let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
+                format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
