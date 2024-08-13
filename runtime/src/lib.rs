@@ -21,13 +21,7 @@ mod callback;
 pub use callback::DiplomatCallback;
 
 mod result;
-pub use result::DiplomatResult;
-
-/// A type to represent Option<T> over FFI.
-/// 
-/// Used internally to handle `Option<T>` arguments and return types, and needs to be
-/// used explicitly for optional struct fields.
-pub type DiplomatOption<T> = DiplomatResult<T, ()>;
+pub use result::{DiplomatOption, DiplomatResult};
 
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;
