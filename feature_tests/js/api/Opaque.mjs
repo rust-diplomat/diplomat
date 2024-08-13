@@ -85,13 +85,13 @@ export class Opaque {
 
     assertStruct(s) {
         
-        let functionCleanup = new diplomatRuntime.CleanupArena();
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanup, {}));
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena, {}));
     
         try {}
         
         finally {
-            functionCleanup.free();
+            functionCleanupArena.free();
         }
     }
 

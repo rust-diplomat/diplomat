@@ -89,37 +89,37 @@ export class Foo {
 
     static extractFromFields(fields) {
         
-        let functionCleanup = new diplomatRuntime.CleanupArena();
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanup, {aAppendArray: [aEdges],}));
+        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}));
     
         try {
             return new Foo(result, [], aEdges);
         }
         
         finally {
-            functionCleanup.free();
+            functionCleanupArena.free();
         }
     }
 
     static extractFromBounds(bounds, anotherString) {
         
-        let functionCleanup = new diplomatRuntime.CleanupArena();
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanup, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanupArena, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
             return new Foo(result, [], aEdges);
         }
         
         finally {
-            functionCleanup.free();
+            functionCleanupArena.free();
         
             anotherStringSlice.garbageCollect();
         }

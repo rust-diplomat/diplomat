@@ -169,7 +169,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     };
                     Some(
                         format!(
-                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanup)"#,
+                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena)"#,
                             lt_name = struct_def.lifetimes.fmt_lifetime(lt),
                         )
                     )
@@ -177,7 +177,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     None
                 }
             } else if let &hir::Type::Struct(..) = &field.ty {
-                Some("functionCleanup".into())
+                Some("functionCleanupArena".into())
             } else {
                 // We take ownership
                 None
@@ -346,7 +346,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             } else {
                 let alloc = if let hir::Type::Struct(..) = param.ty {
                     method_info.needs_slice_cleanup = true;
-                    Some("functionCleanup")
+                    Some("functionCleanupArena")
                 } else {
                     None
                 };

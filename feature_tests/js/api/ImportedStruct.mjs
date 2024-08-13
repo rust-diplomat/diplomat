@@ -25,7 +25,7 @@ export class ImportedStruct {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanup,
+        functionCleanupArena,
         appendArrayMap
     ) {
         return [this.#foo.ffiValue, this.#count]

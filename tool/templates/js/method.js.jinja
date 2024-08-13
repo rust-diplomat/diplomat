@@ -6,7 +6,7 @@
 {%- endfor -%}
 ) {%- if typescript %}{{ return_type }};{% else %} {
     {% if needs_slice_cleanup %}
-    let functionCleanup = new diplomatRuntime.CleanupArena();
+    let functionCleanupArena = new diplomatRuntime.CleanupArena();
     {% endif -%}
 
     {% for slice in slice_params %}
@@ -52,7 +52,7 @@
     
     finally {
     {%- if needs_slice_cleanup %}
-        functionCleanup.free();
+        functionCleanupArena.free();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}
