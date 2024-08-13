@@ -454,7 +454,7 @@ impl<'ast> LoweringContext<'ast> {
         method_parent_attrs: &Attrs,
         self_id: TypeId,
         special_method_presence: &mut SpecialMethodPresence,
-    ) -> Result<Method, ()> {
+    ) -> Result<Option<Method>, ()> {
         self.errors.set_subitem(method.name.as_str());
         let name = self.lower_ident(&method.name, "method name");
 
@@ -473,6 +473,15 @@ impl<'ast> LoweringContext<'ast> {
             (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
         };
 
+        
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
+
+        if attrs.disable {
+            return Ok(None);
+        }
+
         let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
         let (output, lifetime_env) = self.lower_return_type(
@@ -481,10 +490,6 @@ impl<'ast> LoweringContext<'ast> {
             return_ltl,
             in_path,
         )?;
-
-        let attrs =
-            self.attr_validator
-                .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
         let hir_method = Method {
@@ -515,7 +520,7 @@ impl<'ast> LoweringContext<'ast> {
             return Err(());
         }
 
-        Ok(hir_method)
+        Ok(Some(hir_method))
     }
 
     /// Lowers many [`ast::Method`]s into a vector of [`hir::Method`]s.
@@ -540,9 +545,10 @@ impl<'ast> LoweringContext<'ast> {
                 special_method_presence,
             );
             match (method, &mut methods) {
-                (Ok(method), Ok(methods)) => {
+                (Ok(Some(method)), Ok(methods)) => {
                     methods.push(method);
                 }
+                (Ok(None), _) => {},
                 _ => methods = Err(()),
             }
         }
