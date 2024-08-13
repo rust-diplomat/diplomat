@@ -12,7 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct MyZst_option {union { MyZst ok; }; bool is_ok; } MyZst_option;
+    
 } // namespace capi
 } // namespace
 

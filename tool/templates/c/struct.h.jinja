@@ -5,4 +5,6 @@ struct {{ty_name}} {
 {%- endfor %}
 } {%- if !is_for_cpp %} {{ ty_name }} {%- endif %};{% endif %}
 
+{% if fields.len() != 0 -%}
 typedef struct {{ ty_name }}_option {union { {{ty_name}} ok; }; bool is_ok; } {{ ty_name }}_option;
+{%- endif %}

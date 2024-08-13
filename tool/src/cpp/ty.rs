@@ -557,7 +557,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let conversion =
                     self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
-                format!("{cpp_name}.has_value() ? ({copt}){{ {{ {conversion} }}, true }} : ({copt}){{ {{}}, true }}").into()
+                format!("{cpp_name}.has_value() ? ({copt}){{ {{ {conversion} }}, true }} : ({copt}){{ {{}}, false }}").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
