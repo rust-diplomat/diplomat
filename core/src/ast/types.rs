@@ -520,15 +520,7 @@ impl TypeName {
             TypeName::PrimitiveSlice(ltmt, prim, StdlibOrDiplomat::Stdlib) => {
                 TypeName::PrimitiveSlice(ltmt.clone(), *prim, StdlibOrDiplomat::Diplomat)
             }
-            TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
-            TypeName::Option(inner, _) => match **inner {
-                // Option<&T>/Option<Box<T>> are the ffi-safe way to specify options
-                TypeName::Reference(..) | TypeName::Box(..) => {
-                    TypeName::Option(inner.clone(), StdlibOrDiplomat::Stdlib)
-                }
-                // For other types (primitives, structs, enums) you should use DiplomatOption
-                _ => TypeName::Option(inner.clone(), StdlibOrDiplomat::Diplomat),
-            },
+            TypeName::Ordering => TypeName::Primitive(PrimitiveType::i8),
             _ => self.clone(),
         }
     }
