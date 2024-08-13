@@ -22,7 +22,7 @@ typedef struct MyStruct {
   MyEnum g;
 } MyStruct;
 
-
+typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
 
 
 

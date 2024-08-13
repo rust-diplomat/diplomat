@@ -16,7 +16,7 @@ typedef struct CallbackTestingStruct {
   int32_t y;
 } CallbackTestingStruct;
 
-
+typedef struct CallbackTestingStruct_option {union { CallbackTestingStruct ok; }; bool is_ok; } CallbackTestingStruct_option;
 
 
 

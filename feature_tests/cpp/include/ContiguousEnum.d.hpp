@@ -18,6 +18,8 @@ namespace capi {
       ContiguousEnum_E = 2,
       ContiguousEnum_F = 3,
     };
+    
+    typedef struct ContiguousEnum_option {union { ContiguousEnum ok; }; bool is_ok; } ContiguousEnum_option;
 } // namespace capi
 } // namespace
 

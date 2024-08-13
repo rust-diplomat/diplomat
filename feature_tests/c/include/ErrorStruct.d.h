@@ -16,7 +16,7 @@ typedef struct ErrorStruct {
   int32_t j;
 } ErrorStruct;
 
-
+typedef struct ErrorStruct_option {union { ErrorStruct ok; }; bool is_ok; } ErrorStruct_option;
 
 
 
