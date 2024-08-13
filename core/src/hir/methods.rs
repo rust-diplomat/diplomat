@@ -3,7 +3,9 @@
 use std::collections::BTreeSet;
 use std::ops::Deref;
 
-use super::{Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, SelfType, Type, TypeContext};
+use super::{
+    Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, OutputOnly, SelfType, Type, TypeContext,
+};
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
@@ -34,6 +36,45 @@ pub struct Method {
     pub output: ReturnType,
     /// Resolved (and inherited) diplomat::attr attributes on this method
     pub attrs: Attrs,
+}
+
+pub trait CallbackInstantiationFunctionality {
+    #[allow(clippy::result_unit_err)]
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()>; // the types of the parameters
+    #[allow(clippy::result_unit_err)]
+    fn get_output_type(&self) -> Result<&Option<Type>, ()>;
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+// Note: we do not support borrowing across callbacks
+pub struct Callback {
+    pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
+    pub params: Vec<CallbackParam>,
+    pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+}
+
+// uninstantiatable; represents no callback allowed
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum NoCallback {}
+
+impl CallbackInstantiationFunctionality for Callback {
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
+        Ok(self.params.iter().map(|p| &p.ty))
+    }
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+        Ok(&self.output)
+    }
+}
+
+impl CallbackInstantiationFunctionality for NoCallback {
+    fn get_input_types(&self) -> Result<impl Iterator<Item = &Type<OutputOnly>>, ()> {
+        Err::<std::array::IntoIter<&Type<OutputOnly>, 0>, ()>(())
+    }
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+        Err(())
+    }
 }
 
 /// Type that the method returns.
@@ -70,6 +111,14 @@ pub struct ParamSelf {
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
+}
+
+/// A parameter in a callback
+/// No name, since all we get is the callback type signature
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct CallbackParam {
+    pub ty: Type<OutputOnly>,
 }
 
 impl SuccessType {

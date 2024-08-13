@@ -322,7 +322,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            if let Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8)) = param.ty {
+            if matches!(
+                param.ty,
+                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
+            ) {
                 param_validations.push(format!(
                     "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
                     param = param.name.as_str(),

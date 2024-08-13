@@ -85,6 +85,7 @@ mod ffi {
             self.f
         }
     }
+    use core::ffi::c_void;
     use diplomat_runtime::*;
     #[no_mangle]
     extern "C" fn Foo_make(
@@ -151,15 +152,15 @@ mod ffi {
         this.b().into()
     }
     #[no_mangle]
-    extern "C" fn Foo_c(this: Foo) -> &str {
+    extern "C" fn Foo_c(this: Foo) -> diplomat_runtime::DiplomatUtf8StrSlice {
         this.c().into()
     }
     #[no_mangle]
-    extern "C" fn Foo_d(this: Foo) -> &DiplomatStr {
+    extern "C" fn Foo_d(this: Foo) -> diplomat_runtime::DiplomatStrSlice {
         this.d().into()
     }
     #[no_mangle]
-    extern "C" fn Foo_e(this: Foo) -> &DiplomatStr16 {
+    extern "C" fn Foo_e(this: Foo) -> diplomat_runtime::DiplomatStr16Slice {
         this.e().into()
     }
     #[no_mangle]

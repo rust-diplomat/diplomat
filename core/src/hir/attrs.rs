@@ -774,6 +774,8 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
+    /// Allowing callback arguments
+    pub callbacks: bool,
 }
 
 impl BackendAttrSupport {
@@ -797,6 +799,7 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
+            callbacks: true,
         }
     }
 }
@@ -926,6 +929,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
+                callbacks,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -945,7 +949,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
-
+                "callbacks" => callbacks,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
