@@ -134,7 +134,7 @@ export class MyStruct {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new MyZst();
-                throw new Error('MyZst', { cause });
+                throw new globalThis.Error('MyZst', { cause });
             }
     
         }

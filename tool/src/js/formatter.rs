@@ -45,10 +45,7 @@ const RESERVED: &[&str] = &[
 ];
 
 /// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-const RESERVED_TYPES: &[&str] = &[
-    "Infinity",
-    "NaN",
-];
+const RESERVED_TYPES: &[&str] = &["Infinity", "NaN"];
 
 /// Helper class for us to format JS identifiers from the HIR.
 pub(crate) struct JSFormatter<'tcx> {
@@ -72,7 +69,7 @@ impl<'tcx> JSFormatter<'tcx> {
             .rename
             .apply(type_def.name().as_str().into());
 
-        if RESERVED_TYPES.contains(&&*name) || RESERVED.contains(&&*name)  {
+        if RESERVED_TYPES.contains(&&*name) || RESERVED.contains(&&*name) {
             panic!("{name} is not an allowed type in JS. Please rename.")
         }
 
