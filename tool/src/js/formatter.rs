@@ -37,6 +37,7 @@ const RESERVED: &[&str] = &[
     "true",
     "try",
     "typeof",
+    "undefined",
     "var",
     "void",
     "while",
@@ -47,60 +48,6 @@ const RESERVED: &[&str] = &[
 const RESERVED_TYPES: &[&str] = &[
     "Infinity",
     "NaN",
-    "Object",
-    "Function",
-    "Boolean",
-    "Symbol",
-    "Error",
-    "AggregateError",
-    "EvalError",
-    "RangeError",
-    "ReferenceError",
-    "SyntaxError",
-    "TypeError",
-    "URIError",
-    "InternalError",
-    "Number",
-    "BigInt",
-    "Math",
-    "Date",
-    "String",
-    "RegExp",
-    "Array",
-    "Int8Array",
-    "Uint8Array",
-    "Uint8ClampedArray",
-    "Int16Array",
-    "Uint16Array",
-    "Int32Array",
-    "Uint32Array",
-    "BigInt64Array",
-    "BigUint64Array",
-    "Float16Array",
-    "Float32Array",
-    "Float64Array",
-    "Map",
-    "Set",
-    "WeakMap",
-    "WeakSet",
-    "ArrayBuffer",
-    "SharedArrayBuffer",
-    "DataView",
-    "Atomics",
-    "JSON",
-    "WeakRef",
-    "FinalizationRegistry",
-    "Iterator",
-    "AsyncIterator",
-    "Promise",
-    "GeneratorFunction",
-    "AsyncGeneratorFunction",
-    "Generator",
-    "AsyncGenerator",
-    "AsyncFunction",
-    "Reflect",
-    "Proxy",
-    "Intl",
 ];
 
 /// Helper class for us to format JS identifiers from the HIR.
@@ -125,7 +72,7 @@ impl<'tcx> JSFormatter<'tcx> {
             .rename
             .apply(type_def.name().as_str().into());
 
-        if RESERVED_TYPES.contains(&&*name) {
+        if RESERVED_TYPES.contains(&&*name) || RESERVED.contains(&&*name)  {
             panic!("{name} is not an allowed type in JS. Please rename.")
         }
 
