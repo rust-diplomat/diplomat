@@ -46,11 +46,14 @@ namespace capi {
     
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
     
-    void OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 _arg);
+    typedef struct OptionOpaque_accepts_option_u8_result {union {uint8_t ok; }; bool is_ok;} OptionOpaque_accepts_option_u8_result;
+    OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 arg);
     
-    void OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option _arg);
+    typedef struct OptionOpaque_accepts_option_enum_result {union {diplomat::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
+    OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option arg);
     
-    void OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option _arg);
+    typedef struct OptionOpaque_accepts_option_input_struct_result {union {diplomat::capi::OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
+    OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option arg);
     
     diplomat::capi::OptionInputStruct OptionOpaque_returns_option_input_struct(void);
     
@@ -116,16 +119,19 @@ inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
   return result;
 }
 
-inline void OptionOpaque::accepts_option_u8(std::optional<uint8_t> _arg) {
-  diplomat::capi::OptionOpaque_accepts_option_u8(_arg.has_value() ? (diplomat::capi::OptionU8){ { _arg.value() }, true } : (diplomat::capi::OptionU8){ {}, true });
+inline std::optional<uint8_t> OptionOpaque::accepts_option_u8(std::optional<uint8_t> arg) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (diplomat::capi::OptionU8){ { arg.value() }, true } : (diplomat::capi::OptionU8){ {}, true });
+  return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
 }
 
-inline void OptionOpaque::accepts_option_enum(std::optional<OptionEnum> _arg) {
-  diplomat::capi::OptionOpaque_accepts_option_enum(_arg.has_value() ? (diplomat::capi::OptionEnum_option){ { _arg.value().AsFFI() }, true } : (diplomat::capi::OptionEnum_option){ {}, true });
+inline std::optional<OptionEnum> OptionOpaque::accepts_option_enum(std::optional<OptionEnum> arg) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option){ { arg.value().AsFFI() }, true } : (diplomat::capi::OptionEnum_option){ {}, true });
+  return result.is_ok ? std::optional<OptionEnum>(OptionEnum::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline void OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> _arg) {
-  diplomat::capi::OptionOpaque_accepts_option_input_struct(_arg.has_value() ? (diplomat::capi::OptionInputStruct_option){ { _arg.value().AsFFI() }, true } : (diplomat::capi::OptionInputStruct_option){ {}, true });
+inline std::optional<OptionInputStruct> OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> arg) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (diplomat::capi::OptionInputStruct_option){ { arg.value().AsFFI() }, true } : (diplomat::capi::OptionInputStruct_option){ {}, true });
+  return result.is_ok ? std::optional<OptionInputStruct>(OptionInputStruct::FromFFI(result.ok)) : std::nullopt;
 }
 
 inline OptionInputStruct OptionOpaque::returns_option_input_struct() {

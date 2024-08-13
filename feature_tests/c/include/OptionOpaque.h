@@ -45,11 +45,14 @@ void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
 
-void OptionOpaque_accepts_option_u8(OptionU8 _arg);
+typedef struct OptionOpaque_accepts_option_u8_result {union {uint8_t ok; }; bool is_ok;} OptionOpaque_accepts_option_u8_result;
+OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(OptionU8 arg);
 
-void OptionOpaque_accepts_option_enum(OptionEnum_option _arg);
+typedef struct OptionOpaque_accepts_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
+OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(OptionEnum_option arg);
 
-void OptionOpaque_accepts_option_input_struct(OptionInputStruct_option _arg);
+typedef struct OptionOpaque_accepts_option_input_struct_result {union {OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
+OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(OptionInputStruct_option arg);
 
 OptionInputStruct OptionOpaque_returns_option_input_struct(void);
 

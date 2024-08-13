@@ -106,17 +106,23 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_u8(_arg: Option<u8>) {}
+        pub fn accepts_option_u8(arg: Option<u8>) -> Option<u8> {
+            arg
+        }
 
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_enum(_arg: Option<OptionEnum>) {}
+        pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum>  {
+            arg
+        }
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_input_struct(_arg: Option<OptionInputStruct>) {}
+        pub fn accepts_option_input_struct(arg: Option<OptionInputStruct>) -> Option<OptionInputStruct> {
+            arg
+        }
         #[diplomat::attr(not(supports = option), disable)]
         pub fn returns_option_input_struct() -> OptionInputStruct {
             OptionInputStruct {
                 a: Some(1).into(),
-                b: Some('a'.into()).into(),
+                b: None.into(),
                 c: Some(OptionEnum::Foo).into(),
             }
         }
