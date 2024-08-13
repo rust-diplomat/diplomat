@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "OptionEnum.d.h"
+#include "OptionInputStruct.d.h"
 #include "OptionStruct.d.h"
 
 #include "OptionOpaque.d.h"
@@ -42,6 +44,14 @@ OptionStruct OptionOpaque_new_struct_nones(void);
 void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
+
+void OptionOpaque_accepts_option_u8(OptionU8 _arg);
+
+void OptionOpaque_accepts_option_enum(OptionEnum_option _arg);
+
+void OptionOpaque_accepts_option_input_struct(OptionInputStruct_option _arg);
+
+OptionInputStruct OptionOpaque_returns_option_input_struct(void);
 
 
 void OptionOpaque_destroy(OptionOpaque* self);
