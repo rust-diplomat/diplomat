@@ -479,6 +479,9 @@ fn get_ty_from_syn_path(p: &syn::TypePath) -> Option<&syn::Type> {
 
 impl TypeName {
     /// Is this type safe to be passed across the FFI boundary?
+    ///
+    /// This also marks DiplomatOption<&T> as FFI-unsafe: these are technically safe from an ABI standpoint
+    /// however Diplomat always expects these to be equivalent to a nullable pointer, so Option<&T> is required.
     pub fn is_ffi_safe(&self) -> bool {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
@@ -503,6 +506,9 @@ impl TypeName {
     }
 
     /// What's the FFI safe version of this type?
+    ///
+    /// This also marks DiplomatOption<&T> as FFI-unsafe: these are technically safe from an ABI standpoint
+    /// however Diplomat always expects these to be equivalent to a nullable pointer, so Option<&T> is required.
     pub fn ffi_safe_version(&self) -> TypeName {
         match self {
             TypeName::StrReference(lt, encoding, StdlibOrDiplomat::Stdlib) => {
