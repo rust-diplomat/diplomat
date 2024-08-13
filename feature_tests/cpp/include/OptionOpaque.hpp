@@ -9,6 +9,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
+#include "OptionEnum.hpp"
+#include "OptionInputStruct.hpp"
 #include "OptionStruct.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -43,6 +45,14 @@ namespace capi {
     void OptionOpaque_assert_integer(const diplomat::capi::OptionOpaque* self, int32_t i);
     
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
+    
+    void OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 _arg);
+    
+    void OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option _arg);
+    
+    void OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option _arg);
+    
+    diplomat::capi::OptionInputStruct OptionOpaque_returns_option_input_struct(void);
     
     
     void OptionOpaque_destroy(OptionOpaque* self);
@@ -104,6 +114,23 @@ inline void OptionOpaque::assert_integer(int32_t i) const {
 inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
   auto result = diplomat::capi::OptionOpaque_option_opaque_argument(arg ? arg->AsFFI() : nullptr);
   return result;
+}
+
+inline void OptionOpaque::accepts_option_u8(std::optional<uint8_t> _arg) {
+  diplomat::capi::OptionOpaque_accepts_option_u8(_arg.has_value() ? (diplomat::capi::OptionU8){ { _arg.value() }, true } : (diplomat::capi::OptionU8){ {}, true });
+}
+
+inline void OptionOpaque::accepts_option_enum(std::optional<OptionEnum> _arg) {
+  diplomat::capi::OptionOpaque_accepts_option_enum(_arg.has_value() ? (diplomat::capi::OptionEnum_option){ { _arg.value().AsFFI() }, true } : (diplomat::capi::OptionEnum_option){ {}, true });
+}
+
+inline void OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> _arg) {
+  diplomat::capi::OptionOpaque_accepts_option_input_struct(_arg.has_value() ? (diplomat::capi::OptionInputStruct_option){ { _arg.value().AsFFI() }, true } : (diplomat::capi::OptionInputStruct_option){ {}, true });
+}
+
+inline OptionInputStruct OptionOpaque::returns_option_input_struct() {
+  auto result = diplomat::capi::OptionOpaque_returns_option_input_struct();
+  return OptionInputStruct::FromFFI(result);
 }
 
 inline const diplomat::capi::OptionOpaque* OptionOpaque::AsFFI() const {
