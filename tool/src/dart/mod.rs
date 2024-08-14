@@ -38,6 +38,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterators = true;
     a.iterables = true;
     a.indexing = true;
+    a.option = true;
     a.callbacks = false;
 
     a
@@ -646,6 +647,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "core.List<core.String>".into(),
+            Type::DiplomatOption(ref inner) => {
+                let inner = self.gen_type_name(inner);
+                format!("{inner}?").into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -712,6 +717,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
             Type::Slice(s) => self.gen_slice(&s).into(),
+            Type::DiplomatOption(ref inner) => self.gen_result(Some(&inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -801,6 +807,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     alloc.expect("need allocator for slice")
                 };
                 format!("{dart_name}.{alloc_in}({alloc})",).into()
+            }
+            Type::DiplomatOption(ref inner) => {
+                let conversion = self.gen_dart_to_c_for_type(
+                    inner,
+                    dart_name.clone(),
+                    struct_borrow_info,
+                    alloc,
+                );
+                let result = self.gen_result(Some(inner), None);
+                format!("{dart_name} != null ? {result}.ok({conversion}) : {result}.err()").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -919,18 +935,28 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => if let Some(lt) = slice.lifetime() {
-                let MaybeStatic::NonStatic(lifetime) = lt else {
-                    panic!("'static not supported in Dart");
-                };
-                format!(
-                    "{var_name}._toDart({}Edges)",
-                    lifetime_env.fmt_lifetime(lifetime)
-                )
-            } else {
-                format!("{var_name}._toDart([])")
+            Type::Slice(slice) => {
+                if let Some(lt) = slice.lifetime() {
+                    let MaybeStatic::NonStatic(lifetime) = lt else {
+                        panic!("'static not supported in Dart");
+                    };
+                    format!(
+                        "{var_name}._toDart({}Edges)",
+                        lifetime_env.fmt_lifetime(lifetime)
+                    )
+                    .into()
+                } else {
+                    format!("{var_name}._toDart([])").into()
+                }
             }
-            .into(),
+            Type::DiplomatOption(ref inner) => {
+                let conversion = self.gen_c_to_dart_for_type(
+                    inner,
+                    format!("{var_name}.union.ok").into(),
+                    lifetime_env,
+                );
+                format!("{var_name}.isOk ? {conversion} : null").into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
