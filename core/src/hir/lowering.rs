@@ -5,7 +5,7 @@ use super::{
     Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
-    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId, TraitDef
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};

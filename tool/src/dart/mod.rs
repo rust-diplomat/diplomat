@@ -437,40 +437,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
             let alloc = if let hir::Type::Struct(..) = param.ty {
                 needs_temp_arena = true;
                 Some("temp.arena".to_string())
             } else if let hir::Type::Slice(s) = param.ty {
                 match param_borrow_kind {
-=======
-            param_decls_dart.push(format!(
-                "{} {param_name}",
-                match &param.ty {
-                    CanBeInputType::Everywhere(ty) => self.gen_type_name(&ty),
-                    CanBeInputType::InputOnly(ty) => self.gen_type_name(&ty),
-                }
-            ));
-=======
-            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
->>>>>>> 105f801 (refactoring after rebasing, getting rid of CanBeInputType)
-
-            if let hir::Type::Slice(slice) = param.ty {
-                // Two args on the ABI: pointer and size
-
-                let param_element_type_ffi = self.gen_slice_element_ty(&slice);
-                param_types_ffi.push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
-                param_types_ffi_cast
-                    .push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
-                param_names_ffi.push(format!("{param_name}Data").into());
-
-                param_types_ffi.push(self.formatter.fmt_usize(false).into());
-                param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
-                param_names_ffi.push(format!("{param_name}Length").into());
-
-                let alloc = match param_borrow_kind {
->>>>>>> bf652fc (Adding a wrapper for input-only types so that `Param`s can be both TyPosition InputOnly and Everywhere; propagating this through the tool)
                     ParamBorrowInfo::BorrowedSlice => {
                         // Slices borrowed in the return value use a custom arena
                         arenas.push(format!("final {param_name}Arena = _FinalizedArena();").into());
