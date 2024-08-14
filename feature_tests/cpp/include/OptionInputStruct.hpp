@@ -25,9 +25,9 @@ namespace capi {
 
 inline diplomat::capi::OptionInputStruct OptionInputStruct::AsFFI() const {
   return diplomat::capi::OptionInputStruct {
-    /* .a = */ a.has_value() ? (diplomat::capi::OptionU8){ { a.value() }, true } : (diplomat::capi::OptionU8){ {}, false },
-    /* .b = */ b.has_value() ? (diplomat::capi::OptionChar){ { b.value() }, true } : (diplomat::capi::OptionChar){ {}, false },
-    /* .c = */ c.has_value() ? (diplomat::capi::OptionEnum_option){ { c.value().AsFFI() }, true } : (diplomat::capi::OptionEnum_option){ {}, false },
+    /* .a = */ a.has_value() ? (diplomat::capi::OptionU8{ { a.value() }, true }) : (diplomat::capi::OptionU8{ {}, false }),
+    /* .b = */ b.has_value() ? (diplomat::capi::OptionChar{ { b.value() }, true }) : (diplomat::capi::OptionChar{ {}, false }),
+    /* .c = */ c.has_value() ? (diplomat::capi::OptionEnum_option{ { c.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
   };
 }
 

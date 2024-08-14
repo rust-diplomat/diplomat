@@ -120,17 +120,17 @@ inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
 }
 
 inline std::optional<uint8_t> OptionOpaque::accepts_option_u8(std::optional<uint8_t> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (diplomat::capi::OptionU8){ { arg.value() }, true } : (diplomat::capi::OptionU8){ {}, false });
+  auto result = diplomat::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (diplomat::capi::OptionU8{ { arg.value() }, true }) : (diplomat::capi::OptionU8{ {}, false }));
   return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
 }
 
 inline std::optional<OptionEnum> OptionOpaque::accepts_option_enum(std::optional<OptionEnum> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option){ { arg.value().AsFFI() }, true } : (diplomat::capi::OptionEnum_option){ {}, false });
+  auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }));
   return result.is_ok ? std::optional<OptionEnum>(OptionEnum::FromFFI(result.ok)) : std::nullopt;
 }
 
 inline std::optional<OptionInputStruct> OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (diplomat::capi::OptionInputStruct_option){ { arg.value().AsFFI() }, true } : (diplomat::capi::OptionInputStruct_option){ {}, false });
+  auto result = diplomat::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (diplomat::capi::OptionInputStruct_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionInputStruct_option{ {}, false }));
   return result.is_ok ? std::optional<OptionInputStruct>(OptionInputStruct::FromFFI(result.ok)) : std::nullopt;
 }
 
