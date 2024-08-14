@@ -48,7 +48,7 @@ pub mod ffi {
     pub struct MyZst;
 
     impl Opaque {
-        #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(not(kotlin), constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
         }

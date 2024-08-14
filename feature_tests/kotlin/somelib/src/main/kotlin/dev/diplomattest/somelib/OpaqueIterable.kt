@@ -14,7 +14,7 @@ class OpaqueIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>
-): Iterable<RenamedOpaqueIteratorIteratorItem> {
+): Iterable<OpaqueIteratorIteratorItem> {
 
     internal class OpaqueIterableCleaner(val handle: Pointer, val lib: OpaqueIterableLib) : Runnable {
         override fun run() {
@@ -27,7 +27,7 @@ class OpaqueIterable internal constructor (
         internal val lib: OpaqueIterableLib = Native.load("somelib", libClass)
     }
     
-    override fun iterator(): RenamedOpaqueIterator {
+    override fun iterator(): OpaqueIterator {
         
         val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
