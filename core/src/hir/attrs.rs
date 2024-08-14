@@ -710,7 +710,7 @@ impl Attrs {
     }
 }
 
-/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Non-exhaustive list of what attributes and other features your backend is able to handle, based on #[diplomat::attr(...)] contents.
 /// Set this through an [`AttributeValidator`].
 ///
 /// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
@@ -772,6 +772,9 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
+
+    /// Support for Option<Struct> and Option<Primitive>
+    pub option: bool,
     /// Allowing callback arguments
     pub callbacks: bool,
 }
@@ -796,6 +799,7 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
+            option: true,
             callbacks: true,
         }
     }
@@ -925,6 +929,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
+                option,
                 callbacks,
             } = self.support;
             match value {
@@ -944,6 +949,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
+                "option" => option,
                 "callbacks" => callbacks,
                 _ => {
                     return Err(LoweringError::Other(format!(
@@ -1139,6 +1145,47 @@ mod tests {
                     #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_option(&self) -> u8 { todo!() }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_unsupported_features() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+                use diplomat_runtime::DiplomatOption;
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Struct {
+                    pub a: u8,
+                    pub b: u8,
+                    pub c: DiplomatOption<u8>,
+                }
+
+                struct Struct2 {
+                    pub a: DiplomatOption<Struct>,
+                }
+
+                #[diplomat::out]
+                struct OutStruct {
+                    pub option: DiplomatOption<u8>
+                }
+
+
+                impl Opaque {
+                    pub fn take_option(&self, option: DiplomatOption<u8>) {
+                        todo!()
+                    }
+                    // Always ok since this translates to a Resulty return
+                    pub fn returning_option_is_ok(&self) -> Option<u8> {
+                        todo!()
+                    }
+                }
+
             }
         }
     }

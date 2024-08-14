@@ -32,6 +32,9 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             prim.get_diplomat_slice_type(ltmt)
         }
+        ast::TypeName::Option(..) if !param_ty.is_ffi_safe() => {
+            param_ty.ffi_safe_version().to_syn()
+        }
         _ => param_ty.to_syn(),
     }
 }
@@ -51,6 +54,11 @@ fn param_conversion(
         } else {
             quote!(let #name = #name.into();)
         }),
+        // Convert Option<struct/enum/primitive> and DiplomatOption<opaque>
+        // simplify the check by just checking is_ffi_safe()
+        ast::TypeName::Option(..) if !param_type.is_ffi_safe() => {
+            Some(quote!(let #name = #name.into();))
+        }
         ast::TypeName::Function(in_types, out_type) => {
             let cb_wrap_ident = &name;
             let mut cb_param_list = vec![];
@@ -159,19 +167,29 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         } else if let ast::TypeName::Ordering = return_type {
             let return_type_syn = return_type.to_syn();
             (quote! { -> #return_type_syn }, quote! { as i8 })
-        } else if let ast::TypeName::Option(ty) = return_type {
+        } else if let ast::TypeName::Option(ty, is_std_option) = return_type {
             match ty.as_ref() {
                 // pass by reference, Option becomes null
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
                     let return_type_syn = return_type.to_syn();
-                    (quote! { -> #return_type_syn }, quote! {})
+                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
+                        quote! {}
+                    } else {
+                        quote! {.into()}
+                    };
+                    (quote! { -> #return_type_syn }, conversion)
                 }
                 // anything else goes through DiplomatResult
                 _ => {
                     let ty = ty.to_syn();
+                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
+                        quote! { .ok_or(()).into() }
+                    } else {
+                        quote! {}
+                    };
                     (
                         quote! { -> diplomat_runtime::DiplomatResult<#ty, ()> },
-                        quote! { .ok_or(()).into() },
+                        conversion,
                     )
                 }
             }
@@ -871,6 +889,52 @@ mod tests {
                         }
                         pub fn test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32) -> i32 {
                             f() + g(5)
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn both_kinds_of_option() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    use diplomat_runtime::DiplomatOption;
+                    #[diplomat::opaque]
+                    struct Foo {}
+                    struct CustomStruct {
+                        num: u8,
+                        b: bool,
+                        diplo_option: DiplomatOption<u8>,
+                    }
+                    impl Foo {
+                        pub fn diplo_option_u8(x: DiplomatOption<u8>) -> DiplomatOption<u8> {
+                            x
+                        }
+                        pub fn diplo_option_ref(x: DiplomatOption<&Foo>) -> DiplomatOption<&Foo> {
+                            x
+                        }
+                        pub fn diplo_option_box() -> DiplomatOption<Box<Foo>> {
+                            x
+                        }
+                        pub fn diplo_option_struct(x: DiplomatOption<CustomStruct>) -> DiplomatOption<CustomStruct> {
+                            x
+                        }
+                        pub fn option_u8(x: Option<u8>) -> Option<u8> {
+                            x
+                        }
+                        pub fn option_ref(x: Option<&Foo>) -> Option<&Foo> {
+                            x
+                        }
+                        pub fn option_box() -> Option<Box<Foo>> {
+                            x
+                        }
+                        pub fn option_struct(x: Option<CustomStruct>) -> Option<CustomStruct> {
+                            x
                         }
                     }
                 }

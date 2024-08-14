@@ -21,7 +21,7 @@ mod callback;
 pub use callback::DiplomatCallback;
 
 mod result;
-pub use result::DiplomatResult;
+pub use result::{DiplomatOption, DiplomatResult};
 
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;
