@@ -48,8 +48,12 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vMemSeg = arena.allocateFrom(JAVA_DOUBLE, v);
-            var nativeVal = somelib_h.Float64Vec_new(vMemSeg, vLen);
+            var vData= arena.allocateFrom(JAVA_DOUBLE, v);
+            var vView = DiplomatF64View.allocate(arena);
+            DiplomatF64View.len(vView, vLen);
+            DiplomatF64View.data(vView, vData);
+    
+            var nativeVal = somelib_h.Float64Vec_new(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -121,9 +125,12 @@ public class MyString {
     public static MyString new_(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_new(vMemSeg, vLen - 1);
+            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;
+            var vView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(vView, vLen);
+            DiplomatStringView.data(vView, vData);
+            var nativeVal = somelib_h.MyString_new(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -138,9 +145,12 @@ public class MyString {
     public static MyString newUnsafe(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_new_unsafe(vMemSeg, vLen - 1);
+            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;
+            var vView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(vView, vLen);
+            DiplomatStringView.data(vView, vData);
+            var nativeVal = somelib_h.MyString_new_unsafe(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -154,9 +164,12 @@ public class MyString {
     
     public static MyString newOwned(String v) {
         
-        var vMemSeg = Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
-        var vLen = vMemSeg.byteSize();
-        var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
+        var vData= Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
+        var vLen = vData.byteSize() - 1;
+        var vView = DiplomatStringView.allocate(Arena.global());
+        DiplomatStringView.len(vView, vLen);
+        DiplomatStringView.data(vView, vData);
+        var nativeVal = somelib_h.MyString_new_owned(vView);
         List<Object> selfEdges = List.of();
         
         
@@ -170,9 +183,9 @@ public class MyString {
     public static MyString newFromFirst(String [] v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vData = SliceUtils.strs8(arena, v);
+            var vView = SliceUtils.strs8(arena, v);
             var vLen = v.length;
-            var nativeVal = somelib_h.MyString_new_from_first(vData, vLen);
+            var nativeVal = somelib_h.MyString_new_from_first(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -189,9 +202,12 @@ public class MyString {
         
         try (var arena = Arena.ofConfined()) {
             
-            var newStrMemSeg = arena.allocateFrom(newStr, StandardCharsets.UTF_8);
-            var newStrLen = newStrMemSeg.byteSize();
-            somelib_h.MyString_set_str(internal, newStrMemSeg, newStrLen - 1);
+            var newStrData= arena.allocateFrom(newStr, StandardCharsets.UTF_8);
+            var newStrLen = newStrData.byteSize() - 1;
+            var newStrView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(newStrView, newStrLen);
+            DiplomatStringView.data(newStrView, newStrData);
+            somelib_h.MyString_set_str(internal, newStrView);
             
         }
     }

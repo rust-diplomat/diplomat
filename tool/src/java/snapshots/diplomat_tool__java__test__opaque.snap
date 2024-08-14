@@ -60,9 +60,12 @@ public class Opaque {
     public static Opaque fromStr(String input) {
         
         try (var arena = Arena.ofConfined()) {
-            var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_8);
-            var inputLen = inputMemSeg.byteSize();
-            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen - 1);
+            var inputData= arena.allocateFrom(input, StandardCharsets.UTF_8);
+            var inputLen = inputData.byteSize() - 1;
+            var inputView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(inputView, inputLen);
+            DiplomatStringView.data(inputView, inputData);
+            var nativeVal = somelib_h.Opaque_from_str(inputView);
             List<Object> selfEdges = List.of();
             
             
