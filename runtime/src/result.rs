@@ -25,9 +25,9 @@ impl<T: Clone, E: Clone> Clone for DiplomatResult<T, E> {
     fn clone(&self) -> Self {
         unsafe {
             if self.is_ok {
-                Ok((&*self.value.ok).clone()).into()
+                Ok((*self.value.ok).clone()).into()
             } else {
-                Err((&*self.value.err).clone()).into()
+                Err((*self.value.err).clone()).into()
             }
         }
     }
