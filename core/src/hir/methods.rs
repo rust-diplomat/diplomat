@@ -66,12 +66,6 @@ impl CallbackInstantiationFunctionality for Callback {
     fn get_output_type(&self) -> Result<&Option<Type>, ()> {
         Ok(&self.output)
     }
-    fn get_input_types(&self) -> Vec<&Type<OutputOnly>> {
-        self.params.iter().map(|p| &p.ty).collect()
-    }
-    fn get_output_type(&self) -> &Box<Option<Type>> {
-        &self.output
-    }
 }
 
 impl CallbackInstantiationFunctionality for NoCallback {
@@ -80,12 +74,6 @@ impl CallbackInstantiationFunctionality for NoCallback {
     }
     fn get_output_type(&self) -> Result<&Option<Type>, ()> {
         Err(())
-    }
-    fn get_input_types(&self) -> Vec<&Type<OutputOnly>> {
-        panic!("Shouldn't be trying to get the input types when no callback is allowed");
-    }
-    fn get_output_type(&self) -> &Box<Option<Type>> {
-        panic!("Shouldn't be trying to get the output type when no callback is allowed");
     }
 }
 

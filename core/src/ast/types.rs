@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct,
+    OpaqueStruct, Path, RustLink, Struct, Trait
 };
 use crate::Env;
 
