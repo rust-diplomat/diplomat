@@ -950,7 +950,7 @@ retutnVal.option() ?: return null
                     additional_name = Some(
                         struct_name.unwrap().to_owned()
                             + "_"
-                            + &method.name.to_string()
+                            + method.name.as_ref()
                             + "_"
                             + &param_name,
                     );
@@ -961,7 +961,7 @@ retutnVal.option() ?: return null
                     let param_names: Vec<String> = params
                         .iter()
                         .enumerate()
-                        .map(|(index, _)| format!("arg{}", index).into())
+                        .map(|(index, _)| format!("arg{}", index))
                         .collect();
                     let param_names_and_types: Vec<String> = param_input_types
                         .iter()
@@ -974,7 +974,7 @@ retutnVal.option() ?: return null
                         input_names: param_names.join(","),
                         input_params_and_types: param_names_and_types.join(","),
                         output_type: match **output {
-                            Some(ref ty) => self.gen_type_name(&ty, None).into(),
+                            Some(ref ty) => self.gen_type_name(ty, None).into(),
                             None => "Void".into(),
                         },
                     })
@@ -1102,18 +1102,15 @@ retutnVal.option() ?: return null
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
             visitor.visit_param(&param.ty, &param_name);
-            match &param.ty {
-                Type::Callback(_) => {
-                    additional_name = Some(
-                        type_name.to_owned()
-                            + "_"
-                            + &method.name.to_string()
-                            + "_diplomatCallback_"
-                            + &param_name
-                            + "_Native",
-                    )
-                }
-                _ => {}
+            if let Type::Callback(_) = &param.ty {
+                additional_name = Some(
+                    type_name.to_owned()
+                        + "_"
+                        + method.name.as_ref()
+                        + "_diplomatCallback_"
+                        + &param_name
+                        + "_Native",
+                )
             }
 
             param_decls.push(format!(
@@ -1507,7 +1504,7 @@ retutnVal.option() ?: return null
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
-            Type::Callback(_) => self.gen_type_name(ty, additional_name).into(),
+            Type::Callback(_) => self.gen_type_name(ty, additional_name),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1732,6 +1729,10 @@ mod test {
                 impl<'b> MyNativeStruct<'b> {
                     pub fn new() -> MyNativeStruct<'b> {
                         todo!()
+                    }
+
+                    pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
+                        f(10 + x)
                     }
                 }
             }
