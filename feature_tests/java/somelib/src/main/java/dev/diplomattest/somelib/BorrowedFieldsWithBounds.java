@@ -1,6 +1,6 @@
 package dev.diplomattest.somelib;
 
-import dev.diplomattest.somelib.ntv.somelib_h;
+import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -49,11 +49,17 @@ public class BorrowedFieldsWithBounds {
         try (var arena = Arena.ofConfined()) {
             var returnArena = (SegmentAllocator) Arena.ofAuto();
             var fooNative = foo.internal;
-            var dstr16XMemSeg = arena.allocateFrom(dstr16X, StandardCharsets.UTF_16);
-            var dstr16XLen = dstr16XMemSeg.byteSize();
-            var utf8StrZMemSeg = arena.allocateFrom(utf8StrZ, StandardCharsets.UTF_8);
-            var utf8StrZLen = utf8StrZMemSeg.byteSize();
-            var nativeVal = somelib_h.BorrowedFieldsWithBounds_from_foo_and_strings(returnArena, fooNative, dstr16XMemSeg, dstr16XLen - 1, utf8StrZMemSeg, utf8StrZLen - 1);
+            var dstr16XData= arena.allocateFrom(dstr16X, StandardCharsets.UTF_16);
+            var dstr16XLen = dstr16XData.byteSize() - 1;  // allocated strings are null terminated
+            var dstr16XView = DiplomatString16View.allocate(arena);
+            DiplomatString16View.len(dstr16XView, dstr16XLen);
+            DiplomatString16View.data(dstr16XView, dstr16XData);
+            var utf8StrZData= arena.allocateFrom(utf8StrZ, StandardCharsets.UTF_8);
+            var utf8StrZLen = utf8StrZData.byteSize() - 1;
+            var utf8StrZView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(utf8StrZView, utf8StrZLen);
+            DiplomatStringView.data(utf8StrZView, utf8StrZData);
+            var nativeVal = somelib_h.BorrowedFieldsWithBounds_from_foo_and_strings(returnArena, fooNative, dstr16XView, utf8StrZView);
             
             List<Object> xEdges = List.of(foo, dstr16X, utf8StrZ);
             List<Object> yEdges = List.of(foo, utf8StrZ);

@@ -162,8 +162,7 @@ class SliceUtils {
         var string = new String(bytes, StandardCharsets.UTF_16);
         return string;
     }
-
-    // for parameter conversion
+  // for parameter conversion
     static MemorySegment strs16(SegmentAllocator arena, String [] strings) {
         var diplomatStrsData = DiplomatStringView.allocateArray(strings.length, arena);
         var layout = DiplomatStringView.layout();
@@ -179,7 +178,10 @@ class SliceUtils {
                 i++;
             }
         });
-        return diplomatStrsData;
+        var diplomatStrsView = DiplomatStrings16View.allocate(arena);
+        DiplomatStrings16View.len(diplomatStrsView, strings.length);
+        DiplomatStrings16View.data(diplomatStrsView, diplomatStrsData);
+        return diplomatStrsView;
     }
 
     static MemorySegment strs8(SegmentAllocator arena, String [] strings) {
@@ -197,7 +199,11 @@ class SliceUtils {
                 i++;
             }
         });
-        return diplomatStrsData;
+
+        var diplomatStrsView = DiplomatStringsView.allocate(arena);
+        DiplomatStringsView.len(diplomatStrsView, strings.length);
+        DiplomatStringsView.data(diplomatStrsView, diplomatStrsData);
+        return diplomatStrsView;
     }
 
     static String readUtf8FromWriteable(MemorySegment writeable) {

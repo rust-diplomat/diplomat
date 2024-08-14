@@ -43,9 +43,12 @@ public class Utf16Wrap {
     public static Utf16Wrap fromUtf16(String input) {
         
         try (var arena = Arena.ofConfined()) {
-            var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_16);
-            var inputLen = inputMemSeg.byteSize();
-            var nativeVal = somelib_h.Utf16Wrap_from_utf16(inputMemSeg, inputLen - 1);
+            var inputData= arena.allocateFrom(input, StandardCharsets.UTF_16);
+            var inputLen = inputData.byteSize() - 1;  // allocated strings are null terminated
+            var inputView = DiplomatString16View.allocate(arena);
+            DiplomatString16View.len(inputView, inputLen);
+            DiplomatString16View.data(inputView, inputData);
+            var nativeVal = somelib_h.Utf16Wrap_from_utf16(inputView);
             List<Object> selfEdges = List.of();
             
             

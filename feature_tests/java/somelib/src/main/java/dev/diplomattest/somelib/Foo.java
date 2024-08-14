@@ -45,9 +45,12 @@ public class Foo {
     public static Foo new_(String x) {
         
         try (var arena = Arena.ofConfined()) {
-            var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
-            var xLen = xMemSeg.byteSize();
-            var nativeVal = somelib_h.Foo_new(xMemSeg, xLen - 1);
+            var xData= arena.allocateFrom(x, StandardCharsets.UTF_8);
+            var xLen = xData.byteSize() - 1;
+            var xView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(xView, xLen);
+            DiplomatStringView.data(xView, xData);
+            var nativeVal = somelib_h.Foo_new(xView);
             List<Object> selfEdges = List.of();
             
             
@@ -63,9 +66,12 @@ public class Foo {
     public static Foo newStatic(String x) {
         
         try (var arena = Arena.ofConfined()) {
-            var xMemSeg = arena.allocateFrom(x, StandardCharsets.UTF_8);
-            var xLen = xMemSeg.byteSize();
-            var nativeVal = somelib_h.Foo_new_static(xMemSeg, xLen - 1);
+            var xData= arena.allocateFrom(x, StandardCharsets.UTF_8);
+            var xLen = xData.byteSize() - 1;
+            var xView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(xView, xLen);
+            DiplomatStringView.data(xView, xData);
+            var nativeVal = somelib_h.Foo_new_static(xView);
             List<Object> selfEdges = List.of();
             
             
@@ -97,9 +103,12 @@ public class Foo {
         
         try (var arena = Arena.ofConfined()) {
             var boundsNative = bounds.internal;
-            var anotherStringMemSeg = arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
-            var anotherStringLen = anotherStringMemSeg.byteSize();
-            var nativeVal = somelib_h.Foo_extract_from_bounds(boundsNative, anotherStringMemSeg, anotherStringLen - 1);
+            var anotherStringData= arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
+            var anotherStringLen = anotherStringData.byteSize() - 1;
+            var anotherStringView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(anotherStringView, anotherStringLen);
+            DiplomatStringView.data(anotherStringView, anotherStringData);
+            var nativeVal = somelib_h.Foo_extract_from_bounds(boundsNative, anotherStringView);
             List<Object> selfEdges = List.of();
             
             

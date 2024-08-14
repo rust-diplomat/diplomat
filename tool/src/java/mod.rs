@@ -11,6 +11,7 @@ use diplomat_core::hir::{
     StringEncoding, StructDef, StructPathLike, SuccessType, TyPosition, TypeContext, TypeDef,
 };
 use formatter::JavaFormatter;
+use heck::ToUpperCamelCase;
 use serde::Deserialize;
 
 use crate::{c, ErrorStore, FileMap};
@@ -350,11 +351,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
                 (
                     format!(
-                        r#"var {name}MemSeg = {arena_name}.allocateFrom({name}, StandardCharsets.UTF_16);
-var {name}Len = {name}MemSeg.byteSize();"#
+                        r#"var {name}Data= {arena_name}.allocateFrom({name}, StandardCharsets.UTF_16);
+var {name}Len = {name}Data.byteSize() - 1;  // allocated strings are null terminated
+var {name}View = DiplomatString16View.allocate({arena_name});
+DiplomatString16View.len({name}View, {name}Len);
+DiplomatString16View.data({name}View, {name}Data);"# 
+
                     )
                     .into(),
-                    format!("{name}MemSeg, {name}Len - 1").into(),
+                    format!("{name}View").into(),
                 )
             }
             hir::Type::Slice(Slice::Str(
@@ -364,15 +369,22 @@ var {name}Len = {name}MemSeg.byteSize();"#
                 let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
                 (
                     format!(
-                        r#"var {name}MemSeg = {arena_name}.allocateFrom({name}, StandardCharsets.UTF_8);
-var {name}Len = {name}MemSeg.byteSize();"#
+                        r#"var {name}Data= {arena_name}.allocateFrom({name}, StandardCharsets.UTF_8);
+var {name}Len = {name}Data.byteSize() - 1;
+var {name}View = DiplomatStringView.allocate({arena_name});
+DiplomatStringView.len({name}View, {name}Len);
+DiplomatStringView.data({name}View, {name}Data);"#
                     )
                     .into(),
-                    format!("{name}MemSeg, {name}Len - 1").into(),
+                    format!("{name}View").into(),
                     // by default java native creates null terminated strings
                 )
             }
             hir::Type::Slice(Slice::Primitive(borrow, p)) => {
+                let rust_primitive_type = match p {
+                    hir::PrimitiveType::Byte => "U8".to_string(),
+                    _ => p.as_str().to_upper_camel_case(),
+                };
                 let primitive_ty = match p {
                     hir::PrimitiveType::Bool => "JAVA_BYTE", // BYTE is the smallest
                     hir::PrimitiveType::Char => "JAVA_INT",
@@ -396,32 +408,40 @@ byte[] {name}ByteArray = new byte[{name}Len];
 for (int i = 0; i < {name}Len; i++) {{
     {name}ByteArray[i] = (byte) ({name}[i] ? 1 : 0);
 }}
-var {name}MemSeg = {arena_name}.allocateFrom({primitive_ty}, {name}ByteArray);"#
+var {name}Data = {arena_name}.allocateFrom({primitive_ty}, {name}ByteArray);
+var {name}View = Diplomat{rust_primitive_type}View.allocate({arena_name});
+Diplomat{rust_primitive_type}View.len({name}View, {name}Len);
+Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
+"#
                     )
                     .into(),
                     _ => format!(
                         r#"var {name}Len = {name}.length;
-var {name}MemSeg = {arena_name}.allocateFrom({primitive_ty}, {name});"#
+var {name}Data= {arena_name}.allocateFrom({primitive_ty}, {name});
+var {name}View = Diplomat{rust_primitive_type}View.allocate({arena_name});
+Diplomat{rust_primitive_type}View.len({name}View, {name}Len);
+Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
+"#
                     )
                     .into(),
                 };
-                (conversion, format!("{name}MemSeg, {name}Len").into())
+                (conversion, format!("{name}View").into())
             }
             hir::Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => (
                 format!(
-                    r#"var {name}Data = SliceUtils.strs16(arena, {name});
+                    r#"var {name}View = SliceUtils.strs16(arena, {name});
 var {name}Len = {name}.length;"#
                 )
                 .into(),
-                format!(r#"{name}Data, {name}Len"#).into(),
+                format!(r#"{name}View"#).into(),
             ),
             hir::Type::Slice(Slice::Strs(_)) => (
                 format!(
-                    r#"var {name}Data = SliceUtils.strs8(arena, {name});
+                    r#"var {name}View = SliceUtils.strs8(arena, {name});
 var {name}Len = {name}.length;"#
                 )
                 .into(),
-                format!(r#"{name}Data, {name}Len"#).into(),
+                format!(r#"{name}View"#).into(),
             ),
             x => panic!("Unexpected slice type {x:?}"),
         };

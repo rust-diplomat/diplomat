@@ -43,9 +43,12 @@ public class MyString {
     public static MyString new_(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_new(vMemSeg, vLen - 1);
+            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;
+            var vView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(vView, vLen);
+            DiplomatStringView.data(vView, vData);
+            var nativeVal = somelib_h.MyString_new(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -60,9 +63,12 @@ public class MyString {
     public static MyString newUnsafe(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_new_unsafe(vMemSeg, vLen - 1);
+            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;
+            var vView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(vView, vLen);
+            DiplomatStringView.data(vView, vData);
+            var nativeVal = somelib_h.MyString_new_unsafe(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -76,9 +82,12 @@ public class MyString {
     
     public static MyString newOwned(String v) {
         
-        var vMemSeg = Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
-        var vLen = vMemSeg.byteSize();
-        var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
+        var vData= Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
+        var vLen = vData.byteSize() - 1;
+        var vView = DiplomatStringView.allocate(Arena.global());
+        DiplomatStringView.len(vView, vLen);
+        DiplomatStringView.data(vView, vData);
+        var nativeVal = somelib_h.MyString_new_owned(vView);
         List<Object> selfEdges = List.of();
         
         
@@ -92,9 +101,9 @@ public class MyString {
     public static MyString newFromFirst(String [] v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vData = SliceUtils.strs8(arena, v);
+            var vView = SliceUtils.strs8(arena, v);
             var vLen = v.length;
-            var nativeVal = somelib_h.MyString_new_from_first(vData, vLen);
+            var nativeVal = somelib_h.MyString_new_from_first(vView);
             List<Object> selfEdges = List.of();
             
             
@@ -109,10 +118,13 @@ public class MyString {
     public static String stringTransform(String foo) {
         
         try (var arena = Arena.ofConfined()) {
-            var fooMemSeg = arena.allocateFrom(foo, StandardCharsets.UTF_8);
-            var fooLen = fooMemSeg.byteSize();
+            var fooData= arena.allocateFrom(foo, StandardCharsets.UTF_8);
+            var fooLen = fooData.byteSize() - 1;
+            var fooView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(fooView, fooLen);
+            DiplomatStringView.data(fooView, fooData);
             var writeable = somelib_h.diplomat_buffer_write_create(0);
-            somelib_h.MyString_string_transform(fooMemSeg, fooLen - 1, writeable);
+            somelib_h.MyString_string_transform(fooView, writeable);
             var string = SliceUtils. readUtf8FromWriteable(writeable);
             somelib_h.diplomat_buffer_write_destroy(writeable);
             return string;
@@ -124,9 +136,12 @@ public class MyString {
         
         try (var arena = Arena.ofConfined()) {
             
-            var newStrMemSeg = arena.allocateFrom(newStr, StandardCharsets.UTF_8);
-            var newStrLen = newStrMemSeg.byteSize();
-            somelib_h.MyString_set_str(internal, newStrMemSeg, newStrLen - 1);
+            var newStrData= arena.allocateFrom(newStr, StandardCharsets.UTF_8);
+            var newStrLen = newStrData.byteSize() - 1;
+            var newStrView = DiplomatStringView.allocate(arena);
+            DiplomatStringView.len(newStrView, newStrLen);
+            DiplomatStringView.data(newStrView, newStrData);
+            somelib_h.MyString_set_str(internal, newStrView);
             
         }
     }

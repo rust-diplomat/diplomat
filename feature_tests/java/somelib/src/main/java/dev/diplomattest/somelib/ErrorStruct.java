@@ -1,6 +1,6 @@
 package dev.diplomattest.somelib;
 
-import dev.diplomattest.somelib.ntv.somelib_h;
+import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
