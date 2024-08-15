@@ -4,8 +4,8 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, OpaqueOwner, ReturnableStructDef,
-    StructPathLike, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, OpaqueOwner, ReturnableStructDef, StructPathLike,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
