@@ -25,6 +25,8 @@ namespace capi {
       char32_t f;
       diplomat::capi::MyEnum g;
     };
+    
+    typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
 } // namespace capi
 } // namespace
 

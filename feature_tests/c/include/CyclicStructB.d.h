@@ -15,7 +15,7 @@ typedef struct CyclicStructB {
   uint8_t field;
 } CyclicStructB;
 
-
+typedef struct CyclicStructB_option {union { CyclicStructB ok; }; bool is_ok; } CyclicStructB_option;
 
 
 

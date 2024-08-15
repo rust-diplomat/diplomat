@@ -48,6 +48,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterators = true;
     a.iterables = true;
     a.indexing = false;
+    a.callbacks = false;
 
     a
 }

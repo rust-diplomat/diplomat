@@ -39,6 +39,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterators = true;
     a.iterables = true;
     a.indexing = true;
+    a.callbacks = false;
 
     a
 }
@@ -557,7 +558,7 @@ return string{return_type_modifier}"#
         };
 
         if is_zst {
-            return format!("{return_type_name}(){return_type_modifier}");
+            return format!("return {return_type_name}(){return_type_modifier}");
         }
 
         let borrows = lifetimes
@@ -731,7 +732,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 o,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
-            SuccessType::Unit => format!("Unit{return_type_postfix}"),
+            SuccessType::Unit => format!("return Unit{return_type_postfix}"),
             _ => todo!(),
         }
     }
@@ -932,7 +933,7 @@ retutnVal.option() ?: return null
                 _ => (),
             }
 
-            param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
+            param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty),));
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
         }
@@ -1047,7 +1048,7 @@ retutnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty)
+                self.gen_native_type_name(&param.ty),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)

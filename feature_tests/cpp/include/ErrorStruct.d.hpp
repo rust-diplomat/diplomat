@@ -16,6 +16,8 @@ namespace capi {
       int32_t i;
       int32_t j;
     };
+    
+    typedef struct ErrorStruct_option {union { ErrorStruct ok; }; bool is_ok; } ErrorStruct_option;
 } // namespace capi
 } // namespace
 

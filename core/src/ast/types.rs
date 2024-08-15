@@ -344,8 +344,8 @@ pub enum TypeName {
     Reference(Lifetime, Mutability, Box<TypeName>),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
-    /// A `Option<T>` type.
-    Option(Box<TypeName>),
+    /// An `Option<T>` or DiplomatOption type.
+    Option(Box<TypeName>, StdlibOrDiplomat),
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type.
     Result(Box<TypeName>, Box<TypeName>, StdlibOrDiplomat),
     Write,
@@ -378,6 +378,7 @@ pub enum TypeName {
     ///
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
+    Function(Vec<Box<TypeName>>, Box<TypeName>),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -478,22 +479,36 @@ fn get_ty_from_syn_path(p: &syn::TypePath) -> Option<&syn::Type> {
 
 impl TypeName {
     /// Is this type safe to be passed across the FFI boundary?
+    ///
+    /// This also marks DiplomatOption<&T> as FFI-unsafe: these are technically safe from an ABI standpoint
+    /// however Diplomat always expects these to be equivalent to a nullable pointer, so Option<&T> is required.
     pub fn is_ffi_safe(&self) -> bool {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
-            TypeName::Box(..) | TypeName::Option(..) |
+            TypeName::Box(..) |
+            // can only be passed across the FFI boundary; callbacks are input-only
+            TypeName::Function(..) |
             // These are specified using FFI-safe diplomat_runtime types
-             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
+            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
-            TypeName::Unit | TypeName::Write | TypeName::Result(..)
+            TypeName::Unit | TypeName::Write | TypeName::Result(..) |
             // This is basically only useful in return types
-            | TypeName::Ordering
+            TypeName::Ordering |
             // These are specified using Rust stdlib types and not safe across FFI
-             | TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
+            TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
+            TypeName::Option(inner, stdlib) => match **inner {
+                // Option<&T>/Option<Box<T>> are the ffi-safe way to specify options
+                TypeName::Reference(..) | TypeName::Box(..) => *stdlib == StdlibOrDiplomat::Stdlib,
+                // For other types (primitives, structs, enums) we need DiplomatOption
+                _ => *stdlib == StdlibOrDiplomat::Diplomat,
+             }
         }
     }
 
     /// What's the FFI safe version of this type?
+    ///
+    /// This also marks DiplomatOption<&T> as FFI-unsafe: these are technically safe from an ABI standpoint
+    /// however Diplomat always expects these to be equivalent to a nullable pointer, so Option<&T> is required.
     pub fn ffi_safe_version(&self) -> TypeName {
         match self {
             TypeName::StrReference(lt, encoding, StdlibOrDiplomat::Stdlib) => {
@@ -505,7 +520,15 @@ impl TypeName {
             TypeName::PrimitiveSlice(ltmt, prim, StdlibOrDiplomat::Stdlib) => {
                 TypeName::PrimitiveSlice(ltmt.clone(), *prim, StdlibOrDiplomat::Diplomat)
             }
-            TypeName::Ordering => TypeName::Primitive(PrimitiveType::u8),
+            TypeName::Ordering => TypeName::Primitive(PrimitiveType::i8),
+            TypeName::Option(inner, _stdlib) => match **inner {
+                // Option<&T>/Option<Box<T>> are the ffi-safe way to specify options
+                TypeName::Reference(..) | TypeName::Box(..) => {
+                    TypeName::Option(inner.clone(), StdlibOrDiplomat::Stdlib)
+                }
+                // For other types (primitives, structs, enums) we need DiplomatOption
+                _ => TypeName::Option(inner.clone(), StdlibOrDiplomat::Diplomat),
+            },
             _ => self.clone(),
         }
     }
@@ -534,9 +557,13 @@ impl TypeName {
                 let underlying = underlying.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Box<#underlying>)
             }
-            TypeName::Option(underlying) => {
+            TypeName::Option(underlying, StdlibOrDiplomat::Stdlib) => {
                 let underlying = underlying.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Option<#underlying>)
+            }
+            TypeName::Option(underlying, StdlibOrDiplomat::Diplomat) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOption<#underlying>)
             }
             TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
                 let ok = ok.to_syn();
@@ -569,13 +596,18 @@ impl TypeName {
             }
             TypeName::PrimitiveSlice(ltmt, primitive, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                    primitive.get_diplomat_slice_type(ltmt)
-                } else {
                     primitive.get_stdlib_slice_type(ltmt)
+                } else {
+                    primitive.get_diplomat_slice_type(ltmt)
                 }
             }
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
+            TypeName::Function(_input_types, output_type) => {
+                let output_type = output_type.to_syn();
+                // should be DiplomatCallback<function_output_type>
+                syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+            }
         }
     }
 
@@ -710,12 +742,22 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Box type")
                     }
-                } else if p_len == 1 && p.path.segments[0].ident == "Option" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Option"
+                    || is_runtime_type(p, "DiplomatOption")
+                {
                     if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments[0].arguments
                     {
                         if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Option(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                            let stdlib = if p.path.segments[0].ident == "Option" {
+                                StdlibOrDiplomat::Stdlib
+                            } else {
+                                StdlibOrDiplomat::Diplomat
+                            };
+                            TypeName::Option(
+                                Box::new(TypeName::from_syn(tpe, self_path_type)),
+                                stdlib,
+                            )
                         } else {
                             panic!("Expected first type argument for Option to be a type")
                         }
@@ -849,6 +891,51 @@ impl TypeName {
                     todo!("Tuples are not currently supported")
                 }
             }
+            syn::Type::ImplTrait(tr) => {
+                let trait_bound = tr.bounds.first();
+                if tr.bounds.len() > 1 {
+                    todo!("Currently don't support implementing multiple traits");
+                }
+                if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
+                    path:
+                        syn::Path {
+                            segments: rel_segs, ..
+                        },
+                    ..
+                })) = trait_bound
+                {
+                    let path_seg = &rel_segs[0];
+                    if path_seg.ident.eq("Fn") {
+                        // we're in a function type
+                        // get input and output args
+                        if let syn::PathArguments::Parenthesized(
+                            syn::ParenthesizedGenericArguments {
+                                inputs: input_types,
+                                output: output_type,
+                                ..
+                            },
+                        ) = &path_seg.arguments
+                        {
+                            let in_types = input_types
+                                .iter()
+                                .map(|in_ty| {
+                                    Box::new(TypeName::from_syn(in_ty, self_path_type.clone()))
+                                })
+                                .collect::<Vec<Box<TypeName>>>();
+                            let out_type = match output_type {
+                                syn::ReturnType::Type(_, output_type) => {
+                                    TypeName::from_syn(output_type, self_path_type.clone())
+                                }
+                                syn::ReturnType::Default => TypeName::Unit,
+                            };
+                            let ret = TypeName::Function(in_types, Box::new(out_type));
+                            return ret;
+                        }
+                        panic!("Unsupported function type: {:?}", &path_seg.arguments);
+                    }
+                }
+                panic!("Unsupported trait type");
+            }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
@@ -876,7 +963,7 @@ impl TypeName {
                 ty.visit_lifetimes(visit)?;
                 visit(lt, LifetimeOrigin::Reference)
             }
-            TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
+            TypeName::Box(ty) | TypeName::Option(ty, _) => ty.visit_lifetimes(visit),
             TypeName::Result(ok, err, _) => {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
@@ -992,7 +1079,8 @@ impl fmt::Display for TypeName {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))
             }
             TypeName::Box(typ) => write!(f, "Box<{typ}>"),
-            TypeName::Option(typ) => write!(f, "Option<{typ}>"),
+            TypeName::Option(typ, StdlibOrDiplomat::Stdlib) => write!(f, "Option<{typ}>"),
+            TypeName::Option(typ, StdlibOrDiplomat::Diplomat) => write!(f, "DiplomatOption<{typ}>"),
             TypeName::Result(ok, err, _) => {
                 write!(f, "Result<{ok}, {err}>")
             }
@@ -1058,6 +1146,13 @@ impl fmt::Display for TypeName {
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),
+            TypeName::Function(input_types, out_type) => {
+                write!(f, "fn (")?;
+                for in_typ in input_types.iter() {
+                    write!(f, "{in_typ}")?;
+                }
+                write!(f, ")->{out_type}")
+            }
         }
     }
 }

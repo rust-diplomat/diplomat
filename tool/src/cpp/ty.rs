@@ -322,7 +322,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            if let Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8)) = param.ty {
+            if matches!(
+                param.ty,
+                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
+            ) {
                 param_validations.push(format!(
                     "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
                     param = param.name.as_str(),
@@ -495,6 +498,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.formatter.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::DiplomatOption(ref inner) => {
+                format!("std::optional<{}>", self.gen_type_name(inner)).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -547,6 +553,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
+            Type::DiplomatOption(ref inner) => {
+                let conversion =
+                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
+                let copt = self.c.gen_ty_name(ty, &mut Default::default());
+                format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -663,6 +675,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
                 format!("{span}({var_name}.data, {var_name}.len)").into()
+            }
+            Type::DiplomatOption(ref inner) => {
+                let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
+                format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

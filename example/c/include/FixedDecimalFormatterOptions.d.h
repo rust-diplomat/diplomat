@@ -17,7 +17,7 @@ typedef struct FixedDecimalFormatterOptions {
   bool some_other_config;
 } FixedDecimalFormatterOptions;
 
-
+typedef struct FixedDecimalFormatterOptions_option {union { FixedDecimalFormatterOptions ok; }; bool is_ok; } FixedDecimalFormatterOptions_option;
 
 
 
