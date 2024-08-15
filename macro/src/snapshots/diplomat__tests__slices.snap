@@ -9,7 +9,6 @@ mod ffi {
         DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice,
     };
     #[repr(C)]
-    #[derive(Clone, Copy)]
     struct Foo<'a> {
         a: DiplomatSlice<'a, u8>,
         b: DiplomatSlice<'a, u16>,

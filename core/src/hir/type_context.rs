@@ -498,7 +498,8 @@ mod tests {
 
             let mut output = String::new();
 
-            let attr_validator = hir::BasicAttributeValidator::new("tests");
+            let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+            attr_validator.support.option = true;
             match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -783,6 +784,54 @@ mod tests {
                     slice3: Box<str>,
                     slice3: Box<DiplomatStr>,
                     slice4: Box<[u8]>,
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn test_option() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+                mod ffi {
+                use diplomat_runtime::DiplomatOption;
+                #[diplomat::opaque]
+                struct Foo {}
+                struct CustomStruct {
+                    num: u8,
+                    b: bool,
+                    diplo_option: DiplomatOption<u8>,
+                }
+
+                struct BrokenStruct {
+                    regular_option: Option<u8>,
+                    regular_option: Option<CustomStruct>,
+                }
+                impl Foo {
+                    pub fn diplo_option_u8(x: DiplomatOption<u8>) -> DiplomatOption<u8> {
+                        x
+                    }
+                    pub fn diplo_option_ref(x: DiplomatOption<&Foo>) -> DiplomatOption<&Foo> {
+                        x
+                    }
+                    pub fn diplo_option_box() -> DiplomatOption<Box<Foo>> {
+                        x
+                    }
+                    pub fn diplo_option_struct(x: DiplomatOption<CustomStruct>) -> DiplomatOption<CustomStruct> {
+                        x
+                    }
+                    pub fn option_u8(x: Option<u8>) -> Option<u8> {
+                        x
+                    }
+                    pub fn option_ref(x: Option<&Foo>) -> Option<&Foo> {
+                        x
+                    }
+                    pub fn option_box() -> Option<Box<Foo>> {
+                        x
+                    }
+                    pub fn option_struct(x: Option<CustomStruct>) -> Option<CustomStruct> {
+                        x
+                    }
                 }
             }
         };

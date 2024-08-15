@@ -9,7 +9,9 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+struct OptionInputStruct;
 struct OptionStruct;
+class OptionEnum;
 
 
 namespace diplomat {
@@ -42,6 +44,14 @@ public:
   inline void assert_integer(int32_t i) const;
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);
+
+  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg);
+
+  inline static std::optional<OptionEnum> accepts_option_enum(std::optional<OptionEnum> arg);
+
+  inline static std::optional<OptionInputStruct> accepts_option_input_struct(std::optional<OptionInputStruct> arg);
+
+  inline static OptionInputStruct returns_option_input_struct();
 
   inline const diplomat::capi::OptionOpaque* AsFFI() const;
   inline diplomat::capi::OptionOpaque* AsFFI();

@@ -17,7 +17,7 @@ typedef enum AttrEnum {
   AttrEnum_C = 2,
 } AttrEnum;
 
-
+typedef struct AttrEnum_option {union { AttrEnum ok; }; bool is_ok; } AttrEnum_option;
 
 
 

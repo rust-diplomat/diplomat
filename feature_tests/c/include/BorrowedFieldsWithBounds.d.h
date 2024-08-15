@@ -17,7 +17,7 @@ typedef struct BorrowedFieldsWithBounds {
   DiplomatStringView field_c;
 } BorrowedFieldsWithBounds;
 
-
+typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds ok; }; bool is_ok; } BorrowedFieldsWithBounds_option;
 
 
 
