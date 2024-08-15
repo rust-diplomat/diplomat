@@ -4,7 +4,7 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, OpaqueOwner, OutputOnly, ReturnableStructDef,
+    self, CallbackInstantiationFunctionality, OpaqueOwner, ReturnableStructDef,
     StructPathLike, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
@@ -334,12 +334,12 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     + method_abi_name.unwrap().as_str()
                     + "_"
                     + ident;
-                let input_types = some_cb.get_input_types().unwrap();
+                let params = some_cb.get_inputs().unwrap();
                 let output_type = Box::new(some_cb.get_output_type().unwrap().clone());
                 // this call generates any imports needed for param + output type(s)
                 cb_structs_and_defs.push(self.gen_cb_param_wrapper_struct(
                     &cb_wrapper_type,
-                    input_types,
+                    params,
                     &output_type,
                     header,
                 ));
@@ -358,7 +358,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     fn gen_cb_param_wrapper_struct(
         &self,
         cb_wrapper_type: &str,
-        input_types: Vec<&Type<OutputOnly>>,
+        params: &[hir::CallbackParam],
         output_type: &Option<Type>,
         header: &mut Header,
     ) -> CallbackAndStructDef {
@@ -369,8 +369,8 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             "void".into()
         };
         let mut params_types = Vec::<String>::new();
-        for in_ty in input_types.iter() {
-            let cur_type = self.gen_ty_name(in_ty, header);
+        for p in params.iter() {
+            let cur_type = self.gen_ty_name(&p.ty, header);
             params_types.push(cur_type.to_string().clone());
         }
         let params_types = if params_types.is_empty() {
