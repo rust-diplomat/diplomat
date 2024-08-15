@@ -31,7 +31,7 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
 {% if !callback_params.is_empty() -%}
     {%- for callback_param in callback_params %}
 internal interface Runner_{{callback_param.name}}: Callback {
-    fun invoke(ignored: Pointer?{% if callback_param.input_params_and_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}}
+    fun invoke(lang_specific_context: Pointer?{% if callback_param.input_params_and_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}}
 }
 
 internal class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
@@ -40,7 +40,7 @@ internal class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var run_callback: Runner_{{callback_param.name}}
         = object :  Runner_{{callback_param.name}} {
-                override fun invoke(ignored: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
+                override fun invoke(lang_specific_context: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
             }
@@ -64,7 +64,7 @@ internal class {{callback_param.name}} internal constructor (
         
         fun fromCallback(cb: ({{callback_param.input_types}})->{{callback_param.output_type}}): {{callback_param.name}} {
             val callback: Runner_{{callback_param.name}} = object :  Runner_{{callback_param.name}} {
-                override fun invoke(ignored: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
+                override fun invoke(lang_specific_context: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
                     return cb({{callback_param.input_names}});
                 }
             }

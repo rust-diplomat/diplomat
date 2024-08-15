@@ -66,6 +66,7 @@ pub(crate) fn run<'tcx>(
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
+    let mut callback_params = Vec::new();
 
     let mut ty_gen_cx = TyGenContext {
         tcx,
@@ -73,6 +74,7 @@ pub(crate) fn run<'tcx>(
         result_types: RefCell::new(BTreeSet::new()),
         option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
+        callback_params: &mut callback_params,
     };
 
     for (_id, ty) in tcx.all_types() {
@@ -209,6 +211,7 @@ struct TyGenContext<'a, 'cx> {
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
     option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
+    callback_params: &'a mut Vec<CallbackParamInfo>,
 }
 
 impl<'a, 'cx> TyGenContext<'a, 'cx> {
@@ -874,7 +877,6 @@ retutnVal.option() ?: return null
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
         struct_name: Option<&str>,
-        callback_params: &mut Vec<CallbackParamInfo>,
     ) -> String {
         if method.attrs.disable {
             return "".into();
@@ -971,7 +973,7 @@ retutnVal.option() ?: return null
                         .zip(param_names.iter())
                         .map(|(in_ty, in_name)| format!("{}: {}", in_name, in_ty))
                         .collect();
-                    callback_params.push(CallbackParamInfo {
+                    self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(","),
                         input_names: param_names.join(","),
@@ -1152,7 +1154,7 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        let mut callback_params = Vec::new();
+        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1169,7 +1171,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1186,7 +1188,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1247,7 +1249,7 @@ retutnVal.option() ?: return null
             .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
-        let mut callback_params = Vec::new();
+        // let mut callback_params = Vec::new();
         let mut unused_special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
@@ -1264,7 +1266,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     Some(type_name),
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1279,7 +1281,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     Some(type_name),
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1347,7 +1349,7 @@ retutnVal.option() ?: return null
                 self_methods: self_methods.as_ref(),
                 companion_methods: companion_methods.as_ref(),
                 native_methods: native_methods.as_ref(),
-                callback_params: callback_params.as_ref(),
+                callback_params: self.callback_params.as_ref(),
                 lifetimes,
             }
             .render()
@@ -1370,7 +1372,7 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        let mut callback_params = Vec::new();
+        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1387,7 +1389,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1403,7 +1405,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    &mut callback_params,
+                    // &mut callback_params,
                 )
             })
             .collect::<Vec<_>>();
@@ -1551,6 +1553,10 @@ retutnVal.option() ?: return null
         }
     }
 
+    /// Generate the non-diplomat name for a type -- this only applies to
+    /// callback types. So: for a callback, instead of returning `DiplomatCallback_...`
+    /// it returns `(input types)->output type`.
+    /// For all non-callback types it returns the same result as `gen_type_name`.
     fn gen_non_wrapped_type_name(
         &self,
         ty: &Type<InputOnly>,
@@ -1568,9 +1574,6 @@ retutnVal.option() ?: return null
                     .map(|param| self.gen_type_name(&param.ty, None).into())
                     .collect::<Vec<String>>()
                     .join(",");
-                // let in_type_string = input_types.iter().map(|in_ty| {
-                //     self.gen_type_name(in_ty, None)
-                // }).join(",");
                 let out_type_string: String = match **output {
                     Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
                     None => "Void".into(),
@@ -1711,12 +1714,14 @@ mod test {
         {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
+                callback_params: &mut callback_params,
             };
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
@@ -1780,12 +1785,14 @@ mod test {
         {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
+                callback_params: &mut callback_params,
             };
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
@@ -1885,12 +1892,14 @@ mod test {
         {
             let eror_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
+                callback_params: &mut callback_params,
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
