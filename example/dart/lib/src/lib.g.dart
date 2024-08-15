@@ -91,6 +91,19 @@ final class _ResultOpaqueVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+
+  
+  factory _ResultOpaqueVoid.ok(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultOpaqueVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOpaqueVoid.err() {
+    final struct = ffi.Struct.create<_ResultOpaqueVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultVoidVoid extends ffi.Struct {
@@ -98,6 +111,18 @@ final class _ResultVoidVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+
+  
+  factory _ResultVoidVoid.ok() {
+    final struct = ffi.Struct.create<_ResultVoidVoid>();
+    struct.isOk = true;
+    return struct;
+  }
+  factory _ResultVoidVoid.err() {
+    final struct = ffi.Struct.create<_ResultVoidVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _SliceUtf8 extends ffi.Struct {
