@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test
 class ICU4XFixedDecimalFormatterTest {
     @Test
     fun testFormatter() {
-        val locale = ICU4XLocale.new_("en")
-        val provider = ICU4XDataProvider.newStatic()
-        val options = ICU4XFixedDecimalFormatterOptions.default_()
-        val formatter = ICU4XFixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow()
-        val decimal: ICU4XFixedDecimal = ICU4XFixedDecimal.new_(123)
+        val locale = Locale.new_("en")
+        val provider = DataProvider.newStatic()
+        val options = FixedDecimalFormatterOptions.default_()
+        val formatter = FixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow()
+        val decimal: FixedDecimal = FixedDecimal.new_(123)
         val formatted = formatter.formatWrite(decimal)
         assertEquals(formatted, "123")
     }

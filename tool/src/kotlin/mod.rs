@@ -558,7 +558,7 @@ return string{return_type_modifier}"#
         };
 
         if is_zst {
-            return format!("{return_type_name}(){return_type_modifier}");
+            return format!("return {return_type_name}(){return_type_modifier}");
         }
 
         let borrows = lifetimes
@@ -732,7 +732,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 o,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
-            SuccessType::Unit => format!("Unit{return_type_postfix}"),
+            SuccessType::Unit => format!("return Unit{return_type_postfix}"),
             _ => todo!(),
         }
     }
