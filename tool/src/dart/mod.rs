@@ -262,26 +262,35 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
+
                 // We do not need to handle lifetime transitivity here: Methods already resolve
                 // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                 // are explicitly specified on methods.
-                let alloc = if let &hir::Type::Slice(slice) = &field.ty {
-                    if let Some(lt) = slice.lifetime() {
-                        let MaybeStatic::NonStatic(lt) = lt else {
-                            panic!("'static not supported in Dart");
-                        };
-                        Some(format!(
-                            "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
-                            lt_name = ty.lifetimes.fmt_lifetime(lt),
-                        ))
+
+                /// Get the name/initializer of the allocator needed for a particular type
+                fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
+                    if let &hir::Type::Slice(slice) = field_ty {
+                        if let Some(lt) = slice.lifetime() {
+                            let MaybeStatic::NonStatic(lt) = lt else {
+                                panic!("'static not supported in Dart");
+                            };
+                            Some(format!(
+                                "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
+                                lt_name = ty.lifetimes.fmt_lifetime(lt),
+                            ))
+                        } else {
+                            None
+                        }
+                    } else if let &hir::Type::Struct(..) = field_ty {
+                        Some("temp".into())
+                    } else if let &hir::Type::DiplomatOption(ref inner) = field_ty {
+                        alloc_name(ty, inner)
                     } else {
                         None
                     }
-                } else if let &hir::Type::Struct(..) = &field.ty {
-                    Some("temp".into())
-                } else {
-                    None
-                };
+                }
+
+                let alloc = alloc_name(ty, &field.ty);
 
                 let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
                     StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
@@ -438,30 +447,56 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            let alloc = if let hir::Type::Struct(..) = param.ty {
-                needs_temp_arena = true;
-                Some("temp.arena".to_string())
-            } else if let hir::Type::Slice(s) = param.ty {
-                match param_borrow_kind {
-                    ParamBorrowInfo::BorrowedSlice => {
-                        // Slices borrowed in the return value use a custom arena
-                        arenas.push(format!("final {param_name}Arena = _FinalizedArena();").into());
-                        Some(format!("{param_name}Arena.arena"))
+            /// Get the name/initializer of the allocator needed for a particular type
+            fn alloc_name(
+                param_ty: &hir::Type<hir::InputOnly>,
+                param_name: &str,
+                param_borrow_kind: &ParamBorrowInfo,
+                needs_temp_arena: &mut bool,
+                arenas: &mut Vec<Cow<str>>,
+            ) -> Option<String> {
+                if let hir::Type::Struct(..) = param_ty {
+                    *needs_temp_arena = true;
+                    Some("temp.arena".to_string())
+                } else if let hir::Type::Slice(s) = param_ty {
+                    match param_borrow_kind {
+                        ParamBorrowInfo::BorrowedSlice => {
+                            // Slices borrowed in the return value use a custom arena
+                            arenas.push(
+                                format!("final {param_name}Arena = _FinalizedArena();").into(),
+                            );
+                            Some(format!("{param_name}Arena.arena"))
+                        }
+                        // Owned slices use the Rust allocator
+                        ParamBorrowInfo::TemporarySlice if s.lifetime().is_none() => None,
+                        ParamBorrowInfo::TemporarySlice => {
+                            // Everyone else uses the temporary arena that keeps stuff alive until the method is called
+                            *needs_temp_arena = true;
+                            Some("temp.arena".into())
+                        }
+                        _ => unreachable!(
+                            "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                        ),
                     }
-                    // Owned slices use the Rust allocator
-                    ParamBorrowInfo::TemporarySlice if s.lifetime().is_none() => None,
-                    ParamBorrowInfo::TemporarySlice => {
-                        // Everyone else uses the temporary arena that keeps stuff alive until the method is called
-                        needs_temp_arena = true;
-                        Some("temp.arena".into())
-                    }
-                    _ => unreachable!(
-                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
-                    ),
+                } else if let hir::Type::DiplomatOption(ref inner) = param_ty {
+                    alloc_name(
+                        inner,
+                        param_name,
+                        param_borrow_kind,
+                        needs_temp_arena,
+                        arenas,
+                    )
+                } else {
+                    None
                 }
-            } else {
-                None
-            };
+            }
+            let alloc = alloc_name(
+                &param.ty,
+                &param_name,
+                &param_borrow_kind,
+                &mut needs_temp_arena,
+                &mut arenas,
+            );
 
             let struct_borrow_info = if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind
             {
