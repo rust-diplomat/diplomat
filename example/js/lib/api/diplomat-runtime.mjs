@@ -241,9 +241,6 @@ export class DiplomatSlice {
         this.#bufferType = bufferType;
 
         this.#lifetimeEdges = lifetimeEdges;
-        if (this.#lifetimeEdges.length === 0) {
-            this.#wasm.diplomat_free(ptr, size, this.#bufferType.BYTES_PER_ELEMENT);
-        }
     }
 
     getValue() {
