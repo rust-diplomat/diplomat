@@ -12,7 +12,11 @@ internal interface {{type_name}}Lib: Library {
     {{m.declaration}}
     {%- endfor %}
 }
-
+{%- if !callback_params.is_empty() -%}
+    {%- for callback_param in callback_params -%}
+        {{callback_param}}
+    {%- endfor %}
+{% endif -%}
 {%- match special_methods.iterator_type -%}
 {%- when Some with (iter_ty) %}
 typealias {{type_name}}IteratorItem = {{iter_ty}}

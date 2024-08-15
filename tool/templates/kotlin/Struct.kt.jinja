@@ -29,51 +29,8 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
 {% endif -%}
 
 {% if !callback_params.is_empty() -%}
-    {%- for callback_param in callback_params %}
-internal interface Runner_{{callback_param.name}}: Callback {
-    fun invoke(lang_specific_context: Pointer?{% if callback_param.input_params_and_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}}
-}
-
-internal class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
-    @JvmField
-    internal var data_: Pointer = Pointer(0L);
-    @JvmField
-    internal var run_callback: Runner_{{callback_param.name}}
-        = object :  Runner_{{callback_param.name}} {
-                override fun invoke(lang_specific_context: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
-                    throw Exception("Default callback runner -- should be replaced.")
-                }
-            }
-    @JvmField
-    internal var destructor: Pointer = Pointer(0L);
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("data_", "run_callback", "destructor")
-    }
-}
-
-internal class {{callback_param.name}} internal constructor (
-    internal val nativeStruct: {{callback_param.name}}_Native) {
-    val data_: Pointer = nativeStruct.data_
-    val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
-
-    companion object {
-        val NATIVESIZE: Long = Native.getNativeSize({{callback_param.name}}_Native::class.java).toLong()
-        
-        fun fromCallback(cb: ({{callback_param.input_types}})->{{callback_param.output_type}}): {{callback_param.name}} {
-            val callback: Runner_{{callback_param.name}} = object :  Runner_{{callback_param.name}} {
-                override fun invoke(lang_specific_context: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
-                    return cb({{callback_param.input_names}});
-                }
-            }
-            val cb_wrap = {{callback_param.name}}_Native()
-            cb_wrap.run_callback = callback;
-            return {{callback_param.name}}(cb_wrap)
-        }
-    }
-}
+    {%- for callback_param in callback_params -%}
+        {{callback_param}}
     {%- endfor %}
 {% endif -%}
 

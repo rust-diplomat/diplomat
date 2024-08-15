@@ -1215,6 +1215,7 @@ retutnVal.option() ?: return null
             native_methods: &'a [NativeMethodInfo],
             lifetimes: Vec<Cow<'a, str>>,
             special_methods: SpecialMethodsImpl,
+            callback_params: &'a [CallbackParamInfo],
         }
 
         (
@@ -1228,6 +1229,7 @@ retutnVal.option() ?: return null
                 native_methods: native_methods.as_ref(),
                 lifetimes,
                 special_methods: SpecialMethodsImpl::new(special_methods),
+                callback_params: self.callback_params.as_ref(),
             }
             .render()
             .expect("failed to generate struct"),
@@ -1471,6 +1473,7 @@ retutnVal.option() ?: return null
             self_methods: &'d [String],
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
+            callback_params: &'d [CallbackParamInfo],
         }
 
         let variants = EnumVariants::new(ty);
@@ -1483,6 +1486,7 @@ retutnVal.option() ?: return null
             self_methods: self_methods.as_ref(),
             companion_methods: companion_methods.as_ref(),
             native_methods: native_methods.as_ref(),
+            callback_params: self.callback_params.as_ref(),
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
@@ -1650,6 +1654,8 @@ struct NativeMethodInfo {
     declaration: String,
 }
 
+#[derive(Template)]
+#[template(path = "kotlin/Callback.kt.jinja", escape = "none")]
 struct CallbackParamInfo {
     name: String,
     input_types: String,
