@@ -37,7 +37,7 @@ struct MethodDependency {
     params: Vec<ParamInfo>,
 }
 
-pub struct RenderTerminusContext<'ctx, 'tcx> {
+pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,

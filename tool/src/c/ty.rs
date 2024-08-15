@@ -334,7 +334,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     + method_abi_name.unwrap().as_str()
                     + "_"
                     + ident;
-                let input_types = some_cb.get_input_types().unwrap().collect();
+                let input_types = some_cb.get_input_types().unwrap();
                 let output_type = Box::new(some_cb.get_output_type().unwrap().clone());
                 // this call generates any imports needed for param + output type(s)
                 cb_structs_and_defs.push(self.gen_cb_param_wrapper_struct(
