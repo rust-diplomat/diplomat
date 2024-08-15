@@ -44,7 +44,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
             CustomType::Enum(enm) => &enm.methods,
-            CustomType::Trait(trt) => &[],
+            CustomType::Trait(trt) => todo!(), //[],
         }
     }
 
@@ -63,7 +63,7 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.docs,
             CustomType::Opaque(strct) => &strct.docs,
             CustomType::Enum(enm) => &enm.docs,
-            CustomType::Trait(trt) => &trt.attrs,
+            CustomType::Trait(trt) => &trt.docs,
         }
     }
 
@@ -85,6 +85,7 @@ impl CustomType {
             CustomType::Struct(strct) => Some(&strct.lifetimes),
             CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
+            CustomType::Trait(_) => todo!(),
         }
     }
 }
@@ -869,13 +870,11 @@ impl TypeName {
                     todo!("Currently don't support implementing multiple traits");
                 }
                 if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
-                    path:
-                        syn::Path {
-                            segments: rel_segs, ..
-                        },
+                    path: p,
                     ..
                 })) = trait_bound
                 {
+                    let rel_segs = &p.segments;
                     let path_seg = &rel_segs[0];
                     if path_seg.ident.eq("Fn") {
                         // we're in a function type
@@ -904,9 +903,14 @@ impl TypeName {
                             return ret;
                         }
                         panic!("Unsupported function type: {:?}", &path_seg.arguments);
+                    } else {
+                        // panic!("AHHHH WHAT: {:?}", path_seg);
+                        let ret = TypeName::Named(PathType::from(&syn::TypePath { qself: None, path: p.clone() }));
+                        println!("named trait type: {:?}", ret);
+                        return ret;
                     }
                 }
-                panic!("Unsupported trait type");
+                panic!("Unsupported trait type: {:?}", tr);
             }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }

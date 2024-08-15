@@ -1,8 +1,8 @@
 use diplomat_runtime::DiplomatCallback;
 use core::ffi::c_void;
 
-// #[diplomat::bridge]
-// mod ffi {
+#[diplomat::bridge]
+mod ffi {
 
 pub trait TesterTrait {
     fn test_trait_fn(&self, x: i32) -> i32;
@@ -21,7 +21,7 @@ impl Wrapper {
     }
 }  
 
-// }
+}
 
 
 // ------------------------------------------------------------ generated code below

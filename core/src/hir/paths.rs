@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetimes, LinkedLifetimes};
 use super::{
     Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
-    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext,
+    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext, TraitId
 };
 
 /// Path to a struct that may appear as an output.
@@ -21,6 +21,12 @@ pub type OutStructPath = StructPath<OutputOnly>;
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: Lifetimes,
     pub tcx_id: P::StructId,
+}
+
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct TraitPath {
+    pub tcx_id: TraitId,
 }
 
 /// Path to an opaque.

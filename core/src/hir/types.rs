@@ -3,7 +3,7 @@
 use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
-    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId,
+    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId, TraitPath
 };
 use crate::ast;
 pub use ast::Mutability;
@@ -20,6 +20,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
     Struct(P::StructPath),
+    Trait(TraitPath),
     Enum(EnumPath),
     Slice(Slice),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
@@ -32,7 +33,7 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
-    // TODO add Callbacks later
+    Trait(TraitPath),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -93,6 +94,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
             }),
             Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
+            Type::Trait(_) => todo!(),
         }
     }
 }
@@ -175,6 +177,7 @@ impl From<SelfType> for Type {
             SelfType::Opaque(o) => Type::Opaque(o.wrap_optional()),
             SelfType::Struct(s) => Type::Struct(s),
             SelfType::Enum(e) => Type::Enum(e),
+            SelfType::Trait(t) => Type::Trait(t),
         }
     }
 }

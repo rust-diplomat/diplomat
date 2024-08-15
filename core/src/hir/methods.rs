@@ -232,6 +232,7 @@ impl ParamSelf {
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
             SelfType::Enum(_) => (0, 0),
+            SelfType::Trait(_) => todo!(),
         }
     }
 }

@@ -54,8 +54,6 @@ struct MethodTemplate<'a> {
 struct CallbackAndStructDef {
     name: String,
     params_types: String,
-    param_names: String,
-    param_types_and_names: String,
     return_type: String,
 }
 
@@ -349,25 +347,6 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     cb_wrapper_type.clone().into(),
                     format!("{}_cb_wrap", param_name).into(),
                 )
-            }
-            Type::Callback(some_cb) => {
-                let cb_wrapper_type = "DiplomatCallback_".to_owned()
-                    + method_abi_name.unwrap().as_str()
-                    + "_"
-                    + ident;
-                out.push((
-                    cb_wrapper_type.clone().into(),
-                    format!("{}_cb_wrap", param_name).into(),
-                ));
-                let input_types = some_cb.get_input_types();
-                let output_type = some_cb.get_output_type();
-                // this call generates any imports needed for param + output type(s)
-                cb_structs_and_defs.push(self.gen_cb_param_wrapper_struct(
-                    &cb_wrapper_type,
-                    input_types,
-                    output_type,
-                    header,
-                ));
             }
             _ => {
                 let ty = self.gen_ty_name(ty, header);

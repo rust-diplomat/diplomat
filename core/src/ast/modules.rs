@@ -200,6 +200,9 @@ impl Module {
                             CustomType::Enum(enm) => {
                                 enm.methods.append(&mut new_methods);
                             }
+                            CustomType::Trait(trt) => {
+                                // no methods on trait
+                            }
                         }
                     }
                 }

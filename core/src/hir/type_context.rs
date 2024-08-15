@@ -258,17 +258,17 @@ impl TypeContext {
                             };
                             ast_enums.push(item)
                         },
-                        // ast::CustomType::Trait(trt) => {
-                        //     // TODO check this
-                        //     let item = ItemAndInfo {
-                        //         item: trt,
-                        //         in_path: path,
-                        //         ty_parent_attrs: ty_attrs.clone(),
-                        //         method_parent_attrs: method_attrs.clone(),
-                        //         id: TypeId::Trait(TraitId(ast_traits.len())),
-                        //     };
-                        //     ast_traits.push(item)
-                        // }
+                        ast::CustomType::Trait(trt) => {
+                            // TODO check this
+                            let item = ItemAndInfo {
+                                item: trt,
+                                in_path: path,
+                                ty_parent_attrs: ty_attrs.clone(),
+                                method_parent_attrs: method_attrs.clone(),
+                                id: TypeId::Trait(TraitId(ast_traits.len())),
+                            };
+                            ast_traits.push(item)
+                        }
                     }
                 }
             }
@@ -279,7 +279,7 @@ impl TypeContext {
             &ast_structs[..],
             &ast_opaques[..],
             &ast_enums[..],
-            // &ast_traits[..],
+            &ast_traits[..],
         );
         let attr_validator = Box::new(attr_validator);
 
@@ -448,7 +448,7 @@ pub(super) struct LookupId<'ast> {
     struct_map: HashMap<&'ast ast::Struct, StructId>,
     opaque_map: HashMap<&'ast ast::OpaqueStruct, OpaqueId>,
     enum_map: HashMap<&'ast ast::Enum, EnumId>,
-    // trait_map: HashMap<&'ast ast::Trait, TraitId>,
+    trait_map: HashMap<&'ast ast::Trait, TraitId>,
 }
 
 impl<'ast> LookupId<'ast> {
@@ -458,7 +458,7 @@ impl<'ast> LookupId<'ast> {
         structs: &[ItemAndInfo<'ast, ast::Struct>],
         opaques: &[ItemAndInfo<'ast, ast::OpaqueStruct>],
         enums: &[ItemAndInfo<'ast, ast::Enum>],
-        // traits: &[ItemAndInfo<'ast, ast::Trait>],
+        traits: &[ItemAndInfo<'ast, ast::Trait>],
     ) -> Self {
         Self {
             out_struct_map: out_structs
@@ -481,11 +481,11 @@ impl<'ast> LookupId<'ast> {
                 .enumerate()
                 .map(|(index, item)| (item.item, EnumId(index)))
                 .collect(),
-            // trait_map: traits
-            //     .iter()
-            //     .enumerate()
-            //     .map(|(index, item)| (item.item, TraitId(index)))
-            //     .collect(),
+            trait_map: traits
+                .iter()
+                .enumerate()
+                .map(|(index, item)| (item.item, TraitId(index)))
+                .collect(),
         }
     }
 
@@ -505,9 +505,9 @@ impl<'ast> LookupId<'ast> {
         self.enum_map.get(enm).copied()
     }
 
-    // pub(super) fn resolve_trait(&self, trt: &ast::Trait) -> Option<TraitId> {
-    //     self.trait_map.get(trt).copied()
-    // }
+    pub(super) fn resolve_trait(&self, trt: &ast::Trait) -> Option<TraitId> {
+        self.trait_map.get(trt).copied()
+    }
 }
 
 impl From<StructId> for TypeId {

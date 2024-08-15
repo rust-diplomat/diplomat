@@ -150,6 +150,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
                             );
                         }
                         SelfType::Enum(_) => {}
+                        SelfType::Trait(_) => todo!(),
                     }
                 }
 
