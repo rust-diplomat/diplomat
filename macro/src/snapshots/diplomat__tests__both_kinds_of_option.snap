@@ -6,7 +6,6 @@ mod ffi {
     use diplomat_runtime::DiplomatOption;
     struct Foo {}
     #[repr(C)]
-    #[derive(Clone, Copy)]
     struct CustomStruct {
         num: u8,
         b: bool,

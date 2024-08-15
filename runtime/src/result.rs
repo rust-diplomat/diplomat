@@ -21,6 +21,18 @@ pub struct DiplomatResult<T, E> {
 /// used explicitly for optional struct fields.
 pub type DiplomatOption<T> = DiplomatResult<T, ()>;
 
+impl<T: Clone, E: Clone> Clone for DiplomatResult<T, E> {
+    fn clone(&self) -> Self {
+        unsafe {
+            if self.is_ok {
+                Ok((*self.value.ok).clone()).into()
+            } else {
+                Err((*self.value.err).clone()).into()
+            }
+        }
+    }
+}
+
 impl<T, E> Drop for DiplomatResult<T, E> {
     fn drop(&mut self) {
         unsafe {

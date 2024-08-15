@@ -20,6 +20,8 @@ namespace capi {
       MyEnum_E = 2,
       MyEnum_F = 3,
     };
+    
+    typedef struct MyEnum_option {union { MyEnum ok; }; bool is_ok; } MyEnum_option;
 } // namespace capi
 } // namespace
 

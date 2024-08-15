@@ -16,7 +16,7 @@ typedef struct CyclicStructA {
   CyclicStructB a;
 } CyclicStructA;
 
-
+typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
 
 
 

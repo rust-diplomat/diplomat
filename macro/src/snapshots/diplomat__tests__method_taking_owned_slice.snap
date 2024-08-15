@@ -1,11 +1,9 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 647
 expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                struct Foo {} impl Foo\n                                { pub fn fill_slice(s: Box<[u16]>) { unimplemented!() } }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[repr(C)]
-    #[derive(Clone, Copy)]
     struct Foo {}
     impl Foo {
         pub fn fill_slice(s: Box<[u16]>) {

@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
+use diplomat_core::hir::{self, StringEncoding, TyPosition, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -38,6 +38,22 @@ impl<'tcx> CFormatter<'tcx> {
             resolved.attrs().rename.apply(name)
         } else {
             name
+        }
+    }
+
+    /// Given a type found inside a DiplomatOption<T>, provide the name of the corresponding option type
+    ///
+    /// ty_name may or may not have namespacing done to it, you can use the result of `fmt_type_name`, `fmt_type_name_maybe_namespaced`,
+    /// or something more complex here.
+    pub fn fmt_optional_type_name<P: TyPosition>(
+        &self,
+        ty: &hir::Type<P>,
+        ty_name: &str,
+    ) -> String {
+        match ty {
+            hir::Type::Primitive(prim) => self.diplomat_namespace(format!("Option{}", self.fmt_primitive_name_for_derived_type(*prim)).into()).into(),
+            hir::Type::Struct(..) | hir::Type::Enum(..) => format!("{ty_name}_option"),
+            _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }
 
@@ -125,14 +141,11 @@ impl<'tcx> CFormatter<'tcx> {
         };
         s.into()
     }
-    /// Get the primitive type as a C type
-    pub fn fmt_primitive_slice_name(
-        &self,
-        borrow: Option<hir::Borrow>,
-        prim: hir::PrimitiveType,
-    ) -> Cow<'tcx, str> {
+
+    /// Get the primitive name as used in a "derived" type (like slices and options)
+    pub fn fmt_primitive_name_for_derived_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
-        let prim = match prim {
+        match prim {
             PrimitiveType::Bool => "Bool",
             PrimitiveType::Char => "Char",
             PrimitiveType::Int(IntType::I8) => "I8",
@@ -148,7 +161,15 @@ impl<'tcx> CFormatter<'tcx> {
             PrimitiveType::IntSize(IntSizeType::Usize) => "Usize",
             PrimitiveType::Float(FloatType::F32) => "F32",
             PrimitiveType::Float(FloatType::F64) => "F64",
-        };
+        }
+    }
+    /// Get the primitive type as a C type
+    pub fn fmt_primitive_slice_name(
+        &self,
+        borrow: Option<hir::Borrow>,
+        prim: hir::PrimitiveType,
+    ) -> Cow<'tcx, str> {
+        let prim = self.fmt_primitive_name_for_derived_type(prim);
         let mtb = match borrow {
             Some(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",

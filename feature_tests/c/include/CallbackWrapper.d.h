@@ -15,7 +15,7 @@ typedef struct CallbackWrapper {
   bool cant_be_empty;
 } CallbackWrapper;
 
-
+typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok; } CallbackWrapper_option;
 
 
 

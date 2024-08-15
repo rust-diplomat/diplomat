@@ -1,13 +1,11 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 745
 expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                #[diplomat::opaque] struct Foo<'a>(&'a str);\n                                #[diplomat::opaque] struct Bar<'b, 'a: 'b>(&'b Foo<'a>);\n                                struct Baz<'x, 'y> { foo: &'y Foo<'x>, } impl<'a> Foo<'a>\n                                {\n                                    pub fn new(x: &'a str) -> Box<Foo<'a>> { unimplemented!() }\n                                    pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>>\n                                    { unimplemented!() } pub fn get_baz<'b>(&'b self) -> Baz<'b,\n                                    'a> { Bax { foo: self } }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     struct Foo<'a>(&'a str);
     struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
     #[repr(C)]
-    #[derive(Clone, Copy)]
     struct Baz<'x, 'y> {
         foo: &'y Foo<'x>,
     }

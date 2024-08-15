@@ -238,6 +238,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
 struct AttributeInfo {
     repr: bool,
     opaque: bool,
+    #[allow(unused)]
     is_out: bool,
 }
 
@@ -324,13 +325,6 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             // never referenced. #[diplomat::transparent_convert] handles adding repr(transparent)
             // on its own
             if !info.opaque {
-                let copy = if !info.is_out {
-                    // Nothing stops FFI from copying, so we better make sure the struct is Copy.
-                    quote!(#[derive(Clone, Copy)])
-                } else {
-                    quote!()
-                };
-
                 let repr = if !info.repr {
                     quote!(#[repr(C)])
                 } else {
@@ -339,7 +333,6 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
 
                 *s = syn::parse_quote! {
                     #repr
-                    #copy
                     #s
                 }
             }

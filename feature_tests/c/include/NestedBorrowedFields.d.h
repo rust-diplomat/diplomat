@@ -19,7 +19,7 @@ typedef struct NestedBorrowedFields {
   BorrowedFieldsWithBounds bounds2;
 } NestedBorrowedFields;
 
-
+typedef struct NestedBorrowedFields_option {union { NestedBorrowedFields ok; }; bool is_ok; } NestedBorrowedFields_option;
 
 
 

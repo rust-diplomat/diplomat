@@ -1,5 +1,5 @@
-#ifndef ErrorEnum_D_HPP
-#define ErrorEnum_D_HPP
+#ifndef OptionEnum_D_HPP
+#define OptionEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,34 +12,34 @@
 
 namespace diplomat {
 namespace capi {
-    enum ErrorEnum {
-      ErrorEnum_Foo = 0,
-      ErrorEnum_Bar = 1,
+    enum OptionEnum {
+      OptionEnum_Foo = 0,
+      OptionEnum_Bar = 1,
     };
     
-    typedef struct ErrorEnum_option {union { ErrorEnum ok; }; bool is_ok; } ErrorEnum_option;
+    typedef struct OptionEnum_option {union { OptionEnum ok; }; bool is_ok; } OptionEnum_option;
 } // namespace capi
 } // namespace
 
-class ErrorEnum {
+class OptionEnum {
 public:
   enum Value {
     Foo = 0,
     Bar = 1,
   };
 
-  ErrorEnum() = default;
+  OptionEnum() = default;
   // Implicit conversions between enum and ::Value
-  constexpr ErrorEnum(Value v) : value(v) {}
+  constexpr OptionEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline diplomat::capi::ErrorEnum AsFFI() const;
-  inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
+  inline diplomat::capi::OptionEnum AsFFI() const;
+  inline static OptionEnum FromFFI(diplomat::capi::OptionEnum c_enum);
 private:
     Value value;
 };
 
 
-#endif // ErrorEnum_D_HPP
+#endif // OptionEnum_D_HPP
