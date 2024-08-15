@@ -1,12 +1,15 @@
 {% if ok.is_some() || err.is_some() -%}
 final class {{name}}Union extends ffi.Union {
-
   {%- if let Some((anno, ty)) = ok %}
+  {%- if !anno.is_empty() %}
   {{ anno }}
+  {%- endif %}
   external {{ ty }} ok;
   {%- endif %}
   {%- if let Some((anno, ty)) = err %}
+  {%- if !anno.is_empty() %}
   {{ anno }}
+  {%- endif %}
   external {{ ty }} err;
   {%- endif %}
 }
@@ -21,7 +24,7 @@ final class {{name}} extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  {%- if let Some((_, ty)) = ok %}
+  {% if let Some((_, ty)) = ok %}
   factory {{name}}.ok({{ty}} val) {
     final struct = ffi.Struct.create<{{name}}>();
     struct.isOk = true;

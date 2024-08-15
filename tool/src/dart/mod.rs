@@ -684,7 +684,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Strs(..)) => "core.List<core.String>".into(),
             Type::DiplomatOption(ref inner) => {
                 let inner = self.gen_type_name(inner);
-                format!("{inner}?").into()
+                self.formatter.fmt_nullable(&inner).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
