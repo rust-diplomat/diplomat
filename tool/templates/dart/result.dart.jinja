@@ -20,4 +20,33 @@ final class {{name}} extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+
+  {%- if let Some((_, ty)) = ok %}
+  factory {{name}}.ok({{ty}} val) {
+    final struct = ffi.Struct.create<{{name}}>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  {%- else %}
+  factory {{name}}.ok() {
+    final struct = ffi.Struct.create<{{name}}>();
+    struct.isOk = true;
+    return struct;
+  }
+  {%- endif %}
+  {%- if let Some((_, ty)) = err %}
+  factory {{name}}.err({{ty}} val) {
+    final struct = ffi.Struct.create<{{name}}>();
+    struct.isOk = false;
+    struct.union.err = val;
+    return struct;
+  }
+  {%- else %}
+  factory {{name}}.err() {
+    final struct = ffi.Struct.create<{{name}}>();
+    struct.isOk = false;
+    return struct;
+  }
+  {%- endif %}
 }

@@ -126,6 +126,17 @@ final class _ResultDoubleVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultDoubleVoid.ok(double val) {
+    final struct = ffi.Struct.create<_ResultDoubleVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultDoubleVoid.err() {
+    final struct = ffi.Struct.create<_ResultDoubleVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultInt32OpaqueUnion extends ffi.Union {
@@ -141,6 +152,18 @@ final class _ResultInt32Opaque extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultInt32Opaque.ok(int val) {
+    final struct = ffi.Struct.create<_ResultInt32Opaque>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultInt32Opaque.err(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultInt32Opaque>();
+    struct.isOk = false;
+    struct.union.err = val;
+    return struct;
+  }
 }
 
 final class _ResultInt32VoidUnion extends ffi.Union {
@@ -154,6 +177,17 @@ final class _ResultInt32Void extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultInt32Void.ok(int val) {
+    final struct = ffi.Struct.create<_ResultInt32Void>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultInt32Void.err() {
+    final struct = ffi.Struct.create<_ResultInt32Void>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultIntPtrVoidUnion extends ffi.Union {
@@ -167,6 +201,17 @@ final class _ResultIntPtrVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultIntPtrVoid.ok(int val) {
+    final struct = ffi.Struct.create<_ResultIntPtrVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultIntPtrVoid.err() {
+    final struct = ffi.Struct.create<_ResultIntPtrVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultOpaqueErrorStructFfiUnion extends ffi.Union {
@@ -181,6 +226,18 @@ final class _ResultOpaqueErrorStructFfi extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultOpaqueErrorStructFfi.ok(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultOpaqueErrorStructFfi>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOpaqueErrorStructFfi.err(_ErrorStructFfi val) {
+    final struct = ffi.Struct.create<_ResultOpaqueErrorStructFfi>();
+    struct.isOk = false;
+    struct.union.err = val;
+    return struct;
+  }
 }
 
 final class _ResultOpaqueInt32Union extends ffi.Union {
@@ -196,6 +253,18 @@ final class _ResultOpaqueInt32 extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultOpaqueInt32.ok(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultOpaqueInt32>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOpaqueInt32.err(int val) {
+    final struct = ffi.Struct.create<_ResultOpaqueInt32>();
+    struct.isOk = false;
+    struct.union.err = val;
+    return struct;
+  }
 }
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {
@@ -208,6 +277,17 @@ final class _ResultOpaqueVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultOpaqueVoid.ok(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultOpaqueVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOpaqueVoid.err() {
+    final struct = ffi.Struct.create<_ResultOpaqueVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
@@ -220,6 +300,17 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultOptionStructFfiVoid.ok(_OptionStructFfi val) {
+    final struct = ffi.Struct.create<_ResultOptionStructFfiVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOptionStructFfiVoid.err() {
+    final struct = ffi.Struct.create<_ResultOptionStructFfiVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultSizeVoidUnion extends ffi.Union {
@@ -233,6 +324,17 @@ final class _ResultSizeVoid extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultSizeVoid.ok(int val) {
+    final struct = ffi.Struct.create<_ResultSizeVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultSizeVoid.err() {
+    final struct = ffi.Struct.create<_ResultSizeVoid>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultSliceUtf8VoidUnion extends ffi.Union {
@@ -245,6 +347,17 @@ final class _ResultSliceUtf8Void extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultSliceUtf8Void.ok(_SliceUtf8 val) {
+    final struct = ffi.Struct.create<_ResultSliceUtf8Void>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultSliceUtf8Void.err() {
+    final struct = ffi.Struct.create<_ResultSliceUtf8Void>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultUint32VoidUnion extends ffi.Union {
@@ -258,6 +371,17 @@ final class _ResultUint32Void extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultUint32Void.ok(int val) {
+    final struct = ffi.Struct.create<_ResultUint32Void>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultUint32Void.err() {
+    final struct = ffi.Struct.create<_ResultUint32Void>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultUint8VoidUnion extends ffi.Union {
@@ -271,6 +395,17 @@ final class _ResultUint8Void extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultUint8Void.ok(int val) {
+    final struct = ffi.Struct.create<_ResultUint8Void>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultUint8Void.err() {
+    final struct = ffi.Struct.create<_ResultUint8Void>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultVoidMyZstFfi extends ffi.Struct {
@@ -278,6 +413,16 @@ final class _ResultVoidMyZstFfi extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultVoidMyZstFfi.ok() {
+    final struct = ffi.Struct.create<_ResultVoidMyZstFfi>();
+    struct.isOk = true;
+    return struct;
+  }
+  factory _ResultVoidMyZstFfi.err() {
+    final struct = ffi.Struct.create<_ResultVoidMyZstFfi>();
+    struct.isOk = false;
+    return struct;
+  }
 }
 
 final class _ResultVoidOpaqueUnion extends ffi.Union {
@@ -290,6 +435,17 @@ final class _ResultVoidOpaque extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
+  factory _ResultVoidOpaque.ok() {
+    final struct = ffi.Struct.create<_ResultVoidOpaque>();
+    struct.isOk = true;
+    return struct;
+  }
+  factory _ResultVoidOpaque.err(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultVoidOpaque>();
+    struct.isOk = false;
+    struct.union.err = val;
+    return struct;
+  }
 }
 
 final class _SliceBool extends ffi.Struct {
