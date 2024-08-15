@@ -6,7 +6,7 @@ final class {{name}}Union extends ffi.Union {
   {%- endif %}
   external {{ ty }} ok;
   {%- endif %}
-  {%- if let Some((anno, ty)) = err %}
+{% if let Some((anno, ty)) = err %}
   {%- if !anno.is_empty() %}
   {{ anno }}
   {%- endif %}

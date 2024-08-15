@@ -84,6 +84,7 @@ class _FinalizedArena {
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
+
 }
 
 final class _ResultOpaqueVoid extends ffi.Struct {

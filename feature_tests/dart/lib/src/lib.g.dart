@@ -120,6 +120,7 @@ class _FinalizedArena {
 final class _ResultDoubleVoidUnion extends ffi.Union {
   @ffi.Double()
   external double ok;
+
 }
 
 final class _ResultDoubleVoid extends ffi.Struct {
@@ -145,6 +146,7 @@ final class _ResultDoubleVoid extends ffi.Struct {
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;
+
   external ffi.Pointer<ffi.Opaque> err;
 }
 
@@ -172,6 +174,7 @@ final class _ResultInt32Opaque extends ffi.Struct {
 final class _ResultInt32VoidUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;
+
 }
 
 final class _ResultInt32Void extends ffi.Struct {
@@ -197,6 +200,7 @@ final class _ResultInt32Void extends ffi.Struct {
 final class _ResultIntPtrVoidUnion extends ffi.Union {
   @ffi.IntPtr()
   external int ok;
+
 }
 
 final class _ResultIntPtrVoid extends ffi.Struct {
@@ -221,6 +225,7 @@ final class _ResultIntPtrVoid extends ffi.Struct {
 
 final class _ResultOpaqueErrorStructFfiUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
+
   external _ErrorStructFfi err;
 }
 
@@ -247,6 +252,7 @@ final class _ResultOpaqueErrorStructFfi extends ffi.Struct {
 
 final class _ResultOpaqueInt32Union extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
+
   @ffi.Int32()
   external int err;
 }
@@ -274,6 +280,7 @@ final class _ResultOpaqueInt32 extends ffi.Struct {
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
+
 }
 
 final class _ResultOpaqueVoid extends ffi.Struct {
@@ -298,6 +305,7 @@ final class _ResultOpaqueVoid extends ffi.Struct {
 
 final class _ResultOptionInputStructFfiVoidUnion extends ffi.Union {
   external _OptionInputStructFfi ok;
+
 }
 
 final class _ResultOptionInputStructFfiVoid extends ffi.Struct {
@@ -322,6 +330,7 @@ final class _ResultOptionInputStructFfiVoid extends ffi.Struct {
 
 final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
   external _OptionStructFfi ok;
+
 }
 
 final class _ResultOptionStructFfiVoid extends ffi.Struct {
@@ -347,6 +356,7 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
 final class _ResultSizeVoidUnion extends ffi.Union {
   @ffi.Size()
   external int ok;
+
 }
 
 final class _ResultSizeVoid extends ffi.Struct {
@@ -371,6 +381,7 @@ final class _ResultSizeVoid extends ffi.Struct {
 
 final class _ResultSliceUtf8VoidUnion extends ffi.Union {
   external _SliceUtf8 ok;
+
 }
 
 final class _ResultSliceUtf8Void extends ffi.Struct {
@@ -396,6 +407,7 @@ final class _ResultSliceUtf8Void extends ffi.Struct {
 final class _ResultUint32VoidUnion extends ffi.Union {
   @ffi.Uint32()
   external Rune ok;
+
 }
 
 final class _ResultUint32Void extends ffi.Struct {
@@ -421,6 +433,7 @@ final class _ResultUint32Void extends ffi.Struct {
 final class _ResultUint8VoidUnion extends ffi.Union {
   @ffi.Uint8()
   external int ok;
+
 }
 
 final class _ResultUint8Void extends ffi.Struct {
@@ -463,6 +476,7 @@ final class _ResultVoidMyZstFfi extends ffi.Struct {
 }
 
 final class _ResultVoidOpaqueUnion extends ffi.Union {
+
   external ffi.Pointer<ffi.Opaque> err;
 }
 
