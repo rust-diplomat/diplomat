@@ -37,11 +37,15 @@ const RESERVED: &[&str] = &[
     "true",
     "try",
     "typeof",
+    "undefined",
     "var",
     "void",
     "while",
     "with",
 ];
+
+/// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const RESERVED_TYPES: &[&str] = &["Infinity", "NaN"];
 
 /// Helper class for us to format JS identifiers from the HIR.
 pub(crate) struct JSFormatter<'tcx> {
@@ -60,10 +64,16 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let type_def = self.tcx.resolve_type(id);
 
-        type_def
+        let name = type_def
             .attrs()
             .rename
-            .apply(type_def.name().as_str().into())
+            .apply(type_def.name().as_str().into());
+
+        if RESERVED_TYPES.contains(&&*name) || RESERVED.contains(&&*name) {
+            panic!("{name} is not an allowed type in JS. Please rename.")
+        }
+
+        name
     }
 
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {

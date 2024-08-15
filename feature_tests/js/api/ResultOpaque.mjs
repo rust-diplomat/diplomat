@@ -36,7 +36,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
-                throw new Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -54,7 +54,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
-                throw new Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -72,7 +72,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
-                throw new Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -107,7 +107,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ErrorStruct()._fromFFI(diplomatReceive.buffer);
-                throw new Error('ErrorStruct: ' + cause.toString(), { cause });
+                throw new globalThis.Error('ErrorStruct: ' + cause.toString(), { cause });
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -125,7 +125,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new Error('ResultOpaque: ' + cause.toString(), { cause });
+                throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
     
         }
@@ -160,7 +160,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new Error('ResultOpaque: ' + cause.toString(), { cause });
+                throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
         }
