@@ -10,8 +10,8 @@ use diplomat_core::hir::{
         BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
     },
     BackendAttrSupport, DocsUrlGenerator, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner,
-    ReturnType, ReturnableStructDef, SelfType, SpecialMethod, SpecialMethodPresence,
-    StructPathLike, SuccessType, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    ReturnType, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType,
+    TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 
 use askama::Template;
@@ -1159,7 +1159,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart helper class for a result type.
-    fn gen_result(&mut self, ok: Option<&hir::OutType>, err: Option<&hir::OutType>) -> String {
+    fn gen_result<P: TyPosition>(
+        &mut self,
+        ok: Option<&hir::Type<P>>,
+        err: Option<&hir::Type<P>>,
+    ) -> String {
         let name = format!(
             "_Result{}{}",
             &self
@@ -1178,9 +1182,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let Type::Struct(s) = t else {
                 return true;
             };
-            match s.resolve(self.tcx) {
-                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
-                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+            match self.tcx.resolve_type(s.id()) {
+                TypeDef::Struct(s) => !s.fields.is_empty(),
+                TypeDef::OutStruct(s) => !s.fields.is_empty(),
                 _ => unreachable!("unknown AST/HIR variant"),
             }
         });
@@ -1189,44 +1193,42 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let Type::Struct(s) = t else {
                 return true;
             };
-            match s.resolve(self.tcx) {
-                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
-                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+            match self.tcx.resolve_type(s.id()) {
+                TypeDef::Struct(s) => !s.fields.is_empty(),
+                TypeDef::OutStruct(s) => !s.fields.is_empty(),
                 _ => unreachable!("unknown AST/HIR variant"),
             }
         });
 
-        let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
-            .into_iter()
-            .flatten()
-            .map(|(o, field_name)| {
-                format!(
-                    "{}external {} {field_name};",
-                    match o {
-                        hir::OutType::Primitive(p) => {
-                            format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
-                        }
-                        hir::OutType::Enum(_) =>
-                            format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
-                        _ => String::new(),
-                    },
-                    { self.gen_type_name_ffi(o, true) }
-                )
-            })
-            .collect();
+        let mut gen_decl = |ty: &Type<P>| {
+            let annotation = match *ty {
+                hir::Type::Primitive(p) => {
+                    format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(p, false))
+                }
+                hir::Type::Enum(_) => format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
+                _ => String::new(),
+            };
+            let ty = self.gen_type_name_ffi(ty, true);
+            (annotation, ty)
+        };
+
+        let ok = ok.map(&mut gen_decl);
+        let err = err.map(&mut gen_decl);
 
         #[derive(askama::Template)]
         #[template(path = "dart/result.dart.jinja", escape = "none")]
-        struct ResultTemplate {
+        struct ResultTemplate<'a> {
             name: String,
-            decls: Vec<String>,
+            ok: Option<(String, Cow<'a, str>)>,
+            err: Option<(String, Cow<'a, str>)>,
         }
 
         self.helper_classes.insert(
             name.clone(),
             ResultTemplate {
                 name: name.clone(),
-                decls,
+                ok,
+                err,
             }
             .render()
             .unwrap(),

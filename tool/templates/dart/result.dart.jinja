@@ -1,17 +1,20 @@
-{% if !decls.is_empty() -%}
+{% if ok.is_some() || err.is_some() -%}
 final class {{name}}Union extends ffi.Union {
-  {% for decl in decls -%}
-  {% if !loop.first %}
 
-  {% endif -%}
-  {{decl.replace('\n', "\n  ")}}
-  {%- endfor %}
+  {%- if let Some((anno, ty)) = ok %}
+  {{ anno }}
+  external {{ ty }} ok;
+  {%- endif %}
+  {%- if let Some((anno, ty)) = err %}
+  {{ anno }}
+  external {{ ty }} err;
+  {%- endif %}
 }
 
 {% endif -%}
 
 final class {{name}} extends ffi.Struct {
-  {% if !decls.is_empty() -%}
+  {% if ok.is_some() || err.is_some() -%}
   external {{name}}Union union;
   {%- endif %}
 
