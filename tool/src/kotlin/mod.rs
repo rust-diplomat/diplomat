@@ -1,8 +1,8 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, BackendAttrSupport, Borrow, Callback, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn,
-    MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
+    self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
+    MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
     ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
     StructPathLike, TyPosition, Type, TypeContext, TypeDef,
 };
@@ -261,7 +261,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
-            Type::Callback(_) => format!("{name}.nativeStruct").into(),
+            Type::Callback(_) => {
+                let real_param_name = name[name.rfind("_").unwrap() + 1..].to_string(); // past last _
+                format!("{name}.fromCallback({real_param_name}.nativeStruct)").into()
+            }
             _ => todo!(),
         }
     }
@@ -984,10 +987,11 @@ retutnVal.option() ?: return null
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, additional_name.clone());
             param_decls_kt.push(format!(
                 "{param_name}: {}",
-                self.gen_type_name(&param.ty, additional_name)
+                self.gen_non_wrapped_type_name(&param.ty, additional_name.clone())
             ));
+            let param_wrapper_type = self.gen_type_name(&param.ty, additional_name);
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_wrapper_type));
         }
         let write_return = matches!(
             &method.output,
@@ -1544,6 +1548,36 @@ retutnVal.option() ?: return null
             Type::Callback(_) => format!("DiplomatCallback_{}", additional_name.unwrap()).into(),
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
             _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    fn gen_non_wrapped_type_name(
+        &self,
+        ty: &Type<InputOnly>,
+        additional_name: Option<String>,
+    ) -> Cow<'cx, str> {
+        match ty {
+            Type::Callback(Callback {
+                param_self: _,
+                params,
+                output,
+                ..
+            }) => {
+                let in_type_string = params
+                    .iter()
+                    .map(|param| self.gen_type_name(&param.ty, None).into())
+                    .collect::<Vec<String>>()
+                    .join(",");
+                // let in_type_string = input_types.iter().map(|in_ty| {
+                //     self.gen_type_name(in_ty, None)
+                // }).join(",");
+                let out_type_string: String = match **output {
+                    Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
+                    None => "Void".into(),
+                };
+                format!("({})->{}", in_type_string, out_type_string).into()
+            }
+            _ => self.gen_type_name(ty, additional_name),
         }
     }
 }

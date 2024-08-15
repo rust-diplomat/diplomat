@@ -34,14 +34,14 @@ internal interface Runner_{{callback_param.name}}: Callback {
     fun invoke(ignored: Pointer?{% if callback_param.input_params_and_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}}
 }
 
-class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
+internal class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_{{callback_param.name}}
         = object :  Runner_{{callback_param.name}} {
                 override fun invoke(ignored: Pointer?{% if callback_param.input_types != "" %}, {{callback_param.input_params_and_types}} {% endif %}): {{callback_param.output_type}} {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -49,13 +49,13 @@ class {{callback_param.name}}_Native: Structure(), Structure.ByValue {
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class {{callback_param.name}} internal constructor (
+internal class {{callback_param.name}} internal constructor (
     internal val nativeStruct: {{callback_param.name}}_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
