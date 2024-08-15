@@ -31,6 +31,8 @@ part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
 part 'OpaqueMutexedString.g.dart';
+part 'OptionEnum.g.dart';
+part 'OptionInputStruct.g.dart';
 part 'OptionOpaque.g.dart';
 part 'OptionOpaqueChar.g.dart';
 part 'OptionStruct.g.dart';
@@ -290,6 +292,29 @@ final class _ResultOpaqueVoid extends ffi.Struct {
   }
 }
 
+final class _ResultOptionInputStructFfiVoidUnion extends ffi.Union {
+  
+  external _OptionInputStructFfi ok;
+}
+
+final class _ResultOptionInputStructFfiVoid extends ffi.Struct {
+  external _ResultOptionInputStructFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+  factory _ResultOptionInputStructFfiVoid.ok(_OptionInputStructFfi val) {
+    final struct = ffi.Struct.create<_ResultOptionInputStructFfiVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultOptionInputStructFfiVoid.err() {
+    final struct = ffi.Struct.create<_ResultOptionInputStructFfiVoid>();
+    struct.isOk = false;
+    return struct;
+  }
+}
+
 final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
   
   external _OptionStructFfi ok;
@@ -363,7 +388,7 @@ final class _ResultSliceUtf8Void extends ffi.Struct {
 final class _ResultUint32VoidUnion extends ffi.Union {
   @ffi.Uint32()
 
-  external int ok;
+  external Rune ok;
 }
 
 final class _ResultUint32Void extends ffi.Struct {
@@ -371,7 +396,7 @@ final class _ResultUint32Void extends ffi.Struct {
 
   @ffi.Bool()
   external bool isOk;
-  factory _ResultUint32Void.ok(int val) {
+  factory _ResultUint32Void.ok(Rune val) {
     final struct = ffi.Struct.create<_ResultUint32Void>();
     struct.isOk = true;
     struct.union.ok = val;

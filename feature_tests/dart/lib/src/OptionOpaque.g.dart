@@ -89,6 +89,36 @@ final class OptionOpaque implements ffi.Finalizable {
     final result = _OptionOpaque_option_opaque_argument(arg?._ffi ?? ffi.Pointer.fromAddress(0));
     return result;
   }
+
+  static int? acceptsOptionU8(int? arg) {
+    final result = _OptionOpaque_accepts_option_u8(arg != null ? _ResultUint8Void.ok(arg) : _ResultUint8Void.err());
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
+
+  static OptionEnum? acceptsOptionEnum(OptionEnum? arg) {
+    final result = _OptionOpaque_accepts_option_enum(arg != null ? _ResultInt32Void.ok(arg.index) : _ResultInt32Void.err());
+    if (!result.isOk) {
+      return null;
+    }
+    return OptionEnum.values[result.union.ok];
+  }
+
+  static OptionInputStruct? acceptsOptionInputStruct(OptionInputStruct? arg) {
+    final temp = _FinalizedArena();
+    final result = _OptionOpaque_accepts_option_input_struct(arg != null ? _ResultOptionInputStructFfiVoid.ok(arg._toFfi(temp.arena)) : _ResultOptionInputStructFfiVoid.err());
+    if (!result.isOk) {
+      return null;
+    }
+    return OptionInputStruct._fromFfi(result.union.ok);
+  }
+
+  static OptionInputStruct returnsOptionInputStruct() {
+    final result = _OptionOpaque_returns_option_input_struct();
+    return OptionInputStruct._fromFfi(result);
+  }
 }
 
 @meta.ResourceIdentifier('OptionOpaque_destroy')
@@ -150,3 +180,23 @@ external void _OptionOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_opaque_argument')
 // ignore: non_constant_identifier_names
 external bool _OptionOpaque_option_opaque_argument(ffi.Pointer<ffi.Opaque> arg);
+
+@meta.ResourceIdentifier('OptionOpaque_accepts_option_u8')
+@ffi.Native<_ResultUint8Void Function(_ResultUint8Void)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_u8')
+// ignore: non_constant_identifier_names
+external _ResultUint8Void _OptionOpaque_accepts_option_u8(_ResultUint8Void arg);
+
+@meta.ResourceIdentifier('OptionOpaque_accepts_option_enum')
+@ffi.Native<_ResultInt32Void Function(_ResultInt32Void)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_enum')
+// ignore: non_constant_identifier_names
+external _ResultInt32Void _OptionOpaque_accepts_option_enum(_ResultInt32Void arg);
+
+@meta.ResourceIdentifier('OptionOpaque_accepts_option_input_struct')
+@ffi.Native<_ResultOptionInputStructFfiVoid Function(_ResultOptionInputStructFfiVoid)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_input_struct')
+// ignore: non_constant_identifier_names
+external _ResultOptionInputStructFfiVoid _OptionOpaque_accepts_option_input_struct(_ResultOptionInputStructFfiVoid arg);
+
+@meta.ResourceIdentifier('OptionOpaque_returns_option_input_struct')
+@ffi.Native<_OptionInputStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_returns_option_input_struct')
+// ignore: non_constant_identifier_names
+external _OptionInputStructFfi _OptionOpaque_returns_option_input_struct();
