@@ -761,16 +761,14 @@ impl<'ast> LoweringContext<'ast> {
                         ));
                     }
                 }
-                Ok(Type::Slice(Slice::Str(
-                    new_lifetime,
-                    *encoding,
-                )))
+                Ok(Type::Slice(Slice::Str(new_lifetime, *encoding)))
             }
             ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::Slice(Slice::Strs(*encoding))),
-            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => { 
-                let new_lifetime = lm.as_ref()
-                .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
-            
+            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => {
+                let new_lifetime = lm
+                    .as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
+
                 if let Some(b) = new_lifetime {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
@@ -782,10 +780,10 @@ impl<'ast> LoweringContext<'ast> {
                 }
 
                 Ok(Type::Slice(Slice::Primitive(
-                new_lifetime,
-                PrimitiveType::from_ast(*prim),
+                    new_lifetime,
+                    PrimitiveType::from_ast(*prim),
                 )))
-            },
+            }
             ast::TypeName::Function(input_types, out_type) => {
                 if !self.attr_validator.attrs_supported().callbacks {
                     self.errors.push(LoweringError::Other(
