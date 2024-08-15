@@ -5,7 +5,7 @@ use super::{
     Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
-    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId, TraitDef
+    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId, TraitDef, TraitPath
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -633,6 +633,13 @@ impl<'ast> LoweringContext<'ast> {
 
                         Ok(Type::Enum(EnumPath::new(tcx_id)))
                     }
+                    ast::CustomType::Trait(trt) => {
+                        let tcx_id = self.lookup_id.resolve_trait(trt).expect(
+                            "can't find trait in lookup map, which contains all traits from env",
+                        );
+                        todo!()
+                        // Ok(Type::Trait(TraitPath::new(tcx_id)))
+                    }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
@@ -843,31 +850,6 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
-            ast::TypeName::Function(input_types, out_type) => {
-                let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
-                let params = input_types
-                    .iter()
-                    .map(|in_ty| {
-                        let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false);
-                        CallbackParam {
-                            ty: hir_in_ty.unwrap(),
-                        }
-                    })
-                    .collect::<Vec<CallbackParam>>();
-                Ok(Type::Callback(P::build_callback(Callback {
-                    id: callback_id,
-                    param_self: None,
-                    params,
-                    output: Box::new(match **out_type {
-                        ast::TypeName::Unit => None,
-                        _ => Some(self.lower_type(out_type, ltl, in_path)?),
-                    }),
-                })))
-            }
-            ast::TypeName::Unit => {
-                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
-                Err(())
-            }
         }
     }
 
@@ -931,6 +913,12 @@ impl<'ast> LoweringContext<'ast> {
                         );
 
                         Ok(OutType::Enum(EnumPath::new(tcx_id)))
+                    }
+                    ast::CustomType::Trait(_) => {
+                        self.errors.push(LoweringError::Other(format!(
+                            "Traits are input-only, but was found in: {path}"
+                        )));
+                        Err(())
                     }
                 }
             }
@@ -1281,6 +1269,9 @@ impl<'ast> LoweringContext<'ast> {
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id)), attrs),
                     self_param_ltl.no_self_ref(),
                 ))
+            }
+            ast::CustomType::Trait(trt) => {
+                todo!()
             }
         }
     }
