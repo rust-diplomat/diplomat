@@ -283,7 +283,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         }
                     } else if let &hir::Type::Struct(..) = field_ty {
                         Some("temp".into())
-                    } else if let &hir::Type::DiplomatOption(ref inner) = field_ty {
+                    } else if let hir::Type::DiplomatOption(inner) = field_ty {
                         alloc_name(ty, inner)
                     } else {
                         None
@@ -752,7 +752,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
             Type::Slice(s) => self.gen_slice(&s).into(),
-            Type::DiplomatOption(ref inner) => self.gen_result(Some(&inner), None).into(),
+            Type::DiplomatOption(ref inner) => self.gen_result(Some(inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
