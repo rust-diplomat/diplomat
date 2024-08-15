@@ -1264,9 +1264,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut gen_decl = |ty: &Type<P>| {
             let annotation = match *ty {
                 hir::Type::Primitive(p) => {
-                    format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(p, false))
+                    format!("@{}()", self.formatter.fmt_primitive_as_ffi(p, false))
                 }
-                hir::Type::Enum(_) => format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
+                hir::Type::Enum(_) => format!("@{}()", self.formatter.fmt_enum_as_ffi(false)),
                 _ => String::new(),
             };
             let ty = self.gen_type_name_ffi(ty, true);
