@@ -757,7 +757,7 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(super::MaybeStatic::Static) = new_lifetime {
                     if !self.attr_validator.attrs_supported().static_slices {
                         self.errors.push(LoweringError::Other(
-                            format!("'static string slice types are not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                            "'static string slice types are not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]".into()
                         ));
                     }
                 }
