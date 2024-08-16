@@ -11,14 +11,6 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#bytes = bytes;
-            
-        }}
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -27,17 +19,17 @@ export class BorrowedFieldsReturning {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(bytes); } bytes.garbageCollect(); } : bytes.free);
-        
-        return [diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)]
+        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
     }
 
-    #fromFFI(ptr, aEdges) {
+    _fromFFI(ptr, aEdges) {
         const bytesDeref = ptr;
-        this.#bytes = bytesDeref.getString("string8");
+        this.#bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+
+        return this;
     }
 
     // Return all fields corresponding to lifetime `'a` 

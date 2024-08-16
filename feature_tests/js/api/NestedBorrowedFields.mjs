@@ -53,10 +53,10 @@ export class NestedBorrowedFields {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
+        return [...this.#fields._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
     #fromFFI(ptr, xEdges, yEdges, zEdges) {

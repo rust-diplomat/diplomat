@@ -20,8 +20,11 @@ export class Opaque {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Opaque_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Opaque_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -82,15 +85,13 @@ export class Opaque {
 
     assertStruct(s) {
         
-        let slice_cleanup_callbacks = [];
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(slice_cleanup_callbacks, {}));
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena, {}));
     
         try {}
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanupArena.free();
         }
     }
 

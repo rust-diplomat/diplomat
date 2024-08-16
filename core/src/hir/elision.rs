@@ -445,10 +445,13 @@ mod tests {
 
             env.insert(crate::ast::Path::empty(), top_symbols);
 
+            let mut backend = crate::hir::BasicAttributeValidator::new("test-backend");
+            backend.support.static_slices = true;
+
             // Don't run validation: it will error on elision. We want this code to support
             // elision even if we don't actually allow it, since good diagnostics involve understanding
             // broken code.
-            let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, crate::hir::BasicAttributeValidator::new("test-backend")).unwrap();
+            let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, backend).unwrap();
 
             tcx
         }}
