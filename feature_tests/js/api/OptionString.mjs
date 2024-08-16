@@ -66,7 +66,7 @@ export class OptionString {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return diplomatReceive.buffer.getString("string8");
+            return diplomatRuntime.DiplomatReceiveBuf.getString(wasm, diplomatReceive.buffer, "string8");
         }
         
         finally {

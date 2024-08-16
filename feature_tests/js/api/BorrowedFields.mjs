@@ -50,11 +50,11 @@ export class BorrowedFields {
 
     _fromFFI(ptr, aEdges) {
         const aDeref = ptr;
-        this.#a = aDeref.getString("string16");
+        this.#a = diplomatRuntime.DiplomatReceiveBuf.getString(wasm, aDeref, "string16");
         const bDeref = ptr + 8;
-        this.#b = bDeref.getString("string8");
+        this.#b = diplomatRuntime.DiplomatReceiveBuf.getString(wasm, bDeref, "string8");
         const cDeref = ptr + 16;
-        this.#c = cDeref.getString("string8");
+        this.#c = diplomatRuntime.DiplomatReceiveBuf.getString(wasm, cDeref, "string8");
 
         return this;
     }
