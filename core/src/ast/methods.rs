@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
@@ -220,7 +220,7 @@ impl Method {
 }
 
 /// The `self` parameter taken by a [`Method`].
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug, Deserialize)]
 #[non_exhaustive]
 pub struct SelfParam {
     /// The lifetime and mutability of the `self` param, if it's a reference.
@@ -256,7 +256,7 @@ impl SelfParam {
 }
 
 /// A parameter taken by a [`Method`], not including `self`.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[non_exhaustive]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
