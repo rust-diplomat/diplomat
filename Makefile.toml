@@ -167,13 +167,12 @@ exec --fail-on-error dart --enable-experiment=native-assets test
 env = {"OUT_FILE" = "dylib"}
 
 [tasks.test-kotlin-example.linux]
-env = {"OUT_FILE" = "so"}
+env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 
 [tasks.test-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-example"]
-env = {"LD_LIBRARY_PATH" = "./"}
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
@@ -186,7 +185,7 @@ exec --fail-on-error gradle test --warning-mode all
 env = {"OUT_FILE" = "dylib"}
 
 [tasks.test-kotlin-feature.linux]
-env = {"OUT_FILE" = "so"}
+env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 
 [tasks.test-kotlin-feature]
 category = "Tests"
