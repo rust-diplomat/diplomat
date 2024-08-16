@@ -167,6 +167,7 @@ exec --fail-on-error dart --enable-experiment=native-assets test
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-example"]
+env = {"LD_LIBRARY_PATH" = "./"}
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
@@ -183,9 +184,6 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsomelib.so
 cd feature_tests/kotlin/somelib
-ls
-exec gradle --version
-exec java -XshowSettings:properties
 exec --fail-on-error gradle test  --warning-mode all 
 '''
 
