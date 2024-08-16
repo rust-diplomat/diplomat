@@ -40,14 +40,6 @@ final class Foo implements ffi.Finalizable {
     return Bar._fromFfi(result, [], bEdges, aEdges);
   }
 
-  factory Foo.static_(String x) {
-    final temp = _FinalizedArena();
-    // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [];
-    final result = _Foo_new_static(x._utf8AllocIn(temp.arena));
-    return Foo._fromFfi(result, [], aEdges);
-  }
-
   BorrowedFieldsReturning asReturning() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
@@ -88,11 +80,6 @@ external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
-
-@meta.ResourceIdentifier('Foo_new_static')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new_static')
-// ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_new_static(_SliceUtf8 x);
 
 @meta.ResourceIdentifier('Foo_as_returning')
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')

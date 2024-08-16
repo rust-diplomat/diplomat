@@ -18,8 +18,11 @@ export class Float64Vec {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Float64Vec_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Float64Vec_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -131,7 +134,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_as_slice(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatReceive.buffer.getSlice("f64");
+            return new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, diplomatReceive.buffer, "f64", aEdges);
         }
         
         finally {
@@ -186,7 +189,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatReceive.buffer.getSlice("f64");
+            return new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, diplomatReceive.buffer, "f64", aEdges);
         }
         
         finally {

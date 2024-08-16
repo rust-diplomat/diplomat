@@ -36,25 +36,19 @@ export class BorrowedFields {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(a); } a.garbageCollect(); } : a.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(b); } b.garbageCollect(); } : b.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(c); } c.garbageCollect(); } : c.free);
-        
-        return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#a), diplomatRuntime.DiplomatBuf.str8(wasm, this.#b), diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)]
+        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).splat()]
     }
 
     _fromFFI(ptr, aEdges) {
         const aDeref = ptr;
-        this.#a = aDeref.getString("string16");
+        this.#a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
         const bDeref = ptr + 8;
-        this.#b = bDeref.getString("string8");
+        this.#b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
         const cDeref = ptr + 16;
-        this.#c = cDeref.getString("string8");
+        this.#c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
 
         return this;
     }

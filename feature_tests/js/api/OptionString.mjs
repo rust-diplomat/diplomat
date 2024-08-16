@@ -18,8 +18,11 @@ export class OptionString {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        OptionString_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            OptionString_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -66,7 +69,7 @@ export class OptionString {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return diplomatReceive.buffer.getString("string8");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
         }
         
         finally {

@@ -16,6 +16,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.method_overloading = true;
     a.utf8_strings = true;
     a.utf16_strings = true;
+    a.static_slices = true;
 
     a.constructors = false; // TODO
     a.named_constructors = false;

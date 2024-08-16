@@ -14,8 +14,6 @@ export class Foo {
 
     get bar(): Bar;
 
-    static newStatic(x: string): Foo;
-
     asReturning(): BorrowedFieldsReturning;
 
     static extractFromFields(fields: BorrowedFields): Foo;

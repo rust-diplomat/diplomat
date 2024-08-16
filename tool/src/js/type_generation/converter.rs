@@ -118,7 +118,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             .formatter
                             .fmt_lifetime_edge_array(lt, lifetime_environment)
                             .into_owned(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 } else {
                     "[]".into()
@@ -133,7 +133,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                                 .fmt_lifetime_edge_array(lt, lifetime_environment)
                         )
                         .unwrap(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
@@ -156,7 +156,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             write!(edges, ", {}Edges", lifetime_environment.fmt_lifetime(lt))
                                 .unwrap()
                         }
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
@@ -190,15 +190,25 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
             Type::Slice(slice) => {
+                let edges = match slice.lifetime() {
+                    Some(lt) => {
+                        let hir::MaybeStatic::NonStatic(lifetime) = lt else {
+                            panic!("'static not supported for JS backend");
+                        };
+                        format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
+                    }
+                    _ => "[]".into(),
+                };
+
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"{variable_name}.getSlice("{}")"#,
+                        r#"new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, {variable_name}, "{}", {edges})"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"{variable_name}.getString("string{}")"#,
+                        r#"new diplomatRuntime.DiplomatSliceStr(wasm, {variable_name},  "string{}", {edges})"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -211,7 +221,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"{variable_name}.getStrings("string{}")"#,
+                            r#"new diplomatRuntime.DiplomatSliceStrings(wasm, {variable_name}, "string{}", {edges})"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,
@@ -521,31 +531,49 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        alloc: Option<&str>,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
-            Type::Slice(hir::Slice::Str(_, encoding)) => match encoding {
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
-                    format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
+            Type::Struct(..) => {
+                self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap())
+            }
+            Type::Slice(slice) => {
+                if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
+                    panic!("'static not supported for JS backend.")
+                } else {
+                    let base_statement = match slice {
+                        hir::Slice::Str(_, encoding) => match encoding {
+                            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                                format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})")
+                            }
+                            _ => {
+                                format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})")
+                            }
+                        },
+                        hir::Slice::Strs(encoding) => format!(
+                            r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
+                            match encoding {
+                                hir::StringEncoding::UnvalidatedUtf16 => "string16",
+                                _ => "string8",
+                            }
+                        ),
+                        hir::Slice::Primitive(_, p) => format!(
+                            r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
+                            self.formatter.fmt_primitive_list_view(p)
+                        ),
+                        _ => unreachable!("Unknown Slice variant {ty:?}"),
+                    }
+                    .into();
+                    if let Some(a) = alloc {
+                        format!("{a}.alloc({base_statement})").into()
+                    } else {
+                        base_statement
+                    }
                 }
-                _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
-            },
-            Type::Slice(hir::Slice::Strs(encoding)) => format!(
-                r#"diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")"#,
-                match encoding {
-                    hir::StringEncoding::UnvalidatedUtf16 => "string16",
-                    _ => "string8",
-                }
-            )
-            .into(),
-            Type::Slice(hir::Slice::Primitive(_, p)) => format!(
-                r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
-                self.formatter.fmt_primitive_list_view(p)
-            )
-            .into(),
+            }
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
         }
     }
@@ -554,6 +582,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         &self,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        allocator: &str,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
@@ -578,7 +607,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
-        format!("...{js_name}._intoFFI(slice_cleanup_callbacks, {{{params}}})").into()
+        format!("...{js_name}._intoFFI({allocator}, {{{params}}})").into()
     }
     // #endregion
 }

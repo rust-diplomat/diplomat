@@ -753,17 +753,37 @@ impl<'ast> LoweringContext<'ast> {
                 Err(())
             }
             ast::TypeName::StrReference(lifetime, encoding, _stdlib) => {
-                Ok(Type::Slice(Slice::Str(
-                    lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
-                    *encoding,
-                )))
+                let new_lifetime = lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt));
+                if let Some(super::MaybeStatic::Static) = new_lifetime {
+                    if !self.attr_validator.attrs_supported().static_slices {
+                        self.errors.push(LoweringError::Other(
+                            "'static string slice types are not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]".into()
+                        ));
+                    }
+                }
+                Ok(Type::Slice(Slice::Str(new_lifetime, *encoding)))
             }
             ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::Slice(Slice::Strs(*encoding))),
-            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => Ok(Type::Slice(Slice::Primitive(
-                lm.as_ref()
-                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
-                PrimitiveType::from_ast(*prim),
-            ))),
+            ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => {
+                let new_lifetime = lm
+                    .as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
+
+                if let Some(b) = new_lifetime {
+                    if let super::MaybeStatic::Static = b.lifetime {
+                        if !self.attr_validator.attrs_supported().static_slices {
+                            self.errors.push(LoweringError::Other(
+                                format!("'static {prim:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                            ));
+                        }
+                    }
+                }
+
+                Ok(Type::Slice(Slice::Primitive(
+                    new_lifetime,
+                    PrimitiveType::from_ast(*prim),
+                )))
+            }
             ast::TypeName::Function(input_types, out_type) => {
                 if !self.attr_validator.attrs_supported().callbacks {
                     self.errors.push(LoweringError::Other(

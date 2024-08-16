@@ -750,6 +750,8 @@ pub struct BackendAttrSupport {
     pub utf8_strings: bool,
     /// Whether the language uses UTF-16 strings
     pub utf16_strings: bool,
+    /// Whether the language supports using slices with 'static lifetimes.
+    pub static_slices: bool,
 
     // Special methods
     /// Marking a method as a constructor to generate special constructor methods.
@@ -789,6 +791,7 @@ impl BackendAttrSupport {
             method_overloading: true,
             utf8_strings: true,
             utf16_strings: true,
+            static_slices: true,
 
             constructors: true,
             named_constructors: true,
@@ -919,6 +922,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 method_overloading,
                 utf8_strings,
                 utf16_strings,
+                static_slices,
 
                 constructors,
                 named_constructors,
@@ -939,6 +943,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "method_overloading" => method_overloading,
                 "utf8_strings" => utf8_strings,
                 "utf16_strings" => utf16_strings,
+                "static_slices" => static_slices,
 
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,

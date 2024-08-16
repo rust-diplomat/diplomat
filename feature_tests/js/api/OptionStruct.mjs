@@ -34,7 +34,7 @@ export class OptionStruct {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
         return [this.#a.ffiValue ?? 0, this.#b.ffiValue ?? 0, this.#c, this.#d.ffiValue ?? 0]

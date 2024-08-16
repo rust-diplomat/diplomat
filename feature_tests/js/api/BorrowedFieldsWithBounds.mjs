@@ -38,25 +38,19 @@ export class BorrowedFieldsWithBounds {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
-        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(fieldA); } fieldA.garbageCollect(); } : fieldA.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[bAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[bAppendArray]) { appendArrayMap[bAppendArray].push(fieldB); } fieldB.garbageCollect(); } : fieldB.free);
-        
-        slice_cleanup_callbacks.push((appendArrayMap[cAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[cAppendArray]) { appendArrayMap[cAppendArray].push(fieldC); } fieldC.garbageCollect(); } : fieldC.free);
-        
-        return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)]
+        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...(appendArrayMap["bAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["bAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...(appendArrayMap["cAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["cAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
     }
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
-        this.#fieldA = fieldADeref.getString("string16");
+        this.#fieldA = new diplomatRuntime.DiplomatSliceStr(wasm, fieldADeref,  "string16", aEdges);
         const fieldBDeref = ptr + 8;
-        this.#fieldB = fieldBDeref.getString("string8");
+        this.#fieldB = new diplomatRuntime.DiplomatSliceStr(wasm, fieldBDeref,  "string8", bEdges);
         const fieldCDeref = ptr + 16;
-        this.#fieldC = fieldCDeref.getString("string8");
+        this.#fieldC = new diplomatRuntime.DiplomatSliceStr(wasm, fieldCDeref,  "string8", cEdges);
 
         return this;
     }
