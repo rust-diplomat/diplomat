@@ -8,7 +8,7 @@ use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, Param, PathType, Self
 #[non_exhaustive]
 pub struct Trait {
     pub name: Ident,
-    pub lifetimes: LifetimeEnv,
+    // pub lifetimes: LifetimeEnv,
     pub fcts: Vec<TraitFct>,
 }
 
@@ -22,4 +22,12 @@ pub struct TraitFct {
     pub output_type: Box<TypeName>,
 }
 
-impl Trait {}
+impl Trait {
+    /// Extract an [`Enum`] metadata value from an AST node.
+    pub fn new(trt: &syn::ItemTrait, parent_attrs: &Attrs) -> Self {
+        Self {
+            name: (&trt.ident).into(),
+            fcts: vec![],
+        }
+    }
+}
