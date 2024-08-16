@@ -232,7 +232,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             typescript: bool,
             mutable: bool,
-            has_default_constructor: bool,
+            is_out: bool,
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
@@ -245,7 +245,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             type_name,
 
             typescript,
-            has_default_constructor: is_out,
+            is_out,
             mutable: !is_out,
 
             lifetimes: &struct_def.lifetimes,
