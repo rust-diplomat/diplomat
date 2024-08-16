@@ -26,7 +26,7 @@ export class {{type_name}} {
         {{field.field_name}}{% if !loop.last %},{% endif %}
         {%- endfor -%}
         {%- endif -%}
-        ) {% if typescript %};{% else %} {
+        ) {%- if typescript %};{% else %} {
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
             this.#fromFFI(arguments.slice(1));
         }
@@ -40,9 +40,9 @@ export class {{type_name}} {
         {%- endif -%}
     }
     {%- endif -%}
-    {% endif %}
+    {%- endif %}
 
-    {% if !typescript %}
+    {%- if !typescript %}
     {%~ if !fields.is_empty() %}
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -113,7 +113,7 @@ export class {{type_name}} {
         ];
     };
     {%- endfor -%}
-    {%- endif %}
+    {%- endif -%}
     {%- endif %}
 
 {%- for method in methods.methods %}
