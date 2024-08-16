@@ -19,7 +19,11 @@ export class Foo {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Foo is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
@@ -46,7 +50,7 @@ export class Foo {
         const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
     
         try {
-            return new Foo(result, [], aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {
@@ -64,7 +68,7 @@ export class Foo {
         const result = wasm.Foo_get_bar(this.ffiValue);
     
         try {
-            return new Bar(result, [], bEdges, aEdges);
+            return new Bar(diplomatRuntime.internalConstructor, result, [], bEdges, aEdges);
         }
         
         finally {}
@@ -96,7 +100,7 @@ export class Foo {
         const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}));
     
         try {
-            return new Foo(result, [], aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {
@@ -115,7 +119,7 @@ export class Foo {
         const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanupArena, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
-            return new Foo(result, [], aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {

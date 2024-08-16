@@ -16,7 +16,11 @@ export class Opaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Opaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -35,7 +39,7 @@ export class Opaque {
         const result = wasm.Opaque_new();
     
         try {
-            return new Opaque(result, []);
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -47,7 +51,7 @@ export class Opaque {
         const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
     
         try {
-            return result === 0 ? null : new Opaque(result, []);
+            return result === 0 ? null : new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -61,7 +65,7 @@ export class Opaque {
         const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
     
         try {
-            return new Opaque(result, []);
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

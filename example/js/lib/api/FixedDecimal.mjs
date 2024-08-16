@@ -17,7 +17,11 @@ export class FixedDecimal {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("FixedDecimal is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -36,7 +40,7 @@ export class FixedDecimal {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
-            return new FixedDecimal(result, []);
+            return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

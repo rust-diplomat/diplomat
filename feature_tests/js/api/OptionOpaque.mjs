@@ -15,7 +15,11 @@ export class OptionOpaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OptionOpaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,7 +38,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new(i);
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -44,7 +48,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_none();
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
