@@ -11,6 +11,14 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#bytes = bytes;
+            
+        }}
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -25,11 +33,9 @@ export class BorrowedFieldsReturning {
         return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
     }
 
-    _fromFFI(ptr, aEdges) {
+    #fromFFI(ptr, aEdges) {
         const bytesDeref = ptr;
         this.#bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
-
-        return this;
     }
 
     // Return all fields corresponding to lifetime `'a` 
