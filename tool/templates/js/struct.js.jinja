@@ -27,6 +27,7 @@ export class {{type_name}} {
         {%- endfor -%}
         {%- endif -%}
         ) {%- if typescript %};{% else %} {
+        {% if !fields.is_empty() -%}
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
             this.#fromFFI(arguments.slice(1));
         }
@@ -38,6 +39,11 @@ export class {{type_name}} {
             console.error("{{type_name}} is an out struct and can only be created internally.");
         }
         {%- endif -%}
+        {%- else if is_out -%}
+        if (!(arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor)) {
+            console.error("{{type_name}} is an out struct and can only be created internally.");
+        }
+        {%- endif %}
     }
     {%- endif -%}
     {%- endif %}
