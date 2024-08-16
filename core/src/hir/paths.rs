@@ -204,3 +204,10 @@ impl EnumPath {
         tcx.resolve_enum(self.tcx_id)
     }
 }
+
+impl TraitPath {
+    /// Returns a new [`TraitPath`].
+    pub(super) fn new(tcx_id: TraitId) -> Self {
+        Self { tcx_id }
+    }
+}
