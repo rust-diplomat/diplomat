@@ -41,7 +41,7 @@ jobs:
       uses: taiki-e/install-action@v2
       with:
         tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
-        
+
     - name: Run regeneration
       run: cargo make gen
     - name: Test code is fresh
@@ -68,22 +68,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
-    
+
     - name: clang, c11
       run: cargo make check-c
       env: 
         CC: clang
         C_STD: c11
-      
+
     - name: gcc, c11
       run: cargo make check-c
       env: 
         CC: gcc
         C_STD: c11
-    
+
     - name: gcc, c2x
       run: cargo make check-c
       env: 
@@ -162,7 +162,7 @@ jobs:
 
     - name: Test JS
       run: cargo make test-js
-      
+
   test-dart:
     runs-on: ubuntu-latest
     steps:
