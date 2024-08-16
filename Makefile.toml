@@ -180,7 +180,7 @@ script_runner = "@duckscript"
 dependencies = ["build-feature"]
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
+cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsomelib.so
 cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all 
 '''
