@@ -368,16 +368,12 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         } else {
             "void".into()
         };
-        let mut params_types = Vec::<String>::new();
-        for p in params.iter() {
-            let cur_type = self.gen_ty_name(&p.ty, header);
-            params_types.push(cur_type.to_string().clone());
-        }
-        let params_types = if params_types.is_empty() {
-            "".into()
-        } else {
-            params_types.join(", ")
-        };
+        let params_types = params
+            .iter()
+            .map(|p| self.gen_ty_name(&p.ty, header).to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+
         CallbackAndStructDef {
             name: cb_wrapper_type.into(),
             params_types,
