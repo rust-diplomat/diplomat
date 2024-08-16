@@ -184,8 +184,8 @@ cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsom
 cd feature_tests/kotlin/somelib
 ls
 exec gradle --version
-exec java -Djava.library.path=./ -XshowSettings:properties
-exec --fail-on-error gradle test -Djava.library.path=./ -i --warning-mode all 
+exec  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./ java -XshowSettings:properties
+exec --fail-on-error LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./ gradle test  -i --warning-mode all 
 '''
 
 [tasks.check-c-example]
