@@ -70,7 +70,7 @@ impl CallbackInstantiationFunctionality for Callback {
 
 impl CallbackInstantiationFunctionality for NoCallback {
     fn get_inputs(&self) -> Result<&[CallbackParam], ()> {
-        Err::<&[CallbackParam], ()>(())
+        Err(())
     }
     fn get_output_type(&self) -> Result<&Option<Type>, ()> {
         Err(())
