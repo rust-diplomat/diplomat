@@ -2,7 +2,8 @@
 
 use super::lifetimes::LifetimeEnv;
 use super::{
-    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type, Callback,
+    Attrs, Callback, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition,
+    Type,
 };
 use crate::ast::Docs;
 
@@ -24,7 +25,8 @@ pub enum TypeDef<'tcx> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub struct TraitDef { // TyPosition: InputOnly
+pub struct TraitDef {
+    // TyPosition: InputOnly
     pub docs: Docs,
     pub name: IdentBuf,
     pub fcts: Vec<Callback>,

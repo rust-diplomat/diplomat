@@ -5,7 +5,7 @@ use super::{
     Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
-    StructField, StructPath, SuccessType, TyPosition, Type, TypeDef, TypeId, TraitDef, TraitPath
+    StructField, StructPath, SuccessType, TraitDef, TraitPath, TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -607,13 +607,6 @@ impl<'ast> LoweringContext<'ast> {
 
                         Ok(Type::Enum(EnumPath::new(tcx_id)))
                     }
-                    ast::CustomType::Trait(trt) => {
-                        let tcx_id = self.lookup_id.resolve_trait(trt).expect(
-                            "can't find trait in lookup map, which contains all traits from env",
-                        );
-                        todo!()
-                        // Ok(Type::Trait(TraitPath::new(tcx_id)))
-                    }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
@@ -756,6 +749,9 @@ impl<'ast> LoweringContext<'ast> {
                     }),
                 })))
             }
+            ast::TypeName::TraitImpl(trt) => {
+                todo!();
+            }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
@@ -823,12 +819,6 @@ impl<'ast> LoweringContext<'ast> {
                         );
 
                         Ok(OutType::Enum(EnumPath::new(tcx_id)))
-                    }
-                    ast::CustomType::Trait(_) => {
-                        self.errors.push(LoweringError::Other(format!(
-                            "Traits are input-only, but was found in: {path}"
-                        )));
-                        Err(())
                     }
                 }
             }
@@ -1010,6 +1000,12 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
+            ast::TypeName::TraitImpl(_) => {
+                self.errors.push(LoweringError::Other(
+                    "Trait impls can only be an input type".into(),
+                ));
+                Err(())
+            }
         }
     }
 
@@ -1100,9 +1096,6 @@ impl<'ast> LoweringContext<'ast> {
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
                     self_param_ltl.no_self_ref(),
                 ))
-            }
-            ast::CustomType::Trait(trt) => {
-                todo!()
             }
         }
     }

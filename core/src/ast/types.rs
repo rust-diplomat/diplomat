@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct, Trait
+    OpaqueStruct, Path, RustLink, Struct, Trait,
 };
 use crate::Env;
 
@@ -23,8 +23,6 @@ pub enum CustomType {
     Opaque(OpaqueStruct),
     /// A fieldless enum.
     Enum(Enum),
-    /// A trait
-    Trait(Trait),
 }
 
 impl CustomType {
@@ -34,7 +32,6 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.name,
             CustomType::Opaque(strct) => &strct.name,
             CustomType::Enum(enm) => &enm.name,
-            CustomType::Trait(trt) => &trt.name,
         }
     }
 
@@ -44,7 +41,6 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
             CustomType::Enum(enm) => &enm.methods,
-            CustomType::Trait(trt) => todo!(), //[],
         }
     }
 
@@ -53,7 +49,6 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.attrs,
             CustomType::Opaque(strct) => &strct.attrs,
             CustomType::Enum(enm) => &enm.attrs,
-            CustomType::Trait(trt) => &trt.attrs,
         }
     }
 
@@ -63,7 +58,6 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.docs,
             CustomType::Opaque(strct) => &strct.docs,
             CustomType::Enum(enm) => &enm.docs,
-            CustomType::Trait(trt) => &trt.docs,
         }
     }
 
@@ -85,7 +79,6 @@ impl CustomType {
             CustomType::Struct(strct) => Some(&strct.lifetimes),
             CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
-            CustomType::Trait(_) => todo!(),
         }
     }
 }
@@ -101,6 +94,8 @@ pub enum ModSymbol {
     SubModule(Ident),
     /// A symbol that is a custom type.
     CustomType(CustomType),
+    /// A trait
+    Trait(Trait),
 }
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
@@ -203,6 +198,9 @@ impl PathType {
                                 cur_path.elements.join("::")
                             )
                         }
+                    }
+                    Some(ModSymbol::Trait(trt)) => {
+                        todo!(); // probably return CustomType OR trait here?
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
@@ -386,6 +384,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
+    TraitImpl(Trait),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -490,10 +489,10 @@ impl TypeName {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) | TypeName::Option(..) |
-            // can only be passed across the FFI boundary; callbacks are input-only
-            TypeName::Function(..) |
+            // can only be passed across the FFI boundary; traits and callbacks are input-only
+            TypeName::Function(..) | TypeName::TraitImpl(..) |
             // These are specified using FFI-safe diplomat_runtime types
-             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
+            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
             TypeName::Unit | TypeName::Write | TypeName::Result(..)
             // This is basically only useful in return types
@@ -590,6 +589,9 @@ impl TypeName {
                 let output_type = output_type.to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+            }
+            TypeName::TraitImpl(_) => {
+                todo!();
             }
         }
     }
@@ -869,10 +871,8 @@ impl TypeName {
                 if tr.bounds.len() > 1 {
                     todo!("Currently don't support implementing multiple traits");
                 }
-                if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
-                    path: p,
-                    ..
-                })) = trait_bound
+                if let Some(syn::TypeParamBound::Trait(syn::TraitBound { path: p, .. })) =
+                    trait_bound
                 {
                     let rel_segs = &p.segments;
                     let path_seg = &rel_segs[0];
@@ -905,7 +905,10 @@ impl TypeName {
                         panic!("Unsupported function type: {:?}", &path_seg.arguments);
                     } else {
                         // panic!("AHHHH WHAT: {:?}", path_seg);
-                        let ret = TypeName::Named(PathType::from(&syn::TypePath { qself: None, path: p.clone() }));
+                        let ret = TypeName::Named(PathType::from(&syn::TypePath {
+                            qself: None,
+                            path: p.clone(),
+                        }));
                         println!("named trait type: {:?}", ret);
                         return ret;
                     }
@@ -1127,6 +1130,10 @@ impl fmt::Display for TypeName {
                     write!(f, "{in_typ}")?;
                 }
                 write!(f, ")->{out_type}")
+            }
+            TypeName::TraitImpl(trt) => {
+                write!(f, "impl ")?;
+                write!(f, "{}", trt.name)
             }
         }
     }
