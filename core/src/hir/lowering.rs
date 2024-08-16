@@ -186,6 +186,7 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Trait>>,
     ) -> Result<Vec<TraitDef>, ()> {
+        // TODO THIS NEXT
         // self.lower_all(ast_defs, Self::lower_trait)
         Ok(Vec::new())
     }
@@ -574,12 +575,12 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
-                    ast::CustomType::Struct(strct) => {
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Struct(strct)) => {
                         if strct.fields.is_empty() {
                             self.errors.push(LoweringError::Other(format!("zero-size types are not allowed as method arguments: {ty} in {path}")));
                             return Err(());
                         }
-                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes[..],
                                 &strct.lifetimes,
@@ -587,39 +588,46 @@ impl<'ast> LoweringContext<'ast> {
                             );
 
                             Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
-                        } else if self.lookup_id.resolve_out_struct(strct).is_some() {
+                        } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
                             self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
                             Err(())
                         } else {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                         }
                     }
-                    ast::CustomType::Opaque(_) => {
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(_)) => {
                         self.errors.push(LoweringError::Other(format!(
                             "Opaque passed by value: {path}"
                         )));
                         Err(())
                     }
-                    ast::CustomType::Enum(enm) => {
-                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Enum(enm)) => {
+                        let tcx_id = self.lookup_id.resolve_enum(&enm).expect(
                             "can't find enum in lookup map, which contains all enums from env",
                         );
 
                         Ok(Type::Enum(EnumPath::new(tcx_id)))
+                    }
+                    ast::CustomNamedConstruct::Trait(trt) => {
+                        let tcx_id = self.lookup_id.resolve_trait(&trt).expect(
+                            "can't find trait in lookup map, which contains all traits from env",
+                        );
+
+                        Ok(Type::Trait(TraitPath::new(tcx_id)))
                     }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => {
+                        ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(opaque)) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes[..],
                                 &opaque.lifetimes,
                                 ref_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -645,7 +653,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(_) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
+                        ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(_)) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
                         _ => LoweringError::Other(format!("found Box<T> in input where T is a custom type but not opaque. non-opaques can't be behind pointers, and opaques in inputs can't be owned. T = {path}")),
                     }
                 }
@@ -660,14 +668,16 @@ impl<'ast> LoweringContext<'ast> {
                         ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
                             .resolve(in_path, self.env)
                         {
-                            ast::CustomType::Opaque(opaque) => {
+                            ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(
+                                opaque,
+                            )) => {
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
                                     &opaque.lifetimes,
                                     ref_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
 
@@ -787,7 +797,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
-                    ast::CustomType::Struct(strct) => {
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Struct(strct)) => {
                         if !in_result_option && strct.fields.is_empty() {
                             self.errors.push(LoweringError::Other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
                             return Err(());
@@ -795,11 +805,11 @@ impl<'ast> LoweringContext<'ast> {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
 
-                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
                             Ok(OutType::Struct(ReturnableStructPath::Struct(
                                 StructPath::new(lifetimes, tcx_id),
                             )))
-                        } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(strct) {
+                        } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(&strct) {
                             Ok(OutType::Struct(ReturnableStructPath::OutStruct(
                                 OutStructPath::new(lifetimes, tcx_id),
                             )))
@@ -807,32 +817,35 @@ impl<'ast> LoweringContext<'ast> {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                         }
                     }
-                    ast::CustomType::Opaque(_) => {
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(_)) => {
                         self.errors.push(LoweringError::Other(format!(
                             "Opaque passed by value in input: {path}"
                         )));
                         Err(())
                     }
-                    ast::CustomType::Enum(enm) => {
-                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
+                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Enum(enm)) => {
+                        let tcx_id = self.lookup_id.resolve_enum(&enm).expect(
                             "can't find enum in lookup map, which contains all enums from env",
                         );
 
                         Ok(OutType::Enum(EnumPath::new(tcx_id)))
+                    }
+                    ast::CustomNamedConstruct::Trait(trt) => {
+                        todo!()
                     }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => {
+                        ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(opaque)) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes,
                                 &opaque.lifetimes,
                                 ref_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -857,13 +870,13 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => {
+                        ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(opaque)) => {
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes,
                                 &opaque.lifetimes,
                                 box_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -891,14 +904,16 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(opaque) => {
+                            ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(
+                                opaque,
+                            )) => {
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
                                     &opaque.lifetimes,
                                     ref_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                                 "can't find opaque in lookup map, which contains all opaques from env",
                             );
 
@@ -923,13 +938,15 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(opaque) => {
+                            ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(
+                                opaque,
+                            )) => {
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes,
                                     &opaque.lifetimes,
                                     box_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -1020,8 +1037,8 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<(ParamSelf, ParamLifetimeLowerer<'ast>), ()> {
         match self_param.path_type.resolve(in_path, self.env) {
-            ast::CustomType::Struct(strct) => {
-                if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+            ast::CustomNamedConstruct::CustomType(ast::CustomType::Struct(strct)) => {
+                if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
                     if self_param.reference.is_some() {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
                         Err(())
@@ -1045,7 +1062,7 @@ impl<'ast> LoweringContext<'ast> {
                             param_ltl,
                         ))
                     }
-                } else if self.lookup_id.resolve_out_struct(strct).is_some() {
+                } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
                     if let Some((lifetime, _)) = &self_param.reference {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
                         Err(())
@@ -1060,10 +1077,10 @@ impl<'ast> LoweringContext<'ast> {
                 );
                 }
             }
-            ast::CustomType::Opaque(opaque) => {
+            ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(opaque)) => {
                 let tcx_id = self
                     .lookup_id
-                    .resolve_opaque(opaque)
+                    .resolve_opaque(&opaque)
                     .expect("opaque is in env");
 
                 if let Some((lifetime, mutability)) = &self_param.reference {
@@ -1089,13 +1106,16 @@ impl<'ast> LoweringContext<'ast> {
                     Err(())
                 }
             }
-            ast::CustomType::Enum(enm) => {
-                let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
+            ast::CustomNamedConstruct::CustomType(ast::CustomType::Enum(enm)) => {
+                let tcx_id = self.lookup_id.resolve_enum(&enm).expect("enum is in env");
 
                 Ok((
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
                     self_param_ltl.no_self_ref(),
                 ))
+            }
+            ast::CustomNamedConstruct::Trait(trt) => {
+                todo!()
             }
         }
     }

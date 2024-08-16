@@ -25,6 +25,13 @@ pub enum CustomType {
     Enum(Enum),
 }
 
+#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum CustomNamedConstruct {
+    CustomType(CustomType),
+    Trait(Trait),
+}
+
 impl CustomType {
     /// Get the name of the custom type, which is unique within a module.
     pub fn name(&self) -> &Ident {
@@ -164,7 +171,11 @@ impl PathType {
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     ///
     /// Also returns the path the CustomType is in (useful for resolving fields)
-    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
+    pub fn resolve_with_path<'a>(
+        &self,
+        in_path: &Path,
+        env: &'a Env,
+    ) -> (Path, CustomNamedConstruct) {
         let local_path = &self.path;
         let mut cur_path = in_path.clone();
         for (i, elem) in local_path.elements.iter().enumerate() {
@@ -190,7 +201,7 @@ impl PathType {
                     }
                     Some(ModSymbol::CustomType(t)) => {
                         if i == local_path.elements.len() - 1 {
-                            return (cur_path, t);
+                            return (cur_path, CustomNamedConstruct::CustomType(t.clone()));
                         } else {
                             panic!(
                                 "Unexpected custom type when resolving symbol {} in {}",
@@ -200,7 +211,16 @@ impl PathType {
                         }
                     }
                     Some(ModSymbol::Trait(trt)) => {
-                        todo!(); // probably return CustomType OR trait here?
+                        if i == local_path.elements.len() - 1 {
+                            println!("ABOUT TO RETURN TRAIT: {:?}", trt);
+                            return (cur_path, CustomNamedConstruct::Trait(trt.clone()));
+                        } else {
+                            panic!(
+                                "Unexpected custom trait when resolving symbol {} in {}",
+                                o,
+                                cur_path.elements.join("::")
+                            )
+                        }
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
@@ -222,7 +242,7 @@ impl PathType {
     ///
     /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
     /// to get the path to resolve the fields in.
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> CustomNamedConstruct {
         self.resolve_with_path(in_path, env).1
     }
 }
