@@ -170,7 +170,7 @@ dependencies = ["build-example"]
 env = {"LD_LIBRARY_PATH" = "./"}
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
+cp target/debug/libdiplomat_example.so example/kotlin/somelib/libsomelib.so
 cd example/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all
 '''
