@@ -169,6 +169,10 @@ export class DiplomatBuf {
         this.leak = () => { };
         this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
     }
+
+    splat() {
+        return [this.ptr, this.size];
+    }
 }
 
 /** 

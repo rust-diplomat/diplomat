@@ -195,7 +195,17 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()).into();
+            let js_to_c = format!("{}{}{}", 
+                match &field.ty {
+                    Type::Slice(..) => "...",
+                    _ => "",
+                },
+                self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
+                match &field.ty {
+                    Type::Slice(..) => ".splat()",
+                    _ => ""
+                }
+            ).into();
 
             FieldInfo {
                 field_name,
