@@ -33,9 +33,9 @@ export class BorrowedFieldsWithBounds {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#fieldA = fieldA;
-            this.#fieldB = fieldB;
-            this.#fieldC = fieldC;
+            this.#fieldA = arguments[0];
+            this.#fieldB = arguments[1];
+            this.#fieldC = arguments[2];
         }
     }
 

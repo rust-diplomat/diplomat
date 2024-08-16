@@ -66,13 +66,13 @@ export class MyStruct {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#a = a;
-            this.#b = b;
-            this.#c = c;
-            this.#d = d;
-            this.#e = e;
-            this.#f = f;
-            this.#g = g;
+            this.#a = arguments[0];
+            this.#b = arguments[1];
+            this.#c = arguments[2];
+            this.#d = arguments[3];
+            this.#e = arguments[4];
+            this.#f = arguments[5];
+            this.#g = arguments[6];
         }
     }
 

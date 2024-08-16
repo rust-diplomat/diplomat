@@ -25,8 +25,8 @@ export class FixedDecimalFormatterOptions {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#groupingStrategy = groupingStrategy;
-            this.#someOtherConfig = someOtherConfig;
+            this.#groupingStrategy = arguments[0];
+            this.#someOtherConfig = arguments[1];
         }
     }
 

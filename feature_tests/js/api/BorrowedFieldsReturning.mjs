@@ -16,7 +16,7 @@ export class BorrowedFieldsReturning {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#bytes = bytes;
+            this.#bytes = arguments[0];
         }
     }
 

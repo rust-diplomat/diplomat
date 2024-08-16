@@ -17,7 +17,7 @@ export class CyclicStructB {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#field = field;
+            this.#field = arguments[0];
         }
     }
 

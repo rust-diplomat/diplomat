@@ -36,9 +36,9 @@ export class NestedBorrowedFields {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#fields = fields;
-            this.#bounds = bounds;
-            this.#bounds2 = bounds2;
+            this.#fields = arguments[0];
+            this.#bounds = arguments[1];
+            this.#bounds2 = arguments[2];
         }
     }
 

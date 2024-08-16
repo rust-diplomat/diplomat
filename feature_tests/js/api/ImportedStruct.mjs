@@ -25,8 +25,8 @@ export class ImportedStruct {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#foo = foo;
-            this.#count = count;
+            this.#foo = arguments[0];
+            this.#count = arguments[1];
         }
     }
 

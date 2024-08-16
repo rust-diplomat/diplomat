@@ -24,8 +24,8 @@ export class ErrorStruct {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
-            this.#i = i;
-            this.#j = j;
+            this.#i = arguments[0];
+            this.#j = arguments[1];
         }
     }
 
