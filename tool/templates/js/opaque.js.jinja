@@ -22,7 +22,11 @@ export class {{type_name}} {
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
     {%- endfor %}
     
-    constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+    constructor(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("{{type_name}} is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         {% for lifetime in lifetimes.all_lifetimes() %}
         {% let lt = lifetimes.fmt_lifetime(lifetime) %}
         this.#{{lt}}Edge = {{lt}}Edge;

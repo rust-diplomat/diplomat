@@ -139,11 +139,11 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 if op.is_optional() {
                     format!(
-                        "{variable_name} === 0 ? null : new {type_name}({variable_name}, {edges})"
+                        "{variable_name} === 0 ? null : new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})"
                     )
                     .into()
                 } else {
-                    format!("new {type_name}({variable_name}, {edges})").into()
+                    format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
             }
             Type::Struct(ref st) => {
