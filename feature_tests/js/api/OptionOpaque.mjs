@@ -56,7 +56,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -138,7 +138,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -152,7 +152,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

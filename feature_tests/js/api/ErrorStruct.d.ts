@@ -8,5 +8,16 @@ export class ErrorStruct {
 
     get j() : number;
     set j(value: number); 
+    constructor(i,j) {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#i = i;
+            
+            this.#j = j;
+            
+        }}
+    
 
 }

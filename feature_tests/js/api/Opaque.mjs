@@ -110,7 +110,7 @@ export class Opaque {
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
-            return new ImportedStruct()._fromFFI(diplomatReceive.buffer);
+            return new ImportedStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

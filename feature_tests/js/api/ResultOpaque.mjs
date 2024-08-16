@@ -106,7 +106,7 @@ export class ResultOpaque {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = new ErrorStruct()._fromFFI(diplomatReceive.buffer);
+                const cause = new ErrorStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
                 throw new globalThis.Error('ErrorStruct: ' + cause.toString(), { cause });
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);

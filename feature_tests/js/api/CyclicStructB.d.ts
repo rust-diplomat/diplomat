@@ -6,6 +6,15 @@ export class CyclicStructB {
 
     get field() : number;
     set field(value: number); 
+    constructor(field) {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#field = field;
+            
+        }}
+    
 
 
     static getA(): CyclicStructA;

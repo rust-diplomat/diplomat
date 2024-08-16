@@ -2,5 +2,12 @@
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class MyZst {
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+        }}
+    
 
 }

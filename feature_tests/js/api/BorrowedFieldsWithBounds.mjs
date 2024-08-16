@@ -28,6 +28,19 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value) {
         this.#fieldC = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#fieldA = fieldA;
+            
+            this.#fieldB = fieldB;
+            
+            this.#fieldC = fieldC;
+            
+        }}
+    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -50,15 +63,13 @@ export class BorrowedFieldsWithBounds {
         return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)]
     }
 
-    _fromFFI(ptr, aEdges, bEdges, cEdges) {
+    #fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
         this.#fieldA = fieldADeref.getString("string16");
         const fieldBDeref = ptr + 8;
         this.#fieldB = fieldBDeref.getString("string8");
         const fieldCDeref = ptr + 16;
         this.#fieldC = fieldCDeref.getString("string8");
-
-        return this;
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -107,7 +118,7 @@ export class BorrowedFieldsWithBounds {
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-            return new BorrowedFieldsWithBounds()._fromFFI(diplomatReceive.buffer, xEdges, yEdges, zEdges);
+            return new BorrowedFieldsWithBounds(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
         
         finally {

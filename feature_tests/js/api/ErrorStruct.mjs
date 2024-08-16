@@ -19,6 +19,17 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#i = i;
+            
+            this.#j = j;
+            
+        }}
+    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -35,12 +46,10 @@ export class ErrorStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
         this.#i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#j = jDeref;
-
-        return this;
     }
 }

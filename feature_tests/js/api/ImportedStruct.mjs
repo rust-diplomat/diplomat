@@ -20,6 +20,17 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#foo = foo;
+            
+            this.#count = count;
+            
+        }}
+    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -36,12 +47,10 @@ export class ImportedStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         this.#foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#count = countDeref;
-
-        return this;
     }
 }

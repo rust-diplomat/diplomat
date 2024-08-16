@@ -12,6 +12,19 @@ export class BorrowedFieldsWithBounds {
 
     get fieldC() : string;
     set fieldC(value: string); 
+    constructor(fieldA,fieldB,fieldC) {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#fieldA = fieldA;
+            
+            this.#fieldB = fieldB;
+            
+            this.#fieldC = fieldC;
+            
+        }}
+    
 
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;

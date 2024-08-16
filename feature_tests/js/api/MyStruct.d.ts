@@ -25,6 +25,27 @@ export class MyStruct {
 
     get g() : MyEnum;
     set g(value: MyEnum); 
+    constructor(a,b,c,d,e,f,g) {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#a = a;
+            
+            this.#b = b;
+            
+            this.#c = c;
+            
+            this.#d = d;
+            
+            this.#e = e;
+            
+            this.#f = f;
+            
+            this.#g = g;
+            
+        }}
+    
 
 
     static new_(): MyStruct;

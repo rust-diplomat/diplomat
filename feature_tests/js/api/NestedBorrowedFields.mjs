@@ -31,6 +31,19 @@ export class NestedBorrowedFields {
     set bounds2(value) {
         this.#bounds2 = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(arguments.slice(1));
+        } else {
+            
+            this.#fields = fields;
+            
+            this.#bounds = bounds;
+            
+            this.#bounds2 = bounds2;
+            
+        }}
+    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -47,15 +60,13 @@ export class NestedBorrowedFields {
         return [...this.#fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
-    _fromFFI(ptr, xEdges, yEdges, zEdges) {
+    #fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
-        this.#fields = new BorrowedFields()._fromFFI(fieldsDeref, xEdges);
+        this.#fields = new BorrowedFields(diplomatRuntime.internalConstructor, fieldsDeref, xEdges);
         const boundsDeref = ptr + 24;
-        this.#bounds = new BorrowedFieldsWithBounds()._fromFFI(boundsDeref, xEdges, yEdges, yEdges);
+        this.#bounds = new BorrowedFieldsWithBounds(diplomatRuntime.internalConstructor, boundsDeref, xEdges, yEdges, yEdges);
         const bounds2Deref = ptr + 48;
-        this.#bounds2 = new BorrowedFieldsWithBounds()._fromFFI(bounds2Deref, zEdges, zEdges, zEdges);
-
-        return this;
+        this.#bounds2 = new BorrowedFieldsWithBounds(diplomatRuntime.internalConstructor, bounds2Deref, zEdges, zEdges, zEdges);
     }
 
     // Return all fields corresponding to lifetime `'x` 
@@ -108,7 +119,7 @@ export class NestedBorrowedFields {
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-            return new NestedBorrowedFields()._fromFFI(diplomatReceive.buffer, xEdges, yEdges, zEdges);
+            return new NestedBorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
         
         finally {
