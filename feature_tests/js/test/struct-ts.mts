@@ -13,6 +13,7 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
+    // TODO: Need to test with big ints.
     const s = new MyStruct(590, true, 209, 1234n, 5991, '餐'.codePointAt(0), MyEnum.B);
-    t.is(s.intoA(), 590);
+    t.is(s.a, 590);
 });
