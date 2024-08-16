@@ -29,7 +29,7 @@ export class {{type_name}} {
         ) {%- if typescript %};{% else %} {
         {% if !fields.is_empty() -%}
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(Array.prototype.slice.call(arguments, 1));
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         }
         {%- if !is_out %} else {
             {% for field in fields %}
