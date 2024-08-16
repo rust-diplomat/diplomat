@@ -29,7 +29,6 @@ export class ErrorStruct {
             this.#j = j;
             
         }}
-    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

@@ -5,14 +5,5 @@ export class BorrowedFieldsReturning {
 
     get bytes() : string;
     set bytes(value: string); 
-    constructor(bytes) {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#bytes = bytes;
-            
-        }}
-    
-
+    constructor(bytes);
 }

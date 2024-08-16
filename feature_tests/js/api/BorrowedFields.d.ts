@@ -12,20 +12,7 @@ export class BorrowedFields {
 
     get c() : string;
     set c(value: string); 
-    constructor(a,b,c) {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#a = a;
-            
-            this.#b = b;
-            
-            this.#c = c;
-            
-        }}
-    
-
+    constructor(a,b,c);
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }

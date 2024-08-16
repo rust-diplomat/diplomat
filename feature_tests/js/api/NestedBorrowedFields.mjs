@@ -43,7 +43,6 @@ export class NestedBorrowedFields {
             this.#bounds2 = bounds2;
             
         }}
-    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

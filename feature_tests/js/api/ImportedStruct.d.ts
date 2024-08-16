@@ -9,16 +9,5 @@ export class ImportedStruct {
 
     get count() : number;
     set count(value: number); 
-    constructor(foo,count) {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#foo = foo;
-            
-            this.#count = count;
-            
-        }}
-    
-
+    constructor(foo,count);
 }

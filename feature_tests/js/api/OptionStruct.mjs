@@ -35,7 +35,6 @@ export class OptionStruct {
         } else {
             console.error("OptionStruct is an out struct and can only be created internally.");
         }}
-    
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

@@ -15,20 +15,7 @@ export class NestedBorrowedFields {
 
     get bounds2() : BorrowedFieldsWithBounds;
     set bounds2(value: BorrowedFieldsWithBounds); 
-    constructor(fields,bounds,bounds2) {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#fields = fields;
-            
-            this.#bounds = bounds;
-            
-            this.#bounds2 = bounds2;
-            
-        }}
-    
-
+    constructor(fields,bounds,bounds2);
 
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
 }
