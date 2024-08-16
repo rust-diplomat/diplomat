@@ -63,7 +63,7 @@ export class MyStruct {
     }
     constructor() {
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
+            this.#fromFFI(Array.prototype.slice.call(arguments, 1));
         } else {
             
             this.#a = a;
@@ -73,7 +73,8 @@ export class MyStruct {
             this.#e = e;
             this.#f = f;
             this.#g = g;
-        }}
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
