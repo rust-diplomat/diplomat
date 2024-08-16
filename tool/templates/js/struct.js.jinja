@@ -33,7 +33,7 @@ export class {{type_name}} {
         }
         {%- if !is_out %} else {
             {% for field in fields %}
-            this.#{{ field.field_name }} = {{ field.field_name }};
+            this.#{{ field.field_name }} = arguments[{{loop.index0}}];
             {%- endfor %}
         } {%- else %} else {
             console.error("{{type_name}} is an out struct and can only be created internally.");
