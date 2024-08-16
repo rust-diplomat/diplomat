@@ -205,7 +205,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     Type::Slice(..) => ".splat()",
                     _ => ""
                 }
-            ).into();
+            );
 
             FieldInfo {
                 field_name,
