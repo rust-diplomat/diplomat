@@ -178,13 +178,14 @@ exec --fail-on-error gradle test --warning-mode all
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-feature"]
+LD_LIBRARY_PATH = "./"
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsomelib.so
 cd feature_tests/kotlin/somelib
 ls
 exec gradle --version
-exec  LD_LIBRARY_PATH=./ java -XshowSettings:properties
+exec java -XshowSettings:properties
 exec --fail-on-error LD_LIBRARY_PATH=./ gradle test  -i --warning-mode all 
 '''
 
