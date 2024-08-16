@@ -184,7 +184,7 @@ cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsom
 cd feature_tests/kotlin/somelib
 ls
 java -XshowSettings:properties
-exec --fail-on-error gradle test --warning-mode all 
+exec --fail-on-error gradle test -i --warning-mode all 
 '''
 
 [tasks.check-c-example]
