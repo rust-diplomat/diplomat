@@ -309,7 +309,8 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             if !info.opaque {
                 // This is validated by HIR, but it's also nice to validate it in the macro so that there
                 // are early error messages
-                for field in s.fields.iter() {
+                for field in s.fields.iter_mut() {
+                    let _attrs = AttributeInfo::extract(&mut field.attrs);
                     let ty = ast::TypeName::from_syn(&field.ty, None);
                     if !ty.is_ffi_safe() {
                         let ffisafe = ty.ffi_safe_version();
@@ -363,9 +364,15 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                     if info.opaque {
                         panic!("#[diplomat::opaque] not allowed on methods")
                     }
+                    for i in m.sig.inputs.iter_mut() {
+                        let _attrs = match i {
+                            syn::FnArg::Receiver(s) => AttributeInfo::extract(&mut s.attrs),
+                            syn::FnArg::Typed(t) => AttributeInfo::extract(&mut t.attrs),
+                        };
+                    }
                 }
             }
-        }
+        },
         _ => (),
     });
 
