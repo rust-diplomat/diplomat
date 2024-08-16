@@ -34,11 +34,8 @@ export class BorrowedFieldsWithBounds {
         } else {
             
             this.#fieldA = fieldA;
-            
             this.#fieldB = fieldB;
-            
             this.#fieldC = fieldC;
-            
         }}
 
     // Return this struct in FFI function friendly format.

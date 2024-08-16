@@ -34,11 +34,8 @@ export class BorrowedFields {
         } else {
             
             this.#a = a;
-            
             this.#b = b;
-            
             this.#c = c;
-            
         }}
 
     // Return this struct in FFI function friendly format.

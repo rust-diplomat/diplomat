@@ -26,9 +26,7 @@ export class ImportedStruct {
         } else {
             
             this.#foo = foo;
-            
             this.#count = count;
-            
         }}
 
     // Return this struct in FFI function friendly format.

@@ -9,18 +9,7 @@ export class FixedDecimalFormatterOptions {
 
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
-    constructor(groupingStrategy,someOtherConfig) {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(arguments.slice(1));
-        } else {
-            
-            this.#groupingStrategy = groupingStrategy;
-            
-            this.#someOtherConfig = someOtherConfig;
-            
-        }}
-    
-
+    constructor(groupingStrategy: FixedDecimalGroupingStrategy, someOtherConfig: boolean);
 
     static default_(): FixedDecimalFormatterOptions;
 }

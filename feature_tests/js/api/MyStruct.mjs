@@ -67,19 +67,12 @@ export class MyStruct {
         } else {
             
             this.#a = a;
-            
             this.#b = b;
-            
             this.#c = c;
-            
             this.#d = d;
-            
             this.#e = e;
-            
             this.#f = f;
-            
             this.#g = g;
-            
         }}
 
     // Return this struct in FFI function friendly format.

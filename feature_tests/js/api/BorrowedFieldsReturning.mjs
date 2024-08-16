@@ -17,7 +17,6 @@ export class BorrowedFieldsReturning {
         } else {
             
             this.#bytes = bytes;
-            
         }}
 
     // Return this struct in FFI function friendly format.

@@ -25,9 +25,7 @@ export class ErrorStruct {
         } else {
             
             this.#i = i;
-            
             this.#j = j;
-            
         }}
 
     // Return this struct in FFI function friendly format.

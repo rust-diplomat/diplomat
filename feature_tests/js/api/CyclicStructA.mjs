@@ -18,7 +18,6 @@ export class CyclicStructA {
         } else {
             
             this.#a = a;
-            
         }}
 
     // Return this struct in FFI function friendly format.

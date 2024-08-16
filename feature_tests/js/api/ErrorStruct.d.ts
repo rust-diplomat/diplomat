@@ -8,5 +8,5 @@ export class ErrorStruct {
 
     get j() : number;
     set j(value: number); 
-    constructor(i,j);
+    constructor(i: number, j: number);
 }

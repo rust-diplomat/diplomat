@@ -37,11 +37,8 @@ export class NestedBorrowedFields {
         } else {
             
             this.#fields = fields;
-            
             this.#bounds = bounds;
-            
             this.#bounds2 = bounds2;
-            
         }}
 
     // Return this struct in FFI function friendly format.
