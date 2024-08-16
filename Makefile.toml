@@ -176,7 +176,7 @@ dependencies = ["build-example"]
 env = {"LD_LIBRARY_PATH" = "./"}
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_example.so example/kotlin/somelib/libsomelib.${OUT_FILE}
+cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
 cd example/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all
 '''
@@ -193,7 +193,7 @@ script_runner = "@duckscript"
 dependencies = ["build-feature"]
 env = {"LD_LIBRARY_PATH" = "./"}
 script = '''
-cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
+cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
 ls 
 cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test  --warning-mode all 
