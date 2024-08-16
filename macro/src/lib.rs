@@ -372,7 +372,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                     }
                 }
             }
-        },
+        }
         _ => (),
     });
 
