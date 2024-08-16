@@ -41,6 +41,7 @@ publishing {
 
 
 tasks.test {
+    systemProperty ("java.library.path","./")
     useJUnitPlatform()
 }
 
