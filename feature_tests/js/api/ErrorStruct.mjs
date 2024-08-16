@@ -21,7 +21,7 @@ export class ErrorStruct {
     }
     constructor() {
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(Array.prototype.slice.call(arguments, 1));
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         } else {
             
             this.#i = i;
