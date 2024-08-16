@@ -3,7 +3,7 @@
 use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
-    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId, TraitPath
+    PrimitiveType, StructPath, StructPathLike, TraitPath, TyPosition, TypeContext, TypeId,
 };
 use crate::ast;
 pub use ast::Mutability;

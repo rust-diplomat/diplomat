@@ -4,7 +4,7 @@ use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
     AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
-    OutStructDef, StructDef, TypeDef, TraitDef,
+    OutStructDef, StructDef, TraitDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
@@ -257,17 +257,6 @@ impl TypeContext {
                                 id: TypeId::Enum(EnumId(ast_enums.len())),
                             };
                             ast_enums.push(item)
-                        },
-                        ast::CustomType::Trait(trt) => {
-                            // TODO check this
-                            let item = ItemAndInfo {
-                                item: trt,
-                                in_path: path,
-                                ty_parent_attrs: ty_attrs.clone(),
-                                method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Trait(TraitId(ast_traits.len())),
-                            };
-                            ast_traits.push(item)
                         }
                     }
                 }
@@ -303,7 +292,7 @@ impl TypeContext {
                     structs,
                     opaques,
                     enums,
-                    traits
+                    traits,
                 };
 
                 if !ctx.errors.is_empty() {
