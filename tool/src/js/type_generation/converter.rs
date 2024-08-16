@@ -198,7 +198,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"{variable_name}.getString("string{}")"#,
+                        r#"diplomatRuntime.DiplomatReceiveBuf.getString(wasm, {variable_name}, "string{}")"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -211,7 +211,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"{variable_name}.getStrings("string{}")"#,
+                            r#"diplomatRuntime.DiplomatReceiveBuf.getStrings(wasm, {variable_name}, "string{}")"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,

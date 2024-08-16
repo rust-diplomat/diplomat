@@ -294,8 +294,8 @@ export class DiplomatReceiveBuf {
      * @param {number} buffer Buffer to use. Only used by `getStrings`, other wise {@link DiplomatReceiveBuf.buffer} is used.
      * @returns {string} String with encoding of the provided `stringEncoding`.
      */
-    getString(stringEncoding) {
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+    static getString(wasm, buffer, stringEncoding) {
+        const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
         switch (stringEncoding) {
             case "string8":
                 return readString8(wasm, ptr, size);
@@ -312,19 +312,19 @@ export class DiplomatReceiveBuf {
      * @param {string} stringEncoding `string8` or `string16`. 
      * @returns {Array[string]} An array of strings with the encoding of the provided `stringEncoding`.
      */
-    getStrings(stringEncoding) {
-        const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+    static getStrings(wasm, buffer, stringEncoding) {
+        const [ptr, size] = new Uint32Array(wasm.memory.buffer, buffer, 2);
 
-        let strPtrs = new Uint32Array(this.#wasm.memory.buffer, ptr, size);
+        let strPtrs = new Uint32Array(wasm.memory.buffer, ptr, size);
         let strings = [];
 
         for (let arrayPtr = 0; arrayPtr < strPtrs.length; arrayPtr += 2) {
             const [strPtr, strSize] = [strPtrs[arrayPtr], strPtrs[arrayPtr + 1]];
             switch (stringEncoding) {
                 case "string8":
-                    strings.push(readString8(this.#wasm, strPtr, strSize));
+                    strings.push(readString8(wasm, strPtr, strSize));
                 case "string16":
-                    strings.push(readString16(this.#wasm, strPtr, strSize));
+                    strings.push(readString16(wasm, strPtr, strSize));
                 default:
                     console.error("Unrecognized stringEncoding ", stringEncoding);
                     break;
