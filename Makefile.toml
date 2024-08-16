@@ -186,7 +186,7 @@ cd feature_tests/kotlin/somelib
 ls
 exec gradle --version
 exec java -XshowSettings:properties
-exec --fail-on-error LD_LIBRARY_PATH=./ gradle test  -i --warning-mode all 
+exec --fail-on-error gradle test  -i --warning-mode all 
 '''
 
 [tasks.check-c-example]
