@@ -221,6 +221,7 @@ impl Module {
                     if analyze_types {
                         let ident = (&trt.ident).into();
                         let trt = Trait::new(trt, &type_parent_attrs);
+                        println!("TRAIT PARSED: {:?}", trt);
                         custom_traits_by_name
                             .insert(ident, trt);
                     }
