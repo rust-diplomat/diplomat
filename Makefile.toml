@@ -183,6 +183,7 @@ exit_on_error true
 cp target/debug/libdiplomat_feature_tests.so feature_tests/kotlin/somelib/libsomelib.so
 cd feature_tests/kotlin/somelib
 ls
+exec export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./
 exec gradle --version
 exec java -XshowSettings:properties
 exec --fail-on-error gradle test -i --warning-mode all 
