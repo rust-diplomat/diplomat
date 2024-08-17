@@ -1,3 +1,6 @@
+//! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
+//! See `converter.rs` for more conversion specific functions.
+
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -18,14 +21,21 @@ use crate::ErrorStore;
 mod converter;
 use converter::StructBorrowContext;
 
+/// Represents context for generating a Javascript class.
+/// 
+/// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
 pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
+    /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<BTreeSet<String>>,
 }
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
+    /// Generates the code at the top of every `.d.ts` and `.mjs` file.
+    /// 
+    /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used. 
     pub(super) fn generate_base(&self, typescript: bool, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js/base.js.jinja", escape = "none")]
@@ -52,15 +62,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// A wrapper for `borrow_mut`ably inserting new imports.
+    /// 
+    /// I do this to avoid borrow checking madness.
     pub(super) fn add_import(&self, import_str: String) {
         self.imports.borrow_mut().insert(import_str);
     }
 
+    /// Exists for the same reason as [`Self::add_import`].
+    /// 
+    /// Right now, only used for removing any self imports.
     pub(super) fn remove_import(&self, import_str: String) {
         self.imports.borrow_mut().remove(&import_str);
     }
 
-    /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
+    /// Generate an enumerator type's body for a file from the given definition.
     pub(super) fn gen_enum(
         &self,
         typescript: bool,
@@ -97,6 +113,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// Generate an opaque type's body for a file from the given definition.
     pub(super) fn gen_opaque(
         &self,
         typescript: bool,
@@ -137,6 +154,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`]. We separate this step out for two reasons:
+    /// 
+    /// 1. It allows re-use between `.d.ts` and `.mjs` files.
+    /// 2. Clarity.
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
@@ -220,6 +241,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         fields
     }
 
+    /// Generate a struct type's body for a file from the given definition.
+    /// 
+    /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
     pub(super) fn gen_struct<P: hir::TyPosition>(
         &self,
         typescript: bool,
@@ -265,9 +289,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    /// Generate a string Javascript representation of a given method.
+    /// Generate required method info for all other [`TyGenContext::generate_*`] calls.
     ///
-    /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
+    /// For re-usability between `.d.ts` and `.mjs` files.
     pub(super) fn generate_method(
         &self,
         type_id: TypeId,
@@ -433,45 +457,69 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 }
 
+/// Represents a parameter of a method. Used as part of [`MethodInfo`], exclusively in the method definition.
 #[derive(Default)]
 struct ParamInfo<'a> {
     ty: Cow<'a, str>,
     name: Cow<'a, str>,
 }
 
+/// Represents a slice parameter of a method. Used as part of [`MethodInfo`].
+/// 
+/// Any slice is stored as both a [`ParamInfo`], and [`SliceParam`].
+/// 
+/// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
+/// 
+/// See `DiplomatBuf` in `runtime.mjs` for more.
 struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
     slice_expr: Cow<'a, str>,
 }
 
+/// Represents a Rust method that we invoke inside of WebAssembly with JS.
+/// 
+/// Has an attached template to convert it into Javascript.
 #[derive(Default, Template)]
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
+    /// Do we return the `()` type?
     method_output_is_ffi_unit: bool,
+    /// The declaration signature. Something like `static functionName() { /* ... */ }` versus `functionName() { /* ... */ }`
     method_decl: String,
 
     /// Native C method name
     abi_name: String,
 
+    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
     needs_slice_cleanup: bool,
 
     pub typescript: bool,
 
+    /// Represents all the parameters in the method definition (mostly for `.d.ts` generation, showing names and types).
     parameters: Vec<ParamInfo<'info>>,
+    /// See [`SliceParam`] for info on how this array is used.
     slice_params: Vec<SliceParam<'info>>,
+    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`TyGenContext::gen_js_to_c_for_type`] for more.
     param_conversions: Vec<Cow<'info, str>>,
 
+    /// The return type, for `.d.ts` files.
     return_type: String,
+    /// The JS expression used when this method returns.
     return_expression: Option<Cow<'info, str>>,
 
+    /// Used for generating edge information when constructing items like Slices, Structs, and Opaque types. See [hir::methods::borrowing_param::BorrowedLifetimeInfo] for more.
     method_lifetimes_map: BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+    /// We use this to access individual [`hir::Lifetimes`], which we then use to access the [`MethodInfo::method_lifetimes_map`].
     lifetimes: Option<&'info LifetimeEnv>,
 
+    /// Anything we need to allocate for [`MethodInfo::param_conversions`]
     alloc_expressions: Vec<Cow<'info, str>>,
+    /// Anything from [`MethodInfo::alloc_expressions`] we need to clean up afterwards.
     cleanup_expressions: Vec<Cow<'info, str>>,
 }
 
+/// See [`TyGenContext::generate_special_method`].
 #[derive(Template)]
 #[template(path = "js/iterator.js.jinja", escape = "none")]
 pub(super) struct SpecialMethodInfo<'a> {
@@ -479,25 +527,32 @@ pub(super) struct SpecialMethodInfo<'a> {
     pub typescript: bool,
 }
 
+/// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.
 pub(super) struct MethodsInfo<'a> {
     pub methods: Vec<MethodInfo<'a>>,
     pub special_methods: SpecialMethodInfo<'a>,
 }
 
+/// Represents a re-usable set of information for any [`hir::Type::Struct`]s.
 #[derive(Clone)]
 pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
     field_type: &'info Type<P>,
+    /// Representation of the type in `.d.ts` terms.
     js_type_name: Cow<'info, str>,
     c_to_js: Cow<'info, str>,
+    /// Because all structs are created in WebAssembly as pointers, we need to be able to de-reference those pointers. This is an expression for taking a given pointer and returning JS.
     c_to_js_deref: Cow<'info, str>,
     js_to_c: String,
+    /// Used in `get _fieldsForLifetime...` fields, which themselves are used in [`display_lifetime_edge`].
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Modified from dart backend
+/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`TyGenContext::gen_c_to_js_for_type`] for more.)
+/// 
+/// Modified from dart backend.
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     let param_name = &edge.param_name;
     match edge.kind {
@@ -515,6 +570,9 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     }
 }
 
+/// Helper function, since Askama can't use iterators quite like this. 
+/// 
+/// Simple way to check if a lifetime is present within our map.
 fn iter_def_lifetimes_matching_use_lt<'a>(
     use_lt: &'a hir::Lifetime,
     info: &'a StructBorrowInfo,
