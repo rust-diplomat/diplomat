@@ -1,5 +1,5 @@
 //! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
-//! See `converter.rs` for more conversion specific functions.
+//! See [`converter`] for more conversion specific functions.
 
 use std::borrow::Cow;
 use std::cell::RefCell;
