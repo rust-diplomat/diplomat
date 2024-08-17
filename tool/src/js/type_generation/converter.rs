@@ -532,17 +532,19 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         alloc: Option<&str>,
-        conversion : Option<(&str, &str)>,
+        conversion: Option<(&str, &str)>,
     ) -> String {
         let (start, end) = if let Some((s, e)) = conversion {
             (s, e)
         } else {
             ("", "")
         };
-        format!("{start}{}{end}",
+        format!(
+            "{start}{}{end}",
             match *ty {
                 Type::Primitive(..) => js_name.clone(),
-                Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
+                Type::Opaque(ref op) if op.is_optional() =>
+                    format!("{js_name}.ffiValue ?? 0").into(),
                 Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
                 Type::Struct(..) => {
                     self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap())
@@ -553,7 +555,8 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     } else {
                         let base_statement = match slice {
                             hir::Slice::Str(_, encoding) => match encoding {
-                                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                                hir::StringEncoding::UnvalidatedUtf8
+                                | hir::StringEncoding::Utf8 => {
                                     format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})")
                                 }
                                 _ => {
