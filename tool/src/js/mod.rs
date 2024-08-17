@@ -1,3 +1,6 @@
+//! JS code generation backend.
+//! 
+//! This module specifically handles the overview of generating all the necessary `.mjs` and `.d.ts` files that [`type_generation`] creates content for. 
 use std::collections::BTreeSet;
 use std::{borrow::Cow, cell::RefCell};
 
@@ -168,6 +171,7 @@ pub(crate) fn run<'tcx>(
         )
     }
 
+    /// Represents the `index.mjs` file that `export`s all classes that we generate.
     #[derive(Template)]
     #[template(path = "js/index.js.jinja", escape = "none")]
     struct IndexTemplate<'a> {
