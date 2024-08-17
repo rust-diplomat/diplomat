@@ -1,5 +1,5 @@
 //! Formatter functions for Javascript for converting Rust types into Typescript types.
-//! 
+//!
 //! Used in [`super::type_generation`] and [`crate::demo_gen`].
 use std::borrow::Cow;
 
@@ -49,7 +49,7 @@ const RESERVED: &[&str] = &[
 ];
 
 /// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects.
-/// 
+///
 /// If you create a class from these, JS will error. So we throw an error if that happens.
 const RESERVED_TYPES: &[&str] = &["Infinity", "NaN"];
 
@@ -139,9 +139,9 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     /// A version of [`Self::fmt_import_statement`] that is focused more towards modules than specific files.
-    /// 
+    ///
     /// Only used by [`crate::demo_gen`].
-    /// 
+    ///
     /// (Probably could be consolidated with [`Self::fmt_import_statement`])
     pub fn fmt_import_module(
         &self,

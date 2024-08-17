@@ -1,6 +1,6 @@
 //! JS code generation backend.
-//! 
-//! This module specifically handles the overview of generating all the necessary `.mjs` and `.d.ts` files that [`type_generation`] creates content for. 
+//!
+//! This module specifically handles the overview of generating all the necessary `.mjs` and `.d.ts` files that [`type_generation`] creates content for.
 use std::collections::BTreeSet;
 use std::{borrow::Cow, cell::RefCell};
 

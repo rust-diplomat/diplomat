@@ -1,5 +1,5 @@
 //! Lots of helper functions for converting from JS to C and back.
-//! 
+//!
 //! Separate from `type_generation/mod.rs` to avoid clutter.
 use std::borrow::Cow;
 
@@ -241,7 +241,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     }
 
     /// If we have a type that's hidden behind a pointer, de-reference that pointer in JS. Meant to be used in conjunction with [`Self::gen_c_to_js_for_type`].
-    /// 
+    ///
     /// See [`super::FieldInfo::c_to_js_deref`] for an example of this.
     pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(
         &self,

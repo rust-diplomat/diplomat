@@ -22,7 +22,7 @@ mod converter;
 use converter::StructBorrowContext;
 
 /// Represents context for generating a Javascript class.
-/// 
+///
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
 pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
@@ -34,8 +34,8 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// Generates the code at the top of every `.d.ts` and `.mjs` file.
-    /// 
-    /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used. 
+    ///
+    /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used.
     pub(super) fn generate_base(&self, typescript: bool, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js/base.js.jinja", escape = "none")]
@@ -63,14 +63,14 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 
     /// A wrapper for `borrow_mut`ably inserting new imports.
-    /// 
+    ///
     /// I do this to avoid borrow checking madness.
     pub(super) fn add_import(&self, import_str: String) {
         self.imports.borrow_mut().insert(import_str);
     }
 
     /// Exists for the same reason as [`Self::add_import`].
-    /// 
+    ///
     /// Right now, only used for removing any self imports.
     pub(super) fn remove_import(&self, import_str: String) {
         self.imports.borrow_mut().remove(&import_str);
@@ -155,7 +155,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 
     /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`]. We separate this step out for two reasons:
-    /// 
+    ///
     /// 1. It allows re-use between `.d.ts` and `.mjs` files.
     /// 2. Clarity.
     pub(super) fn generate_fields<P: hir::TyPosition>(
@@ -242,7 +242,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 
     /// Generate a struct type's body for a file from the given definition.
-    /// 
+    ///
     /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
     pub(super) fn gen_struct<P: hir::TyPosition>(
         &self,
@@ -465,11 +465,11 @@ struct ParamInfo<'a> {
 }
 
 /// Represents a slice parameter of a method. Used as part of [`MethodInfo`].
-/// 
+///
 /// Any slice is stored as both a [`ParamInfo`], and [`SliceParam`].
-/// 
+///
 /// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
-/// 
+///
 /// See `DiplomatBuf` in `runtime.mjs` for more.
 struct SliceParam<'a> {
     name: Cow<'a, str>,
@@ -478,7 +478,7 @@ struct SliceParam<'a> {
 }
 
 /// Represents a Rust method that we invoke inside of WebAssembly with JS.
-/// 
+///
 /// Has an attached template to convert it into Javascript.
 #[derive(Default, Template)]
 #[template(path = "js/method.js.jinja", escape = "none")]
@@ -551,7 +551,7 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
 /// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`TyGenContext::gen_c_to_js_for_type`] for more.)
-/// 
+///
 /// Modified from dart backend.
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     let param_name = &edge.param_name;
@@ -570,8 +570,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     }
 }
 
-/// Helper function, since Askama can't use iterators quite like this. 
-/// 
+/// Helper function, since Askama can't use iterators quite like this.
+///
 /// Simple way to check if a lifetime is present within our map.
 fn iter_def_lifetimes_matching_use_lt<'a>(
     use_lt: &'a hir::Lifetime,
