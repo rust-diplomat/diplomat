@@ -217,8 +217,8 @@ impl TypeContext {
                 mod_attrs.for_inheritance(AttrInheritContext::MethodOrImplFromModule);
 
             for sym in mod_env.items() {
-                if let ast::ModSymbol::CustomType(custom_type) = sym {
-                    match custom_type {
+                match sym {
+                    ast::ModSymbol::CustomType(custom_type) => match custom_type {
                         ast::CustomType::Struct(strct) => {
                             let id = if strct.output_only {
                                 TypeId::OutStruct(OutStructId(ast_out_structs.len()))
@@ -258,7 +258,18 @@ impl TypeContext {
                             };
                             ast_enums.push(item)
                         }
+                    },
+                    ast::ModSymbol::Trait(trt) => {
+                        let item = ItemAndInfo {
+                            item: trt,
+                            in_path: path,
+                            ty_parent_attrs: ty_attrs.clone(),
+                            method_parent_attrs: method_attrs.clone(),
+                            id: TypeId::Trait(TraitId(ast_traits.len())),
+                        };
+                        ast_traits.push(item)
                     }
+                    _ => {}
                 }
             }
         }
@@ -284,6 +295,7 @@ impl TypeContext {
         let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
         let enums = ctx.lower_all_enums(ast_enums.into_iter());
         let traits = ctx.lower_all_traits(ast_traits.into_iter()).unwrap();
+        println!("WHY WHY WHY {:?}", traits);
 
         match (out_structs, structs, opaques, enums) {
             (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {

@@ -16,7 +16,7 @@ mod structs;
 pub use structs::{OpaqueStruct, Struct};
 
 mod traits;
-pub use traits::Trait;
+pub use traits::{Trait, TraitFct};
 
 mod enums;
 pub use enums::Enum;
