@@ -34,6 +34,25 @@ Method {
                     ),
                 },
             ),
+            attrs: Attrs {
+                disable: false,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                    },
+                },
+            },
         },
     ),
     params: [
@@ -66,6 +85,25 @@ Method {
                     ),
                 },
             ),
+            attrs: Attrs {
+                disable: false,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                    },
+                },
+            },
         },
     ],
     output: Infallible(
@@ -85,7 +123,9 @@ Method {
             generate: false,
             default_constructor: false,
             external: false,
-            input_cfg: {},
+            input_cfg: DemoInputCFG {
+                label: "",
+            },
         },
     },
 }

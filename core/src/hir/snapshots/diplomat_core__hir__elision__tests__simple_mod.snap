@@ -37,6 +37,25 @@ TypeContext {
                             ),
                         },
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                            },
+                        },
+                    },
                 },
             ],
             methods: [
@@ -73,6 +92,25 @@ TypeContext {
                                     UnvalidatedUtf8,
                                 ),
                             ),
+                            attrs: Attrs {
+                                disable: false,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                    },
+                                },
+                            },
                         },
                     ],
                     output: Infallible(
@@ -111,7 +149,9 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
-                            input_cfg: {},
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                            },
                         },
                     },
                 },
@@ -130,7 +170,9 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
-                    input_cfg: {},
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                    },
                 },
             },
             lifetimes: LifetimeEnv {
@@ -176,6 +218,25 @@ TypeContext {
                             UnvalidatedUtf8,
                         ),
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                            },
+                        },
+                    },
                 },
             ],
             methods: [
@@ -214,6 +275,25 @@ TypeContext {
                                     ),
                                 },
                             ),
+                            attrs: Attrs {
+                                disable: false,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                    },
+                                },
+                            },
                         },
                     ),
                     params: [
@@ -231,6 +311,25 @@ TypeContext {
                                     UnvalidatedUtf8,
                                 ),
                             ),
+                            attrs: Attrs {
+                                disable: false,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                    },
+                                },
+                            },
                         },
                     ],
                     output: Infallible(
@@ -263,7 +362,9 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
-                            input_cfg: {},
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                            },
                         },
                     },
                 },
@@ -282,7 +383,9 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
-                    input_cfg: {},
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                    },
                 },
             },
             lifetimes: LifetimeEnv {
@@ -324,7 +427,9 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
-                    input_cfg: {},
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                    },
                 },
             },
             lifetimes: LifetimeEnv {
