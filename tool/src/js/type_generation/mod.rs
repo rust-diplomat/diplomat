@@ -338,7 +338,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
-            // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
+            // If we're a slice of strings or primitives. See [`hir::Type::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
                 let slice_expr =
                     self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None);
@@ -533,7 +533,7 @@ pub(super) struct MethodsInfo<'a> {
     pub special_methods: SpecialMethodInfo<'a>,
 }
 
-/// Represents a re-usable set of information for any [`hir::Type::Struct`]s.
+/// Represents a re-usable set of information for any [`hir::TypeDef::Struct`]s.
 #[derive(Clone)]
 pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
