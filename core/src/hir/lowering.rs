@@ -186,9 +186,7 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Trait>>,
     ) -> Result<Vec<TraitDef>, ()> {
-        // TODO THIS NEXT
-        // self.lower_all(ast_defs, Self::lower_trait)
-        Ok(Vec::new())
+        self.lower_all(ast_defs, Self::lower_trait)
     }
 
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
@@ -393,6 +391,90 @@ impl<'ast> LoweringContext<'ast> {
             &mut self.errors,
         );
         Ok(def)
+    }
+
+    fn lower_trait(&mut self, item: ItemAndInfo<'ast, ast::Trait>) -> Result<TraitDef, ()> {
+        let ast_trait = item.item;
+        self.errors.set_item(ast_trait.name.as_str());
+        let trait_name = self.lower_ident(&ast_trait.name, "trait name")?;
+
+        // let attrs = self.attr_validator.attr_from_ast(
+        //     &item.ty_parent_attrs,
+        //     &mut self.errors,
+        // );
+        let attrs = item.ty_parent_attrs;
+
+        // let fcts = if attrs.disable {
+        //     Vec::new()
+        // } else {
+        let mut fcts = Vec::with_capacity(ast_trait.fcts.len());
+        for ast_trait_fct in ast_trait.fcts.iter() {
+            fcts.push(self.lower_trait_fct(ast_trait_fct, item.in_path)?);
+        }
+        // fcts
+        // };
+        let lifetimes = self.lower_type_lifetime_env(&ast_trait.lifetimes);
+        let def = TraitDef::new(ast_trait.docs.clone(), trait_name, fcts, attrs, lifetimes?);
+
+        // self.attr_validator.validate(
+        //     &def.attrs,
+        //     AttributeContext::Type(TypeDef::from(&def)),
+        //     &mut self.errors,
+        // );
+        Ok(def)
+    }
+
+    // pub struct TraitFct {
+    //     pub name: Ident,
+    //     pub abi_name: Ident,
+    //     pub self_param: Option<SelfParam>,
+    //     // corresponds to the types in Function(Vec<Box<TypeName>>, Box<TypeName>)
+    //     // the callback type; except here the params aren't anonymous
+    //     pub params: Vec<Param>,
+    //     pub output_type: Option<TypeName>,
+    // }
+    fn lower_trait_fct(
+        &mut self,
+        ast_trait_fct: &'ast ast::TraitFct,
+        in_path: &ast::Path,
+    ) -> Result<Callback, ()> {
+        let name = ast_trait_fct.name.clone();
+        // TODO make a version of callback that has an optional name and param names
+
+        // pub struct Callback {
+        //     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
+        //     pub params: Vec<CallbackParam>,
+        //     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+        // }
+
+        let self_param_ltl = SelfParamLifetimeLowerer::new(&ast_trait_fct.lifetimes, self)?;
+        let (param_self, mut param_ltl) =
+            if let Some(self_param) = ast_trait_fct.self_param.as_ref() {
+                let (param_self, param_ltl) = self.lower_self_param(
+                    self_param,
+                    self_param_ltl,
+                    &ast_trait_fct.abi_name,
+                    in_path,
+                )?;
+                (Some(param_self), param_ltl)
+            } else {
+                (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
+            };
+
+        let params = Vec::new(); // TODO LOWER THE PARAMS
+                                 // let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
+
+        let output = if let Some(out_ty) = &ast_trait_fct.output_type {
+            Some(self.lower_type(&out_ty, &mut param_ltl, in_path)?)
+        } else {
+            None
+        };
+
+        Ok(Callback {
+            param_self,
+            params,
+            output: Box::new(output),
+        })
     }
 
     fn lower_out_struct(
@@ -1278,7 +1360,13 @@ impl<'ast> LoweringContext<'ast> {
                 ))
             }
             ast::CustomNamedConstruct::Trait(trt) => {
-                todo!()
+                let tcx_id = self.lookup_id.resolve_trait(&trt).expect("trait is in env");
+
+                // TODO PROBABLY FIX THIS
+                Ok((
+                    ParamSelf::new(SelfType::Trait(TraitPath::new(tcx_id))),
+                    self_param_ltl.no_self_ref(),
+                ))
             }
         }
     }

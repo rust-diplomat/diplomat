@@ -123,6 +123,31 @@ impl LifetimeEnv {
         this
     }
 
+    pub fn from_trait_fct_item(
+        trait_fct_item: &syn::TraitItem,
+        self_param: Option<&SelfParam>,
+        params: &[Param],
+        return_type: Option<&TypeName>,
+    ) -> Self {
+        let mut this = LifetimeEnv::new();
+        if let syn::TraitItem::Fn(fct) = trait_fct_item {
+            if let Some(self_param) = self_param {
+                this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
+            }
+            for param in params {
+                this.extend_implicit_lifetime_bounds(&param.ty, None);
+            }
+            if let Some(return_type) = return_type {
+                this.extend_implicit_lifetime_bounds(return_type, None);
+            }
+        }
+        this
+    }
+
+    pub fn from_trait_item(trt: &syn::ItemTrait) -> Self {
+        LifetimeEnv::new() // TODO
+    }
+
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds
     /// defined in the struct generics, as well as implicit lifetime bounds in
     /// the struct's fields. For example, the field `&'a Foo<'b>` implies `'b: 'a`.

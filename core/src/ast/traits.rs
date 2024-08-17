@@ -8,8 +8,10 @@ use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, Param, PathType, Self
 #[non_exhaustive]
 pub struct Trait {
     pub name: Ident,
-    // pub lifetimes: LifetimeEnv,
+    pub lifetimes: LifetimeEnv,
     pub fcts: Vec<TraitFct>,
+    pub docs: Docs,
+    // pub attrs: Attrs,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
@@ -22,6 +24,7 @@ pub struct TraitFct {
     // the callback type; except here the params aren't anonymous
     pub params: Vec<Param>,
     pub output_type: Option<TypeName>,
+    pub lifetimes: LifetimeEnv,
 }
 
 impl Trait {
@@ -77,12 +80,20 @@ impl Trait {
                     syn::ReturnType::Default => None,
                 };
 
+                let lifetimes = LifetimeEnv::from_trait_fct_item(
+                    trait_item,
+                    self_param.as_ref(),
+                    &all_params[..],
+                    output_type.as_ref(),
+                );
+
                 trait_fcts.push(TraitFct {
                     name: fct_ident.into(),
                     abi_name: (&extern_ident).into(),
                     self_param,
                     params: all_params,
                     output_type,
+                    lifetimes,
                 });
             }
         }
@@ -90,6 +101,8 @@ impl Trait {
         Self {
             name: (&trt.ident).into(),
             fcts: trait_fcts,
+            docs: Docs::from_attrs(&trt.attrs),
+            lifetimes: LifetimeEnv::from_trait_item(trt), // TODO
         }
     }
 }
