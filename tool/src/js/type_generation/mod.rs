@@ -147,8 +147,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             self.tcx,
         );
 
-        let fields_align = fields_layout.align();
-
         let fields = struct_def.fields.iter().enumerate()
         .map(|field_enumerator| {
             let (i, field) = field_enumerator;
@@ -220,7 +218,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     _ => ""
                 },
                 if padding > 0 {
-                    let mut out = String::from(",/* Begin Padding */ ");
+                    let mut out = format!(",/* Padding for {} */ ", field.name);
                     
                     for i in 0..padding {
                         if i < padding - 1 {
