@@ -195,17 +195,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let js_to_c = format!("{}{}{}", 
-                match &field.ty {
-                    Type::Slice(..) => "...",
-                    _ => "",
-                },
-                self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
-                match &field.ty {
-                    Type::Slice(..) => ".splat()",
-                    _ => ""
-                }
-            );
+            let conversion = match field.ty {
+                hir::Type::Slice(..) => Some(("...", ".splat()")),
+                _ => None,
+            };
+
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), conversion);
 
             FieldInfo {
                 field_name,
@@ -317,7 +312,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
                 let slice_expr =
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None);
+                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None, None).into();
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -378,7 +373,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
-                    ));
+                        None
+                    ).into());
             }
 
             method_info.parameters.push(param_info);
