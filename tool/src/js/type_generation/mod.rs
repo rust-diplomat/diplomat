@@ -142,7 +142,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         struct_def: &'tcx hir::StructDef<P>,
     ) -> Vec<FieldInfo<P>> {
-        let (offsets, fields_layout) = crate::js::layout::struct_offsets_size_max_align(
+        let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.tcx,
         );
@@ -204,7 +204,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             } else {
                 curr_offset + field_layout.size()
             };
-            
+
             let padding = next_offset - curr_offset - field_layout.size();
 
             let js_to_c = format!("{}{}{}{}",
@@ -219,7 +219,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 },
                 if padding > 0 {
                     let mut out = format!(",/* Padding for {} */ ", field.name);
-                    
+
                     for i in 0..padding {
                         if i < padding - 1 {
                             write!(out, "0, ").unwrap();
