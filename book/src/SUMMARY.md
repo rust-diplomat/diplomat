@@ -24,3 +24,7 @@
     - [Stringifiers](attrs/stringifiers.md)
   - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)
+- [demo_gen](demo_gen/intro.md)
+  - [Configuring Markup](demo_gen/markup.md)
+  - [Configuring the Default Renderer](demo_gen/renderer.md)
+  - [Attributes](demo_gen/attributes.md)
