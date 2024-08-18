@@ -1,3 +1,3 @@
 (function (...args) {
-    return new {{type_name}}({% for field in fields %}args[{{loop.index0}}]{% if !loop.last %}, {% endif %}{% endfor %});
+    return new {{type_name}}(...args);
 })

@@ -23,7 +23,7 @@ export function formatWrite() {
                         ]
                     ),
                     (function (...args) {
-                        return new FixedDecimalFormatterOptions(args[0], args[1]);
+                        return new FixedDecimalFormatterOptions(...args);
                     }).apply(
                         null,
                         [

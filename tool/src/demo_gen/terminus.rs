@@ -411,19 +411,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
         struct StructInfo {
-            fields: Vec<String>,
             type_name: String,
         }
 
-        let mut fields = Vec::new();
-
         for field in st.fields.iter() {
-            fields.push(
-                self.formatter
-                    .fmt_param_name(field.name.as_str())
-                    .to_string(),
-            );
-
             self.evaluate_param(
                 &field.ty,
                 field.name.to_string(),
@@ -434,7 +425,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         child.method_js = StructInfo {
             type_name: type_name.to_string(),
-            fields,
         }
         .render()
         .unwrap();
