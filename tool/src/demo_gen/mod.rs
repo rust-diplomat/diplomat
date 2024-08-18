@@ -1,3 +1,8 @@
+//! Backend for creating automatic demonstrations of using FFI functions.
+//! 
+//! Designed to work in conjunction with the JS backend.
+//! 
+//! See docs/demo_gen.md for more. 
 use std::{collections::BTreeSet, fmt::Write};
 
 use askama::{self, Template};
@@ -23,7 +28,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-/// TODO: Add this to the design doc.
+/// Configuration for demo_gen generation. Set from a `.toml` file, you can specify the path of the file with `--library-config` option flag.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) struct DemoConfig {
@@ -44,7 +49,7 @@ pub(crate) struct DemoConfig {
     pub relative_js_path: Option<String>,
 }
 
-/// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
+/// Per docs/demo_gen.md
 /// Generate markup.
 ///
 /// That is, only generate .js files to be used in final rendering.

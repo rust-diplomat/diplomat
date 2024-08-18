@@ -57,7 +57,7 @@ impl MethodDependency {
 }
 
 /// A terminus represents a function in the diplomat FFI that is meant to be called by an HTML rendering engine's JS.
-/// (per our design doc: https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing)
+/// (per our design doc: docs/demo_gen.md)
 ///
 /// Termini are (as of right now) automagically generated from every valid FFI function that `diplomat-tool demo_gen` can detect.
 /// Valid termini functions are determined in [`RenderTerminusContext::is_valid_terminus`]
