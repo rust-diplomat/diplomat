@@ -1,8 +1,8 @@
 //! Backend for creating automatic demonstrations of using FFI functions.
-//! 
+//!
 //! Designed to work in conjunction with the JS backend.
-//! 
-//! See docs/demo_gen.md for more. 
+//!
+//! See docs/demo_gen.md for more.
 use std::{collections::BTreeSet, fmt::Write};
 
 use askama::{self, Template};
