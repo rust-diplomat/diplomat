@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write;
 
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
@@ -195,7 +196,18 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let js_to_c = format!("{}{}{}", 
+            let field_layout = crate::js::layout::type_size_alignment(&field.ty, self.tcx);
+
+            let curr_offset = offsets[i];
+            let next_offset = if i < offsets.len() - 1 {
+                offsets[i + 1]
+            } else {
+                curr_offset + field_layout.size()
+            };
+
+            let padding = next_offset - curr_offset - field_layout.size();
+
+            let js_to_c = format!("{}{}{}{}",
                 match &field.ty {
                     Type::Slice(..) => "...",
                     _ => "",
@@ -204,6 +216,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 match &field.ty {
                     Type::Slice(..) => ".splat()",
                     _ => ""
+                },
+                if padding > 0 {
+                    let mut out = format!(",/* Padding for {} */ ", field.name);
+
+                    for i in 0..padding {
+                        if i < padding - 1 {
+                            write!(out, "0, ").unwrap();
+                        } else {
+                            write!(out, "0 /* End Padding */").unwrap();
+                        }
+                    }
+
+                    out
+                } else {
+                    "".into()
                 }
             );
 
