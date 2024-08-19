@@ -184,10 +184,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
-    - name: Set up JDK 19 for x64
+    - name: Set up JDK 17 for x64
       uses: actions/setup-java@v4
       with:
-        java-version: '19'
+        java-version: '17'
         distribution: 'temurin'
         architecture: x64
     - name: Setup Gradle
