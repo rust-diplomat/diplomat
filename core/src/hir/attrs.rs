@@ -140,6 +140,9 @@ pub enum AttributeContext<'a, 'b> {
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
+    Param,
+    SelfParam,
+    Field
 }
 
 fn maybe_error_unsupported(
@@ -399,8 +402,8 @@ impl Attrs {
         let Attrs {
             disable,
             namespace,
-            rename: _,
-            abi_rename: _,
+            rename,
+            abi_rename,
             special_method,
             demo_attrs: _,
         } = &self;
@@ -660,6 +663,32 @@ impl Attrs {
                 "`namespace` can only be used on types".to_string(),
             ));
         }
+
+        if matches!(context, AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field) {
+            if *disable {
+                errors.push(LoweringError::Other(format!(
+                    "`disable`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if namespace.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "`namespace` cannot be used on an {context:?}."
+                )));
+            }
+
+            if !rename.is_empty() || !abi_rename.is_empty() {
+                errors.push(LoweringError::Other(format!(
+                    "`rename`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if special_method.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "{context:?} cannot be special methods."
+                )));
+            }
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -689,19 +718,6 @@ impl Attrs {
             // Never inherited
             special_method: None,
             demo_attrs: Default::default(),
-        }
-    }
-
-    /// Sets what attributes are allowed on struct fields and method parameters.
-    ///
-    /// TODO: Add support for renames and (maybe) disables
-    pub(crate) fn allowed_on_param_or_field(attr_ident: syn::Ident) -> Result<(), LoweringError> {
-        if attr_ident == "demo" {
-            Ok(())
-        } else {
-            Err(LoweringError::Other(format!(
-                "{attr_ident:?} is not a valid attribute on method parameters or fields."
-            )))
         }
     }
 }

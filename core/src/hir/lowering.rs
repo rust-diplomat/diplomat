@@ -326,16 +326,24 @@ impl<'ast> LoweringContext<'ast> {
                     item.in_path,
                 );
 
+                let field_attrs = self.attr_validator.attr_from_ast(
+                    attrs,
+                    &Attrs::default(),
+                    &mut self.errors,
+                );
+
+                self.attr_validator.validate(
+                    &field_attrs,
+                    AttributeContext::Field,
+                    &mut self.errors,
+                );
+
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
                         docs: docs.clone(),
                         name,
                         ty,
-                        attrs: self.attr_validator.attr_from_ast(
-                            attrs,
-                            &Attrs::default(),
-                            &mut self.errors,
-                        ),
+                        attrs: field_attrs
                     }),
                     _ => fields = Err(()),
                 }
@@ -1136,6 +1144,12 @@ impl<'ast> LoweringContext<'ast> {
                             &mut self.errors,
                         );
 
+                        self.attr_validator.validate(
+                            &attrs,
+                            AttributeContext::SelfParam,
+                            &mut self.errors,
+                        );
+
                         Ok((
                             ParamSelf::new(
                                 SelfType::Struct(StructPath::new(type_lifetimes, tcx_id)),
@@ -1180,6 +1194,12 @@ impl<'ast> LoweringContext<'ast> {
                         &mut self.errors,
                     );
 
+                    self.attr_validator.validate(
+                        &attrs,
+                        AttributeContext::SelfParam,
+                        &mut self.errors,
+                    );
+
                     Ok((
                         ParamSelf::new(
                             SelfType::Opaque(OpaquePath::new(
@@ -1203,6 +1223,12 @@ impl<'ast> LoweringContext<'ast> {
                 let attrs = self.attr_validator.attr_from_ast(
                     &self_param.attrs,
                     &Attrs::default(),
+                    &mut self.errors,
+                );
+
+                self.attr_validator.validate(
+                    &attrs,
+                    AttributeContext::SelfParam,
                     &mut self.errors,
                 );
 
@@ -1233,6 +1259,12 @@ impl<'ast> LoweringContext<'ast> {
         let attrs = self.attr_validator.attr_from_ast(
             &param.attrs,
             &Attrs::default(),
+            &mut self.errors,
+        );
+
+        self.attr_validator.validate(
+            &attrs,
+            AttributeContext::Param,
             &mut self.errors,
         );
 
