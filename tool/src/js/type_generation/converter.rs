@@ -203,7 +203,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, {variable_name}, "{}", {edges})"#,
+                        r#"new diplomatRuntime.DiplomatSlicePrimitive.getSlice(wasm, {variable_name}, "{}", {edges})"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
