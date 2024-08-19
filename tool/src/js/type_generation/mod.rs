@@ -207,31 +207,24 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let padding = next_offset - curr_offset - field_layout.size();
 
-            let padding_str = if padding > 0 {
-                let mut out = format!(",/* Padding for {} */ ", field.name);
-
-                for i in 0..padding {
-                    if i < padding - 1 {
-                        write!(out, "0, ").unwrap();
-                    } else {
-                        write!(out, "0 /* End Padding */").unwrap();
+            let js_to_c = format!("{}{}",
+                self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
+                if padding > 0 {
+                    let mut out = format!(",/* Padding for {} */ ", field.name);
+    
+                    for i in 0..padding {
+                        if i < padding - 1 {
+                            write!(out, "0, ").unwrap();
+                        } else {
+                            write!(out, "0 /* End Padding */").unwrap();
+                        }
                     }
+    
+                    out
+                } else {
+                    "".into()
                 }
-
-                out
-            } else {
-                "".into()
-            };
-
-            let splat_end = format!(".splat(){padding_str}");
-            let conversion = match field.ty {
-                hir::Type::Slice(..) => {
-                    Some(("...", splat_end.as_str()))
-                },
-                _ => Some(("", padding_str.as_str())),
-            };
-
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), conversion);
+            );
 
             FieldInfo {
                 field_name,
@@ -343,8 +336,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
                 let slice_expr = self
-                    .gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None, None)
-                    .into();
+                    .gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None);
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -404,9 +396,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
-                        None,
                     )
-                    .into(),
                 );
             }
 
