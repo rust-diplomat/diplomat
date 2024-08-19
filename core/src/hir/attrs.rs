@@ -142,7 +142,7 @@ pub enum AttributeContext<'a, 'b> {
     Module,
     Param,
     SelfParam,
-    Field
+    Field,
 }
 
 fn maybe_error_unsupported(
@@ -664,7 +664,10 @@ impl Attrs {
             ));
         }
 
-        if matches!(context, AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field) {
+        if matches!(
+            context,
+            AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
+        ) {
             if *disable {
                 errors.push(LoweringError::Other(format!(
                     "`disable`s cannot be used on an {context:?}."

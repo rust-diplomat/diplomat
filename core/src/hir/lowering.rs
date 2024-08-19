@@ -197,11 +197,9 @@ impl<'ast> LoweringContext<'ast> {
         let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
-            let attrs = self.attr_validator.attr_from_ast(
-                attrs,
-                &variant_parent_attrs,
-                &mut self.errors,
-            );
+            let attrs =
+                self.attr_validator
+                    .attr_from_ast(attrs, &variant_parent_attrs, &mut self.errors);
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
@@ -326,11 +324,9 @@ impl<'ast> LoweringContext<'ast> {
                     item.in_path,
                 );
 
-                let field_attrs = self.attr_validator.attr_from_ast(
-                    attrs,
-                    &Attrs::default(),
-                    &mut self.errors,
-                );
+                let field_attrs =
+                    self.attr_validator
+                        .attr_from_ast(attrs, &Attrs::default(), &mut self.errors);
 
                 self.attr_validator.validate(
                     &field_attrs,
@@ -343,7 +339,7 @@ impl<'ast> LoweringContext<'ast> {
                         docs: docs.clone(),
                         name,
                         ty,
-                        attrs: field_attrs
+                        attrs: field_attrs,
                     }),
                     _ => fields = Err(()),
                 }
@@ -1226,11 +1222,8 @@ impl<'ast> LoweringContext<'ast> {
                     &mut self.errors,
                 );
 
-                self.attr_validator.validate(
-                    &attrs,
-                    AttributeContext::SelfParam,
-                    &mut self.errors,
-                );
+                self.attr_validator
+                    .validate(&attrs, AttributeContext::SelfParam, &mut self.errors);
 
                 Ok((
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id)), attrs),
@@ -1256,17 +1249,12 @@ impl<'ast> LoweringContext<'ast> {
         let ty = self.lower_type::<InputOnly>(&param.ty, ltl, false, in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
-        let attrs = self.attr_validator.attr_from_ast(
-            &param.attrs,
-            &Attrs::default(),
-            &mut self.errors,
-        );
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
 
-        self.attr_validator.validate(
-            &attrs,
-            AttributeContext::Param,
-            &mut self.errors,
-        );
+        self.attr_validator
+            .validate(&attrs, AttributeContext::Param, &mut self.errors);
 
         Ok(Param::new(name?, ty?, attrs))
     }
