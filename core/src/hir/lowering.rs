@@ -191,7 +191,6 @@ impl<'ast> LoweringContext<'ast> {
             &ast_enum.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
-            None,
         );
 
         let mut variants = Ok(Vec::with_capacity(ast_enum.variants.len()));
@@ -202,7 +201,6 @@ impl<'ast> LoweringContext<'ast> {
                 attrs,
                 &variant_parent_attrs,
                 &mut self.errors,
-                None,
             );
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
@@ -267,7 +265,6 @@ impl<'ast> LoweringContext<'ast> {
             &ast_opaque.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
-            None,
         );
         let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
@@ -311,7 +308,6 @@ impl<'ast> LoweringContext<'ast> {
             &ast_struct.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
-            None,
         );
         // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
         if !attrs.disable {
@@ -339,7 +335,6 @@ impl<'ast> LoweringContext<'ast> {
                             attrs,
                             &Attrs::default(),
                             &mut self.errors,
-                            Some(Attrs::allowed_on_param_or_field),
                         ),
                     }),
                     _ => fields = Err(()),
@@ -400,7 +395,6 @@ impl<'ast> LoweringContext<'ast> {
             &ast_out_struct.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
-            None,
         );
         let fields = if ast_out_struct.fields.is_empty() {
             self.errors.push(LoweringError::Other(format!(
@@ -431,7 +425,6 @@ impl<'ast> LoweringContext<'ast> {
                                 attrs,
                                 &Attrs::default(),
                                 &mut self.errors,
-                                Some(Attrs::allowed_on_param_or_field),
                             ),
                         }),
                         _ => fields = Err(()),
@@ -561,7 +554,6 @@ impl<'ast> LoweringContext<'ast> {
                 &method.attrs,
                 method_parent_attrs,
                 &mut self.errors,
-                None,
             );
             if attrs.disable {
                 continue;
@@ -1142,7 +1134,6 @@ impl<'ast> LoweringContext<'ast> {
                             &self_param.attrs,
                             &Attrs::default(),
                             &mut self.errors,
-                            Some(Attrs::allowed_on_param_or_field),
                         );
 
                         Ok((
@@ -1187,7 +1178,6 @@ impl<'ast> LoweringContext<'ast> {
                         &self_param.attrs,
                         &Attrs::default(),
                         &mut self.errors,
-                        Some(Attrs::allowed_on_param_or_field),
                     );
 
                     Ok((
@@ -1214,7 +1204,6 @@ impl<'ast> LoweringContext<'ast> {
                     &self_param.attrs,
                     &Attrs::default(),
                     &mut self.errors,
-                    Some(Attrs::allowed_on_param_or_field),
                 );
 
                 Ok((
@@ -1245,7 +1234,6 @@ impl<'ast> LoweringContext<'ast> {
             &param.attrs,
             &Attrs::default(),
             &mut self.errors,
-            Some(Attrs::allowed_on_param_or_field),
         );
 
         Ok(Param::new(name?, ty?, attrs))

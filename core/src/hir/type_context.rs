@@ -189,7 +189,6 @@ impl TypeContext {
                 &attr_validator,
                 &Default::default(),
                 &mut errors,
-                None,
             );
             let ty_attrs = mod_attrs.for_inheritance(AttrInheritContext::Type);
             let method_attrs =
