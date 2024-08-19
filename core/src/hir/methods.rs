@@ -52,6 +52,7 @@ pub struct Callback {
     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
     pub params: Vec<CallbackParam>,
     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+    pub name: Option<IdentBuf>,
 }
 
 // uninstantiatable; represents no callback allowed
@@ -119,6 +120,7 @@ pub struct Param {
 #[non_exhaustive]
 pub struct CallbackParam {
     pub ty: Type<OutputOnly>,
+    pub name: Option<IdentBuf>,
 }
 
 impl SuccessType {
