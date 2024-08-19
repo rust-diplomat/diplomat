@@ -12,6 +12,6 @@ test("Verify invariants of struct", t => {
     t.is(s.intoA(), 17);
 });
 test("Test struct creation", t => {
-    const s = new MyStruct(590, true, 209, 1234n, 5991, '餐'.codePointAt(0), MyEnum.B);
-    t.is(s.intoA(), 590);
+    const s = new MyStruct(17, true, 209, 1234n, 5991, '餐'.codePointAt(0), MyEnum.B);
+    t.is(s.intoA(), 17);
 });
