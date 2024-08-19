@@ -78,6 +78,7 @@ pub(crate) fn run<'tcx>(
     };
 
     for (_id, ty) in tcx.all_types() {
+        ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
@@ -266,7 +267,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(_) => format!("{name}Slice").into(),
             Type::Callback(_) => {
                 let real_param_name = name[name.rfind("_").unwrap() + 1..].to_string(); // past last _
-                format!("{name}.fromCallback({real_param_name}.nativeStruct)").into()
+                format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
             }
             _ => todo!(),
         }
@@ -991,9 +992,13 @@ retutnVal.option() ?: return null
                 "{param_name}: {}",
                 self.gen_non_wrapped_type_name(&param.ty, additional_name.clone())
             ));
-            let param_wrapper_type = self.gen_type_name(&param.ty, additional_name);
+            let param_name_to_pass = if let Type::Callback(_) = &param.ty {
+                self.gen_type_name(&param.ty, additional_name)
+            } else {
+                param_name.clone()
+            };
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_wrapper_type));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass));
         }
         let write_return = matches!(
             &method.output,

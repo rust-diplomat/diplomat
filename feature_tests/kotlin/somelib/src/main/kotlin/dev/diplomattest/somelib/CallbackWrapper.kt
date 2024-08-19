@@ -25,17 +25,17 @@ internal class CallbackWrapperNative: Structure(), Structure.ByValue {
 
 
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f: Callback {
-    fun invoke(ignored: Pointer?, arg0: Int ): Int
+    fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }
 
-class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?, arg0: Int ): Int {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -43,13 +43,13 @@ class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f internal constructor (
+internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
@@ -58,7 +58,7 @@ class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_
         
         fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?, arg0: Int ): Int {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     return cb(arg0);
                 }
             }
@@ -69,17 +69,17 @@ class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h: Callback {
-    fun invoke(ignored: Pointer?): Void
+    fun invoke(lang_specific_context: Pointer?): Void
 }
 
-class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: Structure(), Structure.ByValue {
+internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
-                override fun invoke(ignored: Pointer?): Void {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                override fun invoke(lang_specific_context: Pointer?): Void {
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -87,13 +87,13 @@ class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: S
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal constructor (
+internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
@@ -102,7 +102,7 @@ class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal 
         
         fun fromCallback(cb: ()->Void): DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
-                override fun invoke(ignored: Pointer?): Void {
+                override fun invoke(lang_specific_context: Pointer?): Void {
                     return cb();
                 }
             }
@@ -113,17 +113,17 @@ class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal 
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f: Callback {
-    fun invoke(ignored: Pointer?, arg0: CallbackTestingStruct ): Int
+    fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int
 }
 
-class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?, arg0: CallbackTestingStruct ): Int {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int {
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -131,13 +131,13 @@ class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Na
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f internal constructor (
+internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
@@ -146,7 +146,7 @@ class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f in
         
         fun fromCallback(cb: (CallbackTestingStruct)->Int): DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?, arg0: CallbackTestingStruct ): Int {
+                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int {
                     return cb(arg0);
                 }
             }
@@ -157,17 +157,17 @@ class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f in
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f: Callback {
-    fun invoke(ignored: Pointer?): Int
+    fun invoke(lang_specific_context: Pointer?): Int
 }
 
-class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?): Int {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                override fun invoke(lang_specific_context: Pointer?): Int {
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -175,13 +175,13 @@ class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f internal constructor (
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
@@ -190,7 +190,7 @@ class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f 
         
         fun fromCallback(cb: ()->Int): DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
-                override fun invoke(ignored: Pointer?): Int {
+                override fun invoke(lang_specific_context: Pointer?): Int {
                     return cb();
                 }
             }
@@ -201,17 +201,17 @@ class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f 
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g: Callback {
-    fun invoke(ignored: Pointer?, arg0: Int ): Int
+    fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }
 
-class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native: Structure(), Structure.ByValue {
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native: Structure(), Structure.ByValue {
     @JvmField
-    internal var dataa: Pointer = Pointer(0L);
+    internal var data_: Pointer = Pointer(0L);
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
-                override fun invoke(ignored: Pointer?, arg0: Int ): Int {
-                    throw Exception("ERROR NOT IMPLEMENTED")
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
+                    throw Exception("Default callback runner -- should be replaced.")
                 }
             }
     @JvmField
@@ -219,13 +219,13 @@ class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("dataa", "run_callback", "destructor")
+        return listOf("data_", "run_callback", "destructor")
     }
 }
 
-class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g internal constructor (
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {
-    val dataa: Pointer = nativeStruct.dataa
+    val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Pointer = nativeStruct.destructor
 
@@ -234,7 +234,7 @@ class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g 
         
         fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
-                override fun invoke(ignored: Pointer?, arg0: Int ): Int {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     return cb(arg0);
                 }
             }
@@ -253,27 +253,27 @@ class CallbackWrapper internal constructor (
         internal val lib: CallbackWrapperLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackWrapperNative::class.java).toLong()
         
-        fun testMultiArgCallback(f: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f, x: Int): Int {
+        fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_multi_arg_callback(f.nativeStruct, x);
+            val returnVal = lib.CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return returnVal
         }
         
-        fun testNoArgs(h: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h): Int {
+        fun testNoArgs(h: ()->Void): Int {
             
-            val returnVal = lib.CallbackWrapper_test_no_args(h.nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
             return returnVal
         }
         
-        fun testCbWithStruct(f: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f): Int {
+        fun testCbWithStruct(f: (CallbackTestingStruct)->Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_cb_with_struct(f.nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_cb_with_struct(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f.fromCallback(f).nativeStruct);
             return returnVal
         }
         
-        fun testMultipleCbArgs(f: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f, g: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g): Int {
+        fun testMultipleCbArgs(f: ()->Int, g: (Int)->Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_multiple_cb_args(f.nativeStruct, g.nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f.fromCallback(f).nativeStruct, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g.fromCallback(g).nativeStruct);
             return returnVal
         }
     }
