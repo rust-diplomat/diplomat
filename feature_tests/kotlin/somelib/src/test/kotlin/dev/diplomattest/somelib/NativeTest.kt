@@ -1,8 +1,6 @@
 package dev.diplomattest.somelib
 
 import org.junit.jupiter.api.Test
-import java.lang.foreign.MemorySession
-import java.lang.foreign.SegmentAllocator
 import kotlin.random.Random
 import kotlin.test.assertEquals
 
