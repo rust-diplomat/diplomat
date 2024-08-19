@@ -981,7 +981,7 @@ retutnVal.option() ?: return null
                         input_params_and_types: param_names_and_types.join(","),
                         output_type: match **output {
                             Some(ref ty) => self.gen_type_name(ty, None).into(),
-                            None => "Void".into(),
+                            None => "Unit".into(),
                         },
                     })
                 }
@@ -1585,7 +1585,7 @@ retutnVal.option() ?: return null
                     .join(",");
                 let out_type_string: String = match **output {
                     Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
-                    None => "Void".into(),
+                    None => "Unit".into(),
                 };
                 format!("({})->{}", in_type_string, out_type_string).into()
             }

@@ -69,7 +69,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h: Callback {
-    fun invoke(lang_specific_context: Pointer?): Void
+    fun invoke(lang_specific_context: Pointer?): Unit
 }
 
 internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: Structure(), Structure.ByValue {
@@ -78,7 +78,7 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
-                override fun invoke(lang_specific_context: Pointer?): Void {
+                override fun invoke(lang_specific_context: Pointer?): Unit {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
             }
@@ -100,9 +100,9 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native::class.java).toLong()
         
-        fun fromCallback(cb: ()->Void): DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
+        fun fromCallback(cb: ()->Unit): DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
-                override fun invoke(lang_specific_context: Pointer?): Void {
+                override fun invoke(lang_specific_context: Pointer?): Unit {
                     return cb();
                 }
             }
@@ -259,7 +259,7 @@ class CallbackWrapper internal constructor (
             return returnVal
         }
         
-        fun testNoArgs(h: ()->Void): Int {
+        fun testNoArgs(h: ()->Unit): Int {
             
             val returnVal = lib.CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
             return returnVal
