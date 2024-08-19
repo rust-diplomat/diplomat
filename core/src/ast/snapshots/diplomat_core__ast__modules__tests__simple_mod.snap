@@ -17,6 +17,7 @@ declared_types:
           - Primitive: i32
           - - ""
             - []
+          - {}
         - - b
           - Box:
               Named:
@@ -26,6 +27,7 @@ declared_types:
                 lifetimes: []
           - - ""
             - []
+          - {}
       methods:
         - name: new
           docs:
@@ -37,6 +39,7 @@ declared_types:
             - name: x
               ty:
                 Primitive: i32
+              attrs: {}
           return_type:
             Named:
               path:
@@ -59,10 +62,12 @@ declared_types:
                 elements:
                   - NonOpaqueStruct
               lifetimes: []
+            attrs: {}
           params:
             - name: new_a
               ty:
                 Primitive: i32
+              attrs: {}
           return_type: ~
           lifetime_env: {}
           attrs: {}
@@ -106,6 +111,7 @@ declared_types:
                 elements:
                   - OpaqueStruct
               lifetimes: []
+            attrs: {}
           params: []
           return_type:
             Named:

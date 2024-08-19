@@ -309,7 +309,7 @@ impl<'ast> LoweringContext<'ast> {
         );
         // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
         if !attrs.disable {
-            for (name, ty, docs) in ast_struct.fields.iter() {
+            for (name, ty, docs, attrs) in ast_struct.fields.iter() {
                 let name = self.lower_ident(name, "struct field name")?;
                 if !ty.is_ffi_safe() {
                     let ffisafe = ty.ffi_safe_version();
@@ -324,11 +324,22 @@ impl<'ast> LoweringContext<'ast> {
                     item.in_path,
                 );
 
+                let field_attrs =
+                    self.attr_validator
+                        .attr_from_ast(attrs, &Attrs::default(), &mut self.errors);
+
+                self.attr_validator.validate(
+                    &field_attrs,
+                    AttributeContext::Field,
+                    &mut self.errors,
+                );
+
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
                         docs: docs.clone(),
                         name,
                         ty,
+                        attrs: field_attrs,
                     }),
                     _ => fields = Err(()),
                 }
@@ -399,7 +410,7 @@ impl<'ast> LoweringContext<'ast> {
             let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
             // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
             if !attrs.disable {
-                for (name, ty, docs) in ast_out_struct.fields.iter() {
+                for (name, ty, docs, attrs) in ast_out_struct.fields.iter() {
                     let name = self.lower_ident(name, "out-struct field name");
                     let ty = self.lower_out_type(
                         ty,
@@ -414,6 +425,11 @@ impl<'ast> LoweringContext<'ast> {
                             docs: docs.clone(),
                             name,
                             ty,
+                            attrs: self.attr_validator.attr_from_ast(
+                                attrs,
+                                &Attrs::default(),
+                                &mut self.errors,
+                            ),
                         }),
                         _ => fields = Err(()),
                     }
@@ -1138,11 +1154,23 @@ impl<'ast> LoweringContext<'ast> {
                             true,
                         );
 
+                        let attrs = self.attr_validator.attr_from_ast(
+                            &self_param.attrs,
+                            &Attrs::default(),
+                            &mut self.errors,
+                        );
+
+                        self.attr_validator.validate(
+                            &attrs,
+                            AttributeContext::SelfParam,
+                            &mut self.errors,
+                        );
+
                         Ok((
-                            ParamSelf::new(SelfType::Struct(StructPath::new(
-                                type_lifetimes,
-                                tcx_id,
-                            ))),
+                            ParamSelf::new(
+                                SelfType::Struct(StructPath::new(type_lifetimes, tcx_id)),
+                                attrs,
+                            ),
                             param_ltl,
                         ))
                     }
@@ -1176,13 +1204,28 @@ impl<'ast> LoweringContext<'ast> {
                         true,
                     );
 
+                    let attrs = self.attr_validator.attr_from_ast(
+                        &self_param.attrs,
+                        &Attrs::default(),
+                        &mut self.errors,
+                    );
+
+                    self.attr_validator.validate(
+                        &attrs,
+                        AttributeContext::SelfParam,
+                        &mut self.errors,
+                    );
+
                     Ok((
-                        ParamSelf::new(SelfType::Opaque(OpaquePath::new(
-                            lifetimes,
-                            NonOptional,
-                            borrow,
-                            tcx_id,
-                        ))),
+                        ParamSelf::new(
+                            SelfType::Opaque(OpaquePath::new(
+                                lifetimes,
+                                NonOptional,
+                                borrow,
+                                tcx_id,
+                            )),
+                            attrs,
+                        ),
                         param_ltl,
                     ))
                 } else {
@@ -1193,8 +1236,17 @@ impl<'ast> LoweringContext<'ast> {
             ast::CustomType::Enum(enm) => {
                 let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
 
+                let attrs = self.attr_validator.attr_from_ast(
+                    &self_param.attrs,
+                    &Attrs::default(),
+                    &mut self.errors,
+                );
+
+                self.attr_validator
+                    .validate(&attrs, AttributeContext::SelfParam, &mut self.errors);
+
                 Ok((
-                    ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
+                    ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id)), attrs),
                     self_param_ltl.no_self_ref(),
                 ))
             }
@@ -1216,7 +1268,15 @@ impl<'ast> LoweringContext<'ast> {
         let name = self.lower_ident(&param.name, "param name");
         let ty = self.lower_type::<InputOnly>(&param.ty, ltl, false, in_path);
 
-        Ok(Param::new(name?, ty?))
+        // No parent attrs because parameters do not have a strictly clear parent.
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
+
+        self.attr_validator
+            .validate(&attrs, AttributeContext::Param, &mut self.errors);
+
+        Ok(Param::new(name?, ty?, attrs))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.

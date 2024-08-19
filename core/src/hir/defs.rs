@@ -81,6 +81,7 @@ pub struct StructField<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
     pub ty: Type<P>,
+    pub attrs: Attrs,
 }
 
 /// A variant of an [`Enum`].
