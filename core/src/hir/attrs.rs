@@ -155,11 +155,15 @@ fn maybe_error_unsupported(
     }
 }
 impl Attrs {
+    /// `location_validator` represents a callback passed in by `lowering.rs` methods to check if any attributes of a given location are allowed.
+    ///
+    /// Right now this is just used for [`Attrs::allowed_on_param_or_field`], but could be used for other attributes in specific locations.
     pub fn from_ast(
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
         parent_attrs: &Attrs,
         errors: &mut ErrorStore,
+        location_validator: Option<fn(syn::Ident) -> Result<(), LoweringError>>,
     ) -> Self {
         let mut this = parent_attrs.clone();
         // Backends must support this since it applies to the macro/C code.
@@ -181,7 +185,12 @@ impl Attrs {
             if satisfies {
                 let path = attr.meta.path();
                 if let Some(path) = path.get_ident() {
-                    if path == "disable" {
+                    let supported = location_validator
+                        .map(|l| l(path.clone()))
+                        .unwrap_or(Ok(()));
+                    if supported.is_err() {
+                        errors.push(supported.unwrap_err());
+                    } else if path == "disable" {
                         if let Meta::Path(_) = attr.meta {
                             if this.disable {
                                 errors.push(LoweringError::Other(
@@ -691,6 +700,19 @@ impl Attrs {
             demo_attrs: Default::default(),
         }
     }
+
+    /// Sets what attributes are allowed on struct fields and method parameters.
+    ///
+    /// TODO: Add support for renames and (maybe) disables
+    pub(crate) fn allowed_on_param_or_field(attr_ident: syn::Ident) -> Result<(), LoweringError> {
+        if attr_ident == "demo" {
+            Ok(())
+        } else {
+            Err(LoweringError::Other(format!(
+                "{attr_ident:?} is not a valid attribute on method parameters or fields."
+            )))
+        }
+    }
 }
 
 /// Non-exhaustive list of what attributes and other features your backend is able to handle, based on #[diplomat::attr(...)] contents.
@@ -850,8 +872,9 @@ pub trait AttributeValidator {
         ast: &ast::Attrs,
         parent_attrs: &Attrs,
         errors: &mut ErrorStore,
+        loc_validator: Option<fn(syn::Ident) -> Result<(), LoweringError>>,
     ) -> Attrs {
-        Attrs::from_ast(ast, self, parent_attrs, errors)
+        Attrs::from_ast(ast, self, parent_attrs, errors, loc_validator)
     }
 
     // Provided: validates an attribute in the context in which it was constructed
