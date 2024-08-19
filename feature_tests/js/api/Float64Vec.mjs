@@ -14,7 +14,11 @@ export class Float64Vec {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Float64Vec is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -35,7 +39,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_bool(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -49,7 +53,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_i16(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -63,7 +67,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_u16(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -77,7 +81,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_isize(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -91,7 +95,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_usize(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -105,7 +109,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_f64_be_bytes(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -119,7 +123,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr, vSlice.size);
     
         try {
-            return new Float64Vec(result, []);
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

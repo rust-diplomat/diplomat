@@ -12,7 +12,7 @@ export class BorrowedFieldsWithBounds {
 
     get fieldC() : string;
     set fieldC(value: string); 
-
+    constructor(fieldA: string, fieldB: string, fieldC: string);
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 }

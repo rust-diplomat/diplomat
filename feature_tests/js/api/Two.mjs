@@ -16,7 +16,11 @@ export class Two {
     #aEdge = [];
     #bEdge = [];
     
-    constructor(ptr, selfEdge, aEdge, bEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge, bEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Two is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;

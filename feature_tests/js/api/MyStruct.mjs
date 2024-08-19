@@ -61,6 +61,20 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#a = arguments[0];
+            this.#b = arguments[1];
+            this.#c = arguments[2];
+            this.#d = arguments[3];
+            this.#e = arguments[4];
+            this.#f = arguments[5];
+            this.#g = arguments[6];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -77,7 +91,7 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
@@ -92,8 +106,6 @@ export class MyStruct {
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();
-
-        return this;
     }
 
     static new_() {
@@ -102,7 +114,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return new MyStruct()._fromFFI(diplomatReceive.buffer);
+            return new MyStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -131,7 +143,7 @@ export class MyStruct {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = new MyZst();
+                const cause = new MyZst(diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     

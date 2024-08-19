@@ -12,7 +12,7 @@ export class BorrowedFields {
 
     get c() : string;
     set c(value: string); 
-
+    constructor(a: string, b: string, c: string);
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }

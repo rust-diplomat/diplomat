@@ -28,6 +28,16 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value) {
         this.#fieldC = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#fieldA = arguments[0];
+            this.#fieldB = arguments[1];
+            this.#fieldC = arguments[2];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -44,15 +54,13 @@ export class BorrowedFieldsWithBounds {
         return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...(appendArrayMap["bAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["bAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...(appendArrayMap["cAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["cAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
     }
 
-    _fromFFI(ptr, aEdges, bEdges, cEdges) {
+    #fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
         this.#fieldA = new diplomatRuntime.DiplomatSliceStr(wasm, fieldADeref,  "string16", aEdges);
         const fieldBDeref = ptr + 8;
         this.#fieldB = new diplomatRuntime.DiplomatSliceStr(wasm, fieldBDeref,  "string8", bEdges);
         const fieldCDeref = ptr + 16;
         this.#fieldC = new diplomatRuntime.DiplomatSliceStr(wasm, fieldCDeref,  "string8", cEdges);
-
-        return this;
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -101,7 +109,7 @@ export class BorrowedFieldsWithBounds {
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-            return new BorrowedFieldsWithBounds()._fromFFI(diplomatReceive.buffer, xEdges, yEdges, zEdges);
+            return new BorrowedFieldsWithBounds(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
         
         finally {

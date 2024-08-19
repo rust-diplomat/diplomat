@@ -28,6 +28,16 @@ export class BorrowedFields {
     set c(value) {
         this.#c = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#a = arguments[0];
+            this.#b = arguments[1];
+            this.#c = arguments[2];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -42,15 +52,13 @@ export class BorrowedFields {
         return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).splat()]
     }
 
-    _fromFFI(ptr, aEdges) {
+    #fromFFI(ptr, aEdges) {
         const aDeref = ptr;
         this.#a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
         const bDeref = ptr + 8;
         this.#b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
         const cDeref = ptr + 16;
         this.#c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
-
-        return this;
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -75,7 +83,7 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         try {
-            return new BorrowedFields()._fromFFI(diplomatReceive.buffer, xEdges);
+            return new BorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {

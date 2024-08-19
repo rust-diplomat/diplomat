@@ -9,5 +9,5 @@ export class ImportedStruct {
 
     get count() : number;
     set count(value: number); 
-
+    constructor(foo: UnimportedEnum, count: number);
 }

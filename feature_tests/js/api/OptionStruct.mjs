@@ -29,6 +29,13 @@ export class OptionStruct {
         return this.#d;
     }
     
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            console.error("OptionStruct is an out struct and can only be created internally.");
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -45,20 +52,14 @@ export class OptionStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
-        this.#a = aDeref === 0 ? null : new OptionOpaque(aDeref, []);
+        this.#a = aDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, aDeref, []);
         const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
-        this.#b = bDeref === 0 ? null : new OptionOpaqueChar(bDeref, []);
+        this.#b = bDeref === 0 ? null : new OptionOpaqueChar(diplomatRuntime.internalConstructor, bDeref, []);
         const cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
         this.#c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
-        this.#d = dDeref === 0 ? null : new OptionOpaque(dDeref, []);
-
-        return this;
-    }
-    // This is an out struct. You need to call other methods to be able to get this struct.
-    constructor(ptr) {
-        this._fromFFI(ptr);
+        this.#d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
     }
 }

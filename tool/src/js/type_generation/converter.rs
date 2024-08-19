@@ -139,11 +139,11 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 if op.is_optional() {
                     format!(
-                        "{variable_name} === 0 ? null : new {type_name}({variable_name}, {edges})"
+                        "{variable_name} === 0 ? null : new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})"
                     )
                     .into()
                 } else {
-                    format!("new {type_name}({variable_name}, {edges})").into()
+                    format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -163,16 +163,16 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}()").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
-                        format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}()").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::OutStruct(..) => {
-                        format!("new {type_name}({variable_name}{edges})").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
