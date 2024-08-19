@@ -439,14 +439,6 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Callback, ()> {
         let name = ast_trait_fct.name.clone();
-        // TODO make a version of callback that has an optional name and param names
-
-        // pub struct Callback {
-        //     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
-        //     pub params: Vec<CallbackParam>,
-        //     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
-        // }
-
         let self_param_ltl = SelfParamLifetimeLowerer::new(&ast_trait_fct.lifetimes, self)?;
         let (param_self, mut param_ltl) =
             if let Some(self_param) = ast_trait_fct.self_param.as_ref() {
@@ -474,6 +466,7 @@ impl<'ast> LoweringContext<'ast> {
             param_self,
             params,
             output: Box::new(output),
+            name: Some(self.lower_ident(&name, "trait name")?),
         })
     }
 
@@ -918,7 +911,7 @@ impl<'ast> LoweringContext<'ast> {
                         self.errors.push(LoweringError::Other("Callback parameters can't be borrowed, and therefore can't have lifetimes".into()));
                         return Err(());
                     }
-                    params.push(CallbackParam { ty: hir_in_ty })
+                    params.push(CallbackParam { ty: hir_in_ty, name: None })
                 }
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,
@@ -927,6 +920,7 @@ impl<'ast> LoweringContext<'ast> {
                         ast::TypeName::Unit => None,
                         _ => Some(self.lower_type(out_type, ltl, in_struct, in_path)?),
                     }),
+                    name: None,
                 })))
             }
             ast::TypeName::TraitImpl(trt) => {
