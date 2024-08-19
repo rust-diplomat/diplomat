@@ -188,8 +188,8 @@ impl Attrs {
                     let supported = location_validator
                         .map(|l| l(path.clone()))
                         .unwrap_or(Ok(()));
-                    if supported.is_err() {
-                        errors.push(supported.unwrap_err());
+                    if let Err(e) = supported {
+                        errors.push(e);
                     } else if path == "disable" {
                         if let Meta::Path(_) = attr.meta {
                             if this.disable {
