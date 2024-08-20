@@ -969,20 +969,32 @@ retutnVal.option() ?: return null
                         .enumerate()
                         .map(|(index, _)| format!("arg{}", index))
                         .collect();
-                    let param_names_and_types: Vec<String> = param_input_types
+                    let (native_input_names, native_input_params_and_types) = params
                         .iter()
+                        .zip(param_input_types.iter())
                         .zip(param_names.iter())
-                        .map(|(in_ty, in_name)| format!("{}: {}", in_name, in_ty))
-                        .collect();
+                        .map(|((in_param, in_ty), in_name)| match in_param.ty {
+                            Type::Enum(_) | Type::Struct(_) => {
+                                // named types have a _Native wrapper, this needs to be passed as the "native"
+                                // version of the argument
+                                (
+                                    format!("{}({})", in_ty, in_name),
+                                    format!("{}: {}Native", in_name, in_ty),
+                                )
+                            }
+                            _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                        })
+                        .into_iter()
+                        .unzip();
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(","),
-                        input_names: param_names.join(","),
-                        input_params_and_types: param_names_and_types.join(","),
                         output_type: match **output {
                             Some(ref ty) => self.gen_type_name(ty, None).into(),
                             None => "Unit".into(),
                         },
+                        native_input_params_and_types,
+                        native_input_names,
                     })
                 }
                 _ => (),
@@ -1664,8 +1676,8 @@ struct NativeMethodInfo {
 struct CallbackParamInfo {
     name: String,
     input_types: String,
-    input_names: String,
-    input_params_and_types: String,
+    native_input_params_and_types: String,
+    native_input_names: String,
     output_type: String,
 }
 

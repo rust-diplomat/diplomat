@@ -113,7 +113,7 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h 
     }
 }
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f: Callback {
-    fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int
+    fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int
 }
 
 internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native: Structure(), Structure.ByValue {
@@ -122,7 +122,7 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f
         = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
-                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int {
+                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
             }
@@ -146,8 +146,8 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
         
         fun fromCallback(cb: (CallbackTestingStruct)->Int): DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
-                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStruct ): Int {
-                    return cb(arg0);
+                override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int {
+                    return cb(CallbackTestingStruct(arg0));
                 }
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()

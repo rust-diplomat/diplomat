@@ -1,6 +1,6 @@
 
 internal interface Runner_{{name}}: Callback {
-    fun invoke(lang_specific_context: Pointer?{% if input_params_and_types != "" %}, {{input_params_and_types}} {% endif %}): {{output_type}}
+    fun invoke(lang_specific_context: Pointer?{% if native_input_params_and_types != "" %}, {{native_input_params_and_types}} {% endif %}): {{output_type}}
 }
 
 internal class {{name}}_Native: Structure(), Structure.ByValue {
@@ -9,7 +9,7 @@ internal class {{name}}_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var run_callback: Runner_{{name}}
         = object :  Runner_{{name}} {
-                override fun invoke(lang_specific_context: Pointer?{% if input_types != "" %}, {{input_params_and_types}} {% endif %}): {{output_type}} {
+                override fun invoke(lang_specific_context: Pointer?{% if input_types != "" %}, {{native_input_params_and_types}} {% endif %}): {{output_type}} {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
             }
@@ -33,8 +33,8 @@ internal class {{name}} internal constructor (
         
         fun fromCallback(cb: ({{input_types}})->{{output_type}}): {{name}} {
             val callback: Runner_{{name}} = object :  Runner_{{name}} {
-                override fun invoke(lang_specific_context: Pointer?{% if input_types != "" %}, {{input_params_and_types}} {% endif %}): {{output_type}} {
-                    return cb({{input_names}});
+                override fun invoke(lang_specific_context: Pointer?{% if input_types != "" %}, {{native_input_params_and_types}} {% endif %}): {{output_type}} {
+                    return cb({{native_input_names}});
                 }
             }
             val cb_wrap = {{name}}_Native()
