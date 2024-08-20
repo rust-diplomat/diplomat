@@ -53,7 +53,12 @@ pub enum TypeId {
     OutStruct(OutStructId),
     Opaque(OpaqueId),
     Enum(EnumId),
-    Trait(TraitId),
+    // Trait(TraitId),
+}
+
+pub enum SymbolId {
+    TypeId(TypeId),
+    TraitId(TraitId),
 }
 
 enum Param<'a> {
@@ -95,12 +100,6 @@ impl TypeContext {
                     .enumerate()
                     .map(|(i, ty)| (TypeId::Enum(EnumId(i)), TypeDef::Enum(ty))),
             )
-            .chain(
-                self.traits
-                    .iter()
-                    .enumerate()
-                    .map(|(i, ty)| (TypeId::Trait(TraitId(i)), TypeDef::Trait(ty))),
-            )
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -129,7 +128,7 @@ impl TypeContext {
             TypeId::OutStruct(i) => TypeDef::OutStruct(self.resolve_out_struct(i)),
             TypeId::Opaque(i) => TypeDef::Opaque(self.resolve_opaque(i)),
             TypeId::Enum(i) => TypeDef::Enum(self.resolve_enum(i)),
-            TypeId::Trait(i) => TypeDef::Trait(self.resolve_trait(i)),
+            // TypeId::Trait(i) => TypeDef::Trait(self.resolve_trait(i)),
         }
     }
 
@@ -230,7 +229,7 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id,
+                                id: id.into(),
                             };
                             if strct.output_only {
                                 ast_out_structs.push(item);
@@ -244,7 +243,7 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Opaque(OpaqueId(ast_opaques.len())),
+                                id: TypeId::Opaque(OpaqueId(ast_opaques.len())).into(),
                             };
                             ast_opaques.push(item)
                         }
@@ -254,7 +253,7 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Enum(EnumId(ast_enums.len())),
+                                id: TypeId::Enum(EnumId(ast_enums.len())).into(),
                             };
                             ast_enums.push(item)
                         }
@@ -265,7 +264,7 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: TypeId::Trait(TraitId(ast_traits.len())),
+                            id: TraitId(ast_traits.len()).into(),
                         };
                         ast_traits.push(item)
                     }
@@ -534,9 +533,35 @@ impl From<EnumId> for TypeId {
     }
 }
 
-impl From<TraitId> for TypeId {
+impl From<TypeId> for SymbolId {
+    fn from(x: TypeId) -> Self {
+        SymbolId::TypeId(x)
+    }
+}
+
+impl From<TraitId> for SymbolId {
     fn from(x: TraitId) -> Self {
-        TypeId::Trait(x)
+        SymbolId::TraitId(x)
+    }
+}
+
+impl TryInto<TypeId> for SymbolId {
+    type Error = ();
+    fn try_into(self) -> Result<TypeId, Self::Error> {
+        match self {
+            SymbolId::TypeId(id) => Ok(id),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<TraitId> for SymbolId {
+    type Error = ();
+    fn try_into(self) -> Result<TraitId, Self::Error> {
+        match self {
+            SymbolId::TraitId(id) => Ok(id),
+            _ => Err(()),
+        }
     }
 }
 
