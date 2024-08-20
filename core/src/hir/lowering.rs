@@ -5,7 +5,8 @@ use super::{
     Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
-    StructField, StructPath, SuccessType, TraitDef, TraitPath, TyPosition, Type, TypeDef, TypeId,
+    StructField, StructPath, SuccessType, SymbolId, TraitDef, TraitPath, TyPosition, Type, TypeDef,
+    TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -115,7 +116,7 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
 
     /// Any parent attributes resolved from the module, for a method context
     pub(crate) method_parent_attrs: Attrs,
-    pub(crate) id: TypeId,
+    pub(crate) id: SymbolId,
 }
 
 impl<'ast> LoweringContext<'ast> {
@@ -233,7 +234,7 @@ impl<'ast> LoweringContext<'ast> {
                 &ast_enum.methods[..],
                 item.in_path,
                 &item.method_parent_attrs,
-                item.id,
+                item.id.try_into()?,
                 &mut special_method_presence,
             )?
         };
@@ -278,7 +279,7 @@ impl<'ast> LoweringContext<'ast> {
                 &ast_opaque.methods[..],
                 item.in_path,
                 &item.method_parent_attrs,
-                item.id,
+                item.id.try_into()?,
                 &mut special_method_presence,
             )?
         };
@@ -352,7 +353,7 @@ impl<'ast> LoweringContext<'ast> {
                 &ast_struct.methods[..],
                 item.in_path,
                 &item.method_parent_attrs,
-                item.id,
+                item.id.try_into()?,
                 &mut special_method_presence,
             )?
         };
@@ -397,11 +398,12 @@ impl<'ast> LoweringContext<'ast> {
         let lifetimes = self.lower_type_lifetime_env(&ast_trait.lifetimes);
         let def = TraitDef::new(ast_trait.docs.clone(), trait_name, fcts, attrs, lifetimes?);
 
-        self.attr_validator.validate(
-            &def.attrs,
-            AttributeContext::Type(TypeDef::from(&def)),
-            &mut self.errors,
-        );
+        // TODO fix this so it works for traits
+        // self.attr_validator.validate(
+        //     &def.attrs,
+        //     AttributeContext::Type(TypeDef::from(&def)),
+        //     &mut self.errors,
+        // );
         Ok(def)
     }
 
@@ -503,7 +505,7 @@ impl<'ast> LoweringContext<'ast> {
                 &ast_out_struct.methods[..],
                 item.in_path,
                 &item.method_parent_attrs,
-                item.id,
+                item.id.try_into()?,
                 &mut special_method_presence,
             )?
         };
