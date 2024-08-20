@@ -1,6 +1,5 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 1800
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -132,7 +131,7 @@ class MyNativeStruct internal constructor (
         
         fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
             
-            val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f.nativeStruct), Int);
+            val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return returnVal
         }
     }
