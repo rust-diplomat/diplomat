@@ -27,7 +27,7 @@ pub enum CustomType {
 
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
 #[non_exhaustive]
-pub enum CustomNamedConstruct {
+pub enum CustomItem {
     CustomType(CustomType),
     Trait(Trait),
 }
@@ -171,11 +171,7 @@ impl PathType {
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     ///
     /// Also returns the path the CustomType is in (useful for resolving fields)
-    pub fn resolve_with_path<'a>(
-        &self,
-        in_path: &Path,
-        env: &'a Env,
-    ) -> (Path, CustomNamedConstruct) {
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, CustomItem) {
         let local_path = &self.path;
         let mut cur_path = in_path.clone();
         for (i, elem) in local_path.elements.iter().enumerate() {
@@ -201,7 +197,7 @@ impl PathType {
                     }
                     Some(ModSymbol::CustomType(t)) => {
                         if i == local_path.elements.len() - 1 {
-                            return (cur_path, CustomNamedConstruct::CustomType(t.clone()));
+                            return (cur_path, CustomItem::CustomType(t.clone()));
                         } else {
                             panic!(
                                 "Unexpected custom type when resolving symbol {} in {}",
@@ -213,7 +209,7 @@ impl PathType {
                     Some(ModSymbol::Trait(trt)) => {
                         if i == local_path.elements.len() - 1 {
                             println!("ABOUT TO RETURN TRAIT: {:?}", trt);
-                            return (cur_path, CustomNamedConstruct::Trait(trt.clone()));
+                            return (cur_path, CustomItem::Trait(trt.clone()));
                         } else {
                             panic!(
                                 "Unexpected custom trait when resolving symbol {} in {}",
@@ -242,7 +238,7 @@ impl PathType {
     ///
     /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
     /// to get the path to resolve the fields in.
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> CustomNamedConstruct {
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> CustomItem {
         self.resolve_with_path(in_path, env).1
     }
 }

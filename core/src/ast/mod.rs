@@ -16,15 +16,15 @@ mod structs;
 pub use structs::{OpaqueStruct, Struct};
 
 mod traits;
-pub use traits::{Trait, TraitFct};
+pub use traits::{Trait, TraitMethod};
 
 mod enums;
 pub use enums::Enum;
 
 mod types;
 pub use types::{
-    CustomNamedConstruct, CustomType, LifetimeOrigin, ModSymbol, Mutability, PathType,
-    PrimitiveType, StdlibOrDiplomat, StringEncoding, TypeName,
+    CustomItem, CustomType, LifetimeOrigin, ModSymbol, Mutability, PathType, PrimitiveType,
+    StdlibOrDiplomat, StringEncoding, TypeName,
 };
 
 pub(crate) mod lifetimes;

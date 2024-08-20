@@ -9,14 +9,14 @@ use super::{Attrs, Ident, LifetimeEnv, Param, PathType, SelfParam, TypeName};
 pub struct Trait {
     pub name: Ident,
     pub lifetimes: LifetimeEnv,
-    pub fcts: Vec<TraitFct>,
+    pub fcts: Vec<TraitMethod>,
     pub docs: Docs,
     pub attrs: Attrs,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 #[non_exhaustive]
-pub struct TraitFct {
+pub struct TraitMethod {
     pub name: Ident,
     pub abi_name: Ident,
     pub self_param: Option<SelfParam>,
@@ -29,7 +29,7 @@ pub struct TraitFct {
 }
 
 impl Trait {
-    /// Extract an [`Enum`] metadata value from an AST node.
+    /// Extract a [`Trait`] metadata value from an AST node.
     pub fn new(trt: &syn::ItemTrait, parent_attrs: &Attrs) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&trt.attrs);
@@ -90,7 +90,7 @@ impl Trait {
                     output_type.as_ref(),
                 );
 
-                trait_fcts.push(TraitFct {
+                trait_fcts.push(TraitMethod {
                     name: fct_ident.into(),
                     abi_name: (&extern_ident).into(),
                     self_param,
