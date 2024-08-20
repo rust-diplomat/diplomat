@@ -1,3 +1,6 @@
+//! Lots of helper functions for converting from JS to C and back.
+//!
+//! Separate from `type_generation/mod.rs` to avoid clutter.
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
@@ -8,9 +11,7 @@ use std::fmt::Write;
 
 use super::TyGenContext;
 
-/// Part of JSGenerationContext that handles conversions between C and JS.
-/// This is a partial implementation so I don't have really long files.
-
+/// Check if an enum's values are consecutive. (i.e., if we start at 1, the next value is 2).
 fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
     ty.variants
         .iter()
@@ -90,12 +91,13 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// Generate `.d.ts` equivalents for -> Result<>, or -> Option<>, etc.
     pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
             SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            _ => unreachable!(),
+            _ => unreachable!("Unknown success type {out_ty:?}"),
         }
     }
 
@@ -238,6 +240,9 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// If we have a type that's hidden behind a pointer, de-reference that pointer in JS. Meant to be used in conjunction with [`Self::gen_c_to_js_for_type`].
+    ///
+    /// See [`super::FieldInfo::c_to_js_deref`] for an example of this.
     pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(
         &self,
         ty: &Type<P>,
@@ -515,6 +520,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
     // #region JS to C
 
+    /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
     pub(super) fn gen_js_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
@@ -526,6 +532,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// Given any kind of [`hir::Type`], give us JS code that will translate it into something WASM understands.
     pub(super) fn gen_js_to_c_for_type<P: TyPosition>(
         &self,
         ty: &Type<P>,
@@ -578,6 +585,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// The end goal of this is to call `_intoFFI`, to convert a structure into a flattened list of values that WASM understands.
     pub(super) fn gen_js_to_c_for_struct_type(
         &self,
         js_name: Cow<'tcx, str>,
