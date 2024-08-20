@@ -191,8 +191,7 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_primitive_list_type(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "Array<boolean>",
-            // TODO: Can't exactly test for characters with Typescript, but we could create a type guard?
-            hir::PrimitiveType::Char => "Array<string>",
+            hir::PrimitiveType::Char => "Array<codepoint>",
             hir::PrimitiveType::Byte => "Uint8Array",
             hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64) => "Array<bigint>",
             hir::PrimitiveType::Int(_)
