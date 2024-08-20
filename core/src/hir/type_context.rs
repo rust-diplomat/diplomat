@@ -295,7 +295,6 @@ impl TypeContext {
         let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
         let enums = ctx.lower_all_enums(ast_enums.into_iter());
         let traits = ctx.lower_all_traits(ast_traits.into_iter()).unwrap();
-        println!("WHY WHY WHY {:?}", traits);
 
         match (out_structs, structs, opaques, enums) {
             (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {

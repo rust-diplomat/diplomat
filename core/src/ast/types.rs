@@ -400,7 +400,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
-    TraitImpl(PathType),
+    ImplTrait(PathType),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -630,7 +630,7 @@ impl TypeName {
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
-            TypeName::TraitImpl(_) => {
+            TypeName::ImplTrait(_) => {
                 todo!();
             }
         }
@@ -1182,7 +1182,7 @@ impl fmt::Display for TypeName {
                 }
                 write!(f, ")->{out_type}")
             }
-            TypeName::TraitImpl(trt) => {
+            TypeName::ImplTrait(trt) => {
                 write!(f, "impl ")?;
                 trt.fmt(f)
             }
