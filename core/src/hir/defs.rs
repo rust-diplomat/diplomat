@@ -29,7 +29,7 @@ pub struct TraitDef {
     // TyPosition: InputOnly
     pub docs: Docs,
     pub name: IdentBuf,
-    pub fcts: Vec<Callback>,
+    pub methods: Vec<Callback>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
 }
@@ -110,14 +110,14 @@ impl TraitDef {
     pub(super) fn new(
         docs: Docs,
         name: IdentBuf,
-        fcts: Vec<Callback>,
+        methods: Vec<Callback>,
         attrs: Attrs,
         lifetimes: LifetimeEnv,
     ) -> Self {
         Self {
             docs,
             name,
-            fcts,
+            methods,
             attrs,
             lifetimes,
         }
