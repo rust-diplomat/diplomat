@@ -400,7 +400,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
-    TraitImpl(PathType),
+    ImplTrait(PathType),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -506,7 +506,7 @@ impl TypeName {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) | TypeName::Option(..) |
             // can only be passed across the FFI boundary; traits and callbacks are input-only
-            TypeName::Function(..) | TypeName::TraitImpl(..) |
+            TypeName::Function(..) | TypeName::ImplTrait(..) |
             // These are specified using FFI-safe diplomat_runtime types
             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
@@ -606,7 +606,7 @@ impl TypeName {
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
-            TypeName::TraitImpl(_) => {
+            TypeName::ImplTrait(_) => {
                 todo!();
             }
         }
@@ -1147,7 +1147,7 @@ impl fmt::Display for TypeName {
                 }
                 write!(f, ")->{out_type}")
             }
-            TypeName::TraitImpl(trt) => {
+            TypeName::ImplTrait(trt) => {
                 write!(f, "impl ")?;
                 trt.fmt(f)
             }

@@ -650,7 +650,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::Named(path)
             | ast::TypeName::SelfType(path)
-            | ast::TypeName::TraitImpl(path) => match path.resolve(in_path, self.env) {
+            | ast::TypeName::ImplTrait(path) => match path.resolve(in_path, self.env) {
                 ast::CustomItem::CustomType(ast::CustomType::Struct(strct)) => {
                     if strct.fields.is_empty() {
                         self.errors.push(LoweringError::Other(format!(
@@ -685,7 +685,6 @@ impl<'ast> LoweringContext<'ast> {
                     Ok(Type::Enum(EnumPath::new(tcx_id)))
                 }
                 ast::CustomItem::Trait(trt) => {
-                    println!("HERE HERE HEREEEEEEEEEEEE");
                     let tcx_id = self.lookup_id.resolve_trait(&trt).expect(
                         "can't find trait in lookup map, which contains all traits from env",
                     );
@@ -1093,8 +1092,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::TraitImpl(_) => {
-                println!("OH NO OH NO");
+            ast::TypeName::ImplTrait(_) => {
                 self.errors.push(LoweringError::Other(
                     "Trait impls can only be an input type".into(),
                 ));
