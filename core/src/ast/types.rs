@@ -105,7 +105,7 @@ pub enum ModSymbol {
     Trait(Trait),
 }
 
-/// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
+/// A named type or trait that is just a path, e.g. `std::borrow::Cow<'a, T>`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[non_exhaustive]
 pub struct PathType {
@@ -404,7 +404,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
-    TraitImpl(Trait),
+    TraitImpl(PathType),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -1188,7 +1188,7 @@ impl fmt::Display for TypeName {
             }
             TypeName::TraitImpl(trt) => {
                 write!(f, "impl ")?;
-                write!(f, "{}", trt.name)
+                trt.fmt(f)
             }
         }
     }

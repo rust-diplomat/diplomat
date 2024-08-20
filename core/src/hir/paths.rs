@@ -26,6 +26,7 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct TraitPath {
+    pub lifetimes: Lifetimes,
     pub tcx_id: TraitId,
 }
 
@@ -164,7 +165,7 @@ impl OutStructPath {
 }
 
 impl<Opt, Owner> OpaquePath<Opt, Owner> {
-    /// Returns a new [`EnumPath`].
+    /// Returns a new [`OpaquePath`].
     pub(super) fn new(lifetimes: Lifetimes, optional: Opt, owner: Owner, tcx_id: OpaqueId) -> Self {
         Self {
             lifetimes,
@@ -207,7 +208,7 @@ impl EnumPath {
 
 impl TraitPath {
     /// Returns a new [`TraitPath`].
-    pub(super) fn new(tcx_id: TraitId) -> Self {
-        Self { tcx_id }
+    pub(super) fn new(lifetimes: Lifetimes, tcx_id: TraitId) -> Self {
+        Self { lifetimes, tcx_id }
     }
 }
