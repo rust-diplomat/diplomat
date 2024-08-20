@@ -31,4 +31,3 @@ enum class FixedDecimalGroupingStrategy {
         }
     }
 }
-
