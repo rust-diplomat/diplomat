@@ -191,7 +191,7 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_primitive_list_type(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "Array<boolean>",
-            hir::PrimitiveType::Char => "Array<codepoint>",
+            hir::PrimitiveType::Char => "string",
             hir::PrimitiveType::Byte => "Uint8Array",
             hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64) => "Array<bigint>",
             hir::PrimitiveType::Int(_)
