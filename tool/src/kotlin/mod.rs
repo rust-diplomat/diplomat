@@ -266,7 +266,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Slice(_) => format!("{name}Slice").into(),
             Type::Callback(_) => {
-                let real_param_name = name[name.rfind("_").unwrap() + 1..].to_string(); // past last _
+                let real_param_name = name[name.rfind('_').unwrap() + 1..].to_string(); // past last _
                 format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
             }
             _ => todo!(),
@@ -984,7 +984,6 @@ retutnVal.option() ?: return null
                             }
                             _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                         })
-                        .into_iter()
                         .unzip();
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
