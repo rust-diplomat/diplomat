@@ -130,7 +130,7 @@ impl LifetimeEnv {
         return_type: Option<&TypeName>,
     ) -> Self {
         let mut this = LifetimeEnv::new();
-        if let syn::TraitItem::Fn(fct) = trait_fct_item {
+        if let syn::TraitItem::Fn(_) = trait_fct_item {
             if let Some(self_param) = self_param {
                 this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
             }
@@ -144,8 +144,8 @@ impl LifetimeEnv {
         this
     }
 
-    pub fn from_trait_item(trt: &syn::ItemTrait) -> Self {
-        LifetimeEnv::new() // TODO
+    pub fn from_trait_item(_trt: &syn::ItemTrait) -> Self {
+        LifetimeEnv::new() // TODO check this -- structs only include lifetime envs from fields, not methods, so that's my reasoning here
     }
 
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds

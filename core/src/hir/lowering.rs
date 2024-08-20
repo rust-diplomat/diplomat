@@ -379,46 +379,39 @@ impl<'ast> LoweringContext<'ast> {
         self.errors.set_item(ast_trait.name.as_str());
         let trait_name = self.lower_ident(&ast_trait.name, "trait name")?;
 
-        // let attrs = self.attr_validator.attr_from_ast(
-        //     &item.ty_parent_attrs,
-        //     &mut self.errors,
-        // );
-        let attrs = item.ty_parent_attrs;
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_trait.attrs,
+            &item.ty_parent_attrs,
+            &mut self.errors,
+        );
 
-        // let fcts = if attrs.disable {
-        //     Vec::new()
-        // } else {
-        let mut fcts = Vec::with_capacity(ast_trait.fcts.len());
-        for ast_trait_fct in ast_trait.fcts.iter() {
-            fcts.push(self.lower_trait_fct(ast_trait_fct, item.in_path)?);
-        }
-        // fcts
-        // };
+        let fcts = if attrs.disable {
+            Vec::new()
+        } else {
+            let mut fcts = Vec::with_capacity(ast_trait.fcts.len());
+            for ast_trait_fct in ast_trait.fcts.iter() {
+                fcts.push(self.lower_trait_fct(ast_trait_fct, item.in_path, &attrs)?);
+            }
+            fcts
+        };
         let lifetimes = self.lower_type_lifetime_env(&ast_trait.lifetimes);
         let def = TraitDef::new(ast_trait.docs.clone(), trait_name, fcts, attrs, lifetimes?);
 
-        // self.attr_validator.validate(
-        //     &def.attrs,
-        //     AttributeContext::Type(TypeDef::from(&def)),
-        //     &mut self.errors,
-        // );
+        self.attr_validator.validate(
+            &def.attrs,
+            AttributeContext::Type(TypeDef::from(&def)),
+            &mut self.errors,
+        );
         Ok(def)
     }
 
-    // pub struct TraitFct {
-    //     pub name: Ident,
-    //     pub abi_name: Ident,
-    //     pub self_param: Option<SelfParam>,
-    //     // corresponds to the types in Function(Vec<Box<TypeName>>, Box<TypeName>)
-    //     // the callback type; except here the params aren't anonymous
-    //     pub params: Vec<Param>,
-    //     pub output_type: Option<TypeName>,
-    // }
     fn lower_trait_fct(
         &mut self,
         ast_trait_fct: &'ast ast::TraitFct,
         in_path: &ast::Path,
+        parent_trait_attrs: &Attrs,
     ) -> Result<Callback, ()> {
+        self.errors.set_subitem(ast_trait_fct.name.as_str());
         let name = ast_trait_fct.name.clone();
         let self_param_ltl = SelfParamLifetimeLowerer::new(&ast_trait_fct.lifetimes, self)?;
         let (param_self, mut param_ltl) =
@@ -434,8 +427,8 @@ impl<'ast> LoweringContext<'ast> {
                 (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
             };
 
-        let params = Vec::new(); // TODO LOWER THE PARAMS
-                                 // let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
+        let params =
+            self.lower_many_callback_params(&ast_trait_fct.params, &mut param_ltl, in_path)?;
 
         let output = if let Some(out_ty) = &ast_trait_fct.output_type {
             Some(self.lower_type(&out_ty, &mut param_ltl, in_path)?)
@@ -443,11 +436,18 @@ impl<'ast> LoweringContext<'ast> {
             None
         };
 
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_trait_fct.attrs,
+            &parent_trait_attrs,
+            &mut self.errors,
+        );
+
         Ok(Callback {
             param_self,
             params,
             output: Box::new(output),
             name: Some(self.lower_ident(&name, "trait name")?),
+            attrs: Some(attrs),
         })
     }
 
@@ -648,50 +648,53 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Found cmp::Ordering in parameter or struct field, it is only allowed in return types".to_string()));
                 Err(())
             }
-            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                match path.resolve(in_path, self.env) {
-                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Struct(strct)) => {
-                        if strct.fields.is_empty() {
-                            self.errors.push(LoweringError::Other(format!("zero-size types are not allowed as method arguments: {ty} in {path}")));
-                            return Err(());
-                        }
-                        if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
-                            let lifetimes = ltl.lower_generics(
-                                &path.lifetimes[..],
-                                &strct.lifetimes,
-                                ty.is_self(),
-                            );
-
-                            Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
-                        } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
-                            self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
-                            Err(())
-                        } else {
-                            unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
-                        }
-                    }
-                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(_)) => {
+            ast::TypeName::Named(path)
+            | ast::TypeName::SelfType(path)
+            | ast::TypeName::TraitImpl(path) => match path.resolve(in_path, self.env) {
+                ast::CustomNamedConstruct::CustomType(ast::CustomType::Struct(strct)) => {
+                    if strct.fields.is_empty() {
                         self.errors.push(LoweringError::Other(format!(
-                            "Opaque passed by value: {path}"
+                            "zero-size types are not allowed as method arguments: {ty} in {path}"
                         )));
+                        return Err(());
+                    }
+                    if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
+                        let lifetimes =
+                            ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
+
+                        Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
+                    } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
+                        self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
                         Err(())
-                    }
-                    ast::CustomNamedConstruct::CustomType(ast::CustomType::Enum(enm)) => {
-                        let tcx_id = self.lookup_id.resolve_enum(&enm).expect(
-                            "can't find enum in lookup map, which contains all enums from env",
-                        );
-
-                        Ok(Type::Enum(EnumPath::new(tcx_id)))
-                    }
-                    ast::CustomNamedConstruct::Trait(trt) => {
-                        let tcx_id = self.lookup_id.resolve_trait(&trt).expect(
-                            "can't find trait in lookup map, which contains all traits from env",
-                        );
-
-                        Ok(Type::Trait(TraitPath::new(tcx_id)))
+                    } else {
+                        unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                     }
                 }
-            }
+                ast::CustomNamedConstruct::CustomType(ast::CustomType::Opaque(_)) => {
+                    self.errors.push(LoweringError::Other(format!(
+                        "Opaque passed by value: {path}"
+                    )));
+                    Err(())
+                }
+                ast::CustomNamedConstruct::CustomType(ast::CustomType::Enum(enm)) => {
+                    let tcx_id = self
+                        .lookup_id
+                        .resolve_enum(&enm)
+                        .expect("can't find enum in lookup map, which contains all enums from env");
+
+                    Ok(Type::Enum(EnumPath::new(tcx_id)))
+                }
+                ast::CustomNamedConstruct::Trait(trt) => {
+                    println!("HERE HERE HEREEEEEEEEEEEE");
+                    let tcx_id = self.lookup_id.resolve_trait(&trt).expect(
+                        "can't find trait in lookup map, which contains all traits from env",
+                    );
+                    let lifetimes =
+                        ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.is_self());
+
+                    Ok(Type::Trait(TraitPath::new(lifetimes, tcx_id)))
+                }
+            },
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
@@ -823,7 +826,10 @@ impl<'ast> LoweringContext<'ast> {
                         self.errors.push(LoweringError::Other("Callback parameters can't be borrowed, and therefore can't have lifetimes".into()));
                         return Err(());
                     }
-                    params.push(CallbackParam { ty: hir_in_ty, name: None })
+                    params.push(CallbackParam {
+                        ty: hir_in_ty,
+                        name: None,
+                    })
                 }
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,
@@ -833,10 +839,8 @@ impl<'ast> LoweringContext<'ast> {
                         _ => Some(self.lower_type(out_type, ltl, in_path)?),
                     }),
                     name: None,
+                    attrs: None,
                 })))
-            }
-            ast::TypeName::TraitImpl(trt) => {
-                todo!();
             }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
@@ -906,8 +910,10 @@ impl<'ast> LoweringContext<'ast> {
 
                         Ok(OutType::Enum(EnumPath::new(tcx_id)))
                     }
-                    ast::CustomNamedConstruct::Trait(trt) => {
-                        todo!()
+                    ast::CustomNamedConstruct::Trait(_) => {
+                        self.errors
+                            .push(LoweringError::Other(format!("Traits must be input-only")));
+                        Err(())
                     }
                 }
             }
@@ -1094,6 +1100,7 @@ impl<'ast> LoweringContext<'ast> {
                 Err(())
             }
             ast::TypeName::TraitImpl(_) => {
+                println!("OH NO OH NO");
                 self.errors.push(LoweringError::Other(
                     "Trait impls can only be an input type".into(),
                 ));
@@ -1191,13 +1198,40 @@ impl<'ast> LoweringContext<'ast> {
                 ))
             }
             ast::CustomNamedConstruct::Trait(trt) => {
-                let tcx_id = self.lookup_id.resolve_trait(&trt).expect("trait is in env");
+                if let Some(tcx_id) = self.lookup_id.resolve_trait(&trt) {
+                    // check this -- I think we should be able to have both self and non-self
+                    if let Some((lifetime, _)) = &self_param.reference {
+                        let (_, mut param_ltl) = self_param_ltl.lower_self_ref(lifetime);
+                        let lifetimes = param_ltl.lower_generics(
+                            &self_param.path_type.lifetimes,
+                            &trt.lifetimes,
+                            true,
+                        );
 
-                // TODO PROBABLY FIX THIS
-                Ok((
-                    ParamSelf::new(SelfType::Trait(TraitPath::new(tcx_id))),
-                    self_param_ltl.no_self_ref(),
-                ))
+                        Ok((
+                            ParamSelf::new(SelfType::Trait(TraitPath::new(lifetimes, tcx_id))),
+                            param_ltl,
+                        ))
+                    } else {
+                        let mut param_ltl = self_param_ltl.no_self_ref();
+
+                        let type_lifetimes = param_ltl.lower_generics(
+                            &self_param.path_type.lifetimes[..],
+                            &trt.lifetimes,
+                            true,
+                        );
+
+                        Ok((
+                            ParamSelf::new(SelfType::Trait(TraitPath::new(type_lifetimes, tcx_id))),
+                            param_ltl,
+                        ))
+                    }
+                } else {
+                    unreachable!(
+                        "Trait `{}` wasn't found in the set of traits; this is a bug.",
+                        trt.name
+                    );
+                }
             }
         }
     }
@@ -1247,6 +1281,46 @@ impl<'ast> LoweringContext<'ast> {
         }
 
         Ok((params?, param_ltl.into_return_ltl()))
+    }
+
+    fn lower_callback_param(
+        &mut self,
+        param: &ast::Param,
+        ltl: &mut impl LifetimeLowerer,
+        in_path: &ast::Path,
+    ) -> Result<CallbackParam, ()> {
+        let name = self.lower_ident(&param.name, "param name")?;
+        let ty = self.lower_out_type(
+            &param.ty, ltl, in_path, false, /* in_struct */
+            false, /* in_result_option */
+        )?;
+
+        Ok(CallbackParam {
+            name: Some(name),
+            ty,
+        })
+    }
+
+    fn lower_many_callback_params(
+        &mut self,
+        ast_params: &[ast::Param],
+        param_ltl: &mut ParamLifetimeLowerer<'ast>,
+        in_path: &ast::Path,
+    ) -> Result<Vec<CallbackParam>, ()> {
+        let mut params = Ok(Vec::with_capacity(ast_params.len()));
+
+        for param in ast_params {
+            let param = self.lower_callback_param(param, param_ltl, in_path);
+
+            match (param, &mut params) {
+                (Ok(param), Ok(params)) => {
+                    params.push(param);
+                }
+                _ => params = Err(()),
+            }
+        }
+
+        Ok(params?)
     }
 
     /// Lowers the return type of an [`ast::Method`] into a [`hir::ReturnFallability`].

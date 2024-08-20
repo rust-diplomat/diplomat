@@ -53,6 +53,7 @@ pub struct Callback {
     pub params: Vec<CallbackParam>,
     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
     pub name: Option<IdentBuf>,
+    pub attrs: Option<Attrs>,
 }
 
 // uninstantiatable; represents no callback allowed

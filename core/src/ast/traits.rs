@@ -1,20 +1,20 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, Param, PathType, SelfParam, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Param, PathType, SelfParam, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 #[non_exhaustive]
 pub struct Trait {
     pub name: Ident,
     pub lifetimes: LifetimeEnv,
     pub fcts: Vec<TraitFct>,
     pub docs: Docs,
-    // pub attrs: Attrs,
+    pub attrs: Attrs,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 #[non_exhaustive]
 pub struct TraitFct {
     pub name: Ident,
@@ -25,6 +25,7 @@ pub struct TraitFct {
     pub params: Vec<Param>,
     pub output_type: Option<TypeName>,
     pub lifetimes: LifetimeEnv,
+    pub attrs: Attrs,
 }
 
 impl Trait {
@@ -47,6 +48,8 @@ impl Trait {
         });
         for trait_item in trt.items.iter() {
             if let syn::TraitItem::Fn(fct) = trait_item {
+                let mut fct_attrs = attrs.clone();
+                fct_attrs.add_attrs(&fct.attrs);
                 // copied from the method parsing
                 let fct_ident = &fct.sig.ident;
                 let concat_fct_ident = format!("{self_ident}_{fct_ident}");
@@ -94,6 +97,7 @@ impl Trait {
                     params: all_params,
                     output_type,
                     lifetimes,
+                    attrs: fct_attrs,
                 });
             }
         }
@@ -103,6 +107,7 @@ impl Trait {
             fcts: trait_fcts,
             docs: Docs::from_attrs(&trt.attrs),
             lifetimes: LifetimeEnv::from_trait_item(trt), // TODO
+            attrs,
         }
     }
 }

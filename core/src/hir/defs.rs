@@ -30,7 +30,7 @@ pub struct TraitDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub fcts: Vec<Callback>,
-    pub attrs: Attrs, // do we need this?
+    pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
 }
 
