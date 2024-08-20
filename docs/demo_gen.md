@@ -10,8 +10,8 @@ This design doc covers nearly everything about the inner workings of demo_gen. I
   - Users learn by example, and demo_gen should be a simple way to create those examples.
   - We do not aim for completeness of demonstration, but a sample platter or charcuterie board of your library. 
 - demo_gen should have a short setup time.
-  - It should take about 5 seconds to have a sample `.html` file up and running. (not including build and compile time)
-  - TODO: With the errors we generate for Opaque types, this makes things somewhat difficult.
+  - It should take minimal effort to get an example up and running.
+  - We want to minimize time to setup, but we can't eliminate it entirely. See the [docs](https://rust-diplomat.github.io/book/demo_gen/renderer.html) for more on why setup time is not instantaneous.
 - demo_gen should be maximally customizable.
   - Not everyone uses the same front-end, not everyone has the same idea of what a demo should look like.
   - Nearly every aspect of what demo_gen outputs and how it looks should be configurable.
