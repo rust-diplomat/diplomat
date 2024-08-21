@@ -48,7 +48,6 @@ inline diplomat::result<std::monostate, MyZst> MyStruct::returns_zst_result() {
   return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
 }
 
-
 inline diplomat::result<std::monostate, MyZst> MyStruct::fails_zst_result() {
   auto result = diplomat::capi::MyStruct_fails_zst_result();
   return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
