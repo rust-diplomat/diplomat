@@ -358,8 +358,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Type::Slice`].
-            if let hir::Type::Slice(slice) = param.ty {
-                let slice_expr =
+            if let hir::Type::Slice(..) = param.ty {
+                let slice_expr = format!("[{}]",
                     self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(
                         match param_borrow_kind {
                             // Is Rust NOT taking ownership?
@@ -379,7 +379,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                                 "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                             ),
                         }
-                    ));
+                    ))
+                );
 
                 // We add the pointer and size for slices:
                 method_info
@@ -388,7 +389,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
-                    slice_expr,
+                    slice_expr: slice_expr.to_string(),
                 });
             } else {
                 let alloc = if let hir::Type::Struct(..) = param.ty {
