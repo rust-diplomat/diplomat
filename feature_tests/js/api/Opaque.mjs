@@ -31,8 +31,7 @@ export class Opaque {
         return this.#ptr;
     }
 
-    static new_() {
-        const result = wasm.Opaque_new();
+    static new_() {const result = wasm.Opaque_new();
     
         try {
             return new Opaque(result, []);
@@ -42,7 +41,6 @@ export class Opaque {
     }
 
     static tryFromUtf8(input) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
@@ -58,7 +56,6 @@ export class Opaque {
     }
 
     static fromStr(input) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
@@ -74,7 +71,6 @@ export class Opaque {
     }
 
     getDebugStr() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
     
@@ -88,9 +84,8 @@ export class Opaque {
     }
 
     assertStruct(s) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena.alloc(, {}));
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena, {}));
     
         try {}
         
@@ -99,8 +94,7 @@ export class Opaque {
         }
     }
 
-    static returnsUsize() {
-        const result = wasm.Opaque_returns_usize();
+    static returnsUsize() {const result = wasm.Opaque_returns_usize();
     
         try {
             return result;
@@ -110,7 +104,6 @@ export class Opaque {
     }
 
     static returnsImported() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
@@ -123,8 +116,7 @@ export class Opaque {
         }
     }
 
-    static cmp() {
-        const result = wasm.Opaque_cmp();
+    static cmp() {const result = wasm.Opaque_cmp();
     
         try {
             return result;

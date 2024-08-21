@@ -39,7 +39,6 @@ export class Bar {
     }
 
     get foo() {
-        
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
         

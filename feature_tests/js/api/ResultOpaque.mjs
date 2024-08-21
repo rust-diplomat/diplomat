@@ -32,7 +32,6 @@ export class ResultOpaque {
     }
 
     static new_(i) {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
     
@@ -50,7 +49,6 @@ export class ResultOpaque {
     }
 
     static newFailingFoo() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_failing_foo(diplomatReceive.buffer);
     
@@ -68,7 +66,6 @@ export class ResultOpaque {
     }
 
     static newFailingBar() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_failing_bar(diplomatReceive.buffer);
     
@@ -86,7 +83,6 @@ export class ResultOpaque {
     }
 
     static newFailingUnit() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
     
@@ -103,7 +99,6 @@ export class ResultOpaque {
     }
 
     static newFailingStruct(i) {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         const result = wasm.ResultOpaque_new_failing_struct(diplomatReceive.buffer, i);
     
@@ -121,7 +116,6 @@ export class ResultOpaque {
     }
 
     static newInErr(i) {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_in_err(diplomatReceive.buffer, i);
     
@@ -139,7 +133,6 @@ export class ResultOpaque {
     }
 
     static newInt(i) {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
     
@@ -156,7 +149,6 @@ export class ResultOpaque {
     }
 
     static newInEnumErr(i) {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.ResultOpaque_new_in_enum_err(diplomatReceive.buffer, i);
     
@@ -173,8 +165,7 @@ export class ResultOpaque {
         }
     }
 
-    assertInteger(i) {
-        wasm.ResultOpaque_assert_integer(this.ffiValue, i);
+    assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
     
         try {}
         

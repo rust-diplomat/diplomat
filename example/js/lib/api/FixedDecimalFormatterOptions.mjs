@@ -46,7 +46,6 @@ export class FixedDecimalFormatterOptions {
     }
 
     static default_() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     

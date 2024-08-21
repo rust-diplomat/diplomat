@@ -63,12 +63,10 @@ export class BorrowedFields {
     };
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
+        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
+        const dstr16Slice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)).splat()];
         
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
-        const dstr16Slice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)).splat()];
-        
-        const utf8StrSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)).splat()];
+        const utf8StrSlice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)).splat()];
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         
@@ -81,8 +79,7 @@ export class BorrowedFields {
         }
         
         finally {
-            functionCleanupArena.free();
-        
+            functionGarbageCollector.garbageCollect();
             diplomatReceive.free();
         }
     }

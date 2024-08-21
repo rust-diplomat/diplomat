@@ -31,7 +31,6 @@ export class RenamedOpaqueIterable {
     }
 
     [Symbol.iterator]() {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);

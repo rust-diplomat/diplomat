@@ -20,7 +20,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#a._intoFFI(functionCleanupArena.alloc, {})]
+        return [...this.#a._intoFFI(functionCleanupArena, {})]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -36,7 +36,6 @@ export class CyclicStructA {
     }
 
     static getB() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
         const result = wasm.CyclicStructA_get_b(diplomatReceive.buffer);
     

@@ -419,7 +419,6 @@ export class DiplomatReceiveBuf {
  */
 export class CleanupArena {
     #items = [];
-    #garbageCollectItems = [];
 
     #edgeArray = [];
     
@@ -436,16 +435,6 @@ export class CleanupArena {
         return item;
     }
 
-    /**
-     * Instead of setting a slice to be freed, set it to be collected by a FinalizationRegistry (with the `garbageCollect` method that the slice has set up for us)
-     * @param {DiplomatBuf} item 
-     * @returns {DiplomatBuf}
-     */
-    allocGarbageCollect(item) {
-        this.#garbageCollectItems.push(item);
-        return item;
-    }
-
     createWith(edgeArray) {
         this.#edgeArray = edgeArray;
         DiplomatBufferFinalizer.register(this, this.free);
@@ -455,12 +444,24 @@ export class CleanupArena {
         this.#items.forEach((i) => {
             i.free();
         });
-        this.#garbageCollectItems.forEach((i) => {
+
+        this.#items.length = 0;
+    }
+}
+
+export class GarbageCollector {
+    #items = [];
+
+    alloc(item) {
+        this.#items.push(item);
+    }
+
+    garbageCollect() {
+        this.#items.forEach((i) => {
             i.garbageCollect();
         });
 
         this.#items.length = 0;
-        this.#garbageCollectItems.length = 0;
     }
 }
 

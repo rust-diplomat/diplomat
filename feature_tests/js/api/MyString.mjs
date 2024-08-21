@@ -30,7 +30,6 @@ export class MyString {
     }
 
     static new_(v) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
@@ -46,7 +45,6 @@ export class MyString {
     }
 
     static newUnsafe(v) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
@@ -62,7 +60,6 @@ export class MyString {
     }
 
     static newOwned(v) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
@@ -78,7 +75,6 @@ export class MyString {
     }
 
     static newFromFirst(v) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8")).splat()];
@@ -94,7 +90,6 @@ export class MyString {
     }
 
     set str(newStr) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const newStrSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, newStr)).splat()];
@@ -108,7 +103,6 @@ export class MyString {
     }
 
     get str() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyString_get_str(this.ffiValue, write.buffer);
     
@@ -122,7 +116,6 @@ export class MyString {
     }
 
     static stringTransform(foo) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const fooSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, foo)).splat()];

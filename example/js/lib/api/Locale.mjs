@@ -35,7 +35,6 @@ export class Locale {
     }
 
     static new_(name) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const nameSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name)).splat()];

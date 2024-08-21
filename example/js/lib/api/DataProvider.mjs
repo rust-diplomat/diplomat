@@ -34,8 +34,7 @@ export class DataProvider {
         return this.#ptr;
     }
 
-    static newStatic() {
-        const result = wasm.icu4x_DataProvider_new_static_mv1();
+    static newStatic() {const result = wasm.icu4x_DataProvider_new_static_mv1();
     
         try {
             return new DataProvider(result, []);
@@ -44,8 +43,7 @@ export class DataProvider {
         finally {}
     }
 
-    static returnsResult() {
-        const result = wasm.icu4x_DataProvider_returns_result_mv1();
+    static returnsResult() {const result = wasm.icu4x_DataProvider_returns_result_mv1();
     
         try {
             return result === 1;
