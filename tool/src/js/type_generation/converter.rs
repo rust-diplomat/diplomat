@@ -399,20 +399,25 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         self.add_import(type_name.into());
 
                         let fields_empty = match e {
-                            Type::Struct(s) if match s.resolve(self.tcx) {
-                                ReturnableStructDef::Struct(s) => s.fields.is_empty(),
-                                ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
-                                _ => unreachable!()
-                            } => true,
-                            _ => false
+                            Type::Struct(s)
+                                if match s.resolve(self.tcx) {
+                                    ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                                    ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                                    _ => unreachable!(),
+                                } =>
+                            {
+                                true
+                            }
+                            _ => false,
                         };
 
                         let receive_deref = self.gen_c_to_js_deref_for_type(
                             e,
                             match fields_empty {
                                 true => "result",
-                                false => "diplomatReceive.buffer"
-                            }.into(),
+                                false => "diplomatReceive.buffer",
+                            }
+                            .into(),
                             0,
                         );
 
@@ -428,8 +433,9 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         },
                         ))
                     }
-                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None) =>
-                        (false, "return null".into()),
+                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None) => {
+                        (false, "return null".into())
+                    }
                     return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
                 };
 
@@ -483,7 +489,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     "if ({}) {{\n    {};\n}}\n",
                     match requires_buf {
                         true => "!diplomatReceive.resultFlag",
-                        false => "result !== 1"
+                        false => "result !== 1",
                     },
                     error_ret
                 );

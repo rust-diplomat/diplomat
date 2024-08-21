@@ -193,7 +193,7 @@ pub mod ffi {
         }
 
         pub fn fails_zst_result() -> Result<(), MyZst> {
-            Err(MyZst{})
+            Err(MyZst {})
         }
     }
 
