@@ -59,7 +59,7 @@
     {% endif -%}
     {%- if needs_slice_collection %}
         functionGarbageCollector.garbageCollect();
-    {%- endif -%}
+    {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}
     {% endfor -%}

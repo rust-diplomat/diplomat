@@ -54,7 +54,8 @@ export class Foo {
         }
         
         finally {
-            functionGarbageCollector.garbageCollect();}
+            functionGarbageCollector.garbageCollect();
+        }
     }
 
     get bar() {
@@ -121,6 +122,7 @@ export class Foo {
         finally {
             functionCleanupArena.free();
         
-            functionGarbageCollector.garbageCollect();}
+            functionGarbageCollector.garbageCollect();
+        }
     }
 }

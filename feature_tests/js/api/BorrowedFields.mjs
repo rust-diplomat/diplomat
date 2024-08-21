@@ -88,6 +88,7 @@ export class BorrowedFields {
         
         finally {
             functionGarbageCollector.garbageCollect();
+        
             diplomatReceive.free();
         }
     }

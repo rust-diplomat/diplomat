@@ -114,6 +114,7 @@ export class BorrowedFieldsWithBounds {
         
         finally {
             functionGarbageCollector.garbageCollect();
+        
             diplomatReceive.free();
         }
     }

@@ -121,6 +121,7 @@ export class NestedBorrowedFields {
         
         finally {
             functionGarbageCollector.garbageCollect();
+        
             diplomatReceive.free();
         }
     }
