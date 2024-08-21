@@ -83,4 +83,4 @@ mod ffi {
 
 Which creates the following HTML output:
 
-!["AddResult.getAddStr" in large text. Below are two inputs: one labelled "x" that has a value of 10, and one labelled "y" that has a value of 2. Below is a submit button. There is output below the button, with the label "Output" and a value of 12.](../../images/demo_output_renamed.png)
+!["AddResult.getAddStr" in large text. Below are two inputs: one labelled "x" that has a value of 10, and one labelled "y" that has a value of 2. Below is a submit button. There is output below the button, with the label "Output" and a value of 12.](images/demo_output_renamed.png)

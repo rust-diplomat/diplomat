@@ -35,7 +35,7 @@ npm -C adder_bindings/demo run start
 
 If you open the server, you should see a webpage listing `AddResult.getAddStr` with a link. If you click the link, you should see something like:
 
-![A search bar for the web server, with the added URL /demo_gen/rendering/template.html?func=AddResult.getAddStr. Displayed on the webpage is "AddResult.getAddStr" in large text. Below are two inputs: one labelled "left" that has a value of 1, and one labelled "right" that has a value of 2. Below is a submit button. There is output below the button, with the label "Output" and a value of 3.](../../images/demo_output.png)
+![A search bar for the web server, with the added URL /demo_gen/rendering/template.html?func=AddResult.getAddStr. Displayed on the webpage is "AddResult.getAddStr" in large text. Below are two inputs: one labelled "left" that has a value of 1, and one labelled "right" that has a value of 2. Below is a submit button. There is output below the button, with the label "Output" and a value of 3.](images/demo_output.png)
 
 And that's it! Let's talk about what each step means.
 
