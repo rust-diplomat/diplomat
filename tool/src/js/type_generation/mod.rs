@@ -170,7 +170,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     };
                     Some(
                         format!(
-                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena).alloc"#,
+                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena)"#,
                             lt_name = struct_def.lifetimes.fmt_lifetime(lt),
                         )
                     )
@@ -178,7 +178,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     None
                 }
             } else if let &hir::Type::Struct(..) = &field.ty {
-                Some("functionCleanupArena.alloc".into())
+                Some("functionCleanupArena".into())
             } else {
                 // We take ownership
                 None
@@ -335,18 +335,22 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(..) = param.ty {
-                method_info.needs_slice_cleanup = true;
-
                 let slice_expr = format!("[{}]", self
                     .gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(
                         match param_borrow_kind {
                             // Is Rust NOT taking ownership?
                             // Then that means we can free this after the function is done.
-                            ParamBorrowInfo::TemporarySlice => "functionCleanupArena.alloc",
+                            ParamBorrowInfo::TemporarySlice => {
+                                method_info.needs_slice_cleanup = true;
+                                "functionCleanupArena"
+                            },
                             
                             // Is this function borrowing the slice?
                             // I.e., Do we need it alive for at least as long as this function call?
-                            ParamBorrowInfo::BorrowedSlice => "functionCleanupArena.allocGarbageCollect",
+                            ParamBorrowInfo::BorrowedSlice => { 
+                                method_info.needs_slice_collection = true;
+                                "functionGarbageCollector"
+                            },
                             _ => unreachable!(
                                 "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                             ),
@@ -365,7 +369,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             } else {
                 let alloc = if let hir::Type::Struct(..) = param.ty {
                     method_info.needs_slice_cleanup = true;
-                    Some("functionCleanupArena.alloc(")
+                    Some("functionCleanupArena")
                 } else {
                     None
                 };
@@ -463,7 +467,10 @@ pub(super) struct MethodInfo<'info> {
     /// Native C method name
     abi_name: String,
 
+    /// For freeing slices directly.
     needs_slice_cleanup: bool,
+    /// For calling .garbageCollect on slices.
+    needs_slice_collection : bool,
 
     pub typescript: bool,
 

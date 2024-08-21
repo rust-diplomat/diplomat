@@ -546,7 +546,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     panic!("'static not supported for JS backend.")
                 } else {
                     let (alloc_begin, alloc_end) = match alloc {
-                        Some(a) => (format!("{a}("), ")"),
+                        Some(a) => (format!("{a}.alloc("), ")"),
                         None => ("".into(), "")
                     };
 
