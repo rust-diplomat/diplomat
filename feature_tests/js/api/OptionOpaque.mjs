@@ -52,64 +52,84 @@ export class OptionOpaque {
         finally {}
     }
 
-    static returns() {const result = wasm.OptionOpaque_returns();
+    static returns() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 17, 4, true);
+        const result = wasm.OptionOpaque_returns(diplomatReceive.buffer);
     
         try {
-            if (result !== 1) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
-        finally {}
+        finally {
+            diplomatReceive.free();
+        }
     }
 
-    optionIsize() {const result = wasm.OptionOpaque_option_isize(this.ffiValue);
+    optionIsize() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.OptionOpaque_option_isize(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            if (result !== 1) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {}
+        finally {
+            diplomatReceive.free();
+        }
     }
 
-    optionUsize() {const result = wasm.OptionOpaque_option_usize(this.ffiValue);
+    optionUsize() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.OptionOpaque_option_usize(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            if (result !== 1) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {}
+        finally {
+            diplomatReceive.free();
+        }
     }
 
-    optionI32() {const result = wasm.OptionOpaque_option_i32(this.ffiValue);
+    optionI32() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.OptionOpaque_option_i32(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            if (result !== 1) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {}
+        finally {
+            diplomatReceive.free();
+        }
     }
 
-    optionU32() {const result = wasm.OptionOpaque_option_u32(this.ffiValue);
+    optionU32() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.OptionOpaque_option_u32(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            if (result !== 1) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {}
+        finally {
+            diplomatReceive.free();
+        }
     }
 
     static newStruct() {
