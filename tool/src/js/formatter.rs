@@ -1,3 +1,6 @@
+//! Formatter functions for Javascript for converting Rust types into Typescript types.
+//!
+//! Used in [`super::type_generation`] and [`crate::demo_gen`].
 use std::borrow::Cow;
 
 use diplomat_core::hir::{self, Docs, DocsUrlGenerator, EnumVariant, TypeContext, TypeId};
@@ -5,6 +8,7 @@ use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
 use super::FileType;
 
+/// Javascript words that a Diplomat user shouldn't create classes or functions from.
 const RESERVED: &[&str] = &[
     "break",
     "case",
@@ -44,7 +48,9 @@ const RESERVED: &[&str] = &[
     "with",
 ];
 
-/// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+/// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects.
+///
+/// If you create a class from these, JS will error. So we throw an error if that happens.
 const RESERVED_TYPES: &[&str] = &["Infinity", "NaN"];
 
 /// Helper class for us to format JS identifiers from the HIR.
@@ -61,6 +67,7 @@ impl<'tcx> JSFormatter<'tcx> {
         Self { tcx, docs_url_gen }
     }
 
+    /// Given a [`TypeId`] that we're reading, make sure to rename it appropriately, or throw an error if it's reserved.
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let type_def = self.tcx.resolve_type(id);
 
@@ -76,10 +83,12 @@ impl<'tcx> JSFormatter<'tcx> {
         name
     }
 
+    /// Generate a `.mjs` or `.d.ts` file name. Just don't give it that extension yet.
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
         type_name.to_string()
     }
 
+    /// Add an extension to [`Self::fmt_file_name_extensionless`].
     pub fn fmt_file_name(&self, type_name: &str, file_type: &FileType) -> String {
         match file_type {
             FileType::Module => format!("{}.mjs", self.fmt_file_name_extensionless(type_name)),
@@ -87,6 +96,7 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
+    /// Just creates `/** */` doc strings.
     pub fn fmt_docs(&self, docs: &Docs) -> String {
         docs.to_markdown(self.docs_url_gen)
             .trim()
@@ -94,6 +104,7 @@ impl<'tcx> JSFormatter<'tcx> {
             .replace(" \n", "\n")
     }
 
+    /// Creates the body of an `import` or `export` statement.
     pub fn fmt_module_statement(
         &self,
         type_name: &str,
@@ -110,6 +121,7 @@ impl<'tcx> JSFormatter<'tcx> {
         )
     }
 
+    /// Uses [`Self::fmt_module_statement`] to create an import statement.
     pub fn fmt_import_statement(
         &self,
         type_name: &str,
@@ -126,6 +138,11 @@ impl<'tcx> JSFormatter<'tcx> {
         )
     }
 
+    /// A version of [`Self::fmt_import_statement`] that is focused more towards modules than specific files.
+    ///
+    /// Only used by [`crate::demo_gen`].
+    ///
+    /// (Probably could be consolidated with [`Self::fmt_import_statement`])
     pub fn fmt_import_module(
         &self,
         type_name: &str,
@@ -135,6 +152,7 @@ impl<'tcx> JSFormatter<'tcx> {
         format!(r#"import {{ {type_name} }} from "{relative_path}{module_name}""#)
     }
 
+    /// Uses [`Self::fmt_module_statement`] to create an export statement.
     pub fn fmt_export_statement(
         &self,
         type_name: &str,
@@ -150,8 +168,7 @@ impl<'tcx> JSFormatter<'tcx> {
     // #region HIR::Type formatting.
     // This is only visible for Typescript definition files, but we use it to check if types are supported.
 
-    /// Generate a primitive type.
-    /// `cast: bool` - Basically, do we want to use `number` instead of `u8`?
+    /// Generate a JS primitive type from a Rust type.
     pub fn fmt_primitive_as_ffi(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "boolean",
@@ -165,6 +182,7 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
+    /// Generate a JS primitive slice type from a Rust type.
     pub fn fmt_primitive_slice(&self, primitive_type: hir::PrimitiveType) -> &'static str {
         match primitive_type {
             hir::PrimitiveType::Bool
@@ -188,6 +206,7 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
+    /// Generates a JS primitive list type from a Rust type.
     pub fn fmt_primitive_list_type(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "Array<boolean>",
@@ -203,6 +222,7 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
+    /// We generate this in JS as a string that we then have to parse in `runtime.mjs`. Used we're trying to determine how to parse a given slice. See `DiplomatBuf` for more.
     pub fn fmt_primitive_list_view(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "boolean",
