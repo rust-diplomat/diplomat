@@ -19,7 +19,11 @@ export class Locale {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Locale is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -41,7 +45,7 @@ export class Locale {
         const result = wasm.icu4x_Locale_new_mv1(...nameSlice);
     
         try {
-            return new Locale(result, []);
+            return new Locale(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

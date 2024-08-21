@@ -15,7 +15,11 @@ export class OptionOpaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OptionOpaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -33,7 +37,7 @@ export class OptionOpaque {
     static new_(i) {const result = wasm.OptionOpaque_new(i);
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -42,7 +46,7 @@ export class OptionOpaque {
     static newNone() {const result = wasm.OptionOpaque_new_none();
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -56,7 +60,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -133,7 +137,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -146,7 +150,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

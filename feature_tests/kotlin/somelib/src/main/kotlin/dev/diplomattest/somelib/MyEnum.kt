@@ -1,7 +1,10 @@
 package dev.diplomattest.somelib
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
+import com.sun.jna.Pointer
+import com.sun.jna.Structure
 
 internal interface MyEnumLib: Library {
     fun MyEnum_into_value(inner: Int): Byte

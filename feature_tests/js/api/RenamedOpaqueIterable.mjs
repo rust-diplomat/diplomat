@@ -15,7 +15,11 @@ export class RenamedOpaqueIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedOpaqueIterable is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -36,7 +40,7 @@ export class RenamedOpaqueIterable {
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
     
         try {
-            return new RenamedOpaqueIterator(result, [], aEdges);
+            return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}

@@ -19,7 +19,11 @@ export class DataProvider {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("DataProvider is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -37,7 +41,7 @@ export class DataProvider {
     static newStatic() {const result = wasm.icu4x_DataProvider_new_static_mv1();
     
         try {
-            return new DataProvider(result, []);
+            return new DataProvider(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

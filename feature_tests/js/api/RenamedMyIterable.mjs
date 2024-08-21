@@ -15,7 +15,11 @@ export class RenamedMyIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedMyIterable is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -37,7 +41,7 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_new(...xSlice);
     
         try {
-            return new RenamedMyIterable(result, []);
+            return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -51,7 +55,7 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     
         try {
-            return new RenamedMyIterator(result, [], aEdges);
+            return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}

@@ -14,7 +14,11 @@ export class OptionString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OptionString is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -36,7 +40,7 @@ export class OptionString {
         const result = wasm.OptionString_new(...diplomatStrSlice);
     
         try {
-            return result === 0 ? null : new OptionString(result, []);
+            return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

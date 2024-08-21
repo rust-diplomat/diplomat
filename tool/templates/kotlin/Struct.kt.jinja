@@ -1,5 +1,6 @@
 package {{domain}}.{{lib_name}}
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -25,6 +26,12 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
     }
 }
 
+{% endif -%}
+
+{% if !callback_params.is_empty() -%}
+    {%- for callback_param in callback_params -%}
+        {{callback_param}}
+    {%- endfor %}
 {% endif -%}
 
 class {{type_name}} internal constructor (

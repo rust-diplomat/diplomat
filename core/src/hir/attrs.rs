@@ -1,7 +1,5 @@
 //! #[diplomat::attr] and other attributes
 
-use std::collections::HashMap;
-
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -77,9 +75,8 @@ pub struct DemoInfo {
     /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
     pub external: bool,
 
-    /// `#[diplomat::demo(input(...))]`
-    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
-    pub input_cfg: HashMap<String, DemoInputCFG>,
+    /// `#[diplomat::demo(input(...))]` represents configuration options for anywhere we might expect user input.
+    pub input_cfg: DemoInputCFG,
 }
 
 // #endregion
@@ -143,6 +140,9 @@ pub enum AttributeContext<'a, 'b> {
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
+    Param,
+    SelfParam,
+    Field,
 }
 
 fn maybe_error_unsupported(
@@ -360,7 +360,6 @@ impl Attrs {
                 } else if path_ident == "generate" {
                     this.demo_attrs.generate = true;
                 } else if path_ident == "input" {
-                    // TODO: Move this to AST.
                     let meta_list = attr
                         .meta
                         .require_list()
@@ -368,30 +367,17 @@ impl Attrs {
 
                     meta_list
                         .parse_nested_meta(|meta| {
-                            let mut input_cfg = DemoInputCFG::default();
-                            meta.parse_nested_meta(|input_meta| {
-                                if input_meta.path.is_ident("label") {
-                                    let value = input_meta.value()?;
-                                    let s: syn::LitStr = value.parse()?;
-                                    input_cfg.label = s.value();
-                                    Ok(())
-                                } else {
-                                    Err(input_meta.error(format!(
-                                        "Unsupported ident {:?}",
-                                        input_meta.path.get_ident()
-                                    )))
-                                }
-                            })
-                            .expect("Could not read input(arg_name(...)) ");
-
-                            this.demo_attrs.input_cfg.insert(
-                                meta.path
-                                    .get_ident()
-                                    .expect("Expected parameter name.")
-                                    .to_string(),
-                                input_cfg,
-                            );
-                            Ok(())
+                            if meta.path.is_ident("label") {
+                                let value = meta.value()?;
+                                let s: syn::LitStr = value.parse()?;
+                                this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else {
+                                Err(meta.error(format!(
+                                    "Unsupported ident {:?}",
+                                    meta.path.get_ident()
+                                )))
+                            }
                         })
                         .expect("Could not read input(...)");
                 } else {
@@ -416,8 +402,8 @@ impl Attrs {
         let Attrs {
             disable,
             namespace,
-            rename: _,
-            abi_rename: _,
+            rename,
+            abi_rename,
             special_method,
             demo_attrs: _,
         } = &self;
@@ -676,6 +662,35 @@ impl Attrs {
             errors.push(LoweringError::Other(
                 "`namespace` can only be used on types".to_string(),
             ));
+        }
+
+        if matches!(
+            context,
+            AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
+        ) {
+            if *disable {
+                errors.push(LoweringError::Other(format!(
+                    "`disable`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if namespace.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "`namespace` cannot be used on an {context:?}."
+                )));
+            }
+
+            if !rename.is_empty() || !abi_rename.is_empty() {
+                errors.push(LoweringError::Other(format!(
+                    "`rename`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if special_method.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "{context:?} cannot be special methods."
+                )));
+            }
         }
     }
 

@@ -14,7 +14,11 @@ export class MyString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("MyString is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -36,7 +40,7 @@ export class MyString {
         const result = wasm.MyString_new(...vSlice);
     
         try {
-            return new MyString(result, []);
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -51,7 +55,7 @@ export class MyString {
         const result = wasm.MyString_new_unsafe(...vSlice);
     
         try {
-            return new MyString(result, []);
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -64,9 +68,23 @@ export class MyString {
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
         const result = wasm.MyString_new_owned(...vSlice);
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
+        const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
     
         try {
-            return new MyString(result, []);
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
+        }
+        
+        finally {}
+    }
+
+    static newFromFirst(v) {
+        
+        const vSlice = diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8");
+        const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

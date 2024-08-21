@@ -327,7 +327,7 @@ impl RenameAttr {
     }
 
     /// Whether this rename is empty and will perform no changes
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.pattern.is_none()
     }
 

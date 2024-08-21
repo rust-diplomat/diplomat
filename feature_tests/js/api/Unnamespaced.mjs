@@ -16,7 +16,11 @@ export class Unnamespaced {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Unnamespaced is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,7 +38,7 @@ export class Unnamespaced {
     static make(e) {const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
-            return new Unnamespaced(result, []);
+            return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

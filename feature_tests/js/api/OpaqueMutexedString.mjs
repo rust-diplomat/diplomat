@@ -15,7 +15,11 @@ export class OpaqueMutexedString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OpaqueMutexedString is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -33,7 +37,7 @@ export class OpaqueMutexedString {
     static fromUsize(number) {const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
-            return new OpaqueMutexedString(result, []);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -52,7 +56,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
@@ -64,7 +68,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
@@ -76,7 +80,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
@@ -110,7 +114,7 @@ export class OpaqueMutexedString {
     wrapper() {const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
-            return new Utf16Wrap(result, []);
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

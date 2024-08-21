@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::{Docs, Ident, Param, SelfParam, TypeName};
+use super::{Attrs, Docs, Ident, Param, SelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///
@@ -126,10 +126,13 @@ impl LifetimeEnv {
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds
     /// defined in the struct generics, as well as implicit lifetime bounds in
     /// the struct's fields. For example, the field `&'a Foo<'b>` implies `'b: 'a`.
-    pub fn from_struct_item(strct: &syn::ItemStruct, fields: &[(Ident, TypeName, Docs)]) -> Self {
+    pub fn from_struct_item(
+        strct: &syn::ItemStruct,
+        fields: &[(Ident, TypeName, Docs, Attrs)],
+    ) -> Self {
         let mut this = LifetimeEnv::new();
         this.extend_generics(&strct.generics);
-        for (_, typ, _) in fields {
+        for (_, typ, _, _) in fields {
             this.extend_implicit_lifetime_bounds(typ, None);
         }
         this

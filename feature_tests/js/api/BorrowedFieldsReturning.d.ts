@@ -5,5 +5,5 @@ export class BorrowedFieldsReturning {
 
     get bytes() : string;
     set bytes(value: string); 
-
+    constructor(bytes: string);
 }

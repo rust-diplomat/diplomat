@@ -20,6 +20,15 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#groupingStrategy = arguments[0];
+            this.#someOtherConfig = arguments[1];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -36,13 +45,11 @@ export class FixedDecimalFormatterOptions {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         this.#groupingStrategy = FixedDecimalGroupingStrategy[Array.from(FixedDecimalGroupingStrategy.values.keys())[groupingStrategyDeref]];
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         this.#someOtherConfig = someOtherConfigDeref;
-
-        return this;
     }
 
     static default_() {
@@ -50,7 +57,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            return new FixedDecimalFormatterOptions()._fromFFI(diplomatReceive.buffer);
+            return new FixedDecimalFormatterOptions(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

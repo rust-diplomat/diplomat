@@ -16,7 +16,11 @@ export class RefList {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RefList is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
@@ -40,7 +44,7 @@ export class RefList {
         const result = wasm.RefList_node(data.ffiValue);
     
         try {
-            return new RefList(result, [], bEdges);
+            return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);
         }
         
         finally {}

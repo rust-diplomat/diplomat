@@ -16,7 +16,11 @@ export class One {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("One is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
@@ -40,7 +44,7 @@ export class One {
         const result = wasm.One_transitivity(hold.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}
@@ -52,7 +56,7 @@ export class One {
         const result = wasm.One_cycle(hold.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}
@@ -64,7 +68,7 @@ export class One {
         const result = wasm.One_many_dependents(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}
@@ -76,7 +80,7 @@ export class One {
         const result = wasm.One_return_outlives_param(hold.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], longEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], longEdges);
         }
         
         finally {}
@@ -88,7 +92,7 @@ export class One {
         const result = wasm.One_diamond_top(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-            return new One(result, [], topEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], topEdges);
         }
         
         finally {}
@@ -100,7 +104,7 @@ export class One {
         const result = wasm.One_diamond_left(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-            return new One(result, [], leftEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], leftEdges);
         }
         
         finally {}
@@ -112,7 +116,7 @@ export class One {
         const result = wasm.One_diamond_right(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-            return new One(result, [], rightEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], rightEdges);
         }
         
         finally {}
@@ -124,7 +128,7 @@ export class One {
         const result = wasm.One_diamond_bottom(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-            return new One(result, [], bottomEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], bottomEdges);
         }
         
         finally {}
@@ -136,7 +140,7 @@ export class One {
         const result = wasm.One_diamond_and_nested_types(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}
@@ -148,7 +152,7 @@ export class One {
         const result = wasm.One_implicit_bounds(explicitHold.ffiValue, implicitHold.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}
@@ -160,7 +164,7 @@ export class One {
         const result = wasm.One_implicit_bounds_deep(explicit.ffiValue, implicit1.ffiValue, implicit2.ffiValue, nohold.ffiValue);
     
         try {
-            return new One(result, [], aEdges);
+            return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}

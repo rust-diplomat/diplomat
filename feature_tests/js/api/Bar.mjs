@@ -17,7 +17,11 @@ export class Bar {
     #bEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, bEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Bar is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#bEdge = bEdge;
@@ -47,7 +51,7 @@ export class Bar {
         const result = wasm.Bar_foo(this.ffiValue);
     
         try {
-            return new Foo(result, bEdges, aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);
         }
         
         finally {}

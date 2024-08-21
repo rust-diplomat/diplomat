@@ -16,7 +16,11 @@ export class ResultOpaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("ResultOpaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -40,7 +44,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
@@ -57,7 +61,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
@@ -74,7 +78,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
@@ -90,7 +94,7 @@ export class ResultOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
@@ -104,10 +108,10 @@ export class ResultOpaque {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = new ErrorStruct()._fromFFI(diplomatReceive.buffer);
+                const cause = new ErrorStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
                 throw new globalThis.Error('ErrorStruct: ' + cause.toString(), { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
@@ -121,7 +125,7 @@ export class ResultOpaque {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                const cause = new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
     
@@ -154,7 +158,7 @@ export class ResultOpaque {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                const cause = new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];

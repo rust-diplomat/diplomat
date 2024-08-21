@@ -14,7 +14,11 @@ export class Utf16Wrap {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Utf16Wrap is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -36,7 +40,7 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice);
     
         try {
-            return new Utf16Wrap(result, []);
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

@@ -12,6 +12,14 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#a = arguments[0];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
@@ -28,11 +36,9 @@ export class CyclicStructA {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const aDeref = ptr;
-        this.#a = new CyclicStructB()._fromFFI(aDeref);
-
-        return this;
+        this.#a = new CyclicStructB(diplomatRuntime.internalConstructor, aDeref);
     }
 
     static getB() {
@@ -40,7 +46,7 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructB()._fromFFI(diplomatReceive.buffer);
+            return new CyclicStructB(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

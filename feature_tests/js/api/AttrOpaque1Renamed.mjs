@@ -16,7 +16,11 @@ export class AttrOpaque1Renamed {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("AttrOpaque1Renamed is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,7 +38,7 @@ export class AttrOpaque1Renamed {
     static totallyNotNew() {const result = wasm.namespace_AttrOpaque1_new();
     
         try {
-            return new AttrOpaque1Renamed(result, []);
+            return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

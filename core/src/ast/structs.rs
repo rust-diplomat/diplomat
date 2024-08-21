@@ -10,7 +10,7 @@ pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
     pub lifetimes: LifetimeEnv,
-    pub fields: Vec<(Ident, TypeName, Docs)>,
+    pub fields: Vec<(Ident, TypeName, Docs, Attrs)>,
     pub methods: Vec<Method>,
     pub output_only: bool,
     pub attrs: Attrs,
@@ -33,7 +33,7 @@ impl Struct {
                 let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
                 let docs = Docs::from_attrs(&field.attrs);
 
-                (name, type_name, docs)
+                (name, type_name, docs, Attrs::from_attrs(&field.attrs))
             })
             .collect();
 
