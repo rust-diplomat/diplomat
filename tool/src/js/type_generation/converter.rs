@@ -393,6 +393,46 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
             // Result<Type, Error> or Option<Type>
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                let (requires_buf, error_ret) = match return_type {
+                    ReturnType::Fallible(_, Some(e)) => {
+                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                        self.add_import(type_name.into());
+
+                        let fields_empty = match e {
+                            Type::Struct(s) if match s.resolve(self.tcx) {
+                                ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                                ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                                _ => unreachable!()
+                            } => true,
+                            _ => false
+                        };
+
+                        let receive_deref = self.gen_c_to_js_deref_for_type(
+                            e,
+                            match fields_empty {
+                                true => "result",
+                                false => "diplomatReceive.buffer"
+                            }.into(),
+                            0,
+                        );
+
+                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                        let cause =
+                            self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
+                        (!fields_empty, format!(
+                        "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
+                        message = match e {
+                            Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
+                            Type::Struct(..) if fields_empty => format!("'{type_name}'"),
+                            _ => format!("'{type_name}: ' + cause.toString()"),
+                        },
+                        ))
+                    }
+                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None) =>
+                        (false, "return null".into()),
+                    return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
+                };
+
                 let layout = match ok {
                     SuccessType::Unit => crate::js::layout::unit_size_alignment(),
                     SuccessType::OutType(ref o) => {
@@ -423,70 +463,35 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 ) + 1;
                 let align = layout.align();
 
-                method_info.alloc_expressions.push(
-                    format!(
-                        "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
-                        size, align
-                    )
-                    .into(),
-                );
-                method_info
-                    .param_conversions
-                    .insert(0, "diplomatReceive.buffer".into());
-                method_info
-                    .cleanup_expressions
-                    .push("diplomatReceive.free();".into());
+                if requires_buf {
+                    method_info.alloc_expressions.push(
+                        format!(
+                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
+                            size, align
+                        )
+                        .into(),
+                    );
+                    method_info
+                        .param_conversions
+                        .insert(0, "diplomatReceive.buffer".into());
+                    method_info
+                        .cleanup_expressions
+                        .push("diplomatReceive.free();".into());
+                }
 
                 let err_check = format!(
-                    "if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
-                    match return_type {
-                        ReturnType::Fallible(_, Some(e)) => {
-                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                            self.add_import(type_name.into());
-
-                            let receive_deref = self.gen_c_to_js_deref_for_type(
-                                e,
-                                "diplomatReceive.buffer".into(),
-                                0,
-                            );
-                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                            let cause =
-                                self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
-                            format!(
-                            "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
-                            message = match e {
-                                Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
-                                Type::Struct(s) if match s.resolve(self.tcx) {
-                                    ReturnableStructDef::Struct(s) => s.fields.is_empty(),
-                                    ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
-                                    _ => unreachable!()
-                                } => format!("'{type_name}'"),
-                                _ => format!("'{type_name}: ' + cause.toString()"),
-                            },
-                        )
-                        }
-                        ReturnType::Nullable(_) | ReturnType::Fallible(_, None) =>
-                            "return null".into(),
-                        return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
-                    }
+                    "if ({}) {{\n    {};\n}}\n",
+                    match requires_buf {
+                        true => "!diplomatReceive.resultFlag",
+                        false => "result !== 1"
+                    },
+                    error_ret
                 );
 
                 Some(
                     match ok {
                         SuccessType::Unit => err_check,
                         SuccessType::Write => {
-                            // Pretty sure you can't have a Result<Write, Err> and also return something else.
-                            // So this is our ideal output:
-                            /*
-                            const write = diplomatWriteBuf();
-                            const diplomat_receive_buffer = diplomatReceiveBuf(wasm, error_size, error_align);
-                            wasm.c_func(write.buffer);
-                            if (diplomat.resultFlag) {
-                                return write;
-                            } else {
-                                throw Error();
-                            }
-                            */
                             method_info.alloc_expressions.push(
                                 "const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into(),
                             );
