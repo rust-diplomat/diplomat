@@ -68,20 +68,6 @@ export class MyString {
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
         const result = wasm.MyString_new_owned(...vSlice);
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
-    
-        try {
-            return new MyString(diplomatRuntime.internalConstructor, result, []);
-        }
-        
-        finally {}
-    }
-
-    static newFromFirst(v) {
-        
-        const vSlice = diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8");
-        const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
@@ -99,7 +85,7 @@ export class MyString {
         const result = wasm.MyString_new_from_first(...vSlice);
     
         try {
-            return new MyString(result, []);
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
