@@ -35,8 +35,7 @@ export class AttrOpaque1Renamed {
         return this.#ptr;
     }
 
-    static totallyNotNew() {
-        const result = wasm.namespace_AttrOpaque1_new();
+    static totallyNotNew() {const result = wasm.namespace_AttrOpaque1_new();
     
         try {
             return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
@@ -45,8 +44,7 @@ export class AttrOpaque1Renamed {
         finally {}
     }
 
-    get methodRenamed() {
-        const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
+    get methodRenamed() {const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
     
         try {
             return result;
@@ -55,8 +53,7 @@ export class AttrOpaque1Renamed {
         finally {}
     }
 
-    get abirenamed() {
-        const result = wasm.renamed_on_abi_only(this.ffiValue);
+    get abirenamed() {const result = wasm.renamed_on_abi_only(this.ffiValue);
     
         try {
             return result;
@@ -65,16 +62,14 @@ export class AttrOpaque1Renamed {
         finally {}
     }
 
-    useUnnamespaced(un) {
-        wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
+    useUnnamespaced(un) {wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
         try {}
         
         finally {}
     }
 
-    useNamespaced(n) {
-        wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
+    useNamespaced(n) {wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}
         

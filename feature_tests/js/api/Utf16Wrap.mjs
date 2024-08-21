@@ -34,21 +34,21 @@ export class Utf16Wrap {
     }
 
     static fromUtf16(input) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
-        const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
+        const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, input)).splat()];
+        const result = wasm.Utf16Wrap_from_utf16(...inputSlice);
     
         try {
             return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     getDebugStr() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
     
@@ -62,7 +62,6 @@ export class Utf16Wrap {
     }
 
     borrowCont() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a

@@ -34,8 +34,7 @@ export class OpaqueMutexedString {
         return this.#ptr;
     }
 
-    static fromUsize(number) {
-        const result = wasm.OpaqueMutexedString_from_usize(number);
+    static fromUsize(number) {const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
@@ -44,8 +43,7 @@ export class OpaqueMutexedString {
         finally {}
     }
 
-    change(number) {
-        wasm.OpaqueMutexedString_change(this.ffiValue, number);
+    change(number) {wasm.OpaqueMutexedString_change(this.ffiValue, number);
     
         try {}
         
@@ -53,7 +51,6 @@ export class OpaqueMutexedString {
     }
 
     borrow() {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
@@ -66,7 +63,6 @@ export class OpaqueMutexedString {
     }
 
     static borrowOther(other) {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
@@ -79,7 +75,6 @@ export class OpaqueMutexedString {
     }
 
     borrowSelfOrOther(other) {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
@@ -91,8 +86,7 @@ export class OpaqueMutexedString {
         finally {}
     }
 
-    getLenAndAdd(other) {
-        const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
+    getLenAndAdd(other) {const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
     
         try {
             return result;
@@ -102,7 +96,6 @@ export class OpaqueMutexedString {
     }
 
     dummyStr() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
@@ -118,8 +111,7 @@ export class OpaqueMutexedString {
         }
     }
 
-    wrapper() {
-        const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
+    wrapper() {const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
             return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);

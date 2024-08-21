@@ -34,21 +34,21 @@ export class OptionString {
     }
 
     static new_(diplomatStr) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);
-        const result = wasm.OptionString_new(diplomatStrSlice.ptr, diplomatStrSlice.size);
+        const diplomatStrSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)).splat()];
+        const result = wasm.OptionString_new(...diplomatStrSlice);
     
         try {
             return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            diplomatStrSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     write() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
     
@@ -62,7 +62,6 @@ export class OptionString {
     }
 
     borrow() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         // This lifetime edge depends on lifetimes 'a

@@ -39,16 +39,17 @@ export class Locale {
     }
 
     static new_(name) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const nameSlice = diplomatRuntime.DiplomatBuf.str8(wasm, name);
-        const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr, nameSlice.size);
+        const nameSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name)).splat()];
+        const result = wasm.icu4x_Locale_new_mv1(...nameSlice);
     
         try {
             return new Locale(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            nameSlice.free();
+            functionCleanupArena.free();
         }
     }
 }

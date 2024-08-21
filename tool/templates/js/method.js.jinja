@@ -5,9 +5,12 @@
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}{{ return_type }};{% else %} {
-    {% if needs_slice_cleanup %}
+    {%- if needs_slice_cleanup %}
     let functionCleanupArena = new diplomatRuntime.CleanupArena();
     {% endif -%}
+    {%- if needs_slice_collection %}
+    let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
+    {%- endif -%}
 
     {% for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
@@ -53,6 +56,9 @@
     finally {
     {%- if needs_slice_cleanup %}
         functionCleanupArena.free();
+    {% endif -%}
+    {%- if needs_slice_collection %}
+        functionGarbageCollector.garbageCollect();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}

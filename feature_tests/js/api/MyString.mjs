@@ -34,73 +34,79 @@ export class MyString {
     }
 
     static new_(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
+        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const result = wasm.MyString_new(...vSlice);
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            vSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     static newUnsafe(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size);
+        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const result = wasm.MyString_new_unsafe(...vSlice);
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            vSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     static newOwned(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
-    
-        try {
-            return new MyString(diplomatRuntime.internalConstructor, result, []);
-        }
-        
-        finally {}
-    }
-
-    static newFromFirst(v) {
-        
-        const vSlice = diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8");
-        const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
+        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const result = wasm.MyString_new_owned(...vSlice);
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            vSlice.free();
+            functionCleanupArena.free();
+        }
+    }
+
+    static newFromFirst(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8")).splat()];
+        const result = wasm.MyString_new_from_first(...vSlice);
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
+        }
+        
+        finally {
+            functionCleanupArena.free();
         }
     }
 
     set str(newStr) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
-        wasm.MyString_set_str(this.ffiValue, newStrSlice.ptr, newStrSlice.size);
+        const newStrSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, newStr)).splat()];
+        wasm.MyString_set_str(this.ffiValue, ...newStrSlice);
     
         try {}
         
         finally {
-            newStrSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     get str() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyString_get_str(this.ffiValue, write.buffer);
     
@@ -114,18 +120,19 @@ export class MyString {
     }
 
     static stringTransform(foo) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
+        const fooSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, foo)).splat()];
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write.buffer);
+        wasm.MyString_string_transform(...fooSlice, write.buffer);
     
         try {
             return write.readString8();
         }
         
         finally {
-            fooSlice.free();
+            functionCleanupArena.free();
         
             write.free();
         }

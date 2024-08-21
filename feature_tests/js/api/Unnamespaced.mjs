@@ -35,8 +35,7 @@ export class Unnamespaced {
         return this.#ptr;
     }
 
-    static make(e) {
-        const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
+    static make(e) {const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
             return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
@@ -45,8 +44,7 @@ export class Unnamespaced {
         finally {}
     }
 
-    useNamespaced(n) {
-        wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
+    useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}
         

@@ -43,7 +43,6 @@ export class FixedDecimalFormatter {
     }
 
     static tryNew(locale, provider, options) {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
@@ -64,7 +63,6 @@ export class FixedDecimalFormatter {
     }
 
     formatWrite(value) {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
     

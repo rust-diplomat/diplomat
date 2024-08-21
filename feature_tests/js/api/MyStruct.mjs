@@ -109,7 +109,6 @@ export class MyStruct {
     }
 
     static new_() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 28, 8, false);
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
@@ -123,7 +122,6 @@ export class MyStruct {
     }
 
     intoA() {
-        
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
@@ -137,7 +135,6 @@ export class MyStruct {
     }
 
     static returnsZstResult() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         const result = wasm.MyStruct_returns_zst_result(diplomatReceive.buffer);
     

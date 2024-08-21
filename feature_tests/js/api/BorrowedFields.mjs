@@ -71,25 +71,23 @@ export class BorrowedFields {
     };
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
+        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
+        const dstr16Slice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)).splat()];
         
-        const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);
-        
-        const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
+        const utf8StrSlice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)).splat()];
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
-        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice, ...utf8StrSlice);
     
         try {
             return new BorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {
-            dstr16Slice.garbageCollect();
-        
-            utf8StrSlice.garbageCollect();
+            functionGarbageCollector.garbageCollect();
         
             diplomatReceive.free();
         }
