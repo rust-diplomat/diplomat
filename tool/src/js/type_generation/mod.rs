@@ -232,7 +232,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
                 if padding > 0 {
                     let mut out = format!(",/* Padding for {} */ ", field.name);
-    
+
                     for i in 0..padding {
                         if i < padding - 1 {
                             write!(out, "0, ").unwrap();
@@ -240,7 +240,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                             write!(out, "0 /* End Padding */").unwrap();
                         }
                     }
-    
+
                     out
                 } else {
                     "".into()
@@ -368,10 +368,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                                 method_info.needs_slice_cleanup = true;
                                 "functionCleanupArena"
                             },
-                            
+
                             // Is this function borrowing the slice?
                             // I.e., Do we need it alive for at least as long as this function call?
-                            ParamBorrowInfo::BorrowedSlice => { 
+                            ParamBorrowInfo::BorrowedSlice => {
                                 method_info.needs_slice_collection = true;
                                 "functionGarbageCollector"
                             },
@@ -409,14 +409,14 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     } else {
                         None
                     };
-                method_info.param_conversions.push(
-                    self.gen_js_to_c_for_type(
+                method_info
+                    .param_conversions
+                    .push(self.gen_js_to_c_for_type(
                         &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
-                    )
-                );
+                    ));
             }
 
             method_info.parameters.push(param_info);
@@ -488,7 +488,7 @@ struct ParamInfo<'a> {
 struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
-    slice_expr: String
+    slice_expr: String,
 }
 
 /// Represents a Rust method that we invoke inside of WebAssembly with JS.
@@ -508,7 +508,7 @@ pub(super) struct MethodInfo<'info> {
     /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
     needs_slice_cleanup: bool,
     /// For calling .garbageCollect on slices.
-    needs_slice_collection : bool,
+    needs_slice_collection: bool,
 
     pub typescript: bool,
 

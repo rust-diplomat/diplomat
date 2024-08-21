@@ -542,8 +542,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
-            Type::Opaque(ref op) if op.is_optional() =>
-                format!("{js_name}.ffiValue ?? 0").into(),
+            Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
             Type::Struct(..) => {
                 self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap())
@@ -554,7 +553,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 } else {
                     let (alloc_begin, alloc_end) = match alloc {
                         Some(a) => (format!("{a}.alloc("), ")"),
-                        None => ("".into(), "")
+                        None => ("".into(), ""),
                     };
 
                     match slice {
