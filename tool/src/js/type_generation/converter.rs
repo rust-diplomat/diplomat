@@ -398,18 +398,11 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         self.add_import(type_name.into());
 
-                        let fields_empty = match e {
-                            Type::Struct(s)
-                                if match s.resolve(self.tcx) {
-                                    ReturnableStructDef::Struct(s) => s.fields.is_empty(),
-                                    ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
-                                    _ => unreachable!(),
-                                } =>
-                            {
-                                true
-                            }
-                            _ => false,
-                        };
+                        let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
+                                ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                                ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                                _ => unreachable!(),
+                        });
 
                         let receive_deref = self.gen_c_to_js_deref_for_type(
                             e,
