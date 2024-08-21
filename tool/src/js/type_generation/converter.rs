@@ -434,7 +434,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         ))
                     }
                     ReturnType::Nullable(_) | ReturnType::Fallible(_, None) => {
-                        (false, "return null".into())
+                        (true, "return null".into())
                     }
                     return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
                 };
