@@ -459,6 +459,7 @@ export class GarbageCollector {
 
     alloc(item) {
         this.#items.push(item);
+        return item;
     }
 
     garbageCollect() {
