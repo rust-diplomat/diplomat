@@ -28,5 +28,4 @@ MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
 
 
 
-
 #endif // MyStruct_H
