@@ -170,7 +170,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     };
                     Some(
                         format!(
-                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena)"#,
+                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena).alloc"#,
                             lt_name = struct_def.lifetimes.fmt_lifetime(lt),
                         )
                     )
@@ -178,7 +178,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     None
                 }
             } else if let &hir::Type::Struct(..) = &field.ty {
-                Some("functionCleanupArena".into())
+                Some("functionCleanupArena.alloc".into())
             } else {
                 // We take ownership
                 None
@@ -334,39 +334,29 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
-            if let hir::Type::Slice(slice) = param.ty {
-                let slice_expr = self
-                    .gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, None);
+            if let hir::Type::Slice(..) = param.ty {
+                method_info.needs_slice_cleanup = true;
 
-                let is_borrowed = match param_borrow_kind {
-                    ParamBorrowInfo::TemporarySlice => false,
-                    ParamBorrowInfo::BorrowedSlice => true,
-                    _ => unreachable!(
-                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
-                    ),
-                };
+                let slice_expr = format!("[{}]", self
+                    .gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(
+                        match param_borrow_kind {
+                            // Is Rust NOT taking ownership?
+                            // Then that means we can free this after the function is done.
+                            ParamBorrowInfo::TemporarySlice => "functionCleanupArena.alloc",
+                            
+                            // Is this function borrowing the slice?
+                            // I.e., Do we need it alive for at least as long as this function call?
+                            ParamBorrowInfo::BorrowedSlice => "functionCleanupArena.allocGarbageCollect",
+                            _ => unreachable!(
+                                "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                            ),
+                        }
+                    )));
+
                 // We add the pointer and size for slices:
                 method_info
                     .param_conversions
-                    .push(format!("{}Slice.ptr", param_info.name).into());
-                method_info
-                    .param_conversions
-                    .push(format!("{}Slice.size", param_info.name).into());
-
-                // Then we make sure to handle clean-up for the slice:
-                if is_borrowed {
-                    // Is this function borrowing the slice?
-                    // I.e., Do we need it alive for at least as long as this function call?
-                    method_info
-                        .cleanup_expressions
-                        .push(format!("{}Slice.garbageCollect();", param_info.name).into());
-                } else if slice.lifetime().is_some() {
-                    // Is Rust NOT taking ownership?
-                    // Then that means we can free this after the function is done.
-                    method_info
-                        .cleanup_expressions
-                        .push(format!("{}Slice.free();", param_info.name).into());
-                }
+                    .push(format!("...{}Slice", param_info.name).into());
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
@@ -375,7 +365,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             } else {
                 let alloc = if let hir::Type::Struct(..) = param.ty {
                     method_info.needs_slice_cleanup = true;
-                    Some("functionCleanupArena")
+                    Some("functionCleanupArena.alloc(")
                 } else {
                     None
                 };
@@ -461,7 +451,7 @@ struct ParamInfo<'a> {
 struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
-    slice_expr: Cow<'a, str>,
+    slice_expr: String
 }
 
 #[derive(Default, Template)]

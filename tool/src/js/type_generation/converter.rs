@@ -203,7 +203,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"new diplomatRuntime.DiplomatPrimitiveSlice.getSlice(wasm, {variable_name}, "{}", {edges})"#,
+                        r#"new diplomatRuntime.DiplomatSlicePrimitive.getSlice(wasm, {variable_name}, "{}", {edges})"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
@@ -545,35 +545,35 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-                    let base_statement = match slice {
+                    let (alloc_begin, alloc_end) = match alloc {
+                        Some(a) => (format!("{a}("), ")"),
+                        None => ("".into(), "")
+                    };
+
+                    match slice {
                         hir::Slice::Str(_, encoding) => match encoding {
                             hir::StringEncoding::UnvalidatedUtf8
                             | hir::StringEncoding::Utf8 => {
-                                format!("...diplomatRuntime.DiplomatBuf.str8(wasm, {js_name}).splat()")
+                                format!("...{alloc_begin}diplomatRuntime.DiplomatBuf.str8(wasm, {js_name}){alloc_end}.splat()")
                             }
                             _ => {
-                                format!("...diplomatRuntime.DiplomatBuf.str16(wasm, {js_name}).splat()")
+                                format!("...{alloc_begin}diplomatRuntime.DiplomatBuf.str16(wasm, {js_name}){alloc_end}.splat()")
                             }
                         },
                         hir::Slice::Strs(encoding) => format!(
-                            r#"...diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}").splat()"#,
+                            r#"...{alloc_begin}diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}"){alloc_end}.splat()"#,
                             match encoding {
                                 hir::StringEncoding::UnvalidatedUtf16 => "string16",
                                 _ => "string8",
                             }
                         ),
                         hir::Slice::Primitive(_, p) => format!(
-                            r#"...diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}").splat()"#,
+                            r#"...{alloc_begin}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}.splat()"#,
                             self.formatter.fmt_primitive_list_view(p)
                         ),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }
-                    .into();
-                    if let Some(a) = alloc {
-                        format!("{a}.alloc({base_statement})").into()
-                    } else {
-                        base_statement
-                    }
+                    .into()
                 }
             }
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
