@@ -209,19 +209,15 @@ export class Float64Vec {
         }
     }
 
-    get(i) {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
-        const result = wasm.Float64Vec_get(diplomatReceive.buffer, this.ffiValue, i);
+    get(i) {const result = wasm.Float64Vec_get(this.ffiValue, i);
     
         try {
-            if (!diplomatReceive.resultFlag) {
+            if (result !== 1) {
                 return null;
             }
             return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {
-            diplomatReceive.free();
-        }
+        finally {}
     }
 }

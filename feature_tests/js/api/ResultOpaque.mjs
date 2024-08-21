@@ -86,20 +86,16 @@ export class ResultOpaque {
         }
     }
 
-    static newFailingUnit() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
+    static newFailingUnit() {const result = wasm.ResultOpaque_new_failing_unit();
     
         try {
-            if (!diplomatReceive.resultFlag) {
+            if (result !== 1) {
                 return null;
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
-        finally {
-            diplomatReceive.free();
-        }
+        finally {}
     }
 
     static newFailingStruct(i) {
@@ -136,20 +132,16 @@ export class ResultOpaque {
         }
     }
 
-    static newInt(i) {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
+    static newInt(i) {const result = wasm.ResultOpaque_new_int(i);
     
         try {
-            if (!diplomatReceive.resultFlag) {
+            if (result !== 1) {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
-        finally {
-            diplomatReceive.free();
-        }
+        finally {}
     }
 
     static newInEnumErr(i) {

@@ -10,6 +10,7 @@ internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
     fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
     fun MyStruct_returns_zst_result(): ResultUnitMyZstNative
+    fun MyStruct_fails_zst_result(): ResultUnitMyZstNative
 }
 
 internal class MyStructNative: Structure(), Structure.ByValue {
@@ -60,6 +61,16 @@ class MyStruct internal constructor (
         fun returnsZstResult(): Res<Unit, MyZst> {
             
             val returnVal = lib.MyStruct_returns_zst_result();
+            if (returnVal.isOk == 1.toByte()) {
+                return Unit.ok()
+            } else {
+                return MyZst().err()
+            }
+        }
+        
+        fun failsZstResult(): Res<Unit, MyZst> {
+            
+            val returnVal = lib.MyStruct_fails_zst_result();
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {

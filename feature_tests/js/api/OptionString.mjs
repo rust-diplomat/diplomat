@@ -62,21 +62,17 @@ export class OptionString {
     }
 
     borrow() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OptionString_borrow(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.OptionString_borrow(this.ffiValue);
     
         try {
-            if (!diplomatReceive.resultFlag) {
+            if (result !== 1) {
                 return null;
             }
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
         }
         
-        finally {
-            diplomatReceive.free();
-        }
+        finally {}
     }
 }

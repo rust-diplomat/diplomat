@@ -134,20 +134,29 @@ export class MyStruct {
         }
     }
 
-    static returnsZstResult() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.MyStruct_returns_zst_result(diplomatReceive.buffer);
+    static returnsZstResult() {const result = wasm.MyStruct_returns_zst_result();
     
         try {
-            if (!diplomatReceive.resultFlag) {
+            if (result !== 1) {
                 const cause = new MyZst(diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
         }
         
-        finally {
-            diplomatReceive.free();
+        finally {}
+    }
+
+    static failsZstResult() {const result = wasm.MyStruct_fails_zst_result();
+    
+        try {
+            if (result !== 1) {
+                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                throw new globalThis.Error('MyZst', { cause });
+            }
+    
         }
+        
+        finally {}
     }
 }
