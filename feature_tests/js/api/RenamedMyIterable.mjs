@@ -32,15 +32,17 @@ export class RenamedMyIterable {
 
     static new_(x) {
         
-        const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
-        const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const xSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8")).splat()];
+        const result = wasm.namespace_MyIterable_new(...xSlice);
     
         try {
             return new RenamedMyIterable(result, []);
         }
         
         finally {
-            xSlice.free();
+            functionCleanupArena.free();
         }
     }
 

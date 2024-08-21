@@ -31,15 +31,17 @@ export class Utf16Wrap {
 
     static fromUtf16(input) {
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
-        const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, input)).splat()];
+        const result = wasm.Utf16Wrap_from_utf16(...inputSlice);
     
         try {
             return new Utf16Wrap(result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 

@@ -20,7 +20,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#a._intoFFI(functionCleanupArena, {})]
+        return [...this.#a._intoFFI(functionCleanupArena.alloc, {})]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

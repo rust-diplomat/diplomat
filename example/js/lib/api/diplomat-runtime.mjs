@@ -419,14 +419,30 @@ export class DiplomatReceiveBuf {
  */
 export class CleanupArena {
     #items = [];
+    #garbageCollectItems = [];
 
     #edgeArray = [];
     
     constructor() {
     }
     
+    /**
+     * When this arena is freed, call .free() on the given item.
+     * @param {DiplomatBuf} item 
+     * @returns {DiplomatBuf}
+     */
     alloc(item) {
         this.#items.push(item);
+        return item;
+    }
+
+    /**
+     * Instead of setting a slice to be freed, set it to be collected by a FinalizationRegistry (with the `garbageCollect` method that the slice has set up for us)
+     * @param {DiplomatBuf} item 
+     * @returns {DiplomatBuf}
+     */
+    allocGarbageCollect(item) {
+        this.#garbageCollectItems.push(item);
         return item;
     }
 
@@ -439,6 +455,12 @@ export class CleanupArena {
         this.#items.forEach((i) => {
             i.free();
         });
+        this.#garbageCollectItems.forEach((i) => {
+            i.garbageCollect();
+        });
+
+        this.#items.length = 0;
+        this.#garbageCollectItems.length = 0;
     }
 }
 

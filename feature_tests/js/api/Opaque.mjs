@@ -43,29 +43,33 @@ export class Opaque {
 
     static tryFromUtf8(input) {
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
-        const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
+        const result = wasm.Opaque_try_from_utf8(...inputSlice);
     
         try {
             return result === 0 ? null : new Opaque(result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     static fromStr(input) {
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
-        const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
+        const result = wasm.Opaque_from_str(...inputSlice);
     
         try {
             return new Opaque(result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
@@ -86,7 +90,7 @@ export class Opaque {
     assertStruct(s) {
         
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena, {}));
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena.alloc(, {}));
     
         try {}
         

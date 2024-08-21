@@ -39,18 +39,20 @@ export class Foo {
 
     static new_(x) {
         
-        const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const xSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str8(wasm, x)).splat()];
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
-        const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
+        const result = wasm.Foo_new(...xSlice);
     
         try {
             return new Foo(result, [], aEdges);
         }
         
         finally {
-            xSlice.garbageCollect();
+            functionCleanupArena.free();
         }
     }
 
@@ -93,7 +95,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}));
+        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanupArena.alloc(, {aAppendArray: [aEdges],}));
     
         try {
             return new Foo(result, [], aEdges);
@@ -108,11 +110,11 @@ export class Foo {
         
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
+        const anotherStringSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)).splat()];
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanupArena, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanupArena.alloc(, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), ...anotherStringSlice);
     
         try {
             return new Foo(result, [], aEdges);
@@ -120,8 +122,6 @@ export class Foo {
         
         finally {
             functionCleanupArena.free();
-        
-            anotherStringSlice.garbageCollect();
         }
     }
 }

@@ -44,7 +44,7 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#fields._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
+        return [...this.#fields._intoFFI(functionCleanupArena.alloc, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(functionCleanupArena.alloc, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(functionCleanupArena.alloc, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
     _fromFFI(ptr, xEdges, yEdges, zEdges) {
@@ -87,13 +87,15 @@ export class NestedBorrowedFields {
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
-        const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const dstr16ZSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z);
+        const dstr16XSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)).splat()];
         
-        const utf8StrYSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY);
+        const dstr16ZSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z)).splat()];
         
-        const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
+        const utf8StrYSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY)).splat()];
+        
+        const utf8StrZSlice = [...functionCleanupArena.allocGarbageCollect(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)).splat()];
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
         
@@ -105,20 +107,14 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, ...dstr16XSlice, ...dstr16ZSlice, ...utf8StrYSlice, ...utf8StrZSlice);
     
         try {
             return new NestedBorrowedFields()._fromFFI(diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
         
         finally {
-            dstr16XSlice.garbageCollect();
-        
-            dstr16ZSlice.garbageCollect();
-        
-            utf8StrYSlice.garbageCollect();
-        
-            utf8StrZSlice.garbageCollect();
+            functionCleanupArena.free();
         
             diplomatReceive.free();
         }
