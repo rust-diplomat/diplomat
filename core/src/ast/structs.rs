@@ -30,7 +30,7 @@ impl Struct {
                     .as_ref()
                     .map(Into::into)
                     .expect("non-opaque tuples structs are disallowed");
-                let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
+                let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone().into()));
                 let docs = Docs::from_attrs(&field.attrs);
 
                 (name, type_name, docs)

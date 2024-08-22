@@ -105,12 +105,59 @@ pub enum ModSymbol {
     Trait(Trait),
 }
 
-/// A named type or trait that is just a path, e.g. `std::borrow::Cow<'a, T>`.
+/// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[non_exhaustive]
 pub struct PathType {
     pub path: Path,
     pub lifetimes: Vec<Lifetime>,
+}
+
+/// A named trait that is just a path, e.g. `std::borrow::Cow<'a, T>`.
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[non_exhaustive]
+pub struct PathTrait {
+    pub path: Path,
+    pub lifetimes: Vec<Lifetime>,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[non_exhaustive]
+pub enum PathLike {
+    Trait(PathTrait),
+    Type(PathType),
+}
+
+impl From<PathType> for PathLike {
+    fn from(other: PathType) -> Self {
+        PathLike::Type(other)
+    }
+}
+
+impl From<PathTrait> for PathLike {
+    fn from(other: PathTrait) -> Self {
+        PathLike::Trait(other)
+    }
+}
+
+impl TryInto<PathType> for PathLike {
+    type Error = ();
+    fn try_into(self) -> Result<PathType, Self::Error> {
+        match self {
+            PathLike::Type(id) => Ok(id),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<PathTrait> for PathLike {
+    type Error = ();
+    fn try_into(self) -> Result<PathTrait, Self::Error> {
+        match self {
+            PathLike::Trait(id) => Ok(id),
+            _ => Err(()),
+        }
+    }
 }
 
 impl PathType {
@@ -171,7 +218,7 @@ impl PathType {
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     ///
     /// Also returns the path the CustomType is in (useful for resolving fields)
-    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, CustomItem) {
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         let local_path = &self.path;
         let mut cur_path = in_path.clone();
         for (i, elem) in local_path.elements.iter().enumerate() {
@@ -197,7 +244,7 @@ impl PathType {
                     }
                     Some(ModSymbol::CustomType(t)) => {
                         if i == local_path.elements.len() - 1 {
-                            return (cur_path, CustomItem::CustomType(t.clone()));
+                            return (cur_path, t);
                         } else {
                             panic!(
                                 "Unexpected custom type when resolving symbol {} in {}",
@@ -207,16 +254,7 @@ impl PathType {
                         }
                     }
                     Some(ModSymbol::Trait(trt)) => {
-                        if i == local_path.elements.len() - 1 {
-                            println!("ABOUT TO RETURN TRAIT: {:?}", trt);
-                            return (cur_path, CustomItem::Trait(trt.clone()));
-                        } else {
-                            panic!(
-                                "Unexpected custom trait when resolving symbol {} in {}",
-                                o,
-                                cur_path.elements.join("::")
-                            )
-                        }
+                        panic!("Found trait {} but expected a type", trt.name);
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
@@ -238,7 +276,62 @@ impl PathType {
     ///
     /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
     /// to get the path to resolve the fields in.
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> CustomItem {
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
+        self.resolve_with_path(in_path, env).1
+    }
+}
+
+impl PathTrait {
+    pub fn to_syn(&self) -> syn::TraitBound {
+        let mut path = self.path.to_syn();
+
+        if !self.lifetimes.is_empty() {
+            if let Some(seg) = path.segments.last_mut() {
+                let lifetimes = &self.lifetimes;
+                seg.arguments =
+                    syn::PathArguments::AngleBracketed(syn::parse_quote! { <#(#lifetimes),*> });
+            }
+        }
+        todo!()
+    }
+
+    pub fn new(path: Path) -> Self {
+        Self {
+            path,
+            lifetimes: vec![],
+        }
+    }
+
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, Trait) {
+        let local_path = &self.path;
+        let mut cur_path = in_path.clone();
+        for (i, elem) in local_path.elements.iter().enumerate() {
+            if let Some(ModSymbol::Trait(trt)) = env.get(&cur_path, elem.as_str()) {
+                if i == local_path.elements.len() - 1 {
+                    println!("ABOUT TO RETURN TRAIT: {:?}", trt);
+                    return (cur_path, trt.clone());
+                } else {
+                    panic!(
+                        "Unexpected custom trait when resolving symbol {} in {}",
+                        trt.name,
+                        cur_path.elements.join("::")
+                    )
+                }
+            }
+        }
+
+        panic!(
+            "Path {} does not point to a custom trait",
+            in_path.elements.join("::")
+        )
+    }
+
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    ///
+    /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
+    /// to get the path to resolve the fields in.
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> Trait {
         self.resolve_with_path(in_path, env).1
     }
 }
@@ -274,9 +367,46 @@ impl From<&syn::TypePath> for PathType {
     }
 }
 
+impl From<&syn::TraitBound> for PathTrait {
+    fn from(other: &syn::TraitBound) -> Self {
+        let lifetimes = other
+            .path
+            .segments
+            .last()
+            .and_then(|last| {
+                if let syn::PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                    Some(
+                        angle_generics
+                            .args
+                            .iter()
+                            .map(|generic_arg| match generic_arg {
+                                syn::GenericArgument::Lifetime(lifetime) => lifetime.into(),
+                                _ => panic!("generic type arguments are unsupported {other:?}"),
+                            })
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+
+        Self {
+            path: Path::from_syn(&other.path),
+            lifetimes,
+        }
+    }
+}
+
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
         PathType::new(other)
+    }
+}
+
+impl From<Path> for PathTrait {
+    fn from(other: Path) -> Self {
+        PathTrait::new(other)
     }
 }
 
@@ -400,7 +530,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
-    ImplTrait(PathType),
+    ImplTrait(PathTrait),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -625,7 +755,7 @@ impl TypeName {
     /// - If the type is a owned or borrowed slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
-    pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
+    pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathLike>) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
                 let lifetime = Lifetime::from(&r.lifetime);
@@ -757,7 +887,11 @@ impl TypeName {
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
-                        TypeName::SelfType(self_path_type)
+                        TypeName::SelfType(
+                            self_path_type
+                                .try_into()
+                                .expect("Was expecting a type path, got a trait path"),
+                        )
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
@@ -920,9 +1054,10 @@ impl TypeName {
                         }
                         panic!("Unsupported function type: {:?}", &path_seg.arguments);
                     } else {
-                        // panic!("AHHHH WHAT: {:?}", path_seg);
-                        let ret = TypeName::Named(PathType::from(&syn::TypePath {
-                            qself: None,
+                        let ret = TypeName::ImplTrait(PathTrait::from(&syn::TraitBound {
+                            paren_token: None,
+                            modifier: syn::TraitBoundModifier::None,
+                            lifetimes: None, // todo this is an assumption
                             path: p.clone(),
                         }));
                         println!("named trait type: {:?}", ret);
@@ -1243,6 +1378,21 @@ impl<'a> quote::ToTokens for LifetimeGenericsListPartialDisplay<'a> {
 }
 
 impl fmt::Display for PathType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.path.fmt(f)?;
+
+        if let Some((first, rest)) = self.lifetimes.split_first() {
+            write!(f, "<{first}")?;
+            for lifetime in rest {
+                write!(f, ", {lifetime}")?;
+            }
+            '>'.fmt(f)?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for PathTrait {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.path.fmt(f)?;
 

@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::{Docs, Ident, Param, SelfParam, TypeName};
+use super::{Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///
@@ -125,7 +125,7 @@ impl LifetimeEnv {
 
     pub fn from_trait_fct_item(
         trait_fct_item: &syn::TraitItem,
-        self_param: Option<&SelfParam>,
+        self_param: Option<&TraitSelfParam>,
         params: &[Param],
         return_type: Option<&TypeName>,
     ) -> Self {
