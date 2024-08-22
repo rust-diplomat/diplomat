@@ -20,7 +20,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
     Struct(P::StructPath),
-    Trait(P::TraitPath),
+    ImplTrait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
@@ -92,8 +92,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
             Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
-            Type::Primitive(_) | Type::Enum(_) => (0, 0),
-            Type::Trait(_) => todo!(),
+            Type::Primitive(_) | Type::Enum(_) | Type::ImplTrait(_) => (0, 0),
         }
     }
 }

@@ -692,7 +692,7 @@ impl<'ast> LoweringContext<'ast> {
                 let lifetimes =
                     ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.is_self());
 
-                Ok(Type::Trait(P::build_trait_path(TraitPath::new(
+                Ok(Type::ImplTrait(P::build_trait_path(TraitPath::new(
                     lifetimes, tcx_id,
                 ))))
             }
