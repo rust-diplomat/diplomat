@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
+use super::{
+    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathLike, PathTrait, PathType, TypeName,
+};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -63,7 +65,7 @@ impl Method {
             .iter()
             .filter_map(|a| match a {
                 syn::FnArg::Receiver(_) => None,
-                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone())),
+                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone().into())),
             })
             .collect::<Vec<_>>();
 
@@ -78,7 +80,11 @@ impl Method {
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
-                    Some(self_path_type),
+                    Some(
+                        self_path_type
+                            .try_into()
+                            .expect("Was expecting a type path, got a trait path"),
+                    ),
                 ))
             }
             syn::ReturnType::Default => None,
@@ -255,6 +261,38 @@ impl SelfParam {
     }
 }
 
+/// The `self` parameter taken by a [`TraitMethod`].
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug, Deserialize)]
+#[non_exhaustive]
+pub struct TraitSelfParam {
+    /// The lifetime and mutability of the `self` param, if it's a reference.
+    pub reference: Option<(Lifetime, Mutability)>,
+
+    /// The trait of the parameter, which will be a named reference to
+    /// the associated trait,
+    pub path_trait: PathTrait,
+}
+
+impl TraitSelfParam {
+    pub fn to_typename(&self) -> TypeName {
+        let typ = TypeName::ImplTrait(self.path_trait.clone());
+        if let Some((ref lifetime, ref mutability)) = self.reference {
+            return TypeName::Reference(lifetime.clone(), *mutability, Box::new(typ));
+        }
+        typ
+    }
+
+    pub fn from_syn(rec: &syn::Receiver, path_trait: PathTrait) -> Self {
+        TraitSelfParam {
+            reference: rec
+                .reference
+                .as_ref()
+                .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
+            path_trait,
+        }
+    }
+}
+
 /// A parameter taken by a [`Method`], not including `self`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[non_exhaustive]
@@ -278,7 +316,7 @@ impl Param {
         }
     }
 
-    pub fn from_syn(t: &syn::PatType, self_path_type: PathType) -> Self {
+    pub fn from_syn(t: &syn::PatType, self_path_type: PathLike) -> Self {
         let ident = match t.pat.as_ref() {
             syn::Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),

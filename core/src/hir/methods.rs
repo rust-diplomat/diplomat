@@ -4,7 +4,8 @@ use std::collections::BTreeSet;
 use std::ops::Deref;
 
 use super::{
-    Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, OutputOnly, SelfType, Type, TypeContext,
+    Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, OutputOnly, SelfType, TraitPath, Type,
+    TypeContext,
 };
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
@@ -49,7 +50,7 @@ pub trait CallbackInstantiationFunctionality {
 #[non_exhaustive]
 // Note: we do not support borrowing across callbacks
 pub struct Callback {
-    pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
+    pub param_self: Option<TraitParamSelf>, // this is None for callbacks as method arguments
     pub params: Vec<CallbackParam>,
     pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
     pub name: Option<IdentBuf>,
@@ -106,6 +107,11 @@ pub enum ReturnType {
 pub struct ParamSelf {
     pub ty: SelfType,
     pub attrs: Attrs,
+}
+
+#[derive(Debug, Clone)]
+pub struct TraitParamSelf {
+    pub trait_path: TraitPath,
 }
 
 /// A parameter in a method.
@@ -237,8 +243,13 @@ impl ParamSelf {
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
             SelfType::Enum(_) => (0, 0),
-            SelfType::Trait(_) => todo!(),
         }
+    }
+}
+
+impl TraitParamSelf {
+    pub(super) fn new(trait_path: TraitPath) -> Self {
+        Self { trait_path }
     }
 }
 

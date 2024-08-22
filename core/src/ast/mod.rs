@@ -7,7 +7,7 @@ pub(crate) use attrs::AttrInheritContext;
 pub use attrs::Attrs;
 
 mod methods;
-pub use methods::{BorrowedParams, Method, Param, SelfParam};
+pub use methods::{BorrowedParams, Method, Param, SelfParam, TraitSelfParam};
 
 mod modules;
 pub use modules::{File, Module};
@@ -23,8 +23,8 @@ pub use enums::Enum;
 
 mod types;
 pub use types::{
-    CustomItem, CustomType, LifetimeOrigin, ModSymbol, Mutability, PathType, PrimitiveType,
-    StdlibOrDiplomat, StringEncoding, TypeName,
+    CustomItem, CustomType, LifetimeOrigin, ModSymbol, Mutability, PathLike, PathTrait, PathType,
+    PrimitiveType, StdlibOrDiplomat, StringEncoding, TypeName,
 };
 
 pub(crate) mod lifetimes;

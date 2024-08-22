@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Param, PathType, SelfParam, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Param, PathTrait, PathType, TraitSelfParam, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -19,7 +19,7 @@ pub struct Trait {
 pub struct TraitMethod {
     pub name: Ident,
     pub abi_name: Ident,
-    pub self_param: Option<SelfParam>,
+    pub self_param: Option<TraitSelfParam>,
     // corresponds to the types in Function(Vec<Box<TypeName>>, Box<TypeName>)
     // the callback type; except here the params aren't anonymous
     pub params: Vec<Param>,
@@ -38,8 +38,10 @@ impl Trait {
 
         let self_ident = &trt.ident;
         // TODO check this
-        let self_path_type = PathType::from(&syn::TypePath {
-            qself: None,
+        let self_path_trait = PathTrait::from(&syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None, // todo this is an assumption
             path: syn::PathSegment {
                 ident: self_ident.clone(),
                 arguments: syn::PathArguments::None,
@@ -65,7 +67,7 @@ impl Trait {
                     .filter_map(|a| match a {
                         syn::FnArg::Receiver(_) => None,
                         syn::FnArg::Typed(ref t) => {
-                            Some(Param::from_syn(t, self_path_type.clone()))
+                            Some(Param::from_syn(t, self_path_trait.clone().into()))
                         }
                     })
                     .collect::<Vec<_>>();
@@ -73,12 +75,17 @@ impl Trait {
                 let self_param = fct
                     .sig
                     .receiver()
-                    .map(|rec| SelfParam::from_syn(rec, self_path_type.clone()));
+                    .map(|rec| TraitSelfParam::from_syn(rec, self_path_trait.clone()));
 
                 let output_type = match &fct.sig.output {
                     syn::ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
                         return_typ.as_ref(),
-                        Some(self_path_type.clone()),
+                        Some(
+                            self_path_trait
+                                .clone()
+                                .try_into()
+                                .expect("Was expecting a type path, got a trait path"),
+                        ),
                     )),
                     syn::ReturnType::Default => None,
                 };

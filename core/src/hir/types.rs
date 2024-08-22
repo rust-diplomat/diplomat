@@ -44,7 +44,7 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
-    Trait(TraitPath),
+    // Trait(TraitPath),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -205,7 +205,6 @@ impl From<SelfType> for Type {
             SelfType::Opaque(o) => Type::Opaque(o.wrap_optional()),
             SelfType::Struct(s) => Type::Struct(s),
             SelfType::Enum(e) => Type::Enum(e),
-            SelfType::Trait(t) => Type::Trait(t),
         }
     }
 }
