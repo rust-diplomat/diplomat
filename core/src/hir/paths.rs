@@ -30,6 +30,11 @@ pub struct TraitPath {
     pub tcx_id: TraitId,
 }
 
+/// Non-instantiable enum to denote the trait path in
+/// TyPositions that don't allow traits (anything not InputOnly)
+#[derive(Debug, Clone)]
+pub enum NoTraitPath {}
+
 /// Path to an opaque.
 ///
 /// There are three kinds of opaques that Diplomat uses, so this type has two

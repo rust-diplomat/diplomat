@@ -1,8 +1,8 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
     Borrow, Callback, CallbackInstantiationFunctionality, IdentBuf, LinkedLifetimes, MaybeOwn,
-    Mutability, NoCallback, OutStructId, ReturnableStructPath, StructDef, StructId, StructPath,
-    TypeContext, TypeDef, TypeId,
+    Mutability, NoCallback, NoTraitPath, OutStructId, ReturnableStructPath, StructDef, StructId,
+    StructPath, TraitPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
@@ -108,8 +108,11 @@ where
 
     type StructPath: Debug + StructPathLike;
 
+    type TraitPath: Debug;
+
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
     fn build_callback(cb: Callback) -> Self::CallbackInstantiation;
+    fn build_trait_path(trait_path: TraitPath) -> Self::TraitPath;
 }
 
 /// Directionality of the type
@@ -154,12 +157,16 @@ impl TyPosition for Everywhere {
     type StructId = StructId;
     type StructPath = StructPath;
     type CallbackInstantiation = NoCallback;
+    type TraitPath = NoTraitPath;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::Struct(def)
     }
     fn build_callback(_cb: Callback) -> Self::CallbackInstantiation {
         panic!("Callbacks must be input-only");
+    }
+    fn build_trait_path(_trait_path: TraitPath) -> Self::TraitPath {
+        panic!("Traits must be input-only");
     }
 }
 
@@ -169,12 +176,16 @@ impl TyPosition for OutputOnly {
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
     type CallbackInstantiation = NoCallback;
+    type TraitPath = NoTraitPath;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::OutStruct(def)
     }
     fn build_callback(_cb: Callback) -> Self::CallbackInstantiation {
         panic!("Callbacks must be input-only");
+    }
+    fn build_trait_path(_trait_path: TraitPath) -> Self::TraitPath {
+        panic!("Traits must be input-only");
     }
 }
 
@@ -184,12 +195,16 @@ impl TyPosition for InputOnly {
     type StructId = StructId;
     type StructPath = StructPath;
     type CallbackInstantiation = Callback;
+    type TraitPath = TraitPath;
 
     fn wrap_struct_def<'tcx>(_def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         panic!("Input-only structs are not currently supported");
     }
     fn build_callback(cb: Callback) -> Self::CallbackInstantiation {
         cb
+    }
+    fn build_trait_path(trait_path: TraitPath) -> Self::TraitPath {
+        trait_path
     }
 }
 
