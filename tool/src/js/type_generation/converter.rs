@@ -394,7 +394,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             // Result<Type, Error> or Option<Type>
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 let (requires_buf, error_ret) = match return_type {
-                    ReturnType::Fallible(_, Some(e)) => {
+                    ReturnType::Fallible(s, Some(e)) => {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         self.add_import(type_name.into());
 
@@ -402,6 +402,14 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                                 ReturnableStructDef::Struct(s) => s.fields.is_empty(),
                                 ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
                                 _ => unreachable!(),
+                        });
+
+                        let is_out = matches!(s, SuccessType::OutType(..));
+
+                        let success_empty = matches!(s, SuccessType::OutType(Type::Struct(s)) if match s.resolve(self.tcx) {
+                            ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                            ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                            _ => unreachable!(),
                         });
 
                         let receive_deref = self.gen_c_to_js_deref_for_type(
@@ -417,7 +425,8 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         let cause =
                             self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
-                        (!fields_empty, format!(
+                        // We still require an out buffer even if our error types is empty
+                        (!fields_empty || (is_out && !success_empty), format!(
                         "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
                         message = match e {
                             Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
