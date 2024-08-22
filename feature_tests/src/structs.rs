@@ -191,6 +191,10 @@ pub mod ffi {
         pub fn returns_zst_result() -> Result<(), MyZst> {
             Ok(())
         }
+
+        pub fn fails_zst_result() -> Result<(), MyZst> {
+            Err(MyZst {})
+        }
     }
 
     // Test that cycles between structs work even when

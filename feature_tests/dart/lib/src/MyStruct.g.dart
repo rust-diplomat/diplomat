@@ -100,6 +100,17 @@ final class MyStruct {
     
   }
 
+  /// 
+  ///
+  /// Throws [MyZst] on failure.
+  static void failsZstResult() {
+    final result = _MyStruct_fails_zst_result();
+    if (!result.isOk) {
+      throw MyZst();
+    }
+    
+  }
+
   @override
   bool operator ==(Object other) =>
       other is MyStruct &&
@@ -137,3 +148,8 @@ external int _MyStruct_into_a(_MyStructFfi self);
 @ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_returns_zst_result')
 // ignore: non_constant_identifier_names
 external _ResultVoidMyZstFfi _MyStruct_returns_zst_result();
+
+@meta.ResourceIdentifier('MyStruct_fails_zst_result')
+@ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_fails_zst_result')
+// ignore: non_constant_identifier_names
+external _ResultVoidMyZstFfi _MyStruct_fails_zst_result();

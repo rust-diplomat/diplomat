@@ -46,6 +46,8 @@ struct MyStruct {
 
   inline static diplomat::result<std::monostate, MyZst> returns_zst_result();
 
+  inline static diplomat::result<std::monostate, MyZst> fails_zst_result();
+
   inline diplomat::capi::MyStruct AsFFI() const;
   inline static MyStruct FromFFI(diplomat::capi::MyStruct c_struct);
 };

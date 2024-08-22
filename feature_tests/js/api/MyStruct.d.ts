@@ -32,4 +32,6 @@ export class MyStruct {
     intoA(): number;
 
     static returnsZstResult(): void;
+
+    static failsZstResult(): void;
 }
