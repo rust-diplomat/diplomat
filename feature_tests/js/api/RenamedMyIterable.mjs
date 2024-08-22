@@ -38,6 +38,7 @@ export class RenamedMyIterable {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const xSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8")).splat()];
+        
         const result = wasm.namespace_MyIterable_new(...xSlice);
     
         try {
@@ -52,6 +53,7 @@ export class RenamedMyIterable {
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     
         try {

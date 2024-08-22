@@ -37,6 +37,7 @@ export class OptionString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const diplomatStrSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)).splat()];
+        
         const result = wasm.OptionString_new(...diplomatStrSlice);
     
         try {
@@ -50,6 +51,7 @@ export class OptionString {
 
     write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
     
         try {
@@ -66,6 +68,7 @@ export class OptionString {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OptionString_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {

@@ -113,6 +113,7 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
+        
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, ...dstr16XSlice, ...dstr16ZSlice, ...utf8StrYSlice, ...utf8StrZSlice);
     
         try {

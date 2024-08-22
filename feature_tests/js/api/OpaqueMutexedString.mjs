@@ -34,7 +34,8 @@ export class OpaqueMutexedString {
         return this.#ptr;
     }
 
-    static fromUsize(number) {const result = wasm.OpaqueMutexedString_from_usize(number);
+    static fromUsize(number) {
+        const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
@@ -53,6 +54,7 @@ export class OpaqueMutexedString {
     borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
         try {
@@ -65,6 +67,7 @@ export class OpaqueMutexedString {
     static borrowOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
+        
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
         try {
@@ -77,6 +80,7 @@ export class OpaqueMutexedString {
     borrowSelfOrOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
+        
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
         try {
@@ -86,7 +90,8 @@ export class OpaqueMutexedString {
         finally {}
     }
 
-    getLenAndAdd(other) {const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
+    getLenAndAdd(other) {
+        const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
     
         try {
             return result;
@@ -100,6 +105,7 @@ export class OpaqueMutexedString {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -111,7 +117,8 @@ export class OpaqueMutexedString {
         }
     }
 
-    wrapper() {const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
+    wrapper() {
+        const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
             return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
