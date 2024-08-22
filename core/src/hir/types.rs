@@ -20,7 +20,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
     Struct(P::StructPath),
-    Trait(P::TraitPath),
+    ImplTrait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
