@@ -37,6 +37,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean")).splat()];
+        
         const result = wasm.Float64Vec_new_bool(...vSlice);
     
         try {
@@ -52,6 +53,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16")).splat()];
+        
         const result = wasm.Float64Vec_new_i16(...vSlice);
     
         try {
@@ -67,6 +69,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16")).splat()];
+        
         const result = wasm.Float64Vec_new_u16(...vSlice);
     
         try {
@@ -82,6 +85,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32")).splat()];
+        
         const result = wasm.Float64Vec_new_isize(...vSlice);
     
         try {
@@ -97,6 +101,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32")).splat()];
+        
         const result = wasm.Float64Vec_new_usize(...vSlice);
     
         try {
@@ -112,6 +117,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8")).splat()];
+        
         const result = wasm.Float64Vec_new_f64_be_bytes(...vSlice);
     
         try {
@@ -127,6 +133,7 @@ export class Float64Vec {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")).splat()];
+        
         const result = wasm.Float64Vec_new_from_owned(...vSlice);
     
         try {
@@ -143,6 +150,7 @@ export class Float64Vec {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Float64Vec_as_slice(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -198,6 +206,7 @@ export class Float64Vec {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Float64Vec_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -211,6 +220,7 @@ export class Float64Vec {
 
     get(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
+        
         const result = wasm.Float64Vec_get(diplomatReceive.buffer, this.ffiValue, i);
     
         try {

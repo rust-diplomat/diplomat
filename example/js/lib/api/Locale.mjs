@@ -42,6 +42,7 @@ export class Locale {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const nameSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name)).splat()];
+        
         const result = wasm.icu4x_Locale_new_mv1(...nameSlice);
     
         try {

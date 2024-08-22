@@ -37,6 +37,7 @@ export class Utf16Wrap {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, input)).splat()];
+        
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice);
     
         try {
@@ -66,6 +67,7 @@ export class Utf16Wrap {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
     
         try {

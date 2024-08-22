@@ -37,6 +37,7 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        
         const result = wasm.MyString_new(...vSlice);
     
         try {
@@ -52,6 +53,7 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        
         const result = wasm.MyString_new_unsafe(...vSlice);
     
         try {
@@ -67,6 +69,7 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        
         const result = wasm.MyString_new_owned(...vSlice);
     
         try {
@@ -82,6 +85,7 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8")).splat()];
+        
         const result = wasm.MyString_new_from_first(...vSlice);
     
         try {

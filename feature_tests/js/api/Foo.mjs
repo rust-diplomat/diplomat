@@ -47,6 +47,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
+        
         const result = wasm.Foo_new(...xSlice);
     
         try {
@@ -64,6 +65,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];
+        
         const result = wasm.Foo_get_bar(this.ffiValue);
     
         try {
@@ -78,6 +80,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Foo_as_returning(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -94,6 +97,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
+        
         const result = wasm.Foo_extract_from_fields(...fields._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}));
     
         try {
@@ -113,6 +117,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
+        
         const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(functionCleanupArena, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), ...anotherStringSlice);
     
         try {

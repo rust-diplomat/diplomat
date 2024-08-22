@@ -36,7 +36,8 @@ export class FixedDecimal {
         return this.#ptr;
     }
 
-    static new_(v) {const result = wasm.icu4x_FixedDecimal_new_mv1(v);
+    static new_(v) {
+        const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
             return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
@@ -54,6 +55,7 @@ export class FixedDecimal {
 
     toString() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        
         const result = wasm.icu4x_FixedDecimal_to_string_mv1(this.ffiValue, write.buffer);
     
         try {

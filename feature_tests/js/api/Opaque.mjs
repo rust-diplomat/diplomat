@@ -35,7 +35,8 @@ export class Opaque {
         return this.#ptr;
     }
 
-    static new_() {const result = wasm.Opaque_new();
+    static new_() {
+        const result = wasm.Opaque_new();
     
         try {
             return new Opaque(diplomatRuntime.internalConstructor, result, []);
@@ -48,6 +49,7 @@ export class Opaque {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
+        
         const result = wasm.Opaque_try_from_utf8(...inputSlice);
     
         try {
@@ -63,6 +65,7 @@ export class Opaque {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input)).splat()];
+        
         const result = wasm.Opaque_from_str(...inputSlice);
     
         try {
@@ -98,7 +101,8 @@ export class Opaque {
         }
     }
 
-    static returnsUsize() {const result = wasm.Opaque_returns_usize();
+    static returnsUsize() {
+        const result = wasm.Opaque_returns_usize();
     
         try {
             return result;
@@ -109,6 +113,7 @@ export class Opaque {
 
     static returnsImported() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
@@ -120,7 +125,8 @@ export class Opaque {
         }
     }
 
-    static cmp() {const result = wasm.Opaque_cmp();
+    static cmp() {
+        const result = wasm.Opaque_cmp();
     
         try {
             return result;
