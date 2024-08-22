@@ -418,12 +418,8 @@ impl<'ast> LoweringContext<'ast> {
         let self_param_ltl = SelfParamLifetimeLowerer::new(&ast_trait_method.lifetimes, self)?;
         let (param_self, mut param_ltl) =
             if let Some(self_param) = ast_trait_method.self_param.as_ref() {
-                let (param_self, param_ltl) = self.lower_trait_self_param(
-                    self_param,
-                    self_param_ltl,
-                    &ast_trait_method.abi_name,
-                    in_path,
-                )?;
+                let (param_self, param_ltl) =
+                    self.lower_trait_self_param(self_param, self_param_ltl, in_path)?;
                 (Some(param_self), param_ltl)
             } else {
                 (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
@@ -689,7 +685,6 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::ImplTrait(path) => {
                 let trt = path.resolve(in_path, self.env);
-                // ast::CustomItem::Trait(trt) => {
                 let tcx_id = self
                     .lookup_id
                     .resolve_trait(&trt)
@@ -697,8 +692,9 @@ impl<'ast> LoweringContext<'ast> {
                 let lifetimes =
                     ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.is_self());
 
-                Ok(Type::Trait(TraitPath::new(lifetimes, tcx_id)))
-                // }
+                Ok(Type::Trait(P::build_trait_path(TraitPath::new(
+                    lifetimes, tcx_id,
+                ))))
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
@@ -1197,7 +1193,6 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         self_param: &ast::TraitSelfParam,
         self_param_ltl: SelfParamLifetimeLowerer<'ast>,
-        method_full_path: &ast::Ident, // for better error msg
         in_path: &ast::Path,
     ) -> Result<(TraitParamSelf, ParamLifetimeLowerer<'ast>), ()> {
         let trt = self_param.path_trait.resolve(in_path, self.env);

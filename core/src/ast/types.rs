@@ -304,7 +304,7 @@ impl PathTrait {
 
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, Trait) {
         let local_path = &self.path;
-        let mut cur_path = in_path.clone();
+        let cur_path = in_path.clone();
         for (i, elem) in local_path.elements.iter().enumerate() {
             if let Some(ModSymbol::Trait(trt)) = env.get(&cur_path, elem.as_str()) {
                 if i == local_path.elements.len() - 1 {

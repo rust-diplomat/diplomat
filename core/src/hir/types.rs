@@ -3,7 +3,7 @@
 use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
-    PrimitiveType, StructPath, StructPathLike, TraitPath, TyPosition, TypeContext, TypeId,
+    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId,
 };
 use crate::ast;
 pub use ast::Mutability;
@@ -20,7 +20,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
     Struct(P::StructPath),
-    Trait(TraitPath),
+    Trait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
@@ -33,7 +33,6 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
-    // Trait(TraitPath),
 }
 
 #[derive(Copy, Clone, Debug)]

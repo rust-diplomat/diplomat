@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Param, PathTrait, PathType, TraitSelfParam, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Param, PathTrait, TraitSelfParam, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
