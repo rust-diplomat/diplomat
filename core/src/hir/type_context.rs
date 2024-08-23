@@ -53,7 +53,6 @@ pub enum TypeId {
     OutStruct(OutStructId),
     Opaque(OpaqueId),
     Enum(EnumId),
-    // Trait(TraitId),
 }
 
 pub enum SymbolId {
@@ -128,7 +127,6 @@ impl TypeContext {
             TypeId::OutStruct(i) => TypeDef::OutStruct(self.resolve_out_struct(i)),
             TypeId::Opaque(i) => TypeDef::Opaque(self.resolve_opaque(i)),
             TypeId::Enum(i) => TypeDef::Enum(self.resolve_enum(i)),
-            // TypeId::Trait(i) => TypeDef::Trait(self.resolve_trait(i)),
         }
     }
 

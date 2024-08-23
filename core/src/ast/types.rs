@@ -292,7 +292,12 @@ impl PathTrait {
                     syn::PathArguments::AngleBracketed(syn::parse_quote! { <#(#lifetimes),*> });
             }
         }
-        todo!()
+        syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None, // todo this is an assumption
+            path
+        }
     }
 
     pub fn new(path: Path) -> Self {
