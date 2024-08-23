@@ -25,13 +25,6 @@ pub enum CustomType {
     Enum(Enum),
 }
 
-#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum CustomItem {
-    CustomType(CustomType),
-    Trait(Trait),
-}
-
 impl CustomType {
     /// Get the name of the custom type, which is unique within a module.
     pub fn name(&self) -> &Ident {
@@ -296,7 +289,7 @@ impl PathTrait {
             paren_token: None,
             modifier: syn::TraitBoundModifier::None,
             lifetimes: None, // todo this is an assumption
-            path
+            path,
         }
     }
 
