@@ -6,11 +6,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
-interface DiplomatTraitInterface_TesterTrait {
-    fun test_trait_fn(x: Int): Int;
-    fun test_void_trait_fn(): Unit;
-}
+// ------------------------------------------------------------------------------------------- Generated code
 
 class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.ByValue {
     @JvmField
@@ -94,10 +90,19 @@ interface DiplomatCallback_Lib: Library {
         fun invoke(ignored: Pointer?): Unit
     }
 
-    // specific to this callback
     fun Wrapper_test_with_trait(diplomatTraitWrapper: DiplomatTrait_TesterTrait_Wrapper_Native, i: Int): Int
 }
 
+// the Kotlin interface that you'll extend to have access to the Rust trait `TesterTrait`
+interface DiplomatTraitInterface_TesterTrait {
+    fun test_trait_fn(x: Int): Int;
+    fun test_void_trait_fn(): Unit;
+}
+
+// ------------------------------------------------------------------------------------------------ user written code below
+
+// class implementing the interface -- this is where you add custom functionality
+// for the trait methods
 class MyTesterTraitImpl: DiplomatTraitInterface_TesterTrait {
     override fun test_trait_fn(x: Int): Int {
         return x*2;
@@ -113,8 +118,11 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         var trait_obj = MyTesterTraitImpl();
+
+        // create the wrapper object for the trait object, to pass to Rust
         var trait_obj_wrap = DiplomatCallback_TesterTrait_Wrapper.fromTraitObj(trait_obj);
-        var res = DiplomatCallback_TesterTrait_Wrapper.test_trait_fn(trait_obj_wrap, 5); // calls test_rust_fn with the callback
+        // pass the Kotlin trait object to Rust, as the argument to `test_trait_fn`
+        var res = DiplomatCallback_TesterTrait_Wrapper.test_trait_fn(trait_obj_wrap, 5); 
         println("Result: " + res);
     }
 }
