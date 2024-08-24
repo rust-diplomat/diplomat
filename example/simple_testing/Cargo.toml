@@ -1,0 +1,18 @@
+[package]
+name = "simple_testing"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+diplomat = { path = "../../macro" }
+diplomat-runtime = { path = "../../runtime" }
+mls-rs = "0.39.4"
+mls-rs-core = "0.18.1"
+mls-rs-crypto-rustcrypto = "0.10.0"
+jni = "0.21"
+
+[lib]
+crate_type = ["cdylib", "staticlib"]
+name = "somelib"
+
+[workspace]
