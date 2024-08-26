@@ -163,10 +163,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         struct_def: &'tcx hir::StructDef<P>,
     ) -> Vec<FieldInfo<P>> {
-        let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
-            struct_def.fields.iter().map(|f| &f.ty),
-            self.tcx,
-        );
+        let struct_field_info =
+            crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
 
         let fields = struct_def.fields.iter().enumerate()
         .map(|field_enumerator| {
@@ -176,7 +174,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
-            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
+            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty,
@@ -219,9 +217,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let field_layout = crate::js::layout::type_size_alignment(&field.ty, self.tcx);
 
-            let curr_offset = offsets[i];
-            let next_offset = if i < offsets.len() - 1 {
-                offsets[i + 1]
+            let curr_offset = struct_field_info.fields[i].offset;
+            let next_offset = if i < struct_field_info.fields.len() - 1 {
+                struct_field_info.fields[i + 1].offset
             } else {
                 curr_offset + field_layout.size()
             };
