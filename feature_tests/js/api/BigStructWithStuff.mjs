@@ -67,7 +67,7 @@ export class BigStructWithStuff {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#first,/* Padding for first */ 0 /* End Padding */, this.#second, this.#third,/* Padding for third */ 0, 0 /* End Padding */, ...this.#fourth._intoFFI(functionCleanupArena, {}), this.#fifth]
+        return [this.#first, /* Padding (u8) for second */ 0 /* End Padding */,this.#second, this.#third, /* Padding (u16) for fourth */ 0 /* End Padding */,...this.#fourth._intoFFI(functionCleanupArena, {}), this.#fifth]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

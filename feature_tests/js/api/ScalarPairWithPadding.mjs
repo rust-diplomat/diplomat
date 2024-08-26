@@ -39,7 +39,7 @@ export class ScalarPairWithPadding {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#first,/* Padding for first */ 0, 0, 0 /* End Padding */, this.#second]
+        return [this.#first, /* Padding (u8) for second */ 0, 0, 0 /* End Padding */,this.#second]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

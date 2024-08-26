@@ -167,9 +167,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
 
         let fields = struct_def.fields.iter().enumerate()
-        .map(|field_enumerator| {
-            let (i, field) = field_enumerator;
-
+        .map(|(i, field)| {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let js_type_name = self.gen_js_type_str(&field.ty);
@@ -215,35 +213,32 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let field_layout = crate::js::layout::type_size_alignment(&field.ty, self.tcx);
+            let padding = struct_field_info.fields[i].padding_count;
 
-            let curr_offset = struct_field_info.fields[i].offset;
-            let next_offset = if i < struct_field_info.fields.len() - 1 {
-                struct_field_info.fields[i + 1].offset
-            } else {
-                curr_offset + field_layout.size()
-            };
+            let maybe_preceding_padding = if padding > 0 {
+                let padding_size_str = match struct_field_info.fields[i].padding_size {
+                    1 => "u8",
+                    2 => "u16",
+                    4 => "u32",
+                    8 => "u64",
+                    other => unreachable!("Found unknown padding size {other}")
+                };
+                let mut out = format!("/* Padding ({padding_size_str}) for {} */ ", field.name);
 
-            let padding = next_offset - curr_offset - field_layout.size();
-
-            let js_to_c = format!("{}{}",
-                self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
-                if padding > 0 {
-                    let mut out = format!(",/* Padding for {} */ ", field.name);
-
-                    for i in 0..padding {
-                        if i < padding - 1 {
-                            write!(out, "0, ").unwrap();
-                        } else {
-                            write!(out, "0 /* End Padding */").unwrap();
-                        }
+                for i in 0..padding {
+                    if i < padding - 1 {
+                        write!(out, "0, ").unwrap();
+                    } else {
+                        write!(out, "0 /* End Padding */,").unwrap();
                     }
-
-                    out
-                } else {
-                    "".into()
                 }
-            );
+
+                out
+            } else {
+                "".into()
+            };
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref());
+            let js_to_c = format!("{maybe_preceding_padding}{js_to_c}");
 
             FieldInfo {
                 field_name,
