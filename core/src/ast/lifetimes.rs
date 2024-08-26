@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::{Attrs, Docs, Ident, Param, SelfParam, TypeName};
+use super::{Attrs, Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///

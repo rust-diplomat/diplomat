@@ -102,7 +102,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
+            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) | Type::ImplTrait(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
             Type::DiplomatOption(ty) => ty.field_leaf_lifetime_counts(tcx),
         }

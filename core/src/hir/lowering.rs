@@ -448,7 +448,7 @@ impl<'ast> LoweringContext<'ast> {
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
         let output = if let Some(out_ty) = &ast_trait_method.output_type {
-            Some(self.lower_type(&out_ty, &mut param_ltl, in_path)?)
+            Some(self.lower_type(&out_ty, &mut param_ltl, false /* in_struct */, in_path)?)
         } else {
             None
         };
