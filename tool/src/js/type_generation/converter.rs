@@ -19,6 +19,21 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
         .all(|(i, v)| i as isize == v.discriminant)
 }
 
+/// The Rust-Wasm ABI currently treats structs with 1 or 2 scalar fields different from
+/// structs with more ("large" structs). Structs with 1 or 2 scalar fields are passed in as consecutive fields,
+/// whereas larger structs are passed in as an array of fields *including padding*. This choice is typically at the struct
+/// level, however a small struct found within a large struct will also need to care about padding.
+#[derive(Copy, Clone, Default, PartialEq, Eq)]
+pub(super) enum ForcePaddingStatus {
+    /// Don't force padding. For structs found in arguments
+    #[default]
+    NoForce,
+    /// Force padding. For small structs found as fields in large structs
+    Force,
+    /// Force padding if the caller forces padding. For small structs found as fields in small structs.
+    PassThrough,
+}
+
 /// Context about a struct being borrowed when doing js-to-c conversions
 /// Borrowed from dart implementation.
 pub(super) struct StructBorrowContext<'tcx> {
@@ -552,14 +567,19 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         alloc: Option<&str>,
+        // Whether to force padding
+        force_padding: ForcePaddingStatus,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-            Type::Struct(..) => {
-                self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info, alloc.unwrap())
-            }
+            Type::Struct(..) => self.gen_js_to_c_for_struct_type(
+                js_name,
+                struct_borrow_info,
+                alloc.unwrap(),
+                force_padding,
+            ),
             Type::Slice(slice) => {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
@@ -605,6 +625,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         allocator: &str,
+        force_padding: ForcePaddingStatus,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
@@ -629,7 +650,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
-        format!("...{js_name}._intoFFI({allocator}, {{{params}}})").into()
+        let force_padding = match force_padding {
+            ForcePaddingStatus::NoForce => "",
+            ForcePaddingStatus::Force => ", true",
+            ForcePaddingStatus::PassThrough => ", forcePadding",
+        };
+        format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
     }
     // #endregion
 }

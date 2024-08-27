@@ -20,7 +20,7 @@ use super::formatter::JSFormatter;
 use crate::ErrorStore;
 
 mod converter;
-use converter::StructBorrowContext;
+use converter::{ForcePaddingStatus, StructBorrowContext};
 
 /// Represents context for generating a Javascript class.
 ///
@@ -155,16 +155,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`]. We separate this step out for two reasons:
+    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`].
+    ///
+    /// Also returns a boolean of whether the forcePadding argument is needed.
+    ///
+    /// We separate this step out for two reasons:
     ///
     /// 1. It allows re-use between `.d.ts` and `.mjs` files.
     /// 2. Clarity.
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> Vec<FieldInfo<P>> {
+    ) -> (Vec<FieldInfo<P>>, bool) {
         let struct_field_info =
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
+        let mut needs_force_padding = false;
 
         let fields = struct_def.fields.iter().enumerate()
         .map(|(i, field)| {
@@ -215,29 +220,54 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let padding = struct_field_info.fields[i].padding_count;
 
+
+            let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
+                // There's no padding needed
+                (0 | 1, _) => ForcePaddingStatus::NoForce,
+                // Non-structs don't care
+                _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
+                // 2-field struct contained in 2-field struct, caller decides
+                (2, 2) => {
+                    needs_force_padding = true;
+                    ForcePaddingStatus::PassThrough
+                }
+                // Outer struct has > 3 fields, always pad
+                (2, 3..) => ForcePaddingStatus::Force,
+                // Larger fields will always have padding anyway
+                _ => ForcePaddingStatus::NoForce
+
+            };
+
             let maybe_preceding_padding = if padding > 0 {
                 let padding_size_str = match struct_field_info.fields[i].padding_size {
-                    1 => "u8",
-                    2 => "u16",
-                    4 => "u32",
-                    8 => "u64",
+                    1 => "i8",
+                    2 => "i16",
+                    4 => "i32",
+                    8 => "i64",
                     other => unreachable!("Found unknown padding size {other}")
                 };
-                let mut out = format!("/* Padding ({padding_size_str}) for {} */ ", field.name);
 
-                for i in 0..padding {
-                    if i < padding - 1 {
-                        write!(out, "0, ").unwrap();
-                    } else {
-                        write!(out, "0 /* End Padding */,").unwrap();
+                if struct_field_info.scalar_count == 2 {
+                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller
+                    needs_force_padding = true;
+                    format!("...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */), ")
+                } else {
+                    let mut out = format!("/* [{padding} x {padding_size_str}] padding */ ");
+                    for i in 0..padding {
+                        if i < padding - 1 {
+                            write!(out, "0, ").unwrap();
+                        } else {
+                            write!(out, "0 /* end padding */, ").unwrap();
+                        }
                     }
+
+                    out
                 }
 
-                out
             } else {
                 "".into()
             };
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref());
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), force_padding);
             let js_to_c = format!("{maybe_preceding_padding}{js_to_c}");
 
             FieldInfo {
@@ -250,7 +280,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
             }
         }).collect::<Vec<_>>();
-        fields
+
+        (fields, needs_force_padding)
     }
 
     /// Generate a struct type's body for a file from the given definition.
@@ -267,6 +298,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         methods: &MethodsInfo,
 
         is_out: bool,
+        needs_force_padding: bool,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -276,6 +308,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript: bool,
             mutable: bool,
             is_out: bool,
+            needs_force_padding: bool,
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
@@ -290,6 +323,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript,
             is_out,
             mutable: !is_out,
+            needs_force_padding,
 
             lifetimes: &struct_def.lifetimes,
             fields,
@@ -372,7 +406,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                                 "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                             ),
                         }
-                    ))
+                    ),
+                    // Arguments never force padding
+                    ForcePaddingStatus::NoForce)
                 );
 
                 // We add the pointer and size for slices:
@@ -409,6 +445,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
+                        // Arguments never force padding
+                        ForcePaddingStatus::NoForce,
                     ));
             }
 

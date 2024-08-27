@@ -18,6 +18,8 @@ pub struct StructFieldLayout {
     pub padding_count: usize,
     /// The size of the padding field
     pub padding_size: usize,
+    /// The number of scalar fields in this field
+    pub scalar_count: usize,
 }
 
 pub struct StructFieldsInfo {
@@ -67,6 +69,7 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
             offset: next_offset,
             padding_count: padding / padding_size,
             padding_size,
+            scalar_count: field_scalars,
         });
         // All fields use padding sizes from the *previous*
         padding_size = align;

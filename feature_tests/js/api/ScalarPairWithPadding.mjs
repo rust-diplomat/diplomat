@@ -35,11 +35,15 @@ export class ScalarPairWithPadding {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
+    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
+    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
+    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
         functionCleanupArena,
-        appendArrayMap
+        appendArrayMap,
+        forcePadding
     ) {
-        return [this.#first, /* Padding (u8) for second */ 0, 0, 0 /* End Padding */,this.#second]
+        return [this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#second]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
