@@ -83,7 +83,7 @@ export class MyStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue]
+        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

@@ -90,6 +90,14 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
         next_offset += size;
     }
 
+    // Structs can have padding at the end, too
+    if next_offset % max_align != 0 {
+        let fields_len = fields.len();
+        let padding = (max_align - (next_offset % max_align)) % max_align;
+        fields[fields_len - 1].padding_count = padding / prev_align;
+        fields[fields_len - 1].padding_size = prev_align;
+    }
+
     StructFieldsInfo {
         fields,
         struct_layout: Layout::from_size_align(next_offset, max_align).unwrap(),
