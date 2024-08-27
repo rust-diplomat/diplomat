@@ -27,6 +27,7 @@ use converter::{ForcePaddingStatus, StructBorrowContext};
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
 pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
+    pub type_name: Cow<'tcx, str>,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
@@ -82,8 +83,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_name: &str,
-
         enum_def: &'tcx EnumDef,
         methods: &MethodsInfo,
     ) -> String {
@@ -103,7 +102,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         ImplTemplate {
             enum_def,
             formatter: self.formatter,
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
@@ -118,8 +117,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     pub(super) fn gen_opaque(
         &self,
         typescript: bool,
-
-        type_name: &str,
 
         opaque_def: &'tcx OpaqueDef,
         methods: &MethodsInfo,
@@ -141,7 +138,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             lifetimes: &opaque_def.lifetimes,
@@ -291,8 +288,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_name: &str,
-
         struct_def: &'tcx hir::StructDef<P>,
         fields: &Vec<FieldInfo<P>>,
         methods: &MethodsInfo,
@@ -318,7 +313,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
 
             typescript,
             is_out,
