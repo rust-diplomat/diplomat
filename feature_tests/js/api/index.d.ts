@@ -14,6 +14,8 @@ export { NestedBorrowedFields } from "./NestedBorrowedFields"
 
 export { ErrorStruct } from "./ErrorStruct"
 
+export { BigStructWithStuff } from "./BigStructWithStuff"
+
 export { CyclicStructA } from "./CyclicStructA"
 
 export { CyclicStructB } from "./CyclicStructB"
@@ -21,6 +23,8 @@ export { CyclicStructB } from "./CyclicStructB"
 export { MyStruct } from "./MyStruct"
 
 export { MyZst } from "./MyZst"
+
+export { ScalarPairWithPadding } from "./ScalarPairWithPadding"
 
 export { OptionStruct } from "./OptionStruct"
 

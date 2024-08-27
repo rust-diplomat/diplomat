@@ -59,6 +59,18 @@ export function enumDiscriminant(wasm, ptr) {
     return (new Int32Array(wasm.memory.buffer, ptr, 1))[0]
 }
 
+/**
+ * Return an array of paddingCount zeroes to be spread into a function call
+ * if needsPaddingFields is true, else empty
+ */
+export function maybePaddingFields(needsPaddingFields, paddingCount) {
+    if (needsPaddingFields) {
+        return Array(paddingCount).fill(0);;
+    } else {
+        return [];
+    }
+}
+
 /** 
  * A wrapper around a slice of WASM memory that can be freed manually or
  * automatically by the garbage collector.

@@ -61,10 +61,17 @@ export class {{type_name}} {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     {%- endif -%}
-    {% endif %}
+    {%- endif %}
+    {%- if needs_force_padding %}
+    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
+    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
+    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
+    {%- endif %}
     _intoFFI(
         functionCleanupArena,
-        appendArrayMap
+        appendArrayMap{% if needs_force_padding %},
+        forcePadding
+        {%- endif %}
     ) {
         return [
             {%- for field in fields -%}

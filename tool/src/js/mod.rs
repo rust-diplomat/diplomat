@@ -91,10 +91,11 @@ pub(crate) fn run<'tcx>(
 
         let _guard = errors.set_context_ty(type_def.name().as_str().into());
 
-        let name = formatter.fmt_type_name(id);
+        let type_name = formatter.fmt_type_name(id);
 
         let context = TyGenContext {
             tcx,
+            type_name,
             formatter: &formatter,
             errors: &errors,
             imports: RefCell::new(BTreeSet::new()),
@@ -135,38 +136,35 @@ pub(crate) fn run<'tcx>(
             methods_info.special_methods.typescript = ts;
 
             let contents = match type_def {
-                TypeDef::Enum(e) => context.gen_enum(ts, &name, e, &methods_info),
-                TypeDef::Opaque(o) => context.gen_opaque(ts, &name, o, &methods_info),
+                TypeDef::Enum(e) => context.gen_enum(ts, e, &methods_info),
+                TypeDef::Opaque(o) => context.gen_opaque(ts, o, &methods_info),
                 TypeDef::Struct(s) => {
-                    context.gen_struct(ts, &name, s, &fields.clone().unwrap(), &methods_info, false)
+                    let (fields, needs_force_padding) = fields.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, false, needs_force_padding)
                 }
-                TypeDef::OutStruct(s) => context.gen_struct(
-                    ts,
-                    &name,
-                    s,
-                    &fields_out.clone().unwrap(),
-                    &methods_info,
-                    true,
-                ),
+                TypeDef::OutStruct(s) => {
+                    let (fields, needs_force_padding) = fields_out.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, true, needs_force_padding)
+                }
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
 
-            let file_name = formatter.fmt_file_name(&name, &file_type);
+            let file_name = formatter.fmt_file_name(&context.type_name, &file_type);
 
             // Remove our self reference:
-            context.remove_import(name.clone().into());
+            context.remove_import(context.type_name.clone().into());
 
             files.add_file(file_name, context.generate_base(ts, contents));
         }
 
         exports.push(
             formatter
-                .fmt_export_statement(&name, false, "./".into())
+                .fmt_export_statement(&context.type_name, false, "./".into())
                 .into(),
         );
         ts_exports.push(
             formatter
-                .fmt_export_statement(&name, true, "./".into())
+                .fmt_export_statement(&context.type_name, true, "./".into())
                 .into(),
         )
     }

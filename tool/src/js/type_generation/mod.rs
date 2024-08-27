@@ -20,13 +20,14 @@ use super::formatter::JSFormatter;
 use crate::ErrorStore;
 
 mod converter;
-use converter::StructBorrowContext;
+use converter::{ForcePaddingStatus, StructBorrowContext};
 
 /// Represents context for generating a Javascript class.
 ///
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
 pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
+    pub type_name: Cow<'tcx, str>,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
@@ -82,8 +83,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_name: &str,
-
         enum_def: &'tcx EnumDef,
         methods: &MethodsInfo,
     ) -> String {
@@ -103,7 +102,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         ImplTemplate {
             enum_def,
             formatter: self.formatter,
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
@@ -118,8 +117,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     pub(super) fn gen_opaque(
         &self,
         typescript: bool,
-
-        type_name: &str,
 
         opaque_def: &'tcx OpaqueDef,
         methods: &MethodsInfo,
@@ -141,7 +138,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             lifetimes: &opaque_def.lifetimes,
@@ -155,28 +152,29 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`]. We separate this step out for two reasons:
+    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`].
+    ///
+    /// Also returns a boolean of whether the forcePadding argument is needed.
+    ///
+    /// We separate this step out for two reasons:
     ///
     /// 1. It allows re-use between `.d.ts` and `.mjs` files.
     /// 2. Clarity.
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> Vec<FieldInfo<P>> {
-        let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
-            struct_def.fields.iter().map(|f| &f.ty),
-            self.tcx,
-        );
+    ) -> (Vec<FieldInfo<P>>, bool) {
+        let struct_field_info =
+            crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
+        let mut needs_force_padding = false;
 
         let fields = struct_def.fields.iter().enumerate()
-        .map(|field_enumerator| {
-            let (i, field) = field_enumerator;
-
+        .map(|(i, field)| {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
-            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
+            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty,
@@ -217,35 +215,57 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let field_layout = crate::js::layout::type_size_alignment(&field.ty, self.tcx);
+            let padding = struct_field_info.fields[i].padding_count;
 
-            let curr_offset = offsets[i];
-            let next_offset = if i < offsets.len() - 1 {
-                offsets[i + 1]
-            } else {
-                curr_offset + field_layout.size()
+
+            let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
+                // There's no padding needed
+                (0 | 1, _) => ForcePaddingStatus::NoForce,
+                // Non-structs don't care
+                _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
+                // 2-field struct contained in 2-field struct, caller decides
+                (2, 2) => {
+                    needs_force_padding = true;
+                    ForcePaddingStatus::PassThrough
+                }
+                // Outer struct has > 3 fields, always pad
+                (2, 3..) => ForcePaddingStatus::Force,
+                // Larger fields will always have padding anyway
+                _ => ForcePaddingStatus::NoForce
+
             };
 
-            let padding = next_offset - curr_offset - field_layout.size();
+            let maybe_padding_after = if padding > 0 {
+                let padding_size_str = match struct_field_info.fields[i].padding_size {
+                    1 => "i8",
+                    2 => "i16",
+                    4 => "i32",
+                    8 => "i64",
+                    other => unreachable!("Found unknown padding size {other}")
+                };
 
-            let js_to_c = format!("{}{}",
-                self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref()),
-                if padding > 0 {
-                    let mut out = format!(",/* Padding for {} */ ", field.name);
-
+                if struct_field_info.scalar_count == 2 {
+                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller
+                    needs_force_padding = true;
+                    format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")
+                } else {
+                    let mut out = format!(", /* [{padding} x {padding_size_str}] padding */ ");
                     for i in 0..padding {
                         if i < padding - 1 {
                             write!(out, "0, ").unwrap();
                         } else {
-                            write!(out, "0 /* End Padding */").unwrap();
+                            write!(out, "0 /* end padding */").unwrap();
                         }
                     }
 
                     out
-                } else {
-                    "".into()
                 }
-            );
+
+            } else {
+                "".into()
+            };
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), force_padding);
+            let js_to_c = format!("{js_to_c}{maybe_padding_after}");
 
             FieldInfo {
                 field_name,
@@ -257,7 +277,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
             }
         }).collect::<Vec<_>>();
-        fields
+
+        (fields, needs_force_padding)
     }
 
     /// Generate a struct type's body for a file from the given definition.
@@ -267,13 +288,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         &self,
         typescript: bool,
 
-        type_name: &str,
-
         struct_def: &'tcx hir::StructDef<P>,
         fields: &Vec<FieldInfo<P>>,
         methods: &MethodsInfo,
 
         is_out: bool,
+        needs_force_padding: bool,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -283,6 +303,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript: bool,
             mutable: bool,
             is_out: bool,
+            needs_force_padding: bool,
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
@@ -292,11 +313,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
 
             typescript,
             is_out,
             mutable: !is_out,
+            needs_force_padding,
 
             lifetimes: &struct_def.lifetimes,
             fields,
@@ -379,7 +401,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                                 "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                             ),
                         }
-                    ))
+                    ),
+                    // Arguments never force padding
+                    ForcePaddingStatus::NoForce)
                 );
 
                 // We add the pointer and size for slices:
@@ -416,6 +440,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
+                        // Arguments never force padding
+                        ForcePaddingStatus::NoForce,
                     ));
             }
 

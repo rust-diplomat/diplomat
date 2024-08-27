@@ -218,6 +218,44 @@ pub mod ffi {
             Default::default()
         }
     }
+
+    /// Testing JS-specific layout/padding behavior
+    #[diplomat::attr(not(js), disable)]
+    pub struct ScalarPairWithPadding {
+        pub first: u8,
+        // Padding: [3 x u8]
+        pub second: u32,
+    }
+
+    impl ScalarPairWithPadding {
+        pub fn assert_value(self) {
+            assert_eq!(self.first, 122);
+            assert_eq!(self.second, 414);
+        }
+    }
+
+    /// Testing JS-specific layout/padding behavior
+    #[diplomat::attr(not(js), disable)]
+    pub struct BigStructWithStuff {
+        pub first: u8,
+        // Padding: [1 x u8]
+        pub second: u16,
+        pub third: u16,
+        // Padding: [1 x u16]
+        pub fourth: ScalarPairWithPadding,
+        pub fifth: u8,
+    }
+
+    impl BigStructWithStuff {
+        pub fn assert_value(self, extra_val: u16) {
+            assert_eq!(self.first, 101);
+            assert_eq!(self.second, 505);
+            assert_eq!(self.third, 9345);
+            self.fourth.assert_value();
+            assert_eq!(self.fifth, 99);
+            assert_eq!(extra_val, 853);
+        }
+    }
 }
 
 #[allow(unused)]
