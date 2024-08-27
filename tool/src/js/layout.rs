@@ -18,7 +18,7 @@ pub struct StructFieldLayout {
     pub padding_count: usize,
     /// The size of the padding field
     pub padding_size: usize,
-    /// The number of scalar fields in this field
+    /// The number of scalar (integer primitive) fields in this field, transitively. Does not count padding fields.
     pub scalar_count: usize,
 }
 
@@ -27,7 +27,7 @@ pub struct StructFieldsInfo {
     pub fields: Vec<StructFieldLayout>,
     /// The layout of the struct overall
     pub struct_layout: Layout,
-    /// The number of scalar fields in this struct
+    /// The number of scalar (integer primitive) fields in this struct, transitively. Does not count padding fields.
     pub scalar_count: usize,
 }
 /// Given a struct, calculate where each of its fields is in memory.
