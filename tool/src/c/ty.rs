@@ -5,7 +5,7 @@ use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, CallbackInstantiationFunctionality, OpaqueOwner, ReturnableStructDef, StructPathLike,
-    TyPosition, Type, TypeDef, TypeId,
+    TyPosition, Type, TypeDef, TypeId, TraitIdGetter
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -73,7 +73,7 @@ pub(crate) struct TyGenContext<'cx, 'tcx> {
 impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     pub(crate) fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id);
+        let ty_name = self.formatter.fmt_type_name(self.id.into());
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -88,7 +88,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     pub(crate) fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id);
+        let ty_name = self.formatter.fmt_type_name(self.id.into());
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -101,7 +101,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     pub(crate) fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id);
+        let ty_name = self.formatter.fmt_type_name(self.id.into());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
@@ -143,7 +143,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
-        let ty_name = self.formatter.fmt_type_name(self.id);
+        let ty_name = self.formatter.fmt_type_name(self.id.into());
 
         let dtor_name = if let TypeDef::Opaque(opaque) = ty {
             Some(opaque.dtor_abi_name.as_str())
@@ -347,7 +347,19 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     cb_wrapper_type.clone().into(),
                     format!("{}_cb_wrap", param_name).into(),
                 )
-            }
+            },
+            Type::ImplTrait(t) => {
+                let t_id = t.id();
+                let trt_name = self.formatter.fmt_type_name_maybe_namespaced(t_id.into());
+                if self.tcx.resolve_trait(t_id).attrs.disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled trait {trt_name}"))
+                }
+                (
+                    format!("DiplomatTraitStruct_{}", trt_name).into(),
+                    format!("{}_trait_wrap", param_name).into(),
+                )
+            },
             _ => {
                 let ty = self.gen_ty_name(ty, header);
                 (ty, param_name)
@@ -387,8 +399,8 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let ty_name = match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(op_id);
+                let op_id: TypeId = op.tcx_id.into();
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(op_id.into());
                 if self.tcx.resolve_type(op_id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
@@ -398,29 +410,29 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 let ret = self.formatter.fmt_ptr(&ty_name, mutability);
                 header
                     .includes
-                    .insert(self.formatter.fmt_decl_header_path(op_id));
+                    .insert(self.formatter.fmt_decl_header_path(op_id.into()));
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
                 let st_id = st.id();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(st_id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(st_id.into());
                 if self.tcx.resolve_type(st_id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 let ret = ty_name.clone();
-                let header_path = self.formatter.fmt_decl_header_path(st_id);
+                let header_path = self.formatter.fmt_decl_header_path(st_id.into());
                 header.includes.insert(header_path);
                 ret
             }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(id);
+                let id: TypeId = e.tcx_id.into();
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(id.into());
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                let header_path = self.formatter.fmt_decl_header_path(id);
+                let header_path = self.formatter.fmt_decl_header_path(id.into());
                 header.includes.insert(header_path);
                 ty_name
             }
@@ -435,6 +447,18 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             Type::DiplomatOption(ref s) => {
                 let inner = self.gen_ty_name(s, header);
                 self.formatter.fmt_optional_type_name(s, &inner).into()
+            }
+            Type::ImplTrait(ref t) => {
+                let t_id = t.id();
+                let trt_name = self.formatter.fmt_type_name_maybe_namespaced(t_id.into());
+                if self.tcx.resolve_trait(t_id).attrs.disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled trait {trt_name}"))
+                }
+                let ret = trt_name.clone();
+                let header_path = self.formatter.fmt_decl_header_path(t_id.into());
+                header.includes.insert(header_path);
+                ret
             }
             _ => unreachable!("{}", format!("unknown AST/HIR variant: {:?}", ty)),
         };

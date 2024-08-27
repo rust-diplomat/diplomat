@@ -54,8 +54,8 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
             continue;
         }
 
-        let decl_header_path = formatter.fmt_decl_header_path(id);
-        let impl_header_path = formatter.fmt_impl_header_path(id);
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
         let context = TyGenContext {
@@ -81,6 +81,7 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
     }
+    // loop over traits too
 
     (files, errors)
 }

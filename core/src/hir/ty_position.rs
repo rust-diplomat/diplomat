@@ -1,8 +1,8 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, Callback, CallbackInstantiationFunctionality, IdentBuf, LinkedLifetimes, MaybeOwn,
+    Borrow, Callback, CallbackInstantiationFunctionality, LinkedLifetimes, MaybeOwn,
     Mutability, NoCallback, NoTraitPath, OutStructId, ReturnableStructPath, StructDef, StructId,
-    StructPath, TraitPath, TypeContext, TypeDef, TypeId,
+    StructPath, TraitId, TraitPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
@@ -108,7 +108,7 @@ where
 
     type StructPath: Debug + StructPathLike;
 
-    type TraitPath: Debug;
+    type TraitPath: Debug + TraitIdGetter;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
     fn build_callback(cb: Callback) -> Self::CallbackInstantiation;
@@ -123,8 +123,8 @@ pub enum InputOrOutput {
     InputOutput,
 }
 
-pub trait ComputeId {
-    fn id(&self) -> Option<&IdentBuf>;
+pub trait TraitIdGetter {
+    fn id(&self) -> TraitId;
 }
 
 /// One of 3 types implementing [`TyPosition`], representing types that can be
@@ -259,6 +259,19 @@ impl StructPathLike for ReturnableStructPath {
         }
     }
 }
+
+impl TraitIdGetter for TraitPath {
+    fn id(&self) -> TraitId {
+        self.tcx_id
+    }
+}
+
+impl TraitIdGetter for NoTraitPath {
+    fn id(&self) -> TraitId {
+        panic!("Trait path not allowed here, no trait ID valid");
+    }
+}
+
 /// Abstraction over how a type can hold a pointer to an opaque.
 ///
 /// This trait is designed as a helper abstraction for the `OpaqueOwnership`
