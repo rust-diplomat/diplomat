@@ -247,12 +247,13 @@ pub mod ffi {
     }
 
     impl BigStructWithStuff {
-        pub fn assert_value(self) {
+        pub fn assert_value(self, extra_val: u16) {
             assert_eq!(self.first, 101);
             assert_eq!(self.second, 505);
             assert_eq!(self.third, 9345);
             self.fourth.assert_value();
             assert_eq!(self.fifth, 99);
+            assert_eq!(extra_val, 853);
         }
     }
 }

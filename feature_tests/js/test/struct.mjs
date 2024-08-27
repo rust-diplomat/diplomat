@@ -26,6 +26,6 @@ test("Test struct layout: scalar pair layout", t => {
 
 test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
     const s = new BigStructWithStuff(101, 505, 9345, new ScalarPairWithPadding(122, 414), 99);
-    s.assertValue();
+    s.assertValue(853);
     t.is(true, true); // Ava doesn't like tests without assertions
 });

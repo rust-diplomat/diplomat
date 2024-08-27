@@ -88,9 +88,9 @@ export class BigStructWithStuff {
         this.#fifth = fifthDeref;
     }
 
-    assertValue() {
+    assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(...this._intoFFI());
+        wasm.BigStructWithStuff_assert_value(...this._intoFFI(), extraVal);
     
         try {}
         

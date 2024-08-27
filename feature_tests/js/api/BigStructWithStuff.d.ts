@@ -23,5 +23,5 @@ export class BigStructWithStuff {
     set fifth(value: number); 
     constructor(first: number, second: number, third: number, fourth: ScalarPairWithPadding, fifth: number);
 
-    assertValue(): void;
+    assertValue(extraVal: number): void;
 }
