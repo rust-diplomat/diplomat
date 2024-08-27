@@ -14,7 +14,7 @@ use u32 as usize_target;
 pub struct StructFieldLayout {
     /// The offset of this field in the struct
     pub offset: usize,
-    /// The number of padding fields needed before this field
+    /// The number of padding fields needed after this field
     pub padding_count: usize,
     /// The size of the padding field
     pub padding_size: usize,
@@ -40,7 +40,7 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
 ) -> StructFieldsInfo {
     let mut max_align = 0;
     let mut next_offset = 0;
-    let mut fields = vec![];
+    let mut fields: Vec<StructFieldLayout> = vec![];
     let mut scalar_count = 0;
 
     let types = types.collect::<Vec<_>>();
@@ -52,8 +52,7 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
         };
     }
 
-    let mut padding_size = 1;
-
+    let mut prev_align = 1;
     for typ in types {
         let (size_align, field_scalars) = type_size_alignment_and_scalar_count(typ, tcx);
         scalar_count += field_scalars;
@@ -64,15 +63,30 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
         let padding = (align - (next_offset % align)) % align;
         next_offset += padding;
 
-        assert!(padding % padding_size == 0, "Needed padding {padding} must be a perfect multiple of the previous field size {padding_size}");
+        // Tack padding on to previous field
+        //
+        // We don't know until we see the next field if padding is needed, but padding
+        // belongs to the field before it, not the field after it (since there can be padding at the end, but never
+        // padding at the beginning)
+        if padding != 0 {
+            assert!(padding % prev_align == 0, "Needed padding {padding} must be a perfect multiple of the previous field alignment {prev_align}");
+            let fields_len = fields.len();
+            assert!(
+                fields_len != 0,
+                "Padding can only be found after first field!"
+            );
+
+            fields[fields_len - 1].padding_count = padding / prev_align;
+            fields[fields_len - 1].padding_size = prev_align;
+        }
+
         fields.push(StructFieldLayout {
             offset: next_offset,
-            padding_count: padding / padding_size,
-            padding_size,
+            padding_count: 0,
+            padding_size: 1,
             scalar_count: field_scalars,
         });
-        // All fields use padding sizes from the *previous*
-        padding_size = align;
+        prev_align = align;
         next_offset += size;
     }
 

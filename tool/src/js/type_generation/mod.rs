@@ -235,7 +235,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             };
 
-            let maybe_preceding_padding = if padding > 0 {
+            let maybe_padding_after = if padding > 0 {
                 let padding_size_str = match struct_field_info.fields[i].padding_size {
                     1 => "i8",
                     2 => "i16",
@@ -247,14 +247,14 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 if struct_field_info.scalar_count == 2 {
                     // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller
                     needs_force_padding = true;
-                    format!("...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */), ")
+                    format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")
                 } else {
-                    let mut out = format!("/* [{padding} x {padding_size_str}] padding */ ");
+                    let mut out = format!(", /* [{padding} x {padding_size_str}] padding */ ");
                     for i in 0..padding {
                         if i < padding - 1 {
                             write!(out, "0, ").unwrap();
                         } else {
-                            write!(out, "0 /* end padding */, ").unwrap();
+                            write!(out, "0 /* end padding */").unwrap();
                         }
                     }
 
@@ -265,7 +265,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 "".into()
             };
             let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), force_padding);
-            let js_to_c = format!("{maybe_preceding_padding}{js_to_c}");
+            let js_to_c = format!("{js_to_c}{maybe_padding_after}");
 
             FieldInfo {
                 field_name,
