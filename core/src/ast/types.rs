@@ -758,8 +758,13 @@ impl TypeName {
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
-            TypeName::ImplTrait(_) => {
-                todo!();
+            TypeName::ImplTrait(trt_path) => {
+                let trait_name = Ident::from(format!(
+                    "DiplomatTraitStruct_{}",
+                    trt_path.path.elements[0].to_string()
+                ));
+                // should be DiplomatTraitStruct_trait_name
+                syn::parse_quote_spanned!(Span::call_site() => #trait_name)
             }
         }
     }
