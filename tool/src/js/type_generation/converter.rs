@@ -23,14 +23,19 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 /// structs with more ("large" structs). Structs with 1 or 2 scalar fields are passed in as consecutive fields,
 /// whereas larger structs are passed in as an array of fields *including padding*. This choice is typically at the struct
 /// level, however a small struct found within a large struct will also need to care about padding.
+///
+/// See docs/wasm_abi_quirks.md, specifically the difference between "direct" and "padded direct" parameter passing.
 #[derive(Copy, Clone, Default, PartialEq, Eq)]
 pub(super) enum ForcePaddingStatus {
-    /// Don't force padding. For structs found in arguments
+    /// Don't force padding. For large and small structs found in arguments, who will internally make the choice
+    /// between "direct" and "padded direct" parameter passing.
     #[default]
     NoForce,
-    /// Force padding. For small structs found as fields in large structs
+    /// Force padding. For small structs found as fields in large structs, where the larger struct needs the smaller struct
+    /// to use "padded direct" parameter passing.
     Force,
-    /// Force padding if the caller forces padding. For small structs found as fields in small structs.
+    /// Force padding if the caller forces padding. For small structs found as fields in small structs, where we need "padded direct"
+    /// parameter passing iff the structs are eventually found in a larger struct that needs that, as opposed to being passed directly as parameters.
     PassThrough,
 }
 

@@ -15,9 +15,12 @@ pub struct StructFieldLayout {
     /// The offset of this field in the struct
     pub offset: usize,
     /// The number of padding fields needed after this field
+    ///
+    /// Note that this is NOT the total amount of padding: padding fields can be of different
+    /// sizes, see docs/wasm_abi_quirks.md
     pub padding_count: usize,
-    /// The size of the padding field
-    pub padding_size: usize,
+    /// The width of an individual padding field
+    pub padding_field_width: usize,
     /// The number of scalar (integer primitive) fields in this field, transitively. Does not count padding fields.
     pub scalar_count: usize,
 }
@@ -75,15 +78,15 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
                 fields_len != 0,
                 "Padding can only be found after first field!"
             );
-
+            // The padding field width is the alignment of the previous field, see docs/wasm_abi_quirks.md
             fields[fields_len - 1].padding_count = padding / prev_align;
-            fields[fields_len - 1].padding_size = prev_align;
+            fields[fields_len - 1].padding_field_width = prev_align;
         }
 
         fields.push(StructFieldLayout {
             offset: next_offset,
             padding_count: 0,
-            padding_size: 1,
+            padding_field_width: 1,
             scalar_count: field_scalars,
         });
         prev_align = align;
@@ -95,7 +98,7 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
         let fields_len = fields.len();
         let padding = (max_align - (next_offset % max_align)) % max_align;
         fields[fields_len - 1].padding_count = padding / prev_align;
-        fields[fields_len - 1].padding_size = prev_align;
+        fields[fields_len - 1].padding_field_width = prev_align;
     }
 
     StructFieldsInfo {
