@@ -63,7 +63,7 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
             formatter: &formatter,
             errors: &errors,
             is_for_cpp: false,
-            id,
+            id: id.into(),
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
@@ -80,6 +80,30 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
+    }
+
+    for (id, trt) in tcx.all_traits() {
+        if trt.attrs.disable {
+            // Skip type if disabled
+            continue;
+        }
+
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+
+        let _guard = errors.set_context_ty(trt.name.as_str().into());
+        let context = TyGenContext {
+            tcx,
+            formatter: &formatter,
+            errors: &errors,
+            is_for_cpp: false,
+            id: id.into(),
+            decl_header_path: &decl_header_path,
+            impl_header_path: &impl_header_path,
+        };
+
+        let decl_header = context.gen_trait_def(trt);
+        files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
 

@@ -63,7 +63,7 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id,
+                id: id.into(),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },

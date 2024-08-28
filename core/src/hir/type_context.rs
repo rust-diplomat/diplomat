@@ -55,6 +55,7 @@ pub enum TypeId {
     Enum(EnumId),
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SymbolId {
     TypeId(TypeId),
     TraitId(TraitId),
@@ -99,6 +100,13 @@ impl TypeContext {
                     .enumerate()
                     .map(|(i, ty)| (TypeId::Enum(EnumId(i)), TypeDef::Enum(ty))),
             )
+    }
+
+    pub fn all_traits<'tcx>(&'tcx self) -> impl Iterator<Item = (TraitId, &TraitDef)> {
+        self.traits
+            .iter()
+            .enumerate()
+            .map(|(i, trt)| (TraitId(i), trt))
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -165,7 +173,14 @@ impl TypeContext {
     /// Resolve and format a named type for use in diagnostics
     /// (don't apply rename rules and such)
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<str> {
-        self.resolve_type(id).name().as_str().into()
+        self.fmt_symbol_name_diagnostics(id.into())
+    }
+
+    pub fn fmt_symbol_name_diagnostics(&self, id: SymbolId) -> Cow<str> {
+        match id {
+            SymbolId::TypeId(id) => self.resolve_type(id).name().as_str().into(),
+            SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),
+        }
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.

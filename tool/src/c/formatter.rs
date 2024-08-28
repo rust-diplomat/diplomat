@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, StringEncoding, TyPosition, TypeContext, SymbolId};
+use diplomat_core::hir::{self, StringEncoding, SymbolId, TyPosition, TypeContext};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -35,7 +35,7 @@ impl<'tcx> CFormatter<'tcx> {
                 let name: Cow<_> = resolved.name().as_str().into();
                 let attrs = resolved.attrs();
                 (name, attrs)
-            },
+            }
             SymbolId::TraitId(id) => {
                 let resolved = self.tcx.resolve_trait(id);
                 let name: Cow<_> = resolved.name.as_str().into();
@@ -77,7 +77,7 @@ impl<'tcx> CFormatter<'tcx> {
                 let name: Cow<_> = resolved.name().as_str().into();
                 let attrs = resolved.attrs();
                 (name, attrs)
-            },
+            }
             SymbolId::TraitId(id) => {
                 let resolved = self.tcx.resolve_trait(id);
                 let name: Cow<_> = resolved.name.as_str().into();

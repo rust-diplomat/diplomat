@@ -5,7 +5,7 @@ use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, CallbackInstantiationFunctionality, OpaqueOwner, ReturnableStructDef, StructPathLike,
-    TyPosition, Type, TypeDef, TypeId, TraitIdGetter
+    SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -24,6 +24,14 @@ struct EnumTemplate<'a> {
 struct StructTemplate<'a> {
     ty_name: Cow<'a, str>,
     fields: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+    is_for_cpp: bool,
+}
+
+#[derive(Template)]
+#[template(path = "c/trait.h.jinja", escape = "none")]
+struct TraitTemplate<'a> {
+    trt_name: Cow<'a, str>,
+    method_sigs: Vec<String>,
     is_for_cpp: bool,
 }
 
@@ -65,7 +73,7 @@ pub(crate) struct TyGenContext<'cx, 'tcx> {
     pub(crate) formatter: &'cx CFormatter<'tcx>,
     pub(crate) errors: &'cx ErrorStore<'tcx, String>,
     pub(crate) is_for_cpp: bool,
-    pub(crate) id: TypeId,
+    pub(crate) id: SymbolId,
     pub(crate) decl_header_path: &'cx String,
     pub(crate) impl_header_path: &'cx String,
 }
@@ -125,6 +133,41 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         decl_header
     }
 
+    pub(crate) fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
+        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let trt_name = self.formatter.fmt_type_name(self.id.into());
+        let mut method_sigs = vec![];
+        for m in &def.methods {
+            let mut param_types: Vec<Cow<'tcx, str>> = m
+                .params
+                .iter()
+                .map(|param| self.gen_ty_name(&param.ty, &mut decl_header))
+                .collect();
+            param_types.insert(0, "void*".into());
+            let ret_type = if m.output.is_some() {
+                self.gen_ty_name(&m.output.clone().unwrap(), &mut decl_header)
+            } else {
+                "void".into()
+            };
+            method_sigs.push(format!(
+                "{} (*run_{}_callback)({});",
+                ret_type,
+                m.name.as_ref().unwrap().as_str(),
+                param_types.join(", ")
+            ));
+        }
+
+        TraitTemplate {
+            trt_name,
+            method_sigs,
+            is_for_cpp: self.is_for_cpp,
+        }
+        .render_into(&mut decl_header)
+        .unwrap();
+
+        decl_header
+    }
+
     pub(crate) fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.clone(), self.is_for_cpp);
         let mut methods = vec![];
@@ -135,7 +178,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.tcx.fmt_type_name_diagnostics(self.id),
+                self.tcx.fmt_symbol_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
             let (method_chunk, callback_defs) = self.gen_method(method, &mut impl_header);
@@ -347,10 +390,10 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     cb_wrapper_type.clone().into(),
                     format!("{}_cb_wrap", param_name).into(),
                 )
-            },
+            }
             Type::ImplTrait(t) => {
                 let t_id = t.id();
-                let trt_name = self.formatter.fmt_type_name_maybe_namespaced(t_id.into());
+                let trt_name = self.gen_ty_name(ty, header);
                 if self.tcx.resolve_trait(t_id).attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled trait {trt_name}"))
@@ -359,7 +402,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     format!("DiplomatTraitStruct_{}", trt_name).into(),
                     format!("{}_trait_wrap", param_name).into(),
                 )
-            },
+            }
             _ => {
                 let ty = self.gen_ty_name(ty, header);
                 (ty, param_name)

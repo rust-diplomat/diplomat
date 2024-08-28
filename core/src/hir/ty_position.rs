@@ -1,8 +1,8 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, Callback, CallbackInstantiationFunctionality, LinkedLifetimes, MaybeOwn,
-    Mutability, NoCallback, NoTraitPath, OutStructId, ReturnableStructPath, StructDef, StructId,
-    StructPath, TraitId, TraitPath, TypeContext, TypeDef, TypeId,
+    Borrow, Callback, CallbackInstantiationFunctionality, LinkedLifetimes, MaybeOwn, Mutability,
+    NoCallback, NoTraitPath, OutStructId, ReturnableStructPath, StructDef, StructId, StructPath,
+    TraitId, TraitPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
