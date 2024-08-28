@@ -33,6 +33,7 @@ pub struct TraitPath {
 /// Non-instantiable enum to denote the trait path in
 /// TyPositions that don't allow traits (anything not InputOnly)
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum NoTraitPath {}
 
 /// Path to an opaque.

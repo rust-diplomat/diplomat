@@ -83,8 +83,7 @@ impl Trait {
                         Some(
                             self_path_trait
                                 .clone()
-                                .try_into()
-                                .expect("Was expecting a type path, got a trait path"),
+                                .into(),
                         ),
                     )),
                     syn::ReturnType::Default => None,

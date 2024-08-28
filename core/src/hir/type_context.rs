@@ -56,6 +56,7 @@ pub enum TypeId {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[non_exhaustive]
 pub enum SymbolId {
     TypeId(TypeId),
     TraitId(TraitId),

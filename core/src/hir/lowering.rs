@@ -448,14 +448,14 @@ impl<'ast> LoweringContext<'ast> {
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
         let output = if let Some(out_ty) = &ast_trait_method.output_type {
-            Some(self.lower_type(&out_ty, &mut param_ltl, false /* in_struct */, in_path)?)
+            Some(self.lower_type(out_ty, &mut param_ltl, false /* in_struct */, in_path)?)
         } else {
             None
         };
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_trait_method.attrs,
-            &parent_trait_attrs,
+            parent_trait_attrs,
             &mut self.errors,
         );
 
@@ -682,12 +682,12 @@ impl<'ast> LoweringContext<'ast> {
                         )));
                         return Err(());
                     }
-                    if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
+                    if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
 
                         Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
-                    } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
+                    } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
                         Err(())
                     } else {
@@ -703,7 +703,7 @@ impl<'ast> LoweringContext<'ast> {
                 ast::CustomType::Enum(enm) => {
                     let tcx_id = self
                         .lookup_id
-                        .resolve_enum(&enm)
+                        .resolve_enum(enm)
                         .expect("can't find enum in lookup map, which contains all enums from env");
 
                     Ok(Type::Enum(EnumPath::new(tcx_id)))
@@ -737,7 +737,7 @@ impl<'ast> LoweringContext<'ast> {
                                 &opaque.lifetimes,
                                 ref_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -789,7 +789,7 @@ impl<'ast> LoweringContext<'ast> {
                                     &opaque.lifetimes,
                                     ref_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
 
@@ -979,11 +979,11 @@ impl<'ast> LoweringContext<'ast> {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
 
-                        if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::Struct(
                                 StructPath::new(lifetimes, tcx_id),
                             )))
-                        } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(&strct) {
+                        } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::OutStruct(
                                 OutStructPath::new(lifetimes, tcx_id),
                             )))
@@ -998,7 +998,7 @@ impl<'ast> LoweringContext<'ast> {
                         Err(())
                     }
                     ast::CustomType::Enum(enm) => {
-                        let tcx_id = self.lookup_id.resolve_enum(&enm).expect(
+                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
                             "can't find enum in lookup map, which contains all enums from env",
                         );
 
@@ -1016,7 +1016,7 @@ impl<'ast> LoweringContext<'ast> {
                                 &opaque.lifetimes,
                                 ref_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -1047,7 +1047,7 @@ impl<'ast> LoweringContext<'ast> {
                                 &opaque.lifetimes,
                                 box_ty.is_self(),
                             );
-                            let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -1086,7 +1086,7 @@ impl<'ast> LoweringContext<'ast> {
                                     &opaque.lifetimes,
                                     ref_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                 "can't find opaque in lookup map, which contains all opaques from env",
                             );
 
@@ -1121,7 +1121,7 @@ impl<'ast> LoweringContext<'ast> {
                                     &opaque.lifetimes,
                                     box_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_opaque(&opaque).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
@@ -1248,7 +1248,7 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<(ParamSelf, ParamLifetimeLowerer<'ast>), ()> {
         match self_param.path_type.resolve(in_path, self.env) {
             ast::CustomType::Struct(strct) => {
-                if let Some(tcx_id) = self.lookup_id.resolve_struct(&strct) {
+                if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                     if self_param.reference.is_some() {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
                         Err(())
@@ -1284,7 +1284,7 @@ impl<'ast> LoweringContext<'ast> {
                             param_ltl,
                         ))
                     }
-                } else if self.lookup_id.resolve_out_struct(&strct).is_some() {
+                } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                     if let Some((lifetime, _)) = &self_param.reference {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
                         Err(())
@@ -1302,7 +1302,7 @@ impl<'ast> LoweringContext<'ast> {
             ast::CustomType::Opaque(opaque) => {
                 let tcx_id = self
                     .lookup_id
-                    .resolve_opaque(&opaque)
+                    .resolve_opaque(opaque)
                     .expect("opaque is in env");
 
                 if let Some((lifetime, mutability)) = &self_param.reference {
@@ -1344,7 +1344,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
             }
             ast::CustomType::Enum(enm) => {
-                let tcx_id = self.lookup_id.resolve_enum(&enm).expect("enum is in env");
+                let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
 
                 let attrs = self.attr_validator.attr_from_ast(
                     &self_param.attrs,
@@ -1497,8 +1497,7 @@ impl<'ast> LoweringContext<'ast> {
                 _ => params = Err(()),
             }
         }
-
-        Ok(params?)
+        params
     }
 
     /// Lowers the return type of an [`ast::Method`] into a [`hir::ReturnFallability`].

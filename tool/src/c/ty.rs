@@ -81,7 +81,7 @@ pub(crate) struct TyGenContext<'cx, 'tcx> {
 impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     pub(crate) fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.into());
+        let ty_name = self.formatter.fmt_type_name(self.id);
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -96,7 +96,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     pub(crate) fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.into());
+        let ty_name = self.formatter.fmt_type_name(self.id);
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -109,7 +109,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     pub(crate) fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.into());
+        let ty_name = self.formatter.fmt_type_name(self.id);
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
@@ -135,7 +135,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     pub(crate) fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
-        let trt_name = self.formatter.fmt_type_name(self.id.into());
+        let trt_name = self.formatter.fmt_type_name(self.id);
         let mut method_sigs = vec![];
         for m in &def.methods {
             let mut param_types: Vec<Cow<'tcx, str>> = m
@@ -186,7 +186,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
-        let ty_name = self.formatter.fmt_type_name(self.id.into());
+        let ty_name = self.formatter.fmt_type_name(self.id);
 
         let dtor_name = if let TypeDef::Opaque(opaque) = ty {
             Some(opaque.dtor_abi_name.as_str())

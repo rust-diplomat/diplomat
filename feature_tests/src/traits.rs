@@ -1,17 +1,16 @@
 #[diplomat::bridge]
 mod ffi {
-    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::attr(not(supports = "traits"), disable)]
     pub struct TraitTestingStruct {
         x: i32,
         y: i32,
     }
-    #[diplomat::attr(not(supports = "callbacks"), disable)]
     pub trait TesterTrait {
         fn test_trait_fn(&self, x: i32) -> i32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
     }
-    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::attr(not(supports = "traits"), disable)]
     pub struct TraitWrapper {
         cant_be_empty: bool,
     }

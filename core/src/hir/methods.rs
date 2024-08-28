@@ -110,6 +110,7 @@ pub struct ParamSelf {
 }
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct TraitParamSelf {
     pub trait_path: TraitPath,
 }

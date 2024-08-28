@@ -164,7 +164,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
                 let lifetime_mod = if *lifetime == ast::Lifetime::Anonymous {
                     quote! { & }
                 } else {
-                    let prime = format!("'");
+                    let prime = "'".to_string();
                     let lifetime = lifetime.to_syn();
                     quote! { & #prime#lifetime }
                 };

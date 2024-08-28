@@ -82,8 +82,7 @@ impl Method {
                     return_typ.as_ref(),
                     Some(
                         self_path_type
-                            .try_into()
-                            .expect("Was expecting a type path, got a trait path"),
+                            .into(),
                     ),
                 ))
             }

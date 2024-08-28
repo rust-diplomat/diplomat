@@ -42,6 +42,7 @@ impl<'tcx> CFormatter<'tcx> {
                 let attrs = &resolved.attrs;
                 (name, attrs)
             }
+            _ => panic!("Unexpected symbol ID type"),
         };
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
@@ -84,6 +85,7 @@ impl<'tcx> CFormatter<'tcx> {
                 let attrs = &resolved.attrs;
                 (name, attrs)
             }
+            _ => panic!("Unexpected symbol ID type"),
         };
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.

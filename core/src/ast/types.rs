@@ -306,7 +306,6 @@ impl PathTrait {
         for (i, elem) in local_path.elements.iter().enumerate() {
             if let Some(ModSymbol::Trait(trt)) = env.get(&cur_path, elem.as_str()) {
                 if i == local_path.elements.len() - 1 {
-                    println!("ABOUT TO RETURN TRAIT: {:?}", trt);
                     return (cur_path, trt.clone());
                 } else {
                     panic!(
@@ -761,7 +760,7 @@ impl TypeName {
             TypeName::ImplTrait(trt_path) => {
                 let trait_name = Ident::from(format!(
                     "DiplomatTraitStruct_{}",
-                    trt_path.path.elements[0].to_string()
+                    trt_path.path.elements[0]
                 ));
                 // should be DiplomatTraitStruct_trait_name
                 syn::parse_quote_spanned!(Span::call_site() => #trait_name)
@@ -1097,7 +1096,6 @@ impl TypeName {
                             lifetimes: None, // todo this is an assumption
                             path: p.clone(),
                         }));
-                        println!("named trait type: {:?}", ret);
                         return ret;
                     }
                 }
