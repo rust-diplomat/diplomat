@@ -710,6 +710,11 @@ impl<'ast> LoweringContext<'ast> {
                 }
             },
             ast::TypeName::ImplTrait(path) => {
+                if !self.attr_validator.attrs_supported().traits {
+                    self.errors.push(LoweringError::Other(
+                        "Traits are not supported by this backend".into(),
+                    ));
+                }
                 let trt = path.resolve(in_path, self.env);
                 let tcx_id = self
                     .lookup_id

@@ -41,6 +41,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.indexing = true;
     a.option = true;
     a.callbacks = false;
+    a.traits = false;
 
     a
 }

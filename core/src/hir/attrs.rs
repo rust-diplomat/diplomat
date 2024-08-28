@@ -818,6 +818,8 @@ pub struct BackendAttrSupport {
     pub option: bool,
     /// Allowing callback arguments
     pub callbacks: bool,
+    /// Allowing traits
+    pub traits: bool,
 }
 
 impl BackendAttrSupport {
@@ -843,6 +845,7 @@ impl BackendAttrSupport {
             indexing: true,
             option: true,
             callbacks: true,
+            traits: true,
         }
     }
 }
@@ -974,6 +977,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 indexing,
                 option,
                 callbacks,
+                traits,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -995,6 +999,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "indexing" => indexing,
                 "option" => option,
                 "callbacks" => callbacks,
+                "traits" => traits,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
