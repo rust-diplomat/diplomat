@@ -98,6 +98,11 @@ fn param_conversion(
 
 fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident) -> Item {
     let mut method_sigs: Vec<proc_macro2::TokenStream> = vec![];
+    method_sigs.push(quote!(
+        pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
+        pub SIZE: usize,
+        pub ALIGNMENT: usize,
+    ));
     for m in &custom_trait.fcts {
         // TODO check that this is the right conversion, it might be the wrong direction
         let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty)).collect();
@@ -117,9 +122,6 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
 
         ));
     }
-    method_sigs.push(quote!(
-        pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
-    ));
     syn::parse_quote!(
         #[repr(C)]
         pub struct #custom_trait_vtable_type {
@@ -189,7 +191,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
         methods.push(syn::Item::Fn(syn::parse_quote!(
             fn #method_name#lifetimes (#(#param_names_and_types),*) #return_tokens {
                 unsafe {
-                    ((self.vtable)).#runner_method_name(self.data #(#param_names)*)#end_token
+                    ((self.vtable).#runner_method_name)(self.data #(#param_names)*)#end_token
                 }
             }
 
@@ -477,22 +479,6 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                             syn::FnArg::Typed(t) => AttributeInfo::extract(&mut t.attrs),
                         };
                     }
-                }
-            }
-        }
-
-        Item::Trait(trt) => {
-            let info = AttributeInfo::extract(&mut trt.attrs);
-            if !info.opaque {
-                let repr = if !info.repr {
-                    quote!(#[repr(C)])
-                } else {
-                    quote!()
-                };
-
-                *trt = syn::parse_quote! {
-                    #repr
-                    #trt
                 }
             }
         }
