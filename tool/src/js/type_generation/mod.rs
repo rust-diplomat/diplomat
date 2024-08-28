@@ -217,11 +217,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let padding = struct_field_info.fields[i].padding_count;
 
-
+            // See docs/wasm_abi_quirks.md for when "padded direct" parameter passing kicks in
             let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
                 // There's no padding needed
                 (0 | 1, _) => ForcePaddingStatus::NoForce,
                 // Non-structs don't care
+                // This includes slices, which *are* aggregates but have no padding.
                 _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
                 // 2-field struct contained in 2-field struct, caller decides
                 (2, 2) => {
@@ -236,7 +237,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             };
 
             let maybe_padding_after = if padding > 0 {
-                let padding_size_str = match struct_field_info.fields[i].padding_size {
+                let padding_size_str = match struct_field_info.fields[i].padding_field_width {
                     1 => "i8",
                     2 => "i16",
                     4 => "i32",
@@ -245,7 +246,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 };
 
                 if struct_field_info.scalar_count == 2 {
-                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller
+                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller. See docs/wasm_abi_quirks.md
                     needs_force_padding = true;
                     format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")
                 } else {
