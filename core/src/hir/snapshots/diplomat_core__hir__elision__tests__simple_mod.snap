@@ -461,4 +461,5 @@ TypeContext {
         },
     ],
     enums: [],
+    traits: [],
 }
