@@ -22,11 +22,8 @@ mod ffi {
         }
 
         pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
-            let arg = TraitTestingStruct {
-                x: 1,
-                y: 5,
-            };
+            let arg = TraitTestingStruct { x: 1, y: 5 };
             t.test_struct_trait_fn(arg)
         }
-    }  
+    }
 }

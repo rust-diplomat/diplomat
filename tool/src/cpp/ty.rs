@@ -5,8 +5,8 @@ use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike,
-    SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
+    Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 

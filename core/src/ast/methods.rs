@@ -80,10 +80,7 @@ impl Method {
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
-                    Some(
-                        self_path_type
-                            .into(),
-                    ),
+                    Some(self_path_type.into()),
                 ))
             }
             syn::ReturnType::Default => None,

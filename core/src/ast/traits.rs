@@ -80,11 +80,7 @@ impl Trait {
                 let output_type = match &fct.sig.output {
                     syn::ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
                         return_typ.as_ref(),
-                        Some(
-                            self_path_trait
-                                .clone()
-                                .into(),
-                        ),
+                        Some(self_path_trait.clone().into()),
                     )),
                     syn::ReturnType::Default => None,
                 };
