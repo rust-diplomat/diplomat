@@ -36,9 +36,9 @@ export class MyString {
     static new_(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
         
-        const result = wasm.MyString_new(...vSlice);
+        const result = wasm.MyString_new(...vSlice.splat());
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
@@ -52,9 +52,9 @@ export class MyString {
     static newUnsafe(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
         
-        const result = wasm.MyString_new_unsafe(...vSlice);
+        const result = wasm.MyString_new_unsafe(...vSlice.splat());
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
@@ -68,9 +68,9 @@ export class MyString {
     static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v)).splat()];
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
         
-        const result = wasm.MyString_new_owned(...vSlice);
+        const result = wasm.MyString_new_owned(...vSlice.splat());
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
@@ -84,9 +84,9 @@ export class MyString {
     static newFromFirst(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8")).splat()];
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8"));
         
-        const result = wasm.MyString_new_from_first(...vSlice);
+        const result = wasm.MyString_new_from_first(...vSlice.splat());
     
         try {
             return new MyString(diplomatRuntime.internalConstructor, result, []);
@@ -100,8 +100,8 @@ export class MyString {
     set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const newStrSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, newStr)).splat()];
-        wasm.MyString_set_str(this.ffiValue, ...newStrSlice);
+        const newStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, newStr));
+        wasm.MyString_set_str(this.ffiValue, ...newStrSlice.splat());
     
         try {}
         
@@ -126,10 +126,10 @@ export class MyString {
     static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const fooSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, foo)).splat()];
+        const fooSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, foo));
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_string_transform(...fooSlice, write.buffer);
+        wasm.MyString_string_transform(...fooSlice.splat(), write.buffer);
     
         try {
             return write.readString8();
