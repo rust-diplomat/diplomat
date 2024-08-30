@@ -42,8 +42,8 @@ export class Foo {
     }
 
     static new_(x) {
-        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
-        const xSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, x));
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, x));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
@@ -55,7 +55,7 @@ export class Foo {
         }
         
         finally {
-            functionGarbageCollector.garbageCollect();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
 
@@ -112,8 +112,8 @@ export class Foo {
     static extractFromBounds(bounds, anotherString) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
-        const anotherStringSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, anotherString));
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const anotherStringSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, anotherString));
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
@@ -127,7 +127,7 @@ export class Foo {
         finally {
             functionCleanupArena.free();
         
-            functionGarbageCollector.garbageCollect();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
 }

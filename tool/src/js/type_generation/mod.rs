@@ -393,7 +393,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                             // I.e., Do we need it alive for at least as long as this function call?
                             ParamBorrowInfo::BorrowedSlice => {
                                 method_info.needs_slice_collection = true;
-                                "functionGarbageCollector"
+                                "functionGarbageCollectorGrip"
                             },
                             _ => unreachable!(
                                 "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
@@ -534,7 +534,7 @@ pub(super) struct MethodInfo<'info> {
 
     /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
     needs_slice_cleanup: bool,
-    /// For calling .garbageCollect on slices.
+    /// For calling .releaseToGarbageCollector on slices.
     needs_slice_collection: bool,
 
     pub typescript: bool,

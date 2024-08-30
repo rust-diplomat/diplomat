@@ -91,10 +91,10 @@ export class BorrowedFieldsWithBounds {
     };
 
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
-        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
-        const dstr16XSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
         
-        const utf8StrZSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
+        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         
@@ -114,7 +114,7 @@ export class BorrowedFieldsWithBounds {
         }
         
         finally {
-            functionGarbageCollector.garbageCollect();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         
             diplomatReceive.free();
         }

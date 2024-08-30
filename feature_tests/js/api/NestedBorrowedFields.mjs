@@ -94,14 +94,14 @@ export class NestedBorrowedFields {
     };
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
-        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
-        const dstr16XSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
         
-        const dstr16ZSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z));
+        const dstr16ZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z));
         
-        const utf8StrYSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY));
+        const utf8StrYSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY));
         
-        const utf8StrZSlice = functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
+        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
         
@@ -121,7 +121,7 @@ export class NestedBorrowedFields {
         }
         
         finally {
-            functionGarbageCollector.garbageCollect();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         
             diplomatReceive.free();
         }
