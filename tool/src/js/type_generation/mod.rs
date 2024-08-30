@@ -187,11 +187,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     let hir::MaybeStatic::NonStatic(lt) = lt else {
                         panic!("'static not supported in JS backend");
                     };
+                    let lt_name = struct_def.lifetimes.fmt_lifetime(lt);
                     Some(
-                        format!(
-                            r#"(appendArrayMap["{lt_name}AppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["{lt_name}AppendArray"]) : functionCleanupArena)"#,
-                            lt_name = struct_def.lifetimes.fmt_lifetime(lt),
-                        )
+                        format!("diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['{lt_name}AppendArray'])")
                     )
                 } else {
                     None

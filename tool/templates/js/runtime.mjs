@@ -434,8 +434,6 @@ export class DiplomatReceiveBuf {
  */
 export class CleanupArena {
     #items = [];
-
-    #edgeArray = [];
     
     constructor() {
     }
@@ -449,10 +447,35 @@ export class CleanupArena {
         this.#items.push(item);
         return item;
     }
+    /**
+     * Create a new CleanupArena, append it to any edge arrays passed down, and return it.
+     * @param {Array} edgeArrays
+     * @returns {CleanupArena}
+     */
+    createWith(...edgeArrays) {
+        let self = new CleanupArena();
+        for (edgeArray of edgeArrays) {
+            if (edgeArray != null) {
+                edgeArray.push(self);
+            }
+        }
+        DiplomatBufferFinalizer.register(self, self.free);
+        return self;
+    }
 
-    createWith(edgeArray) {
-        this.#edgeArray = edgeArray;
-        DiplomatBufferFinalizer.register(this, this.free);
+    /**
+     * If given edge arrays, create a new CleanupArena, append it to any edge arrays passed down, and return it.
+     * Else return the function-local cleanup arena
+     * @param {CleanupArena} functionCleanupArena
+     * @param {Array} edgeArrays
+     * @returns {DiplomatBuf}
+     */
+    maybeCreateWith(functionCleanupArena, ...edgeArrays) {
+        if (edgeArrays.length > 0) {
+            return CleanupArena.createWith(...edgeArrays);
+        } else {
+            return functionCleanupArena
+        }
     }
 
     free() {

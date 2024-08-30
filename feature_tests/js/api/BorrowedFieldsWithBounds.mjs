@@ -51,7 +51,7 @@ export class BorrowedFieldsWithBounds {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...(appendArrayMap["bAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["bAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...(appendArrayMap["cAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["cAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
+        return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['bAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
     }
 
     #fromFFI(ptr, aEdges, bEdges, cEdges) {
