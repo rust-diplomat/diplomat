@@ -30,7 +30,7 @@ export class BorrowedFieldsReturning {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
+        return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
     }
 
     #fromFFI(ptr, aEdges) {

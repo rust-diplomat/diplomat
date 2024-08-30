@@ -49,7 +49,7 @@ export class BorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).splat(), ...(appendArrayMap["aAppendArray"].length > 0 ? diplomatRuntime.CleanupArena.createWith(appendArrayMap["aAppendArray"]) : functionCleanupArena).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).splat()]
+        return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).splat()]
     }
 
     #fromFFI(ptr, aEdges) {
@@ -71,24 +71,24 @@ export class BorrowedFields {
     };
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
-        let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
-        const dstr16Slice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)).splat()];
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const dstr16Slice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16));
         
-        const utf8StrSlice = [...functionGarbageCollector.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)).splat()];
+        const utf8StrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
         
-        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice, ...utf8StrSlice);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
     
         try {
             return new BorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {
-            functionGarbageCollector.garbageCollect();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         
             diplomatReceive.free();
         }

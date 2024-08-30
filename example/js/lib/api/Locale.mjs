@@ -41,9 +41,9 @@ export class Locale {
     static new_(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const nameSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name)).splat()];
+        const nameSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name));
         
-        const result = wasm.icu4x_Locale_new_mv1(...nameSlice);
+        const result = wasm.icu4x_Locale_new_mv1(...nameSlice.splat());
     
         try {
             return new Locale(diplomatRuntime.internalConstructor, result, []);

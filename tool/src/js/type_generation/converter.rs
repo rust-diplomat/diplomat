@@ -51,6 +51,15 @@ pub(super) struct StructBorrowContext<'tcx> {
     pub param_info: StructBorrowInfo<'tcx>,
 }
 
+pub(super) enum JsToCConversionContext {
+    /// We're passing the result of this directly to params, should produce a comma separated list of fields
+    /// a single field, or a spread expression
+    List,
+    /// Preallocating a slice CleanupArena
+    /// Produces a DiplomatBuf (only for Slice types)
+    SlicePrealloc,
+}
+
 impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region C to JS
     /// Given a type from Rust, convert it into something Typescript will understand.
@@ -574,6 +583,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         alloc: Option<&str>,
         // Whether to force padding
         force_padding: ForcePaddingStatus,
+        gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
@@ -589,30 +599,36 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-                    let (alloc_begin, alloc_end) = match alloc {
-                        Some(a) => (format!("{a}.alloc("), ")"),
-                        None => ("".into(), ""),
-                    };
+                    let alloc = alloc.expect(
+                        "Must provide some allocation anchor for slice conversion generation!",
+                    );
+
+                    let (spread_pre, spread_post) =
+                        if let JsToCConversionContext::SlicePrealloc = gen_context {
+                            ("", "")
+                        } else {
+                            ("...", ".splat()")
+                        };
 
                     match slice {
                         hir::Slice::Str(_, encoding) => match encoding {
                             hir::StringEncoding::UnvalidatedUtf8
                             | hir::StringEncoding::Utf8 => {
-                                format!("...{alloc_begin}diplomatRuntime.DiplomatBuf.str8(wasm, {js_name}){alloc_end}.splat()")
+                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
                             }
                             _ => {
-                                format!("...{alloc_begin}diplomatRuntime.DiplomatBuf.str16(wasm, {js_name}){alloc_end}.splat()")
+                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
                             }
                         },
                         hir::Slice::Strs(encoding) => format!(
-                            r#"...{alloc_begin}diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}"){alloc_end}.splat()"#,
+                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
                             match encoding {
                                 hir::StringEncoding::UnvalidatedUtf16 => "string16",
                                 _ => "string8",
                             }
                         ),
                         hir::Slice::Primitive(_, p) => format!(
-                            r#"...{alloc_begin}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}.splat()"#,
+                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
                             self.formatter.fmt_primitive_list_view(p)
                         ),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),

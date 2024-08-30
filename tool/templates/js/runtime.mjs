@@ -182,7 +182,7 @@ export class DiplomatBuf {
         this.size = size;
         this.free = free;
         this.leak = () => { };
-        this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
+        this.releaseToGarbageCollector = () => DiplomatBufferFinalizer.register(this, this.free);
     }
 
     splat() {
@@ -211,7 +211,7 @@ export class DiplomatWriteBuf {
         this.#wasm.diplomat_buffer_write_destroy(this.#buffer);
     }
 
-    garbageCollect() {
+    releaseToGarbageCollector() {
         DiplomatBufferFinalizer.register(this, this.free);
     }
 
@@ -434,8 +434,6 @@ export class DiplomatReceiveBuf {
  */
 export class CleanupArena {
     #items = [];
-
-    #edgeArray = [];
     
     constructor() {
     }
@@ -449,10 +447,35 @@ export class CleanupArena {
         this.#items.push(item);
         return item;
     }
+    /**
+     * Create a new CleanupArena, append it to any edge arrays passed down, and return it.
+     * @param {Array} edgeArrays
+     * @returns {CleanupArena}
+     */
+    createWith(...edgeArrays) {
+        let self = new CleanupArena();
+        for (edgeArray of edgeArrays) {
+            if (edgeArray != null) {
+                edgeArray.push(self);
+            }
+        }
+        DiplomatBufferFinalizer.register(self, self.free);
+        return self;
+    }
 
-    createWith(edgeArray) {
-        this.#edgeArray = edgeArray;
-        DiplomatBufferFinalizer.register(this, this.free);
+    /**
+     * If given edge arrays, create a new CleanupArena, append it to any edge arrays passed down, and return it.
+     * Else return the function-local cleanup arena
+     * @param {CleanupArena} functionCleanupArena
+     * @param {Array} edgeArrays
+     * @returns {DiplomatBuf}
+     */
+    maybeCreateWith(functionCleanupArena, ...edgeArrays) {
+        if (edgeArrays.length > 0) {
+            return CleanupArena.createWith(...edgeArrays);
+        } else {
+            return functionCleanupArena
+        }
     }
 
     free() {
@@ -465,11 +488,16 @@ export class CleanupArena {
 }
 
 /**
- * Same as {@link CleanupArena}, but for calling `garbageCollect` on {@link DiplomatBuf}s.
- * 
+ * Similar to {@link CleanupArena}, but for holding on to slices until a method is called,
+ * after which we rely on the GC to free them.
+ *
  * This is when you may want to use a slice longer than the body of the method.
+ *
+ * At first glance this seems unnecessary, since we will be holding these slices in edge arrays anyway,
+ * however, if an edge array ends up unused, then we do actually need something to hold it for the duration
+ * of the method call.
  */
-export class GarbageCollector {
+export class GarbageCollectorGrip {
     #items = [];
 
     alloc(item) {
@@ -477,9 +505,9 @@ export class GarbageCollector {
         return item;
     }
 
-    garbageCollect() {
+    releaseToGarbageCollector() {
         this.#items.forEach((i) => {
-            i.garbageCollect();
+            i.releaseToGarbageCollector();
         });
 
         this.#items.length = 0;

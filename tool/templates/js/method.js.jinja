@@ -9,7 +9,7 @@
     let functionCleanupArena = new diplomatRuntime.CleanupArena();
     {% endif -%}
     {%- if needs_slice_collection %}
-    let functionGarbageCollector = new diplomatRuntime.GarbageCollector();
+    let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
     {%- endif -%}
 
     {% for slice in slice_params %}
@@ -59,7 +59,7 @@
         functionCleanupArena.free();
     {% endif -%}
     {%- if needs_slice_collection %}
-        functionGarbageCollector.garbageCollect();
+        functionGarbageCollectorGrip.releaseToGarbageCollector();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}

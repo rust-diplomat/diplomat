@@ -37,9 +37,9 @@ export class RenamedMyIterable {
     static new_(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const xSlice = [...functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8")).splat()];
+        const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8"));
         
-        const result = wasm.namespace_MyIterable_new(...xSlice);
+        const result = wasm.namespace_MyIterable_new(...xSlice.splat());
     
         try {
             return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
