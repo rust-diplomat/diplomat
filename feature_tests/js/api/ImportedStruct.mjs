@@ -44,6 +44,17 @@ export class ImportedStruct {
         return [this.#foo.ffiValue, this.#count, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap,
+        forcePadding
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#foo.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#count, Uint8Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.

@@ -54,6 +54,17 @@ export class BorrowedFieldsWithBounds {
         return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['bAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['bAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+    }
+
     #fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
         this.#fieldA = new diplomatRuntime.DiplomatSliceStr(wasm, fieldADeref,  "string16", aEdges);

@@ -71,6 +71,17 @@ export function maybePaddingFields(needsPaddingFields, paddingCount) {
     }
 }
 
+/**
+* Write a value of width `width` to a an ArrayBuffer `arrayBuffer`
+* at byte offset `offset`, treating it as a buffer of kind `typedArrayKind`
+* (which is a `TypedArray` variant like `Uint8Array` or `Int16Array`)
+*/
+export function writeToArrayBuffer(arrayBuffer, offset, value, typedArrayKind) {
+    let buffer = new typedArrayKind(arrayBuffer, offset);
+    buffer[0] = value;
+}
+
+
 /** 
  * A wrapper around a slice of WASM memory that can be freed manually or
  * automatically by the garbage collector.
@@ -187,6 +198,14 @@ export class DiplomatBuf {
 
     splat() {
         return [this.ptr, this.size];
+    }
+
+    /**
+     * Write the (ptr, len) pair to an array buffer at byte offset `offset`
+     */
+    writePtrLenToArrayBuffer(arrayBuffer, offset) {
+        writeToArrayBuffer(arrayBuffer, offset, this.ptr, Uint32Array);
+        writeToArrayBuffer(arrayBuffer, offset + 4, this.size, Uint32Array);
     }
 }
 

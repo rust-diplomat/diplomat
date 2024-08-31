@@ -31,6 +31,15 @@ export class CyclicStructA {
         return [...this.#a._intoFFI(functionCleanupArena, {})]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        this.#a._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
