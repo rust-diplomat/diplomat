@@ -3,13 +3,13 @@ use serde::Serialize;
 use super::docs::Docs;
 use super::{Attrs, Ident, LifetimeEnv, Param, PathTrait, TraitSelfParam, TypeName};
 
-/// A struct declaration in an FFI module that is not opaque.
+/// A trait declaration in an FFI module.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 #[non_exhaustive]
 pub struct Trait {
     pub name: Ident,
     pub lifetimes: LifetimeEnv,
-    pub fcts: Vec<TraitMethod>,
+    pub methods: Vec<TraitMethod>,
     pub docs: Docs,
     pub attrs: Attrs,
 }
@@ -85,7 +85,7 @@ impl Trait {
                     syn::ReturnType::Default => None,
                 };
 
-                let lifetimes = LifetimeEnv::from_trait_fct_item(
+                let lifetimes = LifetimeEnv::from_trait_item(
                     trait_item,
                     self_param.as_ref(),
                     &all_params[..],
@@ -106,9 +106,9 @@ impl Trait {
 
         Self {
             name: (&trt.ident).into(),
-            fcts: trait_fcts,
+            methods: trait_fcts,
             docs: Docs::from_attrs(&trt.attrs),
-            lifetimes: LifetimeEnv::from_trait_item(trt), // TODO
+            lifetimes: LifetimeEnv::from_trait(trt), // TODO
             attrs,
         }
     }

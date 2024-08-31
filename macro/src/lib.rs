@@ -103,7 +103,7 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
         pub SIZE: usize,
         pub ALIGNMENT: usize,
     ));
-    for m in &custom_trait.fcts {
+    for m in &custom_trait.methods {
         // TODO check that this is the right conversion, it might be the wrong direction
         let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty)).collect();
         let method_name = Ident::new(&format!("run_{}_callback", m.name), Span::call_site());
@@ -132,7 +132,7 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
 
 fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &Ident) -> Item {
     let mut methods: Vec<Item> = vec![];
-    for m in &custom_trait.fcts {
+    for m in &custom_trait.methods {
         let param_names: Vec<proc_macro2::TokenStream> = m
             .params
             .iter()
@@ -141,13 +141,18 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
                 quote! {, #p_name}
             })
             .collect();
+        let mut all_params_conversion = vec![];
         let mut param_names_and_types: Vec<proc_macro2::TokenStream> = m
             .params
             .iter()
             .map(|p| {
+                let orig_type = p.ty.to_syn();
                 let p_ty = param_ty(&p.ty);
+                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty, Some(&p_ty)) {
+                    all_params_conversion.push(conversion);
+                }
                 let p_name = &p.name;
-                quote!(#p_name : #p_ty)
+                quote!(#p_name : #orig_type)
             })
             .collect();
         let method_name = &m.name;
@@ -191,6 +196,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
         methods.push(syn::Item::Fn(syn::parse_quote!(
             fn #method_name#lifetimes (#(#param_names_and_types),*) #return_tokens {
                 unsafe {
+                    #(#all_params_conversion)*
                     ((self.vtable).#runner_method_name)(self.data #(#param_names)*)#end_token
                 }
             }
@@ -1058,6 +1064,7 @@ mod tests {
                         fn test_trait_fn(&self, x: i32) -> i32;
                         fn test_void_trait_fn(&self);
                         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;
+                        fn test_slice_trait_fn(&self, s: &[u8]) -> i32;
                     }
 
                     pub struct Wrapper {

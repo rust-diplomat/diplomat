@@ -408,8 +408,8 @@ impl<'ast> LoweringContext<'ast> {
         let fcts = if attrs.disable {
             Vec::new()
         } else {
-            let mut fcts = Vec::with_capacity(ast_trait.fcts.len());
-            for ast_trait_method in ast_trait.fcts.iter() {
+            let mut fcts = Vec::with_capacity(ast_trait.methods.len());
+            for ast_trait_method in ast_trait.methods.iter() {
                 fcts.push(self.lower_trait_method(ast_trait_method, item.in_path, &attrs)?);
             }
             fcts

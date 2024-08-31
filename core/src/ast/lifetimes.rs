@@ -123,7 +123,7 @@ impl LifetimeEnv {
         this
     }
 
-    pub fn from_trait_fct_item(
+    pub fn from_trait_item(
         trait_fct_item: &syn::TraitItem,
         self_param: Option<&TraitSelfParam>,
         params: &[Param],
@@ -140,12 +140,19 @@ impl LifetimeEnv {
             if let Some(return_type) = return_type {
                 this.extend_implicit_lifetime_bounds(return_type, None);
             }
+        } else {
+            panic!(
+                "Diplomat traits can only have associated methods and no other associated items."
+            )
         }
         this
     }
 
-    pub fn from_trait_item(_trt: &syn::ItemTrait) -> Self {
-        LifetimeEnv::new() // TODO check this -- structs only include lifetime envs from fields, not methods, so that's my reasoning here
+    pub fn from_trait(trt: &syn::ItemTrait) -> Self {
+        if trt.generics.lifetimes().next().is_some() {
+            panic!("Diplomat traits are not allowed to have any lifetime parameters")
+        }
+        LifetimeEnv::new()
     }
 
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds

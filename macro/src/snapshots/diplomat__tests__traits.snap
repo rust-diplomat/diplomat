@@ -1,7 +1,7 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 1049
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct TestingStruct { x: i32, y: i32, } pub trait\n                                TesterTrait\n                                {\n                                    fn test_trait_fn(&self, x: i32) -> i32; fn\n                                    test_void_trait_fn(&self); fn\n                                    test_struct_trait_fn(&self, s: TestingStruct) -> i32;\n                                } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n                                {\n                                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n                                    { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n                                    test_trait_with_struct(t: impl TesterTrait) -> i32\n                                    {\n                                        let arg = TestingStruct { x: 1, y: 5, };\n                                        t.test_struct_trait_fn(arg)\n                                    }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
+assertion_line: 1059
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct TestingStruct { x: i32, y: i32, } pub trait\n                                TesterTrait\n                                {\n                                    fn test_trait_fn(&self, x: i32) -> i32; fn\n                                    test_void_trait_fn(&self); fn\n                                    test_struct_trait_fn(&self, s: TestingStruct) -> i32; fn\n                                    test_slice_trait_fn(&self, s: &[u8]) -> i32;\n                                } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n                                {\n                                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n                                    { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n                                    test_trait_with_struct(t: impl TesterTrait) -> i32\n                                    {\n                                        let arg = TestingStruct { x: 1, y: 5, };\n                                        t.test_struct_trait_fn(arg)\n                                    }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[repr(C)]
@@ -13,6 +13,7 @@ mod ffi {
         fn test_trait_fn(&self, x: i32) -> i32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;
+        fn test_slice_trait_fn(&self, s: &[u8]) -> i32;
     }
     #[repr(C)]
     pub struct Wrapper {
@@ -47,6 +48,8 @@ mod ffi {
         pub run_test_void_trait_fn_callback: unsafe extern "C" fn(*const c_void),
         pub run_test_struct_trait_fn_callback:
             unsafe extern "C" fn(*const c_void, TestingStruct) -> i32,
+        pub run_test_slice_trait_fn_callback:
+            unsafe extern "C" fn(*const c_void, diplomat_runtime::DiplomatSlice<u8>) -> i32,
     }
     #[repr(C)]
     pub struct DiplomatTraitStruct_TesterTrait {
@@ -64,6 +67,12 @@ mod ffi {
         }
         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32 {
             unsafe { ((self.vtable).run_test_struct_trait_fn_callback)(self.data, s) }
+        }
+        fn test_slice_trait_fn(&self, s: &[u8]) -> i32 {
+            unsafe {
+                let s: diplomat_runtime::DiplomatSlice<u8> = s.into();
+                ((self.vtable).run_test_slice_trait_fn_callback)(self.data, s)
+            }
         }
     }
     impl Drop for DiplomatTraitStruct_TesterTrait {
