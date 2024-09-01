@@ -229,7 +229,7 @@ jobs:
         cache: maven
     - name: get jextract
       run: curl -o /opt/jextract.tgz https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
-    # - name: config jextract
-    #   run: tar -xzf jextract.tgz
-    # - name: Test Java
-    #   run: PATH=$PATH:"/opt/jextract-22/bin" echo $PATH
+    - name: config jextract
+      run: tar -xzf /opt/jextract.tgz -C /opt/
+    - name: Test Java
+      run: PATH=$PATH:"/opt/jextract-22/bin" echo $PATH
