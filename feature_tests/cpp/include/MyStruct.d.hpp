@@ -25,6 +25,8 @@ namespace capi {
       char32_t f;
       diplomat::capi::MyEnum g;
     };
+    
+    typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
 } // namespace capi
 } // namespace
 
@@ -43,6 +45,8 @@ struct MyStruct {
   inline uint8_t into_a();
 
   inline static diplomat::result<std::monostate, MyZst> returns_zst_result();
+
+  inline static diplomat::result<std::monostate, MyZst> fails_zst_result();
 
   inline diplomat::capi::MyStruct AsFFI() const;
   inline static MyStruct FromFFI(diplomat::capi::MyStruct c_struct);

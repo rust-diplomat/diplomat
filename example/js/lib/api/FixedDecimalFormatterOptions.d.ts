@@ -9,7 +9,7 @@ export class FixedDecimalFormatterOptions {
 
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
-
+    constructor(groupingStrategy: FixedDecimalGroupingStrategy, someOtherConfig: boolean);
 
     static default_(): FixedDecimalFormatterOptions;
 }

@@ -1,22 +1,22 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
-#[diplomat::attr(not(any(c)), rename = "Renamed{0}")]
+#[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
     #[derive(Clone)]
     #[diplomat::opaque]
-    #[diplomat::attr(*, rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(not(kotlin), rename = "AttrOpaque1Renamed")]
     #[diplomat::attr(java, disable)]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
-        #[diplomat::attr(*, rename = "totally_not_{0}")]
+        #[diplomat::attr(not(kotlin), rename = "totally_not_{0}")]
         #[diplomat::attr(auto, constructor)]
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
 
-        #[diplomat::attr(*, rename = "method_renamed")]
+        #[diplomat::attr(not(kotlin), rename = "method_renamed")]
         #[diplomat::attr(auto, getter = "method")]
         pub fn method(&self) -> u8 {
             77
@@ -51,7 +51,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "")]
-    #[diplomat::attr(*, rename = "Unnamespaced")]
+    #[diplomat::attr(not(kotlin), rename = "Unnamespaced")]
     #[diplomat::attr(java, disable)]
     pub struct Unnamespaced;
 

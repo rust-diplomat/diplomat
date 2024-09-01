@@ -19,12 +19,19 @@ export class Locale {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Locale is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Locale_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Locale_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -32,16 +39,18 @@ export class Locale {
     }
 
     static new_(name) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const nameSlice = diplomatRuntime.DiplomatBuf.str8(wasm, name);
-        const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr, nameSlice.size);
+        const nameSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name));
+        
+        const result = wasm.icu4x_Locale_new_mv1(...nameSlice.splat());
     
         try {
-            return new Locale(result, []);
+            return new Locale(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            nameSlice.free();
+            functionCleanupArena.free();
         }
     }
 }

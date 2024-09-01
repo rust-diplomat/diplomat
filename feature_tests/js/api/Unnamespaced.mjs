@@ -16,12 +16,19 @@ export class Unnamespaced {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Unnamespaced is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Unnamespaced_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Unnamespaced_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -32,14 +39,13 @@ export class Unnamespaced {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
-            return new Unnamespaced(result, []);
+            return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
     }
 
-    useNamespaced(n) {
-        wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
+    useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}
         

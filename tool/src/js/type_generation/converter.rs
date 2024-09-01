@@ -1,3 +1,6 @@
+//! Lots of helper functions for converting from JS to C and back.
+//!
+//! Separate from `type_generation/mod.rs` to avoid clutter.
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
@@ -8,14 +11,32 @@ use std::fmt::Write;
 
 use super::TyGenContext;
 
-/// Part of JSGenerationContext that handles conversions between C and JS.
-/// This is a partial implementation so I don't have really long files.
-
+/// Check if an enum's values are consecutive. (i.e., if we start at 1, the next value is 2).
 fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
     ty.variants
         .iter()
         .enumerate()
         .all(|(i, v)| i as isize == v.discriminant)
+}
+
+/// The Rust-Wasm ABI currently treats structs with 1 or 2 scalar fields different from
+/// structs with more ("large" structs). Structs with 1 or 2 scalar fields are passed in as consecutive fields,
+/// whereas larger structs are passed in as an array of fields *including padding*. This choice is typically at the struct
+/// level, however a small struct found within a large struct will also need to care about padding.
+///
+/// See docs/wasm_abi_quirks.md, specifically the difference between "direct" and "padded direct" parameter passing.
+#[derive(Copy, Clone, Default, PartialEq, Eq)]
+pub(super) enum ForcePaddingStatus {
+    /// Don't force padding. For large and small structs found in arguments, who will internally make the choice
+    /// between "direct" and "padded direct" parameter passing.
+    #[default]
+    NoForce,
+    /// Force padding. For small structs found as fields in large structs, where the larger struct needs the smaller struct
+    /// to use "padded direct" parameter passing.
+    Force,
+    /// Force padding if the caller forces padding. For small structs found as fields in small structs, where we need "padded direct"
+    /// parameter passing iff the structs are eventually found in a larger struct that needs that, as opposed to being passed directly as parameters.
+    PassThrough,
 }
 
 /// Context about a struct being borrowed when doing js-to-c conversions
@@ -28,6 +49,15 @@ pub(super) struct StructBorrowContext<'tcx> {
     pub is_method: bool,
     pub use_env: &'tcx LifetimeEnv,
     pub param_info: StructBorrowInfo<'tcx>,
+}
+
+pub(super) enum JsToCConversionContext {
+    /// We're passing the result of this directly to params, should produce a comma separated list of fields
+    /// a single field, or a spread expression
+    List,
+    /// Preallocating a slice CleanupArena
+    /// Produces a DiplomatBuf (only for Slice types)
+    SlicePrealloc,
 }
 
 impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
@@ -85,17 +115,18 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
-            Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
+            Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
 
+    /// Generate `.d.ts` equivalents for -> Result<>, or -> Option<>, etc.
     pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
             SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            _ => unreachable!(),
+            _ => unreachable!("Unknown success type {out_ty:?}"),
         }
     }
 
@@ -118,7 +149,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             .formatter
                             .fmt_lifetime_edge_array(lt, lifetime_environment)
                             .into_owned(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 } else {
                     "[]".into()
@@ -133,17 +164,17 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                                 .fmt_lifetime_edge_array(lt, lifetime_environment)
                         )
                         .unwrap(),
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
                 if op.is_optional() {
                     format!(
-                        "{variable_name} === 0 ? null : new {type_name}({variable_name}, {edges})"
+                        "{variable_name} === 0 ? null : new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})"
                     )
                     .into()
                 } else {
-                    format!("new {type_name}({variable_name}, {edges})").into()
+                    format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -156,23 +187,23 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             write!(edges, ", {}Edges", lifetime_environment.fmt_lifetime(lt))
                                 .unwrap()
                         }
-                        _ => panic!("'static not implemented for JS2 backend"),
+                        _ => panic!("'static not supported for JS backend"),
                     }
                 }
 
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}()").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
-                        format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}()").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::OutStruct(..) => {
-                        format!("new {type_name}({variable_name}{edges})").into()
+                        format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
@@ -190,15 +221,25 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
             Type::Slice(slice) => {
+                let edges = match slice.lifetime() {
+                    Some(lt) => {
+                        let hir::MaybeStatic::NonStatic(lifetime) = lt else {
+                            panic!("'static not supported for JS backend");
+                        };
+                        format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
+                    }
+                    _ => "[]".into(),
+                };
+
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
-                        r#"{variable_name}.getSlice("{}")"#,
+                        r#"new diplomatRuntime.DiplomatSlicePrimitive.getSlice(wasm, {variable_name}, "{}", {edges})"#,
                         self.formatter.fmt_primitive_list_view(primitive_type)
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"{variable_name}.getString("string{}")"#,
+                        r#"new diplomatRuntime.DiplomatSliceStr(wasm, {variable_name},  "string{}", {edges})"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -211,7 +252,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"{variable_name}.getStrings("string{}")"#,
+                            r#"new diplomatRuntime.DiplomatSliceStrings(wasm, {variable_name}, "string{}", {edges})"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,
@@ -228,6 +269,9 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// If we have a type that's hidden behind a pointer, de-reference that pointer in JS. Meant to be used in conjunction with [`Self::gen_c_to_js_for_type`].
+    ///
+    /// See [`super::FieldInfo::c_to_js_deref`] for an example of this.
     pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(
         &self,
         ty: &Type<P>,
@@ -378,6 +422,54 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
             // Result<Type, Error> or Option<Type>
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                let (requires_buf, error_ret) = match return_type {
+                    ReturnType::Fallible(s, Some(e)) => {
+                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                        self.add_import(type_name.into());
+
+                        let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
+                                ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                                ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                                _ => unreachable!(),
+                        });
+
+                        let is_out = matches!(s, SuccessType::OutType(..));
+
+                        let success_empty = matches!(s, SuccessType::OutType(Type::Struct(s)) if match s.resolve(self.tcx) {
+                            ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                            ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                            _ => unreachable!(),
+                        });
+
+                        let receive_deref = self.gen_c_to_js_deref_for_type(
+                            e,
+                            match fields_empty {
+                                true => "result",
+                                false => "diplomatReceive.buffer",
+                            }
+                            .into(),
+                            0,
+                        );
+
+                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                        let cause =
+                            self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
+                        // We still require an out buffer even if our error types is empty
+                        (!fields_empty || (is_out && !success_empty), format!(
+                        "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
+                        message = match e {
+                            Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
+                            Type::Struct(..) if fields_empty => format!("'{type_name}'"),
+                            _ => format!("'{type_name}: ' + cause.toString()"),
+                        },
+                        ))
+                    }
+                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None) => {
+                        (true, "return null".into())
+                    }
+                    return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
+                };
+
                 let layout = match ok {
                     SuccessType::Unit => crate::js::layout::unit_size_alignment(),
                     SuccessType::OutType(ref o) => {
@@ -408,70 +500,35 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 ) + 1;
                 let align = layout.align();
 
-                method_info.alloc_expressions.push(
-                    format!(
-                        "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
-                        size, align
-                    )
-                    .into(),
-                );
-                method_info
-                    .param_conversions
-                    .insert(0, "diplomatReceive.buffer".into());
-                method_info
-                    .cleanup_expressions
-                    .push("diplomatReceive.free();".into());
+                if requires_buf {
+                    method_info.alloc_expressions.push(
+                        format!(
+                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
+                            size, align
+                        )
+                        .into(),
+                    );
+                    method_info
+                        .param_conversions
+                        .insert(0, "diplomatReceive.buffer".into());
+                    method_info
+                        .cleanup_expressions
+                        .push("diplomatReceive.free();".into());
+                }
 
                 let err_check = format!(
-                    "if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
-                    match return_type {
-                        ReturnType::Fallible(_, Some(e)) => {
-                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                            self.add_import(type_name.into());
-
-                            let receive_deref = self.gen_c_to_js_deref_for_type(
-                                e,
-                                "diplomatReceive.buffer".into(),
-                                0,
-                            );
-                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                            let cause =
-                                self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
-                            format!(
-                            "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
-                            message = match e {
-                                Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
-                                Type::Struct(s) if match s.resolve(self.tcx) {
-                                    ReturnableStructDef::Struct(s) => s.fields.is_empty(),
-                                    ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
-                                    _ => unreachable!()
-                                } => format!("'{type_name}'"),
-                                _ => format!("'{type_name}: ' + cause.toString()"),
-                            },
-                        )
-                        }
-                        ReturnType::Nullable(_) | ReturnType::Fallible(_, None) =>
-                            "return null".into(),
-                        return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
-                    }
+                    "if ({}) {{\n    {};\n}}\n",
+                    match requires_buf {
+                        true => "!diplomatReceive.resultFlag",
+                        false => "result !== 1",
+                    },
+                    error_ret
                 );
 
                 Some(
                     match ok {
                         SuccessType::Unit => err_check,
                         SuccessType::Write => {
-                            // Pretty sure you can't have a Result<Write, Err> and also return something else.
-                            // So this is our ideal output:
-                            /*
-                            const write = diplomatWriteBuf();
-                            const diplomat_receive_buffer = diplomatReceiveBuf(wasm, error_size, error_align);
-                            wasm.c_func(write.buffer);
-                            if (diplomat.resultFlag) {
-                                return write;
-                            } else {
-                                throw Error();
-                            }
-                            */
                             method_info.alloc_expressions.push(
                                 "const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into(),
                             );
@@ -505,6 +562,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
     // #region JS to C
 
+    /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
     pub(super) fn gen_js_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
@@ -516,38 +574,79 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         }
     }
 
+    /// Given any kind of [`hir::Type`], give us JS code that will translate it into something WASM understands.
     pub(super) fn gen_js_to_c_for_type<P: TyPosition>(
         &self,
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        alloc: Option<&str>,
+        // Whether to force padding
+        force_padding: ForcePaddingStatus,
+        gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
-            Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
-                match encoding {
-                    hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
-                        format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
+            Type::Struct(..) => self.gen_js_to_c_for_struct_type(
+                js_name,
+                struct_borrow_info,
+                alloc.unwrap(),
+                force_padding,
+            ),
+            Type::Slice(slice) => {
+                if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
+                    panic!("'static not supported for JS backend.")
+                } else {
+                    let alloc = alloc.expect(
+                        "Must provide some allocation anchor for slice conversion generation!",
+                    );
+
+                    let (spread_pre, spread_post) =
+                        if let JsToCConversionContext::SlicePrealloc = gen_context {
+                            ("", "")
+                        } else {
+                            ("...", ".splat()")
+                        };
+
+                    match slice {
+                        hir::Slice::Str(_, encoding) => match encoding {
+                            hir::StringEncoding::UnvalidatedUtf8
+                            | hir::StringEncoding::Utf8 => {
+                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
+                            }
+                            _ => {
+                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
+                            }
+                        },
+                        hir::Slice::Strs(encoding) => format!(
+                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
+                            match encoding {
+                                hir::StringEncoding::UnvalidatedUtf16 => "string16",
+                                _ => "string8",
+                            }
+                        ),
+                        hir::Slice::Primitive(_, p) => format!(
+                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
+                            self.formatter.fmt_primitive_list_view(p)
+                        ),
+                        _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }
-                    _ => format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into(),
+                    .into()
                 }
             }
-            Type::Slice(hir::Slice::Primitive(_, p)) => format!(
-                r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
-                self.formatter.fmt_primitive_list_view(p)
-            )
-            .into(),
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
         }
     }
 
+    /// The end goal of this is to call `_intoFFI`, to convert a structure into a flattened list of values that WASM understands.
     pub(super) fn gen_js_to_c_for_struct_type(
         &self,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        allocator: &str,
+        force_padding: ForcePaddingStatus,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
@@ -572,7 +671,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
-        format!("...{js_name}._intoFFI(slice_cleanup_callbacks, {{{params}}})").into()
+        let force_padding = match force_padding {
+            ForcePaddingStatus::NoForce => "",
+            ForcePaddingStatus::Force => ", true",
+            ForcePaddingStatus::PassThrough => ", forcePadding",
+        };
+        format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
     }
     // #endregion
 }

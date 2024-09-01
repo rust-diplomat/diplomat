@@ -12,6 +12,8 @@ export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
 
 export { ErrorStruct } from "./ErrorStruct.mjs"
 
+export { BigStructWithStuff } from "./BigStructWithStuff.mjs"
+
 export { CyclicStructA } from "./CyclicStructA.mjs"
 
 export { CyclicStructB } from "./CyclicStructB.mjs"
@@ -19,6 +21,8 @@ export { CyclicStructB } from "./CyclicStructB.mjs"
 export { MyStruct } from "./MyStruct.mjs"
 
 export { MyZst } from "./MyZst.mjs"
+
+export { ScalarPairWithPadding } from "./ScalarPairWithPadding.mjs"
 
 export { OptionStruct } from "./OptionStruct.mjs"
 

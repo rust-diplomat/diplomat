@@ -1,7 +1,9 @@
 package dev.diplomattest.somelib;
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
+import com.sun.jna.Structure
 
 
 internal interface AttrOpaque1Lib: Library {
@@ -30,7 +32,7 @@ class AttrOpaque1 internal constructor (
         internal val libClass: Class<AttrOpaque1Lib> = AttrOpaque1Lib::class.java
         internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
         
-        fun totally_not_new(): AttrOpaque1Renamed {
+        fun new_(): AttrOpaque1 {
             
             val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
@@ -42,7 +44,7 @@ class AttrOpaque1 internal constructor (
         }
     }
     
-    fun method_renamed(): UByte {
+    fun method(): UByte {
         
         val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return returnVal.toUByte()
@@ -60,7 +62,7 @@ class AttrOpaque1 internal constructor (
         
     }
     
-    fun useNamespaced(n: RenamedAttrEnum): Unit {
+    fun useNamespaced(n: AttrEnum): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         

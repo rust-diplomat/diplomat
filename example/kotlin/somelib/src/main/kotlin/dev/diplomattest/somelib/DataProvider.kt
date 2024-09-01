@@ -1,7 +1,9 @@
 package dev.diplomattest.somelib;
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
+import com.sun.jna.Structure
 
 
 internal interface DataProviderLib: Library {
@@ -42,7 +44,7 @@ class DataProvider internal constructor (
             
             val returnVal = lib.icu4x_DataProvider_returns_result_mv1();
             if (returnVal.isOk == 1.toByte()) {
-                Unit.ok()
+                return Unit.ok()
             } else {
                 return Err(Unit)
             }

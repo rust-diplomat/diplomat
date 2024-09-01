@@ -5,13 +5,16 @@
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}{{ return_type }};{% else %} {
+    {%- if needs_slice_cleanup %}
+    let functionCleanupArena = new diplomatRuntime.CleanupArena();
+    {% endif -%}
+    {%- if needs_slice_collection %}
+    let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+    {%- endif -%}
+
     {% for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
     {% endfor -%}
-
-    {%- if needs_slice_cleanup %}
-    let slice_cleanup_callbacks = [];
-    {% endif -%}
 
     {%- for alloc_stmt in alloc_expressions %}
     {{alloc_stmt|indent(4)}}
@@ -35,7 +38,8 @@
     {%- endfor -%}
 
 
-    {%~ if !method_output_is_ffi_unit %}const result = {% endif %}wasm.{{ abi_name }}(
+    {%~ if !method_output_is_ffi_unit %}
+    const result = {% endif %}wasm.{{ abi_name }}(
         {%- for param in param_conversions -%}
         {%- if !loop.first %}, {% endif -%}
         {{ param }}
@@ -52,9 +56,10 @@
     
     finally {
     {%- if needs_slice_cleanup %}
-        for (let cleanup of slice_cleanup_callbacks) {
-            cleanup();
-        }
+        functionCleanupArena.free();
+    {% endif -%}
+    {%- if needs_slice_collection %}
+        functionGarbageCollectorGrip.releaseToGarbageCollector();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}

@@ -14,12 +14,19 @@ export class Utf16Wrap {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Utf16Wrap is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -27,21 +34,22 @@ export class Utf16Wrap {
     }
 
     static fromUtf16(input) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
-        const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
+        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, input));
+        
+        const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
     
         try {
-            return new Utf16Wrap(result, []);
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     getDebugStr() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
     
@@ -55,15 +63,15 @@ export class Utf16Wrap {
     }
 
     borrowCont() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatReceive.buffer.getString("string16");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string16", aEdges);
         }
         
         finally {

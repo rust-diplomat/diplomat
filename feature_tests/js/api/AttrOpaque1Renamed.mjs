@@ -16,12 +16,19 @@ export class AttrOpaque1Renamed {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("AttrOpaque1Renamed is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        AttrOpaque1Renamed_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            AttrOpaque1Renamed_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -32,7 +39,7 @@ export class AttrOpaque1Renamed {
         const result = wasm.namespace_AttrOpaque1_new();
     
         try {
-            return new AttrOpaque1Renamed(result, []);
+            return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -58,16 +65,14 @@ export class AttrOpaque1Renamed {
         finally {}
     }
 
-    useUnnamespaced(un) {
-        wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
+    useUnnamespaced(un) {wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
         try {}
         
         finally {}
     }
 
-    useNamespaced(n) {
-        wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
+    useNamespaced(n) {wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}
         

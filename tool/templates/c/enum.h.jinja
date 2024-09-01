@@ -5,4 +5,4 @@ enum {{ ty_name }} {
   {%- endfor %}
 } {%- if !is_for_cpp %} {{ ty_name }} {%- endif %};
 
-
+typedef struct {{ ty_name }}_option {union { {{ty_name}} ok; }; bool is_ok; } {{ ty_name }}_option;

@@ -34,6 +34,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor = "static")]
+        #[diplomat::attr(not(supports = static_slices), disable)]
         pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }

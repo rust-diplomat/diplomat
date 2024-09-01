@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatWrite;
+    use diplomat_runtime::{DiplomatChar, DiplomatOption, DiplomatWrite};
 
     #[diplomat::opaque]
     #[diplomat::attr(java, disable)]
@@ -39,6 +39,20 @@ pub mod ffi {
         b: Option<Box<OptionOpaqueChar>>,
         c: u32,
         d: Option<Box<OptionOpaque>>,
+    }
+
+    #[diplomat::attr(not(supports = option), disable)]
+    pub struct OptionInputStruct {
+        a: DiplomatOption<u8>,
+        b: DiplomatOption<DiplomatChar>,
+        c: DiplomatOption<OptionEnum>,
+    }
+
+    #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
+    pub enum OptionEnum {
+        Foo,
+        Bar,
     }
 
     impl OptionOpaque {
@@ -94,6 +108,30 @@ pub mod ffi {
 
         pub fn option_opaque_argument(arg: Option<&OptionOpaque>) -> bool {
             arg.is_some()
+        }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_option_u8(arg: Option<u8>) -> Option<u8> {
+            arg
+        }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum> {
+            arg
+        }
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_option_input_struct(
+            arg: Option<OptionInputStruct>,
+        ) -> Option<OptionInputStruct> {
+            arg
+        }
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn returns_option_input_struct() -> OptionInputStruct {
+            OptionInputStruct {
+                a: Some(6).into(),
+                b: None.into(),
+                c: Some(OptionEnum::Bar).into(),
+            }
         }
     }
 

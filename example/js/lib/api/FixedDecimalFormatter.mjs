@@ -23,12 +23,19 @@ export class FixedDecimalFormatter {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("FixedDecimalFormatter is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        FixedDecimalFormatter_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            FixedDecimalFormatter_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -36,30 +43,27 @@ export class FixedDecimalFormatter {
     }
 
     static tryNew(locale, provider, options) {
-        
-        let slice_cleanup_callbacks = [];
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
+        
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(functionCleanupArena, {}));
     
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return new FixedDecimalFormatter(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanupArena.free();
         
             diplomatReceive.free();
         }
     }
 
     formatWrite(value) {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
     

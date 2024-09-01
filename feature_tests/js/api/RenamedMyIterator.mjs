@@ -15,15 +15,22 @@ export class RenamedMyIterator {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedMyIterator is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        RenamedMyIterator_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            RenamedMyIterator_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -31,8 +38,8 @@ export class RenamedMyIterator {
     }
 
     #iteratorNext() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
+        
         const result = wasm.namespace_MyIterator_next(diplomatReceive.buffer, this.ffiValue);
     
         try {

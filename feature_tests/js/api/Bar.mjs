@@ -17,7 +17,11 @@ export class Bar {
     #bEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, bEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Bar is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#bEdge = bEdge;
@@ -27,8 +31,11 @@ export class Bar {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Bar_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Bar_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -36,16 +43,16 @@ export class Bar {
     }
 
     get foo() {
-        
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.Bar_foo(this.ffiValue);
     
         try {
-            return new Foo(result, bEdges, aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);
         }
         
         finally {}

@@ -25,6 +25,9 @@ namespace capi {
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
     MyStruct_returns_zst_result_result MyStruct_returns_zst_result(void);
     
+    typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
+    MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
+    
     
     } // extern "C"
 } // namespace capi
@@ -42,6 +45,11 @@ inline uint8_t MyStruct::into_a() {
 
 inline diplomat::result<std::monostate, MyZst> MyStruct::returns_zst_result() {
   auto result = diplomat::capi::MyStruct_returns_zst_result();
+  return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
+}
+
+inline diplomat::result<std::monostate, MyZst> MyStruct::fails_zst_result() {
+  auto result = diplomat::capi::MyStruct_fails_zst_result();
   return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
 }
 

@@ -15,7 +15,7 @@ typedef struct BorrowedFieldsReturning {
   DiplomatStringView bytes;
 } BorrowedFieldsReturning;
 
-
+typedef struct BorrowedFieldsReturning_option {union { BorrowedFieldsReturning ok; }; bool is_ok; } BorrowedFieldsReturning_option;
 
 
 

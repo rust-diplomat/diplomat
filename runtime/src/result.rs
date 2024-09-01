@@ -15,6 +15,24 @@ pub struct DiplomatResult<T, E> {
     pub is_ok: bool,
 }
 
+/// A type to represent Option<T> over FFI.
+///
+/// Used internally to handle `Option<T>` arguments and return types, and needs to be
+/// used explicitly for optional struct fields.
+pub type DiplomatOption<T> = DiplomatResult<T, ()>;
+
+impl<T: Clone, E: Clone> Clone for DiplomatResult<T, E> {
+    fn clone(&self) -> Self {
+        unsafe {
+            if self.is_ok {
+                Ok((*self.value.ok).clone()).into()
+            } else {
+                Err((*self.value.err).clone()).into()
+            }
+        }
+    }
+}
+
 impl<T, E> Drop for DiplomatResult<T, E> {
     fn drop(&mut self) {
         unsafe {
@@ -44,6 +62,18 @@ impl<T, E> From<Result<T, E>> for DiplomatResult<T, E> {
                 is_ok: false,
             },
         }
+    }
+}
+
+impl<T> From<Option<T>> for DiplomatOption<T> {
+    fn from(option: Option<T>) -> Self {
+        option.ok_or(()).into()
+    }
+}
+
+impl<T> From<DiplomatOption<T>> for Option<T> {
+    fn from(result: DiplomatOption<T>) -> Self {
+        Result::<T, ()>::from(result).ok()
     }
 }
 

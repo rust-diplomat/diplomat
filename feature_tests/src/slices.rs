@@ -47,7 +47,6 @@ mod ffi {
 
     impl Float64Vec {
         #[diplomat::attr(not(supports = memory_sharing), disable)]
-        #[diplomat::attr(auto, constructor)]
         pub fn new(v: &[f64]) -> Box<Float64Vec> {
             Box::new(Self(v.to_vec()))
         }

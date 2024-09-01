@@ -17,12 +17,19 @@ export class FixedDecimal {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("FixedDecimal is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        FixedDecimal_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            FixedDecimal_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -33,14 +40,13 @@ export class FixedDecimal {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
-            return new FixedDecimal(result, []);
+            return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
     }
 
-    multiplyPow10(power) {
-        wasm.icu4x_FixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
+    multiplyPow10(power) {wasm.icu4x_FixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
     
         try {}
         
@@ -48,8 +54,8 @@ export class FixedDecimal {
     }
 
     toString() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        
         const result = wasm.icu4x_FixedDecimal_to_string_mv1(this.ffiValue, write.buffer);
     
         try {

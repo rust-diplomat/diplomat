@@ -15,12 +15,19 @@ export class RenamedMyIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedMyIterable is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        RenamedMyIterable_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            RenamedMyIterable_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -28,27 +35,29 @@ export class RenamedMyIterable {
     }
 
     static new_(x) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
-        const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
+        const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8"));
+        
+        const result = wasm.namespace_MyIterable_new(...xSlice.splat());
     
         try {
-            return new RenamedMyIterable(result, []);
+            return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            xSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     [Symbol.iterator]() {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     
         try {
-            return new RenamedMyIterator(result, [], aEdges);
+            return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}

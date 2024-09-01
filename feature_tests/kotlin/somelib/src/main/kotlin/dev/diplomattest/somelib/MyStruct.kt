@@ -1,5 +1,6 @@
 package dev.diplomattest.somelib
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -9,6 +10,7 @@ internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
     fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
     fun MyStruct_returns_zst_result(): ResultUnitMyZstNative
+    fun MyStruct_fails_zst_result(): ResultUnitMyZstNative
 }
 
 internal class MyStructNative: Structure(), Structure.ByValue {
@@ -60,9 +62,19 @@ class MyStruct internal constructor (
             
             val returnVal = lib.MyStruct_returns_zst_result();
             if (returnVal.isOk == 1.toByte()) {
-                Unit.ok()
+                return Unit.ok()
             } else {
-                MyZst().err()
+                return MyZst().err()
+            }
+        }
+        
+        fun failsZstResult(): Res<Unit, MyZst> {
+            
+            val returnVal = lib.MyStruct_fails_zst_result();
+            if (returnVal.isOk == 1.toByte()) {
+                return Unit.ok()
+            } else {
+                return MyZst().err()
             }
         }
     }

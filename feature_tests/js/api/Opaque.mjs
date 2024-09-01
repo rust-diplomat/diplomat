@@ -16,12 +16,19 @@ export class Opaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Opaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Opaque_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Opaque_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -32,42 +39,45 @@ export class Opaque {
         const result = wasm.Opaque_new();
     
         try {
-            return new Opaque(result, []);
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
     }
 
     static tryFromUtf8(input) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
-        const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
+        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input));
+        
+        const result = wasm.Opaque_try_from_utf8(...inputSlice.splat());
     
         try {
-            return result === 0 ? null : new Opaque(result, []);
+            return result === 0 ? null : new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     static fromStr(input) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
-        const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
+        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input));
+        
+        const result = wasm.Opaque_from_str(...inputSlice.splat());
     
         try {
-            return new Opaque(result, []);
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            inputSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     getDebugStr() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
     
@@ -81,16 +91,13 @@ export class Opaque {
     }
 
     assertStruct(s) {
-        
-        let slice_cleanup_callbacks = [];
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(slice_cleanup_callbacks, {}));
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(functionCleanupArena, {}));
     
         try {}
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanupArena.free();
         }
     }
 
@@ -115,12 +122,12 @@ export class Opaque {
     }
 
     static returnsImported() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
-            return new ImportedStruct()._fromFFI(diplomatReceive.buffer);
+            return new ImportedStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

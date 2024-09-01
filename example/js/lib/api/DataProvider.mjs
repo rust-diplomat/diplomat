@@ -19,12 +19,19 @@ export class DataProvider {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("DataProvider is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        DataProvider_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            DataProvider_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -35,7 +42,7 @@ export class DataProvider {
         const result = wasm.icu4x_DataProvider_new_static_mv1();
     
         try {
-            return new DataProvider(result, []);
+            return new DataProvider(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

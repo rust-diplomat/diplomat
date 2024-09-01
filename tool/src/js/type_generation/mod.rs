@@ -1,6 +1,10 @@
+//! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
+//! See [`converter`] for more conversion specific functions.
+
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write;
 
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
@@ -16,16 +20,24 @@ use super::formatter::JSFormatter;
 use crate::ErrorStore;
 
 mod converter;
-use converter::StructBorrowContext;
+use converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
 
+/// Represents context for generating a Javascript class.
+///
+/// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
 pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
+    pub type_name: Cow<'tcx, str>,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
+    /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<BTreeSet<String>>,
 }
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
+    /// Generates the code at the top of every `.d.ts` and `.mjs` file.
+    ///
+    /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used.
     pub(super) fn generate_base(&self, typescript: bool, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js/base.js.jinja", escape = "none")]
@@ -52,20 +64,24 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// A wrapper for `borrow_mut`ably inserting new imports.
+    ///
+    /// I do this to avoid borrow checking madness.
     pub(super) fn add_import(&self, import_str: String) {
         self.imports.borrow_mut().insert(import_str);
     }
 
+    /// Exists for the same reason as [`Self::add_import`].
+    ///
+    /// Right now, only used for removing any self imports.
     pub(super) fn remove_import(&self, import_str: String) {
         self.imports.borrow_mut().remove(&import_str);
     }
 
-    /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
+    /// Generate an enumerator type's body for a file from the given definition.
     pub(super) fn gen_enum(
         &self,
         typescript: bool,
-
-        type_name: &str,
 
         enum_def: &'tcx EnumDef,
         methods: &MethodsInfo,
@@ -86,7 +102,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         ImplTemplate {
             enum_def,
             formatter: self.formatter,
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
@@ -97,11 +113,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// Generate an opaque type's body for a file from the given definition.
     pub(super) fn gen_opaque(
         &self,
         typescript: bool,
-
-        type_name: &str,
 
         opaque_def: &'tcx OpaqueDef,
         methods: &MethodsInfo,
@@ -123,7 +138,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
             typescript,
 
             lifetimes: &opaque_def.lifetimes,
@@ -137,24 +152,29 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
+    /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`].
+    ///
+    /// Also returns a boolean of whether the forcePadding argument is needed.
+    ///
+    /// We separate this step out for two reasons:
+    ///
+    /// 1. It allows re-use between `.d.ts` and `.mjs` files.
+    /// 2. Clarity.
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> Vec<FieldInfo<P>> {
-        let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
-            struct_def.fields.iter().map(|f| &f.ty),
-            self.tcx,
-        );
+    ) -> (Vec<FieldInfo<P>>, bool) {
+        let struct_field_info =
+            crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
+        let mut needs_force_padding = false;
 
         let fields = struct_def.fields.iter().enumerate()
-        .map(|field_enumerator| {
-            let (i, field) = field_enumerator;
-
+        .map(|(i, field)| {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
-            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
+            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty,
@@ -162,42 +182,89 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 &struct_def.lifetimes
             );
 
-            let (js_to_c, maybe_post_cleanup_info, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
-                let slice_expr = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), None);
-
-                // We do not need to handle lifetime transitivity here: Methods already resolve
-                // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
-                // are explicitly specified on methods.
-
-                let post_cleanup_statement = if let Some(lt) = slice.lifetime() {
+            let alloc = if let &hir::Type::Slice(slice) = &field.ty {
+                if let Some(lt) = slice.lifetime() {
                     let hir::MaybeStatic::NonStatic(lt) = lt else {
-                        panic!("'static not supported in JS2 backend");
+                        panic!("'static not supported in JS backend");
                     };
-                    format!(
-                        "(appendArrayMap[{lt_name}AppendArray] || []).length > 0 ? () => {{ for (let lifetime of appendArrayMap[{lt_name}AppendArray]) {{ appendArrayMap[{lt_name}AppendArray].push({field_name}); }} {field_name}.garbageCollect(); }} : {field_name}.free",
-                        lt_name = struct_def.lifetimes.fmt_lifetime(lt),
-                    )
-                } else {
-                    // We take ownership
-                    "".into()
-                };
-
-                (format!("{slice_expr}"), Some(post_cleanup_statement), None)
-            } else {
-                let borrow_info = if let hir::Type::Struct(path) = &field.ty {
-                    StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
-                        |param_info| StructBorrowContext {
-                            use_env: &struct_def.lifetimes,
-                            param_info,
-                            is_method: false
-                        }
+                    let lt_name = struct_def.lifetimes.fmt_lifetime(lt);
+                    Some(
+                        format!("diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['{lt_name}AppendArray'])")
                     )
                 } else {
                     None
+                }
+            } else if let &hir::Type::Struct(..) = &field.ty {
+                Some("functionCleanupArena".into())
+            } else {
+                // We take ownership
+                None
+            };
+
+            let maybe_struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
+                    |param_info| StructBorrowContext {
+                        use_env: &struct_def.lifetimes,
+                        param_info,
+                        is_method: false
+                    }
+                )
+            } else {
+                None
+            };
+
+            let padding = struct_field_info.fields[i].padding_count;
+
+            // See docs/wasm_abi_quirks.md for when "padded direct" parameter passing kicks in
+            let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
+                // There's no padding needed
+                (0 | 1, _) => ForcePaddingStatus::NoForce,
+                // Non-structs don't care
+                // This includes slices, which *are* aggregates but have no padding.
+                _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
+                // 2-field struct contained in 2-field struct, caller decides
+                (2, 2) => {
+                    needs_force_padding = true;
+                    ForcePaddingStatus::PassThrough
+                }
+                // Outer struct has > 3 fields, always pad
+                (2, 3..) => ForcePaddingStatus::Force,
+                // Larger fields will always have padding anyway
+                _ => ForcePaddingStatus::NoForce
+
+            };
+
+            let maybe_padding_after = if padding > 0 {
+                let padding_size_str = match struct_field_info.fields[i].padding_field_width {
+                    1 => "i8",
+                    2 => "i16",
+                    4 => "i32",
+                    8 => "i64",
+                    other => unreachable!("Found unknown padding size {other}")
                 };
 
-                (self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), borrow_info.as_ref()).into(), None, borrow_info.map(|s| s.param_info))
+                if struct_field_info.scalar_count == 2 {
+                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller. See docs/wasm_abi_quirks.md
+                    needs_force_padding = true;
+                    format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")
+                } else {
+                    let mut out = format!(", /* [{padding} x {padding_size_str}] padding */ ");
+                    for i in 0..padding {
+                        if i < padding - 1 {
+                            write!(out, "0, ").unwrap();
+                        } else {
+                            write!(out, "0 /* end padding */").unwrap();
+                        }
+                    }
+
+                    out
+                }
+
+            } else {
+                "".into()
             };
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), force_padding, JsToCConversionContext::List);
+            let js_to_c = format!("{js_to_c}{maybe_padding_after}");
 
             FieldInfo {
                 field_name,
@@ -205,25 +272,27 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 js_type_name,
                 c_to_js_deref,
                 c_to_js,
-                post_cleanup_statement: maybe_post_cleanup_info,
                 js_to_c,
-                maybe_struct_borrow_info
+                maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
             }
         }).collect::<Vec<_>>();
-        fields
+
+        (fields, needs_force_padding)
     }
 
+    /// Generate a struct type's body for a file from the given definition.
+    ///
+    /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
     pub(super) fn gen_struct<P: hir::TyPosition>(
         &self,
         typescript: bool,
-
-        type_name: &str,
 
         struct_def: &'tcx hir::StructDef<P>,
         fields: &Vec<FieldInfo<P>>,
         methods: &MethodsInfo,
 
         is_out: bool,
+        needs_force_padding: bool,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -232,7 +301,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             typescript: bool,
             mutable: bool,
-            has_default_constructor: bool,
+            is_out: bool,
+            needs_force_padding: bool,
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
@@ -242,11 +312,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         ImplTemplate {
-            type_name,
+            type_name: &self.type_name,
 
             typescript,
-            has_default_constructor: is_out,
+            is_out,
             mutable: !is_out,
+            needs_force_padding,
 
             lifetimes: &struct_def.lifetimes,
             fields,
@@ -258,9 +329,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         .unwrap()
     }
 
-    /// Generate a string Javascript representation of a given method.
+    /// Generate required method info for all other [`TyGenContext::generate_*`] calls.
     ///
-    /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
+    /// For re-usability between `.d.ts` and `.mjs` files.
     pub(super) fn generate_method(
         &self,
         type_id: TypeId,
@@ -307,49 +378,49 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
-            // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
-            if let hir::Type::Slice(slice) = param.ty {
-                let slice_expr =
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
+            // If we're a slice of strings or primitives. See [`hir::Type::Slice`].
+            if let hir::Type::Slice(..) = param.ty {
+                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(
+                        match param_borrow_kind {
+                            // Is Rust NOT taking ownership?
+                            // Then that means we can free this after the function is done.
+                            ParamBorrowInfo::TemporarySlice => {
+                                method_info.needs_slice_cleanup = true;
+                                "functionCleanupArena"
+                            },
 
-                let is_borrowed = match param_borrow_kind {
-                    ParamBorrowInfo::TemporarySlice => false,
-                    ParamBorrowInfo::BorrowedSlice => true,
-                    _ => unreachable!(
-                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                            // Is this function borrowing the slice?
+                            // I.e., Do we need it alive for at least as long as this function call?
+                            ParamBorrowInfo::BorrowedSlice => {
+                                method_info.needs_slice_collection = true;
+                                "functionGarbageCollectorGrip"
+                            },
+                            _ => unreachable!(
+                                "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                            ),
+                        }
                     ),
-                };
+                    // Arguments never force padding
+                    ForcePaddingStatus::NoForce,
+                    // We're specifically doing slice preallocation here
+                    JsToCConversionContext::SlicePrealloc
+                    );
                 // We add the pointer and size for slices:
                 method_info
                     .param_conversions
-                    .push(format!("{}Slice.ptr", param_info.name).into());
-                method_info
-                    .param_conversions
-                    .push(format!("{}Slice.size", param_info.name).into());
-
-                // Then we make sure to handle clean-up for the slice:
-                if is_borrowed {
-                    // Is this function borrowing the slice?
-                    // I.e., Do we need it alive for at least as long as this function call?
-                    method_info
-                        .cleanup_expressions
-                        .push(format!("{}Slice.garbageCollect();", param_info.name).into());
-                } else if slice.lifetime().is_some() {
-                    // Is Rust NOT taking ownership?
-                    // Then that means we can free this after the function is done.
-                    method_info
-                        .cleanup_expressions
-                        .push(format!("{}Slice.free();", param_info.name).into());
-                }
+                    .push(format!("...{}Slice.splat()", param_info.name).into());
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
-                    slice_expr,
+                    slice_expr: slice_expr.to_string(),
                 });
             } else {
-                if let hir::Type::Struct(..) = param.ty {
+                let alloc = if let hir::Type::Struct(..) = param.ty {
                     method_info.needs_slice_cleanup = true;
-                }
+                    Some("functionCleanupArena")
+                } else {
+                    None
+                };
 
                 let struct_borrow_info =
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
@@ -367,6 +438,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
+                        alloc,
+                        // Arguments never force padding
+                        ForcePaddingStatus::NoForce,
+                        // Arguments need a list
+                        JsToCConversionContext::List,
                     ));
             }
 
@@ -422,45 +498,71 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     }
 }
 
+/// Represents a parameter of a method. Used as part of [`MethodInfo`], exclusively in the method definition.
 #[derive(Default)]
 struct ParamInfo<'a> {
     ty: Cow<'a, str>,
     name: Cow<'a, str>,
 }
 
+/// Represents a slice parameter of a method. Used as part of [`MethodInfo`].
+///
+/// Any slice is stored as both a [`ParamInfo`], and [`SliceParam`].
+///
+/// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
+///
+/// See `DiplomatBuf` in `runtime.mjs` for more.
 struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
-    slice_expr: Cow<'a, str>,
+    slice_expr: String,
 }
 
+/// Represents a Rust method that we invoke inside of WebAssembly with JS.
+///
+/// Has an attached template to convert it into Javascript.
 #[derive(Default, Template)]
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
+    /// Do we return the `()` type?
     method_output_is_ffi_unit: bool,
+    /// The declaration signature. Something like `static functionName() { /* ... */ }` versus `functionName() { /* ... */ }`
     method_decl: String,
 
     /// Native C method name
     abi_name: String,
 
+    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
     needs_slice_cleanup: bool,
+    /// For calling .releaseToGarbageCollector on slices.
+    needs_slice_collection: bool,
 
     pub typescript: bool,
 
+    /// Represents all the parameters in the method definition (mostly for `.d.ts` generation, showing names and types).
     parameters: Vec<ParamInfo<'info>>,
+    /// See [`SliceParam`] for info on how this array is used.
     slice_params: Vec<SliceParam<'info>>,
+    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`TyGenContext::gen_js_to_c_for_type`] for more.
     param_conversions: Vec<Cow<'info, str>>,
 
+    /// The return type, for `.d.ts` files.
     return_type: String,
+    /// The JS expression used when this method returns.
     return_expression: Option<Cow<'info, str>>,
 
+    /// Used for generating edge information when constructing items like Slices, Structs, and Opaque types. See [hir::methods::borrowing_param::BorrowedLifetimeInfo] for more.
     method_lifetimes_map: BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+    /// We use this to access individual [`hir::Lifetimes`], which we then use to access the [`MethodInfo::method_lifetimes_map`].
     lifetimes: Option<&'info LifetimeEnv>,
 
+    /// Anything we need to allocate for [`MethodInfo::param_conversions`]
     alloc_expressions: Vec<Cow<'info, str>>,
+    /// Anything from [`MethodInfo::alloc_expressions`] we need to clean up afterwards.
     cleanup_expressions: Vec<Cow<'info, str>>,
 }
 
+/// See [`TyGenContext::generate_special_method`].
 #[derive(Template)]
 #[template(path = "js/iterator.js.jinja", escape = "none")]
 pub(super) struct SpecialMethodInfo<'a> {
@@ -468,26 +570,32 @@ pub(super) struct SpecialMethodInfo<'a> {
     pub typescript: bool,
 }
 
+/// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.
 pub(super) struct MethodsInfo<'a> {
     pub methods: Vec<MethodInfo<'a>>,
     pub special_methods: SpecialMethodInfo<'a>,
 }
 
+/// Represents a re-usable set of information for any [`hir::TypeDef::Struct`]s.
 #[derive(Clone)]
 pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
     field_type: &'info Type<P>,
+    /// Representation of the type in `.d.ts` terms.
     js_type_name: Cow<'info, str>,
     c_to_js: Cow<'info, str>,
+    /// Because all structs are created in WebAssembly as pointers, we need to be able to de-reference those pointers. This is an expression for taking a given pointer and returning JS.
     c_to_js_deref: Cow<'info, str>,
     js_to_c: String,
-    post_cleanup_statement: Option<String>,
+    /// Used in `get _fieldsForLifetime...` fields, which themselves are used in [`display_lifetime_edge`].
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Modified from dart backend
+/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`TyGenContext::gen_c_to_js_for_type`] for more.)
+///
+/// Modified from dart backend.
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     let param_name = &edge.param_name;
     match edge.kind {
@@ -505,6 +613,9 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     }
 }
 
+/// Helper function, since Askama can't use iterators quite like this.
+///
+/// Simple way to check if a lifetime is present within our map.
 fn iter_def_lifetimes_matching_use_lt<'a>(
     use_lt: &'a hir::Lifetime,
     info: &'a StructBorrowInfo,
@@ -528,7 +639,7 @@ fn iter_fields_with_lifetimes_from_set<'a, P: hir::TyPosition>(
     ) -> bool {
         ty.lifetimes().any(|lt| {
             let hir::MaybeStatic::NonStatic(lt) = lt else {
-                panic!("'static not supported in JS2 backend");
+                panic!("'static not supported in JS backend");
             };
             lt == *lifetime
         })

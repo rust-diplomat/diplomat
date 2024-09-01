@@ -163,16 +163,28 @@ exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
+[tasks.test-kotlin-example.mac]
+env = {"OUT_FILE" = "dylib"}
+
+[tasks.test-kotlin-example.linux]
+env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
+
 [tasks.test-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-example"]
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
+cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
 cd example/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all
 '''
+
+[tasks.test-kotlin-feature.mac]
+env = {"OUT_FILE" = "dylib"}
+
+[tasks.test-kotlin-feature.linux]
+env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 
 [tasks.test-kotlin-feature]
 category = "Tests"
@@ -180,9 +192,9 @@ script_runner = "@duckscript"
 dependencies = ["build-feature"]
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
+cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test --warning-mode all 
+exec --fail-on-error gradle test  --warning-mode all 
 '''
 
 [tasks.check-c-example]

@@ -6,7 +6,6 @@ mod ffi {
     struct Foo<'a>(&'a str);
     struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
     #[repr(C)]
-    #[derive(Clone, Copy)]
     struct Baz<'x, 'y> {
         foo: &'y Foo<'x>,
     }
@@ -21,6 +20,7 @@ mod ffi {
             Bax { foo: self }
         }
     }
+    use core::ffi::c_void;
     use diplomat_runtime::*;
     #[no_mangle]
     extern "C" fn Bar_destroy<'b, 'a: 'b>(this: Box<Bar<'b, 'a>>) {}

@@ -20,15 +20,28 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#foo = arguments[0];
+            this.#count = arguments[1];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
+    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
+    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
+    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
-        slice_cleanup_callbacks,
-        appendArrayMap
+        functionCleanupArena,
+        appendArrayMap,
+        forcePadding
     ) {
-        return [this.#foo.ffiValue, this.#count]
+        return [this.#foo.ffiValue, this.#count, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -36,12 +49,10 @@ export class ImportedStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         this.#foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#count = countDeref;
-
-        return this;
     }
 }

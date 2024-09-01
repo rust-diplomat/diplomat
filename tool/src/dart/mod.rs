@@ -10,8 +10,8 @@ use diplomat_core::hir::{
         BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
     },
     BackendAttrSupport, DocsUrlGenerator, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner,
-    ReturnType, ReturnableStructDef, SelfType, SpecialMethod, SpecialMethodPresence,
-    StructPathLike, SuccessType, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    ReturnType, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType,
+    TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 
 use askama::Template;
@@ -28,6 +28,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.method_overloading = false;
     a.utf8_strings = false;
     a.utf16_strings = true;
+    a.static_slices = false;
 
     a.constructors = true;
     a.named_constructors = true;
@@ -38,6 +39,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterators = true;
     a.iterables = true;
     a.indexing = true;
+    a.option = true;
+    a.callbacks = false;
 
     a
 }
@@ -260,26 +263,35 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
+
                 // We do not need to handle lifetime transitivity here: Methods already resolve
                 // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                 // are explicitly specified on methods.
-                let alloc = if let &hir::Type::Slice(slice) = &field.ty {
-                    if let Some(lt) = slice.lifetime() {
-                        let MaybeStatic::NonStatic(lt) = lt else {
-                            panic!("'static not supported in Dart");
-                        };
-                        Some(format!(
-                            "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
-                            lt_name = ty.lifetimes.fmt_lifetime(lt),
-                        ))
+
+                /// Get the name/initializer of the allocator needed for a particular type
+                fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
+                    if let &hir::Type::Slice(slice) = field_ty {
+                        if let Some(lt) = slice.lifetime() {
+                            let MaybeStatic::NonStatic(lt) = lt else {
+                                panic!("'static not supported in Dart");
+                            };
+                            Some(format!(
+                                "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
+                                lt_name = ty.lifetimes.fmt_lifetime(lt),
+                            ))
+                        } else {
+                            None
+                        }
+                    } else if let &hir::Type::Struct(..) = field_ty {
+                        Some("temp".into())
+                    } else if let hir::Type::DiplomatOption(inner) = field_ty {
+                        alloc_name(ty, inner)
                     } else {
                         None
                     }
-                } else if let &hir::Type::Struct(..) = &field.ty {
-                    Some("temp".into())
-                } else {
-                    None
-                };
+                }
+
+                let alloc = alloc_name(ty, &field.ty);
 
                 let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
                     StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
@@ -429,38 +441,63 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-
-            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
+            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
             param_names_ffi.push(param_name.clone());
             param_types_ffi.push(self.gen_type_name_ffi(&param.ty, false));
             param_types_ffi_cast.push(self.gen_type_name_ffi(&param.ty, true));
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            let alloc = if let hir::Type::Struct(..) = param.ty {
-                needs_temp_arena = true;
-                Some("temp.arena".to_string())
-            } else if let hir::Type::Slice(s) = param.ty {
-                match param_borrow_kind {
-                    ParamBorrowInfo::BorrowedSlice => {
-                        // Slices borrowed in the return value use a custom arena
-                        arenas.push(format!("final {param_name}Arena = _FinalizedArena();").into());
-                        Some(format!("{param_name}Arena.arena"))
+            /// Get the name/initializer of the allocator needed for a particular type
+            fn alloc_name(
+                param_ty: &hir::Type<hir::InputOnly>,
+                param_name: &str,
+                param_borrow_kind: &ParamBorrowInfo,
+                needs_temp_arena: &mut bool,
+                arenas: &mut Vec<Cow<str>>,
+            ) -> Option<String> {
+                if let hir::Type::Struct(..) = param_ty {
+                    *needs_temp_arena = true;
+                    Some("temp.arena".to_string())
+                } else if let hir::Type::Slice(s) = param_ty {
+                    match param_borrow_kind {
+                        ParamBorrowInfo::BorrowedSlice => {
+                            // Slices borrowed in the return value use a custom arena
+                            arenas.push(
+                                format!("final {param_name}Arena = _FinalizedArena();").into(),
+                            );
+                            Some(format!("{param_name}Arena.arena"))
+                        }
+                        // Owned slices use the Rust allocator
+                        ParamBorrowInfo::TemporarySlice if s.lifetime().is_none() => None,
+                        ParamBorrowInfo::TemporarySlice => {
+                            // Everyone else uses the temporary arena that keeps stuff alive until the method is called
+                            *needs_temp_arena = true;
+                            Some("temp.arena".into())
+                        }
+                        _ => unreachable!(
+                            "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                        ),
                     }
-                    // Owned slices use the Rust allocator
-                    ParamBorrowInfo::TemporarySlice if s.lifetime().is_none() => None,
-                    ParamBorrowInfo::TemporarySlice => {
-                        // Everyone else uses the temporary arena that keeps stuff alive until the method is called
-                        needs_temp_arena = true;
-                        Some("temp.arena".into())
-                    }
-                    _ => unreachable!(
-                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
-                    ),
+                } else if let hir::Type::DiplomatOption(ref inner) = param_ty {
+                    alloc_name(
+                        inner,
+                        param_name,
+                        param_borrow_kind,
+                        needs_temp_arena,
+                        arenas,
+                    )
+                } else {
+                    None
                 }
-            } else {
-                None
-            };
+            }
+            let alloc = alloc_name(
+                &param.ty,
+                &param_name,
+                &param_borrow_kind,
+                &mut needs_temp_arena,
+                &mut arenas,
+            );
 
             let struct_borrow_info = if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind
             {
@@ -646,6 +683,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "core.List<core.String>".into(),
+            Type::DiplomatOption(ref inner) => {
+                let inner = self.gen_type_name(inner);
+                self.formatter.fmt_nullable(&inner).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -712,6 +753,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
             Type::Slice(s) => self.gen_slice(&s).into(),
+            Type::DiplomatOption(ref inner) => self.gen_result(Some(inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -801,6 +843,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     alloc.expect("need allocator for slice")
                 };
                 format!("{dart_name}.{alloc_in}({alloc})",).into()
+            }
+            Type::DiplomatOption(ref inner) => {
+                let conversion = self.gen_dart_to_c_for_type(
+                    inner,
+                    dart_name.clone(),
+                    struct_borrow_info,
+                    alloc,
+                );
+                let result = self.gen_result(Some(inner), None);
+                format!("{dart_name} != null ? {result}.ok({conversion}) : {result}.err()").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -919,18 +971,28 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => if let Some(lt) = slice.lifetime() {
-                let MaybeStatic::NonStatic(lifetime) = lt else {
-                    panic!("'static not supported in Dart");
-                };
-                format!(
-                    "{var_name}._toDart({}Edges)",
-                    lifetime_env.fmt_lifetime(lifetime)
-                )
-            } else {
-                format!("{var_name}._toDart([])")
+            Type::Slice(slice) => {
+                if let Some(lt) = slice.lifetime() {
+                    let MaybeStatic::NonStatic(lifetime) = lt else {
+                        panic!("'static not supported in Dart");
+                    };
+                    format!(
+                        "{var_name}._toDart({}Edges)",
+                        lifetime_env.fmt_lifetime(lifetime)
+                    )
+                    .into()
+                } else {
+                    format!("{var_name}._toDart([])").into()
+                }
             }
-            .into(),
+            Type::DiplomatOption(ref inner) => {
+                let conversion = self.gen_c_to_dart_for_type(
+                    inner,
+                    format!("{var_name}.union.ok").into(),
+                    lifetime_env,
+                );
+                format!("{var_name}.isOk ? {conversion} : null").into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1159,7 +1221,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart helper class for a result type.
-    fn gen_result(&mut self, ok: Option<&hir::OutType>, err: Option<&hir::OutType>) -> String {
+    fn gen_result<P: TyPosition>(
+        &mut self,
+        ok: Option<&hir::Type<P>>,
+        err: Option<&hir::Type<P>>,
+    ) -> String {
         let name = format!(
             "_Result{}{}",
             &self
@@ -1178,9 +1244,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let Type::Struct(s) = t else {
                 return true;
             };
-            match s.resolve(self.tcx) {
-                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
-                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+            match self.tcx.resolve_type(s.id()) {
+                TypeDef::Struct(s) => !s.fields.is_empty(),
+                TypeDef::OutStruct(s) => !s.fields.is_empty(),
                 _ => unreachable!("unknown AST/HIR variant"),
             }
         });
@@ -1189,44 +1255,42 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let Type::Struct(s) = t else {
                 return true;
             };
-            match s.resolve(self.tcx) {
-                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
-                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+            match self.tcx.resolve_type(s.id()) {
+                TypeDef::Struct(s) => !s.fields.is_empty(),
+                TypeDef::OutStruct(s) => !s.fields.is_empty(),
                 _ => unreachable!("unknown AST/HIR variant"),
             }
         });
 
-        let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
-            .into_iter()
-            .flatten()
-            .map(|(o, field_name)| {
-                format!(
-                    "{}external {} {field_name};",
-                    match o {
-                        hir::OutType::Primitive(p) => {
-                            format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
-                        }
-                        hir::OutType::Enum(_) =>
-                            format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
-                        _ => String::new(),
-                    },
-                    { self.gen_type_name_ffi(o, true) }
-                )
-            })
-            .collect();
+        let mut gen_decl = |ty: &Type<P>| {
+            let annotation = match *ty {
+                hir::Type::Primitive(p) => {
+                    format!("@{}()", self.formatter.fmt_primitive_as_ffi(p, false))
+                }
+                hir::Type::Enum(_) => format!("@{}()", self.formatter.fmt_enum_as_ffi(false)),
+                _ => String::new(),
+            };
+            let ty = self.gen_type_name_ffi(ty, true);
+            (annotation, ty)
+        };
+
+        let ok = ok.map(&mut gen_decl);
+        let err = err.map(&mut gen_decl);
 
         #[derive(askama::Template)]
         #[template(path = "dart/result.dart.jinja", escape = "none")]
-        struct ResultTemplate {
+        struct ResultTemplate<'a> {
             name: String,
-            decls: Vec<String>,
+            ok: Option<(String, Cow<'a, str>)>,
+            err: Option<(String, Cow<'a, str>)>,
         }
 
         self.helper_classes.insert(
             name.clone(),
             ResultTemplate {
                 name: name.clone(),
-                decls,
+                ok,
+                err,
             }
             .render()
             .unwrap(),

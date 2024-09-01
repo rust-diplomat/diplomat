@@ -15,12 +15,19 @@ export class OpaqueMutexedString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OpaqueMutexedString is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -31,14 +38,13 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
-            return new OpaqueMutexedString(result, []);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
     }
 
-    change(number) {
-        wasm.OpaqueMutexedString_change(this.ffiValue, number);
+    change(number) {wasm.OpaqueMutexedString_change(this.ffiValue, number);
     
         try {}
         
@@ -46,39 +52,39 @@ export class OpaqueMutexedString {
     }
 
     borrow() {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
     }
 
     static borrowOther(other) {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
+        
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
     }
 
     borrowSelfOrOther(other) {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
+        
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
         try {
-            return new OpaqueMutexedString(result, aEdges);
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
         
         finally {}
@@ -95,15 +101,15 @@ export class OpaqueMutexedString {
     }
 
     dummyStr() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatReceive.buffer.getString("string8");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
         }
         
         finally {
@@ -115,7 +121,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
-            return new Utf16Wrap(result, []);
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

@@ -66,6 +66,10 @@ final class {{type_name}}
   ) {
     final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
+    {%- if let Type::DiplomatOption(_ty) = field.ty %}
+    {# Dart won't do nullable-promotion for public fields since they could be overridden with unstable getters. Copy to a local. -#}
+    {{field.dart_type_name}} {{field.name}} = this.{{field.name}};
+    {%- endif %}
     struct.{{field.name}} = {{field.dart_to_c}};
     {%- endfor %}
     return struct;

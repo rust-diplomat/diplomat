@@ -1,7 +1,5 @@
 //! #[diplomat::attr] and other attributes
 
-use std::collections::HashMap;
-
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -77,9 +75,8 @@ pub struct DemoInfo {
     /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
     pub external: bool,
 
-    /// `#[diplomat::demo(input(...))]`
-    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
-    pub input_cfg: HashMap<String, DemoInputCFG>,
+    /// `#[diplomat::demo(input(...))]` represents configuration options for anywhere we might expect user input.
+    pub input_cfg: DemoInputCFG,
 }
 
 // #endregion
@@ -143,6 +140,9 @@ pub enum AttributeContext<'a, 'b> {
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
+    Param,
+    SelfParam,
+    Field,
 }
 
 fn maybe_error_unsupported(
@@ -360,7 +360,6 @@ impl Attrs {
                 } else if path_ident == "generate" {
                     this.demo_attrs.generate = true;
                 } else if path_ident == "input" {
-                    // TODO: Move this to AST.
                     let meta_list = attr
                         .meta
                         .require_list()
@@ -368,30 +367,17 @@ impl Attrs {
 
                     meta_list
                         .parse_nested_meta(|meta| {
-                            let mut input_cfg = DemoInputCFG::default();
-                            meta.parse_nested_meta(|input_meta| {
-                                if input_meta.path.is_ident("label") {
-                                    let value = input_meta.value()?;
-                                    let s: syn::LitStr = value.parse()?;
-                                    input_cfg.label = s.value();
-                                    Ok(())
-                                } else {
-                                    Err(input_meta.error(format!(
-                                        "Unsupported ident {:?}",
-                                        input_meta.path.get_ident()
-                                    )))
-                                }
-                            })
-                            .expect("Could not read input(arg_name(...)) ");
-
-                            this.demo_attrs.input_cfg.insert(
-                                meta.path
-                                    .get_ident()
-                                    .expect("Expected parameter name.")
-                                    .to_string(),
-                                input_cfg,
-                            );
-                            Ok(())
+                            if meta.path.is_ident("label") {
+                                let value = meta.value()?;
+                                let s: syn::LitStr = value.parse()?;
+                                this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else {
+                                Err(meta.error(format!(
+                                    "Unsupported ident {:?}",
+                                    meta.path.get_ident()
+                                )))
+                            }
                         })
                         .expect("Could not read input(...)");
                 } else {
@@ -416,8 +402,8 @@ impl Attrs {
         let Attrs {
             disable,
             namespace,
-            rename: _,
-            abi_rename: _,
+            rename,
+            abi_rename,
             special_method,
             demo_attrs: _,
         } = &self;
@@ -677,6 +663,35 @@ impl Attrs {
                 "`namespace` can only be used on types".to_string(),
             ));
         }
+
+        if matches!(
+            context,
+            AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
+        ) {
+            if *disable {
+                errors.push(LoweringError::Other(format!(
+                    "`disable`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if namespace.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "`namespace` cannot be used on an {context:?}."
+                )));
+            }
+
+            if !rename.is_empty() || !abi_rename.is_empty() {
+                errors.push(LoweringError::Other(format!(
+                    "`rename`s cannot be used on an {context:?}."
+                )));
+            }
+
+            if special_method.is_some() {
+                errors.push(LoweringError::Other(format!(
+                    "{context:?} cannot be special methods."
+                )));
+            }
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -710,7 +725,7 @@ impl Attrs {
     }
 }
 
-/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Non-exhaustive list of what attributes and other features your backend is able to handle, based on #[diplomat::attr(...)] contents.
 /// Set this through an [`AttributeValidator`].
 ///
 /// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
@@ -750,6 +765,8 @@ pub struct BackendAttrSupport {
     pub utf8_strings: bool,
     /// Whether the language uses UTF-16 strings
     pub utf16_strings: bool,
+    /// Whether the language supports using slices with 'static lifetimes.
+    pub static_slices: bool,
 
     // Special methods
     /// Marking a method as a constructor to generate special constructor methods.
@@ -772,6 +789,11 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
+
+    /// Support for Option<Struct> and Option<Primitive>
+    pub option: bool,
+    /// Allowing callback arguments
+    pub callbacks: bool,
 }
 
 impl BackendAttrSupport {
@@ -784,6 +806,7 @@ impl BackendAttrSupport {
             method_overloading: true,
             utf8_strings: true,
             utf16_strings: true,
+            static_slices: true,
 
             constructors: true,
             named_constructors: true,
@@ -794,6 +817,8 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
+            option: true,
+            callbacks: true,
         }
     }
 }
@@ -912,6 +937,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 method_overloading,
                 utf8_strings,
                 utf16_strings,
+                static_slices,
 
                 constructors,
                 named_constructors,
@@ -922,6 +948,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
+                option,
+                callbacks,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -930,6 +958,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "method_overloading" => method_overloading,
                 "utf8_strings" => utf8_strings,
                 "utf16_strings" => utf16_strings,
+                "static_slices" => static_slices,
 
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,
@@ -940,7 +969,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
-
+                "option" => option,
+                "callbacks" => callbacks,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1135,6 +1165,47 @@ mod tests {
                     #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_option(&self) -> u8 { todo!() }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_unsupported_features() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+                use diplomat_runtime::DiplomatOption;
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Struct {
+                    pub a: u8,
+                    pub b: u8,
+                    pub c: DiplomatOption<u8>,
+                }
+
+                struct Struct2 {
+                    pub a: DiplomatOption<Struct>,
+                }
+
+                #[diplomat::out]
+                struct OutStruct {
+                    pub option: DiplomatOption<u8>
+                }
+
+
+                impl Opaque {
+                    pub fn take_option(&self, option: DiplomatOption<u8>) {
+                        todo!()
+                    }
+                    // Always ok since this translates to a Resulty return
+                    pub fn returning_option_is_ok(&self) -> Option<u8> {
+                        todo!()
+                    }
+                }
+
             }
         }
     }

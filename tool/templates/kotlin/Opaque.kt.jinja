@@ -1,7 +1,9 @@
 package {{domain}}.{{lib_name}};
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
+import com.sun.jna.Structure
 
 
 internal interface {{type_name}}Lib: Library {
@@ -12,7 +14,11 @@ internal interface {{type_name}}Lib: Library {
     {{m.declaration}}
     {%- endfor %}
 }
-
+{%- if !callback_params.is_empty() -%}
+    {%- for callback_param in callback_params -%}
+        {{callback_param}}
+    {%- endfor %}
+{% endif -%}
 {%- match special_methods.iterator_type -%}
 {%- when Some with (iter_ty) %}
 typealias {{type_name}}IteratorItem = {{iter_ty}}

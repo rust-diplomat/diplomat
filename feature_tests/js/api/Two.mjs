@@ -16,7 +16,11 @@ export class Two {
     #aEdge = [];
     #bEdge = [];
     
-    constructor(ptr, selfEdge, aEdge, bEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge, bEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("Two is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
@@ -26,8 +30,11 @@ export class Two {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        Two_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            Two_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {

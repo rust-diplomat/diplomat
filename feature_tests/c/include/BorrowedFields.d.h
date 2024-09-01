@@ -17,7 +17,7 @@ typedef struct BorrowedFields {
   DiplomatStringView c;
 } BorrowedFields;
 
-
+typedef struct BorrowedFields_option {union { BorrowedFields ok; }; bool is_ok; } BorrowedFields_option;
 
 
 

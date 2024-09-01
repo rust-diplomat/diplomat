@@ -15,12 +15,19 @@ export class RenamedOpaqueIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedOpaqueIterable is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        RenamedOpaqueIterable_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            RenamedOpaqueIterable_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -28,13 +35,13 @@ export class RenamedOpaqueIterable {
     }
 
     [Symbol.iterator]() {
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
     
         try {
-            return new RenamedOpaqueIterator(result, [], aEdges);
+            return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {}

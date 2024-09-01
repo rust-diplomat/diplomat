@@ -1,5 +1,5 @@
 import test from 'ava';
-import { ErrorEnum, ErrorStruct, ResultOpaque } from 'diplomat-wasm-js-feature-tests';
+import { ErrorEnum, ErrorStruct, MyStruct, ResultOpaque } from 'diplomat-wasm-js-feature-tests';
 
 test('Verify result methods', t => {
     const s = ResultOpaque.new_(5);
@@ -26,4 +26,7 @@ test('Verify result methods', t => {
     const error5 = t.throws(() => ResultOpaque.newInEnumErr(881));
     t.is(error5.message, 'ResultOpaque: [object Object]');
     (error5.cause as ResultOpaque).assertInteger(881);
+
+    const error6 = t.throws(() => MyStruct.failsZstResult());
+    t.is(error6.message, "MyZst");
 });

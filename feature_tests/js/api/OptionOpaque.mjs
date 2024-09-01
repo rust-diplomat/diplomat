@@ -15,12 +15,19 @@ export class OptionOpaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OptionOpaque is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        OptionOpaque_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            OptionOpaque_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -31,7 +38,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new(i);
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -41,22 +48,22 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_none();
     
         try {
-            return result === 0 ? null : new OptionOpaque(result, []);
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
     }
 
     static returns() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 17, 4, true);
+        
         const result = wasm.OptionOpaque_returns(diplomatReceive.buffer);
     
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -65,8 +72,8 @@ export class OptionOpaque {
     }
 
     optionIsize() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        
         const result = wasm.OptionOpaque_option_isize(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -82,8 +89,8 @@ export class OptionOpaque {
     }
 
     optionUsize() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        
         const result = wasm.OptionOpaque_option_usize(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -99,8 +106,8 @@ export class OptionOpaque {
     }
 
     optionI32() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        
         const result = wasm.OptionOpaque_option_i32(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -116,8 +123,8 @@ export class OptionOpaque {
     }
 
     optionU32() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        
         const result = wasm.OptionOpaque_option_u32(diplomatReceive.buffer, this.ffiValue);
     
         try {
@@ -133,12 +140,12 @@ export class OptionOpaque {
     }
 
     static newStruct() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+        
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -147,12 +154,12 @@ export class OptionOpaque {
     }
 
     static newStructNones() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+        
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
     
         try {
-            return new OptionStruct(diplomatReceive.buffer);
+            return new OptionStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -160,8 +167,7 @@ export class OptionOpaque {
         }
     }
 
-    assertInteger(i) {
-        wasm.OptionOpaque_assert_integer(this.ffiValue, i);
+    assertInteger(i) {wasm.OptionOpaque_assert_integer(this.ffiValue, i);
     
         try {}
         

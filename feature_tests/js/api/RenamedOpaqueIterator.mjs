@@ -16,15 +16,22 @@ export class RenamedOpaqueIterator {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(ptr, selfEdge, aEdge) {
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedOpaqueIterator is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         
         this.#aEdge = aEdge;
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        RenamedOpaqueIterator_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            RenamedOpaqueIterator_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -35,7 +42,7 @@ export class RenamedOpaqueIterator {
         const result = wasm.namespace_OpaqueIterator_next(this.ffiValue);
     
         try {
-            return result === 0 ? null : new AttrOpaque1Renamed(result, []);
+            return result === 0 ? null : new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

@@ -4,6 +4,7 @@ expression: struct_code
 ---
 package dev.gigapixel.somelib
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -11,6 +12,7 @@ import com.sun.jna.Structure
 
 internal interface MyNativeStructLib: Library {
     fun MyNativeStruct_new(): MyNativeStructNative
+    fun MyNativeStruct_test_multi_arg_callback(f: DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native, x: Int): Int
 }
 
 internal class MyNativeStructNative: Structure(), Structure.ByValue {
@@ -49,6 +51,51 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+internal interface Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f: Callback {
+    fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
+}
+
+internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+    @JvmField
+    internal var data_: Pointer = Pointer(0L);
+    @JvmField
+    internal var run_callback: Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f
+        = object :  Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
+                    throw Exception("Default callback runner -- should be replaced.")
+                }
+            }
+    @JvmField
+    internal var destructor: Pointer = Pointer(0L);
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("data_", "run_callback", "destructor")
+    }
+}
+
+internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f internal constructor (
+    internal val nativeStruct: DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native) {
+    val data_: Pointer = nativeStruct.data_
+    val run_callback: Callback = nativeStruct.run_callback
+    val destructor: Pointer = nativeStruct.destructor
+
+    companion object {
+        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
+        
+        fun fromCallback(cb: (Int)->Int): DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
+            val callback: Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f = object :  Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
+                    return cb(arg0);
+                }
+            }
+            val cb_wrap = DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native()
+            cb_wrap.run_callback = callback;
+            return DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
+        }
+    }
+}
 class MyNativeStruct internal constructor (
     internal val nativeStruct: MyNativeStructNative,
     internal val bEdges: List<Any>
@@ -80,6 +127,12 @@ class MyNativeStruct internal constructor (
             val bEdges: List<Any> = listOf()
             val returnStruct = MyNativeStruct(returnVal, bEdges)
             return returnStruct
+        }
+        
+        fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
+            
+            val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
+            return returnVal
         }
     }
 

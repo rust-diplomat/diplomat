@@ -61,15 +61,29 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#a = arguments[0];
+            this.#b = arguments[1];
+            this.#c = arguments[2];
+            this.#d = arguments[3];
+            this.#e = arguments[4];
+            this.#f = arguments[5];
+            this.#g = arguments[6];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a, this.#b, this.#c, this.#d, this.#e, this.#f, this.#g.ffiValue]
+        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -77,7 +91,7 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
@@ -92,17 +106,15 @@ export class MyStruct {
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();
-
-        return this;
     }
 
     static new_() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 28, 8, false);
+        
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return new MyStruct()._fromFFI(diplomatReceive.buffer);
+            return new MyStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -111,8 +123,8 @@ export class MyStruct {
     }
 
     intoA() {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        let slice_cleanup_callbacks = [];
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
         try {
@@ -120,27 +132,35 @@ export class MyStruct {
         }
         
         finally {
-            for (let cleanup of slice_cleanup_callbacks) {
-                cleanup();
-            }
+            functionCleanupArena.free();
         }
     }
 
     static returnsZstResult() {
-        
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        const result = wasm.MyStruct_returns_zst_result(diplomatReceive.buffer);
+        const result = wasm.MyStruct_returns_zst_result();
     
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new MyZst();
-                throw new Error('MyZst', { cause });
+            if (result !== 1) {
+                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                throw new globalThis.Error('MyZst', { cause });
             }
     
         }
         
-        finally {
-            diplomatReceive.free();
+        finally {}
+    }
+
+    static failsZstResult() {
+        const result = wasm.MyStruct_fails_zst_result();
+    
+        try {
+            if (result !== 1) {
+                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                throw new globalThis.Error('MyZst', { cause });
+            }
+    
         }
+        
+        finally {}
     }
 }

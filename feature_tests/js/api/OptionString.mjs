@@ -14,12 +14,19 @@ export class OptionString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(ptr, selfEdge) {
+    constructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("OptionString is an Opaque type. You cannot call its constructor.");
+            return;
+        }
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        // Unconditionally register to destroy when this object is ready to garbage collect.
-        OptionString_box_destroy_registry.register(this, this.#ptr);
+        
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            OptionString_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
     get ffiValue() {
@@ -27,22 +34,24 @@ export class OptionString {
     }
 
     static new_(diplomatStr) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);
-        const result = wasm.OptionString_new(diplomatStrSlice.ptr, diplomatStrSlice.size);
+        const diplomatStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr));
+        
+        const result = wasm.OptionString_new(...diplomatStrSlice.splat());
     
         try {
-            return result === 0 ? null : new OptionString(result, []);
+            return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            diplomatStrSlice.free();
+            functionCleanupArena.free();
         }
     }
 
     write() {
-        
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
     
         try {
@@ -55,18 +64,18 @@ export class OptionString {
     }
 
     borrow() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         const result = wasm.OptionString_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return diplomatReceive.buffer.getString("string8");
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
         }
         
         finally {

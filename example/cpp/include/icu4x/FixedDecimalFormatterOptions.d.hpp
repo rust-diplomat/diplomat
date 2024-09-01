@@ -22,6 +22,8 @@ namespace capi {
       icu4x::capi::FixedDecimalGroupingStrategy grouping_strategy;
       bool some_other_config;
     };
+    
+    typedef struct FixedDecimalFormatterOptions_option {union { FixedDecimalFormatterOptions ok; }; bool is_ok; } FixedDecimalFormatterOptions_option;
 } // namespace capi
 } // namespace
 

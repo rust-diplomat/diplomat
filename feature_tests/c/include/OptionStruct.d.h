@@ -20,7 +20,7 @@ typedef struct OptionStruct {
   OptionOpaque* d;
 } OptionStruct;
 
-
+typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
 
 
 

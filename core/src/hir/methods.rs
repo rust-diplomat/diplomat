@@ -3,7 +3,9 @@
 use std::collections::BTreeSet;
 use std::ops::Deref;
 
-use super::{Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, SelfType, Type, TypeContext};
+use super::{
+    Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, OutputOnly, SelfType, Type, TypeContext,
+};
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
@@ -36,6 +38,45 @@ pub struct Method {
     pub attrs: Attrs,
 }
 
+pub trait CallbackInstantiationFunctionality {
+    #[allow(clippy::result_unit_err)]
+    fn get_inputs(&self) -> Result<&[CallbackParam], ()>; // the types of the parameters
+    #[allow(clippy::result_unit_err)]
+    fn get_output_type(&self) -> Result<&Option<Type>, ()>;
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+// Note: we do not support borrowing across callbacks
+pub struct Callback {
+    pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
+    pub params: Vec<CallbackParam>,
+    pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+}
+
+// uninstantiatable; represents no callback allowed
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum NoCallback {}
+
+impl CallbackInstantiationFunctionality for Callback {
+    fn get_inputs(&self) -> Result<&[CallbackParam], ()> {
+        Ok(&self.params)
+    }
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+        Ok(&self.output)
+    }
+}
+
+impl CallbackInstantiationFunctionality for NoCallback {
+    fn get_inputs(&self) -> Result<&[CallbackParam], ()> {
+        Err(())
+    }
+    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+        Err(())
+    }
+}
+
 /// Type that the method returns.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
@@ -62,6 +103,7 @@ pub enum ReturnType {
 #[non_exhaustive]
 pub struct ParamSelf {
     pub ty: SelfType,
+    pub attrs: Attrs,
 }
 
 /// A parameter in a method.
@@ -70,6 +112,15 @@ pub struct ParamSelf {
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
+    pub attrs: Attrs,
+}
+
+/// A parameter in a callback
+/// No name, since all we get is the callback type signature
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct CallbackParam {
+    pub ty: Type<OutputOnly>,
 }
 
 impl SuccessType {
@@ -168,8 +219,8 @@ impl ReturnType {
 }
 
 impl ParamSelf {
-    pub(super) fn new(ty: SelfType) -> Self {
-        Self { ty }
+    pub(super) fn new(ty: SelfType, attrs: Attrs) -> Self {
+        Self { ty, attrs }
     }
 
     /// Return the number of fields and leaves that will show up in the [`BorrowingFieldVisitor`].
@@ -188,8 +239,8 @@ impl ParamSelf {
 }
 
 impl Param {
-    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>) -> Self {
-        Self { name, ty }
+    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs: Attrs) -> Self {
+        Self { name, ty, attrs }
     }
 }
 

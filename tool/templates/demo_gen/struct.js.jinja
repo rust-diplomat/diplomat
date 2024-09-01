@@ -1,7 +1,3 @@
 (function (...args) {
-    let out = new {{type_name}}();
-    {% for field in fields %}
-    out.{{field}} = args[{{loop.index0}}];
-    {% endfor %}
-    return out;
+    return new {{type_name}}(...args);
 })

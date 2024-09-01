@@ -19,7 +19,37 @@ export class {{type_name}} {
     {%- endif -%}
     {%- endfor %}
 
-    {%~ if !typescript && !fields.is_empty() %}
+    {%- if !(typescript && is_out) %}
+    constructor(
+        {%- if typescript -%}
+        {%- for field in fields -%}
+        {{field.field_name}}: {{field.js_type_name}}{% if !loop.last %}, {% endif %}
+        {%- endfor -%}
+        {%- endif -%}
+        ) {%- if typescript %};{% else %} {
+        {% if !fields.is_empty() -%}
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        }
+        {%- if !is_out %} else {
+            {% for field in fields %}
+            this.#{{ field.field_name }} = arguments[{{loop.index0}}];
+            {%- endfor %}
+        } {%- else %} else {
+            console.error("{{type_name}} is an out struct and can only be created internally.");
+        }
+        {%- endif -%}
+        {%- else if is_out -%}
+        if (!(arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor)) {
+            console.error("{{type_name}} is an out struct and can only be created internally.");
+        }
+        {%- endif %}
+    }
+    {%- endif -%}
+    {%- endif %}
+
+    {%- if !typescript %}
+    {%~ if !fields.is_empty() %}
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     {% if lifetimes.all_lifetimes().len() != 0 -%}
@@ -31,18 +61,18 @@ export class {{type_name}} {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     {%- endif -%}
-    {% endif %}
+    {%- endif %}
+    {%- if needs_force_padding %}
+    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
+    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
+    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
+    {%- endif %}
     _intoFFI(
-        slice_cleanup_callbacks,
-        appendArrayMap
+        functionCleanupArena,
+        appendArrayMap{% if needs_force_padding %},
+        forcePadding
+        {%- endif %}
     ) {
-        {%- for field in fields -%}
-        {%- match field.post_cleanup_statement -%}
-        {% when Some with (cleanup) %}
-        slice_cleanup_callbacks.push({{cleanup}});
-        {% when None -%}
-        {%- endmatch -%}
-        {%- endfor %}
         return [
             {%- for field in fields -%}
             {{field.js_to_c}}
@@ -58,21 +88,12 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    _fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    #fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         {%- for field in fields %}
         const {{field.field_name}}Deref = {{field.c_to_js_deref}};
         this.#{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
-
-        return this;
     }
-
-    {%- if has_default_constructor %}
-    // This is an out struct. You need to call other methods to be able to get this struct.
-    constructor(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
-        this._fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%});
-    }
-    {%- endif -%}
     
     {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
@@ -98,6 +119,7 @@ export class {{type_name}} {
         ];
     };
     {%- endfor -%}
+    {%- endif -%}
     {%- endif %}
 
 {%- for method in methods.methods %}

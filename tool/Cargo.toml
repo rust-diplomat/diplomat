@@ -20,7 +20,7 @@ syn = { version = "2", features = [ "full", "extra-traits" ] }
 syn-inline-mod = "0.6.0"
 quote = "1.0"
 indenter = "0.3.3"
-pulldown-cmark = "0.8.0"
+pulldown-cmark = "0.11.0"
 clap = { features = ["color", "derive", "std", "suggestions"], version = "4.2" }
 colored = "2.0"
 serde = { features = ["derive"], version = "1.0.130" }

@@ -1,10 +1,10 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, BackendAttrSupport, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic,
-    Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef,
-    SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath, StructPathLike,
-    TyPosition, Type, TypeContext, TypeDef,
+    self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
+    MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
+    ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
+    StructPathLike, TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -29,6 +29,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.method_overloading = true;
     a.utf8_strings = false;
     a.utf16_strings = true;
+    a.static_slices = true;
 
     a.constructors = false; // TODO
     a.named_constructors = false; // TODO
@@ -39,6 +40,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterators = true;
     a.iterables = true;
     a.indexing = true;
+    a.callbacks = true;
 
     a
 }
@@ -64,6 +66,7 @@ pub(crate) fn run<'tcx>(
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
+    let mut callback_params = Vec::new();
 
     let mut ty_gen_cx = TyGenContext {
         tcx,
@@ -71,9 +74,11 @@ pub(crate) fn run<'tcx>(
         result_types: RefCell::new(BTreeSet::new()),
         option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
+        callback_params: &mut callback_params,
     };
 
     for (_id, ty) in tcx.all_types() {
+        ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
@@ -207,6 +212,7 @@ struct TyGenContext<'a, 'cx> {
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
     option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
+    callback_params: &'a mut Vec<CallbackParamInfo>,
 }
 
 impl<'a, 'cx> TyGenContext<'a, 'cx> {
@@ -214,7 +220,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
             SuccessType::Write => self.formatter.fmt_string().into(),
-            SuccessType::OutType(ref o) => self.gen_type_name(o),
+            SuccessType::OutType(ref o) => self.gen_type_name(o, None),
             _ => panic!("Unsupported success type"),
         }
     }
@@ -225,7 +231,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let ok_type = self.gen_infallible_return_type_name(ok);
                 let err_type = err
                     .as_ref()
-                    .map(|err| self.gen_type_name(err))
+                    .map(|err| self.gen_type_name(err, None))
                     .unwrap_or_else(|| "Unit".into());
                 format!("Res<{ok_type}, {err_type}>").into()
             }
@@ -259,6 +265,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
+            Type::Callback(_) => {
+                let real_param_name = name[name.rfind('_').unwrap() + 1..].to_string(); // past last _
+                format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
+            }
             _ => todo!(),
         }
     }
@@ -267,7 +277,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match success {
             SuccessType::Unit => self.formatter.fmt_void().into(),
             SuccessType::Write => self.formatter.fmt_void().into(),
-            SuccessType::OutType(ref o) => self.gen_type_name_ffi(o),
+            SuccessType::OutType(ref o) => self.gen_type_name_ffi(o, None),
             _ => panic!("Unsupported success type"),
         }
     }
@@ -279,7 +289,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let ok_type = self.gen_infallible_return_type_ffi(ok);
                 let err_type = err
                     .as_ref()
-                    .map(|err| self.gen_type_name_ffi(err))
+                    .map(|err| self.gen_type_name_ffi(err, None))
                     .unwrap_or_else(|| "Unit".into());
 
                 let ok_default = match ok {
@@ -368,7 +378,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_type_name_ffi<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
+    fn gen_type_name_ffi<P: TyPosition>(
+        &self,
+        ty: &Type<P>,
+        additional_name: Option<String>,
+    ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_type_native(prim).into(),
             Type::Opaque(ref op) => {
@@ -383,6 +397,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
+            Type::Callback(_) => {
+                format!("DiplomatCallback_{}_Native", additional_name.unwrap()).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -557,7 +574,7 @@ return string{return_type_modifier}"#
         };
 
         if is_zst {
-            return format!("{return_type_name}(){return_type_modifier}");
+            return format!("return {return_type_name}(){return_type_modifier}");
         }
 
         let borrows = lifetimes
@@ -731,7 +748,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 o,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
-            SuccessType::Unit => format!("Unit{return_type_postfix}"),
+            SuccessType::Unit => format!("return Unit{return_type_postfix}"),
             _ => todo!(),
         }
     }
@@ -860,6 +877,7 @@ retutnVal.option() ?: return null
         special_methods: &mut SpecialMethods,
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
+        struct_name: Option<&str>,
     ) -> String {
         if method.attrs.disable {
             return "".into();
@@ -903,19 +921,18 @@ retutnVal.option() ?: return null
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
+            let mut additional_name = None;
 
-            let param_type_ffi = self.gen_type_name_ffi(&param.ty);
-
-            match param.ty {
+            match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), slice));
+                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), *slice));
 
                     let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
                         ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), slice) {
+                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), *slice) {
                                 cleanups.push(cleanup)
                             }
                         }
@@ -929,12 +946,70 @@ retutnVal.option() ?: return null
                 Type::Struct(_) | Type::Opaque(_) => {
                     visitor.visit_param(&param.ty, &param_name);
                 }
+                Type::Callback(Callback {
+                    param_self: _,
+                    params,
+                    output,
+                    ..
+                }) => {
+                    let param_name = "diplomatCallback_".to_owned() + &param_name;
+                    additional_name = Some(
+                        struct_name.unwrap().to_owned()
+                            + "_"
+                            + method.name.as_ref()
+                            + "_"
+                            + &param_name,
+                    );
+                    let param_input_types: Vec<String> = params
+                        .iter()
+                        .map(|param| self.gen_type_name(&param.ty, None).into())
+                        .collect();
+                    let param_names: Vec<String> = params
+                        .iter()
+                        .enumerate()
+                        .map(|(index, _)| format!("arg{}", index))
+                        .collect();
+                    let (native_input_names, native_input_params_and_types) = params
+                        .iter()
+                        .zip(param_input_types.iter())
+                        .zip(param_names.iter())
+                        .map(|((in_param, in_ty), in_name)| match in_param.ty {
+                            Type::Enum(_) | Type::Struct(_) => {
+                                // named types have a _Native wrapper, this needs to be passed as the "native"
+                                // version of the argument
+                                (
+                                    format!("{}({})", in_ty, in_name),
+                                    format!("{}: {}Native", in_name, in_ty),
+                                )
+                            }
+                            _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                        })
+                        .unzip();
+                    self.callback_params.push(CallbackParamInfo {
+                        name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
+                        input_types: param_input_types.join(","),
+                        output_type: match **output {
+                            Some(ref ty) => self.gen_type_name(ty, None).into(),
+                            None => "Unit".into(),
+                        },
+                        native_input_params_and_types,
+                        native_input_names,
+                    })
+                }
                 _ => (),
             }
-
-            param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
+            let param_type_ffi = self.gen_type_name_ffi(&param.ty, additional_name.clone());
+            param_decls_kt.push(format!(
+                "{param_name}: {}",
+                self.gen_non_wrapped_type_name(&param.ty, additional_name.clone())
+            ));
+            let param_name_to_pass = if let Type::Callback(_) = &param.ty {
+                self.gen_type_name(&param.ty, additional_name)
+            } else {
+                param_name.clone()
+            };
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass));
         }
         let write_return = matches!(
             &method.output,
@@ -1024,10 +1099,15 @@ retutnVal.option() ?: return null
         .expect("Failed to render string for method")
     }
 
-    fn gen_native_method_info(&mut self, method: &'cx hir::Method) -> NativeMethodInfo {
+    fn gen_native_method_info(
+        &mut self,
+        method: &'cx hir::Method,
+        type_name: &str,
+    ) -> NativeMethodInfo {
         let mut param_decls = Vec::with_capacity(method.params.len());
 
         let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut additional_name = None;
 
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
@@ -1044,10 +1124,20 @@ retutnVal.option() ?: return null
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
             visitor.visit_param(&param.ty, &param_name);
+            if let Type::Callback(_) = &param.ty {
+                additional_name = Some(
+                    type_name.to_owned()
+                        + "_"
+                        + method.name.as_ref()
+                        + "_diplomatCallback_"
+                        + &param_name
+                        + "_Native",
+                )
+            }
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty)
+                self.gen_native_type_name(&param.ty, additional_name.clone()),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1076,10 +1166,11 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(method))
+            .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
+        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1091,7 +1182,13 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut special_methods, method, Some(self_param))
+                self.gen_method(
+                    &mut special_methods,
+                    method,
+                    Some(self_param),
+                    None,
+                    // &mut callback_params,
+                )
             })
             .collect::<Vec<_>>();
 
@@ -1101,7 +1198,15 @@ retutnVal.option() ?: return null
             .iter()
             .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut unused_special_methods, method, None))
+            .map(|method| {
+                self.gen_method(
+                    &mut unused_special_methods,
+                    method,
+                    None,
+                    None,
+                    // &mut callback_params,
+                )
+            })
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -1126,6 +1231,7 @@ retutnVal.option() ?: return null
             native_methods: &'a [NativeMethodInfo],
             lifetimes: Vec<Cow<'a, str>>,
             special_methods: SpecialMethodsImpl,
+            callback_params: &'a [CallbackParamInfo],
         }
 
         (
@@ -1139,6 +1245,7 @@ retutnVal.option() ?: return null
                 native_methods: native_methods.as_ref(),
                 lifetimes,
                 special_methods: SpecialMethodsImpl::new(special_methods),
+                callback_params: self.callback_params.as_ref(),
             }
             .render()
             .expect("failed to generate struct"),
@@ -1157,9 +1264,10 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(method))
+            .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
+        // let mut callback_params = Vec::new();
         let mut unused_special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
@@ -1171,7 +1279,13 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut unused_special_methods, method, Some(self_param))
+                self.gen_method(
+                    &mut unused_special_methods,
+                    method,
+                    Some(self_param),
+                    Some(type_name),
+                    // &mut callback_params,
+                )
             })
             .collect::<Vec<_>>();
 
@@ -1179,7 +1293,15 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut unused_special_methods, method, None))
+            .map(|method| {
+                self.gen_method(
+                    &mut unused_special_methods,
+                    method,
+                    None,
+                    Some(type_name),
+                    // &mut callback_params,
+                )
+            })
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -1211,6 +1333,7 @@ retutnVal.option() ?: return null
             self_methods: &'a [String],
             companion_methods: &'a [String],
             native_methods: &'a [NativeMethodInfo],
+            callback_params: &'a [CallbackParamInfo],
             lifetimes: Vec<Cow<'a, str>>,
         }
 
@@ -1244,6 +1367,7 @@ retutnVal.option() ?: return null
                 self_methods: self_methods.as_ref(),
                 companion_methods: companion_methods.as_ref(),
                 native_methods: native_methods.as_ref(),
+                callback_params: self.callback_params.as_ref(),
                 lifetimes,
             }
             .render()
@@ -1262,10 +1386,11 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(method))
+            .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
+        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1277,7 +1402,13 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut special_methods, method, Some(self_param))
+                self.gen_method(
+                    &mut special_methods,
+                    method,
+                    Some(self_param),
+                    None,
+                    // &mut callback_params,
+                )
             })
             .collect::<Vec<_>>();
 
@@ -1286,7 +1417,15 @@ retutnVal.option() ?: return null
             .iter()
             .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut special_methods, method, None))
+            .map(|method| {
+                self.gen_method(
+                    &mut special_methods,
+                    method,
+                    None,
+                    None,
+                    // &mut callback_params,
+                )
+            })
             .collect::<Vec<_>>();
 
         #[derive(Clone, Debug)]
@@ -1350,6 +1489,7 @@ retutnVal.option() ?: return null
             self_methods: &'d [String],
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
+            callback_params: &'d [CallbackParamInfo],
         }
 
         let variants = EnumVariants::new(ty);
@@ -1362,6 +1502,7 @@ retutnVal.option() ?: return null
             self_methods: self_methods.as_ref(),
             companion_methods: companion_methods.as_ref(),
             native_methods: native_methods.as_ref(),
+            callback_params: self.callback_params.as_ref(),
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
@@ -1372,7 +1513,11 @@ retutnVal.option() ?: return null
         )
     }
 
-    fn gen_native_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
+    fn gen_native_type_name<P: TyPosition>(
+        &self,
+        ty: &Type<P>,
+        additional_name: Option<String>,
+    ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
             Type::Opaque(ref op) => {
@@ -1385,12 +1530,16 @@ retutnVal.option() ?: return null
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
-
+            Type::Callback(_) => self.gen_type_name(ty, additional_name),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
-    fn gen_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
+    fn gen_type_name<P: TyPosition>(
+        &self,
+        ty: &Type<P>,
+        additional_name: Option<String>,
+    ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_kt(prim).into(),
             Type::Opaque(ref op) => {
@@ -1418,9 +1567,40 @@ retutnVal.option() ?: return null
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
             }
-
+            Type::Callback(_) => format!("DiplomatCallback_{}", additional_name.unwrap()).into(),
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
             _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    /// Generate the non-diplomat name for a type -- this only applies to
+    /// callback types. So: for a callback, instead of returning `DiplomatCallback_...`
+    /// it returns `(input types)->output type`.
+    /// For all non-callback types it returns the same result as `gen_type_name`.
+    fn gen_non_wrapped_type_name(
+        &self,
+        ty: &Type<InputOnly>,
+        additional_name: Option<String>,
+    ) -> Cow<'cx, str> {
+        match ty {
+            Type::Callback(Callback {
+                param_self: _,
+                params,
+                output,
+                ..
+            }) => {
+                let in_type_string = params
+                    .iter()
+                    .map(|param| self.gen_type_name(&param.ty, None).into())
+                    .collect::<Vec<String>>()
+                    .join(",");
+                let out_type_string: String = match **output {
+                    Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
+                    None => "Unit".into(),
+                };
+                format!("({})->{}", in_type_string, out_type_string).into()
+            }
+            _ => self.gen_type_name(ty, additional_name),
         }
     }
 }
@@ -1490,6 +1670,16 @@ struct NativeMethodInfo {
     declaration: String,
 }
 
+#[derive(Template)]
+#[template(path = "kotlin/Callback.kt.jinja", escape = "none")]
+struct CallbackParamInfo {
+    name: String,
+    input_types: String,
+    native_input_params_and_types: String,
+    native_input_names: String,
+    output_type: String,
+}
+
 #[cfg(test)]
 mod test {
 
@@ -1546,12 +1736,14 @@ mod test {
         {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
+                callback_params: &mut callback_params,
             };
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
@@ -1599,6 +1791,10 @@ mod test {
                     pub fn new() -> MyNativeStruct<'b> {
                         todo!()
                     }
+
+                    pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
+                        f(10 + x)
+                    }
                 }
             }
         };
@@ -1611,12 +1807,14 @@ mod test {
         {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
+                callback_params: &mut callback_params,
             };
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
@@ -1723,12 +1921,14 @@ mod test {
         for (_, def) in all_types {
             let eror_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
+                callback_params: &mut callback_params,
             };
             let result = match def {
                 TypeDef::Opaque(opaque_def) => {

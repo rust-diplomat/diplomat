@@ -12,12 +12,20 @@ export class CyclicStructB {
     set field(value) {
         this.#field = value;
     }
+    constructor() {
+        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+        } else {
+            
+            this.#field = arguments[0];
+        }
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        slice_cleanup_callbacks,
+        functionCleanupArena,
         appendArrayMap
     ) {
         return [this.#field]
@@ -28,20 +36,18 @@ export class CyclicStructB {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(ptr) {
+    #fromFFI(ptr) {
         const fieldDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#field = fieldDeref;
-
-        return this;
     }
 
     static getA() {
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        
         const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructA()._fromFFI(diplomatReceive.buffer);
+            return new CyclicStructA(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
