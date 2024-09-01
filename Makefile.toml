@@ -68,6 +68,12 @@ dependencies = [
     "test-kotlin-feature",
 ]
 
+[tasks.test-java]
+category = "Tests"
+dependencies = [
+    "test-kotlin-feature",
+]
+
 [tasks.test-example]
 category = "Tests"
 dependencies = [
@@ -85,6 +91,7 @@ dependencies = [
     "test-js-feature",
     "test-dart-feature",
     "test-kotlin-feature",
+    "test-java-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -195,6 +202,23 @@ exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
 cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test  --warning-mode all 
+'''
+
+[tasks.test-java-feature.mac]
+env = {"OUT_FILE" = "dylib"}
+
+[tasks.test-java-feature.linux]
+env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
+
+[tasks.test-java-feature]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["build-feature"]
+script = '''
+exit_on_error true
+cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/java/somelib/libsomelib.${OUT_FILE}
+cd feature_tests/java/somelib
+exec --fail-on-error mvn test 
 '''
 
 [tasks.check-c-example]

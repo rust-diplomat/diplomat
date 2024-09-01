@@ -198,6 +198,7 @@ pub mod ffi {
             Ok(())
         }
 
+        #[diplomat::attr(java, disable)]
         pub fn fails_zst_result() -> Result<(), MyZst> {
             Err(MyZst {})
         }

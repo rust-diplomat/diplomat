@@ -178,6 +178,7 @@ jobs:
 
     - name: Test Dart
       run: cargo make test-dart
+
   test-kotlin:
     runs-on: ubuntu-latest
     steps:
@@ -194,3 +195,19 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
     - name: Test Kotlin
       run: cargo make test-kotlin
+
+  test-java:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+    - name: Set up JDK 22 for x64
+      uses: actions/setup-java@v4
+      with:
+        java-version: '22'
+        distribution: 'temurin'
+        architecture: x64
+        cache: maven
+    - name: Test Java
+      run: cargo make test-java
