@@ -237,3 +237,5 @@ jobs:
       run: cat ~/.bashrc
     - name: Test PATH var
       run: echo $PATH
+    - name: jextract help
+      run: jextract --help
