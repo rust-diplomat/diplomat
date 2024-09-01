@@ -1391,10 +1391,6 @@ mod test {
                         Box::new(Bar(self))
                     }
 
-                    pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
-                        Box::new(Foo(x))
-                    }
-
                     pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
                         BorrowedFieldsReturning { bytes: self.0 }
                     }
