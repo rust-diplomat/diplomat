@@ -228,7 +228,6 @@ jobs:
         architecture: x64
         cache: maven
     - name: get jextract
-      uses: enflo/curl-action@master
       run: curl -o /opt/jextract.tgz https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
     # - name: config jextract
     #   run: tar -xzf jextract.tgz
