@@ -232,4 +232,4 @@ jobs:
     - name: config jextract
       run: tar -xzf /opt/jextract.tgz -C /opt/
     - name: Test Java
-      run: PATH=$PATH:"/opt/jextract-22/bin" echo $PATH
+      run: ls /opt/
