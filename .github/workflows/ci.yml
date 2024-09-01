@@ -236,6 +236,6 @@ jobs:
     - name: cat bash profile
       run: cat ~/.bashrc
     - name: Test PATH var
-      run: source ~/bashrc && echo $PATH
+      run: source ~/.bashrc && echo $PATH
     - name: jextract help
       run: source ~/.bashrc && jextract --help
