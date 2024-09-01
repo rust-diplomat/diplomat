@@ -235,5 +235,5 @@ jobs:
       run: echo "PATH=$PATH:/opt/jextract-22/bin" >> ~/.bashrc
     - name: cat bash profile
       run: cat ~/.basrc
-    - name: Test PATH
-      run: echo $PATH
+    # - name: Test PATH
+    #   run: echo $PATH
