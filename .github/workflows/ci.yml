@@ -231,5 +231,7 @@ jobs:
       run: curl -o /opt/jextract.tgz https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
     - name: config jextract
       run: tar -xzf /opt/jextract.tgz -C /opt/
+    - name: Add jextract to path
+      run: export PATH=$PATH:/opt/jextract-22/bin
     - name: Test Java
-      run: ls /opt/
+      run: jextract --help
