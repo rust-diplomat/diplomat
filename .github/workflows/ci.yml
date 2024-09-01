@@ -235,5 +235,3 @@ jobs:
       run: echo "PATH=$PATH:/opt/jextract-22/bin" >> ~/.bashrc
     - name: Test PATH
       run: echo $PATH
-    - name: Test Java
-      run: jextract --help
