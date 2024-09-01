@@ -11,36 +11,6 @@ import java.util.Arrays;
 import static java.lang.foreign.ValueLayout.*;
 
 public class Lib {
-
-    public sealed interface Result<T, E> {
-        boolean isOk = false;
-    }
-    public final class Ok<T, E> implements Result<T, E> {
-        boolean isOk = true;
-        T value;
-        public Ok(T value) {
-            value = value;
-        }
-    }
-    public final class Err<T, E> implements Result<T, E> {
-        boolean isOk = false;
-        E err;
-        public Err(E err) {
-            err = err;
-        }
-    }
-
-    class ResBuilder<T, E> {
-        ResBuilder() {}
-        Ok<T, E> Ok(T value) {
-            return Ok(value);
-        }
-        Err<T, E> Err(E err) {
-            return Err(err);
-        }
-    }
-
-    class Unit {}
     static final Cleaner cleaner = Cleaner.create();
 }
 

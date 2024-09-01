@@ -9954,6 +9954,905 @@ public class somelib_h {
         }
     }
 
+    private static class BorrowedFields_from_bar_and_strings {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            BorrowedFields.layout(),
+            somelib_h.C_POINTER,
+            DiplomatString16View.layout(),
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("BorrowedFields_from_bar_and_strings");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * }
+     */
+    public static FunctionDescriptor BorrowedFields_from_bar_and_strings$descriptor() {
+        return BorrowedFields_from_bar_and_strings.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * }
+     */
+    public static MethodHandle BorrowedFields_from_bar_and_strings$handle() {
+        return BorrowedFields_from_bar_and_strings.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * }
+     */
+    public static MemorySegment BorrowedFields_from_bar_and_strings$address() {
+        return BorrowedFields_from_bar_and_strings.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * }
+     */
+    public static MemorySegment BorrowedFields_from_bar_and_strings(SegmentAllocator allocator, MemorySegment bar, MemorySegment dstr16, MemorySegment utf8_str) {
+        var mh$ = BorrowedFields_from_bar_and_strings.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("BorrowedFields_from_bar_and_strings", allocator, bar, dstr16, utf8_str);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator, bar, dstr16, utf8_str);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    private static final int MyEnum_A = (int)-2L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_A = -2
+     * }
+     */
+    public static int MyEnum_A() {
+        return MyEnum_A;
+    }
+    private static final int MyEnum_B = (int)-1L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_B = -1
+     * }
+     */
+    public static int MyEnum_B() {
+        return MyEnum_B;
+    }
+    private static final int MyEnum_C = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_C = 0
+     * }
+     */
+    public static int MyEnum_C() {
+        return MyEnum_C;
+    }
+    private static final int MyEnum_D = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_D = 1
+     * }
+     */
+    public static int MyEnum_D() {
+        return MyEnum_D;
+    }
+    private static final int MyEnum_E = (int)2L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_E = 2
+     * }
+     */
+    public static int MyEnum_E() {
+        return MyEnum_E;
+    }
+    private static final int MyEnum_F = (int)3L;
+    /**
+     * {@snippet lang=c :
+     * enum MyEnum.MyEnum_F = 3
+     * }
+     */
+    public static int MyEnum_F() {
+        return MyEnum_F;
+    }
+
+    private static class MyStruct_new {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            MyStruct.layout()    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyStruct_new");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * MyStruct MyStruct_new()
+     * }
+     */
+    public static FunctionDescriptor MyStruct_new$descriptor() {
+        return MyStruct_new.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * MyStruct MyStruct_new()
+     * }
+     */
+    public static MethodHandle MyStruct_new$handle() {
+        return MyStruct_new.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * MyStruct MyStruct_new()
+     * }
+     */
+    public static MemorySegment MyStruct_new$address() {
+        return MyStruct_new.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * MyStruct MyStruct_new()
+     * }
+     */
+    public static MemorySegment MyStruct_new(SegmentAllocator allocator) {
+        var mh$ = MyStruct_new.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyStruct_new", allocator);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyStruct_into_a {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_CHAR,
+            MyStruct.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyStruct_into_a");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * uint8_t MyStruct_into_a(MyStruct self)
+     * }
+     */
+    public static FunctionDescriptor MyStruct_into_a$descriptor() {
+        return MyStruct_into_a.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * uint8_t MyStruct_into_a(MyStruct self)
+     * }
+     */
+    public static MethodHandle MyStruct_into_a$handle() {
+        return MyStruct_into_a.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * uint8_t MyStruct_into_a(MyStruct self)
+     * }
+     */
+    public static MemorySegment MyStruct_into_a$address() {
+        return MyStruct_into_a.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * uint8_t MyStruct_into_a(MyStruct self)
+     * }
+     */
+    public static byte MyStruct_into_a(MemorySegment self) {
+        var mh$ = MyStruct_into_a.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyStruct_into_a", self);
+            }
+            return (byte)mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CyclicStructB_get_a {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            CyclicStructA.layout()    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("CyclicStructB_get_a");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CyclicStructA CyclicStructB_get_a()
+     * }
+     */
+    public static FunctionDescriptor CyclicStructB_get_a$descriptor() {
+        return CyclicStructB_get_a.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CyclicStructA CyclicStructB_get_a()
+     * }
+     */
+    public static MethodHandle CyclicStructB_get_a$handle() {
+        return CyclicStructB_get_a.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CyclicStructA CyclicStructB_get_a()
+     * }
+     */
+    public static MemorySegment CyclicStructB_get_a$address() {
+        return CyclicStructB_get_a.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CyclicStructA CyclicStructB_get_a()
+     * }
+     */
+    public static MemorySegment CyclicStructB_get_a(SegmentAllocator allocator) {
+        var mh$ = CyclicStructB_get_a.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CyclicStructB_get_a", allocator);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    private static final int ErrorEnum_Foo = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorEnum.ErrorEnum_Foo = 0
+     * }
+     */
+    public static int ErrorEnum_Foo() {
+        return ErrorEnum_Foo;
+    }
+    private static final int ErrorEnum_Bar = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorEnum.ErrorEnum_Bar = 1
+     * }
+     */
+    public static int ErrorEnum_Bar() {
+        return ErrorEnum_Bar;
+    }
+
+    private static class RefListParameter_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("RefListParameter_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void RefListParameter_destroy(RefListParameter *self)
+     * }
+     */
+    public static FunctionDescriptor RefListParameter_destroy$descriptor() {
+        return RefListParameter_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void RefListParameter_destroy(RefListParameter *self)
+     * }
+     */
+    public static MethodHandle RefListParameter_destroy$handle() {
+        return RefListParameter_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void RefListParameter_destroy(RefListParameter *self)
+     * }
+     */
+    public static MemorySegment RefListParameter_destroy$address() {
+        return RefListParameter_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void RefListParameter_destroy(RefListParameter *self)
+     * }
+     */
+    public static void RefListParameter_destroy(MemorySegment self) {
+        var mh$ = RefListParameter_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("RefListParameter_destroy", self);
+            }
+            mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    private static final int UnimportedEnum_A = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * enum UnimportedEnum.UnimportedEnum_A = 0
+     * }
+     */
+    public static int UnimportedEnum_A() {
+        return UnimportedEnum_A;
+    }
+    private static final int UnimportedEnum_B = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum UnimportedEnum.UnimportedEnum_B = 1
+     * }
+     */
+    public static int UnimportedEnum_B() {
+        return UnimportedEnum_B;
+    }
+    private static final int UnimportedEnum_C = (int)2L;
+    /**
+     * {@snippet lang=c :
+     * enum UnimportedEnum.UnimportedEnum_C = 2
+     * }
+     */
+    public static int UnimportedEnum_C() {
+        return UnimportedEnum_C;
+    }
+
+    private static class Opaque_new {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_new");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_new()
+     * }
+     */
+    public static FunctionDescriptor Opaque_new$descriptor() {
+        return Opaque_new.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_new()
+     * }
+     */
+    public static MethodHandle Opaque_new$handle() {
+        return Opaque_new.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_new()
+     * }
+     */
+    public static MemorySegment Opaque_new$address() {
+        return Opaque_new.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * Opaque *Opaque_new()
+     * }
+     */
+    public static MemorySegment Opaque_new() {
+        var mh$ = Opaque_new.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_new");
+            }
+            return (MemorySegment)mh$.invokeExact();
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_from_str {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_from_str");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * }
+     */
+    public static FunctionDescriptor Opaque_from_str$descriptor() {
+        return Opaque_from_str.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * }
+     */
+    public static MethodHandle Opaque_from_str$handle() {
+        return Opaque_from_str.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * }
+     */
+    public static MemorySegment Opaque_from_str$address() {
+        return Opaque_from_str.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * }
+     */
+    public static MemorySegment Opaque_from_str(MemorySegment input) {
+        var mh$ = Opaque_from_str.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_from_str", input);
+            }
+            return (MemorySegment)mh$.invokeExact(input);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_get_debug_str {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_get_debug_str");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
+     * }
+     */
+    public static FunctionDescriptor Opaque_get_debug_str$descriptor() {
+        return Opaque_get_debug_str.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
+     * }
+     */
+    public static MethodHandle Opaque_get_debug_str$handle() {
+        return Opaque_get_debug_str.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
+     * }
+     */
+    public static MemorySegment Opaque_get_debug_str$address() {
+        return Opaque_get_debug_str.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
+     * }
+     */
+    public static void Opaque_get_debug_str(MemorySegment self, MemorySegment write) {
+        var mh$ = Opaque_get_debug_str.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_get_debug_str", self, write);
+            }
+            mh$.invokeExact(self, write);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_assert_struct {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER,
+            MyStruct.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_assert_struct");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
+     * }
+     */
+    public static FunctionDescriptor Opaque_assert_struct$descriptor() {
+        return Opaque_assert_struct.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
+     * }
+     */
+    public static MethodHandle Opaque_assert_struct$handle() {
+        return Opaque_assert_struct.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
+     * }
+     */
+    public static MemorySegment Opaque_assert_struct$address() {
+        return Opaque_assert_struct.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
+     * }
+     */
+    public static void Opaque_assert_struct(MemorySegment self, MemorySegment s) {
+        var mh$ = Opaque_assert_struct.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_assert_struct", self, s);
+            }
+            mh$.invokeExact(self, s);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_returns_usize {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_LONG    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_returns_usize");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * size_t Opaque_returns_usize()
+     * }
+     */
+    public static FunctionDescriptor Opaque_returns_usize$descriptor() {
+        return Opaque_returns_usize.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * size_t Opaque_returns_usize()
+     * }
+     */
+    public static MethodHandle Opaque_returns_usize$handle() {
+        return Opaque_returns_usize.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * size_t Opaque_returns_usize()
+     * }
+     */
+    public static MemorySegment Opaque_returns_usize$address() {
+        return Opaque_returns_usize.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * size_t Opaque_returns_usize()
+     * }
+     */
+    public static long Opaque_returns_usize() {
+        var mh$ = Opaque_returns_usize.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_returns_usize");
+            }
+            return (long)mh$.invokeExact();
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_internal_len {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_LONG,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_internal_len");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * size_t Opaque_internal_len(const Opaque *self)
+     * }
+     */
+    public static FunctionDescriptor Opaque_internal_len$descriptor() {
+        return Opaque_internal_len.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * size_t Opaque_internal_len(const Opaque *self)
+     * }
+     */
+    public static MethodHandle Opaque_internal_len$handle() {
+        return Opaque_internal_len.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * size_t Opaque_internal_len(const Opaque *self)
+     * }
+     */
+    public static MemorySegment Opaque_internal_len$address() {
+        return Opaque_internal_len.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * size_t Opaque_internal_len(const Opaque *self)
+     * }
+     */
+    public static long Opaque_internal_len(MemorySegment self) {
+        var mh$ = Opaque_internal_len.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_internal_len", self);
+            }
+            return (long)mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_returns_imported {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            ImportedStruct.layout()    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_returns_imported");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ImportedStruct Opaque_returns_imported()
+     * }
+     */
+    public static FunctionDescriptor Opaque_returns_imported$descriptor() {
+        return Opaque_returns_imported.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ImportedStruct Opaque_returns_imported()
+     * }
+     */
+    public static MethodHandle Opaque_returns_imported$handle() {
+        return Opaque_returns_imported.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ImportedStruct Opaque_returns_imported()
+     * }
+     */
+    public static MemorySegment Opaque_returns_imported$address() {
+        return Opaque_returns_imported.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ImportedStruct Opaque_returns_imported()
+     * }
+     */
+    public static MemorySegment Opaque_returns_imported(SegmentAllocator allocator) {
+        var mh$ = Opaque_returns_imported.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_returns_imported", allocator);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_cmp {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_CHAR    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_cmp");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * int8_t Opaque_cmp()
+     * }
+     */
+    public static FunctionDescriptor Opaque_cmp$descriptor() {
+        return Opaque_cmp.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * int8_t Opaque_cmp()
+     * }
+     */
+    public static MethodHandle Opaque_cmp$handle() {
+        return Opaque_cmp.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * int8_t Opaque_cmp()
+     * }
+     */
+    public static MemorySegment Opaque_cmp$address() {
+        return Opaque_cmp.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * int8_t Opaque_cmp()
+     * }
+     */
+    public static byte Opaque_cmp() {
+        var mh$ = Opaque_cmp.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_cmp");
+            }
+            return (byte)mh$.invokeExact();
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Opaque_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void Opaque_destroy(Opaque *self)
+     * }
+     */
+    public static FunctionDescriptor Opaque_destroy$descriptor() {
+        return Opaque_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void Opaque_destroy(Opaque *self)
+     * }
+     */
+    public static MethodHandle Opaque_destroy$handle() {
+        return Opaque_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void Opaque_destroy(Opaque *self)
+     * }
+     */
+    public static MemorySegment Opaque_destroy$address() {
+        return Opaque_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void Opaque_destroy(Opaque *self)
+     * }
+     */
+    public static void Opaque_destroy(MemorySegment self) {
+        var mh$ = Opaque_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Opaque_destroy", self);
+            }
+            mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class NestedBorrowedFields_from_bar_and_foo_and_strings {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             NestedBorrowedFields.layout(),
@@ -10012,6 +10911,1280 @@ public class somelib_h {
                 traceDowncall("NestedBorrowedFields_from_bar_and_foo_and_strings", allocator, bar, foo, dstr16_x, dstr16_z, utf8_str_y, utf8_str_z);
             }
             return (MemorySegment)mh$.invokeExact(allocator, bar, foo, dstr16_x, dstr16_z, utf8_str_y, utf8_str_z);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_new {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * MyString *MyString_new(DiplomatStringView v)
+     * }
+     */
+    public static FunctionDescriptor MyString_new$descriptor() {
+        return MyString_new.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * MyString *MyString_new(DiplomatStringView v)
+     * }
+     */
+    public static MethodHandle MyString_new$handle() {
+        return MyString_new.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * MyString *MyString_new(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new$address() {
+        return MyString_new.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * MyString *MyString_new(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new(MemorySegment v) {
+        var mh$ = MyString_new.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_new", v);
+            }
+            return (MemorySegment)mh$.invokeExact(v);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_new_unsafe {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_unsafe");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_unsafe(DiplomatStringView v)
+     * }
+     */
+    public static FunctionDescriptor MyString_new_unsafe$descriptor() {
+        return MyString_new_unsafe.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_unsafe(DiplomatStringView v)
+     * }
+     */
+    public static MethodHandle MyString_new_unsafe$handle() {
+        return MyString_new_unsafe.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_unsafe(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new_unsafe$address() {
+        return MyString_new_unsafe.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * MyString *MyString_new_unsafe(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new_unsafe(MemorySegment v) {
+        var mh$ = MyString_new_unsafe.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_new_unsafe", v);
+            }
+            return (MemorySegment)mh$.invokeExact(v);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_new_owned {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_owned");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_owned(DiplomatStringView v)
+     * }
+     */
+    public static FunctionDescriptor MyString_new_owned$descriptor() {
+        return MyString_new_owned.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_owned(DiplomatStringView v)
+     * }
+     */
+    public static MethodHandle MyString_new_owned$handle() {
+        return MyString_new_owned.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_owned(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new_owned$address() {
+        return MyString_new_owned.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * MyString *MyString_new_owned(DiplomatStringView v)
+     * }
+     */
+    public static MemorySegment MyString_new_owned(MemorySegment v) {
+        var mh$ = MyString_new_owned.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_new_owned", v);
+            }
+            return (MemorySegment)mh$.invokeExact(v);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_new_from_first {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatStringsView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_from_first");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_from_first(DiplomatStringsView v)
+     * }
+     */
+    public static FunctionDescriptor MyString_new_from_first$descriptor() {
+        return MyString_new_from_first.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_from_first(DiplomatStringsView v)
+     * }
+     */
+    public static MethodHandle MyString_new_from_first$handle() {
+        return MyString_new_from_first.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * MyString *MyString_new_from_first(DiplomatStringsView v)
+     * }
+     */
+    public static MemorySegment MyString_new_from_first$address() {
+        return MyString_new_from_first.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * MyString *MyString_new_from_first(DiplomatStringsView v)
+     * }
+     */
+    public static MemorySegment MyString_new_from_first(MemorySegment v) {
+        var mh$ = MyString_new_from_first.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_new_from_first", v);
+            }
+            return (MemorySegment)mh$.invokeExact(v);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_set_str {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER,
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_set_str");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
+     * }
+     */
+    public static FunctionDescriptor MyString_set_str$descriptor() {
+        return MyString_set_str.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
+     * }
+     */
+    public static MethodHandle MyString_set_str$handle() {
+        return MyString_set_str.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
+     * }
+     */
+    public static MemorySegment MyString_set_str$address() {
+        return MyString_set_str.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
+     * }
+     */
+    public static void MyString_set_str(MemorySegment self, MemorySegment new_str) {
+        var mh$ = MyString_set_str.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_set_str", self, new_str);
+            }
+            mh$.invokeExact(self, new_str);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_get_str {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_get_str");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
+     * }
+     */
+    public static FunctionDescriptor MyString_get_str$descriptor() {
+        return MyString_get_str.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
+     * }
+     */
+    public static MethodHandle MyString_get_str$handle() {
+        return MyString_get_str.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
+     * }
+     */
+    public static MemorySegment MyString_get_str$address() {
+        return MyString_get_str.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
+     * }
+     */
+    public static void MyString_get_str(MemorySegment self, MemorySegment write) {
+        var mh$ = MyString_get_str.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_get_str", self, write);
+            }
+            mh$.invokeExact(self, write);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_string_transform {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            DiplomatStringView.layout(),
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_string_transform");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
+     * }
+     */
+    public static FunctionDescriptor MyString_string_transform$descriptor() {
+        return MyString_string_transform.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
+     * }
+     */
+    public static MethodHandle MyString_string_transform$handle() {
+        return MyString_string_transform.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
+     * }
+     */
+    public static MemorySegment MyString_string_transform$address() {
+        return MyString_string_transform.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
+     * }
+     */
+    public static void MyString_string_transform(MemorySegment foo, MemorySegment write) {
+        var mh$ = MyString_string_transform.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_string_transform", foo, write);
+            }
+            mh$.invokeExact(foo, write);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class MyString_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void MyString_destroy(MyString *self)
+     * }
+     */
+    public static FunctionDescriptor MyString_destroy$descriptor() {
+        return MyString_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void MyString_destroy(MyString *self)
+     * }
+     */
+    public static MethodHandle MyString_destroy$handle() {
+        return MyString_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void MyString_destroy(MyString *self)
+     * }
+     */
+    public static MemorySegment MyString_destroy$address() {
+        return MyString_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void MyString_destroy(MyString *self)
+     * }
+     */
+    public static void MyString_destroy(MemorySegment self) {
+        var mh$ = MyString_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("MyString_destroy", self);
+            }
+            mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class BorrowedFieldsWithBounds_from_foo_and_strings {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            BorrowedFieldsWithBounds.layout(),
+            somelib_h.C_POINTER,
+            DiplomatString16View.layout(),
+            DiplomatStringView.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("BorrowedFieldsWithBounds_from_foo_and_strings");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
+     * }
+     */
+    public static FunctionDescriptor BorrowedFieldsWithBounds_from_foo_and_strings$descriptor() {
+        return BorrowedFieldsWithBounds_from_foo_and_strings.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
+     * }
+     */
+    public static MethodHandle BorrowedFieldsWithBounds_from_foo_and_strings$handle() {
+        return BorrowedFieldsWithBounds_from_foo_and_strings.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
+     * }
+     */
+    public static MemorySegment BorrowedFieldsWithBounds_from_foo_and_strings$address() {
+        return BorrowedFieldsWithBounds_from_foo_and_strings.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
+     * }
+     */
+    public static MemorySegment BorrowedFieldsWithBounds_from_foo_and_strings(SegmentAllocator allocator, MemorySegment foo, MemorySegment dstr16_x, MemorySegment utf8_str_z) {
+        var mh$ = BorrowedFieldsWithBounds_from_foo_and_strings.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("BorrowedFieldsWithBounds_from_foo_and_strings", allocator, foo, dstr16_x, utf8_str_z);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator, foo, dstr16_x, utf8_str_z);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_from_usize {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_LONG
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_from_usize");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_from_usize$descriptor() {
+        return OpaqueMutexedString_from_usize.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_from_usize$handle() {
+        return OpaqueMutexedString_from_usize.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_from_usize$address() {
+        return OpaqueMutexedString_from_usize.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_from_usize(long number) {
+        var mh$ = OpaqueMutexedString_from_usize.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_from_usize", number);
+            }
+            return (MemorySegment)mh$.invokeExact(number);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_change {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER,
+            somelib_h.C_LONG
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_change");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_change$descriptor() {
+        return OpaqueMutexedString_change.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_change$handle() {
+        return OpaqueMutexedString_change.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_change$address() {
+        return OpaqueMutexedString_change.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
+     * }
+     */
+    public static void OpaqueMutexedString_change(MemorySegment self, long number) {
+        var mh$ = OpaqueMutexedString_change.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_change", self, number);
+            }
+            mh$.invokeExact(self, number);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_borrow {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_borrow$descriptor() {
+        return OpaqueMutexedString_borrow.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_borrow$handle() {
+        return OpaqueMutexedString_borrow.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow$address() {
+        return OpaqueMutexedString_borrow.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow(MemorySegment self) {
+        var mh$ = OpaqueMutexedString_borrow.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_borrow", self);
+            }
+            return (MemorySegment)mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_borrow_other {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow_other");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_borrow_other$descriptor() {
+        return OpaqueMutexedString_borrow_other.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_borrow_other$handle() {
+        return OpaqueMutexedString_borrow_other.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow_other$address() {
+        return OpaqueMutexedString_borrow_other.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow_other(MemorySegment other) {
+        var mh$ = OpaqueMutexedString_borrow_other.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_borrow_other", other);
+            }
+            return (MemorySegment)mh$.invokeExact(other);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_borrow_self_or_other {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow_self_or_other");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_borrow_self_or_other$descriptor() {
+        return OpaqueMutexedString_borrow_self_or_other.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_borrow_self_or_other$handle() {
+        return OpaqueMutexedString_borrow_self_or_other.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow_self_or_other$address() {
+        return OpaqueMutexedString_borrow_self_or_other.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_borrow_self_or_other(MemorySegment self, MemorySegment other) {
+        var mh$ = OpaqueMutexedString_borrow_self_or_other.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_borrow_self_or_other", self, other);
+            }
+            return (MemorySegment)mh$.invokeExact(self, other);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_get_len_and_add {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_LONG,
+            somelib_h.C_POINTER,
+            somelib_h.C_LONG
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_get_len_and_add");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_get_len_and_add$descriptor() {
+        return OpaqueMutexedString_get_len_and_add.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_get_len_and_add$handle() {
+        return OpaqueMutexedString_get_len_and_add.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_get_len_and_add$address() {
+        return OpaqueMutexedString_get_len_and_add.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
+     * }
+     */
+    public static long OpaqueMutexedString_get_len_and_add(MemorySegment self, long other) {
+        var mh$ = OpaqueMutexedString_get_len_and_add.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_get_len_and_add", self, other);
+            }
+            return (long)mh$.invokeExact(self, other);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_dummy_str {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            DiplomatStringView.layout(),
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_dummy_str");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_dummy_str$descriptor() {
+        return OpaqueMutexedString_dummy_str.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_dummy_str$handle() {
+        return OpaqueMutexedString_dummy_str.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_dummy_str$address() {
+        return OpaqueMutexedString_dummy_str.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_dummy_str(SegmentAllocator allocator, MemorySegment self) {
+        var mh$ = OpaqueMutexedString_dummy_str.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_dummy_str", allocator, self);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator, self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_wrapper {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_wrapper");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_wrapper$descriptor() {
+        return OpaqueMutexedString_wrapper.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_wrapper$handle() {
+        return OpaqueMutexedString_wrapper.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_wrapper$address() {
+        return OpaqueMutexedString_wrapper.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_wrapper(MemorySegment self) {
+        var mh$ = OpaqueMutexedString_wrapper.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_wrapper", self);
+            }
+            return (MemorySegment)mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class OpaqueMutexedString_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
+     * }
+     */
+    public static FunctionDescriptor OpaqueMutexedString_destroy$descriptor() {
+        return OpaqueMutexedString_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
+     * }
+     */
+    public static MethodHandle OpaqueMutexedString_destroy$handle() {
+        return OpaqueMutexedString_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
+     * }
+     */
+    public static MemorySegment OpaqueMutexedString_destroy$address() {
+        return OpaqueMutexedString_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
+     * }
+     */
+    public static void OpaqueMutexedString_destroy(MemorySegment self) {
+        var mh$ = OpaqueMutexedString_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("OpaqueMutexedString_destroy", self);
+            }
+            mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Bar_foo {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Bar_foo");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * const Foo *Bar_foo(const Bar *self)
+     * }
+     */
+    public static FunctionDescriptor Bar_foo$descriptor() {
+        return Bar_foo.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * const Foo *Bar_foo(const Bar *self)
+     * }
+     */
+    public static MethodHandle Bar_foo$handle() {
+        return Bar_foo.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * const Foo *Bar_foo(const Bar *self)
+     * }
+     */
+    public static MemorySegment Bar_foo$address() {
+        return Bar_foo.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * const Foo *Bar_foo(const Bar *self)
+     * }
+     */
+    public static MemorySegment Bar_foo(MemorySegment self) {
+        var mh$ = Bar_foo.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Bar_foo", self);
+            }
+            return (MemorySegment)mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Bar_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Bar_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void Bar_destroy(Bar *self)
+     * }
+     */
+    public static FunctionDescriptor Bar_destroy$descriptor() {
+        return Bar_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void Bar_destroy(Bar *self)
+     * }
+     */
+    public static MethodHandle Bar_destroy$handle() {
+        return Bar_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void Bar_destroy(Bar *self)
+     * }
+     */
+    public static MemorySegment Bar_destroy$address() {
+        return Bar_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void Bar_destroy(Bar *self)
+     * }
+     */
+    public static void Bar_destroy(MemorySegment self) {
+        var mh$ = Bar_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Bar_destroy", self);
+            }
+            mh$.invokeExact(self);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class CyclicStructA_get_b {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            CyclicStructB.layout()    );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("CyclicStructA_get_b");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * CyclicStructB CyclicStructA_get_b()
+     * }
+     */
+    public static FunctionDescriptor CyclicStructA_get_b$descriptor() {
+        return CyclicStructA_get_b.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * CyclicStructB CyclicStructA_get_b()
+     * }
+     */
+    public static MethodHandle CyclicStructA_get_b$handle() {
+        return CyclicStructA_get_b.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * CyclicStructB CyclicStructA_get_b()
+     * }
+     */
+    public static MemorySegment CyclicStructA_get_b$address() {
+        return CyclicStructA_get_b.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * CyclicStructB CyclicStructA_get_b()
+     * }
+     */
+    public static MemorySegment CyclicStructA_get_b(SegmentAllocator allocator) {
+        var mh$ = CyclicStructA_get_b.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("CyclicStructA_get_b", allocator);
+            }
+            return (MemorySegment)mh$.invokeExact(allocator);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class Two_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            somelib_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Two_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void Two_destroy(Two *self)
+     * }
+     */
+    public static FunctionDescriptor Two_destroy$descriptor() {
+        return Two_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void Two_destroy(Two *self)
+     * }
+     */
+    public static MethodHandle Two_destroy$handle() {
+        return Two_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void Two_destroy(Two *self)
+     * }
+     */
+    public static MemorySegment Two_destroy$address() {
+        return Two_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void Two_destroy(Two *self)
+     * }
+     */
+    public static void Two_destroy(MemorySegment self) {
+        var mh$ = Two_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Two_destroy", self);
+            }
+            mh$.invokeExact(self);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10738,262 +12911,6 @@ public class somelib_h {
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
-    }
-
-    private static class Bar_foo {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Bar_foo");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * const Foo *Bar_foo(const Bar *self)
-     * }
-     */
-    public static FunctionDescriptor Bar_foo$descriptor() {
-        return Bar_foo.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * const Foo *Bar_foo(const Bar *self)
-     * }
-     */
-    public static MethodHandle Bar_foo$handle() {
-        return Bar_foo.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * const Foo *Bar_foo(const Bar *self)
-     * }
-     */
-    public static MemorySegment Bar_foo$address() {
-        return Bar_foo.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * const Foo *Bar_foo(const Bar *self)
-     * }
-     */
-    public static MemorySegment Bar_foo(MemorySegment self) {
-        var mh$ = Bar_foo.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Bar_foo", self);
-            }
-            return (MemorySegment)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Bar_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Bar_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void Bar_destroy(Bar *self)
-     * }
-     */
-    public static FunctionDescriptor Bar_destroy$descriptor() {
-        return Bar_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void Bar_destroy(Bar *self)
-     * }
-     */
-    public static MethodHandle Bar_destroy$handle() {
-        return Bar_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void Bar_destroy(Bar *self)
-     * }
-     */
-    public static MemorySegment Bar_destroy$address() {
-        return Bar_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void Bar_destroy(Bar *self)
-     * }
-     */
-    public static void Bar_destroy(MemorySegment self) {
-        var mh$ = Bar_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Bar_destroy", self);
-            }
-            mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-    private static final int ErrorEnum_Foo = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * enum ErrorEnum.ErrorEnum_Foo = 0
-     * }
-     */
-    public static int ErrorEnum_Foo() {
-        return ErrorEnum_Foo;
-    }
-    private static final int ErrorEnum_Bar = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum ErrorEnum.ErrorEnum_Bar = 1
-     * }
-     */
-    public static int ErrorEnum_Bar() {
-        return ErrorEnum_Bar;
-    }
-
-    private static class BorrowedFieldsWithBounds_from_foo_and_strings {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            BorrowedFieldsWithBounds.layout(),
-            somelib_h.C_POINTER,
-            DiplomatString16View.layout(),
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("BorrowedFieldsWithBounds_from_foo_and_strings");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
-     * }
-     */
-    public static FunctionDescriptor BorrowedFieldsWithBounds_from_foo_and_strings$descriptor() {
-        return BorrowedFieldsWithBounds_from_foo_and_strings.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
-     * }
-     */
-    public static MethodHandle BorrowedFieldsWithBounds_from_foo_and_strings$handle() {
-        return BorrowedFieldsWithBounds_from_foo_and_strings.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
-     * }
-     */
-    public static MemorySegment BorrowedFieldsWithBounds_from_foo_and_strings$address() {
-        return BorrowedFieldsWithBounds_from_foo_and_strings.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo *foo, DiplomatString16View dstr16_x, DiplomatStringView utf8_str_z)
-     * }
-     */
-    public static MemorySegment BorrowedFieldsWithBounds_from_foo_and_strings(SegmentAllocator allocator, MemorySegment foo, MemorySegment dstr16_x, MemorySegment utf8_str_z) {
-        var mh$ = BorrowedFieldsWithBounds_from_foo_and_strings.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("BorrowedFieldsWithBounds_from_foo_and_strings", allocator, foo, dstr16_x, utf8_str_z);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator, foo, dstr16_x, utf8_str_z);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-    private static final int ContiguousEnum_C = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * enum ContiguousEnum.ContiguousEnum_C = 0
-     * }
-     */
-    public static int ContiguousEnum_C() {
-        return ContiguousEnum_C;
-    }
-    private static final int ContiguousEnum_D = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum ContiguousEnum.ContiguousEnum_D = 1
-     * }
-     */
-    public static int ContiguousEnum_D() {
-        return ContiguousEnum_D;
-    }
-    private static final int ContiguousEnum_E = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * enum ContiguousEnum.ContiguousEnum_E = 2
-     * }
-     */
-    public static int ContiguousEnum_E() {
-        return ContiguousEnum_E;
-    }
-    private static final int ContiguousEnum_F = (int)3L;
-    /**
-     * {@snippet lang=c :
-     * enum ContiguousEnum.ContiguousEnum_F = 3
-     * }
-     */
-    public static int ContiguousEnum_F() {
-        return ContiguousEnum_F;
-    }
-    private static final int UnimportedEnum_A = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * enum UnimportedEnum.UnimportedEnum_A = 0
-     * }
-     */
-    public static int UnimportedEnum_A() {
-        return UnimportedEnum_A;
-    }
-    private static final int UnimportedEnum_B = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum UnimportedEnum.UnimportedEnum_B = 1
-     * }
-     */
-    public static int UnimportedEnum_B() {
-        return UnimportedEnum_B;
-    }
-    private static final int UnimportedEnum_C = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * enum UnimportedEnum.UnimportedEnum_C = 2
-     * }
-     */
-    public static int UnimportedEnum_C() {
-        return UnimportedEnum_C;
     }
 
     private static class Float64Vec_new_bool {
@@ -11748,1330 +13665,41 @@ public class somelib_h {
            throw new AssertionError("should not reach here", ex$);
         }
     }
-    private static final int MyEnum_A = (int)-2L;
+    private static final int ContiguousEnum_C = (int)0L;
     /**
      * {@snippet lang=c :
-     * enum MyEnum.MyEnum_A = -2
+     * enum ContiguousEnum.ContiguousEnum_C = 0
      * }
      */
-    public static int MyEnum_A() {
-        return MyEnum_A;
+    public static int ContiguousEnum_C() {
+        return ContiguousEnum_C;
     }
-    private static final int MyEnum_B = (int)-1L;
+    private static final int ContiguousEnum_D = (int)1L;
     /**
      * {@snippet lang=c :
-     * enum MyEnum.MyEnum_B = -1
+     * enum ContiguousEnum.ContiguousEnum_D = 1
      * }
      */
-    public static int MyEnum_B() {
-        return MyEnum_B;
+    public static int ContiguousEnum_D() {
+        return ContiguousEnum_D;
     }
-    private static final int MyEnum_C = (int)0L;
+    private static final int ContiguousEnum_E = (int)2L;
     /**
      * {@snippet lang=c :
-     * enum MyEnum.MyEnum_C = 0
+     * enum ContiguousEnum.ContiguousEnum_E = 2
      * }
      */
-    public static int MyEnum_C() {
-        return MyEnum_C;
+    public static int ContiguousEnum_E() {
+        return ContiguousEnum_E;
     }
-    private static final int MyEnum_D = (int)1L;
+    private static final int ContiguousEnum_F = (int)3L;
     /**
      * {@snippet lang=c :
-     * enum MyEnum.MyEnum_D = 1
+     * enum ContiguousEnum.ContiguousEnum_F = 3
      * }
      */
-    public static int MyEnum_D() {
-        return MyEnum_D;
-    }
-    private static final int MyEnum_E = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * enum MyEnum.MyEnum_E = 2
-     * }
-     */
-    public static int MyEnum_E() {
-        return MyEnum_E;
-    }
-    private static final int MyEnum_F = (int)3L;
-    /**
-     * {@snippet lang=c :
-     * enum MyEnum.MyEnum_F = 3
-     * }
-     */
-    public static int MyEnum_F() {
-        return MyEnum_F;
-    }
-
-    private static class MyStruct_new {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            MyStruct.layout()    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyStruct_new");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyStruct MyStruct_new()
-     * }
-     */
-    public static FunctionDescriptor MyStruct_new$descriptor() {
-        return MyStruct_new.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyStruct MyStruct_new()
-     * }
-     */
-    public static MethodHandle MyStruct_new$handle() {
-        return MyStruct_new.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyStruct MyStruct_new()
-     * }
-     */
-    public static MemorySegment MyStruct_new$address() {
-        return MyStruct_new.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyStruct MyStruct_new()
-     * }
-     */
-    public static MemorySegment MyStruct_new(SegmentAllocator allocator) {
-        var mh$ = MyStruct_new.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyStruct_new", allocator);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyStruct_into_a {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_CHAR,
-            MyStruct.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyStruct_into_a");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * uint8_t MyStruct_into_a(MyStruct self)
-     * }
-     */
-    public static FunctionDescriptor MyStruct_into_a$descriptor() {
-        return MyStruct_into_a.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * uint8_t MyStruct_into_a(MyStruct self)
-     * }
-     */
-    public static MethodHandle MyStruct_into_a$handle() {
-        return MyStruct_into_a.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * uint8_t MyStruct_into_a(MyStruct self)
-     * }
-     */
-    public static MemorySegment MyStruct_into_a$address() {
-        return MyStruct_into_a.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * uint8_t MyStruct_into_a(MyStruct self)
-     * }
-     */
-    public static byte MyStruct_into_a(MemorySegment self) {
-        var mh$ = MyStruct_into_a.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyStruct_into_a", self);
-            }
-            return (byte)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_from_usize {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_LONG
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_from_usize");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_from_usize$descriptor() {
-        return OpaqueMutexedString_from_usize.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_from_usize$handle() {
-        return OpaqueMutexedString_from_usize.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_from_usize$address() {
-        return OpaqueMutexedString_from_usize.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * OpaqueMutexedString *OpaqueMutexedString_from_usize(size_t number)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_from_usize(long number) {
-        var mh$ = OpaqueMutexedString_from_usize.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_from_usize", number);
-            }
-            return (MemorySegment)mh$.invokeExact(number);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_change {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER,
-            somelib_h.C_LONG
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_change");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_change$descriptor() {
-        return OpaqueMutexedString_change.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_change$handle() {
-        return OpaqueMutexedString_change.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_change$address() {
-        return OpaqueMutexedString_change.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_change(const OpaqueMutexedString *self, size_t number)
-     * }
-     */
-    public static void OpaqueMutexedString_change(MemorySegment self, long number) {
-        var mh$ = OpaqueMutexedString_change.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_change", self, number);
-            }
-            mh$.invokeExact(self, number);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_borrow {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_borrow$descriptor() {
-        return OpaqueMutexedString_borrow.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_borrow$handle() {
-        return OpaqueMutexedString_borrow.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow$address() {
-        return OpaqueMutexedString_borrow.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow(MemorySegment self) {
-        var mh$ = OpaqueMutexedString_borrow.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_borrow", self);
-            }
-            return (MemorySegment)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_borrow_other {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow_other");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_borrow_other$descriptor() {
-        return OpaqueMutexedString_borrow_other.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_borrow_other$handle() {
-        return OpaqueMutexedString_borrow_other.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow_other$address() {
-        return OpaqueMutexedString_borrow_other.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_other(const OpaqueMutexedString *other)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow_other(MemorySegment other) {
-        var mh$ = OpaqueMutexedString_borrow_other.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_borrow_other", other);
-            }
-            return (MemorySegment)mh$.invokeExact(other);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_borrow_self_or_other {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_borrow_self_or_other");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_borrow_self_or_other$descriptor() {
-        return OpaqueMutexedString_borrow_self_or_other.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_borrow_self_or_other$handle() {
-        return OpaqueMutexedString_borrow_self_or_other.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow_self_or_other$address() {
-        return OpaqueMutexedString_borrow_self_or_other.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * const OpaqueMutexedString *OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString *self, const OpaqueMutexedString *other)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_borrow_self_or_other(MemorySegment self, MemorySegment other) {
-        var mh$ = OpaqueMutexedString_borrow_self_or_other.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_borrow_self_or_other", self, other);
-            }
-            return (MemorySegment)mh$.invokeExact(self, other);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_get_len_and_add {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_LONG,
-            somelib_h.C_POINTER,
-            somelib_h.C_LONG
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_get_len_and_add");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_get_len_and_add$descriptor() {
-        return OpaqueMutexedString_get_len_and_add.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_get_len_and_add$handle() {
-        return OpaqueMutexedString_get_len_and_add.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_get_len_and_add$address() {
-        return OpaqueMutexedString_get_len_and_add.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString *self, size_t other)
-     * }
-     */
-    public static long OpaqueMutexedString_get_len_and_add(MemorySegment self, long other) {
-        var mh$ = OpaqueMutexedString_get_len_and_add.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_get_len_and_add", self, other);
-            }
-            return (long)mh$.invokeExact(self, other);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_dummy_str {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            DiplomatStringView.layout(),
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_dummy_str");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_dummy_str$descriptor() {
-        return OpaqueMutexedString_dummy_str.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_dummy_str$handle() {
-        return OpaqueMutexedString_dummy_str.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_dummy_str$address() {
-        return OpaqueMutexedString_dummy_str.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_dummy_str(SegmentAllocator allocator, MemorySegment self) {
-        var mh$ = OpaqueMutexedString_dummy_str.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_dummy_str", allocator, self);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator, self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_wrapper {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_wrapper");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_wrapper$descriptor() {
-        return OpaqueMutexedString_wrapper.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_wrapper$handle() {
-        return OpaqueMutexedString_wrapper.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_wrapper$address() {
-        return OpaqueMutexedString_wrapper.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * Utf16Wrap *OpaqueMutexedString_wrapper(const OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_wrapper(MemorySegment self) {
-        var mh$ = OpaqueMutexedString_wrapper.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_wrapper", self);
-            }
-            return (MemorySegment)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class OpaqueMutexedString_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("OpaqueMutexedString_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
-     * }
-     */
-    public static FunctionDescriptor OpaqueMutexedString_destroy$descriptor() {
-        return OpaqueMutexedString_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
-     * }
-     */
-    public static MethodHandle OpaqueMutexedString_destroy$handle() {
-        return OpaqueMutexedString_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
-     * }
-     */
-    public static MemorySegment OpaqueMutexedString_destroy$address() {
-        return OpaqueMutexedString_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void OpaqueMutexedString_destroy(OpaqueMutexedString *self)
-     * }
-     */
-    public static void OpaqueMutexedString_destroy(MemorySegment self) {
-        var mh$ = OpaqueMutexedString_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("OpaqueMutexedString_destroy", self);
-            }
-            mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class RefListParameter_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("RefListParameter_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void RefListParameter_destroy(RefListParameter *self)
-     * }
-     */
-    public static FunctionDescriptor RefListParameter_destroy$descriptor() {
-        return RefListParameter_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void RefListParameter_destroy(RefListParameter *self)
-     * }
-     */
-    public static MethodHandle RefListParameter_destroy$handle() {
-        return RefListParameter_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void RefListParameter_destroy(RefListParameter *self)
-     * }
-     */
-    public static MemorySegment RefListParameter_destroy$address() {
-        return RefListParameter_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void RefListParameter_destroy(RefListParameter *self)
-     * }
-     */
-    public static void RefListParameter_destroy(MemorySegment self) {
-        var mh$ = RefListParameter_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("RefListParameter_destroy", self);
-            }
-            mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyEnum_into_value {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_CHAR,
-            somelib_h.C_INT
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyEnum_into_value");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * int8_t MyEnum_into_value(MyEnum self)
-     * }
-     */
-    public static FunctionDescriptor MyEnum_into_value$descriptor() {
-        return MyEnum_into_value.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * int8_t MyEnum_into_value(MyEnum self)
-     * }
-     */
-    public static MethodHandle MyEnum_into_value$handle() {
-        return MyEnum_into_value.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * int8_t MyEnum_into_value(MyEnum self)
-     * }
-     */
-    public static MemorySegment MyEnum_into_value$address() {
-        return MyEnum_into_value.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * int8_t MyEnum_into_value(MyEnum self)
-     * }
-     */
-    public static byte MyEnum_into_value(int self) {
-        var mh$ = MyEnum_into_value.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyEnum_into_value", self);
-            }
-            return (byte)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyEnum_get_a {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_INT    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyEnum_get_a");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyEnum MyEnum_get_a()
-     * }
-     */
-    public static FunctionDescriptor MyEnum_get_a$descriptor() {
-        return MyEnum_get_a.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyEnum MyEnum_get_a()
-     * }
-     */
-    public static MethodHandle MyEnum_get_a$handle() {
-        return MyEnum_get_a.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyEnum MyEnum_get_a()
-     * }
-     */
-    public static MemorySegment MyEnum_get_a$address() {
-        return MyEnum_get_a.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyEnum MyEnum_get_a()
-     * }
-     */
-    public static int MyEnum_get_a() {
-        var mh$ = MyEnum_get_a.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyEnum_get_a");
-            }
-            return (int)mh$.invokeExact();
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_new {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyString *MyString_new(DiplomatStringView v)
-     * }
-     */
-    public static FunctionDescriptor MyString_new$descriptor() {
-        return MyString_new.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyString *MyString_new(DiplomatStringView v)
-     * }
-     */
-    public static MethodHandle MyString_new$handle() {
-        return MyString_new.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyString *MyString_new(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new$address() {
-        return MyString_new.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyString *MyString_new(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new(MemorySegment v) {
-        var mh$ = MyString_new.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_new", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_new_unsafe {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_unsafe");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_unsafe(DiplomatStringView v)
-     * }
-     */
-    public static FunctionDescriptor MyString_new_unsafe$descriptor() {
-        return MyString_new_unsafe.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_unsafe(DiplomatStringView v)
-     * }
-     */
-    public static MethodHandle MyString_new_unsafe$handle() {
-        return MyString_new_unsafe.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_unsafe(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_unsafe$address() {
-        return MyString_new_unsafe.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyString *MyString_new_unsafe(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_unsafe(MemorySegment v) {
-        var mh$ = MyString_new_unsafe.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_new_unsafe", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_new_owned {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_owned");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static FunctionDescriptor MyString_new_owned$descriptor() {
-        return MyString_new_owned.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MethodHandle MyString_new_owned$handle() {
-        return MyString_new_owned.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_owned$address() {
-        return MyString_new_owned.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_owned(MemorySegment v) {
-        var mh$ = MyString_new_owned.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_new_owned", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_new_from_first {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringsView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_from_first");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_from_first(DiplomatStringsView v)
-     * }
-     */
-    public static FunctionDescriptor MyString_new_from_first$descriptor() {
-        return MyString_new_from_first.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_from_first(DiplomatStringsView v)
-     * }
-     */
-    public static MethodHandle MyString_new_from_first$handle() {
-        return MyString_new_from_first.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_from_first(DiplomatStringsView v)
-     * }
-     */
-    public static MemorySegment MyString_new_from_first$address() {
-        return MyString_new_from_first.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyString *MyString_new_from_first(DiplomatStringsView v)
-     * }
-     */
-    public static MemorySegment MyString_new_from_first(MemorySegment v) {
-        var mh$ = MyString_new_from_first.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_new_from_first", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_set_str {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_set_str");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
-     * }
-     */
-    public static FunctionDescriptor MyString_set_str$descriptor() {
-        return MyString_set_str.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
-     * }
-     */
-    public static MethodHandle MyString_set_str$handle() {
-        return MyString_set_str.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
-     * }
-     */
-    public static MemorySegment MyString_set_str$address() {
-        return MyString_set_str.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void MyString_set_str(MyString *self, DiplomatStringView new_str)
-     * }
-     */
-    public static void MyString_set_str(MemorySegment self, MemorySegment new_str) {
-        var mh$ = MyString_set_str.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_set_str", self, new_str);
-            }
-            mh$.invokeExact(self, new_str);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_get_str {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_get_str");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
-     * }
-     */
-    public static FunctionDescriptor MyString_get_str$descriptor() {
-        return MyString_get_str.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
-     * }
-     */
-    public static MethodHandle MyString_get_str$handle() {
-        return MyString_get_str.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
-     * }
-     */
-    public static MemorySegment MyString_get_str$address() {
-        return MyString_get_str.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void MyString_get_str(const MyString *self, DiplomatWrite *write)
-     * }
-     */
-    public static void MyString_get_str(MemorySegment self, MemorySegment write) {
-        var mh$ = MyString_get_str.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_get_str", self, write);
-            }
-            mh$.invokeExact(self, write);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_string_transform {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            DiplomatStringView.layout(),
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_string_transform");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
-     * }
-     */
-    public static FunctionDescriptor MyString_string_transform$descriptor() {
-        return MyString_string_transform.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
-     * }
-     */
-    public static MethodHandle MyString_string_transform$handle() {
-        return MyString_string_transform.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
-     * }
-     */
-    public static MemorySegment MyString_string_transform$address() {
-        return MyString_string_transform.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void MyString_string_transform(DiplomatStringView foo, DiplomatWrite *write)
-     * }
-     */
-    public static void MyString_string_transform(MemorySegment foo, MemorySegment write) {
-        var mh$ = MyString_string_transform.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_string_transform", foo, write);
-            }
-            mh$.invokeExact(foo, write);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void MyString_destroy(MyString *self)
-     * }
-     */
-    public static FunctionDescriptor MyString_destroy$descriptor() {
-        return MyString_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void MyString_destroy(MyString *self)
-     * }
-     */
-    public static MethodHandle MyString_destroy$handle() {
-        return MyString_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void MyString_destroy(MyString *self)
-     * }
-     */
-    public static MemorySegment MyString_destroy$address() {
-        return MyString_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void MyString_destroy(MyString *self)
-     * }
-     */
-    public static void MyString_destroy(MemorySegment self) {
-        var mh$ = MyString_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_destroy", self);
-            }
-            mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
+    public static int ContiguousEnum_F() {
+        return ContiguousEnum_F;
     }
 
     private static class Utf16Wrap_from_utf16 {
@@ -13300,175 +13928,6 @@ public class somelib_h {
                 traceDowncall("Utf16Wrap_destroy", self);
             }
             mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Two_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Two_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void Two_destroy(Two *self)
-     * }
-     */
-    public static FunctionDescriptor Two_destroy$descriptor() {
-        return Two_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void Two_destroy(Two *self)
-     * }
-     */
-    public static MethodHandle Two_destroy$handle() {
-        return Two_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void Two_destroy(Two *self)
-     * }
-     */
-    public static MemorySegment Two_destroy$address() {
-        return Two_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void Two_destroy(Two *self)
-     * }
-     */
-    public static void Two_destroy(MemorySegment self) {
-        var mh$ = Two_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Two_destroy", self);
-            }
-            mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class CyclicStructA_get_b {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            CyclicStructB.layout()    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("CyclicStructA_get_b");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * CyclicStructB CyclicStructA_get_b()
-     * }
-     */
-    public static FunctionDescriptor CyclicStructA_get_b$descriptor() {
-        return CyclicStructA_get_b.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * CyclicStructB CyclicStructA_get_b()
-     * }
-     */
-    public static MethodHandle CyclicStructA_get_b$handle() {
-        return CyclicStructA_get_b.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * CyclicStructB CyclicStructA_get_b()
-     * }
-     */
-    public static MemorySegment CyclicStructA_get_b$address() {
-        return CyclicStructA_get_b.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * CyclicStructB CyclicStructA_get_b()
-     * }
-     */
-    public static MemorySegment CyclicStructA_get_b(SegmentAllocator allocator) {
-        var mh$ = CyclicStructA_get_b.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("CyclicStructA_get_b", allocator);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class CyclicStructB_get_a {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            CyclicStructA.layout()    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("CyclicStructB_get_a");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * CyclicStructA CyclicStructB_get_a()
-     * }
-     */
-    public static FunctionDescriptor CyclicStructB_get_a$descriptor() {
-        return CyclicStructB_get_a.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * CyclicStructA CyclicStructB_get_a()
-     * }
-     */
-    public static MethodHandle CyclicStructB_get_a$handle() {
-        return CyclicStructB_get_a.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * CyclicStructA CyclicStructB_get_a()
-     * }
-     */
-    public static MemorySegment CyclicStructB_get_a$address() {
-        return CyclicStructB_get_a.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * CyclicStructA CyclicStructB_get_a()
-     * }
-     */
-    public static MemorySegment CyclicStructB_get_a(SegmentAllocator allocator) {
-        var mh$ = CyclicStructB_get_a.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("CyclicStructB_get_a", allocator);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13822,15 +14281,13 @@ public class somelib_h {
         }
     }
 
-    private static class BorrowedFields_from_bar_and_strings {
+    private static class MyEnum_into_value {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            BorrowedFields.layout(),
-            somelib_h.C_POINTER,
-            DiplomatString16View.layout(),
-            DiplomatStringView.layout()
+            somelib_h.C_CHAR,
+            somelib_h.C_INT
         );
 
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("BorrowedFields_from_bar_and_strings");
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyEnum_into_value");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13838,113 +14295,55 @@ public class somelib_h {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * int8_t MyEnum_into_value(MyEnum self)
      * }
      */
-    public static FunctionDescriptor BorrowedFields_from_bar_and_strings$descriptor() {
-        return BorrowedFields_from_bar_and_strings.DESC;
+    public static FunctionDescriptor MyEnum_into_value$descriptor() {
+        return MyEnum_into_value.DESC;
     }
 
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * int8_t MyEnum_into_value(MyEnum self)
      * }
      */
-    public static MethodHandle BorrowedFields_from_bar_and_strings$handle() {
-        return BorrowedFields_from_bar_and_strings.HANDLE;
+    public static MethodHandle MyEnum_into_value$handle() {
+        return MyEnum_into_value.HANDLE;
     }
 
     /**
      * Address for:
      * {@snippet lang=c :
-     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * int8_t MyEnum_into_value(MyEnum self)
      * }
      */
-    public static MemorySegment BorrowedFields_from_bar_and_strings$address() {
-        return BorrowedFields_from_bar_and_strings.ADDR;
+    public static MemorySegment MyEnum_into_value$address() {
+        return MyEnum_into_value.ADDR;
     }
 
     /**
      * {@snippet lang=c :
-     * BorrowedFields BorrowedFields_from_bar_and_strings(const Bar *bar, DiplomatString16View dstr16, DiplomatStringView utf8_str)
+     * int8_t MyEnum_into_value(MyEnum self)
      * }
      */
-    public static MemorySegment BorrowedFields_from_bar_and_strings(SegmentAllocator allocator, MemorySegment bar, MemorySegment dstr16, MemorySegment utf8_str) {
-        var mh$ = BorrowedFields_from_bar_and_strings.HANDLE;
+    public static byte MyEnum_into_value(int self) {
+        var mh$ = MyEnum_into_value.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("BorrowedFields_from_bar_and_strings", allocator, bar, dstr16, utf8_str);
+                traceDowncall("MyEnum_into_value", self);
             }
-            return (MemorySegment)mh$.invokeExact(allocator, bar, dstr16, utf8_str);
+            return (byte)mh$.invokeExact(self);
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
     }
 
-    private static class Opaque_new {
+    private static class MyEnum_get_a {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER    );
+            somelib_h.C_INT    );
 
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_new");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * Opaque *Opaque_new()
-     * }
-     */
-    public static FunctionDescriptor Opaque_new$descriptor() {
-        return Opaque_new.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * Opaque *Opaque_new()
-     * }
-     */
-    public static MethodHandle Opaque_new$handle() {
-        return Opaque_new.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * Opaque *Opaque_new()
-     * }
-     */
-    public static MemorySegment Opaque_new$address() {
-        return Opaque_new.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * Opaque *Opaque_new()
-     * }
-     */
-    public static MemorySegment Opaque_new() {
-        var mh$ = Opaque_new.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_new");
-            }
-            return (MemorySegment)mh$.invokeExact();
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_from_str {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_from_str");
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyEnum_get_a");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13952,444 +14351,45 @@ public class somelib_h {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * MyEnum MyEnum_get_a()
      * }
      */
-    public static FunctionDescriptor Opaque_from_str$descriptor() {
-        return Opaque_from_str.DESC;
+    public static FunctionDescriptor MyEnum_get_a$descriptor() {
+        return MyEnum_get_a.DESC;
     }
 
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * MyEnum MyEnum_get_a()
      * }
      */
-    public static MethodHandle Opaque_from_str$handle() {
-        return Opaque_from_str.HANDLE;
+    public static MethodHandle MyEnum_get_a$handle() {
+        return MyEnum_get_a.HANDLE;
     }
 
     /**
      * Address for:
      * {@snippet lang=c :
-     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * MyEnum MyEnum_get_a()
      * }
      */
-    public static MemorySegment Opaque_from_str$address() {
-        return Opaque_from_str.ADDR;
+    public static MemorySegment MyEnum_get_a$address() {
+        return MyEnum_get_a.ADDR;
     }
 
     /**
      * {@snippet lang=c :
-     * Opaque *Opaque_from_str(DiplomatStringView input)
+     * MyEnum MyEnum_get_a()
      * }
      */
-    public static MemorySegment Opaque_from_str(MemorySegment input) {
-        var mh$ = Opaque_from_str.HANDLE;
+    public static int MyEnum_get_a() {
+        var mh$ = MyEnum_get_a.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_from_str", input);
+                traceDowncall("MyEnum_get_a");
             }
-            return (MemorySegment)mh$.invokeExact(input);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_get_debug_str {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_get_debug_str");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
-     * }
-     */
-    public static FunctionDescriptor Opaque_get_debug_str$descriptor() {
-        return Opaque_get_debug_str.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
-     * }
-     */
-    public static MethodHandle Opaque_get_debug_str$handle() {
-        return Opaque_get_debug_str.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
-     * }
-     */
-    public static MemorySegment Opaque_get_debug_str$address() {
-        return Opaque_get_debug_str.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void Opaque_get_debug_str(const Opaque *self, DiplomatWrite *write)
-     * }
-     */
-    public static void Opaque_get_debug_str(MemorySegment self, MemorySegment write) {
-        var mh$ = Opaque_get_debug_str.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_get_debug_str", self, write);
-            }
-            mh$.invokeExact(self, write);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_assert_struct {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER,
-            MyStruct.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_assert_struct");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
-     * }
-     */
-    public static FunctionDescriptor Opaque_assert_struct$descriptor() {
-        return Opaque_assert_struct.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
-     * }
-     */
-    public static MethodHandle Opaque_assert_struct$handle() {
-        return Opaque_assert_struct.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
-     * }
-     */
-    public static MemorySegment Opaque_assert_struct$address() {
-        return Opaque_assert_struct.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void Opaque_assert_struct(const Opaque *self, MyStruct s)
-     * }
-     */
-    public static void Opaque_assert_struct(MemorySegment self, MemorySegment s) {
-        var mh$ = Opaque_assert_struct.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_assert_struct", self, s);
-            }
-            mh$.invokeExact(self, s);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_returns_usize {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_LONG    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_returns_usize");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * size_t Opaque_returns_usize()
-     * }
-     */
-    public static FunctionDescriptor Opaque_returns_usize$descriptor() {
-        return Opaque_returns_usize.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * size_t Opaque_returns_usize()
-     * }
-     */
-    public static MethodHandle Opaque_returns_usize$handle() {
-        return Opaque_returns_usize.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * size_t Opaque_returns_usize()
-     * }
-     */
-    public static MemorySegment Opaque_returns_usize$address() {
-        return Opaque_returns_usize.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * size_t Opaque_returns_usize()
-     * }
-     */
-    public static long Opaque_returns_usize() {
-        var mh$ = Opaque_returns_usize.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_returns_usize");
-            }
-            return (long)mh$.invokeExact();
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_internal_len {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_LONG,
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_internal_len");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * size_t Opaque_internal_len(const Opaque *self)
-     * }
-     */
-    public static FunctionDescriptor Opaque_internal_len$descriptor() {
-        return Opaque_internal_len.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * size_t Opaque_internal_len(const Opaque *self)
-     * }
-     */
-    public static MethodHandle Opaque_internal_len$handle() {
-        return Opaque_internal_len.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * size_t Opaque_internal_len(const Opaque *self)
-     * }
-     */
-    public static MemorySegment Opaque_internal_len$address() {
-        return Opaque_internal_len.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * size_t Opaque_internal_len(const Opaque *self)
-     * }
-     */
-    public static long Opaque_internal_len(MemorySegment self) {
-        var mh$ = Opaque_internal_len.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_internal_len", self);
-            }
-            return (long)mh$.invokeExact(self);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_returns_imported {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            ImportedStruct.layout()    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_returns_imported");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * ImportedStruct Opaque_returns_imported()
-     * }
-     */
-    public static FunctionDescriptor Opaque_returns_imported$descriptor() {
-        return Opaque_returns_imported.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * ImportedStruct Opaque_returns_imported()
-     * }
-     */
-    public static MethodHandle Opaque_returns_imported$handle() {
-        return Opaque_returns_imported.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * ImportedStruct Opaque_returns_imported()
-     * }
-     */
-    public static MemorySegment Opaque_returns_imported$address() {
-        return Opaque_returns_imported.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * ImportedStruct Opaque_returns_imported()
-     * }
-     */
-    public static MemorySegment Opaque_returns_imported(SegmentAllocator allocator) {
-        var mh$ = Opaque_returns_imported.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_returns_imported", allocator);
-            }
-            return (MemorySegment)mh$.invokeExact(allocator);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_cmp {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_CHAR    );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_cmp");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * int8_t Opaque_cmp()
-     * }
-     */
-    public static FunctionDescriptor Opaque_cmp$descriptor() {
-        return Opaque_cmp.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * int8_t Opaque_cmp()
-     * }
-     */
-    public static MethodHandle Opaque_cmp$handle() {
-        return Opaque_cmp.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * int8_t Opaque_cmp()
-     * }
-     */
-    public static MemorySegment Opaque_cmp$address() {
-        return Opaque_cmp.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * int8_t Opaque_cmp()
-     * }
-     */
-    public static byte Opaque_cmp() {
-        var mh$ = Opaque_cmp.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_cmp");
-            }
-            return (byte)mh$.invokeExact();
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Opaque_destroy {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            somelib_h.C_POINTER
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Opaque_destroy");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * void Opaque_destroy(Opaque *self)
-     * }
-     */
-    public static FunctionDescriptor Opaque_destroy$descriptor() {
-        return Opaque_destroy.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * void Opaque_destroy(Opaque *self)
-     * }
-     */
-    public static MethodHandle Opaque_destroy$handle() {
-        return Opaque_destroy.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * void Opaque_destroy(Opaque *self)
-     * }
-     */
-    public static MemorySegment Opaque_destroy$address() {
-        return Opaque_destroy.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * void Opaque_destroy(Opaque *self)
-     * }
-     */
-    public static void Opaque_destroy(MemorySegment self) {
-        var mh$ = Opaque_destroy.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Opaque_destroy", self);
-            }
-            mh$.invokeExact(self);
+            return (int)mh$.invokeExact();
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15491,13 +15491,13 @@ public class somelib_h {
     }
     /**
      * {@snippet lang=c :
-     * #define __ASSERT_FILE_NAME "jextract$11772684471921758602.h"
+     * #define __ASSERT_FILE_NAME "jextract$14714335586850159878.h"
      * }
      */
     public static MemorySegment __ASSERT_FILE_NAME() {
         class Holder {
             static final MemorySegment __ASSERT_FILE_NAME
-                = somelib_h.LIBRARY_ARENA.allocateFrom("jextract$11772684471921758602.h");
+                = somelib_h.LIBRARY_ARENA.allocateFrom("jextract$14714335586850159878.h");
         }
         return Holder.__ASSERT_FILE_NAME;
     }
