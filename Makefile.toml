@@ -71,7 +71,7 @@ dependencies = [
 [tasks.test-java]
 category = "Tests"
 dependencies = [
-    "test-kotlin-feature",
+    "test-java-feature",
 ]
 
 [tasks.test-example]
