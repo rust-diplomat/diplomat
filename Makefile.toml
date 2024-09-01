@@ -378,11 +378,18 @@ dependencies = [
     "gen-dart-feature",
     "gen-dart-example",
 ]
+
 [tasks.gen-kotlin]
 category = "Code generation"
 dependencies = [
     "gen-kotlin-feature",
     "gen-kotlin-example",
+]
+
+[tasks.gen-java]
+category = "Code generation"
+dependencies = [
+    "gen-java-feature",
 ]
 
 

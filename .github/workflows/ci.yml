@@ -234,4 +234,4 @@ jobs:
     - name: Add jextract to path
       run: echo "/opt/jextract-22/bin" >> $GITHUB_PATH
     - name: Run generated java
-      run: cargo make gen-java-feature
+      run: cargo make gen-java
