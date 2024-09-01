@@ -232,7 +232,7 @@ jobs:
     - name: config jextract
       run: tar -xzf /opt/jextract.tgz -C /opt/
     - name: Add jextract to path
-      run: echo "PATH=\$PATH:/opt/jextract-22/bin" >> ~/.bashrc
+      run: echo "export PATH=\$PATH:/opt/jextract-22/bin" >> ~/.bashrc
     - name: cat bash profile
       run: cat ~/.bashrc
     # - name: Test PATH
