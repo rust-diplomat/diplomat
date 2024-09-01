@@ -233,9 +233,5 @@ jobs:
       run: tar -xzf /opt/jextract.tgz -C /opt/
     - name: Add jextract to path
       run: echo "/opt/jextract-22/bin" >> $GITHUB_PATH
-    - name: Test PATH var
-      run: echo $PATH
-    - name: Test GITHUB_PATH var
-      run: cat $GITHUB_PATH
-    - name: jextract help
-      run: jextract --help
+    - name: Run generated java
+      run: cargo make gen-java-feature
