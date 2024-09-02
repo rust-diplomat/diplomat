@@ -14,6 +14,7 @@ use formatter::JSFormatter;
 
 mod gen;
 use gen::{MethodsInfo, TyGenContext};
+mod converter;
 
 mod layout;
 
