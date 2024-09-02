@@ -65,7 +65,7 @@ export function enumDiscriminant(wasm, ptr) {
  */
 export function maybePaddingFields(needsPaddingFields, paddingCount) {
     if (needsPaddingFields) {
-        return Array(paddingCount).fill(0);;
+        return Array(paddingCount).fill(0);
     } else {
         return [];
     }
@@ -79,6 +79,63 @@ export function maybePaddingFields(needsPaddingFields, paddingCount) {
 export function writeToArrayBuffer(arrayBuffer, offset, value, typedArrayKind) {
     let buffer = new typedArrayKind(arrayBuffer, offset);
     buffer[0] = value;
+}
+
+/**
+* Take `jsValue` and write it to arrayBuffer at offset `offset` if it is non-null
+* calling `writeToArrayBufferCallback(arrayBuffer, offset, jsValue)` to write to the buffer,
+* also writing a tag bit.
+* 
+* `size` and `align` are the size and alignment of T, not of Option<T>
+*/
+export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, writeToArrayBufferCallback, size, align) {
+    // perform a nullish check, not a null check,
+    // we want identical behavior for undefined
+    if (jsValue != null) {
+        writeToArrayBufferCallback(arrayBuffer, offset, jsValue);
+        writeToArrayBuffer(arrayBuffer, offset + size, 1, Uint8Array);
+    }
+}
+
+/**
+* For Option<T> of given size/align (of T, not the overall option type),
+* return an array of fields suitable for passing down to a parameter list.
+* 
+* Calls writeToArrayBufferCallback(arrayBuffer, jsValue) for non-null jsValues
+* 
+* This array will have size<T>/align<T> elements for the actual T, then one element
+* for the is_ok bool, and then align<T> - 1 elements for padding if `needsPaddingFields`` is set.
+* 
+* See wasm_abi_quirks.md's section on Unions for understanding this ABI.
+*/
+export function optionToArgsForCalling(jsValue, writeToArrayBufferCallback, size, align, needsPaddingFields) {
+    let args;
+    // perform a nullish check, not a null check,
+    // we want identical behavior for undefined
+    if (jsValue != null) {
+        let buffer;
+        // We need our originator array to be properly aligned
+        if (align == 8) {
+            buffer = new BigUint64Array(size / align);
+        } else if (align == 4) {
+            buffer = new Uint32Array(size / align);
+        } else if (align == 2) {
+            buffer = new Uint16Array(size / align);
+        } else {
+            buffer = new Uint8Array(size / align);
+        }
+
+
+        writeToArrayBufferCallback(buffer.buffer, jsValue);
+        args = Array.from(buffer);
+        args.push(1);
+    } else {
+        args = Array(size / align).fill(0);
+        args.push(0);
+    }
+
+    args = args.concat(maybePaddingFields(needsPaddingFields, size / align));
+    return args;
 }
 
 
