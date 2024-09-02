@@ -99,7 +99,13 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
         let padding = (max_align - (next_offset % max_align)) % max_align;
         fields[fields_len - 1].padding_count = padding / prev_align;
         fields[fields_len - 1].padding_field_width = prev_align;
+        next_offset += padding;
     }
+
+    debug_assert!(
+        next_offset % max_align == 0,
+        "Size {next_offset} must be a multiple of alignment {max_align}"
+    );
 
     StructFieldsInfo {
         fields,
