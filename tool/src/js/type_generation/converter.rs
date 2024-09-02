@@ -122,6 +122,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
+            Type::DiplomatOption(ref inner) => {
+                let inner = self.gen_js_type_str(inner);
+                // This is suboptimal for struct fields; we should instead be using optional fields,
+                // but that requires further context.
+                self.formatter.fmt_nullable(&inner).into()
+            }
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
