@@ -98,6 +98,22 @@ export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, writeToAr
 }
 
 /**
+* Given `ptr` in Wasm memory, treat it as an Option<T> with size for type T,
+* and return the converted T (converted using `readCallback(wasm, ptr)`) if the Option is Some
+* else None.
+*/
+export function readOption(wasm, ptr, size, readCallback) {
+    // Don't need the alignment: diplomat types don't have overridden alignment,
+    // so the flag will immediately be after the inner struct.
+    let flag = resultFlag(wasm, ptr, size);
+    if (flag) {
+        return readCallback(wasm, ptr);
+    } else {
+        return null;
+    }
+}
+
+/**
 * For Option<T> of given size/align (of T, not the overall option type),
 * return an array of fields suitable for passing down to a parameter list.
 * 
