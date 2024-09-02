@@ -88,7 +88,7 @@ export function writeToArrayBuffer(arrayBuffer, offset, value, typedArrayKind) {
 * 
 * `size` and `align` are the size and alignment of T, not of Option<T>
 */
-export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, writeToArrayBufferCallback, size, align) {
+export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, size, align, writeToArrayBufferCallback) {
     // perform a nullish check, not a null check,
     // we want identical behavior for undefined
     if (jsValue != null) {
@@ -98,33 +98,17 @@ export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, writeToAr
 }
 
 /**
-* Given `ptr` in Wasm memory, treat it as an Option<T> with size for type T,
-* and return the converted T (converted using `readCallback(wasm, ptr)`) if the Option is Some
-* else None.
-*/
-export function readOption(wasm, ptr, size, readCallback) {
-    // Don't need the alignment: diplomat types don't have overridden alignment,
-    // so the flag will immediately be after the inner struct.
-    let flag = resultFlag(wasm, ptr, size);
-    if (flag) {
-        return readCallback(wasm, ptr);
-    } else {
-        return null;
-    }
-}
-
-/**
 * For Option<T> of given size/align (of T, not the overall option type),
 * return an array of fields suitable for passing down to a parameter list.
 * 
-* Calls writeToArrayBufferCallback(arrayBuffer, jsValue) for non-null jsValues
+* Calls writeToArrayBufferCallback(arrayBuffer, offset, jsValue) for non-null jsValues
 * 
 * This array will have size<T>/align<T> elements for the actual T, then one element
 * for the is_ok bool, and then align<T> - 1 elements for padding if `needsPaddingFields`` is set.
 * 
 * See wasm_abi_quirks.md's section on Unions for understanding this ABI.
 */
-export function optionToArgsForCalling(jsValue, writeToArrayBufferCallback, size, align, needsPaddingFields) {
+export function optionToArgsForCalling(jsValue, size, align, needsPaddingFields, writeToArrayBufferCallback) {
     let args;
     // perform a nullish check, not a null check,
     // we want identical behavior for undefined
@@ -142,7 +126,7 @@ export function optionToArgsForCalling(jsValue, writeToArrayBufferCallback, size
         }
 
 
-        writeToArrayBufferCallback(buffer.buffer, jsValue);
+        writeToArrayBufferCallback(buffer.buffer, 0, jsValue);
         args = Array.from(buffer);
         args.push(1);
     } else {
@@ -154,6 +138,22 @@ export function optionToArgsForCalling(jsValue, writeToArrayBufferCallback, size
     return args;
 }
 
+
+/**
+* Given `ptr` in Wasm memory, treat it as an Option<T> with size for type T,
+* and return the converted T (converted using `readCallback(wasm, ptr)`) if the Option is Some
+* else None.
+*/
+export function readOption(wasm, ptr, size, readCallback) {
+    // Don't need the alignment: diplomat types don't have overridden alignment,
+    // so the flag will immediately be after the inner struct.
+    let flag = resultFlag(wasm, ptr, size);
+    if (flag) {
+        return readCallback(wasm, ptr);
+    } else {
+        return null;
+    }
+}
 
 /** 
  * A wrapper around a slice of WASM memory that can be freed manually or

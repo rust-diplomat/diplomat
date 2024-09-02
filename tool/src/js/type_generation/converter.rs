@@ -183,6 +183,13 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
             }
+            Type::DiplomatOption(ref inner) => {
+                let inner_deref = self.gen_c_to_js_deref_for_type(inner, "offset".into(), 0);
+                let inner_conversion =
+                    self.gen_c_to_js_for_type(inner, "deref".into(), lifetime_environment);
+                let size = crate::js::layout::type_size_alignment(inner, self.tcx).size();
+                format!("diplomatRuntime.readOption(wasm, {variable_name}, {size}, (wasm, offset) => {{ const deref = {inner_deref}; return {inner_conversion} }})").into()
+            }
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
@@ -294,7 +301,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {pointer})").into(),
             // Structs always assume they're being passed a pointer, so they handle this in their constructors:
             // See NestedBorrowedFields
-            Type::Struct(..) | Type::Slice(..) => pointer,
+            Type::Struct(..) | Type::Slice(..) | Type::DiplomatOption(..) => pointer,
             Type::Primitive(p) => format!(
                 "(new {ctor}(wasm.memory.buffer, {pointer}, 1))[0]{cmp}",
                 ctor = self.formatter.fmt_primitive_slice(p),
@@ -612,6 +619,36 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 alloc.unwrap(),
                 gen_context,
             ),
+            Type::DiplomatOption(ref inner) => {
+                let layout = crate::js::layout::type_size_alignment(&inner, self.tcx);
+                let size = layout.size();
+                let align = layout.align();
+                let inner_conversion = self.gen_js_to_c_for_type(
+                    inner,
+                    "jsValue".into(),
+                    struct_borrow_info,
+                    alloc,
+                    // Option conversion helpers *always* need WriteToBuffer
+                    JsToCConversionContext::WriteToBuffer("offset", 0),
+                );
+                match gen_context {
+                    JsToCConversionContext::SlicePrealloc => {
+                        unreachable!("Used SlicePrealloc context for an Option type!");
+                    }
+                    JsToCConversionContext::List(force_padding) => {
+                        let needs_padding = match force_padding {
+                            ForcePaddingStatus::NoForce => "false",
+                            ForcePaddingStatus::Force => "true",
+                            ForcePaddingStatus::PassThrough => "forcePadding",
+                        };
+                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, {needs_padding}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+
+                    }
+                    JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
+                        format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()
+                    }
+                }
+            }
             Type::Slice(slice) => {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
