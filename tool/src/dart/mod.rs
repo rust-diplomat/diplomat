@@ -1366,11 +1366,14 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         // Slice parameters make an arena which is retained as an edge
         LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
-        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fieldsForLifetime{}",
-            def_env.fmt_lifetime(def_lt).to_uppercase(),
-        )
-        .into(),
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => {
+            let lt = def_env.fmt_lifetime(def_lt).to_uppercase();
+            if is_option {
+                format!("...?{param_name}?._fieldsForLifetime{lt}").into()
+            } else {
+                format!("...{param_name}._fieldsForLifetime{lt}").into()
+            }
+        }
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

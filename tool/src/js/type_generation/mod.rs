@@ -201,7 +201,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let maybe_struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+            let maybe_struct_borrow_info = if let hir::Type::Struct(ref path) = field.ty.unwrap_option() {
                 StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
                     |param_info| StructBorrowContext {
                         use_env: &struct_def.lifetimes,
@@ -416,7 +416,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     slice_expr: slice_expr.to_string(),
                 });
             } else {
-                let alloc = if let hir::Type::Struct(..) = param.ty {
+                let alloc = if let hir::Type::Struct(..) = param.ty.unwrap_option() {
                     method_info.needs_slice_cleanup = true;
                     Some("functionCleanupArena")
                 } else {
@@ -605,11 +605,15 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         // Slice parameters are constructed from diplomatRuntime.mjs:
         LifetimeEdgeKind::SliceParam => format!("{param_name}Slice").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
-        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fieldsForLifetime{}",
-            def_env.fmt_lifetime(def_lt).to_uppercase(),
-        )
-        .into(),
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => {
+            let lt = def_env.fmt_lifetime(def_lt).to_uppercase();
+            if is_option {
+                format!("...({param_name}?._fieldsForLifetime{lt} || [])").into()
+            } else {
+                format!("...{param_name}._fieldsForLifetime{lt}").into()
+            }
+        }
+
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

@@ -120,7 +120,11 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match ty {
             LifetimeEdgeKind::OpaqueParam => format!("listOf({param_name})").into(),
             LifetimeEdgeKind::SliceParam => format!("listOf({param_name}Mem)").into(),
-            LifetimeEdgeKind::StructLifetime(lt_env, lt) => {
+            LifetimeEdgeKind::StructLifetime(lt_env, lt, is_option) => {
+                assert!(
+                    !is_option,
+                    "Kotlin backend doesn't support Option<T> for struct/enum/primitive T"
+                );
                 let lt = lt_env.fmt_lifetime(lt);
                 format!("{param_name}.{lt}Edges").into()
             }

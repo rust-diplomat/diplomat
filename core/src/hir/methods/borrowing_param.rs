@@ -115,10 +115,12 @@ pub enum LifetimeEdgeKind<'tcx> {
     /// A slice being converted and then borrowed. These often need to be handled differently
     /// when they are borrowed as the borrow will need to create an edge
     SliceParam,
-    /// A lifetime parameter of a struct, given the lifetime context and the struct-def lifetime for that struct
+    /// A lifetime parameter of a struct, given the lifetime context and the struct-def lifetime for that struct.
+    ///
+    /// The boolean is whether or not the struct is optional.
     ///
     /// Using this, you can generate code that "asks" the struct for the lifetime-relevant field edges
-    StructLifetime(&'tcx LifetimeEnv, Lifetime),
+    StructLifetime(&'tcx LifetimeEnv, Lifetime, bool),
 }
 
 #[non_exhaustive]
@@ -189,7 +191,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
         // Structs have special handling: structs are purely Dart-side, so if you borrow
         // from a struct, you really are borrowing from the internal fields.
-        if let hir::Type::Struct(s) = ty {
+        if let hir::Type::Struct(s) = ty.unwrap_option() {
             let mut borrowed_struct_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
             let link = s.link_lifetimes(self.tcx);
             for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {
@@ -209,7 +211,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
                             let edge = LifetimeEdge {
                                 param_name: param_name.into(),
-                                kind: LifetimeEdgeKind::StructLifetime(link.def_env(), def_lt),
+                                kind: LifetimeEdgeKind::StructLifetime(
+                                    link.def_env(),
+                                    def_lt,
+                                    ty.is_option(),
+                                ),
                             };
                             method_lifetime_info.incoming_edges.push(edge);
 

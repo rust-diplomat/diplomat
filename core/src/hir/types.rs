@@ -140,6 +140,19 @@ impl<P: TyPosition> Type<P> {
             _ => return None,
         })
     }
+
+    /// Unwrap to the inner type if `self` is `DiplomatOption`
+    pub fn unwrap_option(&self) -> &Type<P> {
+        match self {
+            Self::DiplomatOption(ref o) => &o,
+            _ => &self,
+        }
+    }
+
+    /// Whether this type is a `DiplomatOption`
+    pub fn is_option(&self) -> bool {
+        matches!(self, Self::DiplomatOption(..))
+    }
 }
 
 impl SelfType {
