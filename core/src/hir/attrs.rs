@@ -54,11 +54,17 @@ pub struct Attrs {
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct DemoInputCFG {
-    /// `#[diplomat(input(label = "..."))]`
+    /// `#[diplomat::demo(input(label = "..."))]`
     /// Label that this input parameter should have. Let demo_gen pick a valid name if this is empty.
     ///
     /// For instance <label for="v">Number Here</label><input name="v"/>
     pub label: String,
+
+    /// `#[diplomat::demo(input(default_value = "..."))]`
+    /// Sets the default value for a parameter.
+    /// 
+    /// Should ALWAYS be a string. The HTML renderer is expected to do validation for us.
+    pub default_value : String,
 }
 
 #[non_exhaustive]
@@ -371,6 +377,11 @@ impl Attrs {
                                 let value = meta.value()?;
                                 let s: syn::LitStr = value.parse()?;
                                 this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else if meta.path.is_ident("default_value") {
+                                let value = meta.value()?;
+                                let s : syn::LitStr = value.parse()?;
+                                this.demo_attrs.input_cfg.default_value = s.value();
                                 Ok(())
                             } else {
                                 Err(meta.error(format!(

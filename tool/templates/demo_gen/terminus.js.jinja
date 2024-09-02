@@ -1,6 +1,6 @@
 export function {{function_name}}(
     {%- if typescript %}{%- for param in out_params -%}
-    {{param.js}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
+    {{param.label}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
     {%- endfor -%}{% endif -%}
 ){% if typescript %};{% else %} {
     var terminusArgs = arguments;

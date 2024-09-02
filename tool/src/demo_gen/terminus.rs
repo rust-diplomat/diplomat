@@ -10,10 +10,13 @@ use askama::{self, Template};
 
 #[derive(Clone)]
 pub struct ParamInfo {
-    /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
+    /// The javascript that represents this parameter.
     pub js: String,
-    /// The label to give this parameter. Used only in the `RenderInfo` out object. Can be blank if not intended to be used there.
+}
+
+pub struct OutParam {
     pub label: String,
+    pub default_value : String,
     /// For typescript and RenderInfo output. Type that this parameter is.
     pub type_name: String,
 }
@@ -112,7 +115,7 @@ pub(super) struct TerminusInfo {
     /// b. Are too complicated for us to automagically setup ourselves. These are opaque types tagged with `#[diplomat::demo(external)]`.
     /// The current use case is for say, a singleton or single source of data that must not be repeated. But I'm sure there are other instances
     /// where you don't want us to guess how to construct an opaque, and wish to do it yourself.
-    pub out_params: Vec<ParamInfo>,
+    pub out_params: Vec<OutParam>,
 
     /// The type name of the type that this function belongs to.
     pub type_name: String,
@@ -178,29 +181,29 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         attrs: Option<DemoInfo>,
     ) {
+        let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
-        let label = attrs
-            .and_then(|attrs| {
-                let label = attrs.input_cfg.label;
-
-                if label.is_empty() {
-                    None
-                } else {
-                    Some(label)
-                }
-            })
-            .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
-
-        let mut param_info = ParamInfo {
-            js: param_name,
-            label,
-            type_name,
+        let label = if attrs_default.input_cfg.label.is_empty() {
+            heck::AsUpperCamelCase(param_name.clone()).to_string()
+        } else {
+            attrs_default.input_cfg.label
         };
 
-        self.terminus_info.out_params.push(param_info.clone());
+        let default_value = attrs_default.input_cfg.default_value;
 
-        // Grab arguments without having to name them
-        param_info.js = format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1);
+        let out_param = OutParam {
+            label,
+            type_name: type_name.clone(),
+            default_value
+        };
+
+        self.terminus_info.out_params.push(out_param);
+
+        let param_info = ParamInfo {
+            // Grab arguments without having to name them
+            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1)
+        };
+
         node.params.push(param_info);
     }
 
@@ -356,9 +359,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
                 let call = self.evaluate_constructor(method, &mut child);
                 node.params.push(ParamInfo {
-                    js: call,
-                    label: "".into(),
-                    type_name: String::default(),
+                    js: call
                 });
                 break;
             }
@@ -380,9 +381,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     /*Could not find a usable constructor for {}. \
                     Try adding #[diplomat::demo(default_constructor)]*/",
                     op.name.as_str()
-                ),
-                label: String::default(),
-                type_name: String::default(),
+                )
             });
         }
     }
@@ -426,9 +425,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         .unwrap();
 
         node.params.push(ParamInfo {
-            type_name: type_name.to_string(),
             js: child.render().unwrap(),
-            label: "".into(),
         });
     }
 
