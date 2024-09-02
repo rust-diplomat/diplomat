@@ -626,7 +626,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 gen_context,
             ),
             Type::DiplomatOption(ref inner) => {
-                let layout = crate::js::layout::type_size_alignment(&inner, self.tcx);
+                let layout = crate::js::layout::type_size_alignment(inner, self.tcx);
                 let size = layout.size();
                 let align = layout.align();
                 let inner_conversion = self.gen_js_to_c_for_type(

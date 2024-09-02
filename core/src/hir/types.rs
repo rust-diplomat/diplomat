@@ -144,8 +144,8 @@ impl<P: TyPosition> Type<P> {
     /// Unwrap to the inner type if `self` is `DiplomatOption`
     pub fn unwrap_option(&self) -> &Type<P> {
         match self {
-            Self::DiplomatOption(ref o) => &o,
-            _ => &self,
+            Self::DiplomatOption(ref o) => o,
+            _ => self,
         }
     }
 
