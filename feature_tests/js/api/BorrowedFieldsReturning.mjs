@@ -33,6 +33,15 @@ export class BorrowedFieldsReturning {
         return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+    }
+
     #fromFFI(ptr, aEdges) {
         const bytesDeref = ptr;
         this.#bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);

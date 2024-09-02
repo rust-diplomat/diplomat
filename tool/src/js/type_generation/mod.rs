@@ -201,7 +201,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 None
             };
 
-            let maybe_struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+            let maybe_struct_borrow_info = if let hir::Type::Struct(ref path) = field.ty.unwrap_option() {
                 StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
                     |param_info| StructBorrowContext {
                         use_env: &struct_def.lifetimes,
@@ -263,8 +263,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             } else {
                 "".into()
             };
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), force_padding, JsToCConversionContext::List);
+            let js_name = format!("this.#{}", field_name);
+            let js_to_c = self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding));
             let js_to_c = format!("{js_to_c}{maybe_padding_after}");
+            let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 
             FieldInfo {
                 field_name,
@@ -273,6 +275,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 c_to_js_deref,
                 c_to_js,
                 js_to_c,
+                js_to_c_write,
                 maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
             }
         }).collect::<Vec<_>>();
@@ -400,8 +403,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                             ),
                         }
                     ),
-                    // Arguments never force padding
-                    ForcePaddingStatus::NoForce,
                     // We're specifically doing slice preallocation here
                     JsToCConversionContext::SlicePrealloc
                     );
@@ -415,7 +416,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     slice_expr: slice_expr.to_string(),
                 });
             } else {
-                let alloc = if let hir::Type::Struct(..) = param.ty {
+                let alloc = if let hir::Type::Struct(..) = param.ty.unwrap_option() {
                     method_info.needs_slice_cleanup = true;
                     Some("functionCleanupArena")
                 } else {
@@ -439,10 +440,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
                         alloc,
-                        // Arguments never force padding
-                        ForcePaddingStatus::NoForce,
-                        // Arguments need a list
-                        JsToCConversionContext::List,
+                        // Arguments need a list, and never force padding
+                        JsToCConversionContext::List(ForcePaddingStatus::NoForce),
                     ));
             }
 
@@ -587,6 +586,8 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     /// Because all structs are created in WebAssembly as pointers, we need to be able to de-reference those pointers. This is an expression for taking a given pointer and returning JS.
     c_to_js_deref: Cow<'info, str>,
     js_to_c: String,
+    /// A version of js_to_c that writes the struct field to an arraybuffer `arrayBuffer` at offset `offset`
+    js_to_c_write: String,
     /// Used in `get _fieldsForLifetime...` fields, which themselves are used in [`display_lifetime_edge`].
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 }
@@ -604,11 +605,15 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         // Slice parameters are constructed from diplomatRuntime.mjs:
         LifetimeEdgeKind::SliceParam => format!("{param_name}Slice").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
-        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fieldsForLifetime{}",
-            def_env.fmt_lifetime(def_lt).to_uppercase(),
-        )
-        .into(),
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => {
+            let lt = def_env.fmt_lifetime(def_lt).to_uppercase();
+            if is_option {
+                format!("...({param_name}?._fieldsForLifetime{lt} || [])").into()
+            } else {
+                format!("...{param_name}._fieldsForLifetime{lt}").into()
+            }
+        }
+
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

@@ -46,6 +46,17 @@ export class ScalarPairWithPadding {
         return [this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#second]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap,
+        forcePadding
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#second, Uint32Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.

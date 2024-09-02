@@ -47,6 +47,18 @@ export class OptionStruct {
         return [this.#a.ffiValue ?? 0, this.#b.ffiValue ?? 0, this.#c, this.#d.ffiValue ?? 0]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a.ffiValue ?? 0, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#b.ffiValue ?? 0, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#c, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 12, this.#d.ffiValue ?? 0, Uint32Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.

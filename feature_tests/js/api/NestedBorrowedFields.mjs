@@ -57,6 +57,17 @@ export class NestedBorrowedFields {
         return [...this.#fields._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        this.#fields._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...xAppendArray],});
+        this.#bounds._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],});
+        this.#bounds2._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],});
+    }
+
     #fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
         this.#fields = new BorrowedFields(diplomatRuntime.internalConstructor, fieldsDeref, xEdges);

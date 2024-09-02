@@ -38,6 +38,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
         b: DiplomatOption<DiplomatChar>,

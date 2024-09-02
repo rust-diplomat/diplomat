@@ -12,6 +12,8 @@ export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
 
 export { NestedBorrowedFields } from "./NestedBorrowedFields"
 
+export { OptionInputStruct } from "./OptionInputStruct"
+
 export { ErrorStruct } from "./ErrorStruct"
 
 export { BigStructWithStuff } from "./BigStructWithStuff"
@@ -75,6 +77,8 @@ export { Utf16Wrap } from "./Utf16Wrap"
 export { RenamedAttrEnum } from "./RenamedAttrEnum"
 
 export { UnimportedEnum } from "./UnimportedEnum"
+
+export { OptionEnum } from "./OptionEnum"
 
 export { ErrorEnum } from "./ErrorEnum"
 

@@ -4,8 +4,9 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, LifetimeEnv, Method, OpaqueOwner, PrimitiveType,
-    ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    self, borrowing_param::StructBorrowInfo, IntType, LifetimeEnv, Method, OpaqueOwner,
+    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType,
+    TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -51,13 +52,18 @@ pub(super) struct StructBorrowContext<'tcx> {
     pub param_info: StructBorrowInfo<'tcx>,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub(super) enum JsToCConversionContext {
     /// We're passing the result of this directly to params, should produce a comma separated list of fields
     /// a single field, or a spread expression
-    List,
+    List(ForcePaddingStatus),
     /// Preallocating a slice CleanupArena
     /// Produces a DiplomatBuf (only for Slice types)
     SlicePrealloc,
+    /// Generate a write expression to an ArrayBuffer named `arrayBuffer` at a given offset
+    /// The string is an offset variable, the usize is an additional offset integer, this produces something like
+    /// `offset + numericOffset`
+    WriteToBuffer(&'static str, usize),
 }
 
 impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
@@ -116,6 +122,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
+            Type::DiplomatOption(ref inner) => {
+                let inner = self.gen_js_type_str(inner);
+                // This is suboptimal for struct fields; we should instead be using optional fields,
+                // but that requires further context.
+                self.formatter.fmt_nullable(&inner).into()
+            }
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
         }
     }
@@ -176,6 +188,13 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 } else {
                     format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
+            }
+            Type::DiplomatOption(ref inner) => {
+                let inner_deref = self.gen_c_to_js_deref_for_type(inner, "offset".into(), 0);
+                let inner_conversion =
+                    self.gen_c_to_js_for_type(inner, "deref".into(), lifetime_environment);
+                let size = crate::js::layout::type_size_alignment(inner, self.tcx).size();
+                format!("diplomatRuntime.readOption(wasm, {variable_name}, {size}, (wasm, offset) => {{ const deref = {inner_deref}; return {inner_conversion} }})").into()
             }
             Type::Struct(ref st) => {
                 let id = st.id();
@@ -288,7 +307,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {pointer})").into(),
             // Structs always assume they're being passed a pointer, so they handle this in their constructors:
             // See NestedBorrowedFields
-            Type::Struct(..) | Type::Slice(..) => pointer,
+            Type::Struct(..) | Type::Slice(..) | Type::DiplomatOption(..) => pointer,
             Type::Primitive(p) => format!(
                 "(new {ctor}(wasm.memory.buffer, {pointer}, 1))[0]{cmp}",
                 ctor = self.formatter.fmt_primitive_slice(p),
@@ -581,20 +600,61 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         alloc: Option<&str>,
-        // Whether to force padding
-        force_padding: ForcePaddingStatus,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
-            Type::Primitive(..) => js_name.clone(),
-            Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
-            Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
+            Type::Primitive(p) => self.maybe_wrap_in_write(js_name, gen_context, p),
+            Type::Opaque(ref op) if op.is_optional() => self.maybe_wrap_in_write(
+                format!("{js_name}.ffiValue ?? 0").into(),
+                gen_context,
+                PrimitiveType::Int(IntType::U32),
+            ),
+            Type::Opaque(..) => self.maybe_wrap_in_write(
+                format!("{js_name}.ffiValue").into(),
+                gen_context,
+                PrimitiveType::Int(IntType::U32),
+            ),
+            Type::Enum(..) => self.maybe_wrap_in_write(
+                format!("{js_name}.ffiValue").into(),
+                gen_context,
+                PrimitiveType::Int(IntType::I32),
+            ),
             Type::Struct(..) => self.gen_js_to_c_for_struct_type(
                 js_name,
                 struct_borrow_info,
                 alloc.unwrap(),
-                force_padding,
+                gen_context,
             ),
+            Type::DiplomatOption(ref inner) => {
+                let layout = crate::js::layout::type_size_alignment(inner, self.tcx);
+                let size = layout.size();
+                let align = layout.align();
+                let inner_conversion = self.gen_js_to_c_for_type(
+                    inner,
+                    "jsValue".into(),
+                    struct_borrow_info,
+                    alloc,
+                    // Option conversion helpers *always* need WriteToBuffer
+                    JsToCConversionContext::WriteToBuffer("offset", 0),
+                );
+                match gen_context {
+                    JsToCConversionContext::SlicePrealloc => {
+                        unreachable!("Used SlicePrealloc context for an Option type!");
+                    }
+                    JsToCConversionContext::List(force_padding) => {
+                        let needs_padding = match force_padding {
+                            ForcePaddingStatus::NoForce => "false",
+                            ForcePaddingStatus::Force => "true",
+                            ForcePaddingStatus::PassThrough => "forcePadding",
+                        };
+                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, {needs_padding}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+
+                    }
+                    JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
+                        format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()
+                    }
+                }
+            }
             Type::Slice(slice) => {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
@@ -603,12 +663,20 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         "Must provide some allocation anchor for slice conversion generation!",
                     );
 
-                    let (spread_pre, spread_post) =
-                        if let JsToCConversionContext::SlicePrealloc = gen_context {
-                            ("", "")
-                        } else {
-                            ("...", ".splat()")
-                        };
+                    let (spread_pre, spread_post) = match gen_context {
+                        // SlicePreAlloc just wants the DiplomatBufe
+                        JsToCConversionContext::SlicePrealloc => ("", Cow::Borrowed("")),
+                        // List mode wants a list of (ptr, len)
+                        JsToCConversionContext::List(_) => ("...", ".splat()".into()),
+                        // WriteToBuffer needs to write to buffer arrayBuffer
+                        JsToCConversionContext::WriteToBuffer(offset_var, offset) => (
+                            "",
+                            format!(
+                                ".writePtrLenToArrayBuffer(arrayBuffer, {offset_var} + {offset})"
+                            )
+                            .into(),
+                        ),
+                    };
 
                     match slice {
                         hir::Slice::Str(_, encoding) => match encoding {
@@ -646,7 +714,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         allocator: &str,
-        force_padding: ForcePaddingStatus,
+        gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
@@ -671,12 +739,43 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
-        let force_padding = match force_padding {
-            ForcePaddingStatus::NoForce => "",
-            ForcePaddingStatus::Force => ", true",
-            ForcePaddingStatus::PassThrough => ", forcePadding",
-        };
-        format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+        match gen_context {
+            JsToCConversionContext::List(force_padding) => {
+                let force_padding = match force_padding {
+                    ForcePaddingStatus::NoForce => "",
+                    ForcePaddingStatus::Force => ", true",
+                    ForcePaddingStatus::PassThrough => ", forcePadding",
+                };
+                format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+            }
+            JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
+                "{js_name}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
+            )
+            .into(),
+            JsToCConversionContext::SlicePrealloc => {
+                unreachable!("Structs should not be generated in SlicePrealloc mode")
+            }
+        }
+    }
+
+    /// For a *single-value* (numeric) js-to-c expression, wrap it in an expression to write it to arrayBuffer *if* the context
+    /// is JsToCConversionContext::WriteToBuffer
+    fn maybe_wrap_in_write(
+        &self,
+        js_to_c: Cow<'tcx, str>,
+        context: JsToCConversionContext,
+        width: PrimitiveType,
+    ) -> Cow<'tcx, str> {
+        match context {
+            JsToCConversionContext::List(..) => js_to_c,
+            JsToCConversionContext::SlicePrealloc => {
+                unreachable!("Don't call maybe_wrap_in_write with multi-value slice expressions!")
+            }
+            JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
+                let js_slice_type = self.formatter.fmt_primitive_slice(width);
+                format!("diplomatRuntime.writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_to_c}, {js_slice_type})").into()
+            }
+        }
     }
     // #endregion
 }

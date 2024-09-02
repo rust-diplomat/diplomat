@@ -44,6 +44,17 @@ export class FixedDecimalFormatterOptions {
         return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap,
+        forcePadding
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#groupingStrategy.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#someOtherConfig, Uint8Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
@@ -57,7 +68,7 @@ export class FixedDecimalFormatterOptions {
     }
 
     static default_() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     

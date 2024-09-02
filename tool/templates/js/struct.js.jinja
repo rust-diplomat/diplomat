@@ -81,6 +81,19 @@ export class {{type_name}} {
         ]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap{% if needs_force_padding %},
+        forcePadding
+        {%- endif %}
+    ) {
+        {%- for field in fields %}
+        {{field.js_to_c_write}};
+        {%- endfor %}
+    }
+
     {% if lifetimes.all_lifetimes().len() == 0 -%}
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
