@@ -223,7 +223,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
     ) {
-        let attrs = Some(param_attrs);
 
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
@@ -233,7 +232,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     param_name,
                     self.formatter.fmt_primitive_as_ffi(*p).to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Enum(e) => {
@@ -244,14 +243,14 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name, type_name, node, attrs);
+                self.append_out_param(param_name, type_name, node, Some(param_attrs));
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 self.append_out_param(
                     param_name,
                     self.formatter.fmt_string().to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Slice(hir::Slice::Primitive(_, p)) => {
@@ -259,11 +258,11 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     param_name,
                     self.formatter.fmt_primitive_list_type(*p).to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Slice(hir::Slice::Strs(..)) => {
-                self.append_out_param(param_name, "Array<string>".to_string(), node, attrs);
+                self.append_out_param(param_name, "Array<string>".to_string(), node, Some(param_attrs));
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -277,7 +276,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name, type_name.into(), node, attrs);
+                    self.append_out_param(param_name, type_name.into(), node, Some(param_attrs));
                     return;
                 }
 
@@ -293,7 +292,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 self.evaluate_struct_fields(st, type_name.to_string(), node);
-            }
+            },
+            Type::DiplomatOption(ref inner) => {
+                self.evaluate_param(&inner, param_name, node, param_attrs)
+            },
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
     }
