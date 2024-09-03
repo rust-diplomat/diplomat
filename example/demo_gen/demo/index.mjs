@@ -31,7 +31,8 @@ export const RenderInfo = {
                 
                 {
                     name: "ICU4XFixedDecimal Value",
-                    type: "number"
+                    type: "number",
+                    defaultValue: "1000"
                 }
                 
             ]
@@ -45,7 +46,8 @@ export const RenderInfo = {
                 
                 {
                     name: "ICU4XFixedDecimal Value",
-                    type: "number"
+                    type: "number",
+                    defaultValue: "1000"
                 }
                 
             ]

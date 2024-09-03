@@ -380,8 +380,21 @@ impl Attrs {
                                 Ok(())
                             } else if meta.path.is_ident("default_value") {
                                 let value = meta.value()?;
-                                let s: syn::LitStr = value.parse()?;
-                                this.demo_attrs.input_cfg.default_value = s.value();
+
+                                let str_val : String;
+
+                                let ahead = value.lookahead1();
+                                if ahead.peek(syn::LitFloat) {
+                                    let s : syn::LitFloat = value.parse()?;
+                                    str_val = s.base10_parse::<f64>()?.to_string();
+                                } else if ahead.peek(syn::LitInt) {
+                                    let s : syn::LitInt = value.parse()?;
+                                    str_val = s.base10_parse::<i64>()?.to_string();
+                                } else {
+                                    let s : syn::LitStr = value.parse()?;
+                                    str_val = s.value();
+                                }
+                                this.demo_attrs.input_cfg.default_value = str_val;
                                 Ok(())
                             } else {
                                 Err(meta.error(format!(
