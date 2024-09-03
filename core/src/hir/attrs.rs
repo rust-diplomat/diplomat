@@ -62,9 +62,9 @@ pub struct DemoInputCFG {
 
     /// `#[diplomat::demo(input(default_value = "..."))]`
     /// Sets the default value for a parameter.
-    /// 
+    ///
     /// Should ALWAYS be a string. The HTML renderer is expected to do validation for us.
-    pub default_value : String,
+    pub default_value: String,
 }
 
 #[non_exhaustive]
@@ -380,7 +380,7 @@ impl Attrs {
                                 Ok(())
                             } else if meta.path.is_ident("default_value") {
                                 let value = meta.value()?;
-                                let s : syn::LitStr = value.parse()?;
+                                let s: syn::LitStr = value.parse()?;
                                 this.demo_attrs.input_cfg.default_value = s.value();
                                 Ok(())
                             } else {

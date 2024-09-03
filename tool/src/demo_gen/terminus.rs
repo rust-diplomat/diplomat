@@ -16,10 +16,10 @@ pub struct ParamInfo {
 
 pub struct OutParam {
     /// Param JS representation (i.e., `arg_1`)
-    pub param_name : String,
+    pub param_name: String,
     /// Full string name of the param.
     pub label: String,
-    pub default_value : String,
+    pub default_value: String,
     /// For typescript and RenderInfo output. Type that this parameter is.
     pub type_name: String,
 }
@@ -198,14 +198,14 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             param_name,
             label,
             type_name: type_name.clone(),
-            default_value
+            default_value,
         };
 
         self.terminus_info.out_params.push(out_param);
 
         let param_info = ParamInfo {
             // Grab arguments without having to name them
-            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1)
+            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1),
         };
 
         node.params.push(param_info);
@@ -362,9 +362,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
 
                 let call = self.evaluate_constructor(method, &mut child);
-                node.params.push(ParamInfo {
-                    js: call
-                });
+                node.params.push(ParamInfo { js: call });
                 break;
             }
         }
@@ -385,7 +383,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     /*Could not find a usable constructor for {}. \
                     Try adding #[diplomat::demo(default_constructor)]*/",
                     op.name.as_str()
-                )
+                ),
             });
         }
     }
