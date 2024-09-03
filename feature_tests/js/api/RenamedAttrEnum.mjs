@@ -6,35 +6,51 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 export class RenamedAttrEnum {
     #value = undefined;
 
-    static values = new Map([
+    static #values = new Map([
         ["A", 0],
         ["B", 1],
         ["Renamed", 2]
     ]);
 
     constructor(value) {
-        if (value instanceof RenamedAttrEnum) {
-            this.#value = value.value;
-            return;
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            // We pass in two internalConstructor arguments to create *new*
+            // instances of this type, otherwise the enums are treated as singletons.
+            if (arguments[1] === diplomatRuntime.internalConstructor ) {
+                this.#value = arguments[2];
+                return;
+            }
+            return RenamedAttrEnum.#objectValues[arguments[1]];
         }
 
-        if (RenamedAttrEnum.values.has(value)) {
-            this.#value = value;
-            return;
+        if (value instanceof RenamedAttrEnum) {
+            return value;
+        }
+
+        let intVal = RenamedAttrEnum.#values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            return RenamedAttrEnum.#objectValues[intVal];
         }
 
         throw TypeError(value + " is not a RenamedAttrEnum and does not correspond to any of its enumerator values.");
     }
 
     get value() {
-        return this.#value;
+        return [...RenamedAttrEnum.#values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return RenamedAttrEnum.values.get(this.#value);
+        return this.#value;
     }
+    static #objectValues = [
+        new RenamedAttrEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 0),
+        new RenamedAttrEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
+        new RenamedAttrEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 2),
+    ];
 
-    static A = new RenamedAttrEnum("A");
-    static B = new RenamedAttrEnum("B");
-    static Renamed = new RenamedAttrEnum("Renamed");
+    static A = RenamedAttrEnum.#objectValues[0];
+    static B = RenamedAttrEnum.#objectValues[1];
+    static Renamed = RenamedAttrEnum.#objectValues[2];
 }

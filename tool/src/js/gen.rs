@@ -85,6 +85,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         enum_def: &'tcx EnumDef,
         methods: &MethodsInfo,
     ) -> String {
+        let is_contiguous = enum_def
+            .variants
+            .iter()
+            .enumerate()
+            .all(|(i, v)| i as isize == v.discriminant);
+
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -92,6 +98,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             formatter: &'a JSFormatter<'a>,
             type_name: &'a str,
             typescript: bool,
+            is_contiguous: bool,
 
             doc_str: String,
 
@@ -105,6 +112,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
+            is_contiguous,
 
             methods,
         }

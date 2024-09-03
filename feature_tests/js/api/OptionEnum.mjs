@@ -6,33 +6,48 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 export class OptionEnum {
     #value = undefined;
 
-    static values = new Map([
+    static #values = new Map([
         ["Foo", 0],
         ["Bar", 1]
     ]);
 
     constructor(value) {
-        if (value instanceof OptionEnum) {
-            this.#value = value.value;
-            return;
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            // We pass in two internalConstructor arguments to create *new*
+            // instances of this type, otherwise the enums are treated as singletons.
+            if (arguments[1] === diplomatRuntime.internalConstructor ) {
+                this.#value = arguments[2];
+                return;
+            }
+            return OptionEnum.#objectValues[arguments[1]];
         }
 
-        if (OptionEnum.values.has(value)) {
-            this.#value = value;
-            return;
+        if (value instanceof OptionEnum) {
+            return value;
+        }
+
+        let intVal = OptionEnum.#values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            return OptionEnum.#objectValues[intVal];
         }
 
         throw TypeError(value + " is not a OptionEnum and does not correspond to any of its enumerator values.");
     }
 
     get value() {
-        return this.#value;
+        return [...OptionEnum.#values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return OptionEnum.values.get(this.#value);
+        return this.#value;
     }
+    static #objectValues = [
+        new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 0),
+        new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
+    ];
 
-    static Foo = new OptionEnum("Foo");
-    static Bar = new OptionEnum("Bar");
+    static Foo = OptionEnum.#objectValues[0];
+    static Bar = OptionEnum.#objectValues[1];
 }
