@@ -10,7 +10,7 @@ use diplomat_core::hir::{
 };
 use std::fmt::Write;
 
-use super::TyGenContext;
+use super::gen::TyGenContext;
 
 /// Check if an enum's values are consecutive. (i.e., if we start at 1, the next value is 2).
 fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
@@ -369,7 +369,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     /// We access [`super::MethodInfo`] to handle allocation and cleanup.
     pub(super) fn gen_c_to_js_for_return_type(
         &self,
-        method_info: &mut super::MethodInfo,
+        method_info: &mut super::gen::MethodInfo,
         method: &Method,
     ) -> Option<Cow<'tcx, str>> {
         let return_type = &method.output;
