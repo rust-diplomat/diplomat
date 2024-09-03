@@ -223,7 +223,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
     ) {
-
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
@@ -262,7 +261,12 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 );
             }
             Type::Slice(hir::Slice::Strs(..)) => {
-                self.append_out_param(param_name, "Array<string>".to_string(), node, Some(param_attrs));
+                self.append_out_param(
+                    param_name,
+                    "Array<string>".to_string(),
+                    node,
+                    Some(param_attrs),
+                );
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -292,10 +296,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 self.evaluate_struct_fields(st, type_name.to_string(), node);
-            },
+            }
             Type::DiplomatOption(ref inner) => {
                 self.evaluate_param(&inner, param_name, node, param_attrs)
-            },
+            }
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
     }
