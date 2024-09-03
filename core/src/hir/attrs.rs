@@ -54,11 +54,17 @@ pub struct Attrs {
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct DemoInputCFG {
-    /// `#[diplomat(input(label = "..."))]`
+    /// `#[diplomat::demo(input(label = "..."))]`
     /// Label that this input parameter should have. Let demo_gen pick a valid name if this is empty.
     ///
     /// For instance <label for="v">Number Here</label><input name="v"/>
     pub label: String,
+
+    /// `#[diplomat::demo(input(default_value = "..."))]`
+    /// Sets the default value for a parameter.
+    ///
+    /// Should ALWAYS be a string. The HTML renderer is expected to do validation for us.
+    pub default_value: String,
 }
 
 #[non_exhaustive]
@@ -371,6 +377,24 @@ impl Attrs {
                                 let value = meta.value()?;
                                 let s: syn::LitStr = value.parse()?;
                                 this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else if meta.path.is_ident("default_value") {
+                                let value = meta.value()?;
+
+                                let str_val: String;
+
+                                let ahead = value.lookahead1();
+                                if ahead.peek(syn::LitFloat) {
+                                    let s: syn::LitFloat = value.parse()?;
+                                    str_val = s.base10_parse::<f64>()?.to_string();
+                                } else if ahead.peek(syn::LitInt) {
+                                    let s: syn::LitInt = value.parse()?;
+                                    str_val = s.base10_parse::<i64>()?.to_string();
+                                } else {
+                                    let s: syn::LitStr = value.parse()?;
+                                    str_val = s.value();
+                                }
+                                this.demo_attrs.input_cfg.default_value = str_val;
                                 Ok(())
                             } else {
                                 Err(meta.error(format!(
