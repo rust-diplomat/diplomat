@@ -5,10 +5,10 @@ test('Verify result methods', t => {
     s.assertInteger(5);
     const error1 = t.throws(() => ResultOpaque.newFailingFoo());
     t.is(error1.message, 'ErrorEnum: Foo');
-    t.deepEqual(error1.cause, ErrorEnum.Foo);
+    t.is(error1.cause, ErrorEnum.Foo);
     const error2 = t.throws(() => ResultOpaque.newFailingBar());
     t.is(error2.message, 'ErrorEnum: Bar');
-    t.deepEqual(error2.cause, ErrorEnum.Bar);
+    t.is(error2.cause, ErrorEnum.Bar);
     t.is(ResultOpaque.newFailingUnit(), null);
     const error3 = t.throws(() => ResultOpaque.newFailingStruct(109));
     t.is(error3.message, 'ErrorStruct: [object Object]');

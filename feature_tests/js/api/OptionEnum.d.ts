@@ -9,6 +9,7 @@ export class OptionEnum {
 
     get ffiValue() : number;
 
+
     static Foo : OptionEnum;
     static Bar : OptionEnum;
 }

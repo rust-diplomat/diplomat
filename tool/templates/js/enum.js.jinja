@@ -7,7 +7,7 @@ export class {{type_name}} {
 {%- if !typescript %}
     #value = undefined;
 
-    static values = new Map([
+    static #values = new Map([
 {%- for variant in enum_def.variants %}
         ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
@@ -17,21 +17,24 @@ export class {{type_name}} {
     but we just need to check if a constructor will be generated. -#}
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#value = arguments[1];
-            return;
+            // We pass in two internalConstructor arguments to create *new*
+            // instances of this type, otherwise the enums are treated as singletons.
+            if (arguments[1] === diplomatRuntime.internalConstructor ) {
+                this.#value = arguments[2];
+                return;
+            }
+            return {{type_name}}.#objectValues[arguments[1]];
         }
 
         if (value instanceof {{type_name}}) {
-            this.#value = value.value;
-            return;
+            return value;
         }
 
-        let intVal = {{type_name}}.values.get(value);
+        let intVal = {{type_name}}.#values.get(value);
 
         // Nullish check, checks for null or undefined
         if (intVal == null) {
-            this.#value = intVal;
-            return;
+            return {{type_name}}.#objectValues[intVal];
         }
 
         throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
@@ -40,15 +43,32 @@ export class {{type_name}} {
     constructor(value : {{type_name}} | string);
 {% endif %}
     get value() {% if typescript %}: string;{% else %}{
-        return [...{{type_name}}.values.keys()][this.#value];
+        {%- if is_contiguous %}
+        return [...{{type_name}}.#values.keys()][this.#value];
+        {%- else %}
+        for (let entry of {{type_name}}.#values) {
+            if (entry[1] == this.#value) {
+                return entry[0];
+            }
+        }
+        {%- endif %}
     }{% endif %}
 
     get ffiValue() {% if typescript %}: number;{% else %}{
         return this.#value;
     }{% endif %}
+
+{%- if !typescript %}
+    static #objectValues = {% if is_contiguous -%} [ {%- else -%} { {%- endif %}
+{%- for variant in enum_def.variants %}
+        {% if !is_contiguous -%} [{{variant.discriminant}}]: {% endif -%} new {{type_name}}(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, {{variant.discriminant}}),
+{%- endfor %}
+    {% if is_contiguous -%} ] {%- else -%} } {%- endif %};
+{%- endif %}
+
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}
-    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}(diplomatRuntime.internalConstructor, {{variant.discriminant}}) {%- endif -%};
+    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = {{type_name}}.#objectValues[{{ variant.discriminant }}] {%- endif -%};
 {%- endfor -%}
 
 {%- for method in methods.methods %}
