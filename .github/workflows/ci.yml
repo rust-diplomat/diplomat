@@ -32,6 +32,14 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check
+      run: cargo +1.70 check --verbose
+
   gen:
     runs-on: ubuntu-latest
     steps:
