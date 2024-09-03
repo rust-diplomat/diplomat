@@ -298,7 +298,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.evaluate_struct_fields(st, type_name.to_string(), node);
             }
             Type::DiplomatOption(ref inner) => {
-                self.evaluate_param(&inner, param_name, node, param_attrs)
+                self.evaluate_param(inner, param_name, node, param_attrs)
             }
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
