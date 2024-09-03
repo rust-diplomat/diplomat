@@ -65,7 +65,6 @@ export class {{type_name}} {
 {%- endfor %}
     {% if is_contiguous -%} ] {%- else -%} } {%- endif %};
 {%- endif %}
-
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}
     static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = {{type_name}}.#objectValues[{{ variant.discriminant }}] {%- endif -%};

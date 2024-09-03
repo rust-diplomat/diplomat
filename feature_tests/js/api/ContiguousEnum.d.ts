@@ -9,7 +9,6 @@ export class ContiguousEnum {
 
     get ffiValue() : number;
 
-
     static C : ContiguousEnum;
     static D : ContiguousEnum;
     static E : ContiguousEnum;

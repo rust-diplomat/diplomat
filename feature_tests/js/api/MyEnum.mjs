@@ -60,7 +60,6 @@ export class MyEnum {
         [3]: new MyEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 3),
     };
 
-
     static A = MyEnum.#objectValues[-2];
     static B = MyEnum.#objectValues[-1];
     static C = MyEnum.#objectValues[0];

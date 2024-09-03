@@ -9,7 +9,6 @@ export class MyEnum {
 
     get ffiValue() : number;
 
-
     static A : MyEnum;
     static B : MyEnum;
     static C : MyEnum;

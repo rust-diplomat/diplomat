@@ -48,7 +48,6 @@ export class OptionEnum {
         new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
     ];
 
-
     static Foo = OptionEnum.#objectValues[0];
     static Bar = OptionEnum.#objectValues[1];
 }

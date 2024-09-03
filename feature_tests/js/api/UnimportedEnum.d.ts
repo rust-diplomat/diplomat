@@ -9,7 +9,6 @@ export class UnimportedEnum {
 
     get ffiValue() : number;
 
-
     static A : UnimportedEnum;
     static B : UnimportedEnum;
     static C : UnimportedEnum;

@@ -9,7 +9,6 @@ export class FixedDecimalGroupingStrategy {
 
     get ffiValue() : number;
 
-
     static Auto : FixedDecimalGroupingStrategy;
     static Never : FixedDecimalGroupingStrategy;
     static Always : FixedDecimalGroupingStrategy;

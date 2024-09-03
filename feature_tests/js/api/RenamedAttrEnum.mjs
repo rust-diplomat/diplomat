@@ -50,7 +50,6 @@ export class RenamedAttrEnum {
         new RenamedAttrEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 2),
     ];
 
-
     static A = RenamedAttrEnum.#objectValues[0];
     static B = RenamedAttrEnum.#objectValues[1];
     static Renamed = RenamedAttrEnum.#objectValues[2];

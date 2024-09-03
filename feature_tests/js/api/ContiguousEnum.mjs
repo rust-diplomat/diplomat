@@ -52,7 +52,6 @@ export class ContiguousEnum {
         new ContiguousEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 3),
     ];
 
-
     static C = ContiguousEnum.#objectValues[0];
     static D = ContiguousEnum.#objectValues[1];
     static E = ContiguousEnum.#objectValues[2];

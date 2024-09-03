@@ -50,7 +50,6 @@ export class UnimportedEnum {
         new UnimportedEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 2),
     ];
 
-
     static A = UnimportedEnum.#objectValues[0];
     static B = UnimportedEnum.#objectValues[1];
     static C = UnimportedEnum.#objectValues[2];

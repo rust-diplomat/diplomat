@@ -48,7 +48,6 @@ export class ErrorEnum {
         new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
     ];
 
-
     static Foo = ErrorEnum.#objectValues[0];
     static Bar = ErrorEnum.#objectValues[1];
 }

@@ -52,7 +52,6 @@ export class FixedDecimalGroupingStrategy {
         new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 3),
     ];
 
-
     static Auto = FixedDecimalGroupingStrategy.#objectValues[0];
     static Never = FixedDecimalGroupingStrategy.#objectValues[1];
     static Always = FixedDecimalGroupingStrategy.#objectValues[2];
