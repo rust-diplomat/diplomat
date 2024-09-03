@@ -15,6 +15,9 @@ pub struct ParamInfo {
 }
 
 pub struct OutParam {
+    /// Param JS representation (i.e., `arg_1`)
+    pub param_name : String,
+    /// Full string name of the param.
     pub label: String,
     pub default_value : String,
     /// For typescript and RenderInfo output. Type that this parameter is.
@@ -192,6 +195,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let default_value = attrs_default.input_cfg.default_value;
 
         let out_param = OutParam {
+            param_name,
             label,
             type_name: type_name.clone(),
             default_value

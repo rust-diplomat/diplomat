@@ -25,7 +25,8 @@ export const RenderInfo = {
                 
                 {
                     name: "Useless Config (Ignore)",
-                    type: "boolean"
+                    type: "boolean",
+                    defaultValue: "true"
                 },
                 
                 {

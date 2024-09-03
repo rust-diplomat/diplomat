@@ -15,10 +15,11 @@ export const RenderInfo = {
                 {% for param in terminus.out_params %}
                 {
                     name: "{{param.label}}",
-                    type: "{{param.type_name}}",
-                    {%- if !param.default_value.is_empty() %} 
+                    type: "{{param.type_name}}"
+                    {%- if !param.default_value.is_empty() -%} 
+                    ,
                     defaultValue: "{{ param.default_value }}"
-                    {% endif -%}
+                    {%- endif %}
                 }{% if !loop.last %},{% endif %}
                 {% endfor %}
             ]
