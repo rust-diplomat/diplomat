@@ -37,8 +37,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install MSRV Rust
+      run: rustup install 1.71 --profile minimal
+
     - name: Check
-      run: cargo +1.70 check --verbose
+      run: cargo +1.71 check --verbose
 
   gen:
     runs-on: ubuntu-latest
