@@ -75,6 +75,9 @@ pub struct DemoInfo {
     /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
     pub external: bool,
 
+    /// `#[diplomat::demo(custom_func = "/file/name/here.mjs")]` represents a user defined function that they define themselves in JS.
+    pub custom_func : String,
+
     /// `#[diplomat::demo(input(...))]` represents configuration options for anywhere we might expect user input.
     pub input_cfg: DemoInputCFG,
 }
