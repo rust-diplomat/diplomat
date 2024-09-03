@@ -212,7 +212,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return OptionEnum[Array.from(OptionEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
+            return new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
         }
         
         finally {

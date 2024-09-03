@@ -13,13 +13,21 @@ export class UnimportedEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof UnimportedEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (UnimportedEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = UnimportedEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -27,14 +35,14 @@ export class UnimportedEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...UnimportedEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return UnimportedEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static A = new UnimportedEnum("A");
-    static B = new UnimportedEnum("B");
-    static C = new UnimportedEnum("C");
+    static A = new UnimportedEnum(diplomatRuntime.internalConstructor, 0);
+    static B = new UnimportedEnum(diplomatRuntime.internalConstructor, 1);
+    static C = new UnimportedEnum(diplomatRuntime.internalConstructor, 2);
 }

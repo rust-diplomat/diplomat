@@ -16,13 +16,21 @@ export class {{type_name}} {
     {# TODO: I think it's possible to allow for constructors,
     but we just need to check if a constructor will be generated. -#}
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof {{type_name}}) {
             this.#value = value.value;
             return;
         }
 
-        if ({{type_name}}.values.has(value)) {
-            this.#value = value;
+        let intVal = {{type_name}}.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -32,15 +40,15 @@ export class {{type_name}} {
     constructor(value : {{type_name}} | string);
 {% endif %}
     get value() {% if typescript %}: string;{% else %}{
-        return this.#value;
+        return [...{{type_name}}.values.keys()][this.#value];
     }{% endif %}
 
     get ffiValue() {% if typescript %}: number;{% else %}{
-        return {{type_name}}.values.get(this.#value);
+        return this.#value;
     }{% endif %}
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}
-    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
+    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}(diplomatRuntime.internalConstructor, {{variant.discriminant}}) {%- endif -%};
 {%- endfor -%}
 
 {%- for method in methods.methods %}

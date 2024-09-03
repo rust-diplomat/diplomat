@@ -14,13 +14,21 @@ export class ContiguousEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof ContiguousEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (ContiguousEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = ContiguousEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -28,15 +36,15 @@ export class ContiguousEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...ContiguousEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return ContiguousEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static C = new ContiguousEnum("C");
-    static D = new ContiguousEnum("D");
-    static E = new ContiguousEnum("E");
-    static F = new ContiguousEnum("F");
+    static C = new ContiguousEnum(diplomatRuntime.internalConstructor, 0);
+    static D = new ContiguousEnum(diplomatRuntime.internalConstructor, 1);
+    static E = new ContiguousEnum(diplomatRuntime.internalConstructor, 2);
+    static F = new ContiguousEnum(diplomatRuntime.internalConstructor, 3);
 }

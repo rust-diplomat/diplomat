@@ -230,7 +230,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}[Array.from({type_name}.values.keys())[{variable_name}]]")
+                format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
                     .into()
             }
             Type::Enum(ref enum_path) => {

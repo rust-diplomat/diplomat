@@ -12,13 +12,21 @@ export class ErrorEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof ErrorEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (ErrorEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = ErrorEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -26,13 +34,13 @@ export class ErrorEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...ErrorEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return ErrorEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static Foo = new ErrorEnum("Foo");
-    static Bar = new ErrorEnum("Bar");
+    static Foo = new ErrorEnum(diplomatRuntime.internalConstructor, 0);
+    static Bar = new ErrorEnum(diplomatRuntime.internalConstructor, 1);
 }

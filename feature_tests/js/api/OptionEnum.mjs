@@ -12,13 +12,21 @@ export class OptionEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof OptionEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (OptionEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = OptionEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -26,13 +34,13 @@ export class OptionEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...OptionEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return OptionEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static Foo = new OptionEnum("Foo");
-    static Bar = new OptionEnum("Bar");
+    static Foo = new OptionEnum(diplomatRuntime.internalConstructor, 0);
+    static Bar = new OptionEnum(diplomatRuntime.internalConstructor, 1);
 }

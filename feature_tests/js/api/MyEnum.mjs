@@ -16,13 +16,21 @@ export class MyEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof MyEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (MyEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = MyEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -30,19 +38,19 @@ export class MyEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...MyEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return MyEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static A = new MyEnum("A");
-    static B = new MyEnum("B");
-    static C = new MyEnum("C");
-    static D = new MyEnum("D");
-    static E = new MyEnum("E");
-    static F = new MyEnum("F");
+    static A = new MyEnum(diplomatRuntime.internalConstructor, -2);
+    static B = new MyEnum(diplomatRuntime.internalConstructor, -1);
+    static C = new MyEnum(diplomatRuntime.internalConstructor, 0);
+    static D = new MyEnum(diplomatRuntime.internalConstructor, 1);
+    static E = new MyEnum(diplomatRuntime.internalConstructor, 2);
+    static F = new MyEnum(diplomatRuntime.internalConstructor, 3);
 
     intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);

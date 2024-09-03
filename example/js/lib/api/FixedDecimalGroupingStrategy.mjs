@@ -14,13 +14,21 @@ export class FixedDecimalGroupingStrategy {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof FixedDecimalGroupingStrategy) {
             this.#value = value.value;
             return;
         }
 
-        if (FixedDecimalGroupingStrategy.values.has(value)) {
-            this.#value = value;
+        let intVal = FixedDecimalGroupingStrategy.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -28,15 +36,15 @@ export class FixedDecimalGroupingStrategy {
     }
 
     get value() {
-        return this.#value;
+        return [...FixedDecimalGroupingStrategy.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return FixedDecimalGroupingStrategy.values.get(this.#value);
+        return this.#value;
     }
 
-    static Auto = new FixedDecimalGroupingStrategy("Auto");
-    static Never = new FixedDecimalGroupingStrategy("Never");
-    static Always = new FixedDecimalGroupingStrategy("Always");
-    static Min2 = new FixedDecimalGroupingStrategy("Min2");
+    static Auto = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, 0);
+    static Never = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, 1);
+    static Always = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, 2);
+    static Min2 = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, 3);
 }

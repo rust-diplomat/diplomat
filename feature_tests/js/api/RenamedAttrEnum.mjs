@@ -13,13 +13,21 @@ export class RenamedAttrEnum {
     ]);
 
     constructor(value) {
+        if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#value = arguments[1];
+            return;
+        }
+
         if (value instanceof RenamedAttrEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (RenamedAttrEnum.values.has(value)) {
-            this.#value = value;
+        let intVal = RenamedAttrEnum.values.get(value);
+
+        // Nullish check, checks for null or undefined
+        if (intVal == null) {
+            this.#value = intVal;
             return;
         }
 
@@ -27,14 +35,14 @@ export class RenamedAttrEnum {
     }
 
     get value() {
-        return this.#value;
+        return [...RenamedAttrEnum.values.keys()][this.#value];
     }
 
     get ffiValue() {
-        return RenamedAttrEnum.values.get(this.#value);
+        return this.#value;
     }
 
-    static A = new RenamedAttrEnum("A");
-    static B = new RenamedAttrEnum("B");
-    static Renamed = new RenamedAttrEnum("Renamed");
+    static A = new RenamedAttrEnum(diplomatRuntime.internalConstructor, 0);
+    static B = new RenamedAttrEnum(diplomatRuntime.internalConstructor, 1);
+    static Renamed = new RenamedAttrEnum(diplomatRuntime.internalConstructor, 2);
 }

@@ -62,7 +62,7 @@ export class ImportedStruct {
     // should handle this when constructing edge arrays.
     #fromFFI(ptr) {
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        this.#foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
+        this.#foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#count = countDeref;
     }
