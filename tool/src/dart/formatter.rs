@@ -100,7 +100,11 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
-        format!("{ident}?")
+        if ident.ends_with('?') {
+            ident.to_string()
+        } else {
+            format!("{ident}?")
+        }
     }
 
     /// Format a method
