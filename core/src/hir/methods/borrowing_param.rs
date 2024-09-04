@@ -211,7 +211,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
                             let edge = LifetimeEdge {
                                 param_name: param_name.into(),
-                                kind: LifetimeEdgeKind::StructLifetime(link.def_env(), def_lt),
+                                kind: LifetimeEdgeKind::StructLifetime(
+                                    link.def_env(),
+                                    def_lt,
+                                    ty.is_option(),
+                                ),
                             };
                             method_lifetime_info.incoming_edges.push(edge);
 
