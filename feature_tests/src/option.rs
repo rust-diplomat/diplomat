@@ -45,6 +45,20 @@ pub mod ffi {
         c: DiplomatOption<OptionEnum>,
     }
 
+    impl OptionInputStruct {
+        // Specifically test the Dart default constructor generation code
+        // around Options
+        #[diplomat::attr(not(dart), disable)]
+        #[diplomat::attr(auto, constructor)]
+        pub fn default_ctor() -> Self {
+            Self {
+                a: None.into(),
+                b: None.into(),
+                c: None.into(),
+            }
+        }
+    }
+
     #[diplomat::attr(not(supports = option), disable)]
     #[derive(Debug)]
     pub enum OptionEnum {
