@@ -13,8 +13,6 @@ final class OptionInputStruct {
   Rune? b;
   OptionEnum? c;
 
-  OptionInputStruct({required this.a, required this.b, required this.c});
-
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
@@ -38,6 +36,15 @@ final class OptionInputStruct {
     return struct;
   }
 
+  factory OptionInputStruct({int? a, Rune? b, OptionEnum? c}) {
+    final result = _OptionInputStruct_default_ctor();
+    final dart = OptionInputStruct._fromFfi(result);
+    dart.a = a;
+    dart.b = b;
+    dart.c = c;
+    return dart;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is OptionInputStruct &&
@@ -52,3 +59,8 @@ final class OptionInputStruct {
         c,
       ]);
 }
+
+@meta.ResourceIdentifier('OptionInputStruct_default_ctor')
+@ffi.Native<_OptionInputStructFfi Function()>(isLeaf: true, symbol: 'OptionInputStruct_default_ctor')
+// ignore: non_constant_identifier_names
+external _OptionInputStructFfi _OptionInputStruct_default_ctor();

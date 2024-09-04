@@ -149,9 +149,13 @@ impl<P: TyPosition> Type<P> {
         }
     }
 
-    /// Whether this type is a `DiplomatOption`
+    /// Whether this type is a `DiplomatOption` or optional Opaque
     pub fn is_option(&self) -> bool {
-        matches!(self, Self::DiplomatOption(..))
+        match self {
+            Self::DiplomatOption(..) => true,
+            Self::Opaque(ref o) if o.is_optional() => true,
+            _ => false,
+        }
     }
 }
 
