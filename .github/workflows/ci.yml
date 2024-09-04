@@ -167,7 +167,7 @@ jobs:
       run: rustup target add wasm32-unknown-unknown
 
     - name: Install Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
