@@ -1,6 +1,8 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, StringEncoding, SymbolId, TyPosition, TypeContext};
+use diplomat_core::hir::{
+    self, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -28,22 +30,26 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     /// Resolve and format a named type for use in code (without the namespace)
-    pub fn fmt_type_name(&self, id: SymbolId) -> Cow<'tcx, str> {
-        let (name, attrs) = match id {
-            SymbolId::TypeId(id) => {
-                let resolved = self.tcx.resolve_type(id);
-                let name: Cow<_> = resolved.name().as_str().into();
-                let attrs = resolved.attrs();
-                (name, attrs)
-            }
-            SymbolId::TraitId(id) => {
-                let resolved = self.tcx.resolve_trait(id);
-                let name: Cow<_> = resolved.name.as_str().into();
-                let attrs = &resolved.attrs;
-                (name, attrs)
-            }
-            _ => panic!("Unexpected symbol ID type"),
-        };
+    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_type(id);
+        let name: Cow<_> = resolved.name().as_str().into();
+        let attrs = resolved.attrs();
+
+        // Only apply renames in cpp mode, in pure C mode you'd want the
+        // method names to match the type names.
+        // Potential future improvement: Use alias attributes in pure C mode.
+        if self.is_for_cpp {
+            attrs.rename.apply(name)
+        } else {
+            name
+        }
+    }
+
+    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_trait(id);
+        let name: Cow<_> = resolved.name.as_str().into();
+        let attrs = &resolved.attrs;
+
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.
@@ -111,12 +117,20 @@ impl<'tcx> CFormatter<'tcx> {
     /// *just* the enum. It is included from Foo.h, and external users should not be importing
     /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
     pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
-        let type_name = self.fmt_type_name(id);
+        let type_name = match id {
+            SymbolId::TypeId(id) => self.fmt_type_name(id),
+            SymbolId::TraitId(id) => self.fmt_trait_name(id),
+            _ => panic!("Unexpected symbol ID type"),
+        };
         format!("{type_name}.d.h")
     }
     /// Resolve and format the name of a type for use in header names: impl version
     pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
-        let type_name = self.fmt_type_name(id);
+        let type_name = match id {
+            SymbolId::TypeId(id) => self.fmt_type_name(id),
+            SymbolId::TraitId(id) => self.fmt_trait_name(id),
+            _ => panic!("Unexpected symbol ID type"),
+        };
         format!("{type_name}.h")
     }
 

@@ -5,7 +5,7 @@ use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttr
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
     EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
-    Type, TypeDef, TypeId,
+    TraitDef, Type, TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -143,6 +143,7 @@ pub struct SpecialMethodPresence {
 #[derive(Debug)]
 pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
+    Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,

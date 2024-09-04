@@ -100,8 +100,8 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
     let mut method_sigs: Vec<proc_macro2::TokenStream> = vec![];
     method_sigs.push(quote!(
         pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
-        pub SIZE: usize,
-        pub ALIGNMENT: usize,
+        pub size: usize,
+        pub alignment: usize,
     ));
     for m in &custom_trait.methods {
         // TODO check that this is the right conversion, it might be the wrong direction
@@ -538,7 +538,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
         new_contents.push(syn::parse_quote! {
             #[repr(C)]
             pub struct #custom_trait_name {
-                pub data: *const c_void,
+                data: *const c_void,
                 pub vtable: #custom_trait_vtable_type,
             }
         });

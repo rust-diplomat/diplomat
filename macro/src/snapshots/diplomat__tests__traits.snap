@@ -42,8 +42,8 @@ mod ffi {
     #[repr(C)]
     pub struct TesterTrait_VTable {
         pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
-        pub SIZE: usize,
-        pub ALIGNMENT: usize,
+        pub size: usize,
+        pub alignment: usize,
         pub run_test_trait_fn_callback: unsafe extern "C" fn(*const c_void, i32) -> i32,
         pub run_test_void_trait_fn_callback: unsafe extern "C" fn(*const c_void),
         pub run_test_struct_trait_fn_callback:
@@ -53,7 +53,7 @@ mod ffi {
     }
     #[repr(C)]
     pub struct DiplomatTraitStruct_TesterTrait {
-        pub data: *const c_void,
+        data: *const c_void,
         pub vtable: TesterTrait_VTable,
     }
     impl TesterTrait for DiplomatTraitStruct_TesterTrait {
