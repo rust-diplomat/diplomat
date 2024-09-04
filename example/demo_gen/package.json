@@ -4,8 +4,7 @@
 	"description": "Web demonstration of a miniaturized ICU4X Library to demonstrate Diplomat's capabilities.",
 	"type": "module",
 	"exports": {
-		".": "./demo/index.mjs",
-		"./js": "./demo/js/index.mjs"
+		".": "./demo/index.mjs"
 	},
 	"scripts": {
 		"test": "ava"
@@ -16,6 +15,9 @@
 		"url": "https://github.com/rust-diplomat/diplomat/issues"
 	},
 	"homepage": "https://github.com/rust-diplomat/diplomat#readme",
+	"dependencies": {
+		"mini-icu4x": "../js/lib/"
+	},
 	"devDependencies": {
 		"ava": "^6.1.3"
 	}

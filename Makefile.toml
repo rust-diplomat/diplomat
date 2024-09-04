@@ -443,7 +443,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests demo_gen demo
+generate_generic feature_tests demo_gen demo "-l diplomat-demo-conf.toml"
 '''
 
 [tasks.gen-demo-example]
@@ -452,7 +452,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example demo_gen demo
+generate_generic example demo_gen demo "-l diplomat-demo-conf.toml"
 '''
 
 [tasks.gen-dart-feature]
