@@ -35,6 +35,20 @@ impl<T, E> DiplomatResult<T, E> {
     }
 }
 
+impl<T> DiplomatOption<T> {
+    /// Helper for converting into an Option to avoid trait ambiguity errors with Into
+    #[inline]
+    pub fn into_option(self) -> Option<T> {
+        self.into()
+    }
+
+    /// Helper for converting into an Option with the inner type converted
+    #[inline]
+    pub fn into_converted_option<U: From<T>>(self) -> Option<U> {
+        self.into_option().map(Into::into)
+    }
+}
+
 impl<T: Clone, E: Clone> Clone for DiplomatResult<T, E> {
     fn clone(&self) -> Self {
         unsafe {
