@@ -476,6 +476,7 @@ pub fn transparent_convert(
 
     let full = quote! {
         #expanded
+        #[repr(transparent)]
         #input_cached
     };
     proc_macro::TokenStream::from(full.to_token_stream())
