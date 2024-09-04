@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Param, PathTrait, TraitSelfParam, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Param, PathType, TraitSelfParam, TypeName};
 
 /// A trait declaration in an FFI module.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -38,7 +38,7 @@ impl Trait {
 
         let self_ident = &trt.ident;
         // TODO check this
-        let self_path_trait = PathTrait::from(&syn::TraitBound {
+        let self_path_trait = PathType::from(&syn::TraitBound {
             paren_token: None,
             modifier: syn::TraitBoundModifier::None,
             lifetimes: None, // todo this is an assumption
@@ -67,7 +67,7 @@ impl Trait {
                     .filter_map(|a| match a {
                         syn::FnArg::Receiver(_) => None,
                         syn::FnArg::Typed(ref t) => {
-                            Some(Param::from_syn(t, self_path_trait.clone().into()))
+                            Some(Param::from_syn(t, self_path_trait.clone()))
                         }
                     })
                     .collect::<Vec<_>>();
@@ -80,7 +80,7 @@ impl Trait {
                 let output_type = match &fct.sig.output {
                     syn::ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
                         return_typ.as_ref(),
-                        Some(self_path_trait.clone().into()),
+                        Some(self_path_trait.clone()),
                     )),
                     syn::ReturnType::Default => None,
                 };

@@ -2,9 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{
-    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathLike, PathTrait, PathType, TypeName,
-};
+use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -65,7 +63,7 @@ impl Method {
             .iter()
             .filter_map(|a| match a {
                 syn::FnArg::Receiver(_) => None,
-                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone().into())),
+                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone())),
             })
             .collect::<Vec<_>>();
 
@@ -80,7 +78,7 @@ impl Method {
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
-                    Some(self_path_type.into()),
+                    Some(self_path_type),
                 ))
             }
             syn::ReturnType::Default => None,
@@ -266,7 +264,7 @@ pub struct TraitSelfParam {
 
     /// The trait of the parameter, which will be a named reference to
     /// the associated trait,
-    pub path_trait: PathTrait,
+    pub path_trait: PathType,
 }
 
 impl TraitSelfParam {
@@ -278,7 +276,7 @@ impl TraitSelfParam {
         typ
     }
 
-    pub fn from_syn(rec: &syn::Receiver, path_trait: PathTrait) -> Self {
+    pub fn from_syn(rec: &syn::Receiver, path_trait: PathType) -> Self {
         TraitSelfParam {
             reference: rec
                 .reference
@@ -312,7 +310,7 @@ impl Param {
         }
     }
 
-    pub fn from_syn(t: &syn::PatType, self_path_type: PathLike) -> Self {
+    pub fn from_syn(t: &syn::PatType, self_path_type: PathType) -> Self {
         let ident = match t.pat.as_ref() {
             syn::Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),

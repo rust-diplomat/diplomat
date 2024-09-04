@@ -106,53 +106,6 @@ pub struct PathType {
     pub lifetimes: Vec<Lifetime>,
 }
 
-/// A named trait that is just a path, e.g. `std::borrow::Cow<'a, T>`.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
-#[non_exhaustive]
-pub struct PathTrait {
-    pub path: Path,
-    pub lifetimes: Vec<Lifetime>,
-}
-
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
-#[non_exhaustive]
-pub enum PathLike {
-    Trait(PathTrait),
-    Type(PathType),
-}
-
-impl From<PathType> for PathLike {
-    fn from(other: PathType) -> Self {
-        PathLike::Type(other)
-    }
-}
-
-impl From<PathTrait> for PathLike {
-    fn from(other: PathTrait) -> Self {
-        PathLike::Trait(other)
-    }
-}
-
-impl TryInto<PathType> for PathLike {
-    type Error = ();
-    fn try_into(self) -> Result<PathType, Self::Error> {
-        match self {
-            PathLike::Type(id) => Ok(id),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryInto<PathTrait> for PathLike {
-    type Error = ();
-    fn try_into(self) -> Result<PathTrait, Self::Error> {
-        match self {
-            PathLike::Trait(id) => Ok(id),
-            _ => Err(()),
-        }
-    }
-}
-
 impl PathType {
     pub fn to_syn(&self) -> syn::TypePath {
         let mut path = self.path.to_syn();
@@ -272,10 +225,8 @@ impl PathType {
     pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
         self.resolve_with_path(in_path, env).1
     }
-}
 
-impl PathTrait {
-    pub fn to_syn(&self) -> syn::TraitBound {
+    pub fn trait_to_syn(&self) -> syn::TraitBound {
         let mut path = self.path.to_syn();
 
         if !self.lifetimes.is_empty() {
@@ -293,14 +244,7 @@ impl PathTrait {
         }
     }
 
-    pub fn new(path: Path) -> Self {
-        Self {
-            path,
-            lifetimes: vec![],
-        }
-    }
-
-    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, Trait) {
+    pub fn resolve_trait_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, Trait) {
         let local_path = &self.path;
         let cur_path = in_path.clone();
         for (i, elem) in local_path.elements.iter().enumerate() {
@@ -328,8 +272,8 @@ impl PathTrait {
     ///
     /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
     /// to get the path to resolve the fields in.
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> Trait {
-        self.resolve_with_path(in_path, env).1
+    pub fn resolve_trait<'a>(&self, in_path: &Path, env: &'a Env) -> Trait {
+        self.resolve_trait_with_path(in_path, env).1
     }
 }
 
@@ -364,7 +308,7 @@ impl From<&syn::TypePath> for PathType {
     }
 }
 
-impl From<&syn::TraitBound> for PathTrait {
+impl From<&syn::TraitBound> for PathType {
     fn from(other: &syn::TraitBound) -> Self {
         let lifetimes = other
             .path
@@ -398,12 +342,6 @@ impl From<&syn::TraitBound> for PathTrait {
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
         PathType::new(other)
-    }
-}
-
-impl From<Path> for PathTrait {
-    fn from(other: Path) -> Self {
-        PathTrait::new(other)
     }
 }
 
@@ -527,7 +465,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
-    ImplTrait(PathTrait),
+    ImplTrait(PathType),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -779,7 +717,7 @@ impl TypeName {
     /// - If the type is a owned or borrowed slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
-    pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathLike>) -> TypeName {
+    pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
                 let lifetime = Lifetime::from(&r.lifetime);
@@ -921,11 +859,7 @@ impl TypeName {
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
-                        TypeName::SelfType(
-                            self_path_type
-                                .try_into()
-                                .expect("Was expecting a type path, got a trait path"),
-                        )
+                        TypeName::SelfType(self_path_type)
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
@@ -1088,7 +1022,7 @@ impl TypeName {
                         }
                         panic!("Unsupported function type: {:?}", &path_seg.arguments);
                     } else {
-                        let ret = TypeName::ImplTrait(PathTrait::from(&syn::TraitBound {
+                        let ret = TypeName::ImplTrait(PathType::from(&syn::TraitBound {
                             paren_token: None,
                             modifier: syn::TraitBoundModifier::None,
                             lifetimes: None, // todo this is an assumption
@@ -1412,21 +1346,6 @@ impl<'a> quote::ToTokens for LifetimeGenericsListPartialDisplay<'a> {
 }
 
 impl fmt::Display for PathType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.path.fmt(f)?;
-
-        if let Some((first, rest)) = self.lifetimes.split_first() {
-            write!(f, "<{first}")?;
-            for lifetime in rest {
-                write!(f, ", {lifetime}")?;
-            }
-            '>'.fmt(f)?;
-        }
-        Ok(())
-    }
-}
-
-impl fmt::Display for PathTrait {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.path.fmt(f)?;
 

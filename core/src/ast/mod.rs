@@ -23,8 +23,8 @@ pub use enums::Enum;
 
 mod types;
 pub use types::{
-    CustomType, LifetimeOrigin, ModSymbol, Mutability, PathLike, PathTrait, PathType,
-    PrimitiveType, StdlibOrDiplomat, StringEncoding, TypeName,
+    CustomType, LifetimeOrigin, ModSymbol, Mutability, PathType, PrimitiveType, StdlibOrDiplomat,
+    StringEncoding, TypeName,
 };
 
 pub(crate) mod lifetimes;

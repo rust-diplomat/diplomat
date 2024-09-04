@@ -711,7 +711,7 @@ impl<'ast> LoweringContext<'ast> {
                         "Traits are not supported by this backend".into(),
                     ));
                 }
-                let trt = path.resolve(in_path, self.env);
+                let trt = path.resolve_trait(in_path, self.env);
                 let tcx_id = self
                     .lookup_id
                     .resolve_trait(&trt)
@@ -1365,7 +1365,7 @@ impl<'ast> LoweringContext<'ast> {
         self_param_ltl: SelfParamLifetimeLowerer<'ast>,
         in_path: &ast::Path,
     ) -> Result<(TraitParamSelf, ParamLifetimeLowerer<'ast>), ()> {
-        let trt = self_param.path_trait.resolve(in_path, self.env);
+        let trt = self_param.path_trait.resolve_trait(in_path, self.env);
         if let Some(tcx_id) = self.lookup_id.resolve_trait(&trt) {
             // check this -- I think we should be able to have both self and non-self
             if let Some((lifetime, _)) = &self_param.reference {
