@@ -27,6 +27,7 @@ final class MyStruct {
   int e;
   Rune f;
   MyEnum g;
+  MyZst h;
 
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -41,7 +42,8 @@ final class MyStruct {
     d = ffi.d,
     e = ffi.e,
     f = ffi.f,
-    g = MyEnum.values.firstWhere((v) => v._ffi == ffi.g);
+    g = MyEnum.values.firstWhere((v) => v._ffi == ffi.g),
+    h = MyZst();
 
   // ignore: unused_element
   _MyStructFfi _toFfi(ffi.Allocator temp) {
@@ -53,10 +55,11 @@ final class MyStruct {
     struct.e = e;
     struct.f = f;
     struct.g = g._ffi;
+    struct.h = h._toFfi(temp);
     return struct;
   }
 
-  factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g}) {
+  factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g, MyZst? h}) {
     final result = _MyStruct_new();
     final dart = MyStruct._fromFfi(result);
     if (a != null) {
@@ -79,6 +82,9 @@ final class MyStruct {
     }
     if (g != null) {
       dart.g = g;
+    }
+    if (h != null) {
+      dart.h = h;
     }
     return dart;
   }
@@ -120,7 +126,8 @@ final class MyStruct {
       other.d == d &&
       other.e == e &&
       other.f == f &&
-      other.g == g;
+      other.g == g &&
+      other.h == h;
 
   @override
   int get hashCode => Object.hashAll([
@@ -131,6 +138,7 @@ final class MyStruct {
         e,
         f,
         g,
+        h,
       ]);
 }
 
@@ -145,11 +153,11 @@ external _MyStructFfi _MyStruct_new();
 external int _MyStruct_into_a(_MyStructFfi self);
 
 @_DiplomatFfiUse('MyStruct_returns_zst_result')
-@ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_returns_zst_result')
+@ffi.Native<_ResultVoidvoid Function()>(isLeaf: true, symbol: 'MyStruct_returns_zst_result')
 // ignore: non_constant_identifier_names
-external _ResultVoidMyZstFfi _MyStruct_returns_zst_result();
+external _ResultVoidvoid _MyStruct_returns_zst_result();
 
 @_DiplomatFfiUse('MyStruct_fails_zst_result')
-@ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_fails_zst_result')
+@ffi.Native<_ResultVoidvoid Function()>(isLeaf: true, symbol: 'MyStruct_fails_zst_result')
 // ignore: non_constant_identifier_names
-external _ResultVoidMyZstFfi _MyStruct_fails_zst_result();
+external _ResultVoidvoid _MyStruct_fails_zst_result();

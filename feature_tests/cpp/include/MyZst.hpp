@@ -17,10 +17,17 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    uint32_t MyZst_method(uint8_t foo);
+    
     
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline uint32_t MyZst::method(uint8_t foo) {
+  auto result = diplomat::capi::MyZst_method(foo);
+  return result;
+}
 
 
 

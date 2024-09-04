@@ -354,16 +354,6 @@ impl<'ast> LoweringContext<'ast> {
         let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
-        } else if ast_struct.fields.is_empty() {
-            if !ast_struct.methods.is_empty() {
-                self.errors.push(LoweringError::Other(format!(
-                    "Methods on ZST structs are not yet implemented: {}",
-                    ast_struct.name
-                )));
-                return Err(());
-            } else {
-                Vec::new()
-            }
         } else {
             self.lower_all_methods(
                 &ast_struct.methods[..],
@@ -681,12 +671,6 @@ impl<'ast> LoweringContext<'ast> {
                 .resolve(in_path, self.env)
             {
                 ast::CustomType::Struct(strct) => {
-                    if strct.fields.is_empty() {
-                        self.errors.push(LoweringError::Other(format!(
-                            "zero-size types are not allowed as method arguments: {ty} in {path}"
-                        )));
-                        return Err(());
-                    }
                     if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());

@@ -6,6 +6,11 @@ final class MyZst {
 
   MyZst();
 
+  int method(int foo) {
+    final result = _MyZst_method(foo);
+    return result;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is MyZst;
@@ -13,3 +18,8 @@ final class MyZst {
   @override
   int get hashCode => 0;
 }
+
+@_DiplomatFfiUse('MyZst_method')
+@ffi.Native<ffi.Uint32 Function(ffi.Uint8)>(isLeaf: true, symbol: 'MyZst_method')
+// ignore: non_constant_identifier_names
+external int _MyZst_method(int foo);

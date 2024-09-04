@@ -22,6 +22,16 @@ export class MyZst {
     }
 
 
+    method(foo) {
+        const result = wasm.MyZst_method(foo);
+    
+        try {
+            return result;
+        }
+        
+        finally {}
+    }
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

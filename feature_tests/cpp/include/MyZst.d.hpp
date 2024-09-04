@@ -20,6 +20,8 @@ namespace capi {
 
 struct MyZst {
 
+  inline uint32_t method(uint8_t foo);
+
 };
 
 
