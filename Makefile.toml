@@ -83,6 +83,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-js-feature",
+    "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
@@ -130,6 +131,15 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm install && npm run test
 '''
 
+[tasks.test-demo-feature]
+category = "Tests"
+dependencies = ["build-feature-wasm"]
+script_runner = "@shell"
+script = '''
+cd feature_tests/demo_gen
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm demo/diplomat_feature_tests.wasm
+npm install && npm run test
+'''
 
 [tasks.test-demo-example]
 category = "Tests"
@@ -319,6 +329,7 @@ dependencies = [
     "gen-cpp-feature",
     "gen-c-feature",
     "gen-js-feature",
+    "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
 ]
@@ -417,6 +428,15 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example js lib/api
+'''
+
+[tasks.gen-demo-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests demo_gen demo
 '''
 
 [tasks.gen-demo-example]
