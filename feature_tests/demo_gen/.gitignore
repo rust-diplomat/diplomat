@@ -1,0 +1,4 @@
+demo/js/*
+demo/*.wasm
+node_modules
+package-lock.json
