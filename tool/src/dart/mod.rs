@@ -339,13 +339,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let args = fields
                     .iter()
                     .map(|field| {
-                        let question_mark = if field.ty.is_option() {
-                            // If it's optional we don't need to double-wrap in `?`
-                            ""
-                        } else {
-                            "?"
-                        };
-                        format!("{}{question_mark} {}", field.dart_type_name, field.name)
+                        format!(
+                            "{} {}",
+                            self.formatter.fmt_nullable(&field.dart_type_name),
+                            field.name
+                        )
                     })
                     .collect::<Vec<_>>();
                 constructor.declaration =
@@ -355,13 +353,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
                 for field in &fields {
                     let name = &field.name;
-                    if field.ty.is_option() {
-                        writeln!(&mut r, "dart.{name} = {name};").unwrap();
-                    } else {
-                        writeln!(&mut r, "if ({name} != null) {{").unwrap();
-                        writeln!(&mut r, "  dart.{name} = {name};").unwrap();
-                        writeln!(&mut r, "}}").unwrap();
-                    }
+                    writeln!(&mut r, "if ({name} != null) {{").unwrap();
+                    writeln!(&mut r, "  dart.{name} = {name};").unwrap();
+                    writeln!(&mut r, "}}").unwrap();
                 }
                 write!(&mut r, "return dart;").unwrap();
                 constructor.return_expression = Some(r.into());

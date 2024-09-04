@@ -39,9 +39,15 @@ final class OptionInputStruct {
   factory OptionInputStruct({int? a, Rune? b, OptionEnum? c}) {
     final result = _OptionInputStruct_default_ctor();
     final dart = OptionInputStruct._fromFfi(result);
-    dart.a = a;
-    dart.b = b;
-    dart.c = c;
+    if (a != null) {
+      dart.a = a;
+    }
+    if (b != null) {
+      dart.b = b;
+    }
+    if (c != null) {
+      dart.c = c;
+    }
     return dart;
   }
 
