@@ -1,5 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
+assertion_line: 1823
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -92,8 +93,15 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
             }
             val cb_wrap = DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = JVMTools.getRustGCRootPointer(cb_wrap as Object);
             return DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
+    }
+
+    @Override
+    @SuppressWarnings("Finalize") // needed to deallocate the Rust object
+    fun finalize() {
+        JVMTools.dropGCRoot(this.nativeStruct.data_);
     }
 }
 class MyNativeStruct internal constructor (

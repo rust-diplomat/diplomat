@@ -1,11 +1,13 @@
 package {{domain}}.{{lib_name}};
 
+import com.sun.jna.JNIEnv
 import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 import com.sun.jna.Union
+import java.util.Collections
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
@@ -35,6 +37,26 @@ object DW {
             return bytes.decodeToString();
         } finally {
             lib.diplomat_buffer_write_destroy(write);
+        }
+    }
+}
+
+internal interface JVMLibTools: Library {
+    fun JVM_create_GC_root_in_rust(env: JNIEnv, obj: Object): Pointer
+    fun JVM_drop_GC_root_in_rust(obj_pointer: Pointer): Unit
+}
+
+internal class JVMTools {
+    companion object {
+        val libClass: Class<JVMLibTools> = JVMLibTools::class.java
+        val lib: JVMLibTools = Native.load("{{lib_name}}", libClass, Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
+
+        fun getRustGCRootPointer (obj: Object): Pointer {
+            return lib.JVM_create_GC_root_in_rust(JNIEnv.CURRENT, obj);
+        }
+
+        fun dropGCRoot(obj_pointer: Pointer): Unit {
+            lib.JVM_drop_GC_root_in_rust(obj_pointer);
         }
     }
 }

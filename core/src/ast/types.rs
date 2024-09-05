@@ -606,7 +606,7 @@ impl TypeName {
             TypeName::Function(_input_types, output_type) => {
                 let output_type = output_type.to_syn();
                 // should be DiplomatCallback<function_output_type>
-                syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+                syn::parse_quote_spanned!(Span::call_site() => core::mem::ManuallyDrop<DiplomatCallback<#output_type>>)
             }
         }
     }

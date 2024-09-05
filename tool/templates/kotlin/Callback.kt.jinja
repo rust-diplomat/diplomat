@@ -39,7 +39,14 @@ internal class {{name}} internal constructor (
             }
             val cb_wrap = {{name}}_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = JVMTools.getRustGCRootPointer(cb_wrap as Object);
             return {{name}}(cb_wrap)
         }
+    }
+
+    @Override
+    @SuppressWarnings("Finalize") // needed to deallocate the Rust object
+    fun finalize() {
+        JVMTools.dropGCRoot(this.nativeStruct.data_);
     }
 }
