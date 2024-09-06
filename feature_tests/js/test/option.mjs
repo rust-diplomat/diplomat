@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { OptionOpaque } from "diplomat-wasm-js-feature-tests";
+import { OptionOpaque, OptionInputStruct, OptionEnum } from "diplomat-wasm-js-feature-tests";
 
 test("Verify option methods", t => {
     const o = OptionOpaque.new_(5);
