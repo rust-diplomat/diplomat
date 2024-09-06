@@ -10,6 +10,8 @@ export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds.mjs"
 
 export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
 
+export { OptionInputStruct } from "./OptionInputStruct.mjs"
+
 export { ErrorStruct } from "./ErrorStruct.mjs"
 
 export { BigStructWithStuff } from "./BigStructWithStuff.mjs"
@@ -73,6 +75,8 @@ export { Utf16Wrap } from "./Utf16Wrap.mjs"
 export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
 
 export { UnimportedEnum } from "./UnimportedEnum.mjs"
+
+export { OptionEnum } from "./OptionEnum.mjs"
 
 export { ErrorEnum } from "./ErrorEnum.mjs"
 
