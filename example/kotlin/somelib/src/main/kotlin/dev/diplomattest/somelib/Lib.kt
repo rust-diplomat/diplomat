@@ -1,11 +1,13 @@
 package dev.diplomattest.somelib;
 
+import com.sun.jna.JNIEnv
 import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 import com.sun.jna.Union
+import java.util.Collections
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
@@ -35,6 +37,26 @@ object DW {
             return bytes.decodeToString();
         } finally {
             lib.diplomat_buffer_write_destroy(write);
+        }
+    }
+}
+
+internal interface DiplomatJVMRuntimeLib: Library {
+    fun create_rust_jvm_cookie(env: JNIEnv, obj: Object): Pointer
+    fun destroy_rust_jvm_cookie(obj_pointer: Pointer): Unit
+}
+
+internal class DiplomatJVMRuntime {
+    companion object {
+        val libClass: Class<DiplomatJVMRuntimeLib> = DiplomatJVMRuntimeLib::class.java
+        val lib: DiplomatJVMRuntimeLib = Native.load("somelib", libClass, Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
+
+        fun getRustCookie(obj: Object): Pointer {
+            return lib.create_rust_jvm_cookie(JNIEnv.CURRENT, obj);
+        }
+
+        fun dropRustCookie(obj_pointer: Pointer): Unit {
+            lib.destroy_rust_jvm_cookie(obj_pointer);
         }
     }
 }
