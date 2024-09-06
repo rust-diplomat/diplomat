@@ -68,7 +68,11 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -80,7 +84,7 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
     internal val nativeStruct: DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
@@ -93,15 +97,9 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
             }
             val cb_wrap = DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = JVMTools.getRustGCRootPointer(cb_wrap as Object);
+            cb_wrap.data_ = DiplomatJVMRuntime.getRustCookie(cb_wrap as Object);
             return DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
-    }
-
-    @Override
-    @SuppressWarnings("Finalize") // needed to deallocate the Rust object
-    fun finalize() {
-        JVMTools.dropGCRoot(this.nativeStruct.data_);
     }
 }
 class MyNativeStruct internal constructor (

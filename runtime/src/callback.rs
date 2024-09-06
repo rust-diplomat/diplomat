@@ -34,7 +34,7 @@ impl<ReturnType> Drop for DiplomatCallback<ReturnType> {
 // is not deallocated until the JVM calls a destructor that unwraps
 // the GlobalRef so it can be dropped.
 #[no_mangle]
-extern "system" fn JVM_create_GC_root_in_rust<'local>(
+extern "system" fn create_rust_jvm_cookie<'local>(
     env: JNIEnv<'local>,
     obj_to_ref: JObject<'local>,
 ) -> jlong {
@@ -43,7 +43,7 @@ extern "system" fn JVM_create_GC_root_in_rust<'local>(
 }
 
 #[no_mangle]
-extern "system" fn JVM_drop_GC_root_in_rust(global_ref_boxed: jlong) {
+extern "system" fn destroy_rust_jvm_cookie(global_ref_boxed: jlong) {
     unsafe {
         drop(Box::from_raw(global_ref_boxed as *mut GlobalRef));
     }
