@@ -2,6 +2,7 @@
 name = "diplomat_core"
 description = "Shared utilities between Diplomat macros and code generation"
 version = "0.8.0"
+rust-version.workspace = true
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",

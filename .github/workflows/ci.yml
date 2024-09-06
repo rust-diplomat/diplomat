@@ -41,7 +41,7 @@ jobs:
       run: rustup install 1.71 --profile minimal
 
     - name: Check
-      run: cargo +1.71 check -p diplomat -p diplomat-runtime --verbose
+      run: cargo +1.71 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
 
   gen:
     runs-on: ubuntu-latest
