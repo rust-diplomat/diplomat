@@ -1,5 +1,7 @@
+#[cfg(feature = "jvm-callback-support")]
 use alloc::boxed::Box;
 use core::ffi::c_void;
+#[cfg(feature = "jvm-callback-support")]
 use jni::{
     objects::{GlobalRef, JObject},
     sys::jlong,
@@ -33,6 +35,7 @@ impl<ReturnType> Drop for DiplomatCallback<ReturnType> {
 // this can then be stored as a field in a struct, so that the struct
 // is not deallocated until the JVM calls a destructor that unwraps
 // the GlobalRef so it can be dropped.
+#[cfg(feature = "jvm-callback-support")]
 #[no_mangle]
 extern "system" fn create_rust_jvm_cookie<'local>(
     env: JNIEnv<'local>,
@@ -42,6 +45,7 @@ extern "system" fn create_rust_jvm_cookie<'local>(
     Box::into_raw(Box::new(global_ref)) as jlong
 }
 
+#[cfg(feature = "jvm-callback-support")]
 #[no_mangle]
 extern "system" fn destroy_rust_jvm_cookie(global_ref_boxed: jlong) {
     unsafe {
