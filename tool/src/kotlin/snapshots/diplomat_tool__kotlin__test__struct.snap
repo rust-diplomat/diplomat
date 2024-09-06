@@ -97,7 +97,7 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
             }
             val cb_wrap = DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.getRustCookie(cb_wrap as Object);
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
     }
