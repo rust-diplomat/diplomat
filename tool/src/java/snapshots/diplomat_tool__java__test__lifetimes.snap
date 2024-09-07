@@ -21,7 +21,6 @@ public class BorrowedFields {
     String c;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -41,6 +40,18 @@ public class BorrowedFields {
         this.b = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFields.b(structSegment));
         this.c = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFields.c(structSegment));
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.BorrowedFields.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.BorrowedFields.a(returnVal, SliceUtils.strToUtf16Slice(arena, this.a));
+        dev.diplomattest.somelib.ntv.BorrowedFields.b(returnVal, SliceUtils.strToUtf8Slice(arena, this.b));
+        dev.diplomattest.somelib.ntv.BorrowedFields.c(returnVal, SliceUtils.strToUtf8Slice(arena, this.c));
+        
+
+        return returnVal;
 
     }
     
@@ -65,7 +76,6 @@ public class BorrowedFieldsReturning {
     String bytes;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -83,6 +93,16 @@ public class BorrowedFieldsReturning {
 
         this.bytes = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(structSegment));
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(returnVal, SliceUtils.strToUtf8Slice(arena, this.bytes));
+        
+
+        return returnVal;
 
     }
     
@@ -109,7 +129,6 @@ public class BorrowedFieldsWithBounds {
     String fieldC;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -133,6 +152,18 @@ public class BorrowedFieldsWithBounds {
         this.fieldB = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(structSegment));
         this.fieldC = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(structSegment));
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(returnVal, SliceUtils.strToUtf16Slice(arena, this.fieldA));
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldB));
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldC));
+        
+
+        return returnVal;
 
     }
     
@@ -256,7 +287,7 @@ public class Foo {
     
     public static Foo extractFromFields(BorrowedFields fields) {
         
-        var fieldsNative = fields.internal;
+        var fieldsNative = fields.toNative(fields.arena);
         var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
         List<Object> selfEdges = List.of();
         
@@ -272,7 +303,7 @@ public class Foo {
     public static Foo extractFromBounds(BorrowedFieldsWithBounds bounds,String anotherString) {
         
         try (var arena = Arena.ofConfined()) {
-            var boundsNative = bounds.internal;
+            var boundsNative = bounds.toNative(bounds.arena);
             var anotherStringData= arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
             var anotherStringLen = anotherStringData.byteSize() - 1;
             var anotherStringView = DiplomatStringView.allocate(arena);
