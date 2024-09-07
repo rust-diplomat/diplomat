@@ -16,7 +16,6 @@ public class {{type_name}} {
     {{field.ty}} {{field.name}};
     {% endfor %}
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     {% for edge in edges -%}
@@ -43,6 +42,21 @@ public class {{type_name}} {
         {% endfor %}
 
     }
+
+    {% if is_zst -%}
+    {% else -%}
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = {{domain}}.{{lib_name}}.ntv.{{type_name}}.allocate(arena);
+        
+        {% for field in fields -%}
+        {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(returnVal, {{field.to_native}});
+        {% endfor %}
+
+        return returnVal;
+
+    }
+    {% endif -%}
+
     {% for method in methods %}
     {{method|indent(4)}}
     {% endfor %}

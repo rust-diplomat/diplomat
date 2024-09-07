@@ -21,7 +21,6 @@ public class MyStruct {
     MyEnum g;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
@@ -43,6 +42,22 @@ public class MyStruct {
         this.f = dev.diplomattest.somelib.ntv.MyStruct.f(structSegment);
         this.g = MyEnum.fromInt(dev.diplomattest.somelib.ntv.MyStruct.g(structSegment));
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.MyStruct.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.MyStruct.a(returnVal, this.a);
+        dev.diplomattest.somelib.ntv.MyStruct.b(returnVal, this.b);
+        dev.diplomattest.somelib.ntv.MyStruct.c(returnVal, this.c);
+        dev.diplomattest.somelib.ntv.MyStruct.d(returnVal, this.d);
+        dev.diplomattest.somelib.ntv.MyStruct.e(returnVal, this.e);
+        dev.diplomattest.somelib.ntv.MyStruct.f(returnVal, this.f);
+        dev.diplomattest.somelib.ntv.MyStruct.g(returnVal, this.g.toInt());
+        
+
+        return returnVal;
 
     }
     

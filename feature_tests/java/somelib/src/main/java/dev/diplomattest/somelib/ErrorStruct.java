@@ -16,7 +16,6 @@ public class ErrorStruct {
     int j;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
@@ -33,6 +32,17 @@ public class ErrorStruct {
         this.i = dev.diplomattest.somelib.ntv.ErrorStruct.i(structSegment);
         this.j = dev.diplomattest.somelib.ntv.ErrorStruct.j(structSegment);
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.ErrorStruct.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.ErrorStruct.i(returnVal, this.i);
+        dev.diplomattest.somelib.ntv.ErrorStruct.j(returnVal, this.j);
+        
+
+        return returnVal;
 
     }
     

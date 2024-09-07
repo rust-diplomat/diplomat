@@ -17,7 +17,6 @@ public class BorrowedFieldsWithBounds {
     String fieldC;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -41,6 +40,18 @@ public class BorrowedFieldsWithBounds {
         this.fieldB = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(structSegment));
         this.fieldC = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(structSegment));
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(returnVal, SliceUtils.strToUtf16Slice(arena, this.fieldA));
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldB));
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldC));
+        
+
+        return returnVal;
 
     }
     

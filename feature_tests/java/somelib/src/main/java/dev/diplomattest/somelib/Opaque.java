@@ -108,10 +108,12 @@ public class Opaque {
     
     public void assertStruct(MyStruct s) {
         
-        
-        var sNative = s.internal;
-        somelib_h.Opaque_assert_struct(internal, sNative);
-        
+        try (var arena = Arena.ofConfined()) {
+            
+            var sNative = s.toNative(arena);
+            somelib_h.Opaque_assert_struct(internal, sNative);
+            
+        }
     }
     
     public long internalLen() {

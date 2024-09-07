@@ -16,7 +16,6 @@ public class ImportedStruct {
     byte count;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
@@ -33,6 +32,17 @@ public class ImportedStruct {
         this.foo = UnimportedEnum.fromInt(dev.diplomattest.somelib.ntv.ImportedStruct.foo(structSegment));
         this.count = dev.diplomattest.somelib.ntv.ImportedStruct.count(structSegment);
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.ImportedStruct.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.ImportedStruct.foo(returnVal, this.foo.toInt());
+        dev.diplomattest.somelib.ntv.ImportedStruct.count(returnVal, this.count);
+        
+
+        return returnVal;
 
     }
     

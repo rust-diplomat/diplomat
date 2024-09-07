@@ -133,6 +133,23 @@ class SliceUtils {
         return string;
     }
   // for parameter conversion
+    static MemorySegment strToUtf8Slice(SegmentAllocator arena, String str) {
+        var vData = arena.allocateFrom(str, StandardCharsets.UTF_8);
+        var vLen = vData.byteSize() - 1;
+        var vView = DiplomatStringView.allocate(arena);
+        DiplomatStringView.len(vView, vLen);
+        DiplomatStringView.data(vView, vData);
+        return vData;
+    }
+
+    static MemorySegment strToUtf16Slice(SegmentAllocator arena, String str) {
+        var vData = arena.allocateFrom(str, StandardCharsets.UTF_16);
+        var vLen = vData.byteSize() - 1;
+        var vView = DiplomatStringView.allocate(arena);
+        DiplomatStringView.len(vView, vLen);
+        DiplomatStringView.data(vView, vData);
+        return vData;
+    }
     static MemorySegment strs16(SegmentAllocator arena, String [] strings) {
         var diplomatStrsData = DiplomatStringView.allocateArray(strings.length, arena);
         var layout = DiplomatStringView.layout();

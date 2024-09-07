@@ -5,6 +5,9 @@ use std::path::Path;
 use std::{borrow::Cow, iter::once};
 
 use askama::Template;
+use diplomat_core::hir::borrowing_param::{
+    BorrowingParamVisitor, ParamBorrowInfo, StructBorrowInfo,
+};
 use diplomat_core::hir::{
     self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeOwn,
     MaybeStatic, Method, OpaqueDef, OpaqueOwner, OpaquePath, ReturnType, Slice, SpecialMethod,
@@ -57,26 +60,97 @@ pub(crate) fn run<'a>(
         .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
     let tcx_config = toml::from_str::<Config>(&conf_str)
         .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
-    let (files, errors) = c::run(tcx);
 
-    let errors = errors.take_all();
-    if !errors.is_empty() {
+    let java_formatter = JavaFormatter::new(tcx);
+    let formatter = &java_formatter;
+    let error_store = ErrorStore::default();
+    let errors = &error_store;
+    let ty_gen_cx = TyGenContext {
+        tcx,
+        tcx_config,
+        formatter,
+        errors,
+    };
+
+    let Config {
+        ref domain,
+        ref lib_name,
+    } = ty_gen_cx.tcx_config;
+    let domain_path = domain.replace(".", "/");
+
+    let errors = ErrorStore::default();
+    let c_errors = ErrorStore::default();
+    let files = FileMap::default();
+    let c_files = FileMap::default();
+
+    let mut heard_files: Vec<String> = Vec::new();
+    let c_formatter = crate::c::CFormatter::new(&tcx, false);
+
+    c_files.add_file("diplomat_runtime.h".into(), crate::c::Runtime.to_string());
+    heard_files.push("diplomat_runtime.h".into());
+    for (id, ty) in tcx.all_types() {
+        if ty.attrs().disable {
+            continue;
+        }
+        let decl_header_path = c_formatter.fmt_decl_header_path(id);
+        let impl_header_path = c_formatter.fmt_impl_header_path(id);
+        let c_context = crate::c::TyGenContext {
+            tcx,
+            formatter: &c_formatter,
+            errors: &c_errors,
+            is_for_cpp: false,
+            id,
+            decl_header_path: &decl_header_path,
+            impl_header_path: &impl_header_path,
+        };
+
+        let decl_header = match ty {
+            hir::TypeDef::Enum(e) => c_context.gen_enum_def(e),
+            hir::TypeDef::Opaque(o) => c_context.gen_opaque_def(o),
+            hir::TypeDef::Struct(s) => c_context.gen_struct_def(s),
+            hir::TypeDef::OutStruct(s) => c_context.gen_struct_def(s),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        let impl_header = c_context.gen_impl(ty);
+
+        heard_files.push(impl_header_path.clone());
+
+        c_files.add_file(decl_header_path, decl_header.to_string());
+
+        c_files.add_file(impl_header_path, impl_header.to_string());
+
+        let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
+
+        let (file, body) = match ty {
+            TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque),
+            TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def),
+            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
+            TypeDef::OutStruct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
+            unknown => {
+                unreachable!("Encountered unknown variant: {unknown:?} while parsing all types")
+            }
+        };
+        files.add_file(
+            format!("src/main/java/{domain_path}/{lib_name}/{file}",),
+            body,
+        );
+    }
+
+    let c_errors = c_errors.take_all();
+    if !c_errors.is_empty() {
         eprintln!("Found errors when generating c  code");
-        for error in errors {
+        for error in c_errors {
             eprintln!("\t{}: {}", error.0, error.1);
         }
     }
 
-    let out_files = files.take_files();
+    let out_files = c_files.take_files();
 
     let tmp_path = out_folder.join(TMP_C_DIR);
     std::fs::create_dir(&tmp_path).expect("failed to create directory ");
-    let mut include_files = HashSet::new();
     for (subpath, text) in out_files {
         let out_path = tmp_path.join(&subpath);
-        if !subpath.ends_with(".d.h") && subpath.ends_with(".h") {
-            include_files.insert(subpath);
-        }
         let parent = out_path
             .parent()
             .expect("Cannot create files at top level dir /");
@@ -91,7 +165,7 @@ pub(crate) fn run<'a>(
 
     {
         let mut lib_file = File::create(&lib_path).expect("failed to create lib file");
-        for include in include_files {
+        for include in heard_files {
             writeln!(lib_file, "#include \"{include}\"").expect("failed to write line in lib file");
         }
     }
@@ -148,46 +222,6 @@ pub(crate) fn run<'a>(
 
     cleanup().expect("Failed to clean up temporary files");
 
-    let java_formatter = JavaFormatter::new(tcx);
-    let formatter = &java_formatter;
-    let error_store = ErrorStore::default();
-    let errors = &error_store;
-    let ty_gen_cx = TyGenContext {
-        tcx,
-        tcx_config,
-        formatter,
-        errors,
-    };
-
-    let Config {
-        ref domain,
-        ref lib_name,
-    } = ty_gen_cx.tcx_config;
-    let domain_path = domain.replace(".", "/");
-
-    let errors = ErrorStore::default();
-    let files = FileMap::default();
-    for (_id, ty) in tcx.all_types() {
-        let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
-        if ty.attrs().disable {
-            continue;
-        }
-
-        let (file, body) = match ty {
-            TypeDef::Opaque(opaque) => ty_gen_cx.gen_opaque_def(opaque),
-            TypeDef::Enum(enum_def) => ty_gen_cx.gen_enum_def(enum_def),
-            TypeDef::Struct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
-            TypeDef::OutStruct(struct_def) => ty_gen_cx.gen_struct_def(struct_def),
-            unknown => {
-                unreachable!("Encountered unknown variant: {unknown:?} while parsing all types")
-            }
-        };
-        files.add_file(
-            format!("src/main/java/{domain_path}/{lib_name}/{file}",),
-            body,
-        );
-    }
-
     let lib_file = LibFile {
         domain: domain.clone(),
         lib_name: lib_name.clone(),
@@ -243,12 +277,15 @@ pub(crate) struct StructTypeTpl<'a> {
     edges: Vec<Cow<'a, str>>,
     fields: Vec<FieldTpl<'a>>,
     methods: Vec<Cow<'a, str>>,
+    is_zst: bool,
 }
 
 #[derive(Clone, Debug)]
 struct FieldTpl<'a> {
     name: Cow<'a, str>,
     field_val: Cow<'a, str>,
+    native_name: Cow<'a, str>,
+    to_native: Cow<'a, str>,
     ty: Cow<'a, str>,
 }
 
@@ -324,11 +361,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_param_conversion<'b>(
         &self,
         param: &'b diplomat_core::hir::Param,
-    ) -> ParamConversion<'b> {
+        lt_info: &ParamBorrowInfo<'cx>,
+        allocations: &mut bool,
+    ) -> ParamConversion<'cx> {
         let diplomat_core::hir::Param { name, ty, .. } = param;
         // let java_ty = self.formatter.fmt_java_type(ty);
         let name = self.formatter.fmt_param_name(name.as_str());
-        let converted_value: Cow<'b, str> = format!("{name}Native").into();
+        let converted_value: Cow<'cx, str> = format!("{name}Native").into();
         let (conversion, converted_value) = match ty {
             hir::Type::Primitive(_) => (
                 format!("var {name}Native = {name};").into(),
@@ -338,10 +377,26 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 format!("var {name}Native = {name}.internal;").into(),
                 converted_value,
             ),
-            hir::Type::Struct(_) => (
-                format!(r#"var {name}Native = {name}.internal;"#).into(),
-                converted_value,
-            ),
+            hir::Type::Struct(_) => {
+                let arena: Cow<'cx, str> = match lt_info {
+                    ParamBorrowInfo::Struct(_) => {
+                        // todo: a comment
+                        format!("{name}.arena").into()
+                    }
+                    ParamBorrowInfo::NotBorrowed => {
+                        *allocations = true;
+                        "arena".into()
+                    }
+                    param_borrow => panic!(
+                        "Received unsupport ParamBorrowInfo variant while processing a struct param {param_borrow:?} when generating param conversion fo {}",
+                        param.name
+                    ),
+                };
+                (
+                    format!(r#"var {name}Native = {name}.toNative({arena});"#).into(),
+                    converted_value,
+                )
+            }
             hir::Type::Enum(_) => (
                 format!("var {name}Native = {name}.toInt();").into(),
                 format!("{name}Native").into(),
@@ -498,7 +553,7 @@ return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
             }
             _ => todo!(),
         };
-        return_conversion.wrap_ok()
+        Ok(return_conversion)
     }
 
     fn gen_return_conversion(
@@ -530,10 +585,10 @@ return string;"#,
                     lib_name
                 )
                 .into();
-                return write_return.wrap_ok();
+                return Ok(write_return);
             }
             SuccessType::OutType(ref o) => o,
-            SuccessType::Unit => return Cow::<'cx, str>::default().wrap_ok(),
+            SuccessType::Unit => return Ok(Cow::<'cx, str>::default()),
             _ => todo!(),
         };
         let return_statment: Cow<'cx, str> = match o {
@@ -582,7 +637,7 @@ return string;"#,
     fn gen_methods(
         &self,
         ty_name: &str,
-        methods: &[Method],
+        methods: &'cx [Method],
     ) -> (Vec<Cow<'cx, str>>, Vec<Cow<'cx, str>>) {
         let Config { lib_name, .. } = &self.tcx_config;
         let mut static_methods = Vec::new();
@@ -590,8 +645,9 @@ return string;"#,
         methods
             .iter()
             .filter(|method| !method.attrs.disable)
-            .filter_map(|method| -> Option<(bool, Cow<'cx, str>)> {
-                let mut visitor = method.borrowing_param_visitor(self.tcx);
+            .filter_map(|method: &'cx Method| -> Option<(bool, Cow<'cx, str>)> {
+                let mut visitor: BorrowingParamVisitor<'cx> =
+                    method.borrowing_param_visitor(self.tcx);
 
                 let (method_name, is_valid_constructor) = match method.attrs.special_method {
                     // We need to reserve the default constructor for internal methods so a constructor
@@ -612,18 +668,24 @@ return string;"#,
                 if let Some(param) = &method.param_self {
                     visitor.visit_param(&param.ty.clone().into(), "this");
                 }
-                let params = method
+                let mut allocations = false;
+                let (params, param_conversions) = method
                     .params
                     .iter()
-                    .map(|diplomat_core::hir::Param { name, ty, .. }| {
+                    .map(|ref param @ diplomat_core::hir::Param { name, ty, .. }| {
                         let name: Cow<str> = self.formatter.fmt_param_name(name.as_str()).into();
-                        visitor.visit_param(ty, name.as_ref());
-                        Param {
-                            name,
-                            ty: self.formatter.fmt_java_type(ty),
-                        }
+                        let param_lt_info = visitor.visit_param(ty, name.as_ref());
+                        let conversion =
+                            self.gen_param_conversion(param, &param_lt_info, &mut allocations);
+                        (
+                            Param {
+                                name,
+                                ty: self.formatter.fmt_java_type(ty),
+                            },
+                            conversion,
+                        )
                     })
-                    .collect();
+                    .unzip::<_, _, Vec<_>, Vec<_>>();
                 let lt_lookup = visitor.borrow_map();
                 let (lifetime_edges, return_self_edges, boxed_return) = match &method.output {
                     ReturnType::Fallible(SuccessType::OutType(o), _)
@@ -710,7 +772,7 @@ return string;"#,
                             method.name, ty_name
                         )
                     })
-                    .cown()
+                    .into()
                 } else {
                     match self.gen_return_conversion(
                         &method.output,
@@ -727,8 +789,8 @@ return string;"#,
                         }
                     }
                 };
-                let allocations =
-                    method
+                let allocations = allocations
+                    || method
                         .params
                         .iter()
                         .any(|diplomat_core::hir::Param { ty, .. }| {
@@ -758,12 +820,7 @@ return string;"#,
                         converted_value: "internal".into(),
                         conversion_def: "".into(),
                     }))
-                    .chain(
-                        method
-                            .params
-                            .iter()
-                            .map(|param| self.gen_param_conversion(param)),
-                    )
+                    .chain(param_conversions.into_iter())
                     .collect();
                 let write_return = matches!(
                     method.output,
@@ -806,7 +863,7 @@ return string;"#,
                     )
                 });
 
-                (method.param_self.is_some(), method_rendered.cown()).wrap_some()
+                Some((method.param_self.is_some(), method_rendered.into()))
             })
             .for_each(|(self_param, method_rendered)| match self_param {
                 true => class_methods.push(method_rendered),
@@ -816,7 +873,7 @@ return string;"#,
         (static_methods, class_methods)
     }
 
-    fn gen_enum_def(&self, e: &EnumDef) -> (Cow<str>, String) {
+    fn gen_enum_def(&self, e: &'cx EnumDef) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = e.name.as_str();
         let variants = e
@@ -846,9 +903,10 @@ return string;"#,
             .expect("failed to render struct type"),
         )
     }
-    fn gen_struct_def<TyP: TyPosition>(&self, s: &StructDef<TyP>) -> (Cow<str>, String) {
+    fn gen_struct_def<TyP: TyPosition>(&self, s: &'cx StructDef<TyP>) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let type_name = s.name.as_str();
+        let is_zst = s.fields.is_empty();
         let fields = s
             .fields
             .iter()
@@ -857,12 +915,15 @@ return string;"#,
                 let native_name = field.name.as_str();
                 let native_val =
                     format!("{domain}.{lib_name}.ntv.{type_name}.{native_name}(structSegment)");
-                let field_val = match &field.ty {
-                    hir::Type::Enum(ref enum_def) => format!(
-                        "{}.fromInt({native_val})",
-                        self.tcx.resolve_enum(enum_def.tcx_id).name
-                    )
-                    .into(),
+                let (field_val, to_native): (_, Cow<'cx, str>) = match &field.ty {
+                    hir::Type::Enum(ref enum_def) => (
+                        format!(
+                            "{}.fromInt({native_val})",
+                            self.tcx.resolve_enum(enum_def.tcx_id).name
+                        )
+                        .into(),
+                        format!("this.{name}.toInt()").into(),
+                    ),
                     hir::Type::Struct(struct_path) => {
                         let ty_name = self.tcx.resolve_type(struct_path.id()).name().as_str();
                         let lt_env = &s.lifetimes;
@@ -881,7 +942,7 @@ return string;"#,
                                     .collect::<Vec<_>>();
                                 match lt_edges.len() {
                                     0 => "List.of()".into(),
-                                    1 => lt_edges.join(", ").cown(),
+                                    1 => lt_edges.join(", ").into(),
                                     _ => format!(
                                         "Stream.concat({}).toList()",
                                         lt_edges
@@ -889,24 +950,33 @@ return string;"#,
                                             .map(|edge| format!("{edge}.stream()"))
                                             .mk_str_iter(", ")
                                     )
-                                    .cown(),
+                                    .into(),
                                 }
                             });
-                        let args = once("arena".into())
-                            .chain(once(native_val.to_string().cown()))
+                        let args = once::<Cow<'cx, str>>("arena".into())
+                            .chain(once(native_val.to_string().into()))
                             .chain(lt_edges)
                             .mk_str_iter(", ");
 
-                        format!("new {ty_name}({args})").cown()
+                        (
+                            format!("new {ty_name}({args})").into(),
+                            format!("this.{name}.toNative(arena)").into(),
+                        )
                     }
-                    hir::Type::Primitive(_) => native_val.clone().into(),
+                    hir::Type::Primitive(_) => {
+                        (native_val.clone().into(), format!("this.{name}").into())
+                    }
                     hir::Type::Slice(Slice::Str(
                         _,
                         StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8,
-                    )) => format!("SliceUtils.readUtf8({native_val})").into(),
-                    hir::Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
-                        format!("SliceUtils.readUtf16({native_val})").into()
-                    }
+                    )) => (
+                        format!("SliceUtils.readUtf8({native_val})").into(),
+                        format!("SliceUtils.strToUtf8Slice(arena, this.{name})").into(),
+                    ),
+                    hir::Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => (
+                        format!("SliceUtils.readUtf16({native_val})").into(),
+                        format!("SliceUtils.strToUtf16Slice(arena, this.{name})").into(),
+                    ),
                     hir::Type::Slice(_) => {
                         todo!("Failed to generate field: {name} for struct {}", s.name)
                     }
@@ -946,16 +1016,21 @@ return string;"#,
                                 format!("Stream.concat({lt_edges}).toList()")
                             })
                             .mk_str_iter(", ");
-                        format!("new {ty_name}(arena, {native_val}, {self_edges}, {lt_edges})")
-                            .cown()
+                        (
+                            format!("new {ty_name}(arena, {native_val}, {self_edges}, {lt_edges})")
+                                .into(),
+                            format!("this.{name}.inner").into(),
+                        )
                     }
                     _ => todo!(),
                 };
                 let ty = self.formatter.fmt_java_type(&field.ty);
                 FieldTpl {
                     name,
+                    native_name: native_name.into(),
                     ty,
                     field_val,
+                    to_native,
                 }
             })
             .collect();
@@ -976,6 +1051,7 @@ return string;"#,
                 type_name: type_name.into(),
                 lib_name: lib_name.clone(),
                 domain: domain.clone(),
+                is_zst,
                 edges,
                 fields,
                 methods,
@@ -985,7 +1061,7 @@ return string;"#,
         )
     }
 
-    fn gen_opaque_def(&self, o: &OpaqueDef) -> (Cow<str>, String) {
+    fn gen_opaque_def(&self, o: &'cx OpaqueDef) -> (Cow<str>, String) {
         let Config { domain, lib_name } = &self.tcx_config;
         let (static_methods, class_methods) = self.gen_methods(o.name.as_str(), &o.methods);
 
@@ -1013,27 +1089,6 @@ return string;"#,
             format!("{}.java", o.name).into(),
             opaque_tpl.render().expect("Failed to render opaque type"),
         )
-    }
-}
-
-trait PostFix: Sized {
-    fn wrap_ok<E>(self) -> Result<Self, E> {
-        Ok(self)
-    }
-    fn wrap_some(self) -> Option<Self> {
-        Some(self)
-    }
-}
-
-impl<T> PostFix for T {}
-
-trait PostFixCown {
-    fn cown<'a>(self) -> Cow<'a, str>;
-}
-
-impl PostFixCown for String {
-    fn cown<'a>(self) -> Cow<'a, str> {
-        Cow::Owned(self)
     }
 }
 

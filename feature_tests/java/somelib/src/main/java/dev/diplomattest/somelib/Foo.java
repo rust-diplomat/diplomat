@@ -65,7 +65,7 @@ public class Foo {
     
     public static Foo extractFromFields(BorrowedFields fields) {
         
-        var fieldsNative = fields.internal;
+        var fieldsNative = fields.toNative(fields.arena);
         var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
         List<Object> selfEdges = List.of();
         
@@ -81,7 +81,7 @@ public class Foo {
     public static Foo extractFromBounds(BorrowedFieldsWithBounds bounds,String anotherString) {
         
         try (var arena = Arena.ofConfined()) {
-            var boundsNative = bounds.internal;
+            var boundsNative = bounds.toNative(bounds.arena);
             var anotherStringData= arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
             var anotherStringLen = anotherStringData.byteSize() - 1;
             var anotherStringView = DiplomatStringView.allocate(arena);

@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 public class MyZst {
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
@@ -31,6 +30,7 @@ public class MyZst {
         
 
     }
+
     
 }
 

@@ -17,7 +17,6 @@ public class NestedBorrowedFields {
     BorrowedFieldsWithBounds bounds2;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> xEdges = List.of();
@@ -41,6 +40,18 @@ public class NestedBorrowedFields {
         this.bounds = new BorrowedFieldsWithBounds(arena, dev.diplomattest.somelib.ntv.NestedBorrowedFields.bounds(structSegment), Stream.concat(xEdges.stream(), yEdges.stream()).toList(), yEdges, yEdges);
         this.bounds2 = new BorrowedFieldsWithBounds(arena, dev.diplomattest.somelib.ntv.NestedBorrowedFields.bounds2(structSegment), zEdges, zEdges, zEdges);
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.NestedBorrowedFields.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.NestedBorrowedFields.fields(returnVal, this.fields.toNative(arena));
+        dev.diplomattest.somelib.ntv.NestedBorrowedFields.bounds(returnVal, this.bounds.toNative(arena));
+        dev.diplomattest.somelib.ntv.NestedBorrowedFields.bounds2(returnVal, this.bounds2.toNative(arena));
+        
+
+        return returnVal;
 
     }
     

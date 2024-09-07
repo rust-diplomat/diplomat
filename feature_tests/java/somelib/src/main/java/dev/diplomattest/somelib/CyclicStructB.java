@@ -15,7 +15,6 @@ public class CyclicStructB {
     byte field;
     
 
-    MemorySegment internal;
     SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
@@ -31,6 +30,16 @@ public class CyclicStructB {
 
         this.field = dev.diplomattest.somelib.ntv.CyclicStructB.field(structSegment);
         
+
+    }
+
+    MemorySegment toNative(SegmentAllocator arena) {
+        var returnVal = dev.diplomattest.somelib.ntv.CyclicStructB.allocate(arena);
+        
+        dev.diplomattest.somelib.ntv.CyclicStructB.field(returnVal, this.field);
+        
+
+        return returnVal;
 
     }
     
