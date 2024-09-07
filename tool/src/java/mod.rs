@@ -1,13 +1,10 @@
-use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::{borrow::Cow, iter::once};
 
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{
-    BorrowingParamVisitor, ParamBorrowInfo, StructBorrowInfo,
-};
+use diplomat_core::hir::borrowing_param::{BorrowingParamVisitor, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeOwn,
     MaybeStatic, Method, OpaqueDef, OpaqueOwner, OpaquePath, ReturnType, Slice, SpecialMethod,
@@ -17,7 +14,7 @@ use formatter::JavaFormatter;
 use heck::ToUpperCamelCase;
 use serde::Deserialize;
 
-use crate::{c, ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 
 const TMP_C_DIR: &str = "tmp";
 const LIBRARY: &str = "somelib"; // todo: build from conf. Ensure that name is not the same as any
@@ -84,7 +81,7 @@ pub(crate) fn run<'a>(
     let c_files = FileMap::default();
 
     let mut heard_files: Vec<String> = Vec::new();
-    let c_formatter = crate::c::CFormatter::new(&tcx, false);
+    let c_formatter = crate::c::CFormatter::new(tcx, false);
 
     c_files.add_file("diplomat_runtime.h".into(), crate::c::Runtime.to_string());
     heard_files.push("diplomat_runtime.h".into());
@@ -672,7 +669,7 @@ return string;"#,
                 let (params, param_conversions) = method
                     .params
                     .iter()
-                    .map(|ref param @ diplomat_core::hir::Param { name, ty, .. }| {
+                    .map(|param @ diplomat_core::hir::Param { name, ty, .. }| {
                         let name: Cow<str> = self.formatter.fmt_param_name(name.as_str()).into();
                         let param_lt_info = visitor.visit_param(ty, name.as_ref());
                         let conversion =
@@ -820,7 +817,7 @@ return string;"#,
                         converted_value: "internal".into(),
                         conversion_def: "".into(),
                     }))
-                    .chain(param_conversions.into_iter())
+                    .chain(param_conversions)
                     .collect();
                 let write_return = matches!(
                     method.output,

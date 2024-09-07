@@ -37,7 +37,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-
 #[derive(askama::Template)]
 #[template(path = "c/runtime.h.jinja", escape = "none")]
 pub(crate) struct Runtime;
@@ -46,7 +45,6 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();
-
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 

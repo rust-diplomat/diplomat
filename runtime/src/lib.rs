@@ -33,6 +33,7 @@ pub type DiplomatStr = [u8];
 pub type DiplomatStr16 = [u16];
 
 /// Like [`u8`], but interpreted explicitly as a raw byte as opposed to a numerical value.
+///
 /// This matters for languages like JavaScript or Dart, where there's only a single numeric
 /// type, but special types for byte buffers.
 pub type DiplomatByte = u8;
