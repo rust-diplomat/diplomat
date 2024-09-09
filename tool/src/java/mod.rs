@@ -1,10 +1,13 @@
 use std::fs::File;
 use std::io::Write;
+use std::marker::PhantomData;
 use std::path::Path;
 use std::{borrow::Cow, iter::once};
 
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{BorrowingParamVisitor, ParamBorrowInfo};
+use diplomat_core::hir::borrowing_param::{
+    BorrowingParamVisitor, ParamBorrowInfo, StructBorrowInfo,
+};
 use diplomat_core::hir::{
     self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeOwn,
     MaybeStatic, Method, OpaqueDef, OpaqueOwner, OpaquePath, ReturnType, Slice, SpecialMethod,
@@ -282,7 +285,8 @@ struct FieldTpl<'a> {
     name: Cow<'a, str>,
     field_val: Cow<'a, str>,
     native_name: Cow<'a, str>,
-    to_native: Cow<'a, str>,
+    to_native: Conversion<'a>,
+    to_java: Conversion<'a>,
     ty: Cow<'a, str>,
 }
 
@@ -320,19 +324,23 @@ struct LifetimeTpl<'a> {
 }
 
 #[derive(Template, Clone, Debug)]
-#[template(path = "java/StructReturn.java.jinja", escape = "none")]
-pub(crate) struct StructReturnTpl<'a> {
+#[template(path = "java/StructConversion.java.jinja", escape = "none")]
+pub(crate) struct StructConversionTpl<'a> {
     lifetimes: Vec<LifetimeTpl<'a>>,
-    return_ty: Cow<'a, str>,
+    ty: Cow<'a, str>,
+    name: Cow<'a, str>,
+    native_val: Cow<'a, str>,
 }
 
 #[derive(Template, Clone, Debug)]
-#[template(path = "java/OpaqueReturn.java.jinja", escape = "none")]
-pub(crate) struct OpaqueReturnTpl<'a> {
+#[template(path = "java/OpaqueConversion.java.jinja", escape = "none")]
+pub(crate) struct OpaqueConversionTpl<'a> {
+    name: Cow<'a, str>,
     lifetimes: Vec<LifetimeTpl<'a>>,
     owned_return: bool,
-    return_self_edges: Option<Cow<'a, str>>,
-    return_ty: Cow<'a, str>,
+    self_edges: Option<Cow<'a, str>>,
+    ty: Cow<'a, str>,
+    native_val: Cow<'a, str>,
 }
 
 #[derive(Template, Clone, Debug)]
@@ -354,83 +362,151 @@ struct TyGenContext<'a, 'cx> {
     errors: &'a ErrorStore<'cx, String>,
 }
 
-impl<'a, 'cx> TyGenContext<'a, 'cx> {
-    fn gen_param_conversion<'b>(
-        &self,
-        param: &'b diplomat_core::hir::Param,
-        lt_info: &ParamBorrowInfo<'cx>,
-        allocations: &mut bool,
-    ) -> ParamConversion<'cx> {
-        let diplomat_core::hir::Param { name, ty, .. } = param;
-        // let java_ty = self.formatter.fmt_java_type(ty);
-        let name = self.formatter.fmt_param_name(name.as_str());
-        let converted_value: Cow<'cx, str> = format!("{name}Native").into();
-        let (conversion, converted_value) = match ty {
-            hir::Type::Primitive(_) => (
-                format!("var {name}Native = {name};").into(),
-                converted_value,
-            ),
-            hir::Type::Opaque(_) => (
-                format!("var {name}Native = {name}.internal;").into(),
-                converted_value,
-            ),
-            hir::Type::Struct(_) => {
-                let arena: Cow<'cx, str> = match lt_info {
-                    ParamBorrowInfo::Struct(_) => {
-                        // todo: a comment
-                        format!("{name}.arena").into()
-                    }
-                    ParamBorrowInfo::NotBorrowed => {
-                        *allocations = true;
-                        "arena".into()
-                    }
-                    param_borrow => panic!(
-                        "Received unsupport ParamBorrowInfo variant while processing a struct param {param_borrow:?} when generating param conversion fo {}",
-                        param.name
-                    ),
-                };
-                (
-                    format!(r#"var {name}Native = {name}.toNative({arena});"#).into(),
-                    converted_value,
-                )
+#[derive(Debug, Clone)]
+struct Conversion<'cx> {
+    conversion: Cow<'cx, str>,
+    converted_value: Cow<'cx, str>,
+}
+
+mod arena {
+    use std::{borrow::Cow, fmt::Display};
+    pub type Render<'cx> = Box<dyn Fn(Arena<'cx>) -> Conversion<'cx> + 'cx>;
+
+    const UNIT: &() = &();
+    use super::Conversion;
+
+    #[must_use]
+    pub(crate) struct AllocationConversion<'cx, F: Fn(Arena<'cx>) -> Conversion<'cx>> {
+        clos: F,
+        _marker: &'cx (),
+    }
+    impl<'cx, F: Fn(Arena<'cx>) -> Conversion<'cx> + 'cx> AllocationConversion<'cx, F> {
+        pub fn new(clos: F) -> Self {
+            Self {
+                clos,
+                _marker: UNIT,
             }
-            hir::Type::Enum(_) => (
-                format!("var {name}Native = {name}.toInt();").into(),
-                format!("{name}Native").into(),
-            ),
+        }
 
+        pub fn dynamic(clos: F) -> AllocationConversion<'cx, Render<'cx>> {
+            AllocationConversion {
+                clos: Box::new(clos) as Render<'cx>,
+                _marker: UNIT,
+            }
+        }
+
+        pub fn render(self, arena: Arena<'cx>) -> Conversion<'cx> {
+            (self.clos)(arena)
+        }
+    }
+
+    pub enum Arena<'cx> {
+        Closed,
+        Struct { name: Cow<'cx, str> },
+        Auto,
+    }
+
+    impl<'cx> Display for Arena<'cx> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Arena::Closed => write!(f, "arena"),
+                Arena::Struct { name } => write!(f, "{name}.arena"),
+                Arena::Auto => write!(f, "Arena.ofAuto()"),
+            }
+        }
+    }
+    impl<'cx> From<&diplomat_core::hir::StructDef> for Arena<'cx> {
+        fn from(value: &diplomat_core::hir::StructDef) -> Self {
+            Arena::Struct {
+                name: value.name.as_str().to_string().into(),
+            }
+        }
+    }
+}
+
+enum AllocateConversion<'cx, F: Fn(arena::Arena<'cx>) -> Conversion<'cx>> {
+    NotAllocating(Conversion<'cx>),
+    Allocating(arena::AllocationConversion<'cx, F>),
+}
+
+impl<'a, 'cx> TyGenContext<'a, 'cx> {
+    #[allow(unused)]
+    fn java_to_native<T: TyPosition>(
+        &self,
+        name: Cow<'cx, str>,
+        ty: &diplomat_core::hir::Type<T>,
+    ) -> AllocateConversion<'cx, arena::Render<'cx>> {
+        match ty {
+            hir::Type::Primitive(_) => {
+                let converted_value: Cow<'cx, str> = format!("{name}Native").into();
+                AllocateConversion::NotAllocating(Conversion {
+                    conversion: format!("var {converted_value} = {name}").into(),
+                    converted_value,
+                })
+            }
+            hir::Type::Opaque(_) => {
+                let converted_value: Cow<'cx, str> = format!("{name}Native").into();
+                AllocateConversion::NotAllocating(Conversion {
+                    conversion: format!("var {converted_value} = {name}.inner").into(),
+                    converted_value,
+                })
+            }
+            hir::Type::Struct(_) => {
+                let clos = move |arena| -> Conversion<'cx> {
+                    let converted_value: Cow<'cx, str> = format!("{name}Native").into();
+                    Conversion {
+                        conversion: format!("var {converted_value} = {name}.toNative({arena})")
+                            .into(),
+                        converted_value: format!("{name}Native").into(),
+                    }
+                };
+                AllocateConversion::Allocating(arena::AllocationConversion::dynamic(clos))
+            }
+            hir::Type::Enum(_) => {
+                let converted_value: Cow<'cx, str> = format!("{name}Native").into();
+                AllocateConversion::NotAllocating(Conversion {
+                    conversion: format!("var {converted_value} = {name}.toInt()").into(),
+                    converted_value,
+                })
+            }
             hir::Type::Slice(Slice::Str(borrow, StringEncoding::UnvalidatedUtf16)) => {
-                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
-                (
-                    format!(
-                        r#"var {name}Data= {arena_name}.allocateFrom({name}, StandardCharsets.UTF_16);
+                let clos = move |arena| -> Conversion<'cx> {
+                    let converted_value: Cow<'cx, str> = format!("{name}View").into();
+                    let conversion: Cow<'cx, str> = format!(
+                        r#"var {name}Data= {arena}.allocateFrom({name}, StandardCharsets.UTF_16);
 var {name}Len = {name}Data.byteSize() - 1;  // allocated strings are null terminated
-var {name}View = DiplomatString16View.allocate({arena_name});
+var {name}View = DiplomatString16View.allocate({arena});
 DiplomatString16View.len({name}View, {name}Len);
-DiplomatString16View.data({name}View, {name}Data);"# 
-
+DiplomatString16View.data({name}View, {name}Data);"#
                     )
-                    .into(),
-                    format!("{name}View").into(),
-                )
+                    .into();
+                    Conversion {
+                        conversion,
+                        converted_value,
+                    }
+                };
+                AllocateConversion::Allocating(arena::AllocationConversion::dynamic(clos))
             }
             hir::Type::Slice(Slice::Str(
                 borrow,
                 StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8,
             )) => {
-                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
-                (
-                    format!(
-                        r#"var {name}Data= {arena_name}.allocateFrom({name}, StandardCharsets.UTF_8);
-var {name}Len = {name}Data.byteSize() - 1;
-var {name}View = DiplomatStringView.allocate({arena_name});
-DiplomatStringView.len({name}View, {name}Len);
-DiplomatStringView.data({name}View, {name}Data);"#
+                let clos = move |arena| -> Conversion<'cx> {
+                    let converted_value: Cow<'cx, str> = format!("{name}View").into();
+                    let conversion: Cow<'cx, str> = format!(
+                        r#"var {name}Data= {arena}.allocateFrom({name}, StandardCharsets.UTF_8);
+var {name}Len = {name}Data.byteSize() - 1;  // allocated strings are null terminated
+var {name}View = DiplomatString8View.allocate({arena});
+DiplomatString8View.len({name}View, {name}Len);
+DiplomatString8View.data({name}View, {name}Data);"#
                     )
-                    .into(),
-                    format!("{name}View").into(),
-                    // by default java native creates null terminated strings
-                )
+                    .into();
+                    Conversion {
+                        conversion,
+                        converted_value,
+                    }
+                };
+                AllocateConversion::Allocating(arena::AllocationConversion::dynamic(clos))
             }
             hir::Type::Slice(Slice::Primitive(borrow, p)) => {
                 let rust_primitive_type = match p {
@@ -452,54 +528,192 @@ DiplomatStringView.data({name}View, {name}Data);"#
                     hir::PrimitiveType::Float(hir::FloatType::F32) => "JAVA_FLOAT",
                     hir::PrimitiveType::Float(hir::FloatType::F64) => "JAVA_DOUBLE",
                 };
-                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
-                let conversion = match p {
-                    hir::PrimitiveType::Bool => format!(
-                        r#"var {name}Len = {name}.length;
+
+                let p = *p;
+                let clos = move |arena| -> Conversion<'cx> {
+                    let converted_value: Cow<'cx, str> = format!("{name}View").into();
+
+                    let conversion: Cow<'cx, str> = match p {
+                        hir::PrimitiveType::Bool => format!(
+                            r#"var {name}Len = {name}.length;
 byte[] {name}ByteArray = new byte[{name}Len];
 for (int i = 0; i < {name}Len; i++) {{
     {name}ByteArray[i] = (byte) ({name}[i] ? 1 : 0);
 }}
-var {name}Data = {arena_name}.allocateFrom({primitive_ty}, {name}ByteArray);
-var {name}View = Diplomat{rust_primitive_type}View.allocate({arena_name});
+var {name}Data = {arena}.allocateFrom({primitive_ty}, {name}ByteArray);
+var {name}View = Diplomat{rust_primitive_type}View.allocate({arena});
 Diplomat{rust_primitive_type}View.len({name}View, {name}Len);
 Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
 "#
-                    )
-                    .into(),
-                    _ => format!(
-                        r#"var {name}Len = {name}.length;
-var {name}Data= {arena_name}.allocateFrom({primitive_ty}, {name});
-var {name}View = Diplomat{rust_primitive_type}View.allocate({arena_name});
+                        )
+                        .into(),
+                        _ => format!(
+                            r#"var {name}Len = {name}.length;
+var {name}Data= {arena}.allocateFrom({primitive_ty}, {name});
+var {name}View = Diplomat{rust_primitive_type}View.allocate({arena});
 Diplomat{rust_primitive_type}View.len({name}View, {name}Len);
 Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
 "#
-                    )
-                    .into(),
+                        )
+                        .into(),
+                    };
+                    Conversion {
+                        conversion,
+                        converted_value,
+                    }
                 };
-                (conversion, format!("{name}View").into())
+
+                match borrow {
+                    Some(_) => {
+                        AllocateConversion::Allocating(arena::AllocationConversion::dynamic(clos))
+                    }
+                    None => AllocateConversion::NotAllocating(clos(arena::Arena::Closed)),
+                }
             }
-            hir::Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => (
-                format!(
-                    r#"var {name}View = SliceUtils.strs16(arena, {name});
-var {name}Len = {name}.length;"#
-                )
-                .into(),
-                format!(r#"{name}View"#).into(),
-            ),
-            hir::Type::Slice(Slice::Strs(_)) => (
-                format!(
-                    r#"var {name}View = SliceUtils.strs8(arena, {name});
-var {name}Len = {name}.length;"#
-                )
-                .into(),
-                format!(r#"{name}View"#).into(),
-            ),
-            x => panic!("Unexpected slice type {x:?}"),
-        };
-        ParamConversion {
-            converted_value,
-            conversion_def: conversion,
+            hir::Type::Callback(_) => {
+                // todo
+                todo!("We don't support callbacks yet")
+            }
+            hir::Type::DiplomatOption(_) => {
+                // todo
+                todo!("We don't support options yet")
+            }
+            _ => todo!(),
+        }
+    }
+
+    fn native_to_java<T: TyPosition>(
+        &self,
+        name: Cow<'cx, str>,
+        native_val: Cow<'cx, str>,
+        ty: &diplomat_core::hir::Type<T>,
+        lifetimes: Vec<LifetimeTpl>,
+        return_self_edges: Option<Cow<str>>,
+    ) -> Conversion<'cx> {
+        match ty {
+            hir::Type::Primitive(_) => {
+                let converted_value = format!("{name}Val").into();
+                let conversion = format!("var {name}Val = {native_val};").into();
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+            hir::Type::Opaque(o) => {
+                let converted_value = format!("{name}Val").into();
+                let owned_return: bool = o.owner.is_owned();
+                let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
+                let conversion = OpaqueConversionTpl {
+                    name: "return".into(),
+                    lifetimes,
+                    ty: ty_name.as_str().into(),
+                    owned_return,
+                    self_edges: return_self_edges,
+                    native_val,
+                }
+                .render()
+                .unwrap_or_else(|err| {
+                    panic!(
+                        "Failed to render return val for type {}. Cause: {err}",
+                        ty_name
+                    )
+                })
+                .into();
+
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+            hir::Type::Struct(s) => {
+                let ty_name = &self.tcx.resolve_type(s.id()).name();
+                let converted_value = format!("{name}Val").into();
+                let conversion = StructConversionTpl {
+                    lifetimes,
+                    ty: ty_name.as_str().into(),
+                    name,
+                    native_val,
+                }
+                .render()
+                .unwrap_or_else(|err| {
+                    panic!("Failed to render return val for type {ty_name}. Cause: {err}")
+                })
+                .into();
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+            hir::Type::Enum(e) => {
+                let converted_value = format!("{name}Val").into();
+                let enum_ty = self.tcx.resolve_enum(e.tcx_id).name.as_str();
+                let conversion =
+                    format!(r#"var {name}Val = {enum_ty}.fromInt({native_val});"#).into();
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+
+            hir::Type::Slice(Slice::Str(_, encoding)) => {
+                let conversion = match encoding {
+                    StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => {
+                        format!("{name}Val = SliceUtils.readUtf8({native_val});")
+                    }
+                    StringEncoding::UnvalidatedUtf16 => {
+                        format!("{name}Val = SliceUtils.readUtf16({native_val});")
+                    }
+                    _ => unreachable!("Not a valid string encoding for diplomat"),
+                }
+                .into();
+                let converted_value = format!("{name}Val").into();
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+            hir::Type::Slice(Slice::Primitive(_, p)) => {
+                let lib_name = self.tcx_config.lib_name.as_ref();
+                let domain = self.tcx_config.domain.as_ref();
+                let primitive_ty = match p {
+                    hir::PrimitiveType::Bool => "Bool",
+                    hir::PrimitiveType::Char => "Char",
+                    hir::PrimitiveType::Byte => "U8",
+                    hir::PrimitiveType::Int(IntType::U8) => "U8",
+                    hir::PrimitiveType::Int(IntType::I8) => "I8",
+                    hir::PrimitiveType::Int(IntType::U16) => "U16",
+                    hir::PrimitiveType::Int(IntType::I16) => "I16",
+                    hir::PrimitiveType::Int(IntType::U32) => "U32",
+                    hir::PrimitiveType::Int(IntType::I32) => "I32",
+                    hir::PrimitiveType::Int(IntType::U64) => "U64",
+                    hir::PrimitiveType::Int(IntType::I64) => "I64",
+                    hir::PrimitiveType::IntSize(IntSizeType::Usize) => "Usize",
+                    hir::PrimitiveType::IntSize(IntSizeType::Isize) => "Isize",
+                    hir::PrimitiveType::Int128(_) => {
+                        panic!("Java backend doesn't support Int128 types")
+                    }
+                    hir::PrimitiveType::Float(FloatType::F32) => "F32",
+                    hir::PrimitiveType::Float(FloatType::F64) => "F64",
+                };
+
+                let java_primitive_ty = self.formatter.fmt_native_primitive(p);
+                let conversion = format!(
+                    r#"var data = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.data({native_val});
+var len = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.len({native_val});
+return SliceUtils.{java_primitive_ty}SliceToArray({native_val});"#
+                ).into();
+                let converted_value = format!("{name}Val").into();
+                Conversion {
+                    conversion,
+                    converted_value,
+                }
+            }
+            hir::Type::Slice(Slice::Strs(_)) => {
+                panic!("[&str] not allowed in return position")
+            }
+            hir::Type::Callback(_) => todo!("Callback's aren't supported in java"),
+            hir::Type::DiplomatOption(_) => todo!("Options aren't support in java"),
+            _ => todo!(),
         }
     }
 
@@ -553,12 +767,73 @@ return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
         Ok(return_conversion)
     }
 
+    fn gen_native_to_java_conversion<T: TyPosition>(
+        &self,
+        o: &hir::Type<T>,
+        lifetimes: Vec<LifetimeTpl>,
+        return_self_edges: Option<Cow<str>>,
+    ) -> Result<Cow<'cx, str>, String> {
+        let conversion = match o {
+            hir::Type::Primitive(_) => "return nativeVal;".into(),
+            hir::Type::Opaque(o) => {
+                let owned_return: bool = o.owner.is_owned();
+                let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
+                let conversion = OpaqueConversionTpl {
+                    name: "return".into(),
+                    lifetimes,
+                    ty: ty_name.as_str().into(),
+                    owned_return,
+                    self_edges: return_self_edges,
+                    native_val: "nativeVal".into(),
+                }
+                .render()
+                .unwrap_or_else(|err| {
+                    panic!(
+                        "Failed to render return val for type {}. Cause: {err}",
+                        ty_name
+                    )
+                });
+
+                format!(
+                    r#"{conversion}
+return returnVal;"#
+                )
+                .into()
+            }
+            hir::Type::Struct(s) => {
+                let ty_name = &self.tcx.resolve_type(s.id()).name();
+                let conversion = StructConversionTpl {
+                    lifetimes,
+                    ty: ty_name.as_str().into(),
+                    name: "return".into(),
+                    native_val: "nativeVal".into(),
+                }
+                .render()
+                .unwrap_or_else(|err| {
+                    panic!("Failed to render return val for type {ty_name}. Cause: {err}")
+                });
+                format!(
+                    r#"{conversion}
+return returnVal;"#
+                )
+                .into()
+            }
+            hir::Type::Enum(e) => {
+                let enum_ty = self.tcx.resolve_enum(e.tcx_id).name.as_str();
+                format!(r#"return {enum_ty}.fromInt(nativeVal);"#).into()
+            }
+            hir::Type::Slice(ref slice) => self.gen_slice_return_conversion(slice)?,
+            unknown => panic!("Got to unknown return type: {unknown:?}"),
+        };
+        Ok(conversion)
+    }
+
     fn gen_return_conversion(
         &self,
         ty: &ReturnType,
         lifetimes: Vec<LifetimeTpl>,
         return_self_edges: Option<Cow<str>>,
-    ) -> Result<Cow<'cx, str>, String> {
+    ) -> Cow<'cx, str> {
         let Config { lib_name, .. } = &self.tcx_config;
         let ret = match ty {
             ReturnType::Infallible(ref ret) => ret,
@@ -582,53 +857,29 @@ return string;"#,
                     lib_name
                 )
                 .into();
-                return Ok(write_return);
+                return write_return;
             }
             SuccessType::OutType(ref o) => o,
-            SuccessType::Unit => return Ok(Cow::<'cx, str>::default()),
+            SuccessType::Unit => return Cow::<'cx, str>::default(),
             _ => todo!(),
         };
-        let return_statment: Cow<'cx, str> = match o {
-            hir::Type::Primitive(_) => "return nativeVal;".into(),
-            hir::Type::Opaque(o) => {
-                let owned_return: bool = o.owner.is_owned();
-                let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
-                OpaqueReturnTpl {
-                    lifetimes,
-                    return_ty: ty_name.as_str().into(),
-                    owned_return,
-                    return_self_edges,
-                }
-                .render()
-                .unwrap_or_else(|err| {
-                    panic!(
-                        "Failed to render return val for type {}. Cause: {err}",
-                        ty_name
-                    )
-                })
-                .into()
-            }
-            hir::Type::Struct(s) => {
-                let ty_name = &self.tcx.resolve_type(s.id()).name();
-                StructReturnTpl {
-                    lifetimes,
-                    return_ty: ty_name.as_str().into(),
-                }
-                .render()
-                .unwrap_or_else(|err| {
-                    panic!("Failed to render return val for type {ty_name}. Cause: {err}")
-                })
-                .into()
-            }
-            hir::Type::Enum(e) => {
-                let enum_ty = self.tcx.resolve_enum(e.tcx_id).name.as_str();
-                format!(r#"return {enum_ty}.fromInt(nativeVal);"#).into()
-            }
-            hir::Type::Slice(ref slice) => self.gen_slice_return_conversion(slice)?,
-            unknown => panic!("Got to unknown return type: {unknown:?}"),
-        };
-
-        Ok(return_statment)
+        // (o, lifetimes, return_self_edges)
+        let Conversion {
+            conversion,
+            converted_value,
+        } = self.native_to_java(
+            "return".into(),
+            "nativeVal".into(),
+            o,
+            lifetimes,
+            return_self_edges,
+        );
+        format!(
+            r#"{conversion}
+return {converted_value};
+        "#
+        )
+        .into()
     }
 
     fn gen_methods(
@@ -642,7 +893,7 @@ return string;"#,
         methods
             .iter()
             .filter(|method| !method.attrs.disable)
-            .filter_map(|method: &'cx Method| -> Option<(bool, Cow<'cx, str>)> {
+            .map(|method: &'cx Method| -> (bool, Cow<'cx, str>) {
                 let mut visitor: BorrowingParamVisitor<'cx> =
                     method.borrowing_param_visitor(self.tcx);
 
@@ -669,11 +920,24 @@ return string;"#,
                 let (params, param_conversions) = method
                     .params
                     .iter()
-                    .map(|param @ diplomat_core::hir::Param { name, ty, .. }| {
-                        let name: Cow<str> = self.formatter.fmt_param_name(name.as_str()).into();
+                    .map(|diplomat_core::hir::Param { name, ty, .. }| {
+                        let name: Cow<'cx, str> =
+                            self.formatter.fmt_param_name(name.as_str()).into();
                         let param_lt_info = visitor.visit_param(ty, name.as_ref());
-                        let conversion =
-                            self.gen_param_conversion(param, &param_lt_info, &mut allocations);
+                        let Conversion {
+                            conversion,
+                            converted_value,
+                        } = match self.java_to_native(name.clone(), ty) {
+                            AllocateConversion::NotAllocating(conversion) => conversion,
+                            AllocateConversion::Allocating(conversion_clos) => {
+                                allocations = true;
+                                conversion_clos.render(arena::Arena::Closed)
+                            }
+                        };
+                        let conversion = ParamConversion {
+                            converted_value,
+                            conversion_def: conversion,
+                        };
                         (
                             Param {
                                 name,
@@ -697,14 +961,10 @@ return string;"#,
                             }
                             hir::Type::Slice(
                                 Slice::Str(Some(_), _) | Slice::Primitive(Some(_), _),
-                            ) => Some(ParamConversion {
+                            )
+                            | hir::Type::Struct(_) => Some(ParamConversion {
                                 converted_value: "arena".into(),
                                 conversion_def: "".into(),
-                            }),
-                            hir::Type::Struct(_) => Some(ParamConversion {
-                                converted_value: "returnArena".into(),
-                                conversion_def:
-                                    "var returnArena = (SegmentAllocator) Arena.ofAuto();".into(),
                             }),
                             _ => None,
                         };
@@ -771,20 +1031,7 @@ return string;"#,
                     })
                     .into()
                 } else {
-                    match self.gen_return_conversion(
-                        &method.output,
-                        lifetime_edges,
-                        return_self_edges,
-                    ) {
-                        Ok(ok) => ok,
-                        Err(err) => {
-                            self.errors.push_error(format!(
-                                "can't construct method {} because {err}",
-                                method.name
-                            ));
-                            return None;
-                        }
-                    }
+                    self.gen_return_conversion(&method.output, lifetime_edges, return_self_edges)
                 };
                 let allocations = allocations
                     || method
@@ -860,7 +1107,7 @@ return string;"#,
                     )
                 });
 
-                Some((method.param_self.is_some(), method_rendered.into()))
+                (method.param_self.is_some(), method_rendered.into())
             })
             .for_each(|(self_param, method_rendered)| match self_param {
                 true => class_methods.push(method_rendered),
@@ -1022,11 +1269,23 @@ return string;"#,
                     _ => todo!(),
                 };
                 let ty = self.formatter.fmt_java_type(&field.ty);
+                let to_native = match self.java_to_native(name.clone(), &field.ty) {
+                    AllocateConversion::NotAllocating(conv) => conv,
+                    AllocateConversion::Allocating(clos) => clos.render(arena::Arena::Closed),
+                };
+                let to_java = self.native_to_java(
+                    name.clone(),
+                    format!("{name}Native").into(),
+                    &field.ty,
+                    vec![],
+                    None,
+                );
                 FieldTpl {
                     name,
                     native_name: native_name.into(),
                     ty,
                     field_val,
+                    to_java,
                     to_native,
                 }
             })

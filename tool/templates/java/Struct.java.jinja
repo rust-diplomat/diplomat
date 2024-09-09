@@ -38,7 +38,9 @@ public class {{type_name}} {
         {% endfor %}
 
         {% for field in fields -%}
-        this.{{field.name}} = {{field.field_val}};
+        var {{field.name}}Native = {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(structSegment);
+        {{field.to_java.conversion}}
+        this.{{field.name}} = {{field.to_java.converted_value}};
         {% endfor %}
 
     }
@@ -49,7 +51,8 @@ public class {{type_name}} {
         var returnVal = {{domain}}.{{lib_name}}.ntv.{{type_name}}.allocate(arena);
         
         {% for field in fields -%}
-        {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(returnVal, {{field.to_native}});
+        {{field.to_native.conversion}}
+        {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(returnVal, {{field.to_native.converted_value}});
         {% endfor %}
 
         return returnVal;

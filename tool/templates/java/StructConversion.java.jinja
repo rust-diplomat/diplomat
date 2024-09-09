@@ -6,9 +6,8 @@ List<Object> {{lifetime.name}}Edges = List.of(
 );
 {%- endfor %}
 
-var returnVal = new {{return_ty}}(returnArena, nativeVal
+var {{name}}Val = new {{ty}}(returnArena, {{native_val}}
 {%- for lifetime in lifetimes -%}
 , {{lifetime.name}}Edges
 {%- endfor -%}
 );
-return returnVal;

@@ -46,6 +46,7 @@ public class MyStruct {
     }
 
     MemorySegment toNative(SegmentAllocator arena) {
+        var x = arena;
         var returnVal = dev.diplomattest.somelib.ntv.MyStruct.allocate(arena);
         
         dev.diplomattest.somelib.ntv.MyStruct.a(returnVal, this.a);
