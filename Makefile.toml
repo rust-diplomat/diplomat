@@ -154,7 +154,7 @@ dependencies = ["build-example-wasm"]
 script_runner = "@shell"
 script = '''
 cd example/demo_gen
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm ../js/lib/api/diplomat_example.wasm
 npm install && npm run test
 '''
 
