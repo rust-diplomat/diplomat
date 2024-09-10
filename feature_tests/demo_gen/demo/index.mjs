@@ -1,4 +1,4 @@
-export * as lib from "./js/index.mjs";
+export * as lib from "../../js/api/index.mjs";
 import * as OptionStringDemo from "./OptionString.mjs";
 export * as OptionStringDemo from "./OptionString.mjs";
 import * as Float64VecDemo from "./Float64Vec.mjs";

@@ -1,2 +1,2 @@
-import { Opaque } from "./js/index.mjs"
+import { Opaque } from "../../js/api/index.mjs"
 export function getDebugStr();

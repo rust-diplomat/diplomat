@@ -1,2 +1,2 @@
-import { OptionString } from "./js/index.mjs"
+import { OptionString } from "../../js/api/index.mjs"
 export function write(diplomatStr: string);

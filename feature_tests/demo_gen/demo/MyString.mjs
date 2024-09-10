@@ -1,4 +1,4 @@
-import { MyString } from "./js/index.mjs"
+import { MyString } from "../../js/api/index.mjs"
 export function getStr() {
     var terminusArgs = arguments;
     return (function (...args) { return args[0].getStr }).apply(

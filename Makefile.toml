@@ -144,7 +144,7 @@ dependencies = ["build-feature-wasm"]
 script_runner = "@shell"
 script = '''
 cd feature_tests/demo_gen
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm demo/diplomat_feature_tests.wasm
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm ../js/api/diplomat_feature_tests.wasm
 npm install && npm run test
 '''
 
