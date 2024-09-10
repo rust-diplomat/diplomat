@@ -97,7 +97,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     pub fn fmt_c_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_maybe_namespaced(id)
+        self.c.fmt_type_name_maybe_namespaced(id.into())
     }
 
     pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

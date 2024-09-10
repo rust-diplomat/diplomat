@@ -191,7 +191,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
         // Structs have special handling: structs are purely Dart-side, so if you borrow
         // from a struct, you really are borrowing from the internal fields.
-        if let hir::Type::Struct(s) = ty.unwrap_option() {
+        if let hir::Type::Struct(s) = ty {
             let mut borrowed_struct_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
             let link = s.link_lifetimes(self.tcx);
             for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {

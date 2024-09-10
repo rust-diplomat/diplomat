@@ -96,6 +96,121 @@ fn param_conversion(
     }
 }
 
+fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident) -> Item {
+    let mut method_sigs: Vec<proc_macro2::TokenStream> = vec![];
+    method_sigs.push(quote!(
+        pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
+        pub size: usize,
+        pub alignment: usize,
+    ));
+    for m in &custom_trait.methods {
+        // TODO check that this is the right conversion, it might be the wrong direction
+        let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty)).collect();
+        let method_name = Ident::new(&format!("run_{}_callback", m.name), Span::call_site());
+        let return_tokens = match &m.output_type {
+            Some(ret_ty) => {
+                let conv_ret_ty = ret_ty.to_syn();
+                quote!( -> #conv_ret_ty)
+            }
+            None => {
+                quote! {}
+            }
+        };
+        param_types.insert(0, syn::parse_quote!(*const c_void));
+        method_sigs.push(quote!(
+            pub #method_name: unsafe extern "C" fn (#(#param_types),*) #return_tokens,
+
+        ));
+    }
+    syn::parse_quote!(
+        #[repr(C)]
+        pub struct #custom_trait_vtable_type {
+            #(#method_sigs)*
+        }
+    )
+}
+
+fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &Ident) -> Item {
+    let mut methods: Vec<Item> = vec![];
+    for m in &custom_trait.methods {
+        let param_names: Vec<proc_macro2::TokenStream> = m
+            .params
+            .iter()
+            .map(|p| {
+                let p_name = &p.name;
+                quote! {, #p_name}
+            })
+            .collect();
+        let mut all_params_conversion = vec![];
+        let mut param_names_and_types: Vec<proc_macro2::TokenStream> = m
+            .params
+            .iter()
+            .map(|p| {
+                let orig_type = p.ty.to_syn();
+                let p_ty = param_ty(&p.ty);
+                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty, Some(&p_ty)) {
+                    all_params_conversion.push(conversion);
+                }
+                let p_name = &p.name;
+                quote!(#p_name : #orig_type)
+            })
+            .collect();
+        let method_name = &m.name;
+        let (return_tokens, end_token) = match &m.output_type {
+            Some(ret_ty) => {
+                let conv_ret_ty = ret_ty.to_syn();
+                (quote!( -> #conv_ret_ty), quote! {})
+            }
+            None => (quote! {}, quote! {;}),
+        };
+        if let Some(self_param) = &m.self_param {
+            let mut self_modifier = quote! {};
+            if let Some((lifetime, mutability)) = &self_param.reference {
+                let lifetime_mod = if *lifetime == ast::Lifetime::Anonymous {
+                    quote! { & }
+                } else {
+                    let prime = "'".to_string();
+                    let lifetime = lifetime.to_syn();
+                    quote! { & #prime#lifetime }
+                };
+                let mutability_mod = if *mutability == ast::Mutability::Mutable {
+                    quote! {mut}
+                } else {
+                    quote! {}
+                };
+                self_modifier = quote! { #lifetime_mod #mutability_mod }
+            }
+            param_names_and_types.insert(0, quote!(#self_modifier self));
+        }
+
+        let lifetimes = {
+            let lifetime_env = &m.lifetimes;
+            if lifetime_env.is_empty() {
+                quote! {}
+            } else {
+                quote! { <#lifetime_env> }
+            }
+        };
+        let runner_method_name =
+            Ident::new(&format!("run_{}_callback", method_name), Span::call_site());
+        methods.push(syn::Item::Fn(syn::parse_quote!(
+            fn #method_name#lifetimes (#(#param_names_and_types),*) #return_tokens {
+                unsafe {
+                    #(#all_params_conversion)*
+                    ((self.vtable).#runner_method_name)(self.data #(#param_names)*)#end_token
+                }
+            }
+
+        )));
+    }
+    let trait_name = &custom_trait.name;
+    syn::parse_quote!(
+        impl #trait_name for #custom_trait_struct_name {
+            #(#methods)*
+        }
+    )
+}
+
 fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
@@ -276,7 +391,7 @@ impl AttributeInfo {
                         // as an attribute
                         return true;
                     } else {
-                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported")
+                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {:?}", seg)
                     }
                 } else {
                     panic!("#[diplomat::foo] attrs have a single-segment path name")
@@ -406,6 +521,43 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
             }));
         }
+    }
+
+    for custom_trait in module.declared_traits.values() {
+        let custom_trait_name = Ident::new(
+            &format!("DiplomatTraitStruct_{}", custom_trait.name),
+            Span::call_site(),
+        );
+        let custom_trait_vtable_type =
+            Ident::new(&format!("{}_VTable", custom_trait.name), Span::call_site());
+
+        // vtable
+        new_contents.push(gen_custom_vtable(custom_trait, &custom_trait_vtable_type));
+
+        // trait struct
+        new_contents.push(syn::parse_quote! {
+            #[repr(C)]
+            pub struct #custom_trait_name {
+                data: *const c_void,
+                pub vtable: #custom_trait_vtable_type,
+            }
+        });
+
+        // trait struct wrapper for all methods
+        new_contents.push(gen_custom_trait_impl(custom_trait, &custom_trait_name));
+
+        // destructor
+        new_contents.push(syn::parse_quote! {
+            impl Drop for #custom_trait_name {
+                fn drop(&mut self) {
+                    if let Some(destructor) = self.vtable.destructor {
+                        unsafe {
+                            (destructor)(self.data);
+                        }
+                    }
+                }
+            }
+        })
     }
 
     ItemMod {
@@ -892,6 +1044,49 @@ mod tests {
                             f() + g(5)
                         }
                     }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn traits() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    pub struct TestingStruct {
+                        x: i32,
+                        y: i32,
+                    }
+
+                    pub trait TesterTrait {
+                        fn test_trait_fn(&self, x: i32) -> i32;
+                        fn test_void_trait_fn(&self);
+                        fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;
+                        fn test_slice_trait_fn(&self, s: &[u8]) -> i32;
+                    }
+
+                    pub struct Wrapper {
+                        cant_be_empty: bool,
+                    }
+
+                    impl Wrapper {
+                        pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
+                            t.test_void_trait_fn();
+                            t.test_trait_fn(x)
+                        }
+
+                        pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
+                            let arg = TestingStruct {
+                                x: 1,
+                                y: 5,
+                            };
+                            t.test_struct_trait_fn(arg)
+                        }
+                    }
+
                 }
             })
             .to_token_stream()

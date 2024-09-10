@@ -20,3 +20,4 @@ pub mod result;
 pub mod selftype;
 pub mod slices;
 pub mod structs;
+pub mod traits;
