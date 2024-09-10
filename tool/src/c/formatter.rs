@@ -1,6 +1,8 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, StringEncoding, TyPosition, TypeContext, TypeId};
+use diplomat_core::hir::{
+    self, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -30,12 +32,29 @@ impl<'tcx> CFormatter<'tcx> {
     /// Resolve and format a named type for use in code (without the namespace)
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
-        let name = resolved.name().as_str().into();
+        let name: Cow<_> = resolved.name().as_str().into();
+        let attrs = resolved.attrs();
+
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.
         if self.is_for_cpp {
-            resolved.attrs().rename.apply(name)
+            attrs.rename.apply(name)
+        } else {
+            name
+        }
+    }
+
+    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_trait(id);
+        let name: Cow<_> = resolved.name.as_str().into();
+        let attrs = &resolved.attrs;
+
+        // Only apply renames in cpp mode, in pure C mode you'd want the
+        // method names to match the type names.
+        // Potential future improvement: Use alias attributes in pure C mode.
+        if self.is_for_cpp {
+            attrs.rename.apply(name)
         } else {
             name
         }
@@ -58,19 +77,32 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
-    pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_type(id);
-        let name: Cow<_> = resolved.name().as_str().into();
+    pub fn fmt_type_name_maybe_namespaced(&self, id: SymbolId) -> Cow<'tcx, str> {
+        let (name, attrs) = match id {
+            SymbolId::TypeId(id) => {
+                let resolved = self.tcx.resolve_type(id);
+                let name: Cow<_> = resolved.name().as_str().into();
+                let attrs = resolved.attrs();
+                (name, attrs)
+            }
+            SymbolId::TraitId(id) => {
+                let resolved = self.tcx.resolve_trait(id);
+                let name: Cow<_> = resolved.name.as_str().into();
+                let attrs = &resolved.attrs;
+                (name, attrs)
+            }
+            _ => panic!("Unexpected symbol ID type"),
+        };
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.
         let name = if self.is_for_cpp {
-            resolved.attrs().rename.apply(name)
+            attrs.rename.apply(name)
         } else {
             name
         };
         if self.is_for_cpp {
-            if let Some(ref ns) = resolved.attrs().namespace {
+            if let Some(ref ns) = attrs.namespace {
                 return format!("{ns}::{CAPI_NAMESPACE}::{name}").into();
             }
         }
@@ -84,13 +116,21 @@ impl<'tcx> CFormatter<'tcx> {
     /// To handle this, we make a separate header file called Foo_decl.h, that contains
     /// *just* the enum. It is included from Foo.h, and external users should not be importing
     /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
-    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
-        let type_name = self.fmt_type_name(id);
+    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
+        let type_name = match id {
+            SymbolId::TypeId(id) => self.fmt_type_name(id),
+            SymbolId::TraitId(id) => self.fmt_trait_name(id),
+            _ => panic!("Unexpected symbol ID type"),
+        };
         format!("{type_name}.d.h")
     }
     /// Resolve and format the name of a type for use in header names: impl version
-    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
-        let type_name = self.fmt_type_name(id);
+    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
+        let type_name = match id {
+            SymbolId::TypeId(id) => self.fmt_type_name(id),
+            SymbolId::TraitId(id) => self.fmt_trait_name(id),
+            _ => panic!("Unexpected symbol ID type"),
+        };
         format!("{type_name}.h")
     }
 

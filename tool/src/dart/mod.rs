@@ -41,6 +41,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.indexing = true;
     a.option = true;
     a.callbacks = false;
+    a.traits = false;
 
     a
 }
@@ -338,7 +339,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
                 let args = fields
                     .iter()
-                    .map(|field| format!("{}? {}", field.dart_type_name, field.name))
+                    .map(|field| {
+                        format!(
+                            "{} {}",
+                            self.formatter.fmt_nullable(&field.dart_type_name),
+                            field.name
+                        )
+                    })
                     .collect::<Vec<_>>();
                 constructor.declaration =
                     format!("factory {type_name}({{{args}}})", args = args.join(", "));

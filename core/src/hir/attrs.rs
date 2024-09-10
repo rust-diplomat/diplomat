@@ -5,7 +5,7 @@ use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttr
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
     EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
-    Type, TypeDef, TypeId,
+    TraitDef, Type, TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -143,6 +143,7 @@ pub struct SpecialMethodPresence {
 #[derive(Debug)]
 pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
+    Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
@@ -818,6 +819,8 @@ pub struct BackendAttrSupport {
     pub option: bool,
     /// Allowing callback arguments
     pub callbacks: bool,
+    /// Allowing traits
+    pub traits: bool,
 }
 
 impl BackendAttrSupport {
@@ -843,6 +846,7 @@ impl BackendAttrSupport {
             indexing: true,
             option: true,
             callbacks: true,
+            traits: true,
         }
     }
 }
@@ -974,6 +978,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 indexing,
                 option,
                 callbacks,
+                traits,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -995,6 +1000,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "indexing" => indexing,
                 "option" => option,
                 "callbacks" => callbacks,
+                "traits" => traits,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

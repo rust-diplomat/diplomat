@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct,
+    OpaqueStruct, Path, RustLink, Struct, Trait,
 };
 use crate::Env;
 
@@ -94,6 +94,8 @@ pub enum ModSymbol {
     SubModule(Ident),
     /// A symbol that is a custom type.
     CustomType(CustomType),
+    /// A trait
+    Trait(Trait),
 }
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
@@ -197,6 +199,9 @@ impl PathType {
                             )
                         }
                     }
+                    Some(ModSymbol::Trait(trt)) => {
+                        panic!("Found trait {} but expected a type", trt.name);
+                    }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
                         o,
@@ -220,10 +225,91 @@ impl PathType {
     pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
         self.resolve_with_path(in_path, env).1
     }
+
+    pub fn trait_to_syn(&self) -> syn::TraitBound {
+        let mut path = self.path.to_syn();
+
+        if !self.lifetimes.is_empty() {
+            if let Some(seg) = path.segments.last_mut() {
+                let lifetimes = &self.lifetimes;
+                seg.arguments =
+                    syn::PathArguments::AngleBracketed(syn::parse_quote! { <#(#lifetimes),*> });
+            }
+        }
+        syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None, // todo this is an assumption
+            path,
+        }
+    }
+
+    pub fn resolve_trait_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, Trait) {
+        let local_path = &self.path;
+        let cur_path = in_path.clone();
+        for (i, elem) in local_path.elements.iter().enumerate() {
+            if let Some(ModSymbol::Trait(trt)) = env.get(&cur_path, elem.as_str()) {
+                if i == local_path.elements.len() - 1 {
+                    return (cur_path, trt.clone());
+                } else {
+                    panic!(
+                        "Unexpected custom trait when resolving symbol {} in {}",
+                        trt.name,
+                        cur_path.elements.join("::")
+                    )
+                }
+            }
+        }
+
+        panic!(
+            "Path {} does not point to a custom trait",
+            in_path.elements.join("::")
+        )
+    }
+
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    ///
+    /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
+    /// to get the path to resolve the fields in.
+    pub fn resolve_trait<'a>(&self, in_path: &Path, env: &'a Env) -> Trait {
+        self.resolve_trait_with_path(in_path, env).1
+    }
 }
 
 impl From<&syn::TypePath> for PathType {
     fn from(other: &syn::TypePath) -> Self {
+        let lifetimes = other
+            .path
+            .segments
+            .last()
+            .and_then(|last| {
+                if let syn::PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                    Some(
+                        angle_generics
+                            .args
+                            .iter()
+                            .map(|generic_arg| match generic_arg {
+                                syn::GenericArgument::Lifetime(lifetime) => lifetime.into(),
+                                _ => panic!("generic type arguments are unsupported {other:?}"),
+                            })
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+
+        Self {
+            path: Path::from_syn(&other.path),
+            lifetimes,
+        }
+    }
+}
+
+impl From<&syn::TraitBound> for PathType {
+    fn from(other: &syn::TraitBound) -> Self {
         let lifetimes = other
             .path
             .segments
@@ -379,6 +465,7 @@ pub enum TypeName {
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
     Function(Vec<Box<TypeName>>, Box<TypeName>),
+    ImplTrait(PathType),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -486,8 +573,8 @@ impl TypeName {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
             TypeName::Box(..) |
-            // can only be passed across the FFI boundary; callbacks are input-only
-            TypeName::Function(..) |
+            // can only be passed across the FFI boundary; callbacks and traits are input-only
+            TypeName::Function(..) | TypeName::ImplTrait(..) |
             // These are specified using FFI-safe diplomat_runtime types
             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
@@ -607,6 +694,12 @@ impl TypeName {
                 let output_type = output_type.to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+            }
+            TypeName::ImplTrait(trt_path) => {
+                let trait_name =
+                    Ident::from(format!("DiplomatTraitStruct_{}", trt_path.path.elements[0]));
+                // should be DiplomatTraitStruct_trait_name
+                syn::parse_quote_spanned!(Span::call_site() => #trait_name)
             }
         }
     }
@@ -896,14 +989,10 @@ impl TypeName {
                 if tr.bounds.len() > 1 {
                     todo!("Currently don't support implementing multiple traits");
                 }
-                if let Some(syn::TypeParamBound::Trait(syn::TraitBound {
-                    path:
-                        syn::Path {
-                            segments: rel_segs, ..
-                        },
-                    ..
-                })) = trait_bound
+                if let Some(syn::TypeParamBound::Trait(syn::TraitBound { path: p, .. })) =
+                    trait_bound
                 {
+                    let rel_segs = &p.segments;
                     let path_seg = &rel_segs[0];
                     if path_seg.ident.eq("Fn") {
                         // we're in a function type
@@ -932,9 +1021,17 @@ impl TypeName {
                             return ret;
                         }
                         panic!("Unsupported function type: {:?}", &path_seg.arguments);
+                    } else {
+                        let ret = TypeName::ImplTrait(PathType::from(&syn::TraitBound {
+                            paren_token: None,
+                            modifier: syn::TraitBoundModifier::None,
+                            lifetimes: None, // todo this is an assumption
+                            path: p.clone(),
+                        }));
+                        return ret;
                     }
                 }
-                panic!("Unsupported trait type");
+                panic!("Unsupported trait type: {:?}", tr);
             }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
@@ -1152,6 +1249,10 @@ impl fmt::Display for TypeName {
                     write!(f, "{in_typ}")?;
                 }
                 write!(f, ")->{out_type}")
+            }
+            TypeName::ImplTrait(trt) => {
+                write!(f, "impl ")?;
+                trt.fmt(f)
             }
         }
     }
