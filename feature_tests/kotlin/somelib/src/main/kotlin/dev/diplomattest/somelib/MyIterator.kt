@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface MyIteratorLib: Library {
-    fun MyIterator_destroy(handle: Pointer)
+    fun namespace_MyIterator_destroy(handle: Pointer)
     fun namespace_MyIterator_next(handle: Pointer): OptionByte
 }
 typealias MyIteratorIteratorItem = UByte
@@ -22,7 +22,7 @@ class MyIterator internal constructor (
 
     internal class MyIteratorCleaner(val handle: Pointer, val lib: MyIteratorLib) : Runnable {
         override fun run() {
-            lib.MyIterator_destroy(handle)
+            lib.namespace_MyIterator_destroy(handle)
         }
     }
 

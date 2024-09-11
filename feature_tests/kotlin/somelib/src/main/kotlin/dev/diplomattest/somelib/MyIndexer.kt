@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface MyIndexerLib: Library {
-    fun MyIndexer_destroy(handle: Pointer)
+    fun namespace_MyIndexer_destroy(handle: Pointer)
     fun namespace_MyIndexer_get(handle: Pointer, i: Long): OptionSlice
 }
 
@@ -20,7 +20,7 @@ class MyIndexer internal constructor (
 
     internal class MyIndexerCleaner(val handle: Pointer, val lib: MyIndexerLib) : Runnable {
         override fun run() {
-            lib.MyIndexer_destroy(handle)
+            lib.namespace_MyIndexer_destroy(handle)
         }
     }
 

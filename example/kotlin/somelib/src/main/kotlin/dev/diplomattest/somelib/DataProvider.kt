@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface DataProviderLib: Library {
-    fun DataProvider_destroy(handle: Pointer)
+    fun icu4x_DataProvider_destroy_mv1(handle: Pointer)
     fun icu4x_DataProvider_new_static_mv1(): Pointer
     fun icu4x_DataProvider_returns_result_mv1(): ResultUnitUnit
 }
@@ -21,7 +21,7 @@ class DataProvider internal constructor (
 
     internal class DataProviderCleaner(val handle: Pointer, val lib: DataProviderLib) : Runnable {
         override fun run() {
-            lib.DataProvider_destroy(handle)
+            lib.icu4x_DataProvider_destroy_mv1(handle)
         }
     }
 
