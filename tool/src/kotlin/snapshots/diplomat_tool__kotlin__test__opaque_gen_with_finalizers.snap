@@ -22,11 +22,10 @@ class BorrowWrapper internal constructor (
     internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
 )  {
-    
-    internal class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
-        override fun run() {
-            lib.BorrowWrapper_destroy(handle)
-        }
+    @Override
+    @SuppressWarnings("Finalize")
+    fun finalize() {
+        lib.BorrowWrapper_destroy(handle)
     }
 
     companion object {
