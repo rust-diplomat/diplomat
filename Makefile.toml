@@ -189,7 +189,7 @@ env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 [tasks.test-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
-dependencies = ["build-example"]
+dependencies = ["build-example-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
@@ -206,7 +206,7 @@ env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 [tasks.test-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"
-dependencies = ["build-feature"]
+dependencies = ["build-feature-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
@@ -520,6 +520,18 @@ description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
+
+
+[tasks.build-example-jvm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-example", "--features", "diplomat-runtime/jvm-callback-support"]
+[tasks.build-feature-jvm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-feature-tests", "--features", "diplomat-runtime/jvm-callback-support"]
 
 
 [tasks.bench-rust-example]
