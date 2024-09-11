@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface UnnamespacedLib: Library {
-    fun Unnamespaced_destroy(handle: Pointer)
+    fun namespace_Unnamespaced_destroy(handle: Pointer)
     fun namespace_Unnamespaced_make(e: Int): Pointer
     fun namespace_Unnamespaced_use_namespaced(handle: Pointer, n: Pointer): Unit
 }
@@ -21,7 +21,7 @@ class Unnamespaced internal constructor (
 
     internal class UnnamespacedCleaner(val handle: Pointer, val lib: UnnamespacedLib) : Runnable {
         override fun run() {
-            lib.Unnamespaced_destroy(handle)
+            lib.namespace_Unnamespaced_destroy(handle)
         }
     }
 

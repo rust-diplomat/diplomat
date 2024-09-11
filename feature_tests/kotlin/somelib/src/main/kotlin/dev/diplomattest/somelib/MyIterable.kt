@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface MyIterableLib: Library {
-    fun MyIterable_destroy(handle: Pointer)
+    fun namespace_MyIterable_destroy(handle: Pointer)
     fun namespace_MyIterable_new(x: Slice): Pointer
     fun namespace_MyIterable_iter(handle: Pointer): Pointer
 }
@@ -21,7 +21,7 @@ class MyIterable internal constructor (
 
     internal class MyIterableCleaner(val handle: Pointer, val lib: MyIterableLib) : Runnable {
         override fun run() {
-            lib.MyIterable_destroy(handle)
+            lib.namespace_MyIterable_destroy(handle)
         }
     }
 

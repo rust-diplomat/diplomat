@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface LocaleLib: Library {
-    fun Locale_destroy(handle: Pointer)
+    fun icu4x_Locale_destroy_mv1(handle: Pointer)
     fun icu4x_Locale_new_mv1(name: Slice): Pointer
 }
 
@@ -20,7 +20,7 @@ class Locale internal constructor (
 
     internal class LocaleCleaner(val handle: Pointer, val lib: LocaleLib) : Runnable {
         override fun run() {
-            lib.Locale_destroy(handle)
+            lib.icu4x_Locale_destroy_mv1(handle)
         }
     }
 

@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface FixedDecimalLib: Library {
-    fun FixedDecimal_destroy(handle: Pointer)
+    fun icu4x_FixedDecimal_destroy_mv1(handle: Pointer)
     fun icu4x_FixedDecimal_new_mv1(v: Int): Pointer
     fun icu4x_FixedDecimal_multiply_pow10_mv1(handle: Pointer, power: Short): Unit
     fun icu4x_FixedDecimal_to_string_mv1(handle: Pointer, write: Pointer): ResultUnitUnit
@@ -22,7 +22,7 @@ class FixedDecimal internal constructor (
 
     internal class FixedDecimalCleaner(val handle: Pointer, val lib: FixedDecimalLib) : Runnable {
         override fun run() {
-            lib.FixedDecimal_destroy(handle)
+            lib.icu4x_FixedDecimal_destroy_mv1(handle)
         }
     }
 

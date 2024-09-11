@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface AttrOpaque2Lib: Library {
-    fun AttrOpaque2_destroy(handle: Pointer)
+    fun namespace_AttrOpaque2_destroy(handle: Pointer)
 }
 
 class AttrOpaque2 internal constructor (
@@ -19,7 +19,7 @@ class AttrOpaque2 internal constructor (
 
     internal class AttrOpaque2Cleaner(val handle: Pointer, val lib: AttrOpaque2Lib) : Runnable {
         override fun run() {
-            lib.AttrOpaque2_destroy(handle)
+            lib.namespace_AttrOpaque2_destroy(handle)
         }
     }
 
