@@ -16,6 +16,10 @@ export const RenderInfo = {
                 {
                     name: "{{param.label}}",
                     type: "{{param.type_name}}"
+                    {%- if !param.default_value.is_empty() -%} 
+                    ,
+                    defaultValue: "{{ param.default_value }}"
+                    {%- endif %}
                 }{% if !loop.last %},{% endif %}
                 {% endfor %}
             ]

@@ -10,10 +10,16 @@ use askama::{self, Template};
 
 #[derive(Clone)]
 pub struct ParamInfo {
-    /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
+    /// The javascript that represents this parameter.
     pub js: String,
-    /// The label to give this parameter. Used only in the `RenderInfo` out object. Can be blank if not intended to be used there.
+}
+
+pub struct OutParam {
+    /// Param JS representation (i.e., `arg_1`)
+    pub param_name: String,
+    /// Full string name of the param.
     pub label: String,
+    pub default_value: String,
     /// For typescript and RenderInfo output. Type that this parameter is.
     pub type_name: String,
 }
@@ -112,7 +118,7 @@ pub(super) struct TerminusInfo {
     /// b. Are too complicated for us to automagically setup ourselves. These are opaque types tagged with `#[diplomat::demo(external)]`.
     /// The current use case is for say, a singleton or single source of data that must not be repeated. But I'm sure there are other instances
     /// where you don't want us to guess how to construct an opaque, and wish to do it yourself.
-    pub out_params: Vec<ParamInfo>,
+    pub out_params: Vec<OutParam>,
 
     /// The type name of the type that this function belongs to.
     pub type_name: String,
@@ -178,29 +184,30 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         attrs: Option<DemoInfo>,
     ) {
+        let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
-        let label = attrs
-            .and_then(|attrs| {
-                let label = attrs.input_cfg.label;
-
-                if label.is_empty() {
-                    None
-                } else {
-                    Some(label)
-                }
-            })
-            .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
-
-        let mut param_info = ParamInfo {
-            js: param_name,
-            label,
-            type_name,
+        let label = if attrs_default.input_cfg.label.is_empty() {
+            heck::AsUpperCamelCase(param_name.clone()).to_string()
+        } else {
+            attrs_default.input_cfg.label
         };
 
-        self.terminus_info.out_params.push(param_info.clone());
+        let default_value = attrs_default.input_cfg.default_value;
 
-        // Grab arguments without having to name them
-        param_info.js = format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1);
+        let out_param = OutParam {
+            param_name,
+            label,
+            type_name: type_name.clone(),
+            default_value,
+        };
+
+        self.terminus_info.out_params.push(out_param);
+
+        let param_info = ParamInfo {
+            // Grab arguments without having to name them
+            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1),
+        };
+
         node.params.push(param_info);
     }
 
@@ -216,8 +223,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
     ) {
-        let attrs = Some(param_attrs);
-
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
@@ -226,7 +231,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     param_name,
                     self.formatter.fmt_primitive_as_ffi(*p).to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Enum(e) => {
@@ -237,14 +242,14 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name, type_name, node, attrs);
+                self.append_out_param(param_name, type_name, node, Some(param_attrs));
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 self.append_out_param(
                     param_name,
                     self.formatter.fmt_string().to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Slice(hir::Slice::Primitive(_, p)) => {
@@ -252,11 +257,16 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     param_name,
                     self.formatter.fmt_primitive_list_type(*p).to_string(),
                     node,
-                    attrs,
+                    Some(param_attrs),
                 );
             }
             Type::Slice(hir::Slice::Strs(..)) => {
-                self.append_out_param(param_name, "Array<string>".to_string(), node, attrs);
+                self.append_out_param(
+                    param_name,
+                    "Array<string>".to_string(),
+                    node,
+                    Some(param_attrs),
+                );
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -270,7 +280,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name, type_name.into(), node, attrs);
+                    self.append_out_param(param_name, type_name.into(), node, Some(param_attrs));
                     return;
                 }
 
@@ -286,6 +296,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 self.evaluate_struct_fields(st, type_name.to_string(), node);
+            }
+            Type::DiplomatOption(ref inner) => {
+                self.evaluate_param(inner, param_name, node, param_attrs)
             }
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
@@ -355,11 +368,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
 
                 let call = self.evaluate_constructor(method, &mut child);
-                node.params.push(ParamInfo {
-                    js: call,
-                    label: "".into(),
-                    type_name: String::default(),
-                });
+                node.params.push(ParamInfo { js: call });
                 break;
             }
         }
@@ -381,8 +390,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     Try adding #[diplomat::demo(default_constructor)]*/",
                     op.name.as_str()
                 ),
-                label: String::default(),
-                type_name: String::default(),
             });
         }
     }
@@ -426,9 +433,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         .unwrap();
 
         node.params.push(ParamInfo {
-            type_name: type_name.to_string(),
             js: child.render().unwrap(),
-            label: "".into(),
         });
     }
 

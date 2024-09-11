@@ -192,6 +192,28 @@ export const RenderInfo = {
 };
 ```
 
+The exact structure of `RenderInfo` is:
+
+```js
+export const RenderInfo = {
+    termini: {
+        "functionName": {
+            func: jsFunctionToCall, // Always present.
+            funcName: "jsFunctionToCall", // String value of the function name. Always present.
+            parameters: [ // Always present.
+                {
+                    name: "Param Name", // Always present. Modified by `#[diplomat::demo(input(label = "..."))]`
+                    type: "type_name", // Always present. Could be: string, number, boolean, Array<string>, Array<number>, Array<boolean>, or some specific JS binding class name (i.e., MyEnum).
+                    // In your HTML renderer, you should generally assume that any type that is not a primitive is an enum. #[diplomat::demo(external)] parameters are also exposed here, so be prepared to include carve-outs for those exceptions.
+                    defaultValue: "defaultValue" // Only present if `#[diplomat::demo(input(default_value = "..."))]` is present.
+                }
+            ]
+        }
+    }
+};
+
+```
+
 #### Example Part 3
 
 For `FixedDecimalFormatter.formatWrite`, let's look at the rust definition again:

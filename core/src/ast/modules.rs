@@ -7,7 +7,7 @@ use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
     AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability,
-    OpaqueStruct, Path, PathType, RustLink, Struct,
+    OpaqueStruct, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::environment::*;
 
@@ -65,6 +65,7 @@ pub struct Module {
     pub name: Ident,
     pub imports: Vec<(Path, Ident)>,
     pub declared_types: BTreeMap<Ident, CustomType>,
+    pub declared_traits: BTreeMap<Ident, Trait>,
     pub sub_modules: Vec<Module>,
     pub attrs: Attrs,
 }
@@ -99,6 +100,15 @@ impl Module {
             }
         });
 
+        self.declared_traits.iter().for_each(|(k, v)| {
+            if mod_symbols
+                .insert(k.clone(), ModSymbol::Trait(v.clone()))
+                .is_some()
+            {
+                panic!("Two traits were declared with the same name, this needs to be implemented");
+            }
+        });
+
         let path_to_self = in_path.sub_path(self.name.clone());
         self.sub_modules.iter().for_each(|m| {
             m.insert_all_types(path_to_self.clone(), out);
@@ -110,6 +120,7 @@ impl Module {
 
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mut custom_types_by_name = BTreeMap::new();
+        let mut custom_traits_by_name = BTreeMap::new();
         let mut sub_modules = Vec::new();
         let mut imports = Vec::new();
 
@@ -206,6 +217,14 @@ impl Module {
                 Item::Mod(item_mod) => {
                     sub_modules.push(Module::from_syn(item_mod, false));
                 }
+                Item::Trait(trt) => {
+                    if analyze_types {
+                        let ident = (&trt.ident).into();
+                        let trt = Trait::new(trt, &type_parent_attrs);
+                        custom_traits_by_name
+                            .insert(ident, trt);
+                    }
+                }
                 _ => {}
             });
 
@@ -213,6 +232,7 @@ impl Module {
             name: (&input.ident).into(),
             imports,
             declared_types: custom_types_by_name,
+            declared_traits: custom_traits_by_name,
             sub_modules,
             attrs: mod_attrs,
         }

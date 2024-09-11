@@ -33,7 +33,7 @@ pub mod ffi {
     pub struct FixedDecimalFormatterOptions {
         #[diplomat::demo(input(label = "ICU4X Fixed Decimal Grouping Strategy"))]
         pub grouping_strategy: FixedDecimalGroupingStrategy,
-        #[diplomat::demo(input(label = "Useless Config (Ignore)"))]
+        #[diplomat::demo(input(label = "Useless Config (Ignore)", default_value = "true"))]
         pub some_other_config: bool,
     }
 

@@ -10,15 +10,7 @@ use diplomat_core::hir::{
 };
 use std::fmt::Write;
 
-use super::TyGenContext;
-
-/// Check if an enum's values are consecutive. (i.e., if we start at 1, the next value is 2).
-fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
-    ty.variants
-        .iter()
-        .enumerate()
-        .all(|(i, v)| i as isize == v.discriminant)
-}
+use super::gen::TyGenContext;
 
 /// The Rust-Wasm ABI currently treats structs with 1 or 2 scalar fields different from
 /// structs with more ("large" structs). Structs with 1 or 2 scalar fields are passed in as consecutive fields,
@@ -227,17 +219,11 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
             }
-            Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
-                let id = enum_path.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}[Array.from({type_name}.values.keys())[{variable_name}]]")
-                    .into()
-            }
             Type::Enum(ref enum_path) => {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                // Based on Dart specifics, but if storing too many things in memory isn't an issue we could just make a reverse-lookup map in the enum template.
-                format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
+                format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
+                    .into()
             }
             Type::Slice(slice) => {
                 let edges = match slice.lifetime() {
@@ -369,7 +355,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     /// We access [`super::MethodInfo`] to handle allocation and cleanup.
     pub(super) fn gen_c_to_js_for_return_type(
         &self,
-        method_info: &mut super::MethodInfo,
+        method_info: &mut super::gen::MethodInfo,
         method: &Method,
     ) -> Option<Cow<'tcx, str>> {
         let return_type = &method.output;

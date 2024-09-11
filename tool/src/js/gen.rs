@@ -19,8 +19,7 @@ use askama::{self, Template};
 use super::formatter::JSFormatter;
 use crate::ErrorStore;
 
-mod converter;
-use converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
+use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
 
 /// Represents context for generating a Javascript class.
 ///
@@ -86,6 +85,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         enum_def: &'tcx EnumDef,
         methods: &MethodsInfo,
     ) -> String {
+        let is_contiguous = enum_def
+            .variants
+            .iter()
+            .enumerate()
+            .all(|(i, v)| i as isize == v.discriminant);
+
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -93,6 +98,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             formatter: &'a JSFormatter<'a>,
             type_name: &'a str,
             typescript: bool,
+            is_contiguous: bool,
 
             doc_str: String,
 
@@ -106,6 +112,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             typescript,
 
             doc_str: self.formatter.fmt_docs(&enum_def.docs),
+            is_contiguous,
 
             methods,
         }
@@ -425,7 +432,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
                 let struct_borrow_info =
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
-                        Some(converter::StructBorrowContext {
+                        Some(super::converter::StructBorrowContext {
                             use_env: &method.lifetime_env,
                             param_info,
                             is_method: true,
@@ -499,7 +506,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
 /// Represents a parameter of a method. Used as part of [`MethodInfo`], exclusively in the method definition.
 #[derive(Default)]
-struct ParamInfo<'a> {
+pub(super) struct ParamInfo<'a> {
     ty: Cow<'a, str>,
     name: Cow<'a, str>,
 }
@@ -511,7 +518,7 @@ struct ParamInfo<'a> {
 /// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
 ///
 /// See `DiplomatBuf` in `runtime.mjs` for more.
-struct SliceParam<'a> {
+pub(super) struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
     slice_expr: String,
@@ -524,41 +531,41 @@ struct SliceParam<'a> {
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
     /// Do we return the `()` type?
-    method_output_is_ffi_unit: bool,
+    pub method_output_is_ffi_unit: bool,
     /// The declaration signature. Something like `static functionName() { /* ... */ }` versus `functionName() { /* ... */ }`
-    method_decl: String,
+    pub method_decl: String,
 
     /// Native C method name
-    abi_name: String,
+    pub abi_name: String,
 
     /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
-    needs_slice_cleanup: bool,
+    pub needs_slice_cleanup: bool,
     /// For calling .releaseToGarbageCollector on slices.
-    needs_slice_collection: bool,
+    pub needs_slice_collection: bool,
 
     pub typescript: bool,
 
     /// Represents all the parameters in the method definition (mostly for `.d.ts` generation, showing names and types).
-    parameters: Vec<ParamInfo<'info>>,
+    pub parameters: Vec<ParamInfo<'info>>,
     /// See [`SliceParam`] for info on how this array is used.
-    slice_params: Vec<SliceParam<'info>>,
+    pub slice_params: Vec<SliceParam<'info>>,
     /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`TyGenContext::gen_js_to_c_for_type`] for more.
-    param_conversions: Vec<Cow<'info, str>>,
+    pub param_conversions: Vec<Cow<'info, str>>,
 
     /// The return type, for `.d.ts` files.
-    return_type: String,
+    pub return_type: String,
     /// The JS expression used when this method returns.
-    return_expression: Option<Cow<'info, str>>,
+    pub return_expression: Option<Cow<'info, str>>,
 
     /// Used for generating edge information when constructing items like Slices, Structs, and Opaque types. See [hir::methods::borrowing_param::BorrowedLifetimeInfo] for more.
-    method_lifetimes_map: BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+    pub method_lifetimes_map: BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
     /// We use this to access individual [`hir::Lifetimes`], which we then use to access the [`MethodInfo::method_lifetimes_map`].
-    lifetimes: Option<&'info LifetimeEnv>,
+    pub lifetimes: Option<&'info LifetimeEnv>,
 
     /// Anything we need to allocate for [`MethodInfo::param_conversions`]
-    alloc_expressions: Vec<Cow<'info, str>>,
+    pub alloc_expressions: Vec<Cow<'info, str>>,
     /// Anything from [`MethodInfo::alloc_expressions`] we need to clean up afterwards.
-    cleanup_expressions: Vec<Cow<'info, str>>,
+    pub cleanup_expressions: Vec<Cow<'info, str>>,
 }
 
 /// See [`TyGenContext::generate_special_method`].

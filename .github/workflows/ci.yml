@@ -13,7 +13,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Check rustfmt
       run: cargo fmt --all -- --check
@@ -24,7 +24,7 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Build
       run: cargo build --verbose
@@ -32,10 +32,21 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install MSRV Rust
+      run: rustup install 1.71 --profile minimal
+
+    - name: Check
+      run: cargo +1.71 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
+
   gen:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@v2
@@ -51,7 +62,7 @@ jobs:
   test-c:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -67,7 +78,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -93,7 +104,7 @@ jobs:
   test-cpp:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -112,7 +123,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -147,7 +158,7 @@ jobs:
         ]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -156,7 +167,7 @@ jobs:
       run: rustup target add wasm32-unknown-unknown
 
     - name: Install Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
@@ -166,7 +177,7 @@ jobs:
   test-dart:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make

@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetimes, LinkedLifetimes};
 use super::{
     Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
-    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext,
+    OutputOnly, ReturnableStructDef, StructDef, TraitId, TyPosition, TypeContext,
 };
 
 /// Path to a struct that may appear as an output.
@@ -22,6 +22,19 @@ pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: Lifetimes,
     pub tcx_id: P::StructId,
 }
+
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct TraitPath {
+    pub lifetimes: Lifetimes,
+    pub tcx_id: TraitId,
+}
+
+/// Non-instantiable enum to denote the trait path in
+/// TyPositions that don't allow traits (anything not InputOnly)
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum NoTraitPath {}
 
 /// Path to an opaque.
 ///
@@ -158,7 +171,7 @@ impl OutStructPath {
 }
 
 impl<Opt, Owner> OpaquePath<Opt, Owner> {
-    /// Returns a new [`EnumPath`].
+    /// Returns a new [`OpaquePath`].
     pub(super) fn new(lifetimes: Lifetimes, optional: Opt, owner: Owner, tcx_id: OpaqueId) -> Self {
         Self {
             lifetimes,
@@ -196,5 +209,12 @@ impl EnumPath {
     /// Returns the [`EnumDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx EnumDef {
         tcx.resolve_enum(self.tcx_id)
+    }
+}
+
+impl TraitPath {
+    /// Returns a new [`TraitPath`].
+    pub(super) fn new(lifetimes: Lifetimes, tcx_id: TraitId) -> Self {
+        Self { lifetimes, tcx_id }
     }
 }

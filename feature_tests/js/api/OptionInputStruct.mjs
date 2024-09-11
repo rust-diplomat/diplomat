@@ -71,6 +71,6 @@ export class OptionInputStruct {
         const bDeref = ptr + 4;
         this.#b = diplomatRuntime.readOption(wasm, bDeref, 4, (wasm, offset) => { const deref = (new Uint32Array(wasm.memory.buffer, offset, 1))[0]; return deref });
         const cDeref = ptr + 12;
-        this.#c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return OptionEnum[Array.from(OptionEnum.values.keys())[deref]] });
+        this.#c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
     }
 }
