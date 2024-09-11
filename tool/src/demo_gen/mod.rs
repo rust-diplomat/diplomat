@@ -109,7 +109,8 @@ pub(crate) fn run<'tcx>(
         let mut termini = Vec::new();
 
         {
-            let type_name = formatter.fmt_type_name(id);
+            let ty_name = formatter.fmt_type_name(id);
+            let type_name : String = ty_name.into();
 
             let ty = tcx.resolve_type(id);
             if ty.attrs().disable {
@@ -117,28 +118,58 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable
-                    || !RenderTerminusContext::is_valid_terminus(method)
-                    || (is_explicit && !method.attrs.demo_attrs.generate)
+                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate)
                 {
                     continue;
                 }
-
+                
                 let _guard = errors
                     .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
+
+                let function_name = formatter.fmt_method_name(method);
+
+                if let Some(custom_func) = &method.attrs.demo_attrs.custom_func {
+
+                    let js_file_name = custom_func.to_string();
+
+                    // TODO: All of this.
+                    // Need to make sure to copy over the JS files included into output, as well as make sure everything is hooked up correctly.
+                    out_info.termini.push(TerminusInfo {
+                        function_name,
+                        out_params: Vec::new(),
+
+                        type_name: type_name.clone(),
+
+                        js_file_name: js_file_name.clone(),
+
+                        node_call_stack: String::default(),
+
+                        typescript: false,
+
+                        imports: BTreeSet::default()
+                    });
+                    out_info.termini_exports.push(TerminusExport {
+                        type_name: type_name.clone(),
+                        js_file_name
+
+                    });
+                    continue;
+                } else if !RenderTerminusContext::is_valid_terminus(method) {
+                    continue;
+                }
 
                 let mut ctx = RenderTerminusContext {
                     tcx,
                     formatter: &formatter,
                     errors: &errors,
                     terminus_info: TerminusInfo {
-                        function_name: formatter.fmt_method_name(method),
+                        function_name,
                         out_params: Vec::new(),
 
-                        type_name: type_name.clone().into(),
+                        type_name: type_name.clone(),
 
                         js_file_name: formatter
-                            .fmt_file_name(&type_name, &crate::js::FileType::Module),
+                            .fmt_file_name(&type_name.clone(), &crate::js::FileType::Module),
 
                         node_call_stack: String::default(),
 
@@ -152,7 +183,7 @@ pub(crate) fn run<'tcx>(
                     module_name: module_name.clone(),
                 };
 
-                ctx.evaluate(type_name.clone().into(), method);
+                ctx.evaluate(type_name.clone(), method);
 
                 termini.push(ctx.terminus_info);
             }
