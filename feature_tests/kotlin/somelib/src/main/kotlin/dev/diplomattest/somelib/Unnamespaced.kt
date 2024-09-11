@@ -18,7 +18,7 @@ class Unnamespaced internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class UnnamespacedCleaner(val handle: Pointer, val lib: UnnamespacedLib) : Runnable {
         override fun run() {
             lib.namespace_Unnamespaced_destroy(handle)

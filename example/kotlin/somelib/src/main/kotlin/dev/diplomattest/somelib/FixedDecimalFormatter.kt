@@ -18,7 +18,7 @@ class FixedDecimalFormatter internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class FixedDecimalFormatterCleaner(val handle: Pointer, val lib: FixedDecimalFormatterLib) : Runnable {
         override fun run() {
             lib.icu4x_FixedDecimalFormatter_destroy_mv1(handle)

@@ -18,7 +18,7 @@ class DataProvider internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class DataProviderCleaner(val handle: Pointer, val lib: DataProviderLib) : Runnable {
         override fun run() {
             lib.icu4x_DataProvider_destroy_mv1(handle)

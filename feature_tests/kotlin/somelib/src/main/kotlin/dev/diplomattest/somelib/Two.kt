@@ -18,7 +18,7 @@ class Two internal constructor (
     internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
 )  {
-
+    
     internal class TwoCleaner(val handle: Pointer, val lib: TwoLib) : Runnable {
         override fun run() {
             lib.Two_destroy(handle)

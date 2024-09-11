@@ -28,7 +28,7 @@ class One internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
 )  {
-
+    
     internal class OneCleaner(val handle: Pointer, val lib: OneLib) : Runnable {
         override fun run() {
             lib.One_destroy(handle)

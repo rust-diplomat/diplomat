@@ -19,7 +19,7 @@ class Utf16Wrap internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {
             lib.Utf16Wrap_destroy(handle)

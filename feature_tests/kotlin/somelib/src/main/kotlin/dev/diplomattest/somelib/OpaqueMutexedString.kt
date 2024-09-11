@@ -24,7 +24,7 @@ class OpaqueMutexedString internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class OpaqueMutexedStringCleaner(val handle: Pointer, val lib: OpaqueMutexedStringLib) : Runnable {
         override fun run() {
             lib.OpaqueMutexedString_destroy(handle)

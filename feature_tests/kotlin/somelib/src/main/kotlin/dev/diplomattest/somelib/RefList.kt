@@ -18,7 +18,7 @@ class RefList internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
 )  {
-
+    
     internal class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
         override fun run() {
             lib.RefList_destroy(handle)

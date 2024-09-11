@@ -16,7 +16,7 @@ class AttrOpaque2 internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class AttrOpaque2Cleaner(val handle: Pointer, val lib: AttrOpaque2Lib) : Runnable {
         override fun run() {
             lib.namespace_AttrOpaque2_destroy(handle)

@@ -17,7 +17,7 @@ class MyIndexer internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-
+    
     internal class MyIndexerCleaner(val handle: Pointer, val lib: MyIndexerLib) : Runnable {
         override fun run() {
             lib.namespace_MyIndexer_destroy(handle)

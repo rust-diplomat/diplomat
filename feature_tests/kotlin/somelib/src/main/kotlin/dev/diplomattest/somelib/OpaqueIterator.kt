@@ -19,7 +19,7 @@ class OpaqueIterator internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
 ): Iterator<AttrOpaque1?> {
-
+    
     internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterator_destroy(handle)
