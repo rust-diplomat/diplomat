@@ -39,7 +39,11 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -51,7 +55,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
@@ -64,6 +68,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
     }
@@ -83,7 +88,11 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -95,7 +104,7 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h 
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native::class.java).toLong()
@@ -108,6 +117,7 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h 
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h(cb_wrap)
         }
     }
@@ -127,7 +137,11 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -139,7 +153,7 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native::class.java).toLong()
@@ -152,6 +166,7 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f(cb_wrap)
         }
     }
@@ -171,7 +186,11 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -183,7 +202,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native::class.java).toLong()
@@ -196,6 +215,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f(cb_wrap)
         }
     }
@@ -215,7 +235,11 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -227,7 +251,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native::class.java).toLong()
@@ -240,6 +264,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g(cb_wrap)
         }
     }

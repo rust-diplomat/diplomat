@@ -13,6 +13,7 @@ pub mod ffi {
     pub struct OptionString(String);
 
     impl OptionString {
+        #[diplomat::demo(default_constructor)]
         pub fn new<'a>(diplomat_str: &'a DiplomatStr) -> Option<Box<Self>> {
             let string = std::str::from_utf8(diplomat_str).ok()?.into();
             Some(Box::new(OptionString(string)))

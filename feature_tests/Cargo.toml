@@ -14,5 +14,5 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
 diplomat = { path = "../macro" }
-diplomat-runtime = { path = "../runtime", feature = ["log"] }
+diplomat-runtime = { path = "../runtime", feature = ["log", "jvm-callback-support"] }
 log = { version = "0.4" }

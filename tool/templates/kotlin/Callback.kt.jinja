@@ -14,7 +14,11 @@ internal class {{name}}_Native: Structure(), Structure.ByValue {
                 }
             }
     @JvmField
-    internal var destructor: Pointer = Pointer(0L);
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -26,7 +30,7 @@ internal class {{name}} internal constructor (
     internal val nativeStruct: {{name}}_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
-    val destructor: Pointer = nativeStruct.destructor
+    val destructor: Callback = nativeStruct.destructor
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize({{name}}_Native::class.java).toLong()
@@ -39,6 +43,7 @@ internal class {{name}} internal constructor (
             }
             val cb_wrap = {{name}}_Native()
             cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
             return {{name}}(cb_wrap)
         }
     }

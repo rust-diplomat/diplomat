@@ -1,10 +1,11 @@
 {
-	"name": "mini-icu4x-demo",
+	"name": "diplomat-wasm-demo-gen-feature-tests",
 	"version": "0.0.1",
-	"description": "Web demonstration of a miniaturized ICU4X Library to demonstrate Diplomat's capabilities.",
+	"description": "Diplomat WASM with demo_gen HIR Backend Feature Tests",
 	"type": "module",
 	"exports": {
-		".": "./demo/index.mjs"
+		".": "./demo/index.mjs",
+		"./js": "./demo/js/index.mjs"
 	},
 	"scripts": {
 		"test": "ava",
@@ -16,9 +17,6 @@
 		"url": "https://github.com/rust-diplomat/diplomat/issues"
 	},
 	"homepage": "https://github.com/rust-diplomat/diplomat#readme",
-	"dependencies": {
-		"mini-icu4x": "../js/lib/"
-	},
 	"devDependencies": {
 		"ava": "^6.1.3",
 		"http-server": "^14.1.1"
