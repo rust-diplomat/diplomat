@@ -1796,6 +1796,10 @@ mod test {
                     pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
                         f(10 + x)
                     }
+
+                    pub fn get_u_byte_slice<'a>() -> &'a [u8] {
+                        todo!()
+                    }
                 }
             }
         };
@@ -1902,7 +1906,6 @@ mod test {
                     pub fn string_stuff_2<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'a MyOpaqueStruct<'b> {
                         self.0.as_ref()
                     }
-
                 }
 
             }
