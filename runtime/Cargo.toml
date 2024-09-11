@@ -18,5 +18,8 @@ repository = "https://github.com/rust-diplomat/diplomat"
 [lib]
 path = "src/lib.rs"
 
+[features]
+jvm-callback-support = ["dep:jni"]
+
 [dependencies]
-log = { version = "0.4", optional = true }
+jni = { version  = "0.21", optional = true }
