@@ -11,7 +11,9 @@ import java.util.Collections
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
+{%- if !use_finalizers_instead_of_cleaners %}
 val CLEANER = java.lang.ref.Cleaner.create()
+{%- endif %}
 
 
 interface DiplomatWriteLib: Library {

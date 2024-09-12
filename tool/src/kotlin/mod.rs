@@ -200,6 +200,7 @@ pub(crate) fn run<'tcx>(
         native_results: &'a [String],
         native_options: &'a [String],
         lib_name: &'a str,
+        use_finalizers_instead_of_cleaners: bool,
     }
 
     let init = Init {
@@ -207,6 +208,7 @@ pub(crate) fn run<'tcx>(
         lib_name: &lib_name,
         native_results: native_results.as_slice(),
         native_options: native_options.as_slice(),
+        use_finalizers_instead_of_cleaners,
     }
     .render()
     .expect("Failed to lib top level file");
