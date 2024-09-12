@@ -1,5 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
+assertion_line: 2042
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -10,27 +11,40 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 
-internal interface BorrowWrapperLib: Library {
-    fun BorrowWrapper_destroy(handle: Pointer)
+internal interface MyOpaqueStructLib: Library {
+    fun MyOpaqueStruct_destroy(handle: Pointer)
+    fun MyOpaqueStruct_get_byte(): Byte
+    fun MyOpaqueStruct_get_string_wrapper(in1: Int): Int
 }
 
-class BorrowWrapper internal constructor (
+class MyOpaqueStruct internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
 )  {
     @Override
     @SuppressWarnings("Finalize")
     fun finalize() {
-        lib.BorrowWrapper_destroy(handle)
+        lib.MyOpaqueStruct_destroy(handle)
     }
 
     companion object {
-        internal val libClass: Class<BorrowWrapperLib> = BorrowWrapperLib::class.java
-        internal val lib: BorrowWrapperLib = Native.load("somelib", libClass)
+        internal val libClass: Class<MyOpaqueStructLib> = MyOpaqueStructLib::class.java
+        internal val lib: MyOpaqueStructLib = Native.load("somelib", libClass)
+        
+        fun getByte(): UByte {
+            
+            val returnVal = lib.MyOpaqueStruct_get_byte();
+            return returnVal.toUByte()
+        }
+        
+        fun getStringWrapper(in1: Int): Int {
+            
+            val returnVal = lib.MyOpaqueStruct_get_string_wrapper(in1);
+            return returnVal
+        }
     }
 
 }

@@ -50,7 +50,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 struct KotlinConfig {
     domain: String,
     lib_name: String,
-    use_finalizers_instead_of_cleaners: Option<bool>,
+    use_finalizers_not_cleaners: Option<bool>,
 }
 
 pub(crate) fn run<'tcx>(
@@ -64,11 +64,10 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         lib_name,
-        use_finalizers_instead_of_cleaners,
+        use_finalizers_not_cleaners,
     } = toml::from_str::<KotlinConfig>(&conf_str)
         .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
-    let use_finalizers_instead_of_cleaners =
-        matches!(use_finalizers_instead_of_cleaners, Some(true));
+    let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
 
     let formatter = KotlinFormatter::new(tcx, None);
 
@@ -100,7 +99,7 @@ pub(crate) fn run<'tcx>(
                     &type_name,
                     &domain,
                     &lib_name,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
@@ -114,7 +113,7 @@ pub(crate) fn run<'tcx>(
                     &type_name,
                     &domain,
                     &lib_name,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
@@ -128,7 +127,7 @@ pub(crate) fn run<'tcx>(
                     &type_name,
                     &domain,
                     &lib_name,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
@@ -142,7 +141,7 @@ pub(crate) fn run<'tcx>(
                     &type_name,
                     &domain,
                     &lib_name,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
@@ -200,7 +199,7 @@ pub(crate) fn run<'tcx>(
         native_results: &'a [String],
         native_options: &'a [String],
         lib_name: &'a str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     }
 
     let init = Init {
@@ -208,7 +207,7 @@ pub(crate) fn run<'tcx>(
         lib_name: &lib_name,
         native_results: native_results.as_slice(),
         native_options: native_options.as_slice(),
-        use_finalizers_instead_of_cleaners,
+        use_finalizers_not_cleaners,
     }
     .render()
     .expect("Failed to lib top level file");
@@ -445,7 +444,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         let opaque_def = opaque_path.resolve(self.tcx);
 
@@ -463,7 +462,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             optional: bool,
             val_name: &'a str,
             return_type_modifier: &'a str,
-            use_finalizers_instead_of_cleaners: bool,
+            use_finalizers_not_cleaners: bool,
         }
 
         struct ParamsForLt<'c> {
@@ -518,7 +517,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             optional,
             val_name,
             return_type_modifier,
-            use_finalizers_instead_of_cleaners,
+            use_finalizers_not_cleaners,
         };
         opaque_return
             .render()
@@ -664,7 +663,7 @@ return string{return_type_modifier}"#
         val_name: &'d str,
         return_type_modifier: &'d str,
         o: &'d OutType,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -678,7 +677,7 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 return_type_modifier,
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -713,7 +712,7 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         o: &'d OutType,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -727,7 +726,7 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 ".?",
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -778,7 +777,7 @@ val intermediateOption = {val_name}.option() ?: return null
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_postfix: &str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match res {
             SuccessType::Write => Self::write_return(return_type_postfix),
@@ -789,7 +788,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 val_name,
                 return_type_postfix,
                 o,
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
             SuccessType::Unit => format!("return Unit{return_type_postfix}"),
@@ -802,7 +801,7 @@ val intermediateOption = {val_name}.option() ?: return null
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match &method.output {
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
@@ -812,7 +811,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 "returnVal",
                 "",
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             ),
             ReturnType::Fallible(ok, err) => {
                 let ok_path = self.gen_success_return_conversion(
@@ -822,7 +821,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal.union.ok",
                     ".ok()",
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 );
 
                 let err_path = err
@@ -835,7 +834,7 @@ val intermediateOption = {val_name}.option() ?: return null
                             "returnVal.union.err",
                             ".err()",
                             err,
-                            use_finalizers_instead_of_cleaners,
+                            use_finalizers_not_cleaners,
                         )
                     })
                     .unwrap_or_else(|| "return Err(Unit)".into());
@@ -860,7 +859,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal",
                     res,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 ),
 
             ReturnType::Nullable(SuccessType::Write) => format!(
@@ -927,7 +926,7 @@ retutnVal.option() ?: return null
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
         struct_name: Option<&str>,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         if method.attrs.disable {
             return "".into();
@@ -1080,7 +1079,7 @@ retutnVal.option() ?: return null
                 method,
                 method_lifetimes_map,
                 cleanups.as_ref(),
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             )
             .into();
 
@@ -1216,7 +1215,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1243,7 +1242,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1260,7 +1259,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1289,7 +1288,7 @@ retutnVal.option() ?: return null
             lifetimes: Vec<Cow<'a, str>>,
             special_methods: SpecialMethodsImpl,
             callback_params: &'a [CallbackParamInfo],
-            use_finalizers_instead_of_cleaners: bool,
+            use_finalizers_not_cleaners: bool,
         }
 
         (
@@ -1305,7 +1304,7 @@ retutnVal.option() ?: return null
                 lifetimes,
                 special_methods: SpecialMethodsImpl::new(special_methods),
                 callback_params: self.callback_params.as_ref(),
-                use_finalizers_instead_of_cleaners,
+                use_finalizers_not_cleaners,
             }
             .render()
             .expect("failed to generate struct"),
@@ -1319,7 +1318,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1345,7 +1344,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     Some(type_name),
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1360,7 +1359,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     Some(type_name),
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1442,7 +1441,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
-        use_finalizers_instead_of_cleaners: bool,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1469,7 +1468,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1485,7 +1484,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    use_finalizers_instead_of_cleaners,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -2006,16 +2005,6 @@ mod test {
                     a: SomeExternalType
                 }
 
-                #[diplomat::opaque]
-                struct InputStruct {
-                }
-
-                #[diplomat::opaque]
-                struct BorrowWrapper<'a, 'b> {
-                    my_opaque: &'b MyOpaqueStruct<'a>
-
-                }
-
                 impl<'b> MyOpaqueStruct<'b> {
 
                     pub fn get_byte() -> u8 {
@@ -2024,54 +2013,6 @@ mod test {
 
                     pub fn get_string_wrapper(in1: i32) -> i32 {
                         unimplemented!()
-                    }
-
-                    pub fn copy(&self, borrow: &MyOpaqueStruct<'b>) -> i32 {
-                        unimplemented!()
-                    }
-
-                    pub fn borrow_other<'a>(inp_1: &'a InputStruct, inp_2: &'a InputStruct, borrow: &'a MyOpaqueStruct<'b>) -> &'a MyOpaqueStruct<'b> {
-                        unimplemented!()
-                    }
-
-                    pub fn create(in1: i32) -> Box<MyOpaqueStruct<'b>> {
-                        unimplemented!()
-                    }
-
-
-                    pub fn do_stuff(&self, in1: i32) -> f64 {
-                        unimplemented!()
-                    }
-
-                    pub fn borrow<'a>(&'a self ) -> Box<BorrowWrapper<'b, 'a>> {
-                        Box::new(BorrowWrapper {
-                            my_opaque: self.as_ref()
-                        })
-                    }
-
-                    pub fn borrow2<'a>(&'a self ) -> &'a MyOpaqueStruct<'b> {
-                        self
-                    }
-
-
-                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWrite) {
-                        todo!()
-                    }
-
-                    pub fn borrow<'a>(other: &'a MyOpaqueStruct<'b>) -> Box<BorrowWrapper<'b, 'a>> {
-                        Box::new(BorrowWrapper {
-                            my_opaque: other.as_ref()
-                        })
-                    }
-
-
-                    pub fn string_stuff<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'c MyOpaqueStruct<'b> {
-                        self.0.as_ref()
-                    }
-
-
-                    pub fn string_stuff_2<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'a MyOpaqueStruct<'b> {
-                        self.0.as_ref()
                     }
                 }
 

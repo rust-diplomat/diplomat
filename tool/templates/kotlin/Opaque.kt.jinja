@@ -40,7 +40,7 @@ class {{type_name}} internal constructor (
 {%- endfor %}
 {%- endif %} {
 
-    {%- if !use_finalizers_instead_of_cleaners %}
+    {%- if !use_finalizers_not_cleaners %}
 
     internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {

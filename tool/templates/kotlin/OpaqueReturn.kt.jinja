@@ -13,7 +13,7 @@ listOf()
 val handle = {{val_name}} {% if optional %}?: return null{% endif %}
 val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
 {%- if is_owned %}
-{%- if !use_finalizers_instead_of_cleaners %}
+{%- if !use_finalizers_not_cleaners %}
 CLEANER.register(returnOpaque, {{return_type_name}}.{{return_type_name}}Cleaner(handle, {{return_type_name}}.lib));
 {% endif -%}
 {% else -%}
