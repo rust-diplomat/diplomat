@@ -50,6 +50,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 struct KotlinConfig {
     domain: String,
     lib_name: String,
+    use_finalizers_not_cleaners: Option<bool>,
 }
 
 pub(crate) fn run<'tcx>(
@@ -60,8 +61,13 @@ pub(crate) fn run<'tcx>(
 
     let conf_str = std::fs::read_to_string(conf_path)
         .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
-    let KotlinConfig { domain, lib_name } = toml::from_str::<KotlinConfig>(&conf_str)
+    let KotlinConfig {
+        domain,
+        lib_name,
+        use_finalizers_not_cleaners,
+    } = toml::from_str::<KotlinConfig>(&conf_str)
         .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
+    let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
 
     let formatter = KotlinFormatter::new(tcx, None);
 
@@ -88,7 +94,13 @@ pub(crate) fn run<'tcx>(
             TypeDef::Opaque(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_opaque_def(o, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_opaque_def(
+                    o,
+                    &type_name,
+                    &domain,
+                    &lib_name,
+                    use_finalizers_not_cleaners,
+                );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -96,7 +108,13 @@ pub(crate) fn run<'tcx>(
             TypeDef::OutStruct(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_struct_def(o, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_struct_def(
+                    o,
+                    &type_name,
+                    &domain,
+                    &lib_name,
+                    use_finalizers_not_cleaners,
+                );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -104,8 +122,13 @@ pub(crate) fn run<'tcx>(
             TypeDef::Struct(struct_def) => {
                 let type_name = struct_def.name.to_string();
 
-                let (file_name, body) =
-                    ty_gen_cx.gen_struct_def(struct_def, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_struct_def(
+                    struct_def,
+                    &type_name,
+                    &domain,
+                    &lib_name,
+                    use_finalizers_not_cleaners,
+                );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -113,8 +136,13 @@ pub(crate) fn run<'tcx>(
             TypeDef::Enum(enum_def) => {
                 let type_name = enum_def.name.to_string();
 
-                let (file_name, body) =
-                    ty_gen_cx.gen_enum_def(enum_def, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_enum_def(
+                    enum_def,
+                    &type_name,
+                    &domain,
+                    &lib_name,
+                    use_finalizers_not_cleaners,
+                );
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -171,6 +199,7 @@ pub(crate) fn run<'tcx>(
         native_results: &'a [String],
         native_options: &'a [String],
         lib_name: &'a str,
+        use_finalizers_not_cleaners: bool,
     }
 
     let init = Init {
@@ -178,6 +207,7 @@ pub(crate) fn run<'tcx>(
         lib_name: &lib_name,
         native_results: native_results.as_slice(),
         native_options: native_options.as_slice(),
+        use_finalizers_not_cleaners,
     }
     .render()
     .expect("Failed to lib top level file");
@@ -405,6 +435,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn gen_opaque_return_conversion<'d>(
         &'d self,
         opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
@@ -413,6 +444,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         let opaque_def = opaque_path.resolve(self.tcx);
 
@@ -430,6 +462,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             optional: bool,
             val_name: &'a str,
             return_type_modifier: &'a str,
+            use_finalizers_not_cleaners: bool,
         }
 
         struct ParamsForLt<'c> {
@@ -484,6 +517,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             optional,
             val_name,
             return_type_modifier,
+            use_finalizers_not_cleaners,
         };
         opaque_return
             .render()
@@ -620,6 +654,7 @@ return string{return_type_modifier}"#
         .expect("Failed to render opaque return block")
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn gen_out_type_return_conversion<'d>(
         &'d self,
         method: &'d Method,
@@ -628,6 +663,7 @@ return string{return_type_modifier}"#
         val_name: &'d str,
         return_type_modifier: &'d str,
         o: &'d OutType,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -641,6 +677,7 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 return_type_modifier,
+                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -675,6 +712,7 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         o: &'d OutType,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -688,6 +726,7 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 ".?",
+                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -729,6 +768,7 @@ val intermediateOption = {val_name}.option() ?: return null
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn gen_success_return_conversion<'d>(
         &'d self,
         res: &'d SuccessType,
@@ -737,6 +777,7 @@ val intermediateOption = {val_name}.option() ?: return null
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_postfix: &str,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match res {
             SuccessType::Write => Self::write_return(return_type_postfix),
@@ -747,6 +788,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 val_name,
                 return_type_postfix,
                 o,
+                use_finalizers_not_cleaners,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
             SuccessType::Unit => format!("return Unit{return_type_postfix}"),
@@ -759,6 +801,7 @@ val intermediateOption = {val_name}.option() ?: return null
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         match &method.output {
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
@@ -768,6 +811,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 "returnVal",
                 "",
+                use_finalizers_not_cleaners,
             ),
             ReturnType::Fallible(ok, err) => {
                 let ok_path = self.gen_success_return_conversion(
@@ -777,6 +821,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal.union.ok",
                     ".ok()",
+                    use_finalizers_not_cleaners,
                 );
 
                 let err_path = err
@@ -789,6 +834,7 @@ val intermediateOption = {val_name}.option() ?: return null
                             "returnVal.union.err",
                             ".err()",
                             err,
+                            use_finalizers_not_cleaners,
                         )
                     })
                     .unwrap_or_else(|| "return Err(Unit)".into());
@@ -813,6 +859,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal",
                     res,
+                    use_finalizers_not_cleaners,
                 ),
 
             ReturnType::Nullable(SuccessType::Write) => format!(
@@ -879,6 +926,7 @@ retutnVal.option() ?: return null
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
         struct_name: Option<&str>,
+        use_finalizers_not_cleaners: bool,
     ) -> String {
         if method.attrs.disable {
             return "".into();
@@ -1027,7 +1075,12 @@ retutnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
+            .gen_return_conversion(
+                method,
+                method_lifetimes_map,
+                cleanups.as_ref(),
+                use_finalizers_not_cleaners,
+            )
             .into();
 
         // this should only be called in the special method generation below
@@ -1162,6 +1215,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1188,7 +1242,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1205,7 +1259,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1234,6 +1288,7 @@ retutnVal.option() ?: return null
             lifetimes: Vec<Cow<'a, str>>,
             special_methods: SpecialMethodsImpl,
             callback_params: &'a [CallbackParamInfo],
+            use_finalizers_not_cleaners: bool,
         }
 
         (
@@ -1249,6 +1304,7 @@ retutnVal.option() ?: return null
                 lifetimes,
                 special_methods: SpecialMethodsImpl::new(special_methods),
                 callback_params: self.callback_params.as_ref(),
+                use_finalizers_not_cleaners,
             }
             .render()
             .expect("failed to generate struct"),
@@ -1262,6 +1318,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1287,7 +1344,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     Some(type_name),
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1302,7 +1359,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     Some(type_name),
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1384,6 +1441,7 @@ retutnVal.option() ?: return null
         type_name: &str,
         domain: &str,
         lib_name: &str,
+        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1410,7 +1468,7 @@ retutnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1426,7 +1484,7 @@ retutnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    // &mut callback_params,
+                    use_finalizers_not_cleaners,
                 )
             })
             .collect::<Vec<_>>();
@@ -1751,7 +1809,7 @@ mod test {
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, enum_code) =
-                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.gigapixel", "somelib", false);
             insta::assert_snapshot!(enum_code)
         }
     }
@@ -1826,7 +1884,7 @@ mod test {
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, struct_code) =
-                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.gigapixel", "somelib", false);
             insta::assert_snapshot!(struct_code)
         }
     }
@@ -1932,7 +1990,55 @@ mod test {
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", false);
+            insta::assert_snapshot!(result)
+        }
+    }
+
+    #[test]
+    fn test_opaque_gen_with_finalizers() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct<'b> {
+                    a: SomeExternalType
+                }
+
+                impl<'b> MyOpaqueStruct<'b> {
+
+                    pub fn get_byte() -> u8 {
+                        unimplemented!()
+                    }
+
+                    pub fn get_string_wrapper(in1: i32) -> i32 {
+                        unimplemented!()
+                    }
+                }
+
+            }
+        };
+        let tcx = new_tcx(tk_stream);
+        let mut all_types = tcx.all_types();
+        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
+            let eror_store = ErrorStore::default();
+            let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
+            let mut ty_gen_cx = TyGenContext {
+                tcx: &tcx,
+                formatter: &formatter,
+                result_types: RefCell::new(BTreeSet::new()),
+                option_types: RefCell::new(BTreeSet::new()),
+                errors: &eror_store,
+                callback_params: &mut callback_params,
+            };
+            let type_name = opaque_def.name.to_string();
+            // test that we can render and that it doesn't panic
+            let (_, result) =
+                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", true);
             insta::assert_snapshot!(result)
         }
     }
