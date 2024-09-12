@@ -17,7 +17,7 @@ class Locale internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class LocaleCleaner(val handle: Pointer, val lib: LocaleLib) : Runnable {
         override fun run() {
             lib.icu4x_Locale_destroy_mv1(handle)

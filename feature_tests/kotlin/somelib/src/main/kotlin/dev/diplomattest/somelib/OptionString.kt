@@ -19,7 +19,7 @@ class OptionString internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class OptionStringCleaner(val handle: Pointer, val lib: OptionStringLib) : Runnable {
         override fun run() {
             lib.OptionString_destroy(handle)

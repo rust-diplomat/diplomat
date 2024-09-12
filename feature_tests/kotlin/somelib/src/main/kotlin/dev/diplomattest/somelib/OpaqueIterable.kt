@@ -17,7 +17,7 @@ class OpaqueIterable internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 ): Iterable<OpaqueIteratorIteratorItem> {
-    
+
     internal class OpaqueIterableCleaner(val handle: Pointer, val lib: OpaqueIterableLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterable_destroy(handle)

@@ -16,7 +16,7 @@ class RefListParameter internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class RefListParameterCleaner(val handle: Pointer, val lib: RefListParameterLib) : Runnable {
         override fun run() {
             lib.RefListParameter_destroy(handle)

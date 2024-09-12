@@ -19,7 +19,7 @@ class MyIterator internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
 ): Iterator<UByte> {
-    
+
     internal class MyIteratorCleaner(val handle: Pointer, val lib: MyIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterator_destroy(handle)

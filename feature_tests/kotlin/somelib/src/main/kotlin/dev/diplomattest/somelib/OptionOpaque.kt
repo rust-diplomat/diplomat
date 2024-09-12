@@ -27,7 +27,7 @@ class OptionOpaque internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class OptionOpaqueCleaner(val handle: Pointer, val lib: OptionOpaqueLib) : Runnable {
         override fun run() {
             lib.OptionOpaque_destroy(handle)

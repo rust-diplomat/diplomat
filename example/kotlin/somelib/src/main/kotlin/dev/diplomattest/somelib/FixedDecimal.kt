@@ -19,7 +19,7 @@ class FixedDecimal internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class FixedDecimalCleaner(val handle: Pointer, val lib: FixedDecimalLib) : Runnable {
         override fun run() {
             lib.icu4x_FixedDecimal_destroy_mv1(handle)

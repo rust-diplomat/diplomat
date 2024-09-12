@@ -29,7 +29,7 @@ class Float64Vec internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class Float64VecCleaner(val handle: Pointer, val lib: Float64VecLib) : Runnable {
         override fun run() {
             lib.Float64Vec_destroy(handle)

@@ -17,7 +17,7 @@ class OptionOpaqueChar internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {
         override fun run() {
             lib.OptionOpaqueChar_destroy(handle)

@@ -25,7 +25,7 @@ class ResultOpaque internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class ResultOpaqueCleaner(val handle: Pointer, val lib: ResultOpaqueLib) : Runnable {
         override fun run() {
             lib.ResultOpaque_destroy(handle)

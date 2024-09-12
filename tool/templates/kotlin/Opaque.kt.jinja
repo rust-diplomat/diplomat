@@ -41,7 +41,7 @@ class {{type_name}} internal constructor (
 {%- endif %} {
 
     {%- if !use_finalizers_instead_of_cleaners %}
-    
+
     internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
             lib.{{dtor_abi_name}}(handle)

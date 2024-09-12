@@ -23,7 +23,7 @@ class MyString internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 )  {
-    
+
     internal class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
         override fun run() {
             lib.MyString_destroy(handle)

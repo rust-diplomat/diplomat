@@ -23,7 +23,7 @@ class Foo internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
 )  {
-    
+
     internal class FooCleaner(val handle: Pointer, val lib: FooLib) : Runnable {
         override fun run() {
             lib.Foo_destroy(handle)

@@ -18,7 +18,7 @@ class MyIterable internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>
 ): Iterable<MyIteratorIteratorItem> {
-    
+
     internal class MyIterableCleaner(val handle: Pointer, val lib: MyIterableLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterable_destroy(handle)

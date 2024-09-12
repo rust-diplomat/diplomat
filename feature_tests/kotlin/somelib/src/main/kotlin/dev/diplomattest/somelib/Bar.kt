@@ -19,7 +19,7 @@ class Bar internal constructor (
     internal val bEdges: List<Any>,
     internal val aEdges: List<Any>,
 )  {
-    
+
     internal class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
         override fun run() {
             lib.Bar_destroy(handle)
