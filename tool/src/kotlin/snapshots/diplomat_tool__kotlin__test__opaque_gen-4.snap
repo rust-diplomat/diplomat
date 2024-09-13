@@ -1,0 +1,35 @@
+---
+source: tool/src/kotlin/mod.rs
+expression: result
+---
+package dev.diplomattest.somelib;
+import com.sun.jna.Callback
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+import com.sun.jna.Structure
+
+
+internal interface InputStructLib: Library {
+    fun InputStruct_destroy(handle: Pointer)
+}
+
+class InputStruct internal constructor (
+    internal val handle: Pointer,
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
+    internal val selfEdges: List<Any>
+)  {
+
+    internal class InputStructCleaner(val handle: Pointer, val lib: InputStructLib) : Runnable {
+        override fun run() {
+            lib.InputStruct_destroy(handle)
+        }
+    }
+
+    companion object {
+        internal val libClass: Class<InputStructLib> = InputStructLib::class.java
+        internal val lib: InputStructLib = Native.load("somelib", libClass)
+    }
+
+}
