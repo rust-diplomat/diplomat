@@ -115,10 +115,12 @@ pub enum LifetimeEdgeKind<'tcx> {
     /// A slice being converted and then borrowed. These often need to be handled differently
     /// when they are borrowed as the borrow will need to create an edge
     SliceParam,
-    /// A lifetime parameter of a struct, given the lifetime context and the struct-def lifetime for that struct
+    /// A lifetime parameter of a struct, given the lifetime context and the struct-def lifetime for that struct.
+    ///
+    /// The boolean is whether or not the struct is optional.
     ///
     /// Using this, you can generate code that "asks" the struct for the lifetime-relevant field edges
-    StructLifetime(&'tcx LifetimeEnv, Lifetime),
+    StructLifetime(&'tcx LifetimeEnv, Lifetime, bool),
 }
 
 #[non_exhaustive]
@@ -209,7 +211,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
                             let edge = LifetimeEdge {
                                 param_name: param_name.into(),
-                                kind: LifetimeEdgeKind::StructLifetime(link.def_env(), def_lt),
+                                kind: LifetimeEdgeKind::StructLifetime(
+                                    link.def_env(),
+                                    def_lt,
+                                    ty.is_option(),
+                                ),
                             };
                             method_lifetime_info.incoming_edges.push(edge);
 

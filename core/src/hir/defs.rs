@@ -2,7 +2,8 @@
 
 use super::lifetimes::LifetimeEnv;
 use super::{
-    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type,
+    Attrs, Callback, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition,
+    Type,
 };
 use crate::ast::Docs;
 
@@ -19,6 +20,17 @@ pub enum TypeDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
     Opaque(&'tcx OpaqueDef),
     Enum(&'tcx EnumDef),
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct TraitDef {
+    // TyPosition: InputOnly
+    pub docs: Docs,
+    pub name: IdentBuf,
+    pub methods: Vec<Callback>,
+    pub attrs: Attrs,
+    pub lifetimes: LifetimeEnv,
 }
 
 /// Structs that can only be returned from methods.
@@ -92,6 +104,24 @@ pub struct EnumVariant {
     pub name: IdentBuf,
     pub discriminant: isize,
     pub attrs: Attrs,
+}
+
+impl TraitDef {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        methods: Vec<Callback>,
+        attrs: Attrs,
+        lifetimes: LifetimeEnv,
+    ) -> Self {
+        Self {
+            docs,
+            name,
+            methods,
+            attrs,
+            lifetimes,
+        }
+    }
 }
 
 impl<P: TyPosition> StructDef<P> {

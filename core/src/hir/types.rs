@@ -20,6 +20,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
     Struct(P::StructPath),
+    ImplTrait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
@@ -101,7 +102,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
+            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) | Type::ImplTrait(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
             Type::DiplomatOption(ty) => ty.field_leaf_lifetime_counts(tcx),
         }
@@ -127,6 +128,7 @@ impl<P: TyPosition> Type<P> {
                     .map(|lt| std::slice::from_ref(lt).iter().copied())
                     .unwrap_or([].iter().copied()),
             ),
+            // TODO the Callback case
             _ => Either::Left([].iter().copied()),
         }
     }
@@ -139,6 +141,23 @@ impl<P: TyPosition> Type<P> {
             Self::Struct(p) => p.id(),
             _ => return None,
         })
+    }
+
+    /// Unwrap to the inner type if `self` is `DiplomatOption`
+    pub fn unwrap_option(&self) -> &Type<P> {
+        match self {
+            Self::DiplomatOption(ref o) => o,
+            _ => self,
+        }
+    }
+
+    /// Whether this type is a `DiplomatOption` or optional Opaque
+    pub fn is_option(&self) -> bool {
+        match self {
+            Self::DiplomatOption(..) => true,
+            Self::Opaque(ref o) if o.is_optional() => true,
+            _ => false,
+        }
     }
 }
 

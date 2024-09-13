@@ -1,6 +1,7 @@
 ---
 source: tool/src/kotlin/mod.rs
-expression: res
+assertion_line: 1995
+expression: result
 ---
 package dev.diplomattest.somelib
 

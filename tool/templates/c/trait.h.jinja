@@ -1,0 +1,22 @@
+{% if !is_for_cpp -%} typedef {% endif -%}
+struct {{trt_name}}_VTable {
+    void (*destructor)(const void*);
+    size_t SIZE; size_t ALIGNMENT;
+    {%- for method_sig in method_sigs %}
+    {{ method_sig }}
+    {%- endfor %}
+} {%- if !is_for_cpp %} {{trt_name}}_VTable {%- endif %};
+
+{% if !is_for_cpp -%} typedef {% endif -%}
+struct DiplomatTraitStruct_{{trt_name}} {
+    void (*destructor)(const void*);
+    {{trt_name}}_VTable vtable;
+} {%- if !is_for_cpp %} DiplomatTraitStruct_{{trt_name}} {%- endif %};
+
+static void general_destructor(const void* data) {
+    // TODO
+}
+
+const size_t {{trt_name}}_DATA_SIZE = 0;
+const size_t {{trt_name}}_DATA_ALIGNMENT = 0;
+

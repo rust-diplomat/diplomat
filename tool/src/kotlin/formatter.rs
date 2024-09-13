@@ -60,10 +60,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
-            PrimitiveType::Int(IntType::U8) => "Byte",
-            PrimitiveType::Int(IntType::U16) => "Short",
-            PrimitiveType::Int(IntType::U32) => "Int",
-            PrimitiveType::Int(IntType::U64) => "Long",
+            PrimitiveType::Int(IntType::U8) => "UByte",
+            PrimitiveType::Int(IntType::U16) => "UShort",
+            PrimitiveType::Int(IntType::U32) => "UInt",
+            PrimitiveType::Int(IntType::U64) => "ULong",
             PrimitiveType::Byte => "Byte",
             PrimitiveType::IntSize(IntSizeType::Isize) => "Long",
             PrimitiveType::IntSize(IntSizeType::Usize) => "Long",
@@ -120,7 +120,11 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match ty {
             LifetimeEdgeKind::OpaqueParam => format!("listOf({param_name})").into(),
             LifetimeEdgeKind::SliceParam => format!("listOf({param_name}Mem)").into(),
-            LifetimeEdgeKind::StructLifetime(lt_env, lt) => {
+            LifetimeEdgeKind::StructLifetime(lt_env, lt, is_option) => {
+                assert!(
+                    !is_option,
+                    "Kotlin backend doesn't support Option<T> for struct/enum/primitive T"
+                );
                 let lt = lt_env.fmt_lifetime(lt);
                 format!("{param_name}.{lt}Edges").into()
             }

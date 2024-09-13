@@ -44,6 +44,17 @@ export class FixedDecimalFormatterOptions {
         return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap,
+        forcePadding
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#groupingStrategy.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#someOtherConfig, Uint8Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
@@ -51,13 +62,13 @@ export class FixedDecimalFormatterOptions {
     // should handle this when constructing edge arrays.
     #fromFFI(ptr) {
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        this.#groupingStrategy = FixedDecimalGroupingStrategy[Array.from(FixedDecimalGroupingStrategy.values.keys())[groupingStrategyDeref]];
+        this.#groupingStrategy = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, groupingStrategyDeref);
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         this.#someOtherConfig = someOtherConfigDeref;
     }
 
     static default_() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     

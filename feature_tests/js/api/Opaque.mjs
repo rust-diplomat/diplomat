@@ -122,7 +122,7 @@ export class Opaque {
     }
 
     static returnsImported() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     

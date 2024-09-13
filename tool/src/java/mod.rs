@@ -85,6 +85,7 @@ pub(crate) fn run<'a>(
         if ty.attrs().disable {
             continue;
         }
+        let id = id.into();
         let decl_header_path = c_formatter.fmt_decl_header_path(id);
         let impl_header_path = c_formatter.fmt_impl_header_path(id);
         let c_context = crate::c::TyGenContext {

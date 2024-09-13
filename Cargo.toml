@@ -1,4 +1,6 @@
 [workspace]
+# Applies to diplomat-core, diplomat, and diplomat-runtime
+# Diplomat-tool has no MSRV for now
 resolver = "2"
 members = [
   "core",
@@ -8,3 +10,6 @@ members = [
   "example",
   "feature_tests",
 ]
+
+[workspace.package]
+rust-version = "1.71"

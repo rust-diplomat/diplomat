@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface OpaqueIteratorLib: Library {
-    fun OpaqueIterator_destroy(handle: Pointer)
+    fun namespace_OpaqueIterator_destroy(handle: Pointer)
     fun namespace_OpaqueIterator_next(handle: Pointer): Pointer?
 }
 typealias OpaqueIteratorIteratorItem = AttrOpaque1?
@@ -22,7 +22,7 @@ class OpaqueIterator internal constructor (
 
     internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {
         override fun run() {
-            lib.OpaqueIterator_destroy(handle)
+            lib.namespace_OpaqueIterator_destroy(handle)
         }
     }
 

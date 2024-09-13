@@ -2,6 +2,7 @@
 name = "diplomat-runtime"
 description = "Common runtime utilities used by diplomat codegen"
 version = "0.8.1"
+rust-version.workspace = true
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -17,5 +18,8 @@ repository = "https://github.com/rust-diplomat/diplomat"
 [lib]
 path = "src/lib.rs"
 
+[features]
+jvm-callback-support = ["dep:jni"]
+
 [dependencies]
-log = { version = "0.4", optional = true }
+jni = { version  = "0.21", optional = true }

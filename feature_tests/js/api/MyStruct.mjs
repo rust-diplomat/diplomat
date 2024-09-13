@@ -86,6 +86,21 @@ export class MyStruct {
         return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
     }
 
+    _writeToArrayBuffer(
+        arrayBuffer,
+        offset,
+        functionCleanupArena,
+        appendArrayMap
+    ) {
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a, Uint8Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 1, this.#b, Uint8Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#c, Uint8Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#d, BigUint64Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#e, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 20, this.#f, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 24, this.#g.ffiValue, Int32Array);
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
@@ -105,11 +120,11 @@ export class MyStruct {
         const fDeref = (new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0];
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
-        this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();
+        this.#g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
     }
 
     static new_() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 28, 8, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
         
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     

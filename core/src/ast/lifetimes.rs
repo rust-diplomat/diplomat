@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::{Attrs, Docs, Ident, Param, SelfParam, TypeName};
+use super::{Attrs, Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///
@@ -121,6 +121,38 @@ impl LifetimeEnv {
         }
 
         this
+    }
+
+    pub fn from_trait_item(
+        trait_fct_item: &syn::TraitItem,
+        self_param: Option<&TraitSelfParam>,
+        params: &[Param],
+        return_type: Option<&TypeName>,
+    ) -> Self {
+        let mut this = LifetimeEnv::new();
+        if let syn::TraitItem::Fn(_) = trait_fct_item {
+            if let Some(self_param) = self_param {
+                this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
+            }
+            for param in params {
+                this.extend_implicit_lifetime_bounds(&param.ty, None);
+            }
+            if let Some(return_type) = return_type {
+                this.extend_implicit_lifetime_bounds(return_type, None);
+            }
+        } else {
+            panic!(
+                "Diplomat traits can only have associated methods and no other associated items."
+            )
+        }
+        this
+    }
+
+    pub fn from_trait(trt: &syn::ItemTrait) -> Self {
+        if trt.generics.lifetimes().next().is_some() {
+            panic!("Diplomat traits are not allowed to have any lifetime parameters")
+        }
+        LifetimeEnv::new()
     }
 
     /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds

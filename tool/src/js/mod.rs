@@ -1,6 +1,6 @@
 //! JS code generation backend.
 //!
-//! This module specifically handles the overview of generating all the necessary `.mjs` and `.d.ts` files that [`type_generation`] creates content for.
+//! This module specifically handles the overview of generating all the necessary `.mjs` and `.d.ts` files that [`gen`] creates content for.
 use std::collections::BTreeSet;
 use std::{borrow::Cow, cell::RefCell};
 
@@ -12,8 +12,9 @@ use askama::Template;
 pub(crate) mod formatter;
 use formatter::JSFormatter;
 
-mod type_generation;
-use type_generation::{MethodsInfo, TyGenContext};
+mod gen;
+use gen::{MethodsInfo, TyGenContext};
+mod converter;
 
 mod layout;
 
@@ -53,6 +54,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterables = true;
     a.indexing = false;
     a.callbacks = false;
+    a.option = true;
+    a.traits = false;
 
     a
 }

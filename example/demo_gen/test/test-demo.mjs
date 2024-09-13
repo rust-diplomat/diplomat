@@ -1,6 +1,6 @@
 import test from "ava";
 import { FixedDecimalDemo, FixedDecimalFormatterDemo } from "mini-icu4x-demo";
-import { FixedDecimalGroupingStrategy } from "mini-icu4x-demo/js";
+import { FixedDecimalGroupingStrategy } from "mini-icu4x";
 
 
 test("Test FixedDecimal", (t) => {

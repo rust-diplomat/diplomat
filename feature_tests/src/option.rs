@@ -16,6 +16,7 @@ pub mod ffi {
     pub struct OptionString(String);
 
     impl OptionString {
+        #[diplomat::demo(default_constructor)]
         pub fn new<'a>(diplomat_str: &'a DiplomatStr) -> Option<Box<Self>> {
             let string = std::str::from_utf8(diplomat_str).ok()?.into();
             Some(Box::new(OptionString(string)))
@@ -42,10 +43,25 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
         b: DiplomatOption<DiplomatChar>,
         c: DiplomatOption<OptionEnum>,
+    }
+
+    impl OptionInputStruct {
+        // Specifically test the Dart default constructor generation code
+        // around Options
+        #[diplomat::attr(not(dart), disable)]
+        #[diplomat::attr(auto, constructor)]
+        pub fn default_ctor() -> Self {
+            Self {
+                a: None.into(),
+                b: None.into(),
+                c: None.into(),
+            }
+        }
     }
 
     #[diplomat::attr(not(supports = option), disable)]

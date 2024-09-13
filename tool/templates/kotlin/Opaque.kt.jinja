@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 
 internal interface {{type_name}}Lib: Library {
-    fun {{type_name}}_destroy(handle: Pointer)
+    fun {{dtor_abi_name}}(handle: Pointer)
 
     
     {%- for m in native_methods %}
@@ -40,11 +40,20 @@ class {{type_name}} internal constructor (
 {%- endfor %}
 {%- endif %} {
 
+    {%- if !use_finalizers_not_cleaners %}
+
     internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
-            lib.{{type_name}}_destroy(handle)
+            lib.{{dtor_abi_name}}(handle)
         }
     }
+    {%- else %}
+    @Override
+    @SuppressWarnings("Finalize")
+    fun finalize() {
+        lib.{{dtor_abi_name}}(handle)
+    }
+    {%- endif %}
 
     companion object {
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java

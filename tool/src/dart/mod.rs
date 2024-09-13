@@ -41,6 +41,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.indexing = true;
     a.option = true;
     a.callbacks = false;
+    a.traits = false;
 
     a
 }
@@ -338,7 +339,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
                 let args = fields
                     .iter()
-                    .map(|field| format!("{}? {}", field.dart_type_name, field.name))
+                    .map(|field| {
+                        format!(
+                            "{} {}",
+                            self.formatter.fmt_nullable(&field.dart_type_name),
+                            field.name
+                        )
+                    })
                     .collect::<Vec<_>>();
                 constructor.declaration =
                     format!("factory {type_name}({{{args}}})", args = args.join(", "));
@@ -1366,11 +1373,14 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         // Slice parameters make an arena which is retained as an edge
         LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
-        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fieldsForLifetime{}",
-            def_env.fmt_lifetime(def_lt).to_uppercase(),
-        )
-        .into(),
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => {
+            let lt = def_env.fmt_lifetime(def_lt).to_uppercase();
+            if is_option {
+                format!("...?{param_name}?._fieldsForLifetime{lt}").into()
+            } else {
+                format!("...{param_name}._fieldsForLifetime{lt}").into()
+            }
+        }
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

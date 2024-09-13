@@ -1,3 +1,4 @@
+use core::fmt;
 use core::mem::ManuallyDrop;
 
 #[repr(C)]
@@ -20,6 +21,33 @@ pub struct DiplomatResult<T, E> {
 /// Used internally to handle `Option<T>` arguments and return types, and needs to be
 /// used explicitly for optional struct fields.
 pub type DiplomatOption<T> = DiplomatResult<T, ()>;
+
+impl<T, E> DiplomatResult<T, E> {
+    pub fn as_ref(&self) -> Result<&T, &E> {
+        // Safety: we're only accessing the union variants when the flag is correct
+        unsafe {
+            if self.is_ok {
+                Ok(&self.value.ok)
+            } else {
+                Err(&self.value.err)
+            }
+        }
+    }
+}
+
+impl<T> DiplomatOption<T> {
+    /// Helper for converting into an Option to avoid trait ambiguity errors with Into
+    #[inline]
+    pub fn into_option(self) -> Option<T> {
+        self.into()
+    }
+
+    /// Helper for converting into an Option with the inner type converted
+    #[inline]
+    pub fn into_converted_option<U: From<T>>(self) -> Option<U> {
+        self.into_option().map(Into::into)
+    }
+}
 
 impl<T: Clone, E: Clone> Clone for DiplomatResult<T, E> {
     fn clone(&self) -> Self {
@@ -86,5 +114,11 @@ impl<T, E> From<DiplomatResult<T, E>> for Result<T, E> {
                 Err(ManuallyDrop::take(&mut result.value.err))
             }
         }
+    }
+}
+
+impl<T: fmt::Debug, E: fmt::Debug> fmt::Debug for DiplomatResult<T, E> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.as_ref().fmt(f)
     }
 }

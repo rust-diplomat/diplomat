@@ -54,6 +54,13 @@ dependencies = [
     "test-js-feature",
 ]
 
+[tasks.test-demo]
+category = "Tests"
+dependencies = [
+    "test-demo-feature",
+    "test-demo-example"
+]
+
 [tasks.test-dart]
 category = "Tests"
 dependencies = [
@@ -89,6 +96,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-js-feature",
+    "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
     "test-java-feature",
@@ -137,6 +145,15 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm install && npm run test
 '''
 
+[tasks.test-demo-feature]
+category = "Tests"
+dependencies = ["build-feature-wasm"]
+script_runner = "@shell"
+script = '''
+cd feature_tests/demo_gen
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm ../js/api/diplomat_feature_tests.wasm
+npm install && npm run test
+'''
 
 [tasks.test-demo-example]
 category = "Tests"
@@ -144,7 +161,7 @@ dependencies = ["build-example-wasm"]
 script_runner = "@shell"
 script = '''
 cd example/demo_gen
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm ../js/lib/api/diplomat_example.wasm
 npm install && npm run test
 '''
 
@@ -179,7 +196,7 @@ env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 [tasks.test-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
-dependencies = ["build-example"]
+dependencies = ["build-example-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
@@ -196,7 +213,7 @@ env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
 [tasks.test-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"
-dependencies = ["build-feature"]
+dependencies = ["build-feature-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
@@ -343,6 +360,7 @@ dependencies = [
     "gen-cpp-feature",
     "gen-c-feature",
     "gen-js-feature",
+    "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
 ]
@@ -450,13 +468,22 @@ exit_on_error true
 generate_generic example js lib/api
 '''
 
+[tasks.gen-demo-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests demo_gen demo "-l diplomat-demo-conf.toml"
+'''
+
 [tasks.gen-demo-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example demo_gen demo
+generate_generic example demo_gen demo "-l diplomat-demo-conf.toml"
 '''
 
 [tasks.gen-dart-feature]
@@ -532,6 +559,18 @@ description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
+
+
+[tasks.build-example-jvm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-example", "--features", "diplomat-runtime/jvm-callback-support"]
+[tasks.build-feature-jvm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-feature-tests", "--features", "diplomat-runtime/jvm-callback-support"]
 
 
 [tasks.bench-rust-example]
