@@ -4,7 +4,7 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
     MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
     ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
-    StructPathLike, TyPosition, Type, TypeContext, TypeDef,
+    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TraitIdGetter
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -41,7 +41,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterables = true;
     a.indexing = true;
     a.callbacks = true;
-    a.traits = false;
+    a.traits = true;
 
     a
 }
@@ -148,6 +148,24 @@ pub(crate) fn run<'tcx>(
             }
             ty_def => panic!("Received unknown type definition: {ty_def:?}"),
         }
+    }
+
+    for (_id, trt_def) in tcx.all_traits() {
+        ty_gen_cx.callback_params.clear(); // specific to each type in a file
+        let _guard = ty_gen_cx.errors.set_context_ty(trt_def.name.as_str().into());
+        if trt_def.attrs.disable {
+            continue;
+        }
+        let trait_name = trt_def.name.to_string();
+
+        let (file_name, body) = ty_gen_cx.gen_trait_def(
+            trt_def,
+            &trait_name,
+            &domain,
+            &lib_name,
+        );
+
+        files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
 
     #[derive(Template)]
@@ -291,6 +309,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
+            Type::ImplTrait(_) => format!("{name}.nativeStruct").into(),
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
                 format!("{name}Slice").into()
@@ -430,6 +449,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => {
                 format!("DiplomatCallback_{}_Native", additional_name.unwrap()).into()
+            }
+            Type::ImplTrait(ref trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                format!("DiplomatTrait_{}_Wrapper_Native", resolved.name).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1225,7 +1249,6 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1314,7 +1337,6 @@ retutnVal.option() ?: return null
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
-
         type_name: &str,
         domain: &str,
         lib_name: &str,
@@ -1327,7 +1349,6 @@ retutnVal.option() ?: return null
             .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
-        // let mut callback_params = Vec::new();
         let mut unused_special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
@@ -1435,6 +1456,100 @@ retutnVal.option() ?: return null
         )
     }
 
+    fn gen_trait_method_info(&self, method: &Callback) -> TraitMethodInfo {
+        if !method.name.is_some() {
+            panic!("Trait methods need a name");
+        }
+        let method_name = method.name.clone().unwrap().to_string();
+        let param_input_types: Vec<String> = method.params
+            .iter()
+            .map(|param| self.gen_type_name(&param.ty, None).into())
+            .collect();
+        let param_names: Vec<String> = method.params
+            .iter()
+            .enumerate()
+            .map(|(index, param)| if let Some(param_name) = &param.name {
+                param_name.to_string()
+            } else {
+                format!("arg{}", index).into()
+            })
+            .collect();
+        let (native_input_names, native_input_params_and_types) = method.params
+            .iter()
+            .zip(param_input_types.iter())
+            .zip(param_names.iter())
+            .map(|((in_param, in_ty), in_name)| match in_param.ty {
+                Type::Enum(_) | Type::Struct(_) => {
+                    // named types have a _Native wrapper, this needs to be passed as the "native"
+                    // version of the argument
+                    (
+                        format!("{}({})", in_ty, in_name),
+                        format!("{}: {}Native", in_name, in_ty),
+                    )
+                }
+                _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+            })
+            .unzip();
+        let non_native_params_and_types = method.params
+            .iter()
+            .zip(param_input_types.iter())
+            .zip(param_names.iter())
+            .map(|((_, in_ty), in_name)| format!("{}: {}", in_name, in_ty))
+            .collect();
+        TraitMethodInfo {
+            name: method_name,
+            output_type: match *method.output {
+                Some(ref ty) => self.gen_type_name(ty, None).into(),
+                None => "Unit".into(),
+            },
+            input_params_and_types: native_input_params_and_types,
+            non_native_params_and_types,
+            input_params: native_input_names,
+        }
+    }
+
+    fn gen_trait_def(
+        &mut self,
+        trt: &'cx hir::TraitDef,
+        trait_name: &str,
+        domain: &str,
+        lib_name: &str,
+    ) -> (String, String) {
+        let trait_methods = trt
+            .methods
+            .iter()
+            .filter(|m| if let Some(m_attrs) = &m.attrs {
+                !m_attrs.disable} else {true})
+            .map(|method| self.gen_trait_method_info(method))
+            .collect::<Vec<_>>();
+        let trait_method_names = trait_methods.iter().map(|m| format!("\"run_{}_callback\"", m.name)).collect::<Vec<_>>();
+
+        #[derive(Template)]
+        #[template(path = "kotlin/Trait.kt.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+            trait_name: &'a str,
+            trait_methods: &'a [TraitMethodInfo],
+            trait_method_names: &'a str,
+            callback_params: &'a [CallbackParamInfo],
+        }
+
+        (
+            format!("{}/{lib_name}/{trait_name}.kt", domain.replace('.', "/"),),
+            ImplTemplate {
+                domain,
+                lib_name,
+                trait_name,
+                trait_methods: trait_methods.as_ref(),
+                callback_params: self.callback_params.as_ref(),
+                trait_method_names: &trait_method_names.join(", ")
+            }
+            .render()
+            .expect("Failed to render trait template"),
+        )
+    }
+
     fn gen_enum_def(
         &mut self,
         ty: &'cx hir::EnumDef,
@@ -1451,7 +1566,6 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1592,6 +1706,10 @@ retutnVal.option() ?: return null
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => self.gen_type_name(ty, additional_name),
+            Type::ImplTrait(ref trt) => {
+                let op_id = trt.id();
+                format!("DiplomatTrait_{}_Wrapper_Native", self.formatter.fmt_trait_name(op_id)).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1622,6 +1740,10 @@ retutnVal.option() ?: return null
             Type::Struct(ref strct) => {
                 let op_id = strct.id();
                 self.formatter.fmt_type_name(op_id)
+            }
+            Type::ImplTrait(ref trt) => {
+                let op_id = trt.id();
+                format!("DiplomatTrait_{}_Wrapper", self.formatter.fmt_trait_name(op_id)).into()
             }
             Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
@@ -1729,6 +1851,14 @@ struct MethodTpl<'a> {
 
 struct NativeMethodInfo {
     declaration: String,
+}
+
+struct TraitMethodInfo {
+    name: String,
+    input_params_and_types: String,
+    input_params: String,
+    output_type: String,
+    non_native_params_and_types: String,
 }
 
 #[derive(Template)]

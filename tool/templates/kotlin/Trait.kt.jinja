@@ -1,0 +1,97 @@
+package {{domain}}.{{lib_name}}
+
+import com.sun.jna.Callback
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+import com.sun.jna.Structure
+
+interface {{trait_name}} {
+    {%- for m in trait_methods %}
+    fun {{m.name}}({{m.non_native_params_and_types}}): {{m.output_type}};
+    {%- endfor %}
+}
+
+{% if !callback_params.is_empty() -%}
+    {%- for callback_param in callback_params -%}
+        {{callback_param}}
+    {%- endfor %}
+{% endif -%}
+
+{% if !trait_methods.is_empty() -%}
+    {%- for trait_method in trait_methods %}
+internal interface Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}}: Callback {
+    fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}}
+}
+    {%- endfor %}
+{%- endif %}
+
+object {{trait_name}}_VTable_destructor: Callback {
+    fun invoke(obj_pointer: Pointer) {
+        DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+    }
+};
+
+class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue {
+    {% if !trait_methods.is_empty() -%}
+        {%- for trait_method in trait_methods %}
+    @JvmField
+    internal var run_{{trait_method.name}}_callback: Runner_DiplomatTraitMethod_TesterTrait_{{trait_method.name}}
+        = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
+                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}} {
+                    throw Exception("ERROR NOT IMPLEMENTED")
+                }
+            }
+        {%- endfor %}
+    {% endif -%}
+
+    @JvmField
+    internal var destructor: Callback = {{trait_name}}_VTable_destructor;
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf({% if trait_method_names != "" %}{{trait_method_names}}, {% endif %} "destructor")
+    }
+}
+
+class DiplomatTrait_{{trait_name}}_Wrapper_Native: Structure(), Structure.ByValue {
+    @JvmField
+    internal var data_: Pointer = Pointer(0L);
+    @JvmField
+    internal var vtable: DiplomatTrait_{{trait_name}}_VTable_Native
+        = DiplomatTrait_{{trait_name}}_VTable_Native();
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("data_", "vtable")
+    }
+}
+
+class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
+    internal val nativeStruct: DiplomatTrait_{{trait_name}}_Wrapper_Native) {
+    val data_: Pointer = nativeStruct.data_
+    val vtable: DiplomatTrait_{{trait_name}}_VTable_Native = nativeStruct.vtable
+
+    companion object {
+        val NATIVESIZE: Long = Native.getNativeSize(DiplomatTrait_{{trait_name}}_Wrapper_Native::class.java).toLong()
+
+        fun fromTraitObj(trt_obj: DiplomatTraitInterface_{{trait_name}}): DiplomatTrait_{{trait_name}}_Wrapper {
+            val vtable = DiplomatTrait_{{trait_name}}_VTable_Native()
+            
+            {% if !trait_methods.is_empty() -%}
+                {%- for trait_method in trait_methods %}
+            val {{trait_method.name}}: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
+                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}} {
+                    return trt_obj.{{trait_method.name}}({{trait_method.input_params}});
+                }
+            }
+            vtable.run_{{trait_method.name}}_callback = {{trait_method.name}};
+                {%- endfor %}
+            {% endif -%}
+            val native_wrapper = DiplomatTrait_{{trait_name}}_Wrapper_Native();
+            native_wrapper.vtable = vtable;
+            return DiplomatTrait_{{trait_name}}_Wrapper(native_wrapper);
+        }
+    }
+}
+

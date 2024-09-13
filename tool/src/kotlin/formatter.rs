@@ -2,7 +2,7 @@ use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
     FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice,
-    StringEncoding, StructPathLike, TyPosition, Type, TypeContext, TypeId,
+    StringEncoding, StructPathLike, TyPosition, Type, TypeContext, TypeId, TraitId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -349,6 +349,27 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
 
         resolved.attrs().rename.apply(candidate)
+    }
+
+    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_trait(id);
+
+        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
+            resolved
+                .name
+                .as_str()
+                .strip_prefix(strip_prefix)
+                .unwrap_or(resolved.name.as_str())
+                .into()
+        } else {
+            resolved.name.as_str().into()
+        };
+
+        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+            panic!("{candidate:?} is not a valid Kotlin trait name. Please rename.");
+        }
+
+        resolved.attrs.rename.apply(candidate)
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
