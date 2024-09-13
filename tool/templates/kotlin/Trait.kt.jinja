@@ -33,6 +33,12 @@ object {{trait_name}}_VTable_destructor: Callback {
 };
 
 class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue {
+    @JvmField
+    internal var destructor: Callback = {{trait_name}}_VTable_destructor;
+    @JvmField
+    internal var size: Pointer = Pointer(0L);
+    @JvmField
+    internal var alignment: Pointer = Pointer(0L);
     {% if !trait_methods.is_empty() -%}
         {%- for trait_method in trait_methods %}
     @JvmField
@@ -45,12 +51,9 @@ class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue
         {%- endfor %}
     {% endif -%}
 
-    @JvmField
-    internal var destructor: Callback = {{trait_name}}_VTable_destructor;
-
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf({% if trait_method_names != "" %}{{trait_method_names}}, {% endif %} "destructor")
+        return listOf("destructor", "size", "alignment"{% if trait_method_names != "" %}, {{trait_method_names}}{% endif %})
     }
 }
 
@@ -75,7 +78,7 @@ class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatTrait_{{trait_name}}_Wrapper_Native::class.java).toLong()
 
-        fun fromTraitObj(trt_obj: DiplomatTraitInterface_{{trait_name}}): DiplomatTrait_{{trait_name}}_Wrapper {
+        fun fromTraitObj(trt_obj: {{trait_name}}): DiplomatTrait_{{trait_name}}_Wrapper {
             val vtable = DiplomatTrait_{{trait_name}}_VTable_Native()
             
             {% if !trait_methods.is_empty() -%}
@@ -90,6 +93,7 @@ class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
             {% endif -%}
             val native_wrapper = DiplomatTrait_{{trait_name}}_Wrapper_Native();
             native_wrapper.vtable = vtable;
+            native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(vtable as Object);
             return DiplomatTrait_{{trait_name}}_Wrapper(native_wrapper);
         }
     }

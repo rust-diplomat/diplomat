@@ -2,7 +2,7 @@ use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
     FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice,
-    StringEncoding, StructPathLike, TyPosition, Type, TypeContext, TypeId, TraitId,
+    StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};

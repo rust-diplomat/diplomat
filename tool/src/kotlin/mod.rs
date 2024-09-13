@@ -4,7 +4,7 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
     MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
     ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
-    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TraitIdGetter
+    StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -152,18 +152,15 @@ pub(crate) fn run<'tcx>(
 
     for (_id, trt_def) in tcx.all_traits() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
-        let _guard = ty_gen_cx.errors.set_context_ty(trt_def.name.as_str().into());
+        let _guard = ty_gen_cx
+            .errors
+            .set_context_ty(trt_def.name.as_str().into());
         if trt_def.attrs.disable {
             continue;
         }
         let trait_name = trt_def.name.to_string();
 
-        let (file_name, body) = ty_gen_cx.gen_trait_def(
-            trt_def,
-            &trait_name,
-            &domain,
-            &lib_name,
-        );
+        let (file_name, body) = ty_gen_cx.gen_trait_def(trt_def, &trait_name, &domain, &lib_name);
 
         files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
@@ -1457,24 +1454,29 @@ retutnVal.option() ?: return null
     }
 
     fn gen_trait_method_info(&self, method: &Callback) -> TraitMethodInfo {
-        if !method.name.is_some() {
+        if method.name.is_none() {
             panic!("Trait methods need a name");
         }
         let method_name = method.name.clone().unwrap().to_string();
-        let param_input_types: Vec<String> = method.params
+        let param_input_types: Vec<String> = method
+            .params
             .iter()
             .map(|param| self.gen_type_name(&param.ty, None).into())
             .collect();
-        let param_names: Vec<String> = method.params
+        let param_names: Vec<String> = method
+            .params
             .iter()
             .enumerate()
-            .map(|(index, param)| if let Some(param_name) = &param.name {
-                param_name.to_string()
-            } else {
-                format!("arg{}", index).into()
+            .map(|(index, param)| {
+                if let Some(param_name) = &param.name {
+                    param_name.to_string()
+                } else {
+                    format!("arg{}", index)
+                }
             })
             .collect();
-        let (native_input_names, native_input_params_and_types) = method.params
+        let (native_input_names, native_input_params_and_types) = method
+            .params
             .iter()
             .zip(param_input_types.iter())
             .zip(param_names.iter())
@@ -1490,12 +1492,14 @@ retutnVal.option() ?: return null
                 _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
             })
             .unzip();
-        let non_native_params_and_types = method.params
+        let non_native_params_and_types = method
+            .params
             .iter()
             .zip(param_input_types.iter())
             .zip(param_names.iter())
-            .map(|((_, in_ty), in_name)| format!("{}: {}", in_name, in_ty))
-            .collect();
+            .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
+                cur + &format!("{}: {}", in_name, in_ty)
+            });
         TraitMethodInfo {
             name: method_name,
             output_type: match *method.output {
@@ -1518,11 +1522,19 @@ retutnVal.option() ?: return null
         let trait_methods = trt
             .methods
             .iter()
-            .filter(|m| if let Some(m_attrs) = &m.attrs {
-                !m_attrs.disable} else {true})
+            .filter(|m| {
+                if let Some(m_attrs) = &m.attrs {
+                    !m_attrs.disable
+                } else {
+                    true
+                }
+            })
             .map(|method| self.gen_trait_method_info(method))
             .collect::<Vec<_>>();
-        let trait_method_names = trait_methods.iter().map(|m| format!("\"run_{}_callback\"", m.name)).collect::<Vec<_>>();
+        let trait_method_names = trait_methods
+            .iter()
+            .map(|m| format!("\"run_{}_callback\"", m.name))
+            .collect::<Vec<_>>();
 
         #[derive(Template)]
         #[template(path = "kotlin/Trait.kt.jinja", escape = "none")]
@@ -1543,7 +1555,7 @@ retutnVal.option() ?: return null
                 trait_name,
                 trait_methods: trait_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
-                trait_method_names: &trait_method_names.join(", ")
+                trait_method_names: &trait_method_names.join(", "),
             }
             .render()
             .expect("Failed to render trait template"),
@@ -1708,7 +1720,11 @@ retutnVal.option() ?: return null
             Type::Callback(_) => self.gen_type_name(ty, additional_name),
             Type::ImplTrait(ref trt) => {
                 let op_id = trt.id();
-                format!("DiplomatTrait_{}_Wrapper_Native", self.formatter.fmt_trait_name(op_id)).into()
+                format!(
+                    "DiplomatTrait_{}_Wrapper_Native",
+                    self.formatter.fmt_trait_name(op_id)
+                )
+                .into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1743,7 +1759,11 @@ retutnVal.option() ?: return null
             }
             Type::ImplTrait(ref trt) => {
                 let op_id = trt.id();
-                format!("DiplomatTrait_{}_Wrapper", self.formatter.fmt_trait_name(op_id)).into()
+                format!(
+                    "DiplomatTrait_{}_Wrapper",
+                    self.formatter.fmt_trait_name(op_id)
+                )
+                .into()
             }
             Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
@@ -2171,5 +2191,57 @@ mod test {
                 ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", true);
             insta::assert_snapshot!(result)
         }
+    }
+
+    #[test]
+    fn test_trait_gen() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+
+                pub struct TraitTestingStruct {
+                    x: i32,
+                    y: i32,
+                }
+                pub trait TesterTrait {
+                    fn test_trait_fn(&self, x: i32) -> i32;
+                    fn test_void_trait_fn(&self);
+                    fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
+                }
+                pub struct Wrapper {
+                    cant_be_empty: bool,
+                }
+                impl Wrapper {
+                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
+                        t.test_void_trait_fn();
+                        t.test_trait_fn(x)
+                    }
+
+                    pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
+                        let arg = TraitTestingStruct { x: 1, y: 5 };
+                        t.test_struct_trait_fn(arg)
+                    }
+                }
+            }
+        };
+        let tcx = new_tcx(tk_stream);
+        let mut all_traits = tcx.all_traits();
+        let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
+        let error_store = ErrorStore::default();
+        let formatter = KotlinFormatter::new(&tcx, None);
+        let mut callback_params = Vec::new();
+        let mut ty_gen_cx = TyGenContext {
+            tcx: &tcx,
+            formatter: &formatter,
+            result_types: RefCell::new(BTreeSet::new()),
+            option_types: RefCell::new(BTreeSet::new()),
+            errors: &error_store,
+            callback_params: &mut callback_params,
+        };
+        let trait_name = trait_def.name.to_string();
+        // test that we can render and that it doesn't panic
+        let (_, result) =
+            ty_gen_cx.gen_trait_def(trait_def, &trait_name, "dev.gigapixel", "somelib");
+        insta::assert_snapshot!(result)
     }
 }
