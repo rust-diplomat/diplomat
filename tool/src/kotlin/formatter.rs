@@ -106,6 +106,23 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_trait_method_name<'a>(&self, method: &'a hir::Callback) -> Cow<'a, str> {
+        if method.name.is_none() {
+            panic!("Trait methods need a name");
+        }
+        let name = method.name.clone().unwrap().as_str().to_lower_camel_case();
+        let name = if method.attrs.is_some() {
+            method.attrs.as_ref().unwrap().rename.apply(name.into())
+        } else {
+            name.into()
+        };
+        if INVALID_METHOD_NAMES.contains(&&*name) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
+    }
+
     pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'tcx, str> {
         ident.to_lower_camel_case().into()
     }

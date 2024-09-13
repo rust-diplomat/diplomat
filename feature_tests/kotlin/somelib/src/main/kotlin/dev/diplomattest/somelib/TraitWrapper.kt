@@ -30,15 +30,15 @@ class TraitWrapper internal constructor (
         internal val lib: TraitWrapperLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TraitWrapperNative::class.java).toLong()
         
-        fun testWithTrait(t: DiplomatTrait_TesterTrait_Wrapper, x: Int): Int {
+        fun testWithTrait(t: TesterTrait, x: Int): Int {
             
-            val returnVal = lib.TraitWrapper_test_with_trait(t.nativeStruct, x);
+            val returnVal = lib.TraitWrapper_test_with_trait(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct, x);
             return returnVal
         }
         
-        fun testTraitWithStruct(t: DiplomatTrait_TesterTrait_Wrapper): Int {
+        fun testTraitWithStruct(t: TesterTrait): Int {
             
-            val returnVal = lib.TraitWrapper_test_trait_with_struct(t.nativeStruct);
+            val returnVal = lib.TraitWrapper_test_trait_with_struct(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
             return returnVal
         }
     }

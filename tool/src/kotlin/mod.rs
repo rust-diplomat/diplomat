@@ -306,7 +306,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
-            Type::ImplTrait(_) => format!("{name}.nativeStruct").into(),
+            Type::ImplTrait(ref trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                let trait_name = resolved.name.to_string();
+                format!("DiplomatTrait_{trait_name}_Wrapper.fromTraitObj({name}).nativeStruct")
+                    .into()
+            }
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
                 format!("{name}Slice").into()
@@ -1457,7 +1463,7 @@ retutnVal.option() ?: return null
         if method.name.is_none() {
             panic!("Trait methods need a name");
         }
-        let method_name = method.name.clone().unwrap().to_string();
+        let method_name = self.formatter.fmt_trait_method_name(method).into();
         let param_input_types: Vec<String> = method
             .params
             .iter()
@@ -1777,8 +1783,9 @@ retutnVal.option() ?: return null
     }
 
     /// Generate the non-diplomat name for a type -- this only applies to
-    /// callback types. So: for a callback, instead of returning `DiplomatCallback_...`
+    /// callback and trait types. So: for a callback, instead of returning `DiplomatCallback_...`
     /// it returns `(input types)->output type`.
+    /// And for traits instead of returning `DiplomatTrait_<TraitName>...` it returns TraitName
     /// For all non-callback types it returns the same result as `gen_type_name`.
     fn gen_non_wrapped_type_name(
         &self,
@@ -1802,6 +1809,11 @@ retutnVal.option() ?: return null
                     None => "Unit".into(),
                 };
                 format!("({})->{}", in_type_string, out_type_string).into()
+            }
+            Type::ImplTrait(trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                resolved.name.to_string().into()
             }
             _ => self.gen_type_name(ty, additional_name),
         }

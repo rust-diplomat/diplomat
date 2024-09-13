@@ -26,13 +26,13 @@ internal interface Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name
     {%- endfor %}
 {%- endif %}
 
-object {{trait_name}}_VTable_destructor: Callback {
+internal object {{trait_name}}_VTable_destructor: Callback {
     fun invoke(obj_pointer: Pointer) {
         DiplomatJVMRuntime.dropRustCookie(obj_pointer);
     }
 };
 
-class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue {
+internal class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var destructor: Callback = {{trait_name}}_VTable_destructor;
     @JvmField
@@ -57,7 +57,7 @@ class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structure.ByValue
     }
 }
 
-class DiplomatTrait_{{trait_name}}_Wrapper_Native: Structure(), Structure.ByValue {
+internal class DiplomatTrait_{{trait_name}}_Wrapper_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
@@ -70,7 +70,7 @@ class DiplomatTrait_{{trait_name}}_Wrapper_Native: Structure(), Structure.ByValu
     }
 }
 
-class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
+internal class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
     internal val nativeStruct: DiplomatTrait_{{trait_name}}_Wrapper_Native) {
     val data_: Pointer = nativeStruct.data_
     val vtable: DiplomatTrait_{{trait_name}}_VTable_Native = nativeStruct.vtable

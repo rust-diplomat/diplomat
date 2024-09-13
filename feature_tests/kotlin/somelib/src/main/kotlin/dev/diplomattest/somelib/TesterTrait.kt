@@ -7,29 +7,29 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 interface TesterTrait {
-    fun test_trait_fn(x: Int): Int;
-    fun test_void_trait_fn(): Unit;
-    fun test_struct_trait_fn(s: TraitTestingStruct): Int;
+    fun testTraitFn(x: Int): Int;
+    fun testVoidTraitFn(): Unit;
+    fun testStructTraitFn(s: TraitTestingStruct): Int;
 }
 
 
-internal interface Runner_DiplomatTraitMethod_TesterTrait_test_trait_fn: Callback {
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testTraitFn: Callback {
     fun invoke(ignored: Pointer?, x: Int ): Int
 }
-internal interface Runner_DiplomatTraitMethod_TesterTrait_test_void_trait_fn: Callback {
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn: Callback {
     fun invoke(ignored: Pointer?): Unit
 }
-internal interface Runner_DiplomatTraitMethod_TesterTrait_test_struct_trait_fn: Callback {
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn: Callback {
     fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int
 }
 
-object TesterTrait_VTable_destructor: Callback {
+internal object TesterTrait_VTable_destructor: Callback {
     fun invoke(obj_pointer: Pointer) {
         DiplomatJVMRuntime.dropRustCookie(obj_pointer);
     }
 };
 
-class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.ByValue {
+internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var destructor: Callback = TesterTrait_VTable_destructor;
     @JvmField
@@ -38,33 +38,33 @@ class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.ByValue {
     internal var alignment: Pointer = Pointer(0L);
     
     @JvmField
-    internal var run_test_trait_fn_callback: Runner_DiplomatTraitMethod_TesterTrait_test_trait_fn
-        = object :  Runner_DiplomatTraitMethod_TesterTrait_test_trait_fn {
+    internal var run_testTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
                 override fun invoke(ignored: Pointer?, x: Int ): Int {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
     @JvmField
-    internal var run_test_void_trait_fn_callback: Runner_DiplomatTraitMethod_TesterTrait_test_void_trait_fn
-        = object :  Runner_DiplomatTraitMethod_TesterTrait_test_void_trait_fn {
+    internal var run_testVoidTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn {
                 override fun invoke(ignored: Pointer?): Unit {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
     @JvmField
-    internal var run_test_struct_trait_fn_callback: Runner_DiplomatTraitMethod_TesterTrait_test_struct_trait_fn
-        = object :  Runner_DiplomatTraitMethod_TesterTrait_test_struct_trait_fn {
+    internal var run_testStructTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn {
                 override fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("destructor", "size", "alignment", "run_test_trait_fn_callback", "run_test_void_trait_fn_callback", "run_test_struct_trait_fn_callback")
+        return listOf("destructor", "size", "alignment", "run_testTraitFn_callback", "run_testVoidTraitFn_callback", "run_testStructTraitFn_callback")
     }
 }
 
-class DiplomatTrait_TesterTrait_Wrapper_Native: Structure(), Structure.ByValue {
+internal class DiplomatTrait_TesterTrait_Wrapper_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
@@ -77,7 +77,7 @@ class DiplomatTrait_TesterTrait_Wrapper_Native: Structure(), Structure.ByValue {
     }
 }
 
-class DiplomatTrait_TesterTrait_Wrapper internal constructor (
+internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
     internal val nativeStruct: DiplomatTrait_TesterTrait_Wrapper_Native) {
     val data_: Pointer = nativeStruct.data_
     val vtable: DiplomatTrait_TesterTrait_VTable_Native = nativeStruct.vtable
@@ -89,24 +89,24 @@ class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             val vtable = DiplomatTrait_TesterTrait_VTable_Native()
             
             
-            val test_trait_fn: Runner_DiplomatTraitMethod_TesterTrait_test_trait_fn = object :  Runner_DiplomatTraitMethod_TesterTrait_test_trait_fn {
+            val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
                 override fun invoke(ignored: Pointer?, x: Int ): Int {
-                    return trt_obj.test_trait_fn(x);
+                    return trt_obj.testTraitFn(x);
                 }
             }
-            vtable.run_test_trait_fn_callback = test_trait_fn;
-            val test_void_trait_fn: Runner_DiplomatTraitMethod_TesterTrait_test_void_trait_fn = object :  Runner_DiplomatTraitMethod_TesterTrait_test_void_trait_fn {
+            vtable.run_testTraitFn_callback = testTraitFn;
+            val testVoidTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn {
                 override fun invoke(ignored: Pointer?): Unit {
-                    return trt_obj.test_void_trait_fn();
+                    return trt_obj.testVoidTraitFn();
                 }
             }
-            vtable.run_test_void_trait_fn_callback = test_void_trait_fn;
-            val test_struct_trait_fn: Runner_DiplomatTraitMethod_TesterTrait_test_struct_trait_fn = object :  Runner_DiplomatTraitMethod_TesterTrait_test_struct_trait_fn {
+            vtable.run_testVoidTraitFn_callback = testVoidTraitFn;
+            val testStructTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn {
                 override fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int {
-                    return trt_obj.test_struct_trait_fn(TraitTestingStruct(s));
+                    return trt_obj.testStructTraitFn(TraitTestingStruct(s));
                 }
             }
-            vtable.run_test_struct_trait_fn_callback = test_struct_trait_fn;
+            vtable.run_testStructTraitFn_callback = testStructTraitFn;
             val native_wrapper = DiplomatTrait_TesterTrait_Wrapper_Native();
             native_wrapper.vtable = vtable;
             native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(vtable as Object);
