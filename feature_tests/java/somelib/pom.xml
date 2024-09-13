@@ -28,14 +28,35 @@
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>RELEASE</version>
+            <version>1.37</version>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>RELEASE</version>
+            <version>1.37</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>3.5.0</version>
+        </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.0</version>
+                <!--                <dependencies>-->
+                <!--                    <dependency>-->
+                <!--                        <groupId>org.apache.maven.surefire</groupId>-->
+                <!--                        <artifactId>surefire-junit47</artifactId>-->
+                <!--                        <version>3.5.0</version>-->
+                <!--                    </dependency>-->
+                <!--                </dependencies>-->
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
