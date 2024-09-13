@@ -16,6 +16,7 @@ public class Utf16Wrap {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     
@@ -43,20 +44,20 @@ public class Utf16Wrap {
     public static Utf16Wrap fromUtf16(String input) {
         
         try (var arena = Arena.ofConfined()) {
-            var inputData= arena.allocateFrom(input, StandardCharsets.UTF_16);
+            var inputData = Arena.ofAuto().allocateFrom(input, StandardCharsets.UTF_16);
             var inputLen = inputData.byteSize() - 1;  // allocated strings are null terminated
-            var inputView = DiplomatString16View.allocate(arena);
+            var inputView = DiplomatString16View.allocate(Arena.ofAuto());
             DiplomatString16View.len(inputView, inputLen);
             DiplomatString16View.data(inputView, inputData);
             var nativeVal = somelib_h.Utf16Wrap_from_utf16(inputView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Utf16Wrap(nativeVal, selfEdges);
-            var cleaner = new Utf16Wrap.Utf16WrapCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -77,7 +78,10 @@ public class Utf16Wrap {
             
             
             var nativeVal = somelib_h.Utf16Wrap_borrow_cont(arena, internal);
-            return SliceUtils.readUtf16(nativeVal);
+            
+            var returnVal = SliceUtils.readUtf16(nativeVal);
+            return returnVal;
+                    
         }
     }
     

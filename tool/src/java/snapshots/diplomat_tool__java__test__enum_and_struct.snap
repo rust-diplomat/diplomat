@@ -25,26 +25,37 @@ public class MyStruct {
     MyEnum g;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
 
-    private MyStruct(SegmentAllocator arena) {
-        this.arena = arena;
+    private MyStruct() {
     }
 
-    MyStruct(SegmentAllocator arena, MemorySegment structSegment) {
-        this.arena = arena;
+    MyStruct(MemorySegment structSegment) {
         this.selfEdges = selfEdges;
         
 
-        this.a = dev.diplomattest.somelib.ntv.MyStruct.a(structSegment);
-        this.b = dev.diplomattest.somelib.ntv.MyStruct.b(structSegment);
-        this.c = dev.diplomattest.somelib.ntv.MyStruct.c(structSegment);
-        this.d = dev.diplomattest.somelib.ntv.MyStruct.d(structSegment);
-        this.e = dev.diplomattest.somelib.ntv.MyStruct.e(structSegment);
-        this.f = dev.diplomattest.somelib.ntv.MyStruct.f(structSegment);
-        this.g = MyEnum.fromInt(dev.diplomattest.somelib.ntv.MyStruct.g(structSegment));
+        var aNative = dev.diplomattest.somelib.ntv.MyStruct.a(structSegment);
+        var aVal = aNative;
+        this.a = aVal;
+        var bNative = dev.diplomattest.somelib.ntv.MyStruct.b(structSegment);
+        var bVal = bNative;
+        this.b = bVal;
+        var cNative = dev.diplomattest.somelib.ntv.MyStruct.c(structSegment);
+        var cVal = cNative;
+        this.c = cVal;
+        var dNative = dev.diplomattest.somelib.ntv.MyStruct.d(structSegment);
+        var dVal = dNative;
+        this.d = dVal;
+        var eNative = dev.diplomattest.somelib.ntv.MyStruct.e(structSegment);
+        var eVal = eNative;
+        this.e = eVal;
+        var fNative = dev.diplomattest.somelib.ntv.MyStruct.f(structSegment);
+        var fVal = fNative;
+        this.f = fVal;
+        var gNative = dev.diplomattest.somelib.ntv.MyStruct.g(structSegment);
+        var gVal = MyEnum.fromInt(gNative);
+        this.g = gVal;
         
 
     }
@@ -52,13 +63,20 @@ public class MyStruct {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.MyStruct.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.MyStruct.a(returnVal, this.a);
-        dev.diplomattest.somelib.ntv.MyStruct.b(returnVal, this.b);
-        dev.diplomattest.somelib.ntv.MyStruct.c(returnVal, this.c);
-        dev.diplomattest.somelib.ntv.MyStruct.d(returnVal, this.d);
-        dev.diplomattest.somelib.ntv.MyStruct.e(returnVal, this.e);
-        dev.diplomattest.somelib.ntv.MyStruct.f(returnVal, this.f);
-        dev.diplomattest.somelib.ntv.MyStruct.g(returnVal, this.g.toInt());
+        var aNative = a;
+        dev.diplomattest.somelib.ntv.MyStruct.a(returnVal, aNative);
+        var bNative = b;
+        dev.diplomattest.somelib.ntv.MyStruct.b(returnVal, bNative);
+        var cNative = c;
+        dev.diplomattest.somelib.ntv.MyStruct.c(returnVal, cNative);
+        var dNative = d;
+        dev.diplomattest.somelib.ntv.MyStruct.d(returnVal, dNative);
+        var eNative = e;
+        dev.diplomattest.somelib.ntv.MyStruct.e(returnVal, eNative);
+        var fNative = f;
+        dev.diplomattest.somelib.ntv.MyStruct.f(returnVal, fNative);
+        var gNative = g.toInt();
+        dev.diplomattest.somelib.ntv.MyStruct.g(returnVal, gNative);
         
 
         return returnVal;
@@ -67,12 +85,14 @@ public class MyStruct {
     
     public static MyStruct new_() {
         
-        var returnArena = (SegmentAllocator) Arena.ofAuto();
-        var nativeVal = somelib_h.MyStruct_new(returnArena);
-        
-        
-        var returnVal = new MyStruct(returnArena, nativeVal);
-        return returnVal;
+        try (var arena = Arena.ofConfined()) {
+            
+            var nativeVal = somelib_h.MyStruct_new(arena);
+            
+            var returnVal = new MyStruct(nativeVal);
+            return returnVal;
+                    
+        }
     }
     
 }
@@ -154,7 +174,10 @@ public enum MyEnum {
     public static MyEnum getA() {
         
         var nativeVal = somelib_h.MyEnum_get_a();
-        return MyEnum.fromInt(nativeVal);
+        
+        var returnVal = MyEnum.fromInt(nativeVal);
+        return returnVal;
+                
     }
     
 }

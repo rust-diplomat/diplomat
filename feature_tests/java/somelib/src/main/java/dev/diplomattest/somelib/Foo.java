@@ -16,6 +16,7 @@ public class Foo {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -45,58 +46,60 @@ public class Foo {
     public static Foo new_(String x) {
         
         try (var arena = Arena.ofConfined()) {
-            var xData= arena.allocateFrom(x, StandardCharsets.UTF_8);
-            var xLen = xData.byteSize() - 1;
-            var xView = DiplomatStringView.allocate(arena);
+            var xData= Arena.ofAuto().allocateFrom(x, StandardCharsets.UTF_8);
+            var xLen = xData.byteSize() - 1;  // allocated strings are null terminated
+            var xView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(xView, xLen);
             DiplomatStringView.data(xView, xData);
             var nativeVal = somelib_h.Foo_new(xView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             List<Object> aEdges = List.of(x);
             var returnVal = new Foo(nativeVal, selfEdges, aEdges);
-            var cleaner = new Foo.FooCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
     public static Foo extractFromFields(BorrowedFields fields) {
         
-        var fieldsNative = fields.toNative(fields.arena);
-        var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
-        List<Object> selfEdges = List.of();
-        
-        
-        
-        List<Object> aEdges = List.of(fields);
-        var returnVal = new Foo(nativeVal, selfEdges, aEdges);
-        var cleaner = new Foo.FooCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
-        return returnVal;
+        try (var arena = Arena.ofConfined()) {
+            var fieldsNative = fields.toNative(arena);
+            var nativeVal = somelib_h.Foo_extract_from_fields(fieldsNative);
+            
+            List<Object> selfEdges = List.of();
+            
+            
+            
+            List<Object> aEdges = List.of(fields);
+            var returnVal = new Foo(nativeVal, selfEdges, aEdges);
+            return returnVal;
+                    
+        }
     }
     
     public static Foo extractFromBounds(BorrowedFieldsWithBounds bounds,String anotherString) {
         
         try (var arena = Arena.ofConfined()) {
-            var boundsNative = bounds.toNative(bounds.arena);
-            var anotherStringData= arena.allocateFrom(anotherString, StandardCharsets.UTF_8);
-            var anotherStringLen = anotherStringData.byteSize() - 1;
-            var anotherStringView = DiplomatStringView.allocate(arena);
+            var boundsNative = bounds.toNative(arena);
+            var anotherStringData= Arena.ofAuto().allocateFrom(anotherString, StandardCharsets.UTF_8);
+            var anotherStringLen = anotherStringData.byteSize() - 1;  // allocated strings are null terminated
+            var anotherStringView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(anotherStringView, anotherStringLen);
             DiplomatStringView.data(anotherStringView, anotherStringData);
             var nativeVal = somelib_h.Foo_extract_from_bounds(boundsNative, anotherStringView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             List<Object> aEdges = List.of(bounds, bounds, anotherString);
             var returnVal = new Foo(nativeVal, selfEdges, aEdges);
-            var cleaner = new Foo.FooCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -105,6 +108,7 @@ public class Foo {
         
         
         var nativeVal = somelib_h.Foo_get_bar(internal);
+        
         List<Object> selfEdges = List.of();
         
         
@@ -112,21 +116,21 @@ public class Foo {
         List<Object> bEdges = List.of(this);
         List<Object> aEdges = List.of(this);
         var returnVal = new Bar(nativeVal, selfEdges, bEdges, aEdges);
-        var cleaner = new Bar.BarCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
+                
     }
     
     public BorrowedFieldsReturning asReturning() {
         
-        var returnArena = (SegmentAllocator) Arena.ofAuto();
-        
-        var nativeVal = somelib_h.Foo_as_returning(returnArena, internal);
-        
-        List<Object> aEdges = List.of(this);
-        
-        var returnVal = new BorrowedFieldsReturning(returnArena, nativeVal, aEdges);
-        return returnVal;
+        try (var arena = Arena.ofConfined()) {
+            
+            
+            var nativeVal = somelib_h.Foo_as_returning(arena, internal);
+            
+            var returnVal = new BorrowedFieldsReturning(nativeVal, List.of());
+            return returnVal;
+                    
+        }
     }
     
 }

@@ -1,13 +1,17 @@
-{% for lifetime in lifetimes %}
-List<Object> {{lifetime.name}}Edges = List.of(
+var {{name}}Val = new {{ty}}({{native_val}}
+{%- for lifetime in lifetimes -%}
+, {% if lifetime.edges.len() > 1 -%}
+List.of(
 {%- for edge in lifetime.edges -%}
 {% if loop.first %}{% else %}, {% endif %}{{edge}}
 {%- endfor -%}
-);
-{%- endfor %}
-
-var {{name}}Val = new {{ty}}(returnArena, {{native_val}}
-{%- for lifetime in lifetimes -%}
-, {{lifetime.name}}Edges
+)
+{%- else if lifetime.edges.len() == 0 -%}
+{%- for edge in lifetime.edges -%}
+List.of({{edge}})
+{%- endfor -%}
+{%- else -%}
+List.of()
+{%- endif -%}
 {%- endfor -%}
 );

@@ -14,16 +14,13 @@ import java.util.stream.Stream;
 public class MyZst {
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
 
-    private MyZst(SegmentAllocator arena) {
-        this.arena = arena;
+    private MyZst() {
     }
 
-    MyZst(SegmentAllocator arena, MemorySegment structSegment) {
-        this.arena = arena;
+    MyZst(MemorySegment structSegment) {
         this.selfEdges = selfEdges;
         
 

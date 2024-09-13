@@ -16,6 +16,7 @@ public class OpaqueMutexedString {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     
@@ -44,27 +45,28 @@ public class OpaqueMutexedString {
         
         var numberNative = number;
         var nativeVal = somelib_h.OpaqueMutexedString_from_usize(numberNative);
+        
         List<Object> selfEdges = List.of();
         
         
         
         var returnVal = new OpaqueMutexedString(nativeVal, selfEdges);
-        var cleaner = new OpaqueMutexedString.OpaqueMutexedStringCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
+                
     }
     
     public static OpaqueMutexedString borrowOther(OpaqueMutexedString other) {
         
         var otherNative = other.internal;
         var nativeVal = somelib_h.OpaqueMutexedString_borrow_other(otherNative);
+        
         List<Object> selfEdges = List.of(other);
         
         
         
         var returnVal = new OpaqueMutexedString(nativeVal, selfEdges);
-        
         return returnVal;
+                
     }
     
     
@@ -80,13 +82,14 @@ public class OpaqueMutexedString {
         
         
         var nativeVal = somelib_h.OpaqueMutexedString_borrow(internal);
+        
         List<Object> selfEdges = List.of(this);
         
         
         
         var returnVal = new OpaqueMutexedString(nativeVal, selfEdges);
-        
         return returnVal;
+                
     }
     
     public OpaqueMutexedString borrowSelfOrOther(OpaqueMutexedString other) {
@@ -94,13 +97,14 @@ public class OpaqueMutexedString {
         
         var otherNative = other.internal;
         var nativeVal = somelib_h.OpaqueMutexedString_borrow_self_or_other(internal, otherNative);
+        
         List<Object> selfEdges = List.of(this, other);
         
         
         
         var returnVal = new OpaqueMutexedString(nativeVal, selfEdges);
-        
         return returnVal;
+                
     }
     
     public long getLenAndAdd(long other) {
@@ -108,7 +112,10 @@ public class OpaqueMutexedString {
         
         var otherNative = other;
         var nativeVal = somelib_h.OpaqueMutexedString_get_len_and_add(internal, otherNative);
-        return nativeVal;
+        
+        var returnVal = nativeVal;
+        return returnVal;
+                
     }
     
     public String dummyStr() {
@@ -117,7 +124,10 @@ public class OpaqueMutexedString {
             
             
             var nativeVal = somelib_h.OpaqueMutexedString_dummy_str(arena, internal);
-            return SliceUtils.readUtf8(nativeVal);
+            
+            var returnVal = SliceUtils.readUtf8(nativeVal);
+            return returnVal;
+                    
         }
     }
     
@@ -125,14 +135,14 @@ public class OpaqueMutexedString {
         
         
         var nativeVal = somelib_h.OpaqueMutexedString_wrapper(internal);
+        
         List<Object> selfEdges = List.of();
         
         
         
         var returnVal = new Utf16Wrap(nativeVal, selfEdges);
-        var cleaner = new Utf16Wrap.Utf16WrapCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
+                
     }
     
 }

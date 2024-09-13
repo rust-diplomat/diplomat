@@ -15,22 +15,21 @@ public class BorrowedFieldsReturning {
     String bytes;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
     
 
-    private BorrowedFieldsReturning(SegmentAllocator arena) {
-        this.arena = arena;
+    private BorrowedFieldsReturning() {
     }
 
-    BorrowedFieldsReturning(SegmentAllocator arena, MemorySegment structSegment, List<Object> aEdges) {
-        this.arena = arena;
+    BorrowedFieldsReturning(MemorySegment structSegment, List<Object> aEdges) {
         this.selfEdges = selfEdges;
         this.aEdges = aEdges;
         
 
-        this.bytes = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(structSegment));
+        var bytesNative = dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(structSegment);
+        var bytesVal = SliceUtils.readUtf8(bytesNative);
+        this.bytes = bytesVal;
         
 
     }
@@ -38,7 +37,12 @@ public class BorrowedFieldsReturning {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(returnVal, SliceUtils.strToUtf8Slice(arena, this.bytes));
+        var bytesData= arena.allocateFrom(bytes, StandardCharsets.UTF_8);
+        var bytesLen = bytesData.byteSize() - 1;  // allocated strings are null terminated
+        var bytesView = DiplomatStringView.allocate(arena);
+        DiplomatStringView.len(bytesView, bytesLen);
+        DiplomatStringView.data(bytesView, bytesData);
+        dev.diplomattest.somelib.ntv.BorrowedFieldsReturning.bytes(returnVal, bytesView);
         
 
         return returnVal;

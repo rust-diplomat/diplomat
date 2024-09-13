@@ -16,21 +16,22 @@ public class ErrorStruct {
     int j;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
 
-    private ErrorStruct(SegmentAllocator arena) {
-        this.arena = arena;
+    private ErrorStruct() {
     }
 
-    ErrorStruct(SegmentAllocator arena, MemorySegment structSegment) {
-        this.arena = arena;
+    ErrorStruct(MemorySegment structSegment) {
         this.selfEdges = selfEdges;
         
 
-        this.i = dev.diplomattest.somelib.ntv.ErrorStruct.i(structSegment);
-        this.j = dev.diplomattest.somelib.ntv.ErrorStruct.j(structSegment);
+        var iNative = dev.diplomattest.somelib.ntv.ErrorStruct.i(structSegment);
+        var iVal = iNative;
+        this.i = iVal;
+        var jNative = dev.diplomattest.somelib.ntv.ErrorStruct.j(structSegment);
+        var jVal = jNative;
+        this.j = jVal;
         
 
     }
@@ -38,8 +39,10 @@ public class ErrorStruct {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.ErrorStruct.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.ErrorStruct.i(returnVal, this.i);
-        dev.diplomattest.somelib.ntv.ErrorStruct.j(returnVal, this.j);
+        var iNative = i;
+        dev.diplomattest.somelib.ntv.ErrorStruct.i(returnVal, iNative);
+        var jNative = j;
+        dev.diplomattest.somelib.ntv.ErrorStruct.j(returnVal, jNative);
         
 
         return returnVal;

@@ -17,28 +17,31 @@ public class BorrowedFieldsWithBounds {
     String fieldC;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
     List<Object> bEdges = List.of();
     List<Object> cEdges = List.of();
     
 
-    private BorrowedFieldsWithBounds(SegmentAllocator arena) {
-        this.arena = arena;
+    private BorrowedFieldsWithBounds() {
     }
 
-    BorrowedFieldsWithBounds(SegmentAllocator arena, MemorySegment structSegment, List<Object> aEdges, List<Object> bEdges, List<Object> cEdges) {
-        this.arena = arena;
+    BorrowedFieldsWithBounds(MemorySegment structSegment, List<Object> aEdges, List<Object> bEdges, List<Object> cEdges) {
         this.selfEdges = selfEdges;
         this.aEdges = aEdges;
         this.bEdges = bEdges;
         this.cEdges = cEdges;
         
 
-        this.fieldA = SliceUtils.readUtf16(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(structSegment));
-        this.fieldB = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(structSegment));
-        this.fieldC = SliceUtils.readUtf8(dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(structSegment));
+        var fieldANative = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(structSegment);
+        var fieldAVal = SliceUtils.readUtf16(fieldANative);
+        this.fieldA = fieldAVal;
+        var fieldBNative = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(structSegment);
+        var fieldBVal = SliceUtils.readUtf8(fieldBNative);
+        this.fieldB = fieldBVal;
+        var fieldCNative = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(structSegment);
+        var fieldCVal = SliceUtils.readUtf8(fieldCNative);
+        this.fieldC = fieldCVal;
         
 
     }
@@ -46,9 +49,24 @@ public class BorrowedFieldsWithBounds {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(returnVal, SliceUtils.strToUtf16Slice(arena, this.fieldA));
-        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldB));
-        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(returnVal, SliceUtils.strToUtf8Slice(arena, this.fieldC));
+        var fieldAData = arena.allocateFrom(fieldA, StandardCharsets.UTF_16);
+        var fieldALen = fieldAData.byteSize() - 1;  // allocated strings are null terminated
+        var fieldAView = DiplomatString16View.allocate(arena);
+        DiplomatString16View.len(fieldAView, fieldALen);
+        DiplomatString16View.data(fieldAView, fieldAData);
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_a(returnVal, fieldAView);
+        var fieldBData= arena.allocateFrom(fieldB, StandardCharsets.UTF_8);
+        var fieldBLen = fieldBData.byteSize() - 1;  // allocated strings are null terminated
+        var fieldBView = DiplomatStringView.allocate(arena);
+        DiplomatStringView.len(fieldBView, fieldBLen);
+        DiplomatStringView.data(fieldBView, fieldBData);
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_b(returnVal, fieldBView);
+        var fieldCData= arena.allocateFrom(fieldC, StandardCharsets.UTF_8);
+        var fieldCLen = fieldCData.byteSize() - 1;  // allocated strings are null terminated
+        var fieldCView = DiplomatStringView.allocate(arena);
+        DiplomatStringView.len(fieldCView, fieldCLen);
+        DiplomatStringView.data(fieldCView, fieldCData);
+        dev.diplomattest.somelib.ntv.BorrowedFieldsWithBounds.field_c(returnVal, fieldCView);
         
 
         return returnVal;
@@ -58,26 +76,23 @@ public class BorrowedFieldsWithBounds {
     public static BorrowedFieldsWithBounds fromFooAndStrings(Foo foo,String dstr16X,String utf8StrZ) {
         
         try (var arena = Arena.ofConfined()) {
-            var returnArena = (SegmentAllocator) Arena.ofAuto();
+            
             var fooNative = foo.internal;
-            var dstr16XData= arena.allocateFrom(dstr16X, StandardCharsets.UTF_16);
+            var dstr16XData = Arena.ofAuto().allocateFrom(dstr16X, StandardCharsets.UTF_16);
             var dstr16XLen = dstr16XData.byteSize() - 1;  // allocated strings are null terminated
-            var dstr16XView = DiplomatString16View.allocate(arena);
+            var dstr16XView = DiplomatString16View.allocate(Arena.ofAuto());
             DiplomatString16View.len(dstr16XView, dstr16XLen);
             DiplomatString16View.data(dstr16XView, dstr16XData);
-            var utf8StrZData= arena.allocateFrom(utf8StrZ, StandardCharsets.UTF_8);
-            var utf8StrZLen = utf8StrZData.byteSize() - 1;
-            var utf8StrZView = DiplomatStringView.allocate(arena);
+            var utf8StrZData= Arena.ofAuto().allocateFrom(utf8StrZ, StandardCharsets.UTF_8);
+            var utf8StrZLen = utf8StrZData.byteSize() - 1;  // allocated strings are null terminated
+            var utf8StrZView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(utf8StrZView, utf8StrZLen);
             DiplomatStringView.data(utf8StrZView, utf8StrZData);
-            var nativeVal = somelib_h.BorrowedFieldsWithBounds_from_foo_and_strings(returnArena, fooNative, dstr16XView, utf8StrZView);
+            var nativeVal = somelib_h.BorrowedFieldsWithBounds_from_foo_and_strings(arena, fooNative, dstr16XView, utf8StrZView);
             
-            List<Object> xEdges = List.of(foo, dstr16X, utf8StrZ);
-            List<Object> yEdges = List.of(foo, utf8StrZ);
-            List<Object> zEdges = List.of(utf8StrZ);
-            
-            var returnVal = new BorrowedFieldsWithBounds(returnArena, nativeVal, xEdges, yEdges, zEdges);
+            var returnVal = new BorrowedFieldsWithBounds(nativeVal, List.of(foo, dstr16X, utf8StrZ), List.of(foo, utf8StrZ), List.of());
             return returnVal;
+                    
         }
     }
     

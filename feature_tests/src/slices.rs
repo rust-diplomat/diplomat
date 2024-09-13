@@ -17,6 +17,7 @@ mod ffi {
             Box::new(Self(v.to_string()))
         }
 
+        #[diplomat::attr(supports = memory_sharing, disable)]
         pub fn new_owned(v: Box<DiplomatStr>) -> Box<MyString> {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }

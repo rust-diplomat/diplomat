@@ -19,7 +19,7 @@ class Float64VecTest {
             assertEquals(dArray[i], outArray[i]);
         }
 
-        var newVec = Float64Vec.newFromOwned(dArray);
+        var newVec = Float64Vec.new_(dArray);
         var newArray = newVec.asSlice();
         assertEquals(dArray.length, newArray.length);
         for (var i = 0; i < dArray.length; i++) {

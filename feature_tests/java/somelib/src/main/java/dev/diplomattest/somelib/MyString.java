@@ -16,6 +16,7 @@ public class MyString {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     
@@ -43,84 +44,66 @@ public class MyString {
     public static MyString new_(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vData.byteSize() - 1;
-            var vView = DiplomatStringView.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;  // allocated strings are null terminated
+            var vView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(vView, vLen);
             DiplomatStringView.data(vView, vData);
             var nativeVal = somelib_h.MyString_new(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new MyString(nativeVal, selfEdges);
-            var cleaner = new MyString.MyStringCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
     public static MyString newUnsafe(String v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vData= arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vData.byteSize() - 1;
-            var vView = DiplomatStringView.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vData.byteSize() - 1;  // allocated strings are null terminated
+            var vView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(vView, vLen);
             DiplomatStringView.data(vView, vData);
             var nativeVal = somelib_h.MyString_new_unsafe(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new MyString(nativeVal, selfEdges);
-            var cleaner = new MyString.MyStringCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
-    }
-    
-    public static MyString newOwned(String v) {
-        
-        var vData= Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
-        var vLen = vData.byteSize() - 1;
-        var vView = DiplomatStringView.allocate(Arena.global());
-        DiplomatStringView.len(vView, vLen);
-        DiplomatStringView.data(vView, vData);
-        var nativeVal = somelib_h.MyString_new_owned(vView);
-        List<Object> selfEdges = List.of();
-        
-        
-        
-        var returnVal = new MyString(nativeVal, selfEdges);
-        var cleaner = new MyString.MyStringCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
-        return returnVal;
     }
     
     public static MyString newFromFirst(String [] v) {
         
         try (var arena = Arena.ofConfined()) {
-            var vView = SliceUtils.strs8(arena, v);
-            var vLen = v.length;
+            var vView = SliceUtils.strs8(Arena.ofAuto(), v);
+                var vLen = v.length;
             var nativeVal = somelib_h.MyString_new_from_first(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new MyString(nativeVal, selfEdges);
-            var cleaner = new MyString.MyStringCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
     public static String stringTransform(String foo) {
         
         try (var arena = Arena.ofConfined()) {
-            var fooData= arena.allocateFrom(foo, StandardCharsets.UTF_8);
-            var fooLen = fooData.byteSize() - 1;
-            var fooView = DiplomatStringView.allocate(arena);
+            var fooData= Arena.ofAuto().allocateFrom(foo, StandardCharsets.UTF_8);
+            var fooLen = fooData.byteSize() - 1;  // allocated strings are null terminated
+            var fooView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(fooView, fooLen);
             DiplomatStringView.data(fooView, fooData);
             var writeable = somelib_h.diplomat_buffer_write_create(0);
@@ -136,9 +119,9 @@ public class MyString {
         
         try (var arena = Arena.ofConfined()) {
             
-            var newStrData= arena.allocateFrom(newStr, StandardCharsets.UTF_8);
-            var newStrLen = newStrData.byteSize() - 1;
-            var newStrView = DiplomatStringView.allocate(arena);
+            var newStrData= Arena.ofAuto().allocateFrom(newStr, StandardCharsets.UTF_8);
+            var newStrLen = newStrData.byteSize() - 1;  // allocated strings are null terminated
+            var newStrView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(newStrView, newStrLen);
             DiplomatStringView.data(newStrView, newStrData);
             somelib_h.MyString_set_str(internal, newStrView);

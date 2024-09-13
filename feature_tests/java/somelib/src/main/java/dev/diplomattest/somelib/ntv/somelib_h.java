@@ -11744,6 +11744,64 @@ public class somelib_h {
         }
     }
 
+    private static class Float64Vec_new {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            somelib_h.C_POINTER,
+            DiplomatF64View.layout()
+        );
+
+        public static final MemorySegment ADDR = somelib_h.findOrThrow("Float64Vec_new");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * Float64Vec *Float64Vec_new(DiplomatF64View v)
+     * }
+     */
+    public static FunctionDescriptor Float64Vec_new$descriptor() {
+        return Float64Vec_new.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * Float64Vec *Float64Vec_new(DiplomatF64View v)
+     * }
+     */
+    public static MethodHandle Float64Vec_new$handle() {
+        return Float64Vec_new.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * Float64Vec *Float64Vec_new(DiplomatF64View v)
+     * }
+     */
+    public static MemorySegment Float64Vec_new$address() {
+        return Float64Vec_new.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * Float64Vec *Float64Vec_new(DiplomatF64View v)
+     * }
+     */
+    public static MemorySegment Float64Vec_new(MemorySegment v) {
+        var mh$ = Float64Vec_new.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("Float64Vec_new", v);
+            }
+            return (MemorySegment)mh$.invokeExact(v);
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class Float64Vec_new_bool {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             somelib_h.C_POINTER,
@@ -12085,64 +12143,6 @@ public class somelib_h {
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("Float64Vec_new_f64_be_bytes", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class Float64Vec_new_from_owned {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatF64ViewMut.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("Float64Vec_new_from_owned");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * Float64Vec *Float64Vec_new_from_owned(DiplomatF64ViewMut v)
-     * }
-     */
-    public static FunctionDescriptor Float64Vec_new_from_owned$descriptor() {
-        return Float64Vec_new_from_owned.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * Float64Vec *Float64Vec_new_from_owned(DiplomatF64ViewMut v)
-     * }
-     */
-    public static MethodHandle Float64Vec_new_from_owned$handle() {
-        return Float64Vec_new_from_owned.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * Float64Vec *Float64Vec_new_from_owned(DiplomatF64ViewMut v)
-     * }
-     */
-    public static MemorySegment Float64Vec_new_from_owned$address() {
-        return Float64Vec_new_from_owned.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * Float64Vec *Float64Vec_new_from_owned(DiplomatF64ViewMut v)
-     * }
-     */
-    public static MemorySegment Float64Vec_new_from_owned(MemorySegment v) {
-        var mh$ = Float64Vec_new_from_owned.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("Float64Vec_new_from_owned", v);
             }
             return (MemorySegment)mh$.invokeExact(v);
         } catch (Throwable ex$) {
@@ -12606,64 +12606,6 @@ public class somelib_h {
         try {
             if (TRACE_DOWNCALLS) {
                 traceDowncall("MyString_new_unsafe", v);
-            }
-            return (MemorySegment)mh$.invokeExact(v);
-        } catch (Throwable ex$) {
-           throw new AssertionError("should not reach here", ex$);
-        }
-    }
-
-    private static class MyString_new_owned {
-        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            somelib_h.C_POINTER,
-            DiplomatStringView.layout()
-        );
-
-        public static final MemorySegment ADDR = somelib_h.findOrThrow("MyString_new_owned");
-
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
-    }
-
-    /**
-     * Function descriptor for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static FunctionDescriptor MyString_new_owned$descriptor() {
-        return MyString_new_owned.DESC;
-    }
-
-    /**
-     * Downcall method handle for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MethodHandle MyString_new_owned$handle() {
-        return MyString_new_owned.HANDLE;
-    }
-
-    /**
-     * Address for:
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_owned$address() {
-        return MyString_new_owned.ADDR;
-    }
-
-    /**
-     * {@snippet lang=c :
-     * MyString *MyString_new_owned(DiplomatStringView v)
-     * }
-     */
-    public static MemorySegment MyString_new_owned(MemorySegment v) {
-        var mh$ = MyString_new_owned.HANDLE;
-        try {
-            if (TRACE_DOWNCALLS) {
-                traceDowncall("MyString_new_owned", v);
             }
             return (MemorySegment)mh$.invokeExact(v);
         } catch (Throwable ex$) {
@@ -14435,13 +14377,13 @@ public class somelib_h {
     }
     /**
      * {@snippet lang=c :
-     * #define __ASSERT_FILE_NAME "jextract$7847839858914727962.h"
+     * #define __ASSERT_FILE_NAME "jextract$8785474449644430005.h"
      * }
      */
     public static MemorySegment __ASSERT_FILE_NAME() {
         class Holder {
             static final MemorySegment __ASSERT_FILE_NAME
-                = somelib_h.LIBRARY_ARENA.allocateFrom("jextract$7847839858914727962.h");
+                = somelib_h.LIBRARY_ARENA.allocateFrom("jextract$8785474449644430005.h");
         }
         return Holder.__ASSERT_FILE_NAME;
     }

@@ -15,20 +15,19 @@ public class CyclicStructA {
     CyclicStructB a;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
 
-    private CyclicStructA(SegmentAllocator arena) {
-        this.arena = arena;
+    private CyclicStructA() {
     }
 
-    CyclicStructA(SegmentAllocator arena, MemorySegment structSegment) {
-        this.arena = arena;
+    CyclicStructA(MemorySegment structSegment) {
         this.selfEdges = selfEdges;
         
 
-        this.a = new CyclicStructB(arena, dev.diplomattest.somelib.ntv.CyclicStructA.a(structSegment));
+        var aNative = dev.diplomattest.somelib.ntv.CyclicStructA.a(structSegment);
+        var aVal = new CyclicStructB(aNative);
+        this.a = aVal;
         
 
     }
@@ -36,7 +35,8 @@ public class CyclicStructA {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.CyclicStructA.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.CyclicStructA.a(returnVal, this.a.toNative(arena));
+        var aNative = a.toNative(arena);
+        dev.diplomattest.somelib.ntv.CyclicStructA.a(returnVal, aNative);
         
 
         return returnVal;
@@ -45,12 +45,14 @@ public class CyclicStructA {
     
     public static CyclicStructB getB() {
         
-        var returnArena = (SegmentAllocator) Arena.ofAuto();
-        var nativeVal = somelib_h.CyclicStructA_get_b(returnArena);
-        
-        
-        var returnVal = new CyclicStructB(returnArena, nativeVal);
-        return returnVal;
+        try (var arena = Arena.ofConfined()) {
+            
+            var nativeVal = somelib_h.CyclicStructA_get_b(arena);
+            
+            var returnVal = new CyclicStructB(nativeVal);
+            return returnVal;
+                    
+        }
     }
     
 }

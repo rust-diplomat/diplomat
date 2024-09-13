@@ -16,6 +16,7 @@ public class Bar {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     List<Object> bEdges = List.of();
@@ -49,14 +50,15 @@ public class Bar {
         
         
         var nativeVal = somelib_h.Bar_foo(internal);
+        
         List<Object> selfEdges = List.of(this);
         
         
         
         List<Object> aEdges = List.of(this);
         var returnVal = new Foo(nativeVal, selfEdges, aEdges);
-        
         return returnVal;
+                
     }
     
 }

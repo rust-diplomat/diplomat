@@ -16,6 +16,7 @@ public class Float64Vec {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     
@@ -40,6 +41,27 @@ public class Float64Vec {
 
     }
     
+    public static Float64Vec new_(double[] v) {
+        
+        try (var arena = Arena.ofConfined()) {
+            var vLen = v.length;
+            var vData= Arena.ofAuto().allocateFrom(JAVA_DOUBLE, v);
+            var vView = DiplomatF64View.allocate(Arena.ofAuto());
+            DiplomatF64View.len(vView, vLen);
+            DiplomatF64View.data(vView, vData);
+    
+            var nativeVal = somelib_h.Float64Vec_new(vView);
+            
+            List<Object> selfEdges = List.of();
+            
+            
+            
+            var returnVal = new Float64Vec(nativeVal, selfEdges);
+            return returnVal;
+                    
+        }
+    }
+    
     public static Float64Vec newBool(boolean[] v) {
         
         try (var arena = Arena.ofConfined()) {
@@ -48,20 +70,20 @@ public class Float64Vec {
             for (int i = 0; i < vLen; i++) {
                 vByteArray[i] = (byte) (v[i] ? 1 : 0);
             }
-            var vData = arena.allocateFrom(JAVA_BYTE, vByteArray);
-            var vView = DiplomatBoolView.allocate(arena);
+            var vData = Arena.ofAuto().allocateFrom(JAVA_BYTE, vByteArray);
+            var vView = DiplomatBoolView.allocate(Arena.ofAuto());
             DiplomatBoolView.len(vView, vLen);
             DiplomatBoolView.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_bool(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -69,20 +91,20 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_SHORT, v);
-            var vView = DiplomatI16View.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_SHORT, v);
+            var vView = DiplomatI16View.allocate(Arena.ofAuto());
             DiplomatI16View.len(vView, vLen);
             DiplomatI16View.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_i16(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -90,20 +112,20 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_SHORT, v);
-            var vView = DiplomatU16View.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_SHORT, v);
+            var vView = DiplomatU16View.allocate(Arena.ofAuto());
             DiplomatU16View.len(vView, vLen);
             DiplomatU16View.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_u16(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -111,20 +133,20 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_LONG, v);
-            var vView = DiplomatIsizeView.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_LONG, v);
+            var vView = DiplomatIsizeView.allocate(Arena.ofAuto());
             DiplomatIsizeView.len(vView, vLen);
             DiplomatIsizeView.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_isize(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -132,20 +154,20 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_LONG, v);
-            var vView = DiplomatUsizeView.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_LONG, v);
+            var vView = DiplomatUsizeView.allocate(Arena.ofAuto());
             DiplomatUsizeView.len(vView, vLen);
             DiplomatUsizeView.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_usize(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
@@ -153,40 +175,21 @@ public class Float64Vec {
         
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_BYTE, v);
-            var vView = DiplomatU8View.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_BYTE, v);
+            var vView = DiplomatU8View.allocate(Arena.ofAuto());
             DiplomatU8View.len(vView, vLen);
             DiplomatU8View.data(vView, vData);
     
             var nativeVal = somelib_h.Float64Vec_new_f64_be_bytes(vView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Float64Vec(nativeVal, selfEdges);
-            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
-    }
-    
-    public static Float64Vec newFromOwned(double[] v) {
-        
-        var vLen = v.length;
-        var vData= Arena.global().allocateFrom(JAVA_DOUBLE, v);
-        var vView = DiplomatF64View.allocate(Arena.global());
-        DiplomatF64View.len(vView, vLen);
-        DiplomatF64View.data(vView, vData);
-    
-        var nativeVal = somelib_h.Float64Vec_new_from_owned(vView);
-        List<Object> selfEdges = List.of();
-        
-        
-        
-        var returnVal = new Float64Vec(nativeVal, selfEdges);
-        var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
-        return returnVal;
     }
     
     
@@ -196,9 +199,12 @@ public class Float64Vec {
             
             
             var nativeVal = somelib_h.Float64Vec_as_slice(arena, internal);
+            
             var data = dev.diplomattest.somelib.ntv.DiplomatF64View.data(nativeVal);
             var len = dev.diplomattest.somelib.ntv.DiplomatF64View.len(nativeVal);
-            return SliceUtils.doubleSliceToArray(nativeVal);
+            var returnVal = SliceUtils.doubleSliceToArray(nativeVal);
+            return returnVal;
+                    
         }
     }
     
@@ -207,8 +213,8 @@ public class Float64Vec {
         try (var arena = Arena.ofConfined()) {
             
             var vLen = v.length;
-            var vData= arena.allocateFrom(JAVA_DOUBLE, v);
-            var vView = DiplomatF64View.allocate(arena);
+            var vData= Arena.ofAuto().allocateFrom(JAVA_DOUBLE, v);
+            var vView = DiplomatF64View.allocate(Arena.ofAuto());
             DiplomatF64View.len(vView, vLen);
             DiplomatF64View.data(vView, vData);
     
@@ -222,8 +228,8 @@ public class Float64Vec {
         try (var arena = Arena.ofConfined()) {
             
             var newSliceLen = newSlice.length;
-            var newSliceData= arena.allocateFrom(JAVA_DOUBLE, newSlice);
-            var newSliceView = DiplomatF64View.allocate(arena);
+            var newSliceData= Arena.ofAuto().allocateFrom(JAVA_DOUBLE, newSlice);
+            var newSliceView = DiplomatF64View.allocate(Arena.ofAuto());
             DiplomatF64View.len(newSliceView, newSliceLen);
             DiplomatF64View.data(newSliceView, newSliceData);
     
@@ -248,9 +254,12 @@ public class Float64Vec {
             
             
             var nativeVal = somelib_h.Float64Vec_borrow(arena, internal);
+            
             var data = dev.diplomattest.somelib.ntv.DiplomatF64View.data(nativeVal);
             var len = dev.diplomattest.somelib.ntv.DiplomatF64View.len(nativeVal);
-            return SliceUtils.doubleSliceToArray(nativeVal);
+            var returnVal = SliceUtils.doubleSliceToArray(nativeVal);
+            return returnVal;
+                    
         }
     }
     

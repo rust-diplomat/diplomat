@@ -16,6 +16,7 @@ public class {{type_name}} {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     {% for edge in edges -%}

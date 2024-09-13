@@ -16,22 +16,19 @@ public class {{type_name}} {
     {{field.ty}} {{field.name}};
     {% endfor %}
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     {% for edge in edges -%}
     List<Object> {{edge}}Edges = List.of();
     {% endfor %}
 
-    private {{type_name}}(SegmentAllocator arena) {
-        this.arena = arena;
+    private {{type_name}}() {
     }
 
-    {{type_name}}(SegmentAllocator arena, MemorySegment structSegment
+    {{type_name}}(MemorySegment structSegment
     {%- for edge in edges -%}
     , List<Object> {{edge}}Edges
     {%- endfor -%}
     ) {
-        this.arena = arena;
         this.selfEdges = selfEdges;
         {% for edge in edges -%}
         this.{{edge}}Edges = {{edge}}Edges;
@@ -39,7 +36,7 @@ public class {{type_name}} {
 
         {% for field in fields -%}
         var {{field.name}}Native = {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(structSegment);
-        {{field.to_java.conversion}}
+        {{field.to_java.conversion|indent(8)}}
         this.{{field.name}} = {{field.to_java.converted_value}};
         {% endfor %}
 
@@ -51,7 +48,7 @@ public class {{type_name}} {
         var returnVal = {{domain}}.{{lib_name}}.ntv.{{type_name}}.allocate(arena);
         
         {% for field in fields -%}
-        {{field.to_native.conversion}}
+        {{field.to_native.conversion|indent(8)}}
         {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.native_name}}(returnVal, {{field.to_native.converted_value}});
         {% endfor %}
 

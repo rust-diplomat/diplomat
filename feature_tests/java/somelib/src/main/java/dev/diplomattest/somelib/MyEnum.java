@@ -73,7 +73,10 @@ public enum MyEnum {
     public static MyEnum getA() {
         
         var nativeVal = somelib_h.MyEnum_get_a();
-        return MyEnum.fromInt(nativeVal);
+        
+        var returnVal = MyEnum.fromInt(nativeVal);
+        return returnVal;
+                
     }
     
 }

@@ -16,6 +16,7 @@ public class Two {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();

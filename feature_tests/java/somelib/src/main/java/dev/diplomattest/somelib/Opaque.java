@@ -16,6 +16,7 @@ public class Opaque {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     
@@ -43,56 +44,64 @@ public class Opaque {
     public static Opaque new_() {
         
         var nativeVal = somelib_h.Opaque_new();
+        
         List<Object> selfEdges = List.of();
         
         
         
         var returnVal = new Opaque(nativeVal, selfEdges);
-        var cleaner = new Opaque.OpaqueCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
+                
     }
     
     public static Opaque fromStr(String input) {
         
         try (var arena = Arena.ofConfined()) {
-            var inputData= arena.allocateFrom(input, StandardCharsets.UTF_8);
-            var inputLen = inputData.byteSize() - 1;
-            var inputView = DiplomatStringView.allocate(arena);
+            var inputData= Arena.ofAuto().allocateFrom(input, StandardCharsets.UTF_8);
+            var inputLen = inputData.byteSize() - 1;  // allocated strings are null terminated
+            var inputView = DiplomatStringView.allocate(Arena.ofAuto());
             DiplomatStringView.len(inputView, inputLen);
             DiplomatStringView.data(inputView, inputData);
             var nativeVal = somelib_h.Opaque_from_str(inputView);
+            
             List<Object> selfEdges = List.of();
             
             
             
             var returnVal = new Opaque(nativeVal, selfEdges);
-            var cleaner = new Opaque.OpaqueCleaner(nativeVal);
-            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
+                    
         }
     }
     
     public static long returnsUsize() {
         
         var nativeVal = somelib_h.Opaque_returns_usize();
-        return nativeVal;
+        
+        var returnVal = nativeVal;
+        return returnVal;
+                
     }
     
     public static ImportedStruct returnsImported() {
         
-        var returnArena = (SegmentAllocator) Arena.ofAuto();
-        var nativeVal = somelib_h.Opaque_returns_imported(returnArena);
-        
-        
-        var returnVal = new ImportedStruct(returnArena, nativeVal);
-        return returnVal;
+        try (var arena = Arena.ofConfined()) {
+            
+            var nativeVal = somelib_h.Opaque_returns_imported(arena);
+            
+            var returnVal = new ImportedStruct(nativeVal);
+            return returnVal;
+                    
+        }
     }
     
     public static byte cmp() {
         
         var nativeVal = somelib_h.Opaque_cmp();
-        return nativeVal;
+        
+        var returnVal = nativeVal;
+        return returnVal;
+                
     }
     
     
@@ -108,19 +117,20 @@ public class Opaque {
     
     public void assertStruct(MyStruct s) {
         
-        try (var arena = Arena.ofConfined()) {
-            
-            var sNative = s.toNative(arena);
-            somelib_h.Opaque_assert_struct(internal, sNative);
-            
-        }
+        
+        var sNative = s.toNative(Arena.ofAuto());
+        somelib_h.Opaque_assert_struct(internal, sNative);
+        
     }
     
     public long internalLen() {
         
         
         var nativeVal = somelib_h.Opaque_internal_len(internal);
-        return nativeVal;
+        
+        var returnVal = nativeVal;
+        return returnVal;
+                
     }
     
 }

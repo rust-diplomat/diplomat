@@ -16,21 +16,22 @@ public class ImportedStruct {
     byte count;
     
 
-    SegmentAllocator arena;
     List<Object> selfEdges = List.of();
     
 
-    private ImportedStruct(SegmentAllocator arena) {
-        this.arena = arena;
+    private ImportedStruct() {
     }
 
-    ImportedStruct(SegmentAllocator arena, MemorySegment structSegment) {
-        this.arena = arena;
+    ImportedStruct(MemorySegment structSegment) {
         this.selfEdges = selfEdges;
         
 
-        this.foo = UnimportedEnum.fromInt(dev.diplomattest.somelib.ntv.ImportedStruct.foo(structSegment));
-        this.count = dev.diplomattest.somelib.ntv.ImportedStruct.count(structSegment);
+        var fooNative = dev.diplomattest.somelib.ntv.ImportedStruct.foo(structSegment);
+        var fooVal = UnimportedEnum.fromInt(fooNative);
+        this.foo = fooVal;
+        var countNative = dev.diplomattest.somelib.ntv.ImportedStruct.count(structSegment);
+        var countVal = countNative;
+        this.count = countVal;
         
 
     }
@@ -38,8 +39,10 @@ public class ImportedStruct {
     MemorySegment toNative(SegmentAllocator arena) {
         var returnVal = dev.diplomattest.somelib.ntv.ImportedStruct.allocate(arena);
         
-        dev.diplomattest.somelib.ntv.ImportedStruct.foo(returnVal, this.foo.toInt());
-        dev.diplomattest.somelib.ntv.ImportedStruct.count(returnVal, this.count);
+        var fooNative = foo.toInt();
+        dev.diplomattest.somelib.ntv.ImportedStruct.foo(returnVal, fooNative);
+        var countNative = count;
+        dev.diplomattest.somelib.ntv.ImportedStruct.count(returnVal, countNative);
         
 
         return returnVal;

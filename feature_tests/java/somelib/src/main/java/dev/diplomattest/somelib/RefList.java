@@ -16,6 +16,7 @@ public class RefList {
 
     MemorySegment internal;
     Cleaner.Cleanable cleanable;
+    SegmentAllocator arena;
 
     List<Object> selfEdges = List.of();
     List<Object> aEdges = List.of();
@@ -46,15 +47,15 @@ public class RefList {
         
         var dataNative = data.internal;
         var nativeVal = somelib_h.RefList_node(dataNative);
+        
         List<Object> selfEdges = List.of();
         
         
         
         List<Object> bEdges = List.of(data);
         var returnVal = new RefList(nativeVal, selfEdges, bEdges);
-        var cleaner = new RefList.RefListCleaner(nativeVal);
-        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
+                
     }
     
     
