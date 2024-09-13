@@ -43,7 +43,6 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
-    #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
         b: DiplomatOption<DiplomatChar>,
@@ -65,7 +64,6 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
-    #[derive(Debug)]
     pub enum OptionEnum {
         Foo,
         Bar,
