@@ -1,15 +1,14 @@
+use std::borrow::Cow;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use std::{borrow::Cow, iter::once};
 
 use askama::Template;
 use diplomat_core::hir::borrowing_param::BorrowingParamVisitor;
 use diplomat_core::hir::{
-    self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, LifetimeEnv,
-    MaybeOwn, MaybeStatic, Method, OpaqueDef, OpaqueOwner, OpaquePath, ReturnType, Slice,
-    SpecialMethod, StringEncoding, StructDef, StructPathLike, SuccessType, TyPosition, TypeContext,
-    TypeDef,
+    self, BackendAttrSupport, EnumDef, EnumVariant, FloatType, IntSizeType, IntType, MaybeOwn,
+    MaybeStatic, Method, OpaqueDef, OpaquePath, ReturnType, Slice, SpecialMethod, StringEncoding,
+    StructDef, StructPathLike, SuccessType, TyPosition, TypeContext, TypeDef,
 };
 use formatter::JavaFormatter;
 use heck::ToUpperCamelCase;
@@ -18,9 +17,6 @@ use serde::Deserialize;
 use crate::{ErrorStore, FileMap};
 
 const TMP_C_DIR: &str = "tmp";
-const LIBRARY: &str = "somelib"; // todo: build from conf. Ensure that name is not the same as any
-                                 // type
-const GROUP: &str = "dev.diplomattest"; // todo: config
 const _TMP_LIB_NAME: &str = "dev/diplomattest/somelib"; // todo: build from conf
 const _JAVA_DIR: &str = "src/main/java/";
 
@@ -158,7 +154,7 @@ pub(crate) fn run<'a>(
             .expect("failed to write files");
     }
 
-    let lib_path = tmp_path.join(format!("{LIBRARY}.h"));
+    let lib_path = tmp_path.join(format!("{lib_name}.h"));
 
     {
         let mut lib_file = File::create(&lib_path).expect("failed to create lib file");
@@ -175,7 +171,7 @@ pub(crate) fn run<'a>(
     //   --library mylib \
     //   /path/to/mylib/include/mylib.h
 
-    let package = format!("{GROUP}.{LIBRARY}.ntv");
+    let package = format!("{domain}.{lib_name}.ntv");
     let mut command = std::process::Command::new("jextract");
     command
         .arg("--include-dir")
@@ -185,7 +181,7 @@ pub(crate) fn run<'a>(
         .arg("--target-package")
         .arg(package)
         .arg("--library")
-        .arg(LIBRARY)
+        .arg(AsRef::<str>::as_ref(lib_name))
         .arg(lib_path);
 
     // cleanup tmp c files
@@ -364,7 +360,7 @@ struct Conversion<'cx> {
 }
 
 mod arena {
-    use std::{fmt::Display, marker::PhantomData};
+    use std::fmt::Display;
     pub type Render<'cx> = Box<dyn Fn(Arena<'cx>) -> Conversion<'cx> + 'cx>;
 
     const UNIT: &() = &();
@@ -376,13 +372,6 @@ mod arena {
         _marker: &'cx (),
     }
     impl<'cx, F: Fn(Arena<'cx>) -> Conversion<'cx> + 'cx> AllocationConversion<'cx, F> {
-        pub fn new(clos: F) -> Self {
-            Self {
-                clos,
-                _marker: UNIT,
-            }
-        }
-
         pub fn dynamic(clos: F) -> AllocationConversion<'cx, Render<'cx>> {
             AllocationConversion {
                 clos: Box::new(clos) as Render<'cx>,
@@ -397,8 +386,8 @@ mod arena {
 
     pub enum Arena<'cx> {
         Closed,
-        Owned,
         Auto,
+        #[allow(unused)]
         Phantom(&'cx ()),
     }
 
@@ -406,7 +395,6 @@ mod arena {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
                 Arena::Closed => write!(f, "arena"),
-                Arena::Owned => write!(f, "ownedArena"),
                 Arena::Auto => write!(f, "Arena.ofAuto()"),
                 Arena::Phantom(_) => write!(f, "phantom"),
             }
@@ -625,7 +613,6 @@ Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
             }
             hir::Type::Opaque(o) => {
                 let converted_value = format!("{name}Val").into();
-                let owned_return: bool = o.owner.is_owned();
                 let ty_name = &self.tcx.resolve_opaque(o.tcx_id).name;
                 let conversion = OpaqueConversionTpl {
                     name: "return".into(),
@@ -651,7 +638,7 @@ Diplomat{rust_primitive_type}View.data({name}View, {name}Data);
             hir::Type::Struct(s) => {
                 let id = s.id();
                 let ty_name = self.tcx.resolve_type(id).name();
-                let clos = move |arena| {
+                let clos = move |_| {
                     let lifetimes = lifetimes.clone();
                     let name = name.clone();
                     let native_val = native_val.clone();
@@ -1107,12 +1094,9 @@ return {converted_value};
             .map(|field| {
                 let name = self.formatter.fmt_field_name(field);
                 let native_name = field.name.as_str();
-                let native_val =
-                    format!("{domain}.{lib_name}.ntv.{type_name}.{native_name}(structSegment)");
                 let lifetimes = match &field.ty {
-                    hir::Type::Enum(ref enum_def) => vec![],
+                    hir::Type::Enum(_) => vec![],
                     hir::Type::Struct(struct_path) => {
-                        let ty_name = self.tcx.resolve_type(struct_path.id()).name().as_str();
                         let lt_env = &s.lifetimes;
                         struct_path
                             .lifetimes()
@@ -1146,13 +1130,7 @@ return {converted_value};
                     hir::Type::Slice(_) => {
                         todo!("Failed to generate field: {name} for struct {}", s.name)
                     }
-                    hir::Type::Opaque(OpaquePath {
-                        ref lifetimes,
-                        ref owner,
-                        tcx_id,
-                        ..
-                    }) => {
-                        let ty_name = self.tcx.resolve_opaque(*tcx_id).name.as_str();
+                    hir::Type::Opaque(OpaquePath { ref lifetimes, .. }) => {
                         let lt_env = &s.lifetimes;
                         // todo: fix
                         // let self_edges: Cow<str> = match owner.lifetime() {
