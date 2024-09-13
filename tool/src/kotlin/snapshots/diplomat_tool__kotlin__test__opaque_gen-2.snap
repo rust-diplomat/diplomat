@@ -1,0 +1,36 @@
+---
+source: tool/src/kotlin/mod.rs
+expression: result
+---
+package dev.diplomattest.somelib
+
+import com.sun.jna.Callback
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+import com.sun.jna.Structure
+
+internal interface OwnedStructLib: Library {
+}
+
+internal class OwnedStructNative: Structure(), Structure.ByValue {
+    @JvmField
+    internal var int: Int = 0;
+  
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("int")
+    }
+}
+
+class OwnedStruct internal constructor (
+    internal val nativeStruct: OwnedStructNative) {
+    val int: Int = nativeStruct.int
+
+    companion object {
+        internal val libClass: Class<OwnedStructLib> = OwnedStructLib::class.java
+        internal val lib: OwnedStructLib = Native.load("somelib", libClass)
+        val NATIVESIZE: Long = Native.getNativeSize(OwnedStructNative::class.java).toLong()
+    }
+
+}
