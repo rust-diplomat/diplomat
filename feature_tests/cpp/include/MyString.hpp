@@ -20,8 +20,6 @@ namespace capi {
     
     diplomat::capi::MyString* MyString_new_unsafe(diplomat::capi::DiplomatStringView v);
     
-    diplomat::capi::MyString* MyString_new_owned(diplomat::capi::DiplomatStringView v);
-    
     void MyString_set_str(diplomat::capi::MyString* self, diplomat::capi::DiplomatStringView new_str);
     
     void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
@@ -46,11 +44,6 @@ inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString
   }
   auto result = diplomat::capi::MyString_new_unsafe({v.data(), v.size()});
   return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
-}
-
-inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {
-  auto result = diplomat::capi::MyString_new_owned({v.data(), v.size()});
-  return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
 inline void MyString::set_str(std::string_view new_str) {
