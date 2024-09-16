@@ -4,7 +4,7 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
     MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
     ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
-    StructPathLike, TyPosition, Type, TypeContext, TypeDef,
+    StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -41,7 +41,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterables = true;
     a.indexing = true;
     a.callbacks = true;
-    a.traits = false;
+    a.traits = true;
 
     a
 }
@@ -148,6 +148,21 @@ pub(crate) fn run<'tcx>(
             }
             ty_def => panic!("Received unknown type definition: {ty_def:?}"),
         }
+    }
+
+    for (_id, trt_def) in tcx.all_traits() {
+        ty_gen_cx.callback_params.clear(); // specific to each type in a file
+        let _guard = ty_gen_cx
+            .errors
+            .set_context_ty(trt_def.name.as_str().into());
+        if trt_def.attrs.disable {
+            continue;
+        }
+        let trait_name = trt_def.name.to_string();
+
+        let (file_name, body) = ty_gen_cx.gen_trait_def(trt_def, &trait_name, &domain, &lib_name);
+
+        files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
 
     #[derive(Template)]
@@ -291,6 +306,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
+            Type::ImplTrait(ref trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                let trait_name = resolved.name.to_string();
+                format!("DiplomatTrait_{trait_name}_Wrapper.fromTraitObj({name}).nativeStruct")
+                    .into()
+            }
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
                 format!("{name}Slice").into()
@@ -430,6 +452,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => {
                 format!("DiplomatCallback_{}_Native", additional_name.unwrap()).into()
+            }
+            Type::ImplTrait(ref trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                format!("DiplomatTrait_{}_Wrapper_Native", resolved.name).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1225,7 +1252,6 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1314,7 +1340,6 @@ retutnVal.option() ?: return null
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
-
         type_name: &str,
         domain: &str,
         lib_name: &str,
@@ -1327,7 +1352,6 @@ retutnVal.option() ?: return null
             .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
-        // let mut callback_params = Vec::new();
         let mut unused_special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
@@ -1435,6 +1459,115 @@ retutnVal.option() ?: return null
         )
     }
 
+    fn gen_trait_method_info(&self, method: &Callback) -> TraitMethodInfo {
+        if method.name.is_none() {
+            panic!("Trait methods need a name");
+        }
+        let method_name = self.formatter.fmt_trait_method_name(method).into();
+        let param_input_types: Vec<String> = method
+            .params
+            .iter()
+            .map(|param| self.gen_type_name(&param.ty, None).into())
+            .collect();
+        let param_names: Vec<String> = method
+            .params
+            .iter()
+            .enumerate()
+            .map(|(index, param)| {
+                if let Some(param_name) = &param.name {
+                    param_name.to_string()
+                } else {
+                    format!("arg{}", index)
+                }
+            })
+            .collect();
+        let (native_input_names, native_input_params_and_types) = method
+            .params
+            .iter()
+            .zip(param_input_types.iter())
+            .zip(param_names.iter())
+            .map(|((in_param, in_ty), in_name)| match in_param.ty {
+                Type::Enum(_) | Type::Struct(_) => {
+                    // named types have a _Native wrapper, this needs to be passed as the "native"
+                    // version of the argument
+                    (
+                        format!("{}({})", in_ty, in_name),
+                        format!("{}: {}Native", in_name, in_ty),
+                    )
+                }
+                _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+            })
+            .unzip();
+        let non_native_params_and_types = method
+            .params
+            .iter()
+            .zip(param_input_types.iter())
+            .zip(param_names.iter())
+            .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
+                cur + &format!("{}: {}", in_name, in_ty)
+            });
+        TraitMethodInfo {
+            name: method_name,
+            output_type: match *method.output {
+                Some(ref ty) => self.gen_type_name(ty, None).into(),
+                None => "Unit".into(),
+            },
+            input_params_and_types: native_input_params_and_types,
+            non_native_params_and_types,
+            input_params: native_input_names,
+        }
+    }
+
+    fn gen_trait_def(
+        &mut self,
+        trt: &'cx hir::TraitDef,
+        trait_name: &str,
+        domain: &str,
+        lib_name: &str,
+    ) -> (String, String) {
+        let trait_methods = trt
+            .methods
+            .iter()
+            .filter(|m| {
+                if let Some(m_attrs) = &m.attrs {
+                    !m_attrs.disable
+                } else {
+                    true
+                }
+            })
+            .map(|method| self.gen_trait_method_info(method))
+            .collect::<Vec<_>>();
+        let trait_method_names = trait_methods
+            .iter()
+            .map(|m| format!("\"run_{}_callback\"", m.name))
+            .collect::<Vec<_>>();
+
+        #[derive(Template)]
+        #[template(path = "kotlin/Trait.kt.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+            trait_name: &'a str,
+            trait_methods: &'a [TraitMethodInfo],
+            trait_method_names: &'a str,
+            callback_params: &'a [CallbackParamInfo],
+        }
+
+        (
+            format!("{}/{lib_name}/{trait_name}.kt", domain.replace('.', "/"),),
+            ImplTemplate {
+                domain,
+                lib_name,
+                trait_name,
+                trait_methods: trait_methods.as_ref(),
+                callback_params: self.callback_params.as_ref(),
+                trait_method_names: &trait_method_names.join(", "),
+            }
+            .render()
+            .expect("Failed to render trait template"),
+        )
+    }
+
     fn gen_enum_def(
         &mut self,
         ty: &'cx hir::EnumDef,
@@ -1451,7 +1584,6 @@ retutnVal.option() ?: return null
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
-        // let mut callback_params = Vec::new();
         let self_methods = ty
             .methods
             .iter()
@@ -1592,6 +1724,14 @@ retutnVal.option() ?: return null
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => self.gen_type_name(ty, additional_name),
+            Type::ImplTrait(ref trt) => {
+                let op_id = trt.id();
+                format!(
+                    "DiplomatTrait_{}_Wrapper_Native",
+                    self.formatter.fmt_trait_name(op_id)
+                )
+                .into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1623,6 +1763,14 @@ retutnVal.option() ?: return null
                 let op_id = strct.id();
                 self.formatter.fmt_type_name(op_id)
             }
+            Type::ImplTrait(ref trt) => {
+                let op_id = trt.id();
+                format!(
+                    "DiplomatTrait_{}_Wrapper",
+                    self.formatter.fmt_trait_name(op_id)
+                )
+                .into()
+            }
             Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
@@ -1635,8 +1783,9 @@ retutnVal.option() ?: return null
     }
 
     /// Generate the non-diplomat name for a type -- this only applies to
-    /// callback types. So: for a callback, instead of returning `DiplomatCallback_...`
+    /// callback and trait types. So: for a callback, instead of returning `DiplomatCallback_...`
     /// it returns `(input types)->output type`.
+    /// And for traits instead of returning `DiplomatTrait_<TraitName>...` it returns TraitName
     /// For all non-callback types it returns the same result as `gen_type_name`.
     fn gen_non_wrapped_type_name(
         &self,
@@ -1660,6 +1809,11 @@ retutnVal.option() ?: return null
                     None => "Unit".into(),
                 };
                 format!("({})->{}", in_type_string, out_type_string).into()
+            }
+            Type::ImplTrait(trt) => {
+                let trait_id = trt.id();
+                let resolved = self.tcx.resolve_trait(trait_id);
+                resolved.name.to_string().into()
             }
             _ => self.gen_type_name(ty, additional_name),
         }
@@ -1729,6 +1883,14 @@ struct MethodTpl<'a> {
 
 struct NativeMethodInfo {
     declaration: String,
+}
+
+struct TraitMethodInfo {
+    name: String,
+    input_params_and_types: String,
+    input_params: String,
+    output_type: String,
+    non_native_params_and_types: String,
 }
 
 #[derive(Template)]
@@ -2041,5 +2203,57 @@ mod test {
                 ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", true);
             insta::assert_snapshot!(result)
         }
+    }
+
+    #[test]
+    fn test_trait_gen() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+
+                pub struct TraitTestingStruct {
+                    x: i32,
+                    y: i32,
+                }
+                pub trait TesterTrait {
+                    fn test_trait_fn(&self, x: i32) -> i32;
+                    fn test_void_trait_fn(&self);
+                    fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
+                }
+                pub struct Wrapper {
+                    cant_be_empty: bool,
+                }
+                impl Wrapper {
+                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
+                        t.test_void_trait_fn();
+                        t.test_trait_fn(x)
+                    }
+
+                    pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
+                        let arg = TraitTestingStruct { x: 1, y: 5 };
+                        t.test_struct_trait_fn(arg)
+                    }
+                }
+            }
+        };
+        let tcx = new_tcx(tk_stream);
+        let mut all_traits = tcx.all_traits();
+        let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
+        let error_store = ErrorStore::default();
+        let formatter = KotlinFormatter::new(&tcx, None);
+        let mut callback_params = Vec::new();
+        let mut ty_gen_cx = TyGenContext {
+            tcx: &tcx,
+            formatter: &formatter,
+            result_types: RefCell::new(BTreeSet::new()),
+            option_types: RefCell::new(BTreeSet::new()),
+            errors: &error_store,
+            callback_params: &mut callback_params,
+        };
+        let trait_name = trait_def.name.to_string();
+        // test that we can render and that it doesn't panic
+        let (_, result) =
+            ty_gen_cx.gen_trait_def(trait_def, &trait_name, "dev.gigapixel", "somelib");
+        insta::assert_snapshot!(result)
     }
 }

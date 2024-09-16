@@ -2,7 +2,7 @@ use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
     FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice,
-    StringEncoding, StructPathLike, TyPosition, Type, TypeContext, TypeId,
+    StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -99,6 +99,23 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
+        if INVALID_METHOD_NAMES.contains(&&*name) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
+    }
+
+    pub fn fmt_trait_method_name<'a>(&self, method: &'a hir::Callback) -> Cow<'a, str> {
+        if method.name.is_none() {
+            panic!("Trait methods need a name");
+        }
+        let name = method.name.clone().unwrap().as_str().to_lower_camel_case();
+        let name = if method.attrs.is_some() {
+            method.attrs.as_ref().unwrap().rename.apply(name.into())
+        } else {
+            name.into()
+        };
         if INVALID_METHOD_NAMES.contains(&&*name) {
             format!("{name}_").into()
         } else {
@@ -349,6 +366,27 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
 
         resolved.attrs().rename.apply(candidate)
+    }
+
+    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_trait(id);
+
+        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
+            resolved
+                .name
+                .as_str()
+                .strip_prefix(strip_prefix)
+                .unwrap_or(resolved.name.as_str())
+                .into()
+        } else {
+            resolved.name.as_str().into()
+        };
+
+        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+            panic!("{candidate:?} is not a valid Kotlin trait name. Please rename.");
+        }
+
+        resolved.attrs.rename.apply(candidate)
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
