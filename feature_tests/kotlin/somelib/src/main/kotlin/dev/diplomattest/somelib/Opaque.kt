@@ -42,7 +42,6 @@ class Opaque internal constructor (
             val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            
             return returnOpaque
         }
         

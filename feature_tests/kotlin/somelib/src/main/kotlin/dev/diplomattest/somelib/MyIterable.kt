@@ -50,7 +50,6 @@ class MyIterable internal constructor (
         val handle = returnVal 
         val returnOpaque = MyIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, MyIterator.MyIteratorCleaner(handle, MyIterator.lib));
-        
         return returnOpaque
     }
 

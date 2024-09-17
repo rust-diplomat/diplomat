@@ -36,7 +36,6 @@ class DataProvider internal constructor (
             val handle = returnVal 
             val returnOpaque = DataProvider(handle, selfEdges)
             CLEANER.register(returnOpaque, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
-            
             return returnOpaque
         }
         

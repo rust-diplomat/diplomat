@@ -42,7 +42,6 @@ class OpaqueMutexedString internal constructor (
             val handle = returnVal 
             val returnOpaque = OpaqueMutexedString(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
-            
             return returnOpaque
         }
         
@@ -99,7 +98,6 @@ class OpaqueMutexedString internal constructor (
         val handle = returnVal 
         val returnOpaque = Utf16Wrap(handle, selfEdges)
         CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
-        
         return returnOpaque
     }
 

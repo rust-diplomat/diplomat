@@ -36,7 +36,6 @@ class Unnamespaced internal constructor (
             val handle = returnVal 
             val returnOpaque = Unnamespaced(handle, selfEdges)
             CLEANER.register(returnOpaque, Unnamespaced.UnnamespacedCleaner(handle, Unnamespaced.lib));
-            
             return returnOpaque
         }
     }

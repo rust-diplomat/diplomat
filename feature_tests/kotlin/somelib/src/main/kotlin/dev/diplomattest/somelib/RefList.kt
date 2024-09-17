@@ -37,7 +37,6 @@ class RefList internal constructor (
             val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)
             CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));
-            
             return returnOpaque
         }
     }
