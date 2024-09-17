@@ -72,7 +72,7 @@ class Opaque internal constructor (
         fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
-            return returnVal.toULong()
+            return (returnVal.toULong())
         }
         
         fun returnsImported(): ImportedStruct {
@@ -86,7 +86,7 @@ class Opaque internal constructor (
         fun cmp(): Byte {
             
             val returnVal = lib.Opaque_cmp();
-            return returnVal
+            return (returnVal)
         }
     }
     

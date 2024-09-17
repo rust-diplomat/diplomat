@@ -52,6 +52,6 @@ enum class MyEnum(val inner: Int) {
     fun intoValue(): Byte {
         
         val returnVal = lib.MyEnum_into_value(this.toNative());
-        return returnVal
+        return (returnVal)
     }
 }
