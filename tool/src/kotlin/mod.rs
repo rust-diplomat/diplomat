@@ -695,7 +695,12 @@ return string{return_type_modifier}"#
         match o {
             Type::Primitive(prim) => {
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
-                format!("return {val_name}{return_type_modifier}{maybe_unsized_modifier}")
+                match prim {
+                    PrimitiveType::Bool => {
+                        format!("return ({val_name}{maybe_unsized_modifier}){return_type_modifier}")
+                    }
+                    _ => format!("return {val_name}{return_type_modifier}{maybe_unsized_modifier}"),
+                }
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
@@ -2020,6 +2025,10 @@ mod test {
                     }
 
                     pub fn get_u_byte_slice<'a>() -> &'a [u8] {
+                        todo!()
+                    }
+
+                    pub fn boolean_result() -> Result<bool, ()> {
                         todo!()
                     }
                 }
