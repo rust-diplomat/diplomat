@@ -33,13 +33,13 @@ class TraitWrapper internal constructor (
         fun testWithTrait(t: TesterTrait, x: Int): Int {
             
             val returnVal = lib.TraitWrapper_test_with_trait(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct, x);
-            return returnVal
+            return (returnVal)
         }
         
         fun testTraitWithStruct(t: TesterTrait): Int {
             
             val returnVal = lib.TraitWrapper_test_trait_with_struct(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
-            return returnVal
+            return (returnVal)
         }
     }
 

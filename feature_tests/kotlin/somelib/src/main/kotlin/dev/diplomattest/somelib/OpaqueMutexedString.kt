@@ -82,7 +82,7 @@ class OpaqueMutexedString internal constructor (
     fun getLenAndAdd(other: ULong): ULong {
         
         val returnVal = lib.OpaqueMutexedString_get_len_and_add(handle, other.toLong());
-        return returnVal.toULong()
+        return (returnVal.toULong())
     }
     
     fun dummyStr(): String {

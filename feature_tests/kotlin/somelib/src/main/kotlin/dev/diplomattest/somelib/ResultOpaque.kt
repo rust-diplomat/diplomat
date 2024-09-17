@@ -126,7 +126,7 @@ class ResultOpaque internal constructor (
             
             val returnVal = lib.ResultOpaque_new_int(i);
             if (returnVal.isOk == 1.toByte()) {
-                return returnVal.union.ok.ok()
+                return (returnVal.union.ok).ok()
             } else {
                 return Err(Unit)
             }

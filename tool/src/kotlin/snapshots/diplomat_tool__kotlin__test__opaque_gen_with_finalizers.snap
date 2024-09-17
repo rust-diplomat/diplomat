@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2042
+assertion_line: 2261
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -37,13 +37,13 @@ class MyOpaqueStruct internal constructor (
         fun getByte(): UByte {
             
             val returnVal = lib.MyOpaqueStruct_get_byte();
-            return returnVal.toUByte()
+            return (returnVal.toUByte())
         }
         
         fun getStringWrapper(in1: Int): Int {
             
             val returnVal = lib.MyOpaqueStruct_get_string_wrapper(in1);
-            return returnVal
+            return (returnVal)
         }
     }
 
