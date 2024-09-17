@@ -88,7 +88,7 @@ class OptionOpaque internal constructor (
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
             
             val returnVal = lib.OptionOpaque_option_opaque_argument(arg?.handle);
-            return returnVal > 0
+            return (returnVal > 0)
         }
     }
     
