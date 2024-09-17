@@ -1,0 +1,51 @@
+---
+source: tool/src/kotlin/mod.rs
+assertion_line: 2099
+expression: result
+---
+package dev.gigapixel.somelib;
+import com.sun.jna.Callback
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+import com.sun.jna.Structure
+
+
+internal interface AnotherOpaqueLib: Library {
+    fun AnotherOpaque_destroy(handle: Pointer)
+    fun AnotherOpaque_get_rust_owned_bytes(handle: Pointer, a: Slice, b: Slice): Pointer
+}
+
+class AnotherOpaque internal constructor (
+    internal val handle: Pointer,
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
+    internal val selfEdges: List<Any>
+)  {
+
+    internal class AnotherOpaqueCleaner(val handle: Pointer, val lib: AnotherOpaqueLib) : Runnable {
+        override fun run() {
+            lib.AnotherOpaque_destroy(handle)
+        }
+    }
+
+    companion object {
+        internal val libClass: Class<AnotherOpaqueLib> = AnotherOpaqueLib::class.java
+        internal val lib: AnotherOpaqueLib = Native.load("somelib", libClass)
+    }
+    
+    fun getRustOwnedBytes(a: UByteArray, b: UByteArray): RustOwnedBytes {
+        val (aMem, aSlice) = PrimitiveArrayTools.native(a)
+        val (bMem, bSlice) = PrimitiveArrayTools.native(b)
+        
+        val returnVal = lib.AnotherOpaque_get_rust_owned_bytes(handle, aSlice, bSlice);
+        val selfEdges: List<Any> = listOf()
+        val handle = returnVal 
+        val returnOpaque = RustOwnedBytes(handle, selfEdges)
+        CLEANER.register(returnOpaque, RustOwnedBytes.RustOwnedBytesCleaner(handle, RustOwnedBytes.lib));
+        aMem.close()
+        bMem.close()
+        return returnOpaque
+    }
+
+}

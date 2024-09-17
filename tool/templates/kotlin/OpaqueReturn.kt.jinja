@@ -18,5 +18,7 @@ CLEANER.register(returnOpaque, {{return_type_name}}.{{return_type_name}}Cleaner(
 {% endif -%}
 {% else -%}
 {% endif -%}
-{% for cleanup in cleanups %}{{cleanup|indent(4)}}{% endfor %}
+{% for cleanup in cleanups -%}
+{{cleanup|indent(4)}}
+{% endfor -%}
 return returnOpaque{{return_type_modifier}}

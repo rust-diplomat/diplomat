@@ -2052,6 +2052,55 @@ mod test {
     }
 
     #[test]
+    fn test_opaque_gen_multiple_ref_args() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct RustOwnedBytes {
+                    my_bytes: Vec<u8>,
+                }
+
+                #[diplomat::opaque]
+                struct AnotherOpaque {
+                    my_bytes: Vec<u8>,
+                }
+
+                impl AnotherOpaque {
+                    // we need the 2 referenced inputs to make sure the cleaner
+                    // code is not all on the same line
+                    pub fn get_rust_owned_bytes(&self, a: &[u8], b: &[u8]) -> Box<RustOwnedBytes> {
+                        return Box::new(RustOwnedBytes{my_bytes: a.to_vec()})
+                    }
+                }
+            }
+        };
+        let tcx = new_tcx(tk_stream);
+        let mut all_types = tcx.all_types();
+        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
+            let eror_store = ErrorStore::default();
+            let formatter = KotlinFormatter::new(&tcx, None);
+            let mut callback_params = Vec::new();
+            let mut ty_gen_cx = TyGenContext {
+                tcx: &tcx,
+                formatter: &formatter,
+                result_types: RefCell::new(BTreeSet::new()),
+                option_types: RefCell::new(BTreeSet::new()),
+                errors: &eror_store,
+                callback_params: &mut callback_params,
+            };
+            let type_name = opaque_def.name.to_string();
+            // test that we can render and that it doesn't panic
+            let (_, result) =
+                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", false);
+            insta::assert_snapshot!(result)
+        }
+    }
+
+    #[test]
     fn test_opaque_gen() {
         let tk_stream = quote! {
             #[diplomat::bridge]
