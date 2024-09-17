@@ -37,7 +37,6 @@ class FixedDecimal internal constructor (
             val handle = returnVal 
             val returnOpaque = FixedDecimal(handle, selfEdges)
             CLEANER.register(returnOpaque, FixedDecimal.FixedDecimalCleaner(handle, FixedDecimal.lib));
-            
             return returnOpaque
         }
     }

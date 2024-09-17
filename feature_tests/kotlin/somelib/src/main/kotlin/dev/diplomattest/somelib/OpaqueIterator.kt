@@ -38,7 +38,6 @@ class OpaqueIterator internal constructor (
         val handle = returnVal ?: return null
         val returnOpaque = AttrOpaque1(handle, selfEdges)
         CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
-        
         return returnOpaque
     }
 

@@ -45,7 +45,6 @@ class OptionOpaque internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
-            
             return returnOpaque
         }
         
@@ -56,7 +55,6 @@ class OptionOpaque internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
-            
             return returnOpaque
         }
         

@@ -44,7 +44,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.ok()
             } else {
                 return ErrorEnum.fromNative(returnVal.union.err).err()
@@ -59,7 +58,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.ok()
             } else {
                 return ErrorEnum.fromNative(returnVal.union.err).err()
@@ -74,7 +72,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.ok()
             } else {
                 return ErrorEnum.fromNative(returnVal.union.err).err()
@@ -89,7 +86,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.ok()
             } else {
                 return Err(Unit)
@@ -104,7 +100,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.ok()
             } else {
                 
@@ -123,7 +118,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.err 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.err()
             }
         }
@@ -148,7 +142,6 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.err 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                
                 return returnOpaque.err()
             }
         }

@@ -37,7 +37,6 @@ class FixedDecimalFormatter internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = FixedDecimalFormatter(handle, selfEdges)
                 CLEANER.register(returnOpaque, FixedDecimalFormatter.FixedDecimalFormatterCleaner(handle, FixedDecimalFormatter.lib));
-                
                 return returnOpaque.ok()
             } else {
                 return Err(Unit)

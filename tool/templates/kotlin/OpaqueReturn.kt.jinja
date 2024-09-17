@@ -15,10 +15,10 @@ val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !borrows.is_empt
 {%- if is_owned %}
 {%- if !use_finalizers_not_cleaners %}
 CLEANER.register(returnOpaque, {{return_type_name}}.{{return_type_name}}Cleaner(handle, {{return_type_name}}.lib));
-{% endif -%}
-{% else -%}
-{% endif -%}
-{% for cleanup in cleanups -%}
+{%- endif %}
+{%- else -%}
+{%- endif %}
+{%- for cleanup in cleanups %}
 {{cleanup|indent(4)}}
-{% endfor -%}
+{%- endfor %}
 return returnOpaque{{return_type_modifier}}

@@ -66,7 +66,6 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            
             return returnOpaque
         }
         

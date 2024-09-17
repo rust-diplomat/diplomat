@@ -47,7 +47,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -59,7 +58,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -71,7 +69,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -83,7 +80,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, longEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -95,7 +91,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, topEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -107,7 +102,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, leftEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -119,7 +113,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, rightEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -131,7 +124,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, bottomEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -143,7 +135,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -155,7 +146,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
         
@@ -167,7 +157,6 @@ class One internal constructor (
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
-            
             return returnOpaque
         }
     }

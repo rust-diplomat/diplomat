@@ -43,7 +43,6 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            
             return returnOpaque
         }
         
@@ -68,7 +67,6 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            
             return returnOpaque
         }
         
@@ -81,7 +79,6 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            
             return returnOpaque
         }
     }
@@ -95,7 +92,6 @@ class Foo internal constructor (
         val handle = returnVal 
         val returnOpaque = Bar(handle, selfEdges, bEdges, aEdges)
         CLEANER.register(returnOpaque, Bar.BarCleaner(handle, Bar.lib));
-        
         return returnOpaque
     }
     
