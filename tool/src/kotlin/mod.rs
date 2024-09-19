@@ -891,12 +891,12 @@ val intermediateOption = {val_name}.option() ?: return null
 
             ReturnType::Nullable(SuccessType::Write) => format!(
                 r#"
-retutnVal.option() ?: return null
+returnVal.option() ?: return null
 {}
                         "#,
                 Self::write_return("")
             ),
-            ReturnType::Nullable(SuccessType::Unit) => "retutnVal.option() ?: return null".into(),
+            ReturnType::Nullable(SuccessType::Unit) => "returnVal.option() ?: return null".into(),
             _ => panic!("unsupported type"),
         }
     }
