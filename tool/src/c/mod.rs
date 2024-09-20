@@ -2,10 +2,10 @@ mod formatter;
 mod header;
 mod ty;
 
-pub(crate) use self::formatter::CFormatter;
+pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
-pub(crate) use self::ty::TyGenContext;
+pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir;
@@ -38,14 +38,14 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
+#[derive(askama::Template)]
+#[template(path = "c/runtime.h.jinja", escape = "none")]
+pub struct Runtime;
+
 pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();
-
-    #[derive(askama::Template)]
-    #[template(path = "c/runtime.h.jinja", escape = "none")]
-    struct Runtime;
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 

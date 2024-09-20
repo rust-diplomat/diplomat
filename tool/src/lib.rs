@@ -2,7 +2,7 @@
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
 // Backends
-mod c;
+pub mod c;
 mod cpp;
 mod dart;
 mod demo_gen;
@@ -135,7 +135,7 @@ pub fn gen(
 
 /// This type abstracts over files being written to.
 #[derive(Default, Debug)]
-struct FileMap {
+pub struct FileMap {
     // The context types exist as a way to avoid passing around a billion different
     // parameters. However, passing them around as &mut self restricts the amount of
     // borrowing that can be done. We instead use a RefCell to guard the specifically mutable bits.
@@ -143,11 +143,11 @@ struct FileMap {
 }
 
 impl FileMap {
-    fn take_files(self) -> HashMap<String, String> {
+    pub fn take_files(self) -> HashMap<String, String> {
         mem::take(&mut *self.files.borrow_mut())
     }
 
-    fn add_file(&self, name: String, contents: String) {
+    pub fn add_file(&self, name: String, contents: String) {
         if self.files.borrow().get(&name).is_some() {
             panic!("File map already contains {}", name)
         }
@@ -163,7 +163,7 @@ impl FileMap {
 /// once they go out of scope, so you don't have to worry about errors originating from code
 /// that does not set a context.
 #[derive(Default)]
-struct ErrorStore<'tcx, E> {
+pub struct ErrorStore<'tcx, E> {
     /// The stack of contexts reached so far
     context: RefCell<ErrorContext<'tcx>>,
     errors: RefCell<Vec<(ErrorContext<'tcx>, E)>>,
@@ -172,14 +172,14 @@ struct ErrorStore<'tcx, E> {
 impl<'tcx, E> ErrorStore<'tcx, E> {
     /// Set the context to a named type. Will return a scope guard that will automatically
     /// clear the context on drop.
-    fn set_context_ty<'a>(&'a self, ty: Cow<'tcx, str>) -> ErrorContextGuard<'a, 'tcx, E> {
+    pub fn set_context_ty<'a>(&'a self, ty: Cow<'tcx, str>) -> ErrorContextGuard<'a, 'tcx, E> {
         let new = ErrorContext { ty, method: None };
         let old = mem::replace(&mut *self.context.borrow_mut(), new);
         ErrorContextGuard(self, old)
     }
     /// Set the context to a named method. Will return a scope guard that will automatically
     /// clear the context on drop.
-    fn set_context_method<'a>(
+    pub fn set_context_method<'a>(
         &'a self,
         ty: Cow<'tcx, str>,
         method: Cow<'tcx, str>,
@@ -193,13 +193,13 @@ impl<'tcx, E> ErrorStore<'tcx, E> {
         ErrorContextGuard(self, old)
     }
 
-    fn push_error(&self, error: E) {
+    pub fn push_error(&self, error: E) {
         self.errors
             .borrow_mut()
             .push((self.context.borrow().clone(), error));
     }
 
-    fn take_all(&self) -> Vec<(impl fmt::Display + 'tcx, E)> {
+    pub fn take_all(&self) -> Vec<(impl fmt::Display + 'tcx, E)> {
         mem::take(&mut self.errors.borrow_mut())
     }
 }
@@ -224,7 +224,7 @@ impl<'tcx> fmt::Display for ErrorContext<'tcx> {
 
 /// Scope guard terminating the context created `set_context_*` method on [`ErrorStore`]
 #[must_use]
-struct ErrorContextGuard<'a, 'tcx, E>(&'a ErrorStore<'tcx, E>, ErrorContext<'tcx>);
+pub struct ErrorContextGuard<'a, 'tcx, E>(&'a ErrorStore<'tcx, E>, ErrorContext<'tcx>);
 
 impl<'a, 'tcx, E> Drop for ErrorContextGuard<'a, 'tcx, E> {
     fn drop(&mut self) {
