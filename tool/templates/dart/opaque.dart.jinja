@@ -55,7 +55,7 @@ final class {{type_name}}
   {%- endif %}
 }
 
-@meta.ResourceIdentifier('{{destructor}}')
+@meta.RecordUse('{{destructor}}')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: '{{destructor}}')
 // ignore: non_constant_identifier_names
 external void _{{destructor}}(ffi.Pointer<ffi.Void> self);

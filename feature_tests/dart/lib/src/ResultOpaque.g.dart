@@ -108,52 +108,52 @@ final class ResultOpaque implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('ResultOpaque_destroy')
+@meta.RecordUse('ResultOpaque_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ResultOpaque_destroy')
 // ignore: non_constant_identifier_names
 external void _ResultOpaque_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('ResultOpaque_new')
+@meta.RecordUse('ResultOpaque_new')
 @ffi.Native<_ResultOpaqueInt32 Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueInt32 _ResultOpaque_new(int i);
 
-@meta.ResourceIdentifier('ResultOpaque_new_failing_foo')
+@meta.RecordUse('ResultOpaque_new_failing_foo')
 @ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_foo')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueInt32 _ResultOpaque_new_failing_foo();
 
-@meta.ResourceIdentifier('ResultOpaque_new_failing_bar')
+@meta.RecordUse('ResultOpaque_new_failing_bar')
 @ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_bar')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueInt32 _ResultOpaque_new_failing_bar();
 
-@meta.ResourceIdentifier('ResultOpaque_new_failing_unit')
+@meta.RecordUse('ResultOpaque_new_failing_unit')
 @ffi.Native<_ResultOpaqueVoid Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_unit')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueVoid _ResultOpaque_new_failing_unit();
 
-@meta.ResourceIdentifier('ResultOpaque_new_failing_struct')
+@meta.RecordUse('ResultOpaque_new_failing_struct')
 @ffi.Native<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_failing_struct')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueErrorStructFfi _ResultOpaque_new_failing_struct(int i);
 
-@meta.ResourceIdentifier('ResultOpaque_new_in_err')
+@meta.RecordUse('ResultOpaque_new_in_err')
 @ffi.Native<_ResultVoidOpaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_err')
 // ignore: non_constant_identifier_names
 external _ResultVoidOpaque _ResultOpaque_new_in_err(int i);
 
-@meta.ResourceIdentifier('ResultOpaque_new_int')
+@meta.RecordUse('ResultOpaque_new_int')
 @ffi.Native<_ResultInt32Void Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_int')
 // ignore: non_constant_identifier_names
 external _ResultInt32Void _ResultOpaque_new_int(int i);
 
-@meta.ResourceIdentifier('ResultOpaque_new_in_enum_err')
+@meta.RecordUse('ResultOpaque_new_in_enum_err')
 @ffi.Native<_ResultInt32Opaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_enum_err')
 // ignore: non_constant_identifier_names
 external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
 
-@meta.ResourceIdentifier('ResultOpaque_assert_integer')
+@meta.RecordUse('ResultOpaque_assert_integer')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_assert_integer')
 // ignore: non_constant_identifier_names
 external void _ResultOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);

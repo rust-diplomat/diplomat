@@ -31,12 +31,12 @@ final class RefList implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('RefList_destroy')
+@meta.RecordUse('RefList_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'RefList_destroy')
 // ignore: non_constant_identifier_names
 external void _RefList_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('RefList_node')
+@meta.RecordUse('RefList_node')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'RefList_node')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _RefList_node(ffi.Pointer<ffi.Opaque> data);

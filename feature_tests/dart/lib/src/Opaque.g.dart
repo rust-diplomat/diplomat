@@ -70,47 +70,47 @@ final class Opaque implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('Opaque_destroy')
+@meta.RecordUse('Opaque_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Opaque_destroy')
 // ignore: non_constant_identifier_names
 external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('Opaque_new')
+@meta.RecordUse('Opaque_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Opaque_new();
 
-@meta.ResourceIdentifier('Opaque_try_from_utf8')
+@meta.RecordUse('Opaque_try_from_utf8')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_try_from_utf8')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(_SliceUtf8 input);
 
-@meta.ResourceIdentifier('Opaque_from_str')
+@meta.RecordUse('Opaque_from_str')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_from_str')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Opaque_from_str(_SliceUtf8 input);
 
-@meta.ResourceIdentifier('Opaque_get_debug_str')
+@meta.RecordUse('Opaque_get_debug_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Opaque_get_debug_str')
 // ignore: non_constant_identifier_names
 external void _Opaque_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@meta.ResourceIdentifier('Opaque_assert_struct')
+@meta.RecordUse('Opaque_assert_struct')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true, symbol: 'Opaque_assert_struct')
 // ignore: non_constant_identifier_names
 external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s);
 
-@meta.ResourceIdentifier('Opaque_returns_usize')
+@meta.RecordUse('Opaque_returns_usize')
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'Opaque_returns_usize')
 // ignore: non_constant_identifier_names
 external int _Opaque_returns_usize();
 
-@meta.ResourceIdentifier('Opaque_returns_imported')
+@meta.RecordUse('Opaque_returns_imported')
 @ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')
 // ignore: non_constant_identifier_names
 external _ImportedStructFfi _Opaque_returns_imported();
 
-@meta.ResourceIdentifier('Opaque_cmp')
+@meta.RecordUse('Opaque_cmp')
 @ffi.Native<ffi.Int8 Function()>(isLeaf: true, symbol: 'Opaque_cmp')
 // ignore: non_constant_identifier_names
 external int _Opaque_cmp();

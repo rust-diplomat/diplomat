@@ -37,17 +37,17 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
   int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
 }
 
-@meta.ResourceIdentifier('namespace_Comparable_destroy')
+@meta.RecordUse('namespace_Comparable_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_Comparable_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_Comparable_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('namespace_Comparable_new')
+@meta.RecordUse('namespace_Comparable_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Uint8)>(isLeaf: true, symbol: 'namespace_Comparable_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_Comparable_new(int int);
 
-@meta.ResourceIdentifier('namespace_Comparable_cmp')
+@meta.RecordUse('namespace_Comparable_cmp')
 @ffi.Native<ffi.Int8 Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_Comparable_cmp')
 // ignore: non_constant_identifier_names
 external int _namespace_Comparable_cmp(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> other);

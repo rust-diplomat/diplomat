@@ -29,12 +29,12 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
   }
 }
 
-@meta.ResourceIdentifier('namespace_OpaqueIterable_destroy')
+@meta.RecordUse('namespace_OpaqueIterable_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_OpaqueIterable_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('namespace_OpaqueIterable_iter')
+@meta.RecordUse('namespace_OpaqueIterable_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_iter')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterable_iter(ffi.Pointer<ffi.Opaque> self);
