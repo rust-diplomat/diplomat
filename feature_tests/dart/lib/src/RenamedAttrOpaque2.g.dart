@@ -22,7 +22,7 @@ final class RenamedAttrOpaque2 implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_AttrOpaque2_destroy));
 }
 
-@meta.ResourceIdentifier('namespace_AttrOpaque2_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_AttrOpaque2_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque2_destroy(ffi.Pointer<ffi.Void> self);

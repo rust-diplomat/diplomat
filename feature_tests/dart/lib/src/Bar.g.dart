@@ -35,12 +35,12 @@ final class Bar implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('Bar_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Bar_destroy')
 // ignore: non_constant_identifier_names
 external void _Bar_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('Bar_foo')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Bar_foo')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Bar_foo(ffi.Pointer<ffi.Opaque> self);

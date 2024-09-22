@@ -26,7 +26,7 @@ final class Two implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Two_destroy));
 }
 
-@meta.ResourceIdentifier('Two_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Two_destroy')
 // ignore: non_constant_identifier_names
 external void _Two_destroy(ffi.Pointer<ffi.Void> self);

@@ -44,7 +44,7 @@ final class CyclicStructB {
       ]);
 }
 
-@meta.ResourceIdentifier('CyclicStructB_get_a')
+@meta.RecordUse()
 @ffi.Native<_CyclicStructAFfi Function()>(isLeaf: true, symbol: 'CyclicStructB_get_a')
 // ignore: non_constant_identifier_names
 external _CyclicStructAFfi _CyclicStructB_get_a();

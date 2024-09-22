@@ -101,62 +101,62 @@ final class One implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('One_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'One_destroy')
 // ignore: non_constant_identifier_names
 external void _One_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('One_transitivity')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_transitivity')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_transitivity(ffi.Pointer<ffi.Opaque> hold, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_cycle')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_cycle')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_cycle(ffi.Pointer<ffi.Opaque> hold, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_many_dependents')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_many_dependents')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_many_dependents(ffi.Pointer<ffi.Opaque> a, ffi.Pointer<ffi.Opaque> b, ffi.Pointer<ffi.Opaque> c, ffi.Pointer<ffi.Opaque> d, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_return_outlives_param')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_return_outlives_param')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_return_outlives_param(ffi.Pointer<ffi.Opaque> hold, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_diamond_top')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_diamond_top')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_diamond_top(ffi.Pointer<ffi.Opaque> top, ffi.Pointer<ffi.Opaque> left, ffi.Pointer<ffi.Opaque> right, ffi.Pointer<ffi.Opaque> bottom);
 
-@meta.ResourceIdentifier('One_diamond_left')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_diamond_left')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_diamond_left(ffi.Pointer<ffi.Opaque> top, ffi.Pointer<ffi.Opaque> left, ffi.Pointer<ffi.Opaque> right, ffi.Pointer<ffi.Opaque> bottom);
 
-@meta.ResourceIdentifier('One_diamond_right')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_diamond_right')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_diamond_right(ffi.Pointer<ffi.Opaque> top, ffi.Pointer<ffi.Opaque> left, ffi.Pointer<ffi.Opaque> right, ffi.Pointer<ffi.Opaque> bottom);
 
-@meta.ResourceIdentifier('One_diamond_bottom')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_diamond_bottom')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_diamond_bottom(ffi.Pointer<ffi.Opaque> top, ffi.Pointer<ffi.Opaque> left, ffi.Pointer<ffi.Opaque> right, ffi.Pointer<ffi.Opaque> bottom);
 
-@meta.ResourceIdentifier('One_diamond_and_nested_types')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_diamond_and_nested_types')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_diamond_and_nested_types(ffi.Pointer<ffi.Opaque> a, ffi.Pointer<ffi.Opaque> b, ffi.Pointer<ffi.Opaque> c, ffi.Pointer<ffi.Opaque> d, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_implicit_bounds')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_implicit_bounds')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_implicit_bounds(ffi.Pointer<ffi.Opaque> explicitHold, ffi.Pointer<ffi.Opaque> implicitHold, ffi.Pointer<ffi.Opaque> nohold);
 
-@meta.ResourceIdentifier('One_implicit_bounds_deep')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_implicit_bounds_deep')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _One_implicit_bounds_deep(ffi.Pointer<ffi.Opaque> explicit, ffi.Pointer<ffi.Opaque> implicit1, ffi.Pointer<ffi.Opaque> implicit2, ffi.Pointer<ffi.Opaque> nohold);

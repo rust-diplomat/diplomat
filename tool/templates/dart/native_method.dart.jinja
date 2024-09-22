@@ -1,4 +1,4 @@
-@meta.ResourceIdentifier('{{ m.abi_name }}')
+@meta.RecordUse()
 @ffi.Native<{{ m.return_type_ffi }} Function({%- for param in m.param_types_ffi %}
       {%- if !loop.first %}, {% endif -%}
       {{ param }}
