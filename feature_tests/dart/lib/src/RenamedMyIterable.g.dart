@@ -35,17 +35,17 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
   }
 }
 
-@meta.RecordUse('namespace_MyIterable_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIterable_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_MyIterable_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('namespace_MyIterable_new')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint8)>(isLeaf: true, symbol: 'namespace_MyIterable_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_new(_SliceUint8 x);
 
-@meta.RecordUse('namespace_MyIterable_iter')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterable_iter')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_iter(ffi.Pointer<ffi.Opaque> self);

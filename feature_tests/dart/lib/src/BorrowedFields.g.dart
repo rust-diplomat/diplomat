@@ -66,7 +66,7 @@ final class BorrowedFields {
   core.List<Object> get _fieldsForLifetimeA => [a, b, c];
 }
 
-@meta.RecordUse('BorrowedFields_from_bar_and_strings')
+@meta.RecordUse()
 @ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
 // ignore: non_constant_identifier_names
 external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, _SliceUtf16 dstr16, _SliceUtf8 utf8Str);

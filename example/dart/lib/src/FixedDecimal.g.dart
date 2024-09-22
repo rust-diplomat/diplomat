@@ -48,22 +48,22 @@ final class FixedDecimal implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse('icu4x_FixedDecimal_destroy_mv1')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_destroy_mv1')
 // ignore: non_constant_identifier_names
 external void _icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('icu4x_FixedDecimal_new_mv1')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_new_mv1')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _icu4x_FixedDecimal_new_mv1(int v);
 
-@meta.RecordUse('icu4x_FixedDecimal_multiply_pow10_mv1')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_multiply_pow10_mv1')
 // ignore: non_constant_identifier_names
 external void _icu4x_FixedDecimal_multiply_pow10_mv1(ffi.Pointer<ffi.Opaque> self, int power);
 
-@meta.RecordUse('icu4x_FixedDecimal_to_string_mv1')
+@meta.RecordUse()
 @ffi.Native<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_to_string_mv1')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _icu4x_FixedDecimal_to_string_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);

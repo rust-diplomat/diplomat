@@ -41,12 +41,12 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
   }
 }
 
-@meta.RecordUse('namespace_MyIterator_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIterator_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_MyIterator_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('namespace_MyIterator_next')
+@meta.RecordUse()
 @ffi.Native<_ResultUint8Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterator_next')
 // ignore: non_constant_identifier_names
 external _ResultUint8Void _namespace_MyIterator_next(ffi.Pointer<ffi.Opaque> self);

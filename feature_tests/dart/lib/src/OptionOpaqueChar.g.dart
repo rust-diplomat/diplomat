@@ -26,12 +26,12 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse('OptionOpaqueChar_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaqueChar_destroy')
 // ignore: non_constant_identifier_names
 external void _OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('OptionOpaqueChar_assert_char')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Uint32)>(isLeaf: true, symbol: 'OptionOpaqueChar_assert_char')
 // ignore: non_constant_identifier_names
 external void _OptionOpaqueChar_assert_char(ffi.Pointer<ffi.Opaque> self, Rune ch);

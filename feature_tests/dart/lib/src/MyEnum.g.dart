@@ -43,12 +43,12 @@ enum MyEnum {
   }
 }
 
-@meta.RecordUse('MyEnum_into_value')
+@meta.RecordUse()
 @ffi.Native<ffi.Int8 Function(ffi.Int32)>(isLeaf: true, symbol: 'MyEnum_into_value')
 // ignore: non_constant_identifier_names
 external int _MyEnum_into_value(int self);
 
-@meta.RecordUse('MyEnum_get_a')
+@meta.RecordUse()
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'MyEnum_get_a')
 // ignore: non_constant_identifier_names
 external int _MyEnum_get_a();

@@ -66,32 +66,32 @@ final class Foo implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse('Foo_destroy')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Foo_destroy')
 // ignore: non_constant_identifier_names
 external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('Foo_new')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
 
-@meta.RecordUse('Foo_get_bar')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse('Foo_as_returning')
+@meta.RecordUse()
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
 // ignore: non_constant_identifier_names
 external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse('Foo_extract_from_fields')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
 
-@meta.RecordUse('Foo_extract_from_bounds')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, _SliceUtf8)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, _SliceUtf8 anotherString);

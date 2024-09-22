@@ -37,17 +37,17 @@ final class DataProvider implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse('icu4x_DataProvider_destroy_mv1')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_DataProvider_destroy_mv1')
 // ignore: non_constant_identifier_names
 external void _icu4x_DataProvider_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse('icu4x_DataProvider_new_static_mv1')
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_new_static_mv1')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _icu4x_DataProvider_new_static_mv1();
 
-@meta.RecordUse('icu4x_DataProvider_returns_result_mv1')
+@meta.RecordUse()
 @ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_returns_result_mv1')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _icu4x_DataProvider_returns_result_mv1();

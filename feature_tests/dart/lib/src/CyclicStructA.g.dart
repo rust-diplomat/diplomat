@@ -43,7 +43,7 @@ final class CyclicStructA {
       ]);
 }
 
-@meta.RecordUse('CyclicStructA_get_b')
+@meta.RecordUse()
 @ffi.Native<_CyclicStructBFfi Function()>(isLeaf: true, symbol: 'CyclicStructA_get_b')
 // ignore: non_constant_identifier_names
 external _CyclicStructBFfi _CyclicStructA_get_b();

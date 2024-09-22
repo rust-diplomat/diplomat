@@ -90,7 +90,7 @@ final class NestedBorrowedFields {
   core.List<Object> get _fieldsForLifetimeZ => [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
 }
 
-@meta.RecordUse('NestedBorrowedFields_from_bar_and_foo_and_strings')
+@meta.RecordUse()
 @ffi.Native<_NestedBorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf16, _SliceUtf8, _SliceUtf8)>(isLeaf: true, symbol: 'NestedBorrowedFields_from_bar_and_foo_and_strings')
 // ignore: non_constant_identifier_names
 external _NestedBorrowedFieldsFfi _NestedBorrowedFields_from_bar_and_foo_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf16 dstr16Z, _SliceUtf8 utf8StrY, _SliceUtf8 utf8StrZ);
