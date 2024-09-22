@@ -391,6 +391,7 @@ name = "diplomat-runtime"
 version = "0.8.1"
 dependencies = [
  "jni",
+ "log",
 ]
 
 [[package]]
