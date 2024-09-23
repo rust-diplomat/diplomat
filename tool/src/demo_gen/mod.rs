@@ -168,6 +168,7 @@ pub(crate) fn run<'tcx>(
 
                     termini.push(TerminusInfo {
                         function_name: function_name.clone(),
+                        // TODO: Need to reconfigure `RenderTerminusContext` to evaluate out_params without evaluating the call stack.
                         out_params: Vec::new(),
 
                         type_name: type_name.clone(),
