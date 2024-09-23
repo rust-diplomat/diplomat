@@ -112,6 +112,10 @@ pub(crate) fn run<'tcx>(
             let ty_name = formatter.fmt_type_name(id);
             let type_name : String = ty_name.into();
 
+            let js_file_name = formatter
+            .fmt_file_name(&type_name.clone(), &crate::js::FileType::Module);
+    
+
             let ty = tcx.resolve_type(id);
             if ty.attrs().disable {
                 continue;
@@ -130,28 +134,48 @@ pub(crate) fn run<'tcx>(
 
                 if let Some(custom_func) = &method.attrs.demo_attrs.custom_func {
 
-                    let js_file_name = custom_func.to_string();
+                    let custom_func_filename = custom_func.to_string();
 
-                    // TODO: All of this.
-                    // Need to make sure to copy over the JS files included into output, as well as make sure everything is hooked up correctly.
-                    out_info.termini.push(TerminusInfo {
+                    let file_path = std::path::Path::new(&custom_func_filename);
+
+                    let file_name : String = String::from(file_path.clone().file_name().unwrap().to_str().unwrap());
+
+                    // Copy the custom function file from where it is relative to the FFI definition to our output directory.
+                    let read = std::fs::read(file_path);
+
+                    if let Ok(r) = read {
+                        let from_utf = String::from_utf8(r);
+                        if let Ok(contents) = from_utf {
+                            files.add_file(file_name, contents);
+                        } else if let Err(e) = from_utf {
+                            errors.push_error(format!("Could not convert contents of {custom_func_filename} to UTF-8: {e}"));
+                            continue;
+                        }
+                    } else if let Err(e) = read {
+                        errors.push_error(format!("Could not read {custom_func_filename} as a custom function file path: {e}"));
+                        continue;
+                    }
+
+                    // Then add it to our imports for all of the termini that belong to this class.
+                    let mut imports = BTreeSet::new();
+
+                    let custom_import = formatter.fmt_import_module(&function_name, file_name, import_path.clone());
+
+                    imports.insert(custom_import);
+
+                    termini.push(TerminusInfo {
                         function_name,
                         out_params: Vec::new(),
 
                         type_name: type_name.clone(),
 
-                        js_file_name: js_file_name.clone(),
+                        js_file_name,
 
                         node_call_stack: String::default(),
 
                         typescript: false,
 
-                        imports: BTreeSet::default()
-                    });
-                    out_info.termini_exports.push(TerminusExport {
-                        type_name: type_name.clone(),
-                        js_file_name
-
+                        imports
                     });
                     continue;
                 } else if !RenderTerminusContext::is_valid_terminus(method) {
@@ -168,8 +192,7 @@ pub(crate) fn run<'tcx>(
 
                         type_name: type_name.clone(),
 
-                        js_file_name: formatter
-                            .fmt_file_name(&type_name.clone(), &crate::js::FileType::Module),
+                        js_file_name,
 
                         node_call_stack: String::default(),
 

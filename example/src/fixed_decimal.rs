@@ -21,6 +21,7 @@ pub mod ffi {
 
         /// Multiply the [`FixedDecimal`] by a given power of ten.
         #[diplomat::rust_link(fixed_decimal::FixedDecimal::multiply_pow10, FnInStruct)]
+        #[diplomat::demo(custom_func="../demo_gen/custom_func/a.mjs")]
         pub fn multiply_pow10(&mut self, power: i16) {
             self.0.multiply_pow10(power);
         }
