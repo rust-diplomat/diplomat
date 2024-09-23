@@ -408,11 +408,31 @@ impl Attrs {
                             }
                         })
                         .expect("Could not read input(...)");
+                } else if path_ident == "custom_func" {
+                    let v = &attr.meta.require_name_value().unwrap().value;
+
+                    if let syn::Expr::Lit(s) = v {
+                        if let syn::Lit::Str(string) = &s.lit {
+                            this.demo_attrs.custom_func = Some(string.value());
+                        } else {
+                            errors.push(LoweringError::Other(format!(
+                                "#[diplomat::demo(custom_func=\"...\") must be a literal string."
+                            )));
+                        }
+                    } else {
+                        errors.push(LoweringError::Other(format!(
+                            "#[diplomat::demo(custom_func=\"...\") must be a literal string."
+                        )));
+                    }
                 } else {
-                    panic!("Unknown demo_attr: {path_ident:?}");
+                    errors.push(LoweringError::Other(format!(
+                        "Unknown demo_attr: {path_ident:?}"
+                    )));
                 }
             } else {
-                panic!("Unknown demo_attr: {path:?}");
+                errors.push(LoweringError::Other(format!(
+                    "Unknown demo_attr: {path:?}"
+                )));
             }
         }
 
