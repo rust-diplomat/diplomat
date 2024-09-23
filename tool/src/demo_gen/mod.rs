@@ -146,7 +146,7 @@ pub(crate) fn run<'tcx>(
                     if let Ok(r) = read {
                         let from_utf = String::from_utf8(r);
                         if let Ok(contents) = from_utf {
-                            files.add_file(file_name, contents);
+                            files.add_file(file_name.clone(), contents);
                         } else if let Err(e) = from_utf {
                             errors.push_error(format!("Could not convert contents of {custom_func_filename} to UTF-8: {e}"));
                             continue;
@@ -169,7 +169,7 @@ pub(crate) fn run<'tcx>(
 
                         type_name: type_name.clone(),
 
-                        js_file_name,
+                        js_file_name: js_file_name.clone(),
 
                         node_call_stack: String::default(),
 
@@ -192,7 +192,7 @@ pub(crate) fn run<'tcx>(
 
                         type_name: type_name.clone(),
 
-                        js_file_name,
+                        js_file_name: js_file_name.clone(),
 
                         node_call_stack: String::default(),
 
