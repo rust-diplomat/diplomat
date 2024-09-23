@@ -96,7 +96,7 @@ pub fn gen(
                     silent,
                 )?;
             }
-            demo_gen::run(&tcx, docs_url_gen, conf)
+            demo_gen::run(entry, &tcx, docs_url_gen, conf)
         }
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),

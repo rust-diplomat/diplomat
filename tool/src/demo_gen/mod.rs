@@ -56,6 +56,7 @@ pub(crate) struct DemoConfig {
 /// This JS should include:
 /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
 pub(crate) fn run<'tcx>(
+    entry : &std::path::Path,
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
     conf: Option<DemoConfig>,
@@ -63,6 +64,8 @@ pub(crate) fn run<'tcx>(
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
+
+    let root = entry.join("../");
 
     let unwrapped_conf = conf.unwrap_or_default();
 
@@ -136,12 +139,12 @@ pub(crate) fn run<'tcx>(
 
                     let custom_func_filename = custom_func.to_string();
 
-                    let file_path = std::path::Path::new(&custom_func_filename);
+                    let file_path = root.join(custom_func_filename.clone());
 
-                    let file_name : String = String::from(file_path.clone().file_name().unwrap().to_str().unwrap());
+                    let file_name : String = String::from(file_path.file_name().unwrap().to_str().unwrap());
 
                     // Copy the custom function file from where it is relative to the FFI definition to our output directory.
-                    let read = std::fs::read(file_path);
+                    let read = std::fs::read(file_path.clone());
 
                     if let Ok(r) = read {
                         let from_utf = String::from_utf8(r);
@@ -152,7 +155,7 @@ pub(crate) fn run<'tcx>(
                             continue;
                         }
                     } else if let Err(e) = read {
-                        errors.push_error(format!("Could not read {custom_func_filename} as a custom function file path: {e}"));
+                        errors.push_error(format!("Could not read {custom_func_filename} as a custom function file path ({file_path:?}): {e}"));
                         continue;
                     }
 
@@ -164,14 +167,14 @@ pub(crate) fn run<'tcx>(
                     imports.insert(custom_import);
 
                     termini.push(TerminusInfo {
-                        function_name,
+                        function_name: function_name.clone(),
                         out_params: Vec::new(),
 
                         type_name: type_name.clone(),
 
                         js_file_name: js_file_name.clone(),
 
-                        node_call_stack: String::default(),
+                        node_call_stack: format!("{function_name}(...terminusArgs);"),
 
                         typescript: false,
 

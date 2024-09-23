@@ -38,6 +38,15 @@ export const RenderInfo = {
             ]
         },
         
+        "FixedDecimal.multiplyPow10": {
+            func: FixedDecimalDemo.multiplyPow10,
+            // For avoiding webpacking minifying issues:
+            funcName: "FixedDecimal.multiplyPow10",
+            parameters: [
+                
+            ]
+        },
+        
         "FixedDecimal.toString": {
             func: FixedDecimalDemo.toString,
             // For avoiding webpacking minifying issues:
