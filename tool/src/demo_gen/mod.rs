@@ -135,6 +135,36 @@ pub(crate) fn run<'tcx>(
 
                 let function_name = formatter.fmt_method_name(method);
 
+                if !RenderTerminusContext::is_valid_terminus(method) && method.attrs.demo_attrs.custom_func.is_none() {
+                    continue;
+                }
+
+                let mut ctx = RenderTerminusContext {
+                    tcx,
+                    formatter: &formatter,
+                    errors: &errors,
+                    terminus_info: TerminusInfo {
+                        function_name: function_name.clone(),
+                        out_params: Vec::new(),
+
+                        type_name: type_name.clone(),
+
+                        js_file_name: js_file_name.clone(),
+
+                        node_call_stack: String::default(),
+
+                        // We set this in the init function of WebDemoGenerationContext.
+                        typescript: false,
+
+                        imports: BTreeSet::new(),
+                    },
+
+                    relative_import_path: import_path.clone(),
+                    module_name: module_name.clone(),
+                };
+
+                ctx.evaluate(type_name.clone(), method);
+
                 if let Some(custom_func) = &method.attrs.demo_attrs.custom_func {
 
                     let custom_func_filename = custom_func.to_string();
@@ -165,52 +195,11 @@ pub(crate) fn run<'tcx>(
                     let custom_import = formatter.fmt_import_module(&function_name, file_name, import_path.clone());
 
                     imports.insert(custom_import);
-
-                    termini.push(TerminusInfo {
-                        function_name: function_name.clone(),
-                        // TODO: Need to reconfigure `RenderTerminusContext` to evaluate out_params without evaluating the call stack.
-                        out_params: Vec::new(),
-
-                        type_name: type_name.clone(),
-
-                        js_file_name: js_file_name.clone(),
-
-                        node_call_stack: format!("{function_name}(...terminusArgs);"),
-
-                        typescript: false,
-
-                        imports
-                    });
-                    continue;
-                } else if !RenderTerminusContext::is_valid_terminus(method) {
-                    continue;
+                    
+                    // Now override our evaluated terminus info to use the external function:
+                    ctx.terminus_info.node_call_stack = format!("{function_name}(...terminusArgs);");
+                    ctx.terminus_info.imports = imports;
                 }
-
-                let mut ctx = RenderTerminusContext {
-                    tcx,
-                    formatter: &formatter,
-                    errors: &errors,
-                    terminus_info: TerminusInfo {
-                        function_name,
-                        out_params: Vec::new(),
-
-                        type_name: type_name.clone(),
-
-                        js_file_name: js_file_name.clone(),
-
-                        node_call_stack: String::default(),
-
-                        // We set this in the init function of WebDemoGenerationContext.
-                        typescript: false,
-
-                        imports: BTreeSet::new(),
-                    },
-
-                    relative_import_path: import_path.clone(),
-                    module_name: module_name.clone(),
-                };
-
-                ctx.evaluate(type_name.clone(), method);
 
                 termini.push(ctx.terminus_info);
             }

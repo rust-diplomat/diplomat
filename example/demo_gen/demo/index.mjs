@@ -44,6 +44,17 @@ export const RenderInfo = {
             funcName: "FixedDecimal.multiplyPow10",
             parameters: [
                 
+                {
+                    name: "ICU4XFixedDecimal Value",
+                    type: "number",
+                    defaultValue: "1000"
+                },
+                
+                {
+                    name: "Power",
+                    type: "number"
+                }
+                
             ]
         },
         
