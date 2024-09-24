@@ -82,7 +82,7 @@ pub struct DemoInfo {
     pub external: bool,
 
     /// `#[diplomat::demo(custom_func = "/file/name/here.mjs")]` represents a user defined function that they define themselves in JS.
-    pub custom_func : Option<String>,
+    pub custom_func: Option<String>,
 
     /// `#[diplomat::demo(input(...))]` represents configuration options for anywhere we might expect user input.
     pub input_cfg: DemoInputCFG,
@@ -416,12 +416,12 @@ impl Attrs {
                             this.demo_attrs.custom_func = Some(string.value());
                         } else {
                             errors.push(LoweringError::Other(format!(
-                                "#[diplomat::demo(custom_func=\"...\") must be a literal string."
+                                "#[diplomat::demo(custom_func={s:?}) must be a literal string."
                             )));
                         }
                     } else {
                         errors.push(LoweringError::Other(format!(
-                            "#[diplomat::demo(custom_func=\"...\") must be a literal string."
+                            "#[diplomat::demo(custom_func={v:?}) must be a literal string."
                         )));
                     }
                 } else {
@@ -430,9 +430,7 @@ impl Attrs {
                     )));
                 }
             } else {
-                errors.push(LoweringError::Other(format!(
-                    "Unknown demo_attr: {path:?}"
-                )));
+                errors.push(LoweringError::Other(format!("Unknown demo_attr: {path:?}")));
             }
         }
 

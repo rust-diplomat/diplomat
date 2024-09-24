@@ -56,7 +56,7 @@ pub(crate) struct DemoConfig {
 /// This JS should include:
 /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
 pub(crate) fn run<'tcx>(
-    entry : &std::path::Path,
+    entry: &std::path::Path,
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
     conf: Option<DemoConfig>,
@@ -113,11 +113,10 @@ pub(crate) fn run<'tcx>(
 
         {
             let ty_name = formatter.fmt_type_name(id);
-            let type_name : String = ty_name.into();
+            let type_name: String = ty_name.into();
 
-            let js_file_name = formatter
-            .fmt_file_name(&type_name.clone(), &crate::js::FileType::Module);
-    
+            let js_file_name =
+                formatter.fmt_file_name(&type_name.clone(), &crate::js::FileType::Module);
 
             let ty = tcx.resolve_type(id);
             if ty.attrs().disable {
@@ -125,17 +124,18 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate)
-                {
+                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate) {
                     continue;
                 }
-                
+
                 let _guard = errors
                     .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
                 let function_name = formatter.fmt_method_name(method);
 
-                if !RenderTerminusContext::is_valid_terminus(method) && method.attrs.demo_attrs.custom_func.is_none() {
+                if !RenderTerminusContext::is_valid_terminus(method)
+                    && method.attrs.demo_attrs.custom_func.is_none()
+                {
                     continue;
                 }
 
@@ -166,12 +166,12 @@ pub(crate) fn run<'tcx>(
                 ctx.evaluate(type_name.clone(), method);
 
                 if let Some(custom_func) = &method.attrs.demo_attrs.custom_func {
-
                     let custom_func_filename = custom_func.to_string();
 
                     let file_path = root.join(custom_func_filename.clone());
 
-                    let file_name : String = String::from(file_path.file_name().unwrap().to_str().unwrap());
+                    let file_name: String =
+                        String::from(file_path.file_name().unwrap().to_str().unwrap());
 
                     // Copy the custom function file from where it is relative to the FFI definition to our output directory.
                     let read = std::fs::read(file_path.clone());
@@ -192,12 +192,14 @@ pub(crate) fn run<'tcx>(
                     // Then add it to our imports for all of the termini that belong to this class.
                     let mut imports = BTreeSet::new();
 
-                    let custom_import = formatter.fmt_import_module(&function_name, file_name, import_path.clone());
+                    let custom_import =
+                        formatter.fmt_import_module(&function_name, file_name, import_path.clone());
 
                     imports.insert(custom_import);
-                    
+
                     // Now override our evaluated terminus info to use the external function:
-                    ctx.terminus_info.node_call_stack = format!("{function_name}(...terminusArgs);");
+                    ctx.terminus_info.node_call_stack =
+                        format!("{function_name}(...terminusArgs);");
                     ctx.terminus_info.imports = imports;
                 }
 
