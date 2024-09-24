@@ -193,7 +193,7 @@ pub(crate) fn run<'tcx>(
                     let mut imports = BTreeSet::new();
 
                     let custom_import =
-                        formatter.fmt_import_module(&function_name, file_name, import_path.clone());
+                        formatter.fmt_import_module(&function_name, file_name, "./".to_string());
 
                     imports.insert(custom_import);
 
