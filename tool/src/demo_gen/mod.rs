@@ -192,7 +192,9 @@ pub(crate) fn run<'tcx>(
                     // Then add it to our imports for all of the termini that belong to this class.
                     let mut imports = BTreeSet::new();
 
-                    let custom_import = format!(r#"import {{ {function_name} as {function_name}Custom }} from "./{file_name}";"#);
+                    let custom_import = format!(
+                        r#"import {{ {function_name} as {function_name}Custom }} from "./{file_name}";"#
+                    );
 
                     imports.insert(custom_import);
 
