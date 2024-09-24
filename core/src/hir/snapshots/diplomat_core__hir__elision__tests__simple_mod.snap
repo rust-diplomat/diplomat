@@ -51,6 +51,7 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
+                            custom_func: None,
                             input_cfg: DemoInputCFG {
                                 label: "",
                                 default_value: "",
@@ -107,6 +108,7 @@ TypeContext {
                                     generate: false,
                                     default_constructor: false,
                                     external: false,
+                                    custom_func: None,
                                     input_cfg: DemoInputCFG {
                                         label: "",
                                         default_value: "",
@@ -151,6 +153,7 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
+                            custom_func: None,
                             input_cfg: DemoInputCFG {
                                 label: "",
                                 default_value: "",
@@ -173,6 +176,7 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
+                    custom_func: None,
                     input_cfg: DemoInputCFG {
                         label: "",
                         default_value: "",
@@ -236,6 +240,7 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
+                            custom_func: None,
                             input_cfg: DemoInputCFG {
                                 label: "",
                                 default_value: "",
@@ -294,6 +299,7 @@ TypeContext {
                                     generate: false,
                                     default_constructor: false,
                                     external: false,
+                                    custom_func: None,
                                     input_cfg: DemoInputCFG {
                                         label: "",
                                         default_value: "",
@@ -331,6 +337,7 @@ TypeContext {
                                     generate: false,
                                     default_constructor: false,
                                     external: false,
+                                    custom_func: None,
                                     input_cfg: DemoInputCFG {
                                         label: "",
                                         default_value: "",
@@ -369,6 +376,7 @@ TypeContext {
                             generate: false,
                             default_constructor: false,
                             external: false,
+                            custom_func: None,
                             input_cfg: DemoInputCFG {
                                 label: "",
                                 default_value: "",
@@ -391,6 +399,7 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
+                    custom_func: None,
                     input_cfg: DemoInputCFG {
                         label: "",
                         default_value: "",
@@ -436,6 +445,7 @@ TypeContext {
                     generate: false,
                     default_constructor: false,
                     external: false,
+                    custom_func: None,
                     input_cfg: DemoInputCFG {
                         label: "",
                         default_value: "",
