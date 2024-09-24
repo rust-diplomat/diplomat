@@ -65,7 +65,7 @@ pub(crate) fn run<'tcx>(
     let errors = ErrorStore::default();
     let files = FileMap::default();
 
-    let root = entry.join("../");
+    let root = entry.parent().unwrap();
 
     let unwrapped_conf = conf.unwrap_or_default();
 
