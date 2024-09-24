@@ -1,8 +1,8 @@
 import { FixedDecimal } from "../../js/lib/api/index.mjs"
-import { multiplyPow10 } from "./a.mjs"
+import { multiplyPow10 as multiplyPow10Custom } from "./a.mjs";
 export function multiplyPow10() {
     var terminusArgs = arguments;
-    return multiplyPow10(...terminusArgs);;
+    return multiplyPow10Custom(...terminusArgs);;
 }
 export function toString() {
     var terminusArgs = arguments;

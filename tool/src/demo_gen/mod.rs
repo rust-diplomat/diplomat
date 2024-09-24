@@ -192,14 +192,13 @@ pub(crate) fn run<'tcx>(
                     // Then add it to our imports for all of the termini that belong to this class.
                     let mut imports = BTreeSet::new();
 
-                    let custom_import =
-                        formatter.fmt_import_module(&function_name, file_name, "./".to_string());
+                    let custom_import = format!(r#"import {{ {function_name} as {function_name}Custom }} from "./{file_name}";"#);
 
                     imports.insert(custom_import);
 
                     // Now override our evaluated terminus info to use the external function:
                     ctx.terminus_info.node_call_stack =
-                        format!("{function_name}(...terminusArgs);");
+                        format!("{function_name}Custom(...terminusArgs);");
                     ctx.terminus_info.imports = imports;
                 }
 
