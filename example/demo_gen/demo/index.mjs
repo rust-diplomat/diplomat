@@ -56,5 +56,5 @@ let termini = Object.assign({
 }, RenderTerminiFixedDecimal);
 
 export const RenderInfo = {
-    "termini": termini,
+    "termini": termini
 };

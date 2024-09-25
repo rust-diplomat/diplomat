@@ -27,8 +27,8 @@ let termini = Object.assign({
         ]
     }{% if !loop.last %},{% endif %}
 {% endfor -%}
-}, {% for obj in custom_func_objs %}{{obj}}{% if !loop.last %}, {% endif %}{% endfor %});
+}{% for obj in custom_func_objs %}{% if loop.first %}, {% endif %}{{obj}}{% if !loop.last %}, {% endif %}{% endfor %});
 
 export const RenderInfo = {
-    "termini": termini,
+    "termini": termini
 };
