@@ -93,8 +93,8 @@ pub(crate) fn run<'tcx>(
         pub termini: Vec<TerminusInfo>,
         pub js_out: String,
 
-        pub imports : Vec<String>,
-        pub custom_func_objs : Vec<String>
+        pub imports: Vec<String>,
+        pub custom_func_objs: Vec<String>,
     }
 
     let mut out_info = IndexInfo {
@@ -103,7 +103,7 @@ pub(crate) fn run<'tcx>(
         js_out: format!("{import_path}{module_name}"),
 
         imports: Vec::new(),
-        custom_func_objs: Vec::new()
+        custom_func_objs: Vec::new(),
     };
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
@@ -131,7 +131,6 @@ pub(crate) fn run<'tcx>(
                 continue;
             }
 
-            
             if let Some(custom_func) = &attrs.demo_attrs.custom_func {
                 let custom_func_filename = custom_func.to_string();
 
@@ -148,7 +147,9 @@ pub(crate) fn run<'tcx>(
                     if let Ok(contents) = from_utf {
                         files.add_file(file_name.clone(), contents);
                     } else if let Err(e) = from_utf {
-                        errors.push_error(format!("Could not convert contents of {custom_func_filename} to UTF-8: {e}"));
+                        errors.push_error(format!(
+                            "Could not convert contents of {custom_func_filename} to UTF-8: {e}"
+                        ));
                         continue;
                     }
                 } else if let Err(e) = read {
@@ -162,11 +163,16 @@ pub(crate) fn run<'tcx>(
                 ));
 
                 // Finally, make sure the user-defined RenderTermini is added to the terminus object:
-                out_info.custom_func_objs.push(format!("RenderTermini{type_name}"));
+                out_info
+                    .custom_func_objs
+                    .push(format!("RenderTermini{type_name}"));
             }
 
             for method in methods {
-                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate) || !RenderTerminusContext::is_valid_terminus(method) {
+                if method.attrs.disable
+                    || (is_explicit && !method.attrs.demo_attrs.generate)
+                    || !RenderTerminusContext::is_valid_terminus(method)
+                {
                     continue;
                 }
 

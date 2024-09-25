@@ -9,7 +9,7 @@ pub mod ffi {
     #[diplomat::rust_link(fixed_decimal::FixedDecimal, Struct)]
     // Link to where other custom functions for this class can be found.
     // Make sure any .mjs file export defaults an object that matches the `RenderTerminus.terminus` object in content.
-    #[diplomat::demo(custom_func="../demo_gen/custom_func/a.mjs")]
+    #[diplomat::demo(custom_func = "../demo_gen/custom_func/a.mjs")]
     pub struct FixedDecimal(pub fixed_decimal::FixedDecimal);
 
     impl FixedDecimal {
