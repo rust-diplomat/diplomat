@@ -198,9 +198,11 @@ pub(crate) fn run<'tcx>(
 
                     imports.insert(custom_import);
 
+                    imports.insert(r#"import lib from "./index.mjs";"#.into());
+
                     // Now override our evaluated terminus info to use the external function:
-                    ctx.terminus_info.node_call_stack =
-                        format!("{function_name}Custom(...terminusArgs);");
+                    // ctx.terminus_info.node_call_stack =
+                    //     format!("{function_name}Custom(lib, ...terminusArgs)");
                     ctx.terminus_info.imports = imports;
                 }
 
