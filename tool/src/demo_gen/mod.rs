@@ -92,12 +92,18 @@ pub(crate) fn run<'tcx>(
         termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
         pub js_out: String,
+
+        pub imports : Vec<String>,
+        pub custom_func_objs : Vec<String>
     }
 
     let mut out_info = IndexInfo {
         termini_exports: Vec::new(),
         termini: Vec::new(),
         js_out: format!("{import_path}{module_name}"),
+
+        imports: Vec::new(),
+        custom_func_objs: Vec::new()
     };
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
@@ -126,7 +132,7 @@ pub(crate) fn run<'tcx>(
             }
 
             
-            if let Some(custom_func) = attrs.demo_attrs.custom_func {
+            if let Some(custom_func) = &attrs.demo_attrs.custom_func {
                 let custom_func_filename = custom_func.to_string();
 
                 let file_path = root.join(custom_func_filename.clone());
@@ -151,16 +157,16 @@ pub(crate) fn run<'tcx>(
                 }
 
                 // Then add it to our imports for `index.mjs`:
-                out_info.imports.insert(format!(
-                    r#"import RenderTermini from "./{file_name}";"#
+                out_info.imports.push(format!(
+                    r#"import RenderTermini{type_name} from "./{file_name}";"#
                 ));
 
                 // Finally, make sure the user-defined RenderTermini is added to the terminus object:
-                // TODO:
+                out_info.custom_func_objs.push(format!("RenderTermini{type_name}"));
             }
 
             for method in methods {
-                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate) {
+                if method.attrs.disable || (is_explicit && !method.attrs.demo_attrs.generate) || !RenderTerminusContext::is_valid_terminus(method) {
                     continue;
                 }
 
@@ -168,11 +174,6 @@ pub(crate) fn run<'tcx>(
                     .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
                 let function_name = formatter.fmt_method_name(method);
-
-                if !RenderTerminusContext::is_valid_terminus(method)
-                {
-                    continue;
-                }
 
                 let mut ctx = RenderTerminusContext {
                     tcx,

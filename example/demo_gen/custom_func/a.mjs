@@ -1,7 +1,7 @@
 import { lib } from "./index.mjs";
 
-function multiplyPow10(power) {
-	let fixedDecimal = lib.FixedDecimal.new(10);
+export function multiplyPow10(power) {
+	let fixedDecimal = lib.FixedDecimal.new_(10);
 	fixedDecimal.multiplyPow10(power);
 	return fixedDecimal.toString();
 }
@@ -9,7 +9,7 @@ function multiplyPow10(power) {
 export default {
 	"FixedDecimal.multiplyPow10": {
 		func: multiplyPow10,
-		funcName: "multiplyPow10",
+		funcName: "FixedDecimal.multiplyPow10",
 		parameters: [
 			{
 				name: "power",

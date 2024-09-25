@@ -4,73 +4,57 @@ export * as FixedDecimalFormatterDemo from "./FixedDecimalFormatter.mjs";
 import * as FixedDecimalDemo from "./FixedDecimal.mjs";
 export * as FixedDecimalDemo from "./FixedDecimal.mjs";
 
+import RenderTerminiFixedDecimal from "./a.mjs";
+
+
+let termini = Object.assign({
+    "FixedDecimalFormatter.formatWrite": {
+        func: FixedDecimalFormatterDemo.formatWrite,
+        // For avoiding webpacking minifying issues:
+        funcName: "FixedDecimalFormatter.formatWrite",
+        parameters: [
+            
+            {
+                name: "Locale Name",
+                type: "string"
+            },
+            
+            {
+                name: "ICU4X Fixed Decimal Grouping Strategy",
+                type: "FixedDecimalGroupingStrategy"
+            },
+            
+            {
+                name: "Useless Config (Ignore)",
+                type: "boolean",
+                defaultValue: "true"
+            },
+            
+            {
+                name: "ICU4XFixedDecimal Value",
+                type: "number",
+                defaultValue: "1000"
+            }
+            
+        ]
+    },
+
+    "FixedDecimal.toString": {
+        func: FixedDecimalDemo.toString,
+        // For avoiding webpacking minifying issues:
+        funcName: "FixedDecimal.toString",
+        parameters: [
+            
+            {
+                name: "ICU4XFixedDecimal Value",
+                type: "number",
+                defaultValue: "1000"
+            }
+            
+        ]
+    }
+}, RenderTerminiFixedDecimal);
 
 export const RenderInfo = {
-    termini: {
-        "FixedDecimalFormatter.formatWrite": {
-            func: FixedDecimalFormatterDemo.formatWrite,
-            // For avoiding webpacking minifying issues:
-            funcName: "FixedDecimalFormatter.formatWrite",
-            parameters: [
-                
-                {
-                    name: "Locale Name",
-                    type: "string"
-                },
-                
-                {
-                    name: "ICU4X Fixed Decimal Grouping Strategy",
-                    type: "FixedDecimalGroupingStrategy"
-                },
-                
-                {
-                    name: "Useless Config (Ignore)",
-                    type: "boolean",
-                    defaultValue: "true"
-                },
-                
-                {
-                    name: "ICU4XFixedDecimal Value",
-                    type: "number",
-                    defaultValue: "1000"
-                }
-                
-            ]
-        },
-        
-        "FixedDecimal.multiplyPow10": {
-            func: FixedDecimalDemo.multiplyPow10,
-            // For avoiding webpacking minifying issues:
-            funcName: "FixedDecimal.multiplyPow10",
-            parameters: [
-                
-                {
-                    name: "ICU4XFixedDecimal Value",
-                    type: "number",
-                    defaultValue: "1000"
-                },
-                
-                {
-                    name: "Power",
-                    type: "number"
-                }
-                
-            ]
-        },
-        
-        "FixedDecimal.toString": {
-            func: FixedDecimalDemo.toString,
-            // For avoiding webpacking minifying issues:
-            funcName: "FixedDecimal.toString",
-            parameters: [
-                
-                {
-                    name: "ICU4XFixedDecimal Value",
-                    type: "number",
-                    defaultValue: "1000"
-                }
-                
-            ]
-        }
-        },
+    "termini": termini,
 };

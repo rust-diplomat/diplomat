@@ -1,5 +1,5 @@
 import test from "ava";
-import { FixedDecimalDemo, FixedDecimalFormatterDemo } from "mini-icu4x-demo";
+import { FixedDecimalDemo, FixedDecimalFormatterDemo, RenderInfo } from "mini-icu4x-demo";
 import { FixedDecimalGroupingStrategy } from "mini-icu4x";
 
 
@@ -12,5 +12,5 @@ test("Test FixedDecimalFormatter", (t) => {
 });
 
 test("Custom Function", (t) => {
-	t.is(FixedDecimalDemo.multiplyPow10(3), "1000");
+	t.is(RenderInfo.termini["FixedDecimal.multiplyPow10"].func(3), "10000");
 });
