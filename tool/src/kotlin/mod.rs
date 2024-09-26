@@ -1045,7 +1045,10 @@ returnVal.option() ?: return null
                         .enumerate()
                         .map(|(index, _)| format!("arg{}", index))
                         .collect();
-                    let (native_input_names, native_input_params_and_types) = params
+                    let (native_input_names, native_input_params_and_types): (
+                        Vec<String>,
+                        Vec<String>,
+                    ) = params
                         .iter()
                         .zip(param_input_types.iter())
                         .zip(param_names.iter())
@@ -1063,13 +1066,13 @@ returnVal.option() ?: return null
                         .unzip();
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
-                        input_types: param_input_types.join(","),
+                        input_types: param_input_types.join(", "),
                         output_type: match **output {
                             Some(ref ty) => self.gen_type_name(ty, None).into(),
                             None => "Unit".into(),
                         },
-                        native_input_params_and_types,
-                        native_input_names,
+                        native_input_params_and_types: native_input_params_and_types.join(", "),
+                        native_input_names: native_input_names.join(", "),
                     })
                 }
                 _ => (),
@@ -1481,30 +1484,33 @@ returnVal.option() ?: return null
                 }
             })
             .collect();
-        let (native_input_names, native_input_params_and_types) = method
-            .params
-            .iter()
-            .zip(param_input_types.iter())
-            .zip(param_names.iter())
-            .map(|((in_param, in_ty), in_name)| match in_param.ty {
-                Type::Enum(_) | Type::Struct(_) => {
-                    // named types have a _Native wrapper, this needs to be passed as the "native"
-                    // version of the argument
-                    (
-                        format!("{}({})", in_ty, in_name),
-                        format!("{}: {}Native", in_name, in_ty),
-                    )
-                }
-                _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
-            })
-            .unzip();
+        let (native_input_names, native_input_params_and_types): (Vec<String>, Vec<String>) =
+            method
+                .params
+                .iter()
+                .zip(param_input_types.iter())
+                .zip(param_names.iter())
+                .map(|((in_param, in_ty), in_name)| match in_param.ty {
+                    Type::Enum(_) | Type::Struct(_) => {
+                        // named types have a _Native wrapper, this needs to be passed as the "native"
+                        // version of the argument
+                        (
+                            format!("{}({})", in_ty, in_name),
+                            format!("{}: {}Native", in_name, in_ty),
+                        )
+                    }
+                    _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                })
+                .unzip();
         let non_native_params_and_types = method
             .params
             .iter()
             .zip(param_input_types.iter())
             .zip(param_names.iter())
             .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
-                cur + &format!("{}: {}", in_name, in_ty)
+                cur.clone()
+                    + (if !cur.is_empty() { ", " } else { "" })
+                    + &format!("{}: {}", in_name, in_ty)
             });
         TraitMethodInfo {
             name: method_name,
@@ -1512,9 +1518,9 @@ returnVal.option() ?: return null
                 Some(ref ty) => self.gen_type_name(ty, None).into(),
                 None => "Unit".into(),
             },
-            input_params_and_types: native_input_params_and_types,
+            input_params_and_types: native_input_params_and_types.join(", "),
             non_native_params_and_types,
-            input_params: native_input_names,
+            input_params: native_input_names.join(", "),
         }
     }
 
@@ -1803,7 +1809,7 @@ returnVal.option() ?: return null
                     .iter()
                     .map(|param| self.gen_type_name(&param.ty, None).into())
                     .collect::<Vec<String>>()
-                    .join(",");
+                    .join(", ");
                 let out_type_string: String = match **output {
                     Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
                     None => "Unit".into(),
@@ -2015,8 +2021,8 @@ mod test {
                         todo!()
                     }
 
-                    pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) -> i32 {
-                        f(10 + x)
+                    pub fn test_multi_arg_callback(f: impl Fn(i32, i32, i32) -> i32, x: i32) -> i32 {
+                        f(10 + x, 5, 5)
                     }
 
                     pub fn get_u_byte_slice<'a>() -> &'a [u8] {
@@ -2273,7 +2279,7 @@ mod test {
                     y: i32,
                 }
                 pub trait TesterTrait {
-                    fn test_trait_fn(&self, x: i32) -> i32;
+                    fn test_trait_fn(&self, x: i32, y: i32, z: u8) -> i32;
                     fn test_void_trait_fn(&self);
                     fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
                 }
@@ -2281,9 +2287,9 @@ mod test {
                     cant_be_empty: bool,
                 }
                 impl Wrapper {
-                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
+                    pub fn test_with_trait(t: impl TesterTrait, x: i32, y: i32, z: u8) -> i32 {
                         t.test_void_trait_fn();
-                        t.test_trait_fn(x)
+                        t.test_trait_fn(x, y, z)
                     }
 
                     pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {

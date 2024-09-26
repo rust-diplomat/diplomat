@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2058
+assertion_line: 2064
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -57,7 +57,7 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
 
 
 internal interface Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f: Callback {
-    fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
+    fun invoke(lang_specific_context: Pointer?, arg0: Int, arg1: Int, arg2: Int ): Int
 }
 
 internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
@@ -66,7 +66,7 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
     @JvmField
     internal var run_callback: Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f
         = object :  Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
-                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int, arg1: Int, arg2: Int ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
             }
@@ -92,10 +92,10 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
         
-        fun fromCallback(cb: (Int)->Int): DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
+        fun fromCallback(cb: (Int, Int, Int)->Int): DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f = object :  Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
-                override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
-                    return cb(arg0);
+                override fun invoke(lang_specific_context: Pointer?, arg0: Int, arg1: Int, arg2: Int ): Int {
+                    return cb(arg0, arg1, arg2);
                 }
             }
             val cb_wrap = DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native()
@@ -138,7 +138,7 @@ class MyNativeStruct internal constructor (
             return returnStruct
         }
         
-        fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
+        fun testMultiArgCallback(f: (Int, Int, Int)->Int, x: Int): Int {
             
             val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
