@@ -2,7 +2,7 @@
 
 Let's say you want to add your own custom demonstration functions for a given struct, without demo_gen automagically creating the content of JS functions for you.
 
-This is done with the `#[diplomat::demo(custom_func="filename.mjs")]` attribute. demo_gen will search for files relative to `lib.rs`, and add the contents of `filename.mjs` to its output.
+This is done with the `#[diplomat::demo(custom_func="filename.mjs")]` attribute, which can be added above any `struct` definition. demo_gen will search for files relative to `lib.rs`, and add the contents of `filename.mjs` to its output.
 
 Then demo_gen will import the default export of `filename.mjs`, and append it to the list of [RenderInfo](https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md#step-two-constructing-renderinfo) termini.
 
