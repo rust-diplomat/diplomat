@@ -30,3 +30,4 @@
   - [Configuring Markup](demo_gen/markup.md)
   - [Configuring the Default Renderer](demo_gen/renderer.md)
   - [Making Your Own Renderer](demo_gen/custom_renderer.md)
+  - [Making Custom Functions](demo_gen/custom_functions.md)

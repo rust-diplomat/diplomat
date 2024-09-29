@@ -6,4 +6,4 @@ Inside of `index.mjs`, demo_gen outputs an object called `RenderInfo` that point
 
 This is meant to slot in to almost any Javascript solution with ease, but if there's an issue with `RenderInfo`s setup that is not quite compatible with your solution, please [open an issue](https://github.com/rust-diplomat/diplomat/issues/new?labels=B-demo_gen).
 
-The exact structure of `RenderInfo` is available in the demo_gen [design docs](https://github.com/rust-diplomat/diplomat/blob/main/docs/design_doc.md#step-two-constructing-renderinfo).
+The exact structure of `RenderInfo` is available in the demo_gen [design docs](https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md#step-two-constructing-renderinfo).
