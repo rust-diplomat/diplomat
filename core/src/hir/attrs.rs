@@ -83,6 +83,8 @@ pub struct DemoInfo {
 
     /// `#[diplomat::demo(custom_func = "/file/name/here.mjs")]` can be used above any `struct` definition in the bridge. It represents a file that exports an object that contains information on the parameters and execution of these custom functions.
     /// 
+    /// Files are located relative to lib.rs.
+    /// 
     /// This object is very similar to `RenderInfo`, the details of how you can set this up are detailed in [the book](https://rust-diplomat.github.io/book/demo_gen/custom_functions.html).
     pub custom_func: Option<String>,
 
