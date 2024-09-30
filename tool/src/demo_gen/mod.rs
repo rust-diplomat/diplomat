@@ -56,6 +56,7 @@ pub(crate) struct DemoConfig {
 /// This JS should include:
 /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
 pub(crate) fn run<'tcx>(
+    entry: &std::path::Path,
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
     conf: Option<DemoConfig>,
@@ -63,6 +64,8 @@ pub(crate) fn run<'tcx>(
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
+
+    let root = entry.parent().unwrap();
 
     let unwrapped_conf = conf.unwrap_or_default();
 
@@ -89,12 +92,18 @@ pub(crate) fn run<'tcx>(
         termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
         pub js_out: String,
+
+        pub imports: Vec<String>,
+        pub custom_func_objs: Vec<String>,
     }
 
     let mut out_info = IndexInfo {
         termini_exports: Vec::new(),
         termini: Vec::new(),
         js_out: format!("{import_path}{module_name}"),
+
+        imports: Vec::new(),
+        custom_func_objs: Vec::new(),
     };
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
@@ -109,17 +118,60 @@ pub(crate) fn run<'tcx>(
         let mut termini = Vec::new();
 
         {
-            let type_name = formatter.fmt_type_name(id);
+            let ty_name = formatter.fmt_type_name(id);
+            let type_name: String = ty_name.into();
+
+            let js_file_name =
+                formatter.fmt_file_name(&type_name.clone(), &crate::js::FileType::Module);
 
             let ty = tcx.resolve_type(id);
-            if ty.attrs().disable {
+
+            let attrs = ty.attrs();
+            if attrs.disable {
                 continue;
+            }
+
+            if let Some(custom_func) = &attrs.demo_attrs.custom_func {
+                let custom_func_filename = custom_func.to_string();
+
+                let file_path = root.join(custom_func_filename.clone());
+
+                let file_name: String =
+                    String::from(file_path.file_name().unwrap().to_str().unwrap());
+
+                // Copy the custom function file from where it is relative to the FFI definition to our output directory.
+                let read = std::fs::read(file_path.clone());
+
+                if let Ok(r) = read {
+                    let from_utf = String::from_utf8(r);
+                    if let Ok(contents) = from_utf {
+                        files.add_file(file_name.clone(), contents);
+                    } else if let Err(e) = from_utf {
+                        errors.push_error(format!(
+                            "Could not convert contents of {custom_func_filename} to UTF-8: {e}"
+                        ));
+                        continue;
+                    }
+                } else if let Err(e) = read {
+                    errors.push_error(format!("Could not read {custom_func_filename} as a custom function file path ({file_path:?}): {e}"));
+                    continue;
+                }
+
+                // Then add it to our imports for `index.mjs`:
+                out_info.imports.push(format!(
+                    r#"import RenderTermini{type_name} from "./{file_name}";"#
+                ));
+
+                // Finally, make sure the user-defined RenderTermini is added to the terminus object:
+                out_info
+                    .custom_func_objs
+                    .push(format!("RenderTermini{type_name}"));
             }
 
             for method in methods {
                 if method.attrs.disable
-                    || !RenderTerminusContext::is_valid_terminus(method)
                     || (is_explicit && !method.attrs.demo_attrs.generate)
+                    || !RenderTerminusContext::is_valid_terminus(method)
                 {
                     continue;
                 }
@@ -127,18 +179,19 @@ pub(crate) fn run<'tcx>(
                 let _guard = errors
                     .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
+                let function_name = formatter.fmt_method_name(method);
+
                 let mut ctx = RenderTerminusContext {
                     tcx,
                     formatter: &formatter,
                     errors: &errors,
                     terminus_info: TerminusInfo {
-                        function_name: formatter.fmt_method_name(method),
+                        function_name: function_name.clone(),
                         out_params: Vec::new(),
 
-                        type_name: type_name.clone().into(),
+                        type_name: type_name.clone(),
 
-                        js_file_name: formatter
-                            .fmt_file_name(&type_name, &crate::js::FileType::Module),
+                        js_file_name: js_file_name.clone(),
 
                         node_call_stack: String::default(),
 
@@ -152,7 +205,7 @@ pub(crate) fn run<'tcx>(
                     module_name: module_name.clone(),
                 };
 
-                ctx.evaluate(type_name.clone().into(), method);
+                ctx.evaluate(type_name.clone(), method);
 
                 termini.push(ctx.terminus_info);
             }

@@ -3,27 +3,32 @@ export * as lib from "{{js_out}}";
 import * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
 export * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
 {% endfor %}
+{% for i in imports -%}
+{{ i }}
+{% endfor %}
+
+let termini = Object.assign({
+{%- for terminus in termini %}
+    "{{terminus.type_name}}.{{terminus.function_name}}": {
+        func: {{terminus.type_name}}Demo.{{terminus.function_name}},
+        // For avoiding webpacking minifying issues:
+        funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
+        parameters: [
+            {% for param in terminus.out_params %}
+            {
+                name: "{{param.label}}",
+                type: "{{param.type_name}}"
+                {%- if !param.default_value.is_empty() -%} 
+                ,
+                defaultValue: "{{ param.default_value }}"
+                {%- endif %}
+            }{% if !loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if !loop.last %},{% endif %}
+{% endfor -%}
+}{% for obj in custom_func_objs %}{% if loop.first %}, {% endif %}{{obj}}{% if !loop.last %}, {% endif %}{% endfor %});
 
 export const RenderInfo = {
-    termini: {
-        {%- for terminus in termini %}
-        "{{terminus.type_name}}.{{terminus.function_name}}": {
-            func: {{terminus.type_name}}Demo.{{terminus.function_name}},
-            // For avoiding webpacking minifying issues:
-            funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
-            parameters: [
-                {% for param in terminus.out_params %}
-                {
-                    name: "{{param.label}}",
-                    type: "{{param.type_name}}"
-                    {%- if !param.default_value.is_empty() -%} 
-                    ,
-                    defaultValue: "{{ param.default_value }}"
-                    {%- endif %}
-                }{% if !loop.last %},{% endif %}
-                {% endfor %}
-            ]
-        }{% if !loop.last %},{% endif %}
-        {% endfor -%}
-    },
+    "termini": termini
 };
