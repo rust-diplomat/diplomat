@@ -42,7 +42,7 @@ internal class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structur
     {% if !trait_methods.is_empty() -%}
         {%- for trait_method in trait_methods %}
     @JvmField
-    internal var run_{{trait_method.name}}_callback: Runner_DiplomatTraitMethod_TesterTrait_{{trait_method.name}}
+    internal var run_{{trait_method.name}}_callback: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}}
         = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
                 override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}} {
                     throw Exception("ERROR NOT IMPLEMENTED")
