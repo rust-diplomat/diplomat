@@ -1061,6 +1061,13 @@ returnVal.option() ?: return null
                                     format!("{}: {}Native", in_name, in_ty),
                                 )
                             }
+                            Type::Slice(_) => {
+                                // slices need to be passed as Slice type
+                                (
+                                    format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
+                                    format!("{}: Slice", in_name),
+                                )
+                            }
                             _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                         })
                         .unzip();
@@ -1497,6 +1504,13 @@ returnVal.option() ?: return null
                         (
                             format!("{}({})", in_ty, in_name),
                             format!("{}: {}Native", in_name, in_ty),
+                        )
+                    }
+                    Type::Slice(_) => {
+                        // slices need to be passed as Slice type
+                        (
+                            format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
+                            format!("{}: Slice", in_name),
                         )
                     }
                     _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
@@ -2282,6 +2296,7 @@ mod test {
                     fn test_trait_fn(&self, x: i32, y: i32, z: u8) -> i32;
                     fn test_void_trait_fn(&self);
                     fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
+                    fn test_with_slices(&mut self, a: &[u8], b: &[i16]) -> i32;
                 }
                 pub struct Wrapper {
                     cant_be_empty: bool,
