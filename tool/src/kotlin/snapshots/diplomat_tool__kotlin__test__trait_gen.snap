@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2335
+assertion_line: 2380
 expression: result
 ---
 package dev.gigapixel.somelib
@@ -16,6 +16,8 @@ interface TesterTrait {
     fun testVoidTraitFn(): Unit;
     fun testStructTraitFn(s: TraitTestingStruct): Int;
     fun testWithSlices(a: UByteArray, b: ShortArray): Int;
+    fun testStructReturn(): TraitTestingStruct;
+    fun testEnumReturn(): TraitTestingEnum;
 }
 
 
@@ -30,6 +32,12 @@ internal interface Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn: Cal
 }
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testWithSlices: Callback {
     fun invoke(ignored: Pointer?, a: Slice, b: Slice ): Int
+}
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testStructReturn: Callback {
+    fun invoke(ignored: Pointer?): TraitTestingStructNative
+}
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn: Callback {
+    fun invoke(ignored: Pointer?): Int
 }
 
 internal object TesterTrait_VTable_destructor: Callback {
@@ -74,9 +82,23 @@ internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.B
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
+    @JvmField
+    internal var run_testStructReturn_callback: Runner_DiplomatTraitMethod_TesterTrait_testStructReturn
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructReturn {
+                override fun invoke(ignored: Pointer?): TraitTestingStructNative {
+                    throw Exception("ERROR NOT IMPLEMENTED")
+                }
+            }
+    @JvmField
+    internal var run_testEnumReturn_callback: Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn {
+                override fun invoke(ignored: Pointer?): Int {
+                    throw Exception("ERROR NOT IMPLEMENTED")
+                }
+            }
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("destructor", "size", "alignment", "run_testTraitFn_callback", "run_testVoidTraitFn_callback", "run_testStructTraitFn_callback", "run_testWithSlices_callback")
+        return listOf("destructor", "size", "alignment", "run_testTraitFn_callback", "run_testVoidTraitFn_callback", "run_testStructTraitFn_callback", "run_testWithSlices_callback", "run_testStructReturn_callback", "run_testEnumReturn_callback")
     }
 }
 
@@ -129,6 +151,18 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
                 }
             }
             vtable.run_testWithSlices_callback = testWithSlices;
+            val testStructReturn: Runner_DiplomatTraitMethod_TesterTrait_testStructReturn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructReturn {
+                override fun invoke(ignored: Pointer?): TraitTestingStructNative {
+                    return trt_obj.testStructReturn().nativeStruct;
+                }
+            }
+            vtable.run_testStructReturn_callback = testStructReturn;
+            val testEnumReturn: Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn = object :  Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn {
+                override fun invoke(ignored: Pointer?): Int {
+                    return trt_obj.testEnumReturn().toNative();
+                }
+            }
+            vtable.run_testEnumReturn_callback = testEnumReturn;
             val native_wrapper = DiplomatTrait_TesterTrait_Wrapper_Native();
             native_wrapper.vtable = vtable;
             native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(vtable as Object);

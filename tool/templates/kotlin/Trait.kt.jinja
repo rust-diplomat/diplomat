@@ -21,7 +21,7 @@ interface {{trait_name}} {
 {% if !trait_methods.is_empty() -%}
     {%- for trait_method in trait_methods %}
 internal interface Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}}: Callback {
-    fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}}
+    fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.native_output_type}}
 }
     {%- endfor %}
 {%- endif %}
@@ -44,7 +44,7 @@ internal class DiplomatTrait_{{trait_name}}_VTable_Native: Structure(), Structur
     @JvmField
     internal var run_{{trait_method.name}}_callback: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}}
         = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
-                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}} {
+                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.native_output_type}} {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
@@ -84,8 +84,8 @@ internal class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
             {% if !trait_methods.is_empty() -%}
                 {%- for trait_method in trait_methods %}
             val {{trait_method.name}}: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
-                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.output_type}} {
-                    return trt_obj.{{trait_method.name}}({{trait_method.input_params}});
+                override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.native_output_type}} {
+                    return trt_obj.{{trait_method.name}}({{trait_method.input_params}}){{trait_method.return_modification}};
                 }
             }
             vtable.run_{{trait_method.name}}_callback = {{trait_method.name}};

@@ -1075,6 +1075,18 @@ returnVal.option() ?: return null
                             _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                         })
                         .unzip();
+                    let (native_output_type, return_modification) = match **output {
+                        Some(ref ty) => (
+                            self.gen_native_type_name(ty, None).into(),
+                            match ty {
+                                Type::Enum(..) => ".toNative()",
+                                Type::Struct(..) => ".nativeStruct",
+                                _ => "",
+                            }
+                            .into(),
+                        ),
+                        None => ("Unit".into(), "".into()),
+                    };
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
@@ -1084,6 +1096,8 @@ returnVal.option() ?: return null
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
+                        native_output_type,
+                        return_modification,
                     })
                 }
                 _ => (),
@@ -1533,12 +1547,26 @@ returnVal.option() ?: return null
                     + (if !cur.is_empty() { ", " } else { "" })
                     + &format!("{}: {}", in_name, in_ty)
             });
+        let (native_output_type, return_modification) = match *method.output {
+            Some(ref ty) => (
+                self.gen_native_type_name(ty, None).into(),
+                match ty {
+                    Type::Enum(..) => ".toNative()",
+                    Type::Struct(..) => ".nativeStruct",
+                    _ => "",
+                }
+                .into(),
+            ),
+            None => ("Unit".into(), "".into()),
+        };
         TraitMethodInfo {
             name: method_name,
             output_type: match *method.output {
                 Some(ref ty) => self.gen_type_name(ty, None).into(),
                 None => "Unit".into(),
             },
+            native_output_type,
+            return_modification,
             input_params_and_types: native_input_params_and_types.join(", "),
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
@@ -1917,6 +1945,8 @@ struct TraitMethodInfo {
     input_params_and_types: String,
     input_params: String,
     output_type: String,
+    native_output_type: String,
+    return_modification: String,
     non_native_params_and_types: String,
 }
 
@@ -1928,6 +1958,8 @@ struct CallbackParamInfo {
     native_input_params_and_types: String,
     native_input_names: String,
     output_type: String,
+    native_output_type: String,
+    return_modification: String,
 }
 
 #[cfg(test)]
@@ -2299,11 +2331,17 @@ mod test {
                     x: i32,
                     y: i32,
                 }
+                pub enum TraitTestingEnum {
+                    One,
+                    Two,
+                }
                 pub trait TesterTrait {
                     fn test_trait_fn(&self, x: i32, y: i32, z: u8) -> i32;
                     fn test_void_trait_fn(&self);
                     fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
                     fn test_with_slices(&mut self, a: &[u8], b: &[i16]) -> i32;
+                    fn test_struct_return(&self) -> TraitTestingStruct;
+                    fn test_enum_return(&self) -> TraitTestingEnum;
                 }
                 pub struct Wrapper {
                     cant_be_empty: bool,
