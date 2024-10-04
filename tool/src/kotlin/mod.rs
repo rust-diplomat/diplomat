@@ -1061,12 +1061,16 @@ returnVal.option() ?: return null
                                     format!("{}: {}Native", in_name, in_ty),
                                 )
                             }
-                            Type::Slice(_) => {
+                            Type::Slice(Slice::Primitive(_, _)) => {
                                 // slices need to be passed as Slice type
+                                // and only primitive slices are allowed
                                 (
                                     format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
                                     format!("{}: Slice", in_name),
                                 )
+                            }
+                            Type::Slice(_) => {
+                                panic!("Non-primitive slices are not allowed as callback args")
                             }
                             _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                         })
@@ -1506,12 +1510,15 @@ returnVal.option() ?: return null
                             format!("{}: {}Native", in_name, in_ty),
                         )
                     }
-                    Type::Slice(_) => {
+                    Type::Slice(Slice::Primitive(_, _)) => {
                         // slices need to be passed as Slice type
                         (
                             format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
                             format!("{}: Slice", in_name),
                         )
+                    }
+                    Type::Slice(_) => {
+                        panic!("Non-primitive slices are not allowed as callback args")
                     }
                     _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                 })
