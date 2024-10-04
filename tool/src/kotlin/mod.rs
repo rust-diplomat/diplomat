@@ -1072,6 +1072,10 @@ returnVal.option() ?: return null
                             Type::Slice(_) => {
                                 panic!("Non-primitive slices are not allowed as callback args")
                             }
+                            Type::Opaque(_) => (
+                                format!("{}({}, listOf())", in_ty, in_name),
+                                format!("{}: Pointer", in_name),
+                            ),
                             _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                         })
                         .unzip();
@@ -1534,6 +1538,10 @@ returnVal.option() ?: return null
                     Type::Slice(_) => {
                         panic!("Non-primitive slices are not allowed as callback args")
                     }
+                    Type::Opaque(_) => (
+                        format!("{}({}, listOf())", in_ty, in_name),
+                        format!("{}: Pointer", in_name),
+                    ),
                     _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
                 })
                 .unzip();
