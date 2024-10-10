@@ -109,7 +109,7 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             vtable.run_testStructTraitFn_callback = testStructTraitFn;
             val native_wrapper = DiplomatTrait_TesterTrait_Wrapper_Native();
             native_wrapper.vtable = vtable;
-            native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(vtable as Object);
+            native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(native_wrapper as Object);
             return DiplomatTrait_TesterTrait_Wrapper(native_wrapper);
         }
     }
