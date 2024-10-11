@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2099
+assertion_line: 2174
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -20,7 +20,7 @@ class AnotherOpaque internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>
+    internal val selfEdges: List<Any>,
 )  {
 
     internal class AnotherOpaqueCleaner(val handle: Pointer, val lib: AnotherOpaqueLib) : Runnable {
