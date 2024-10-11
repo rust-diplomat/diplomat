@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2261
+assertion_line: 2328
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -23,11 +23,17 @@ class MyOpaqueStruct internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any>,
+    internal var finalizer_registered: Boolean = false,
 )  {
+    fun registerFinalizer() {
+        this.finalizer_registered = true
+    }
+
     @Override
     @SuppressWarnings("Finalize")
     fun finalize() {
-        lib.MyOpaqueStruct_destroy(handle)
+        if (finalizer_registered)
+            lib.MyOpaqueStruct_destroy(handle)
     }
 
     companion object {

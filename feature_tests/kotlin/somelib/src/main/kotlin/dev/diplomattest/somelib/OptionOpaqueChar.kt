@@ -15,7 +15,7 @@ class OptionOpaqueChar internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>
+    internal val selfEdges: List<Any>,
 )  {
 
     internal class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {

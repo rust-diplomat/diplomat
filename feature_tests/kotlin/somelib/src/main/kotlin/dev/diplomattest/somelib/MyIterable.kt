@@ -16,7 +16,7 @@ class MyIterable internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>
+    internal val selfEdges: List<Any>,
 ): Iterable<MyIteratorIteratorItem> {
 
     internal class MyIterableCleaner(val handle: Pointer, val lib: MyIterableLib) : Runnable {
