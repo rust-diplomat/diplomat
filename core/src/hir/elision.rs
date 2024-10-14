@@ -430,7 +430,7 @@ impl LifetimeLowerer for &ast::LifetimeEnv {
 
 #[cfg(test)]
 mod tests {
-    use strck_ident::IntoCk;
+    use strck::IntoCk;
 
     /// Convert a syntax tree into a [`TypeContext`].
     macro_rules! tcx {

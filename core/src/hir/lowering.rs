@@ -11,7 +11,7 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
 use core::fmt;
-use strck_ident::IntoCk;
+use strck::IntoCk;
 
 /// An error from lowering the AST to the HIR.
 #[derive(Debug)]
