@@ -171,7 +171,7 @@ class TerminusParams extends HTMLElement {
 
             var newChild;
 
-            switch (param.type) {
+            switch (param.typeUse) {
                 case "string":
                     newChild = new StringTemplate(param);
                     this.#params[i] = "";
@@ -188,17 +188,18 @@ class TerminusParams extends HTMLElement {
                     newChild = new StringArrayTemplate(param);
                     this.#params[i] = [];
                     break;
+                case "enumerator":
+                    newChild = new EnumTemplate(param, library[param.type]);
+                    this.#params[i] = newChild.default
+                    break;
+                case "external":
+                    let updateParamEvent = (value) => {
+                        this.#params[i] = value;
+                    };
+                    evaluateExternal(param, updateParamEvent);
+                    break;
                 default:
-                    if (param.type in library && "values" in library[param.type]) {
-                        newChild = new EnumTemplate(param, library[param.type]);
-                        this.#params[i] = newChild.default
-                    } else {
-                        let updateParamEvent = (value) => {
-                            this.#params[i] = value;
-                        };
-                        evaluateExternal(param, updateParamEvent);
-                        continue;
-                    }
+                    console.error("Unrecognized parameter: ", param);
                     break;
             }
 
