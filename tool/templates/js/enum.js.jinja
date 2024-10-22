@@ -13,6 +13,10 @@ export class {{type_name}} {
 {%- endfor %}
     ]);
 
+    static getAllValues() {
+        return {{type_name}}.#values.toArray();
+    }
+
     {# TODO: I think it's possible to allow for constructors,
     but we just need to check if a constructor will be generated. -#}
     constructor(value) {
