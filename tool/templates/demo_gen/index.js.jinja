@@ -17,7 +17,8 @@ let termini = Object.assign({
             {% for param in terminus.out_params %}
             {
                 name: "{{param.label}}",
-                type: "{{param.type_name}}"
+                type: "{{param.type_name}}",
+                typeUse: "{{param.type_use}}"
                 {%- if !param.default_value.is_empty() -%} 
                 ,
                 defaultValue: "{{ param.default_value }}"

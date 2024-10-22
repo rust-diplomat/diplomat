@@ -20,8 +20,10 @@ pub struct OutParam {
     /// Full string name of the param.
     pub label: String,
     pub default_value: String,
-    /// For typescript and RenderInfo output. Type that this parameter is.
+    /// For typescript and RenderInfo output. Type that this parameter is. We get this directly from Rust.
     pub type_name: String,
+    /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
+    pub type_use : String,
 }
 
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
@@ -177,10 +179,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
     /// Helper function for quickly passing a parameter to both our node and the render terminus.
     /// Appends to [TerminusInfo::out_params]
-    fn append_out_param(
+    fn append_out_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
         param_name: String,
-        type_name: String,
+        type_info: &Type<P>,
         node: &mut MethodDependency,
         attrs: Option<DemoInfo>,
     ) {
@@ -194,10 +196,22 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         let default_value = attrs_default.input_cfg.default_value;
 
+        let type_name = self.formatter.fmt_type_name(type_info.id().unwrap()).to_string();
+
+        let type_use = if attrs_default.external {
+            "external".into()
+        } else {
+            match type_info {
+                Type::Enum(..) => "enumerator".into(),
+                _ => type_name.clone()
+            }
+        };
+
         let out_param = OutParam {
             param_name,
             label,
             type_name: type_name.clone(),
+            type_use,
             default_value,
         };
 
@@ -226,10 +240,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
-            Type::Primitive(p) => {
+            Type::Primitive(..) => {
                 self.append_out_param(
                     param_name,
-                    self.formatter.fmt_primitive_as_ffi(*p).to_string(),
+                    param_type,
                     node,
                     Some(param_attrs),
                 );
@@ -242,28 +256,12 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name, type_name, node, Some(param_attrs));
+                self.append_out_param(param_name, param_type, node, Some(param_attrs));
             }
-            Type::Slice(hir::Slice::Str(..)) => {
+            Type::Slice(..) => {
                 self.append_out_param(
                     param_name,
-                    self.formatter.fmt_string().to_string(),
-                    node,
-                    Some(param_attrs),
-                );
-            }
-            Type::Slice(hir::Slice::Primitive(_, p)) => {
-                self.append_out_param(
-                    param_name,
-                    self.formatter.fmt_primitive_list_type(*p).to_string(),
-                    node,
-                    Some(param_attrs),
-                );
-            }
-            Type::Slice(hir::Slice::Strs(..)) => {
-                self.append_out_param(
-                    param_name,
-                    "Array<string>".to_string(),
+                    param_type,
                     node,
                     Some(param_attrs),
                 );
@@ -280,7 +278,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name, type_name.into(), node, Some(param_attrs));
+                    self.append_out_param(param_name, param_type, node, Some(param_attrs));
                     return;
                 }
 
