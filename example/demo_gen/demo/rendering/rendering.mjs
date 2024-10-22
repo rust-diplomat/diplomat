@@ -142,10 +142,8 @@ class EnumTemplate extends ParameterTemplate {
         let options = clone.querySelector("*[data-options]");
 
         if (this.default === null) {
-            this.default = enumType.values.values().next().value;
-
-            for (let value of enumType.values) {
-                options.append(...(new EnumOption(value[0])).children);
+            for (let entry of enumType.getAllEntries()) {
+                options.append(...(new EnumOption(entry[0])).children);
             }
         }
     }

@@ -13,8 +13,8 @@ export class {{type_name}} {
 {%- endfor %}
     ]);
 
-    static getAllValues() {
-        return {{type_name}}.#values.toArray();
+    static getAllEntries() {
+        return {{type_name}}.#values.entries();
     }
 
     {# TODO: I think it's possible to allow for constructors,
