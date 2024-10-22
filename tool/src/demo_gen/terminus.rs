@@ -196,7 +196,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         let default_value = attrs_default.input_cfg.default_value;
 
-        let type_name = self.formatter.fmt_type_name(type_info.id().unwrap()).to_string();
+        let type_name = match type_info {
+            Type::Primitive(p) => self.formatter.fmt_primitive_as_ffi(*p).to_string(),
+            Type::Enum(e) => self.formatter.fmt_type_name(e.tcx_id.into()).to_string(),
+            Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
+            Type::Slice(hir::Slice::Primitive(.., p)) => self.formatter.fmt_primitive_list_type(*p).to_string(),
+            Type::Slice(hir::Slice::Strs(..)) => "Array<string>".to_string(),
+            _ => if let Some(i) = type_info.id() {
+                self.formatter.fmt_type_name(i).to_string()
+            } else {
+                panic!("Type {type_info:?} not recognized.");
+            }
+        };
 
         let type_use = if attrs_default.external {
             "external".into()
