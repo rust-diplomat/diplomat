@@ -23,7 +23,7 @@ pub struct OutParam {
     /// For typescript and RenderInfo output. Type that this parameter is. We get this directly from Rust.
     pub type_name: String,
     /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
-    pub type_use : String,
+    pub type_use: String,
 }
 
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
@@ -200,12 +200,16 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             Type::Primitive(p) => self.formatter.fmt_primitive_as_ffi(*p).to_string(),
             Type::Enum(e) => self.formatter.fmt_type_name(e.tcx_id.into()).to_string(),
             Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
-            Type::Slice(hir::Slice::Primitive(.., p)) => self.formatter.fmt_primitive_list_type(*p).to_string(),
+            Type::Slice(hir::Slice::Primitive(.., p)) => {
+                self.formatter.fmt_primitive_list_type(*p).to_string()
+            }
             Type::Slice(hir::Slice::Strs(..)) => "Array<string>".to_string(),
-            _ => if let Some(i) = type_info.id() {
-                self.formatter.fmt_type_name(i).to_string()
-            } else {
-                panic!("Type {type_info:?} not recognized.");
+            _ => {
+                if let Some(i) = type_info.id() {
+                    self.formatter.fmt_type_name(i).to_string()
+                } else {
+                    panic!("Type {type_info:?} not recognized.");
+                }
             }
         };
 
@@ -214,7 +218,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         } else {
             match type_info {
                 Type::Enum(..) => "enumerator".into(),
-                _ => type_name.clone()
+                _ => type_name.clone(),
             }
         };
 
@@ -252,12 +256,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
-                self.append_out_param(
-                    param_name,
-                    param_type,
-                    node,
-                    Some(param_attrs),
-                );
+                self.append_out_param(param_name, param_type, node, Some(param_attrs));
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -270,12 +269,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.append_out_param(param_name, param_type, node, Some(param_attrs));
             }
             Type::Slice(..) => {
-                self.append_out_param(
-                    param_name,
-                    param_type,
-                    node,
-                    Some(param_attrs),
-                );
+                self.append_out_param(param_name, param_type, node, Some(param_attrs));
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
