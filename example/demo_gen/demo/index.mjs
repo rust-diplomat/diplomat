@@ -16,23 +16,27 @@ let termini = Object.assign({
             
             {
                 name: "Locale Name",
-                type: "string"
+                type: "string",
+                typeUse: "string"
             },
             
             {
                 name: "ICU4X Fixed Decimal Grouping Strategy",
-                type: "FixedDecimalGroupingStrategy"
+                type: "FixedDecimalGroupingStrategy",
+                typeUse: "enumerator"
             },
             
             {
                 name: "Useless Config (Ignore)",
                 type: "boolean",
+                typeUse: "boolean",
                 defaultValue: "true"
             },
             
             {
                 name: "ICU4XFixedDecimal Value",
                 type: "number",
+                typeUse: "number",
                 defaultValue: "1000"
             }
             
@@ -48,6 +52,7 @@ let termini = Object.assign({
             {
                 name: "ICU4XFixedDecimal Value",
                 type: "number",
+                typeUse: "number",
                 defaultValue: "1000"
             }
             

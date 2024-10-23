@@ -13,6 +13,10 @@ export class ContiguousEnum {
         ["F", 3]
     ]);
 
+    static getAllEntries() {
+        return ContiguousEnum.#values.entries();
+    }
+
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*

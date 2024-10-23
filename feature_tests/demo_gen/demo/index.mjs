@@ -21,7 +21,8 @@ let termini = Object.assign({
             
             {
                 name: "DiplomatStr",
-                type: "string"
+                type: "string",
+                typeUse: "string"
             }
             
         ]
@@ -35,7 +36,8 @@ let termini = Object.assign({
             
             {
                 name: "V",
-                type: "Array<number>"
+                type: "Array<number>",
+                typeUse: "Array<number>"
             }
             
         ]
@@ -49,7 +51,8 @@ let termini = Object.assign({
             
             {
                 name: "V",
-                type: "string"
+                type: "string",
+                typeUse: "string"
             }
             
         ]
@@ -63,7 +66,8 @@ let termini = Object.assign({
             
             {
                 name: "Foo",
-                type: "string"
+                type: "string",
+                typeUse: "string"
             }
             
         ]
@@ -86,7 +90,8 @@ let termini = Object.assign({
             
             {
                 name: "Input",
-                type: "string"
+                type: "string",
+                typeUse: "string"
             }
             
         ]
