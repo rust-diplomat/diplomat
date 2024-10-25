@@ -20,7 +20,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "DiplomatStr",
+                name: "OptionString:DiplomatStr",
                 type: "string",
                 typeUse: "string"
             }
@@ -35,7 +35,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "V",
+                name: "Float64Vec:V",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -50,7 +50,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "V",
+                name: "MyString:V",
                 type: "string",
                 typeUse: "string"
             }
@@ -65,7 +65,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Foo",
+                name: "MyString:Foo",
                 type: "string",
                 typeUse: "string"
             }
@@ -89,7 +89,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Input",
+                name: "Utf16Wrap:Input",
                 type: "string",
                 typeUse: "string"
             }
