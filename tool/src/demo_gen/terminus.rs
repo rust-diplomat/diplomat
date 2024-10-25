@@ -193,7 +193,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
-            heck::AsUpperCamelCase(format!("{}:{}", node.owning_type, param_name.clone())).to_string()
+            format!("{}:{}", heck::AsUpperCamelCase(node.owning_type.clone()), heck::AsUpperCamelCase(param_name.clone())).to_string()
         } else {
             attrs_default.input_cfg.label
         };
