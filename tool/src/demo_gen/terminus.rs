@@ -159,10 +159,8 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root = MethodDependency::new(
-            self.get_constructor_js(type_name.clone(), method),
-            None,
-        );
+        let mut root =
+            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
 
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
@@ -195,9 +193,11 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
-            let owning_str = node.owning_param.as_ref().map(|p| {
-                format!("{}:", heck::AsUpperCamelCase(p))
-            }).unwrap_or_default();
+            let owning_str = node
+                .owning_param
+                .as_ref()
+                .map(|p| format!("{}:", heck::AsUpperCamelCase(p)))
+                .unwrap_or_default();
             format!(
                 "{}{}",
                 owning_str,
@@ -356,7 +356,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         &mut self,
         op: &OpaqueDef,
         type_name: String,
-        param_name : String,
+        param_name: String,
         node: &mut MethodDependency,
     ) {
         let mut usable_constructor = false;
