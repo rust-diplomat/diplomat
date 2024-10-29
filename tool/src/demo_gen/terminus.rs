@@ -55,7 +55,7 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub terminus_info: TerminusInfo,
 
     /// To avoid similar parameter names while we're collecting [`OutParam`]s.
-    pub out_param_collision : HashMap<String, i32>,
+    pub out_param_collision: HashMap<String, i32>,
 
     pub relative_import_path: String,
     pub module_name: String,
@@ -242,7 +242,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let (p, n) = if self.out_param_collision.contains_key(&param_name) {
             let n = self.out_param_collision.get(&param_name).unwrap();
 
-            (format!("{param_name}_{n}"), n+1)
+            (format!("{param_name}_{n}"), n + 1)
         } else {
             (param_name.clone(), 1)
         };
