@@ -259,9 +259,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         self.terminus_info.out_params.push(out_param);
 
-        let param_info = ParamInfo {
-            js: p,
-        };
+        let param_info = ParamInfo { js: p };
 
         node.params.push(param_info);
     }
