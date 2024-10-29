@@ -250,7 +250,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         self.out_param_collision.insert(param_name, n);
 
         let out_param = OutParam {
-            param_name: p,
+            param_name: p.clone(),
             label,
             type_name: type_name.clone(),
             type_use,
@@ -261,7 +261,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         let param_info = ParamInfo {
             // Grab arguments without having to name them
-            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1),
+            js: p,
         };
 
         node.params.push(param_info);
