@@ -54,6 +54,9 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 
+    /// To avoid similar parameter names while we're collecting [`OutParam`]s.
+    pub out_param_collision : HashMap<String, i32>,
+
     pub relative_import_path: String,
     pub module_name: String,
 }
@@ -172,20 +175,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             self.relative_import_path.clone(),
         );
 
-        let mut param_collision_dict : HashMap<String, i32> = HashMap::new();
-
-        for out_param in &mut self.terminus_info.out_params {
-            if param_collision_dict.contains_key(&out_param.param_name) {
-                let num = param_collision_dict.get(&out_param.param_name).unwrap();
-                
-                out_param.param_name = format!("{}_{}", out_param.param_name, num);
-
-                param_collision_dict.insert(out_param.param_name.clone(), num + 1);
-            } else {
-                param_collision_dict.insert(out_param.param_name.clone(), 1);
-            }
-        }
-
         self.terminus_info.imports.insert(format);
     }
 
@@ -250,8 +239,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             }
         };
 
+        let (p, n) = if self.out_param_collision.contains_key(&param_name) {
+            let n = self.out_param_collision.get(&param_name).unwrap();
+
+            (format!("{param_name}_{n}"), n+1)
+        } else {
+            (param_name.clone(), 1)
+        };
+
+        self.out_param_collision.insert(param_name, n);
+
         let out_param = OutParam {
-            param_name,
+            param_name: p,
             label,
             type_name: type_name.clone(),
             type_use,
