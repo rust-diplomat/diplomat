@@ -20,7 +20,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "DiplomatStr",
+                name: "Self:DiplomatStr",
                 type: "string",
                 typeUse: "string"
             }
@@ -35,7 +35,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "V",
+                name: "Self:V",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -50,7 +50,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "V",
+                name: "Self:V",
                 type: "string",
                 typeUse: "string"
             }
@@ -89,7 +89,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Input",
+                name: "Self:Input",
                 type: "string",
                 typeUse: "string"
             }

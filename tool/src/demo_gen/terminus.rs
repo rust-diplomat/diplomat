@@ -43,6 +43,9 @@ struct MethodDependency {
 
     /// Parameters to pass into the method.
     params: Vec<ParamInfo>,
+
+    /// The Rust parameter that we're attempting to construct with this method. Currently used by [`OutParam`] for better default parameter names.
+    owning_param: Option<String>,
 }
 
 pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
@@ -56,10 +59,11 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
 }
 
 impl MethodDependency {
-    pub fn new(method_js: String) -> Self {
+    pub fn new(method_js: String, owning_param: Option<String>) -> Self {
         MethodDependency {
             method_js,
             params: Vec::new(),
+            owning_param,
         }
     }
 }
@@ -156,7 +160,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root =
-            MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
+            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
 
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
@@ -189,7 +193,17 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
-            heck::AsUpperCamelCase(param_name.clone()).to_string()
+            let owning_str = node
+                .owning_param
+                .as_ref()
+                .map(|p| format!("{}:", heck::AsUpperCamelCase(p)))
+                .unwrap_or_default();
+            format!(
+                "{}{}",
+                owning_str,
+                heck::AsUpperCamelCase(param_name.clone())
+            )
+            .to_string()
         } else {
             attrs_default.input_cfg.label
         };
@@ -287,7 +301,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     return;
                 }
 
-                self.evaluate_op_constructors(op, type_name.to_string(), node);
+                self.evaluate_op_constructors(op, type_name.to_string(), param_name, node);
             }
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
@@ -298,7 +312,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.evaluate_struct_fields(st, type_name.to_string(), node);
+                self.evaluate_struct_fields(st, type_name.to_string(), param_name, node);
             }
             Type::DiplomatOption(ref inner) => {
                 self.evaluate_param(inner, param_name, node, param_attrs)
@@ -342,6 +356,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         &mut self,
         op: &OpaqueDef,
         type_name: String,
+        param_name: String,
         node: &mut MethodDependency,
     ) {
         let mut usable_constructor = false;
@@ -367,8 +382,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         self.relative_import_path.clone(),
                     ));
 
-                let mut child =
-                    MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
+                let mut child = MethodDependency::new(
+                    self.get_constructor_js(type_name.to_string(), method),
+                    Some(param_name),
+                );
 
                 let call = self.evaluate_constructor(method, &mut child);
                 node.params.push(ParamInfo { js: call });
@@ -402,6 +419,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         &mut self,
         st: &StructDef,
         type_name: String,
+        param_name: String,
         node: &mut MethodDependency,
     ) {
         self.terminus_info
@@ -412,7 +430,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.relative_import_path.clone(),
             ));
 
-        let mut child = MethodDependency::new("".to_string());
+        let mut child = MethodDependency::new("".to_string(), Some(param_name));
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
@@ -430,7 +448,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         }
 
         child.method_js = StructInfo {
-            type_name: type_name.to_string(),
+            type_name: type_name.clone(),
         }
         .render()
         .unwrap();
