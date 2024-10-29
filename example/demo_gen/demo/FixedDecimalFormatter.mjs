@@ -3,7 +3,7 @@ import { FixedDecimal } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
-export function formatWrite() {
+export function formatWrite(name, grouping_strategy, some_other_config, v) {
     var terminusArgs = arguments;
     return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
         null,

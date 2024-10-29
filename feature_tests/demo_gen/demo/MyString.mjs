@@ -1,5 +1,5 @@
 import { MyString } from "../../js/api/index.mjs"
-export function getStr() {
+export function getStr(v) {
     var terminusArgs = arguments;
     return (function (...args) { return args[0].getStr }).apply(
         null,
@@ -13,7 +13,7 @@ export function getStr() {
         ]
     );
 }
-export function stringTransform() {
+export function stringTransform(foo) {
     var terminusArgs = arguments;
     return MyString.stringTransform.apply(
         null,

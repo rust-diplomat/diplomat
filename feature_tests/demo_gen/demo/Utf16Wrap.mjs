@@ -1,5 +1,5 @@
 import { Utf16Wrap } from "../../js/api/index.mjs"
-export function getDebugStr() {
+export function getDebugStr(input) {
     var terminusArgs = arguments;
     return (function (...args) { return args[0].getDebugStr(...args.slice(1)) }).apply(
         null,
