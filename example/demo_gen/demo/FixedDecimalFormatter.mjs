@@ -4,7 +4,6 @@ import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
 export function formatWrite(name, grouping_strategy, some_other_config, v) {
-    var terminusArgs = arguments;
     return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
         null,
         [
@@ -14,7 +13,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                     Locale.new_.apply(
                         null,
                         [
-                            terminusArgs[0]
+                            name
                         ]
                     ),
                     DataProvider.newStatic.apply(
@@ -27,8 +26,8 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                     }).apply(
                         null,
                         [
-                            terminusArgs[1],
-                            terminusArgs[2]
+                            grouping_strategy,
+                            some_other_config
                         ]
                     )
                 ]
@@ -36,7 +35,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             FixedDecimal.new_.apply(
                 null,
                 [
-                    terminusArgs[3]
+                    v
                 ]
             )
         ]
