@@ -1,24 +1,22 @@
 import { MyString } from "../../js/api/index.mjs"
-export function getStr() {
-    var terminusArgs = arguments;
+export function getStr(v) {
     return (function (...args) { return args[0].getStr }).apply(
         null,
         [
             MyString.new_.apply(
                 null,
                 [
-                    terminusArgs[0]
+                    v
                 ]
             )
         ]
     );
 }
-export function stringTransform() {
-    var terminusArgs = arguments;
+export function stringTransform(foo) {
     return MyString.stringTransform.apply(
         null,
         [
-            terminusArgs[0]
+            foo
         ]
     );
 }

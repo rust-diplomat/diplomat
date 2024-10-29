@@ -1,9 +1,8 @@
 export function {{function_name}}(
-    {%- if typescript %}{%- for param in out_params -%}
+    {%- for param in out_params -%}
     {{param.param_name}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
-    {%- endfor -%}{% endif -%}
+    {%- endfor -%}
 ){% if typescript %};{% else %} {
-    var terminusArgs = arguments;
     return {{node_call_stack|indent(4)}};
 }
 {%- endif %}

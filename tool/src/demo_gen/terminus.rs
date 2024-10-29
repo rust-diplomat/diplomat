@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use diplomat_core::hir::{
     self, DemoInfo, Method, OpaqueDef, StructDef, StructPath, TyPosition, Type, TypeContext,
@@ -53,6 +53,9 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
+
+    /// To avoid similar parameter names while we're collecting [`OutParam`]s.
+    pub out_param_collision: HashMap<String, i32>,
 
     pub relative_import_path: String,
     pub module_name: String,
@@ -236,8 +239,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             }
         };
 
+        let (p, n) = if self.out_param_collision.contains_key(&param_name) {
+            let n = self.out_param_collision.get(&param_name).unwrap();
+
+            (format!("{param_name}_{n}"), n + 1)
+        } else {
+            (param_name.clone(), 1)
+        };
+
+        self.out_param_collision.insert(param_name, n);
+
         let out_param = OutParam {
-            param_name,
+            param_name: p.clone(),
             label,
             type_name: type_name.clone(),
             type_use,
@@ -246,10 +259,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         self.terminus_info.out_params.push(out_param);
 
-        let param_info = ParamInfo {
-            // Grab arguments without having to name them
-            js: format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1),
-        };
+        let param_info = ParamInfo { js: p };
 
         node.params.push(param_info);
     }

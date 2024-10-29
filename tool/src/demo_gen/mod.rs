@@ -3,7 +3,10 @@
 //! Designed to work in conjunction with the JS backend.
 //!
 //! See docs/demo_gen.md for more.
-use std::{collections::BTreeSet, fmt::Write};
+use std::{
+    collections::{BTreeSet, HashMap},
+    fmt::Write,
+};
 
 use askama::{self, Template};
 use diplomat_core::hir::{BackendAttrSupport, TypeContext};
@@ -200,6 +203,8 @@ pub(crate) fn run<'tcx>(
 
                         imports: BTreeSet::new(),
                     },
+
+                    out_param_collision: HashMap::new(),
 
                     relative_import_path: import_path.clone(),
                     module_name: module_name.clone(),
