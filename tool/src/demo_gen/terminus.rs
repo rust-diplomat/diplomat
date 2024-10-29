@@ -260,7 +260,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         self.terminus_info.out_params.push(out_param);
 
         let param_info = ParamInfo {
-            // Grab arguments without having to name them
             js: p,
         };
 
