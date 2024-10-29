@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use diplomat_core::hir::{
     self, DemoInfo, Method, OpaqueDef, StructDef, StructPath, TyPosition, Type, TypeContext,
@@ -171,6 +171,20 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             self.module_name.clone(),
             self.relative_import_path.clone(),
         );
+
+        let mut param_collision_dict : HashMap<String, i32> = HashMap::new();
+
+        for out_param in &mut self.terminus_info.out_params {
+            if param_collision_dict.contains_key(&out_param.param_name) {
+                let num = param_collision_dict.get(&out_param.param_name).unwrap();
+                
+                out_param.param_name = format!("{}_{}", out_param.param_name, num);
+
+                param_collision_dict.insert(out_param.param_name.clone(), num + 1);
+            } else {
+                param_collision_dict.insert(out_param.param_name.clone(), 1);
+            }
+        }
 
         self.terminus_info.imports.insert(format);
     }
