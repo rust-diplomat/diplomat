@@ -470,7 +470,7 @@ pub mod test {
         let tcx = new_tcx(tk_stream);
         let docs_urls = std::collections::HashMap::new();
         let docs_generator = &diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
-        let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
+        let formatter = KotlinFormatter::new(&tcx, None, docs_generator);
         let opaques = tcx.opaques();
         assert!(!opaques.is_empty());
         let mut all_types = tcx.all_types();

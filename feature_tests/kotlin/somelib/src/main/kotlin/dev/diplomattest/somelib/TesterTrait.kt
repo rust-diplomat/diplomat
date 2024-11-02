@@ -5,6 +5,7 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+
 interface TesterTrait {
     fun testTraitFn(x: Int): Int;
     fun testVoidTraitFn(): Unit;

@@ -14,7 +14,6 @@ internal interface FixedDecimalLib: Library {
 }
 /** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
 */
-
 class FixedDecimal internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned

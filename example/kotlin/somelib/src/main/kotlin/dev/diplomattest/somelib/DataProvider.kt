@@ -15,7 +15,6 @@ internal interface DataProviderLib: Library {
 *
 *See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
 */
-
 class DataProvider internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned

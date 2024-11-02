@@ -1586,7 +1586,7 @@ returnVal.option() ?: return null
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
             docs: match &method.docs {
-                Some(method_docs) => self.formatter.fmt_docs(&method_docs),
+                Some(method_docs) => self.formatter.fmt_docs(method_docs),
                 None => "".to_string(),
             },
         }

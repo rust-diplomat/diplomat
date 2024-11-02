@@ -14,7 +14,6 @@ internal interface LocaleLib: Library {
 *
 *See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
 */
-
 class Locale internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned

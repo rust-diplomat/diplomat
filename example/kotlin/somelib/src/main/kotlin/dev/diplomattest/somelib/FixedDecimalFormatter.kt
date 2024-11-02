@@ -15,7 +15,6 @@ internal interface FixedDecimalFormatterLib: Library {
 *
 *See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
 */
-
 class FixedDecimalFormatter internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
