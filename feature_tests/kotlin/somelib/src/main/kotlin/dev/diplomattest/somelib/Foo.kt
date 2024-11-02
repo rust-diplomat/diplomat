@@ -70,6 +70,8 @@ class Foo internal constructor (
             return returnOpaque
         }
         
+        /** Test that the extraction logic correctly pins the right fields
+        */
         fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
             val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.readUtf8(anotherString)
             

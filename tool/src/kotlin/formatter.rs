@@ -1,8 +1,9 @@
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice,
-    StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext, TypeId,
+    Docs, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic,
+    PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext,
+    TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -11,6 +12,8 @@ use std::{borrow::Cow, iter::once};
 pub(super) struct KotlinFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     strip_prefix: Option<String>,
+    /// For generating doc.rs links
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &[
@@ -19,8 +22,16 @@ const INVALID_METHOD_NAMES: &[&str] = &[
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, strip_prefix: Option<String>) -> Self {
-        Self { tcx, strip_prefix }
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        strip_prefix: Option<String>,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
+        Self {
+            tcx,
+            strip_prefix,
+            docs_url_gen,
+        }
     }
 
     pub fn fmt_void(&self) -> &'static str {
@@ -42,6 +53,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_string(&self) -> &'static str {
         "String"
+    }
+
+    pub fn fmt_docs(&self, docs: &Docs) -> String {
+        docs.to_markdown(self.docs_url_gen)
+            .trim()
+            .replace('\n', "\n*")
+            .replace(" \n", "\n")
     }
 
     pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {
@@ -450,7 +468,9 @@ pub mod test {
             }
         };
         let tcx = new_tcx(tk_stream);
-        let formatter = KotlinFormatter::new(&tcx, None);
+        let docs_urls = std::collections::HashMap::new();
+        let docs_generator = &diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+        let formatter = KotlinFormatter::new(&tcx, None, docs_generator);
         let opaques = tcx.opaques();
         assert!(!opaques.is_empty());
         let mut all_types = tcx.all_types();

@@ -1,4 +1,8 @@
 
+{%- if !docs.is_empty() %}
+/** {{docs}}
+*/
+{%- endif %}
 {{ declaration }} {
 {%- for slice_conv in slice_conversions %}{{slice_conv|indent(4)}}{% endfor %}
     {% if write_return %}val write = DW.lib.diplomat_buffer_write_create(0){% endif %}

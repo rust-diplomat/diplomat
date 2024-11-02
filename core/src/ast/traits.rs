@@ -26,6 +26,7 @@ pub struct TraitMethod {
     pub output_type: Option<TypeName>,
     pub lifetimes: LifetimeEnv,
     pub attrs: Attrs,
+    pub docs: Docs,
 }
 
 impl Trait {
@@ -100,6 +101,7 @@ impl Trait {
                     output_type,
                     lifetimes,
                     attrs: fct_attrs,
+                    docs: Docs::from_attrs(&fct.attrs),
                 });
             }
         }

@@ -11,7 +11,10 @@ internal interface FixedDecimalFormatterLib: Library {
     fun icu4x_FixedDecimalFormatter_try_new_mv1(locale: Pointer, provider: Pointer, options: FixedDecimalFormatterOptionsNative): ResultPointerUnit
     fun icu4x_FixedDecimalFormatter_format_write_mv1(handle: Pointer, value: Pointer, write: Pointer): Unit
 }
-
+/** An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+*
+*See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
+*/
 class FixedDecimalFormatter internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
@@ -29,6 +32,10 @@ class FixedDecimalFormatter internal constructor (
         internal val libClass: Class<FixedDecimalFormatterLib> = FixedDecimalFormatterLib::class.java
         internal val lib: FixedDecimalFormatterLib = Native.load("somelib", libClass)
         
+        /** Creates a new [`FixedDecimalFormatter`] from locale data.
+        *
+        *See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
+        */
         fun tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): Res<FixedDecimalFormatter, Unit> {
             
             val returnVal = lib.icu4x_FixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.nativeStruct);
@@ -44,6 +51,10 @@ class FixedDecimalFormatter internal constructor (
         }
     }
     
+    /** Formats a [`FixedDecimal`] to a string.
+    *
+    *See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
+    */
     fun formatWrite(value: FixedDecimal): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.icu4x_FixedDecimalFormatter_format_write_mv1(handle, value.handle, write);

@@ -24,7 +24,10 @@ internal interface {{type_name}}Lib: Library {
 typealias {{type_name}}IteratorItem = {{iter_ty}}
 {%- when None %}
 {%- endmatch %}
-
+{% if !docs.is_empty() -%}
+/** {{docs}}
+*/
+{%- endif %}
 class {{type_name}} internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned

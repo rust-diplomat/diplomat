@@ -1,10 +1,10 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, BackendAttrSupport, Borrow, Callback, InputOnly, Lifetime, LifetimeEnv, Lifetimes,
-    MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType,
-    ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPath,
-    StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
+    self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
+    Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
+    PrimitiveType, ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding,
+    StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -56,6 +56,7 @@ struct KotlinConfig {
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     conf_path: Option<&Path>,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let conf_path = conf_path.expect("Kotlin library needs to be called with config");
 
@@ -68,8 +69,7 @@ pub(crate) fn run<'tcx>(
     } = toml::from_str::<KotlinConfig>(&conf_str)
         .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
-
-    let formatter = KotlinFormatter::new(tcx, None);
+    let formatter = KotlinFormatter::new(tcx, None, docs_url_gen);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
@@ -1207,6 +1207,7 @@ returnVal.option() ?: return null
             return_expression,
             write_return,
             slice_conversions,
+            docs: self.formatter.fmt_docs(&method.docs),
         }
         .render()
         .expect("Failed to render string for method")
@@ -1347,6 +1348,7 @@ returnVal.option() ?: return null
             special_methods: SpecialMethodsImpl,
             callback_params: &'a [CallbackParamInfo],
             use_finalizers_not_cleaners: bool,
+            docs: String,
         }
 
         (
@@ -1363,6 +1365,7 @@ returnVal.option() ?: return null
                 special_methods: SpecialMethodsImpl::new(special_methods),
                 callback_params: self.callback_params.as_ref(),
                 use_finalizers_not_cleaners,
+                docs: self.formatter.fmt_docs(&ty.docs),
             }
             .render()
             .expect("failed to generate struct"),
@@ -1437,6 +1440,7 @@ returnVal.option() ?: return null
             ffi_cast_type_name: Cow<'d, str>,
             field_type: Cow<'d, str>,
             native_to_kt: Cow<'d, str>,
+            docs: String,
         }
 
         #[derive(Template)]
@@ -1451,6 +1455,7 @@ returnVal.option() ?: return null
             native_methods: &'a [NativeMethodInfo],
             callback_params: &'a [CallbackParamInfo],
             lifetimes: Vec<Cow<'a, str>>,
+            docs: String,
         }
 
         let fields = ty
@@ -1469,6 +1474,7 @@ returnVal.option() ?: return null
                         &ty.lifetimes,
                         &field.ty,
                     ),
+                    docs: self.formatter.fmt_docs(&field.docs),
                 }
             })
             .collect();
@@ -1485,6 +1491,7 @@ returnVal.option() ?: return null
                 native_methods: native_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
                 lifetimes,
+                docs: self.formatter.fmt_docs(&ty.docs),
             }
             .render()
             .expect("Failed to render struct template"),
@@ -1578,6 +1585,10 @@ returnVal.option() ?: return null
             input_params_and_types: native_input_params_and_types.join(", "),
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
+            docs: match &method.docs {
+                Some(method_docs) => self.formatter.fmt_docs(method_docs),
+                None => "".to_string(),
+            },
         }
     }
 
@@ -1614,6 +1625,7 @@ returnVal.option() ?: return null
             trait_methods: &'a [TraitMethodInfo],
             trait_method_names: &'a str,
             callback_params: &'a [CallbackParamInfo],
+            docs: String,
         }
 
         (
@@ -1625,6 +1637,7 @@ returnVal.option() ?: return null
                 trait_methods: trait_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
                 trait_method_names: &trait_method_names.join(", "),
+                docs: self.formatter.fmt_docs(&trt.docs),
             }
             .render()
             .expect("Failed to render trait template"),
@@ -1746,6 +1759,7 @@ returnVal.option() ?: return null
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
             callback_params: &'d [CallbackParamInfo],
+            docs: String,
         }
 
         let variants = EnumVariants::new(ty);
@@ -1759,6 +1773,7 @@ returnVal.option() ?: return null
             companion_methods: companion_methods.as_ref(),
             native_methods: native_methods.as_ref(),
             callback_params: self.callback_params.as_ref(),
+            docs: self.formatter.fmt_docs(&ty.docs),
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
@@ -1942,6 +1957,7 @@ struct MethodTpl<'a> {
     return_expression: Cow<'a, str>,
     write_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
+    docs: String,
 }
 
 struct NativeMethodInfo {
@@ -1956,6 +1972,7 @@ struct TraitMethodInfo {
     native_output_type: String,
     return_modification: String,
     non_native_params_and_types: String,
+    docs: String,
 }
 
 #[derive(Template)]
@@ -1974,7 +1991,7 @@ struct CallbackParamInfo {
 mod test {
 
     use std::cell::RefCell;
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeSet, HashMap};
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
@@ -2025,7 +2042,10 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
-            let formatter = KotlinFormatter::new(&tcx, None);
+            let docs_urls = HashMap::new();
+            let docs_generator =
+                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+            let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
@@ -2060,6 +2080,7 @@ mod test {
                     i: i32,
                 }
 
+                /// Documentation for the struct
                 pub struct MyNativeStruct<'b> {
                     a: bool,
                     b: i8,
@@ -2069,6 +2090,7 @@ mod test {
                     f: i32,
                     g: u32,
                     h: i64,
+                    /// Documentation for the struct field `i`
                     i: u64,
                     j: DiplomatChar,
                     k: f32,
@@ -2108,7 +2130,10 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
-            let formatter = KotlinFormatter::new(&tcx, None);
+            let docs_urls = HashMap::new();
+            let docs_generator =
+                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+            let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
@@ -2157,7 +2182,10 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let eror_store = ErrorStore::default();
-            let formatter = KotlinFormatter::new(&tcx, None);
+            let docs_urls = HashMap::new();
+            let docs_generator =
+                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+            let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
@@ -2263,7 +2291,10 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let eror_store = ErrorStore::default();
-            let formatter = KotlinFormatter::new(&tcx, None);
+            let docs_urls = HashMap::new();
+            let docs_generator =
+                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+            let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
@@ -2311,7 +2342,10 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let eror_store = ErrorStore::default();
-            let formatter = KotlinFormatter::new(&tcx, None);
+            let docs_urls = HashMap::new();
+            let docs_generator =
+                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+            let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
@@ -2343,7 +2377,9 @@ mod test {
                     One,
                     Two,
                 }
+                /// Documentation for this trait!
                 pub trait TesterTrait {
+                    /// Trait function docs
                     fn test_trait_fn(&self, x: i32, y: i32, z: u8) -> i32;
                     fn test_void_trait_fn(&self);
                     fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
@@ -2371,7 +2407,9 @@ mod test {
         let mut all_traits = tcx.all_traits();
         let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
         let error_store = ErrorStore::default();
-        let formatter = KotlinFormatter::new(&tcx, None);
+        let docs_urls = HashMap::new();
+        let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+        let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
         let mut callback_params = Vec::new();
         let mut ty_gen_cx = TyGenContext {
             tcx: &tcx,
