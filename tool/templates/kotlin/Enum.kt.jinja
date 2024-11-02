@@ -19,6 +19,10 @@ internal interface {{type_name}}Lib: Library {
 {% endif -%}
 {% let variants_for_decl = variants -%}
 {%- let variants_for_native = variants -%}
+{% if !docs.is_empty() -%}
+/** {{docs}}
+*/
+{% endif -%}
 enum class {{type_name}}
 {%- match variants_for_decl -%}
 {%- when EnumVariants::NonContiguous with (variants) %}(val inner: Int) {

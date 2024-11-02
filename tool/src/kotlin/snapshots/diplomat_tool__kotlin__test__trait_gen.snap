@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2380
+assertion_line: 2424
 expression: result
 ---
 package dev.gigapixel.somelib
@@ -11,7 +11,11 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+/** Documentation for this trait!
+*/
 interface TesterTrait {
+    /** Trait function docs
+    */
     fun testTraitFn(x: Int, y: Int, z: UByte): Int;
     fun testVoidTraitFn(): Unit;
     fun testStructTraitFn(s: TraitTestingStruct): Int;

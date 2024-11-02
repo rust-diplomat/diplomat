@@ -461,6 +461,7 @@ impl<'ast> LoweringContext<'ast> {
             output: Box::new(output),
             name: Some(self.lower_ident(&name, "trait name")?),
             attrs: Some(attrs),
+            docs: Some(ast_trait_method.docs.clone()),
         })
     }
 
@@ -930,6 +931,7 @@ impl<'ast> LoweringContext<'ast> {
                     }),
                     name: None,
                     attrs: None,
+                    docs: None,
                 })))
             }
             ast::TypeName::Unit => {

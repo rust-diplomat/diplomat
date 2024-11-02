@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2064
+assertion_line: 2150
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -36,6 +36,8 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
     internal var g: Int = 0;
     @JvmField
     internal var h: Long = 0;
+    /** Documentation for the struct field `i`
+    */
     @JvmField
     internal var i: Long = 0;
     @JvmField
@@ -105,6 +107,8 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
         }
     }
 }
+/** Documentation for the struct
+*/
 class MyNativeStruct internal constructor (
     internal val nativeStruct: MyNativeStructNative,
     internal val bEdges: List<Any>

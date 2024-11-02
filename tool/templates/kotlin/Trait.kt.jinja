@@ -6,8 +6,16 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+{% if !docs.is_empty() -%}
+/** {{docs}}
+*/
+{%- endif %}
 interface {{trait_name}} {
     {%- for m in trait_methods %}
+    {%- if !m.docs.is_empty() %}
+    /** {{m.docs}}
+    */
+    {%- endif %}
     fun {{m.name}}({{m.non_native_params_and_types}}): {{m.output_type}};
     {%- endfor %}
 }

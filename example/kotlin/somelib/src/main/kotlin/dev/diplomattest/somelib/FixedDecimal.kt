@@ -12,6 +12,8 @@ internal interface FixedDecimalLib: Library {
     fun icu4x_FixedDecimal_multiply_pow10_mv1(handle: Pointer, power: Short): Unit
     fun icu4x_FixedDecimal_to_string_mv1(handle: Pointer, write: Pointer): ResultUnitUnit
 }
+/** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
+*/
 
 class FixedDecimal internal constructor (
     internal val handle: Pointer,
@@ -30,6 +32,8 @@ class FixedDecimal internal constructor (
         internal val libClass: Class<FixedDecimalLib> = FixedDecimalLib::class.java
         internal val lib: FixedDecimalLib = Native.load("somelib", libClass)
         
+        /** Construct an [`FixedDecimal`] from an integer.
+        */
         fun new_(v: Int): FixedDecimal {
             
             val returnVal = lib.icu4x_FixedDecimal_new_mv1(v);
@@ -41,12 +45,20 @@ class FixedDecimal internal constructor (
         }
     }
     
+    /** Multiply the [`FixedDecimal`] by a given power of ten.
+    *
+    *See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
+    */
     fun multiplyPow10(power: Short): Unit {
         
         val returnVal = lib.icu4x_FixedDecimal_multiply_pow10_mv1(handle, power);
         
     }
     
+    /** Format the [`FixedDecimal`] as a string.
+    *
+    *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
+    */
     fun toString_(): Res<String, Unit> {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.icu4x_FixedDecimal_to_string_mv1(handle, write);

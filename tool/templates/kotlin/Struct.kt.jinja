@@ -16,6 +16,10 @@ internal interface {{type_name}}Lib: Library {
 
 internal class {{type_name}}Native: Structure(), Structure.ByValue {
     {%- for field in fields %}
+    {% if !field.docs.is_empty() -%}
+    /** {{field.docs}}
+    */
+    {% endif -%}
     @JvmField
     internal var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
     {%- endfor %}
@@ -34,6 +38,10 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
     {%- endfor %}
 {% endif -%}
 
+{% if !docs.is_empty() -%}
+/** {{docs}}
+*/
+{% endif -%}
 class {{type_name}} internal constructor (
     {% if !fields.is_empty() -%}
     internal val nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},{% endif %}{% endif -%}

@@ -10,6 +10,10 @@ internal interface LocaleLib: Library {
     fun icu4x_Locale_destroy_mv1(handle: Pointer)
     fun icu4x_Locale_new_mv1(name: Slice): Pointer
 }
+/** An  Locale, capable of representing strings like `"en-US"`.
+*
+*See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
+*/
 
 class Locale internal constructor (
     internal val handle: Pointer,
@@ -28,6 +32,8 @@ class Locale internal constructor (
         internal val libClass: Class<LocaleLib> = LocaleLib::class.java
         internal val lib: LocaleLib = Native.load("somelib", libClass)
         
+        /** Construct an [`Locale`] from a locale identifier represented as a string.
+        */
         fun new_(name: String): Locale {
             val (nameMem, nameSlice) = PrimitiveArrayTools.readUtf8(name)
             
