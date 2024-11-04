@@ -10,6 +10,6 @@ test("String List", (t) => {
 });
 test("Float64Vec", (t) => {
     let input = [1, 2, 3, 4, 5];
-    let data = Float64Vec.newFromOwned(input);
-    t.is(data.borrow(), input);
+    let data = Float64Vec.newIsize(input);
+    t.deepEqual(data.borrow(), input);
 });

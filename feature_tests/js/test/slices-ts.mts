@@ -1,5 +1,6 @@
 import test from "ava";
 import { MyString, Float64Vec } from "diplomat-wasm-js-feature-tests";
+import wasm from "../api/diplomat-wasm.mjs";
 
 test("MyString functionality", (t) => {
   let str = MyString.new_("This is a test value.");
@@ -13,6 +14,6 @@ test("String List", (t) => {
 
 test("Float64Vec", (t) => {
   let input = [1, 2, 3, 4, 5];
-  let data = Float64Vec.newFromOwned(input);
-  t.is(data.borrow(), input);
+  let data = Float64Vec.newIsize(input);
+  t.deepEqual(data.borrow(), input);
 });
