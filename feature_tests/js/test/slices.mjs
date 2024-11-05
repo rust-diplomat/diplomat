@@ -10,3 +10,9 @@ test("String List", (t) => {
 	let str = MyString.newFromFirst(["This", "is", "a", "test."]);
 	t.is(str.str, "This");
 });
+
+test("Float64Vec", (t) => {
+    let input = [1, 2, 3, 4, 5];
+    let data = Float64Vec.newIsize(input);
+    t.deepEqual(data.borrow(), input);
+});
