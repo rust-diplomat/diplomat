@@ -45,7 +45,7 @@ export class {{type_name}} {
         if ("{{field.field_name}}" in struct_obj) {
             this.#{{ field.field_name }} = struct_obj.{{field.field_name}};
         } else {
-            throw new Error("Missing required type {{field.field_name}}.");
+            throw new Error("Missing required field {{field.field_name}}.");
         }
         {%~ endfor %}
     }
@@ -105,11 +105,17 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    #fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    static _fromFFI(internalConstructor, ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         {%- for field in fields %}
         const {{field.field_name}}Deref = {{field.c_to_js_deref}};
-        this.#{{field.field_name}} = {{field.c_to_js}};
+        structObj.{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
+
+        return new {{type_name}}(structObj);
     }
     
     {%- for l in lifetimes.all_lifetimes() %}
