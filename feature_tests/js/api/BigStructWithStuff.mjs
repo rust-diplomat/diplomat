@@ -47,17 +47,37 @@ export class BigStructWithStuff {
     set fifth(value) {
         this.#fifth = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("first" in struct_obj) {
+            this.#first = struct_obj.first;
         } else {
-            
-            this.#first = arguments[0];
-            this.#second = arguments[1];
-            this.#third = arguments[2];
-            this.#fourth = arguments[3];
-            this.#fifth = arguments[4];
+            throw new Error("Missing required type first.");
         }
+
+        if ("second" in struct_obj) {
+            this.#second = struct_obj.second;
+        } else {
+            throw new Error("Missing required type second.");
+        }
+
+        if ("third" in struct_obj) {
+            this.#third = struct_obj.third;
+        } else {
+            throw new Error("Missing required type third.");
+        }
+
+        if ("fourth" in struct_obj) {
+            this.#fourth = struct_obj.fourth;
+        } else {
+            throw new Error("Missing required type fourth.");
+        }
+
+        if ("fifth" in struct_obj) {
+            this.#fifth = struct_obj.fifth;
+        } else {
+            throw new Error("Missing required type fifth.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

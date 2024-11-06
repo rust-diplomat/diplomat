@@ -19,14 +19,19 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("i" in struct_obj) {
+            this.#i = struct_obj.i;
         } else {
-            
-            this.#i = arguments[0];
-            this.#j = arguments[1];
+            throw new Error("Missing required type i.");
         }
+
+        if ("j" in struct_obj) {
+            this.#j = struct_obj.j;
+        } else {
+            throw new Error("Missing required type j.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

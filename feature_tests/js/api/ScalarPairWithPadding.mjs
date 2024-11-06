@@ -22,14 +22,19 @@ export class ScalarPairWithPadding {
     set second(value) {
         this.#second = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("first" in struct_obj) {
+            this.#first = struct_obj.first;
         } else {
-            
-            this.#first = arguments[0];
-            this.#second = arguments[1];
+            throw new Error("Missing required type first.");
         }
+
+        if ("second" in struct_obj) {
+            this.#second = struct_obj.second;
+        } else {
+            throw new Error("Missing required type second.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

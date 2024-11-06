@@ -31,15 +31,25 @@ export class NestedBorrowedFields {
     set bounds2(value) {
         this.#bounds2 = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("fields" in struct_obj) {
+            this.#fields = struct_obj.fields;
         } else {
-            
-            this.#fields = arguments[0];
-            this.#bounds = arguments[1];
-            this.#bounds2 = arguments[2];
+            throw new Error("Missing required type fields.");
         }
+
+        if ("bounds" in struct_obj) {
+            this.#bounds = struct_obj.bounds;
+        } else {
+            throw new Error("Missing required type bounds.");
+        }
+
+        if ("bounds2" in struct_obj) {
+            this.#bounds2 = struct_obj.bounds2;
+        } else {
+            throw new Error("Missing required type bounds2.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

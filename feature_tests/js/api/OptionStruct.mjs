@@ -29,12 +29,34 @@ export class OptionStruct {
         return this.#d;
     }
     
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            console.error("OptionStruct is an out struct and can only be created internally.");
+    constructor(, internalConstructor) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionStruct is an out struct and can only be created internally.");
         }
+        if ("a" in struct_obj) {
+            this.#a = struct_obj.a;
+        } else {
+            throw new Error("Missing required type a.");
+        }
+
+        if ("b" in struct_obj) {
+            this.#b = struct_obj.b;
+        } else {
+            throw new Error("Missing required type b.");
+        }
+
+        if ("c" in struct_obj) {
+            this.#c = struct_obj.c;
+        } else {
+            throw new Error("Missing required type c.");
+        }
+
+        if ("d" in struct_obj) {
+            this.#d = struct_obj.d;
+        } else {
+            throw new Error("Missing required type d.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

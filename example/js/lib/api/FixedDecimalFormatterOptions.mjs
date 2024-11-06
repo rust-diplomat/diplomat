@@ -20,14 +20,19 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("groupingStrategy" in struct_obj) {
+            this.#groupingStrategy = struct_obj.groupingStrategy;
         } else {
-            
-            this.#groupingStrategy = arguments[0];
-            this.#someOtherConfig = arguments[1];
+            throw new Error("Missing required type groupingStrategy.");
         }
+
+        if ("someOtherConfig" in struct_obj) {
+            this.#someOtherConfig = struct_obj.someOtherConfig;
+        } else {
+            throw new Error("Missing required type someOtherConfig.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

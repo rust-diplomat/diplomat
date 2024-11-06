@@ -11,13 +11,13 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("bytes" in struct_obj) {
+            this.#bytes = struct_obj.bytes;
         } else {
-            
-            this.#bytes = arguments[0];
+            throw new Error("Missing required type bytes.");
         }
+
     }
 
     // Return this struct in FFI function friendly format.

@@ -61,19 +61,49 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("a" in struct_obj) {
+            this.#a = struct_obj.a;
         } else {
-            
-            this.#a = arguments[0];
-            this.#b = arguments[1];
-            this.#c = arguments[2];
-            this.#d = arguments[3];
-            this.#e = arguments[4];
-            this.#f = arguments[5];
-            this.#g = arguments[6];
+            throw new Error("Missing required type a.");
         }
+
+        if ("b" in struct_obj) {
+            this.#b = struct_obj.b;
+        } else {
+            throw new Error("Missing required type b.");
+        }
+
+        if ("c" in struct_obj) {
+            this.#c = struct_obj.c;
+        } else {
+            throw new Error("Missing required type c.");
+        }
+
+        if ("d" in struct_obj) {
+            this.#d = struct_obj.d;
+        } else {
+            throw new Error("Missing required type d.");
+        }
+
+        if ("e" in struct_obj) {
+            this.#e = struct_obj.e;
+        } else {
+            throw new Error("Missing required type e.");
+        }
+
+        if ("f" in struct_obj) {
+            this.#f = struct_obj.f;
+        } else {
+            throw new Error("Missing required type f.");
+        }
+
+        if ("g" in struct_obj) {
+            this.#g = struct_obj.g;
+        } else {
+            throw new Error("Missing required type g.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

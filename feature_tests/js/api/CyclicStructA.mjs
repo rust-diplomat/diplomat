@@ -12,13 +12,13 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("a" in struct_obj) {
+            this.#a = struct_obj.a;
         } else {
-            
-            this.#a = arguments[0];
+            throw new Error("Missing required type a.");
         }
+
     }
 
     // Return this struct in FFI function friendly format.

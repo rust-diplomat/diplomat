@@ -28,15 +28,25 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value) {
         this.#fieldC = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("fieldA" in struct_obj) {
+            this.#fieldA = struct_obj.fieldA;
         } else {
-            
-            this.#fieldA = arguments[0];
-            this.#fieldB = arguments[1];
-            this.#fieldC = arguments[2];
+            throw new Error("Missing required type fieldA.");
         }
+
+        if ("fieldB" in struct_obj) {
+            this.#fieldB = struct_obj.fieldB;
+        } else {
+            throw new Error("Missing required type fieldB.");
+        }
+
+        if ("fieldC" in struct_obj) {
+            this.#fieldC = struct_obj.fieldC;
+        } else {
+            throw new Error("Missing required type fieldC.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

@@ -20,14 +20,19 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("foo" in struct_obj) {
+            this.#foo = struct_obj.foo;
         } else {
-            
-            this.#foo = arguments[0];
-            this.#count = arguments[1];
+            throw new Error("Missing required type foo.");
         }
+
+        if ("count" in struct_obj) {
+            this.#count = struct_obj.count;
+        } else {
+            throw new Error("Missing required type count.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.

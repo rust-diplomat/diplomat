@@ -12,13 +12,13 @@ export class CyclicStructB {
     set field(value) {
         this.#field = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(struct_obj) {
+        if ("field" in struct_obj) {
+            this.#field = struct_obj.field;
         } else {
-            
-            this.#field = arguments[0];
+            throw new Error("Missing required type field.");
         }
+
     }
 
     // Return this struct in FFI function friendly format.
