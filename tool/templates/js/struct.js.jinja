@@ -2,6 +2,15 @@
 /** {{docs}}
 */
 {% endif -%}
+
+{% if typescript %}
+type {{type_name}}_Obj = {
+    {% for field in fields %}
+    {field.field_name}: {{field.js_type_name}};
+    {% endfor %}
+};
+{% endif %}
+
 export class {{type_name}} {
     {%- for field in fields %}
 
@@ -21,29 +30,27 @@ export class {{type_name}} {
 
     {%- if !(typescript && is_out) %}
     constructor(
-        {%- if typescript -%}
-        {%- for field in fields -%}
-        {{field.field_name}}: {{field.js_type_name}}{% if !loop.last %}, {% endif %}
-        {%- endfor -%}
+        {%- if !is_out -%} struct_obj {%- if typescript %} : {{type_name}}_Obj {%- endif -%}{%- endif -%}
+        {%- if !typescript %}, internalConstructor{% endif %}) {%- if typescript %};{% else %} {
+        
+        {%- if is_out %}
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}} is an out struct and can only be created internally.");
+        }
         {%- endif -%}
-        ) {%- if typescript %};{% else %} {
+
+        {%- for field in fields %}
+        if ("{{field.field_name}}" in struct_obj) {
+            this.#{{ field.field_name }} = struct_obj.{{field.field_name}};
+        } else {
+            throw new Error("Missing required type {{field.field_name}}.");
+        }
+        {%- endfor -%}
+        
         {% if !fields.is_empty() -%}
         if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
             this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
         }
-        {%- if !is_out %} else {
-            {% for field in fields %}
-            this.#{{ field.field_name }} = arguments[{{loop.index0}}];
-            {%- endfor %}
-        } {%- else %} else {
-            console.error("{{type_name}} is an out struct and can only be created internally.");
-        }
-        {%- endif -%}
-        {%- else if is_out -%}
-        if (!(arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor)) {
-            console.error("{{type_name}} is an out struct and can only be created internally.");
-        }
-        {%- endif %}
     }
     {%- endif -%}
     {%- endif %}
