@@ -32,19 +32,19 @@ export class OptionInputStruct {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required type a.");
+            throw new Error("Missing required field a.");
         }
 
         if ("b" in struct_obj) {
             this.#b = struct_obj.b;
         } else {
-            throw new Error("Missing required type b.");
+            throw new Error("Missing required field b.");
         }
 
         if ("c" in struct_obj) {
             this.#c = struct_obj.c;
         } else {
-            throw new Error("Missing required type c.");
+            throw new Error("Missing required field c.");
         }
 
     }
@@ -75,12 +75,18 @@ export class OptionInputStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionInputStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = ptr;
-        this.#a = diplomatRuntime.readOption(wasm, aDeref, 1, (wasm, offset) => { const deref = (new Uint8Array(wasm.memory.buffer, offset, 1))[0]; return deref });
+        structObj.a = diplomatRuntime.readOption(wasm, aDeref, 1, (wasm, offset) => { const deref = (new Uint8Array(wasm.memory.buffer, offset, 1))[0]; return deref });
         const bDeref = ptr + 4;
-        this.#b = diplomatRuntime.readOption(wasm, bDeref, 4, (wasm, offset) => { const deref = (new Uint32Array(wasm.memory.buffer, offset, 1))[0]; return deref });
+        structObj.b = diplomatRuntime.readOption(wasm, bDeref, 4, (wasm, offset) => { const deref = (new Uint32Array(wasm.memory.buffer, offset, 1))[0]; return deref });
         const cDeref = ptr + 12;
-        this.#c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
+        structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
+
+        return new OptionInputStruct(structObj);
     }
 }

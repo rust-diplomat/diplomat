@@ -15,7 +15,7 @@ export class BorrowedFieldsReturning {
         if ("bytes" in struct_obj) {
             this.#bytes = struct_obj.bytes;
         } else {
-            throw new Error("Missing required type bytes.");
+            throw new Error("Missing required field bytes.");
         }
 
     }
@@ -42,9 +42,15 @@ export class BorrowedFieldsReturning {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
-    #fromFFI(ptr, aEdges) {
+    static _fromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const bytesDeref = ptr;
-        this.#bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+        structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+
+        return new BorrowedFieldsReturning(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 

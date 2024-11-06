@@ -36,25 +36,25 @@ export class OptionStruct {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required type a.");
+            throw new Error("Missing required field a.");
         }
 
         if ("b" in struct_obj) {
             this.#b = struct_obj.b;
         } else {
-            throw new Error("Missing required type b.");
+            throw new Error("Missing required field b.");
         }
 
         if ("c" in struct_obj) {
             this.#c = struct_obj.c;
         } else {
-            throw new Error("Missing required type c.");
+            throw new Error("Missing required field c.");
         }
 
         if ("d" in struct_obj) {
             this.#d = struct_obj.d;
         } else {
-            throw new Error("Missing required type d.");
+            throw new Error("Missing required field d.");
         }
 
     }
@@ -86,14 +86,20 @@ export class OptionStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
-        this.#a = aDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, aDeref, []);
+        structObj.a = aDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, aDeref, []);
         const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
-        this.#b = bDeref === 0 ? null : new OptionOpaqueChar(diplomatRuntime.internalConstructor, bDeref, []);
+        structObj.b = bDeref === 0 ? null : new OptionOpaqueChar(diplomatRuntime.internalConstructor, bDeref, []);
         const cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        this.#c = cDeref;
+        structObj.c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
-        this.#d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
+        structObj.d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
+
+        return new OptionStruct(structObj);
     }
 }

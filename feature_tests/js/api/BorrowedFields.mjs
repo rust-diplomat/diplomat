@@ -32,19 +32,19 @@ export class BorrowedFields {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required type a.");
+            throw new Error("Missing required field a.");
         }
 
         if ("b" in struct_obj) {
             this.#b = struct_obj.b;
         } else {
-            throw new Error("Missing required type b.");
+            throw new Error("Missing required field b.");
         }
 
         if ("c" in struct_obj) {
             this.#c = struct_obj.c;
         } else {
-            throw new Error("Missing required type c.");
+            throw new Error("Missing required field c.");
         }
 
     }
@@ -73,13 +73,19 @@ export class BorrowedFields {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
-    #fromFFI(ptr, aEdges) {
+    static _fromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFields._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = ptr;
-        this.#a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
+        structObj.a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
         const bDeref = ptr + 8;
-        this.#b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
+        structObj.b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
         const cDeref = ptr + 16;
-        this.#c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
+        structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
+
+        return new BorrowedFields(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -105,7 +111,7 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
     
         try {
-            return new BorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
+            return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {

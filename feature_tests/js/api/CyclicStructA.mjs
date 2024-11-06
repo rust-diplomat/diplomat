@@ -16,7 +16,7 @@ export class CyclicStructA {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required type a.");
+            throw new Error("Missing required field a.");
         }
 
     }
@@ -45,9 +45,15 @@ export class CyclicStructA {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructA._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = ptr;
-        this.#a = new CyclicStructB(diplomatRuntime.internalConstructor, aDeref);
+        structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
+
+        return new CyclicStructA(structObj);
     }
 
     static getB() {
@@ -56,7 +62,7 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructB(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

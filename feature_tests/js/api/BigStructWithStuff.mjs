@@ -51,31 +51,31 @@ export class BigStructWithStuff {
         if ("first" in struct_obj) {
             this.#first = struct_obj.first;
         } else {
-            throw new Error("Missing required type first.");
+            throw new Error("Missing required field first.");
         }
 
         if ("second" in struct_obj) {
             this.#second = struct_obj.second;
         } else {
-            throw new Error("Missing required type second.");
+            throw new Error("Missing required field second.");
         }
 
         if ("third" in struct_obj) {
             this.#third = struct_obj.third;
         } else {
-            throw new Error("Missing required type third.");
+            throw new Error("Missing required field third.");
         }
 
         if ("fourth" in struct_obj) {
             this.#fourth = struct_obj.fourth;
         } else {
-            throw new Error("Missing required type fourth.");
+            throw new Error("Missing required field fourth.");
         }
 
         if ("fifth" in struct_obj) {
             this.#fifth = struct_obj.fifth;
         } else {
-            throw new Error("Missing required type fifth.");
+            throw new Error("Missing required field fifth.");
         }
 
     }
@@ -108,17 +108,23 @@ export class BigStructWithStuff {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const firstDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#first = firstDeref;
+        structObj.first = firstDeref;
         const secondDeref = (new Uint16Array(wasm.memory.buffer, ptr + 2, 1))[0];
-        this.#second = secondDeref;
+        structObj.second = secondDeref;
         const thirdDeref = (new Uint16Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#third = thirdDeref;
+        structObj.third = thirdDeref;
         const fourthDeref = ptr + 8;
-        this.#fourth = new ScalarPairWithPadding(diplomatRuntime.internalConstructor, fourthDeref);
+        structObj.fourth = ScalarPairWithPadding._fromFFI(diplomatRuntime.internalConstructor, fourthDeref);
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
-        this.#fifth = fifthDeref;
+        structObj.fifth = fifthDeref;
+
+        return new BigStructWithStuff(structObj);
     }
 
     assertValue(extraVal) {

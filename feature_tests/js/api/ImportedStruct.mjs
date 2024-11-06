@@ -24,13 +24,13 @@ export class ImportedStruct {
         if ("foo" in struct_obj) {
             this.#foo = struct_obj.foo;
         } else {
-            throw new Error("Missing required type foo.");
+            throw new Error("Missing required field foo.");
         }
 
         if ("count" in struct_obj) {
             this.#count = struct_obj.count;
         } else {
-            throw new Error("Missing required type count.");
+            throw new Error("Missing required field count.");
         }
 
     }
@@ -65,10 +65,16 @@ export class ImportedStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ImportedStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        this.#foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
+        structObj.foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#count = countDeref;
+        structObj.count = countDeref;
+
+        return new ImportedStruct(structObj);
     }
 }

@@ -23,13 +23,13 @@ export class ErrorStruct {
         if ("i" in struct_obj) {
             this.#i = struct_obj.i;
         } else {
-            throw new Error("Missing required type i.");
+            throw new Error("Missing required field i.");
         }
 
         if ("j" in struct_obj) {
             this.#j = struct_obj.j;
         } else {
-            throw new Error("Missing required type j.");
+            throw new Error("Missing required field j.");
         }
 
     }
@@ -59,10 +59,16 @@ export class ErrorStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ErrorStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#i = iDeref;
+        structObj.i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#j = jDeref;
+        structObj.j = jDeref;
+
+        return new ErrorStruct(structObj);
     }
 }

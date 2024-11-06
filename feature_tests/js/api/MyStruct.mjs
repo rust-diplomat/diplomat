@@ -65,43 +65,43 @@ export class MyStruct {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required type a.");
+            throw new Error("Missing required field a.");
         }
 
         if ("b" in struct_obj) {
             this.#b = struct_obj.b;
         } else {
-            throw new Error("Missing required type b.");
+            throw new Error("Missing required field b.");
         }
 
         if ("c" in struct_obj) {
             this.#c = struct_obj.c;
         } else {
-            throw new Error("Missing required type c.");
+            throw new Error("Missing required field c.");
         }
 
         if ("d" in struct_obj) {
             this.#d = struct_obj.d;
         } else {
-            throw new Error("Missing required type d.");
+            throw new Error("Missing required field d.");
         }
 
         if ("e" in struct_obj) {
             this.#e = struct_obj.e;
         } else {
-            throw new Error("Missing required type e.");
+            throw new Error("Missing required field e.");
         }
 
         if ("f" in struct_obj) {
             this.#f = struct_obj.f;
         } else {
-            throw new Error("Missing required type f.");
+            throw new Error("Missing required field f.");
         }
 
         if ("g" in struct_obj) {
             this.#g = struct_obj.g;
         } else {
-            throw new Error("Missing required type g.");
+            throw new Error("Missing required field g.");
         }
 
     }
@@ -136,21 +136,27 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("MyStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#a = aDeref;
+        structObj.a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
-        this.#b = bDeref;
+        structObj.b = bDeref;
         const cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
-        this.#c = cDeref;
+        structObj.c = cDeref;
         const dDeref = (new BigUint64Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        this.#d = dDeref;
+        structObj.d = dDeref;
         const eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
-        this.#e = eDeref;
+        structObj.e = eDeref;
         const fDeref = (new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0];
-        this.#f = fDeref;
+        structObj.f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
-        this.#g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
+        structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
+
+        return new MyStruct(structObj);
     }
 
     static new_() {
@@ -159,7 +165,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return new MyStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -186,7 +192,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                const cause = MyZst._fromFFI(diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -200,7 +206,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                const cause = MyZst._fromFFI(diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
