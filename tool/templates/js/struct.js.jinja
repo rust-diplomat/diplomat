@@ -3,13 +3,14 @@
 */
 {% endif -%}
 
-{% if typescript %}
+{%- if typescript -%}
 type {{type_name}}_Obj = {
-    {% for field in fields %}
-    {field.field_name}: {{field.js_type_name}};
-    {% endfor %}
+    {%- for field in fields %}
+    {{field.field_name}}: {{field.js_type_name}};
+    {%- endfor %}
 };
-{% endif %}
+
+{% endif -%}
 
 export class {{type_name}} {
     {%- for field in fields %}
@@ -31,7 +32,8 @@ export class {{type_name}} {
     {%- if !(typescript && is_out) %}
     constructor(
         {%- if !is_out -%} struct_obj {%- if typescript %} : {{type_name}}_Obj {%- endif -%}{%- endif -%}
-        {%- if !typescript %}, internalConstructor{% endif %}) {%- if typescript %};{% else %} {
+        {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+    ) {%- if typescript %};{% else %} {
         
         {%- if is_out %}
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
@@ -45,12 +47,7 @@ export class {{type_name}} {
         } else {
             throw new Error("Missing required type {{field.field_name}}.");
         }
-        {%- endfor -%}
-        
-        {% if !fields.is_empty() -%}
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        }
+        {%~ endfor %}
     }
     {%- endif -%}
     {%- endif %}
