@@ -3,7 +3,7 @@
 */
 {% endif -%}
 
-{%- if typescript -%}
+{%- if typescript && !is_out -%}
 type {{type_name}}_Obj = {
     {%- for field in fields %}
     {{field.field_name}}: {{field.js_type_name}};
@@ -30,8 +30,8 @@ export class {{type_name}} {
     {%- endfor %}
 
     {%- if !(typescript && is_out) %}
-    constructor(
-        {%- if !is_out -%} struct_obj {%- if typescript %} : {{type_name}}_Obj {%- endif -%}{%- endif -%}
+    constructor(struct_obj
+        {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         

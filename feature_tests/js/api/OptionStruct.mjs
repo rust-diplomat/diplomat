@@ -29,7 +29,7 @@ export class OptionStruct {
         return this.#d;
     }
     
-    constructor(, internalConstructor) {
+    constructor(struct_obj, internalConstructor) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionStruct is an out struct and can only be created internally.");
         }
