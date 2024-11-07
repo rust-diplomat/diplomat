@@ -45,7 +45,11 @@ export class {{type_name}} {
         if ("{{field.field_name}}" in struct_obj) {
             this.#{{ field.field_name }} = struct_obj.{{field.field_name}};
         } else {
+            {%- if field.is_optional %}
+            this.#{{ field.field_name }} = null;
+            {%- else %}
             throw new Error("Missing required field {{field.field_name}}.");
+            {%- endif %}
         }
         {%~ endfor %}
     }
