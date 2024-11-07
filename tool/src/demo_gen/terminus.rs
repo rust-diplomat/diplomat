@@ -446,7 +446,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
         struct StructInfo {
             type_name: String,
+            fields: Vec<String>,
         }
+
+        let mut fields = Vec::new();
 
         for field in st.fields.iter() {
             self.evaluate_param(
@@ -455,10 +458,12 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 &mut child,
                 field.attrs.demo_attrs.clone(),
             );
+            fields.push(field.name.to_string());
         }
 
         child.method_js = StructInfo {
             type_name: type_name.clone(),
+            fields
         }
         .render()
         .unwrap();
