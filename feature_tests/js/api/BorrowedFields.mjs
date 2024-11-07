@@ -89,7 +89,7 @@ export class BorrowedFields {
         const cDeref = ptr + 16;
         structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
 
-        return new BorrowedFields(structObj);
+        return new BorrowedFields(structObj, internalConstructor);
     }
 
     // Return all fields corresponding to lifetime `'a` 

@@ -79,7 +79,7 @@ export class FixedDecimalFormatterOptions {
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         structObj.someOtherConfig = someOtherConfigDeref;
 
-        return new FixedDecimalFormatterOptions(structObj);
+        return new FixedDecimalFormatterOptions(structObj, internalConstructor);
     }
 
     static default_() {

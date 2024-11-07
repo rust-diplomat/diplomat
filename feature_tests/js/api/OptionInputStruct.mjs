@@ -91,6 +91,6 @@ export class OptionInputStruct {
         const cDeref = ptr + 12;
         structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
 
-        return new OptionInputStruct(structObj);
+        return new OptionInputStruct(structObj, internalConstructor);
     }
 }

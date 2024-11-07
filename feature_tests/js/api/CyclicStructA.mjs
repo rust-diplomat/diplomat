@@ -57,7 +57,7 @@ export class CyclicStructA {
         const aDeref = ptr;
         structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return new CyclicStructA(structObj);
+        return new CyclicStructA(structObj, internalConstructor);
     }
 
     static getB() {

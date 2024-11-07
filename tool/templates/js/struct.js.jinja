@@ -122,7 +122,7 @@ export class {{type_name}} {
         structObj.{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
 
-        return new {{type_name}}(structObj);
+        return new {{type_name}}(structObj, internalConstructor);
     }
     
     {%- for l in lifetimes.all_lifetimes() %}

@@ -104,6 +104,6 @@ export class OptionStruct {
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
         structObj.d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
 
-        return new OptionStruct(structObj);
+        return new OptionStruct(structObj, internalConstructor);
     }
 }

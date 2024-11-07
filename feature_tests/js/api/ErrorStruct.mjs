@@ -73,6 +73,6 @@ export class ErrorStruct {
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.j = jDeref;
 
-        return new ErrorStruct(structObj);
+        return new ErrorStruct(structObj, internalConstructor);
     }
 }

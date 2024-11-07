@@ -57,7 +57,7 @@ export class CyclicStructB {
         const fieldDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.field = fieldDeref;
 
-        return new CyclicStructB(structObj);
+        return new CyclicStructB(structObj, internalConstructor);
     }
 
     static getA() {

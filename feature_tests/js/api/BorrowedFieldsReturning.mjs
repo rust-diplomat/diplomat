@@ -54,7 +54,7 @@ export class BorrowedFieldsReturning {
         const bytesDeref = ptr;
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
 
-        return new BorrowedFieldsReturning(structObj);
+        return new BorrowedFieldsReturning(structObj, internalConstructor);
     }
 
     // Return all fields corresponding to lifetime `'a` 

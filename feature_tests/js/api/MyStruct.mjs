@@ -160,7 +160,7 @@ export class MyStruct {
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
 
-        return new MyStruct(structObj);
+        return new MyStruct(structObj, internalConstructor);
     }
 
     static new_() {

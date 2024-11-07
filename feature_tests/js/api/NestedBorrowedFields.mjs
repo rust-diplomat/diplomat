@@ -94,7 +94,7 @@ export class NestedBorrowedFields {
         const bounds2Deref = ptr + 48;
         structObj.bounds2 = BorrowedFieldsWithBounds._fromFFI(diplomatRuntime.internalConstructor, bounds2Deref, zEdges, zEdges, zEdges);
 
-        return new NestedBorrowedFields(structObj);
+        return new NestedBorrowedFields(structObj, internalConstructor);
     }
 
     // Return all fields corresponding to lifetime `'x` 

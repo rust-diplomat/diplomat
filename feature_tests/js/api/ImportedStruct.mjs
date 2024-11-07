@@ -79,6 +79,6 @@ export class ImportedStruct {
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.count = countDeref;
 
-        return new ImportedStruct(structObj);
+        return new ImportedStruct(structObj, internalConstructor);
     }
 }

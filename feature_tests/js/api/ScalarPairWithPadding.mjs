@@ -81,7 +81,7 @@ export class ScalarPairWithPadding {
         const secondDeref = (new Uint32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.second = secondDeref;
 
-        return new ScalarPairWithPadding(structObj);
+        return new ScalarPairWithPadding(structObj, internalConstructor);
     }
 
     assertValue() {

@@ -128,7 +128,7 @@ export class BigStructWithStuff {
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
         structObj.fifth = fifthDeref;
 
-        return new BigStructWithStuff(structObj);
+        return new BigStructWithStuff(structObj, internalConstructor);
     }
 
     assertValue(extraVal) {
