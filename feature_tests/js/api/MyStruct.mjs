@@ -196,7 +196,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = MyZst._fromFFI(diplomatRuntime.internalConstructor);
+                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -210,7 +210,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = MyZst._fromFFI(diplomatRuntime.internalConstructor);
+                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
