@@ -29,34 +29,34 @@ export class OptionStruct {
         return this.#d;
     }
     
-    constructor(struct_obj, internalConstructor) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj, internalConstructor) {
+        if (typeof structObj !== "object") {
             throw new Error("OptionStruct's constructor takes an object of OptionStruct's fields.");
         }
 
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionStruct is an out struct and can only be created internally.");
         }
-        if ("a" in struct_obj) {
-            this.#a = struct_obj.a;
+        if ("a" in structObj) {
+            this.#a = structObj.a;
         } else {
             throw new Error("Missing required field a.");
         }
 
-        if ("b" in struct_obj) {
-            this.#b = struct_obj.b;
+        if ("b" in structObj) {
+            this.#b = structObj.b;
         } else {
             throw new Error("Missing required field b.");
         }
 
-        if ("c" in struct_obj) {
-            this.#c = struct_obj.c;
+        if ("c" in structObj) {
+            this.#c = structObj.c;
         } else {
             throw new Error("Missing required field c.");
         }
 
-        if ("d" in struct_obj) {
-            this.#d = struct_obj.d;
+        if ("d" in structObj) {
+            this.#d = structObj.d;
         } else {
             throw new Error("Missing required field d.");
         }

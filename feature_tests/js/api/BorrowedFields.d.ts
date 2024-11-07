@@ -18,7 +18,7 @@ export class BorrowedFields {
 
     get c() : string;
     set c(value: string); 
-    constructor(struct_obj : BorrowedFields_Obj);
+    constructor(structObj : BorrowedFields_Obj);
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }

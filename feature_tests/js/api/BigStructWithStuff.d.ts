@@ -29,7 +29,7 @@ export class BigStructWithStuff {
 
     get fifth() : number;
     set fifth(value: number); 
-    constructor(struct_obj : BigStructWithStuff_Obj);
+    constructor(structObj : BigStructWithStuff_Obj);
 
     assertValue(extraVal: number): void;
 }

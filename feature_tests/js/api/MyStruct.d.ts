@@ -35,7 +35,7 @@ export class MyStruct {
 
     get g() : MyEnum;
     set g(value: MyEnum); 
-    constructor(struct_obj : MyStruct_Obj);
+    constructor(structObj : MyStruct_Obj);
 
     static new_(): MyStruct;
 

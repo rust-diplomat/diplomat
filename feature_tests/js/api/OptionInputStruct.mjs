@@ -28,25 +28,25 @@ export class OptionInputStruct {
     set c(value) {
         this.#c = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("OptionInputStruct's constructor takes an object of OptionInputStruct's fields.");
         }
 
-        if ("a" in struct_obj) {
-            this.#a = struct_obj.a;
+        if ("a" in structObj) {
+            this.#a = structObj.a;
         } else {
             this.#a = null;
         }
 
-        if ("b" in struct_obj) {
-            this.#b = struct_obj.b;
+        if ("b" in structObj) {
+            this.#b = structObj.b;
         } else {
             this.#b = null;
         }
 
-        if ("c" in struct_obj) {
-            this.#c = struct_obj.c;
+        if ("c" in structObj) {
+            this.#c = structObj.c;
         } else {
             this.#c = null;
         }

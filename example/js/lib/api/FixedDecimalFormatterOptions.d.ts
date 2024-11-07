@@ -14,7 +14,7 @@ export class FixedDecimalFormatterOptions {
 
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
-    constructor(struct_obj : FixedDecimalFormatterOptions_Obj);
+    constructor(structObj : FixedDecimalFormatterOptions_Obj);
 
     static default_(): FixedDecimalFormatterOptions;
 }

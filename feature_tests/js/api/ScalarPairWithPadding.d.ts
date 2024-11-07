@@ -16,7 +16,7 @@ export class ScalarPairWithPadding {
 
     get second() : number;
     set second(value: number); 
-    constructor(struct_obj : ScalarPairWithPadding_Obj);
+    constructor(structObj : ScalarPairWithPadding_Obj);
 
     assertValue(): void;
 }

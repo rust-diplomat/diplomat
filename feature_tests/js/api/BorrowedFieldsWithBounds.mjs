@@ -28,25 +28,25 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value) {
         this.#fieldC = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsWithBounds's constructor takes an object of BorrowedFieldsWithBounds's fields.");
         }
 
-        if ("fieldA" in struct_obj) {
-            this.#fieldA = struct_obj.fieldA;
+        if ("fieldA" in structObj) {
+            this.#fieldA = structObj.fieldA;
         } else {
             throw new Error("Missing required field fieldA.");
         }
 
-        if ("fieldB" in struct_obj) {
-            this.#fieldB = struct_obj.fieldB;
+        if ("fieldB" in structObj) {
+            this.#fieldB = structObj.fieldB;
         } else {
             throw new Error("Missing required field fieldB.");
         }
 
-        if ("fieldC" in struct_obj) {
-            this.#fieldC = struct_obj.fieldC;
+        if ("fieldC" in structObj) {
+            this.#fieldC = structObj.fieldC;
         } else {
             throw new Error("Missing required field fieldC.");
         }

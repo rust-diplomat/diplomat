@@ -12,13 +12,13 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
         }
 
-        if ("a" in struct_obj) {
-            this.#a = struct_obj.a;
+        if ("a" in structObj) {
+            this.#a = structObj.a;
         } else {
             throw new Error("Missing required field a.");
         }

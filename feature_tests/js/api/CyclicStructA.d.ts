@@ -10,7 +10,7 @@ export class CyclicStructA {
 
     get a() : CyclicStructB;
     set a(value: CyclicStructB); 
-    constructor(struct_obj : CyclicStructA_Obj);
+    constructor(structObj : CyclicStructA_Obj);
 
     static getB(): CyclicStructB;
 }

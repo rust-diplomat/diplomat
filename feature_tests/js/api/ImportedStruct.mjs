@@ -20,19 +20,19 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("ImportedStruct's constructor takes an object of ImportedStruct's fields.");
         }
 
-        if ("foo" in struct_obj) {
-            this.#foo = struct_obj.foo;
+        if ("foo" in structObj) {
+            this.#foo = structObj.foo;
         } else {
             throw new Error("Missing required field foo.");
         }
 
-        if ("count" in struct_obj) {
-            this.#count = struct_obj.count;
+        if ("count" in structObj) {
+            this.#count = structObj.count;
         } else {
             throw new Error("Missing required field count.");
         }

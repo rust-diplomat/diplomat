@@ -18,5 +18,5 @@ export class OptionInputStruct {
 
     get c() : OptionEnum | null;
     set c(value: OptionEnum | null); 
-    constructor(struct_obj : OptionInputStruct_Obj);
+    constructor(structObj : OptionInputStruct_Obj);
 }

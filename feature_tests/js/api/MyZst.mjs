@@ -3,8 +3,8 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class MyZst {
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");
         }
 

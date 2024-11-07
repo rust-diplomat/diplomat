@@ -14,5 +14,5 @@ export class ImportedStruct {
 
     get count() : number;
     set count(value: number); 
-    constructor(struct_obj : ImportedStruct_Obj);
+    constructor(structObj : ImportedStruct_Obj);
 }

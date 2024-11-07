@@ -13,5 +13,5 @@ export class ErrorStruct {
 
     get j() : number;
     set j(value: number); 
-    constructor(struct_obj : ErrorStruct_Obj);
+    constructor(structObj : ErrorStruct_Obj);
 }

@@ -61,49 +61,49 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
         }
 
-        if ("a" in struct_obj) {
-            this.#a = struct_obj.a;
+        if ("a" in structObj) {
+            this.#a = structObj.a;
         } else {
             throw new Error("Missing required field a.");
         }
 
-        if ("b" in struct_obj) {
-            this.#b = struct_obj.b;
+        if ("b" in structObj) {
+            this.#b = structObj.b;
         } else {
             throw new Error("Missing required field b.");
         }
 
-        if ("c" in struct_obj) {
-            this.#c = struct_obj.c;
+        if ("c" in structObj) {
+            this.#c = structObj.c;
         } else {
             throw new Error("Missing required field c.");
         }
 
-        if ("d" in struct_obj) {
-            this.#d = struct_obj.d;
+        if ("d" in structObj) {
+            this.#d = structObj.d;
         } else {
             throw new Error("Missing required field d.");
         }
 
-        if ("e" in struct_obj) {
-            this.#e = struct_obj.e;
+        if ("e" in structObj) {
+            this.#e = structObj.e;
         } else {
             throw new Error("Missing required field e.");
         }
 
-        if ("f" in struct_obj) {
-            this.#f = struct_obj.f;
+        if ("f" in structObj) {
+            this.#f = structObj.f;
         } else {
             throw new Error("Missing required field f.");
         }
 
-        if ("g" in struct_obj) {
-            this.#g = struct_obj.g;
+        if ("g" in structObj) {
+            this.#g = structObj.g;
         } else {
             throw new Error("Missing required field g.");
         }

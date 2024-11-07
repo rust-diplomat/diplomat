@@ -9,5 +9,5 @@ export class BorrowedFieldsReturning {
 
     get bytes() : string;
     set bytes(value: string); 
-    constructor(struct_obj : BorrowedFieldsReturning_Obj);
+    constructor(structObj : BorrowedFieldsReturning_Obj);
 }

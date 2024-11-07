@@ -19,19 +19,19 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
         }
 
-        if ("i" in struct_obj) {
-            this.#i = struct_obj.i;
+        if ("i" in structObj) {
+            this.#i = structObj.i;
         } else {
             throw new Error("Missing required field i.");
         }
 
-        if ("j" in struct_obj) {
-            this.#j = struct_obj.j;
+        if ("j" in structObj) {
+            this.#j = structObj.j;
         } else {
             throw new Error("Missing required field j.");
         }

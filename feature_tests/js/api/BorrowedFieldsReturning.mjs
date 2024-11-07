@@ -11,13 +11,13 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
         }
 
-        if ("bytes" in struct_obj) {
-            this.#bytes = struct_obj.bytes;
+        if ("bytes" in structObj) {
+            this.#bytes = structObj.bytes;
         } else {
             throw new Error("Missing required field bytes.");
         }

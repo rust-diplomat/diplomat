@@ -31,25 +31,25 @@ export class NestedBorrowedFields {
     set bounds2(value) {
         this.#bounds2 = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("NestedBorrowedFields's constructor takes an object of NestedBorrowedFields's fields.");
         }
 
-        if ("fields" in struct_obj) {
-            this.#fields = struct_obj.fields;
+        if ("fields" in structObj) {
+            this.#fields = structObj.fields;
         } else {
             throw new Error("Missing required field fields.");
         }
 
-        if ("bounds" in struct_obj) {
-            this.#bounds = struct_obj.bounds;
+        if ("bounds" in structObj) {
+            this.#bounds = structObj.bounds;
         } else {
             throw new Error("Missing required field bounds.");
         }
 
-        if ("bounds2" in struct_obj) {
-            this.#bounds2 = struct_obj.bounds2;
+        if ("bounds2" in structObj) {
+            this.#bounds2 = structObj.bounds2;
         } else {
             throw new Error("Missing required field bounds2.");
         }

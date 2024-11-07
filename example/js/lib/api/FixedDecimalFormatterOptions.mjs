@@ -20,19 +20,19 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");
         }
 
-        if ("groupingStrategy" in struct_obj) {
-            this.#groupingStrategy = struct_obj.groupingStrategy;
+        if ("groupingStrategy" in structObj) {
+            this.#groupingStrategy = structObj.groupingStrategy;
         } else {
             throw new Error("Missing required field groupingStrategy.");
         }
 
-        if ("someOtherConfig" in struct_obj) {
-            this.#someOtherConfig = struct_obj.someOtherConfig;
+        if ("someOtherConfig" in structObj) {
+            this.#someOtherConfig = structObj.someOtherConfig;
         } else {
             throw new Error("Missing required field someOtherConfig.");
         }

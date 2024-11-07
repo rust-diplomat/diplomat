@@ -21,7 +21,7 @@ export class NestedBorrowedFields {
 
     get bounds2() : BorrowedFieldsWithBounds;
     set bounds2(value: BorrowedFieldsWithBounds); 
-    constructor(struct_obj : NestedBorrowedFields_Obj);
+    constructor(structObj : NestedBorrowedFields_Obj);
 
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
 }

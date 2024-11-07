@@ -5,5 +5,5 @@ type MyZst_Obj = {
 };
 
 export class MyZst {
-    constructor(struct_obj : MyZst_Obj);
+    constructor(structObj : MyZst_Obj);
 }

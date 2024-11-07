@@ -22,19 +22,19 @@ export class ScalarPairWithPadding {
     set second(value) {
         this.#second = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");
         }
 
-        if ("first" in struct_obj) {
-            this.#first = struct_obj.first;
+        if ("first" in structObj) {
+            this.#first = structObj.first;
         } else {
             throw new Error("Missing required field first.");
         }
 
-        if ("second" in struct_obj) {
-            this.#second = struct_obj.second;
+        if ("second" in structObj) {
+            this.#second = structObj.second;
         } else {
             throw new Error("Missing required field second.");
         }

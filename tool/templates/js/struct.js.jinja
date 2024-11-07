@@ -30,11 +30,11 @@ export class {{type_name}} {
     {%- endfor %}
 
     {%- if !(typescript && is_out) %}
-    constructor(struct_obj
+    constructor(structObj
         {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
-        if (typeof struct_obj !== "object") {
+        if (typeof structObj !== "object") {
             throw new Error("{{type_name}}'s constructor takes an object of {{type_name}}'s fields.");
         }
         
@@ -45,8 +45,8 @@ export class {{type_name}} {
         {%- endif -%}
 
         {%- for field in fields %}
-        if ("{{field.field_name}}" in struct_obj) {
-            this.#{{ field.field_name }} = struct_obj.{{field.field_name}};
+        if ("{{field.field_name}}" in structObj) {
+            this.#{{ field.field_name }} = structObj.{{field.field_name}};
         } else {
             {%- if field.is_optional %}
             this.#{{ field.field_name }} = null;

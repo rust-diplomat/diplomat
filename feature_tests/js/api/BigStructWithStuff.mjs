@@ -47,37 +47,37 @@ export class BigStructWithStuff {
     set fifth(value) {
         this.#fifth = value;
     }
-    constructor(struct_obj) {
-        if (typeof struct_obj !== "object") {
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
             throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
         }
 
-        if ("first" in struct_obj) {
-            this.#first = struct_obj.first;
+        if ("first" in structObj) {
+            this.#first = structObj.first;
         } else {
             throw new Error("Missing required field first.");
         }
 
-        if ("second" in struct_obj) {
-            this.#second = struct_obj.second;
+        if ("second" in structObj) {
+            this.#second = structObj.second;
         } else {
             throw new Error("Missing required field second.");
         }
 
-        if ("third" in struct_obj) {
-            this.#third = struct_obj.third;
+        if ("third" in structObj) {
+            this.#third = structObj.third;
         } else {
             throw new Error("Missing required field third.");
         }
 
-        if ("fourth" in struct_obj) {
-            this.#fourth = struct_obj.fourth;
+        if ("fourth" in structObj) {
+            this.#fourth = structObj.fourth;
         } else {
             throw new Error("Missing required field fourth.");
         }
 
-        if ("fifth" in struct_obj) {
-            this.#fifth = struct_obj.fifth;
+        if ("fifth" in structObj) {
+            this.#fifth = structObj.fifth;
         } else {
             throw new Error("Missing required field fifth.");
         }
