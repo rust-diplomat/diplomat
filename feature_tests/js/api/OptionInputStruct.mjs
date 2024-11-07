@@ -32,19 +32,19 @@ export class OptionInputStruct {
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {
-            throw new Error("Missing required field a.");
+            this.#a = null;
         }
 
         if ("b" in struct_obj) {
             this.#b = struct_obj.b;
         } else {
-            throw new Error("Missing required field b.");
+            this.#b = null;
         }
 
         if ("c" in struct_obj) {
             this.#c = struct_obj.c;
         } else {
-            throw new Error("Missing required field c.");
+            this.#c = null;
         }
 
     }
