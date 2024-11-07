@@ -458,11 +458,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 &mut child,
                 field.attrs.demo_attrs.clone(),
             );
-            fields.push(
-                self.formatter
-                    .fmt_param_name(field.name.as_ref())
-                    .into(),
-            );
+            fields.push(self.formatter.fmt_param_name(field.name.as_ref()).into());
         }
 
         child.method_js = StructInfo {
