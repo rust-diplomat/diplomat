@@ -460,7 +460,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             );
             fields.push(
                 self.formatter
-                    .fmt_param_name(&field.name.to_string())
+                    .fmt_param_name(field.name.as_ref())
                     .into(),
             );
         }

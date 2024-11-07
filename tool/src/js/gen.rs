@@ -181,10 +181,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
-            let is_option = match &field.ty {
-                hir::Type::DiplomatOption(..) => true,
-                _ => false
-            };
+            let is_option = matches!(&field.ty, hir::Type::DiplomatOption(..));
 
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
