@@ -38,7 +38,7 @@ export class {{type_name}} {
             throw new Error("{{type_name}}'s constructor takes an object of {{type_name}}'s fields.");
         }
         
-        {%- if is_out %}
+        {%~ if is_out %}
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}} is an out struct and can only be created internally.");
         }

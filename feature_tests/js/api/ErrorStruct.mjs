@@ -20,6 +20,10 @@ export class ErrorStruct {
         this.#j = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
+        }
+
         if ("i" in struct_obj) {
             this.#i = struct_obj.i;
         } else {

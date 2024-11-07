@@ -23,6 +23,10 @@ export class ScalarPairWithPadding {
         this.#second = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");
+        }
+
         if ("first" in struct_obj) {
             this.#first = struct_obj.first;
         } else {

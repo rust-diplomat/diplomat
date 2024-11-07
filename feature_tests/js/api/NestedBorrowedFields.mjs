@@ -32,6 +32,10 @@ export class NestedBorrowedFields {
         this.#bounds2 = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("NestedBorrowedFields's constructor takes an object of NestedBorrowedFields's fields.");
+        }
+
         if ("fields" in struct_obj) {
             this.#fields = struct_obj.fields;
         } else {

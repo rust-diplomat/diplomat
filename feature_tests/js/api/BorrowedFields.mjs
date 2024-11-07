@@ -29,6 +29,10 @@ export class BorrowedFields {
         this.#c = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("BorrowedFields's constructor takes an object of BorrowedFields's fields.");
+        }
+
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {

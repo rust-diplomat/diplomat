@@ -29,6 +29,10 @@ export class BorrowedFieldsWithBounds {
         this.#fieldC = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("BorrowedFieldsWithBounds's constructor takes an object of BorrowedFieldsWithBounds's fields.");
+        }
+
         if ("fieldA" in struct_obj) {
             this.#fieldA = struct_obj.fieldA;
         } else {

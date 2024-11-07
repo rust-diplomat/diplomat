@@ -48,6 +48,10 @@ export class BigStructWithStuff {
         this.#fifth = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
+        }
+
         if ("first" in struct_obj) {
             this.#first = struct_obj.first;
         } else {

@@ -13,6 +13,10 @@ export class CyclicStructB {
         this.#field = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("CyclicStructB's constructor takes an object of CyclicStructB's fields.");
+        }
+
         if ("field" in struct_obj) {
             this.#field = struct_obj.field;
         } else {

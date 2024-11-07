@@ -21,6 +21,10 @@ export class ImportedStruct {
         this.#count = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("ImportedStruct's constructor takes an object of ImportedStruct's fields.");
+        }
+
         if ("foo" in struct_obj) {
             this.#foo = struct_obj.foo;
         } else {

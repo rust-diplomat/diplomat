@@ -29,6 +29,10 @@ export class OptionInputStruct {
         this.#c = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("OptionInputStruct's constructor takes an object of OptionInputStruct's fields.");
+        }
+
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {

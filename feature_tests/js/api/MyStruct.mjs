@@ -62,6 +62,10 @@ export class MyStruct {
         this.#g = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
+        }
+
         if ("a" in struct_obj) {
             this.#a = struct_obj.a;
         } else {

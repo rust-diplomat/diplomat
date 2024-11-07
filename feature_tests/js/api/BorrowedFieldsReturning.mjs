@@ -12,6 +12,10 @@ export class BorrowedFieldsReturning {
         this.#bytes = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
+        }
+
         if ("bytes" in struct_obj) {
             this.#bytes = struct_obj.bytes;
         } else {

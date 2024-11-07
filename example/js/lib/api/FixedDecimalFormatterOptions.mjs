@@ -21,6 +21,10 @@ export class FixedDecimalFormatterOptions {
         this.#someOtherConfig = value;
     }
     constructor(struct_obj) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");
+        }
+
         if ("groupingStrategy" in struct_obj) {
             this.#groupingStrategy = struct_obj.groupingStrategy;
         } else {

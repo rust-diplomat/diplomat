@@ -30,6 +30,10 @@ export class OptionStruct {
     }
     
     constructor(struct_obj, internalConstructor) {
+        if (typeof struct_obj !== "object") {
+            throw new Error("OptionStruct's constructor takes an object of OptionStruct's fields.");
+        }
+
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionStruct is an out struct and can only be created internally.");
         }
