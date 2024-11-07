@@ -31,7 +31,7 @@ test("DiplomatOption tests", t => {
 
     let maybeStruct = OptionOpaque.acceptsOptionInputStruct(null);
     t.assert(maybeStruct === null);
-    maybeStruct = OptionOpaque.acceptsOptionInputStruct(new OptionInputStruct(7, null, OptionEnum.Bar));
+    maybeStruct = OptionOpaque.acceptsOptionInputStruct(new OptionInputStruct({a: 7, c: OptionEnum.Bar}));
     t.is(maybeStruct.a, 7);
     t.assert(maybeStruct.b === null);
     t.is(maybeStruct.c.value, OptionEnum.Bar.value);

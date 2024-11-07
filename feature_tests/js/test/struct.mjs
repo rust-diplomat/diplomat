@@ -40,7 +40,7 @@ test("Test struct layout: complex struct with multiple padding types and contain
         first: 101, 
         second: 505, 
         third: 9345,
-        fourth: new ScalarPairWithPadding(122, 414),
+        fourth: new ScalarPairWithPadding({first: 122, second: 414}),
         fifth: 99
     });
     s.assertValue(853);

@@ -34,6 +34,9 @@ export class {{type_name}} {
         {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
+        if (typeof struct_obj !== "object") {
+            throw new Error("{{type_name}}'s constructor takes an object of {{type_name}}'s fields.");
+        }
         
         {%- if is_out %}
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
