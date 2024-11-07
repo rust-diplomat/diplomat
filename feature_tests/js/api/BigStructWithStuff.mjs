@@ -47,17 +47,41 @@ export class BigStructWithStuff {
     set fifth(value) {
         this.#fifth = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#first = arguments[0];
-            this.#second = arguments[1];
-            this.#third = arguments[2];
-            this.#fourth = arguments[3];
-            this.#fifth = arguments[4];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
         }
+
+        if ("first" in structObj) {
+            this.#first = structObj.first;
+        } else {
+            throw new Error("Missing required field first.");
+        }
+
+        if ("second" in structObj) {
+            this.#second = structObj.second;
+        } else {
+            throw new Error("Missing required field second.");
+        }
+
+        if ("third" in structObj) {
+            this.#third = structObj.third;
+        } else {
+            throw new Error("Missing required field third.");
+        }
+
+        if ("fourth" in structObj) {
+            this.#fourth = structObj.fourth;
+        } else {
+            throw new Error("Missing required field fourth.");
+        }
+
+        if ("fifth" in structObj) {
+            this.#fifth = structObj.fifth;
+        } else {
+            throw new Error("Missing required field fifth.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -88,17 +112,23 @@ export class BigStructWithStuff {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const firstDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#first = firstDeref;
+        structObj.first = firstDeref;
         const secondDeref = (new Uint16Array(wasm.memory.buffer, ptr + 2, 1))[0];
-        this.#second = secondDeref;
+        structObj.second = secondDeref;
         const thirdDeref = (new Uint16Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#third = thirdDeref;
+        structObj.third = thirdDeref;
         const fourthDeref = ptr + 8;
-        this.#fourth = new ScalarPairWithPadding(diplomatRuntime.internalConstructor, fourthDeref);
+        structObj.fourth = ScalarPairWithPadding._fromFFI(diplomatRuntime.internalConstructor, fourthDeref);
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
-        this.#fifth = fifthDeref;
+        structObj.fifth = fifthDeref;
+
+        return new BigStructWithStuff(structObj, internalConstructor);
     }
 
     assertValue(extraVal) {

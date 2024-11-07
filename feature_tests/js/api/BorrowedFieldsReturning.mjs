@@ -11,13 +11,17 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#bytes = arguments[0];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
         }
+
+        if ("bytes" in structObj) {
+            this.#bytes = structObj.bytes;
+        } else {
+            throw new Error("Missing required field bytes.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -42,9 +46,15 @@ export class BorrowedFieldsReturning {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
-    #fromFFI(ptr, aEdges) {
+    static _fromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const bytesDeref = ptr;
-        this.#bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+        structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+
+        return new BorrowedFieldsReturning(structObj, internalConstructor);
     }
 
     // Return all fields corresponding to lifetime `'a` 

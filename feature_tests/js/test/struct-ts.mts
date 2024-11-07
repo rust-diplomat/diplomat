@@ -14,6 +14,14 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
-    const s = new MyStruct(17, true, 209, 1234n, 5991, '餐'.codePointAt(0), MyEnum.B);
+    const s = new MyStruct({
+        a: 17,
+        b: true,
+        c: 209,
+        d: 1234n,
+        e: 5991,
+        f: '餐'.codePointAt(0),
+        g: MyEnum.B
+    });
     t.is(s.intoA(), 17);
 });

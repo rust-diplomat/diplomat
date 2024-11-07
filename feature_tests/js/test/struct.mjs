@@ -14,18 +14,35 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
-    const s = new MyStruct(17, true, 209, 1234n, 5991, '餐'.codePointAt(0), MyEnum.B);
+    const s = new MyStruct({
+        a: 17,
+        b: true,
+        c: 209,
+        d: 1234n,
+        e: 5991,
+        f: '餐'.codePointAt(0),
+        g: MyEnum.B
+    });
     t.is(s.intoA(), 17);
 });
 
 test("Test struct layout: scalar pair layout", t => {
-    const s = new ScalarPairWithPadding(122, 414);
+    const s = new ScalarPairWithPadding({
+        first: 122,
+        second: 414
+    });
     s.assertValue();
     t.is(true, true); // Ava doesn't like tests without assertions
 });
 
 test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
-    const s = new BigStructWithStuff(101, 505, 9345, new ScalarPairWithPadding(122, 414), 99);
+    const s = new BigStructWithStuff({
+        first: 101, 
+        second: 505, 
+        third: 9345,
+        fourth: new ScalarPairWithPadding({first: 122, second: 414}),
+        fifth: 99
+    });
     s.assertValue(853);
     t.is(true, true); // Ava doesn't like tests without assertions
 });

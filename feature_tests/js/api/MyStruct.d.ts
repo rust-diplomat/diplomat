@@ -3,6 +3,16 @@ import type { MyEnum } from "./MyEnum"
 import type { MyZst } from "./MyZst"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+type MyStruct_Obj = {
+    a: number;
+    b: boolean;
+    c: number;
+    d: bigint;
+    e: number;
+    f: codepoint;
+    g: MyEnum;
+};
+
 export class MyStruct {
 
     get a() : number;
@@ -25,7 +35,7 @@ export class MyStruct {
 
     get g() : MyEnum;
     set g(value: MyEnum); 
-    constructor(a: number, b: boolean, c: number, d: bigint, e: number, f: codepoint, g: MyEnum);
+    constructor(structObj : MyStruct_Obj);
 
     static new_(): MyStruct;
 

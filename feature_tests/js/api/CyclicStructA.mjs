@@ -12,13 +12,17 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#a = arguments[0];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
         }
+
+        if ("a" in structObj) {
+            this.#a = structObj.a;
+        } else {
+            throw new Error("Missing required field a.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -45,9 +49,15 @@ export class CyclicStructA {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructA._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = ptr;
-        this.#a = new CyclicStructB(diplomatRuntime.internalConstructor, aDeref);
+        structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
+
+        return new CyclicStructA(structObj, internalConstructor);
     }
 
     static getB() {
@@ -56,7 +66,7 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructB(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

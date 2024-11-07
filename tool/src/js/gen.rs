@@ -181,6 +181,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
+            let is_option = matches!(&field.ty, hir::Type::DiplomatOption(..));
+
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
             let c_to_js = self.gen_c_to_js_for_type(
@@ -283,7 +285,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 c_to_js,
                 js_to_c,
                 js_to_c_write,
-                maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info)
+                maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info),
+                is_optional: is_option
             }
         }).collect::<Vec<_>>();
 
@@ -597,6 +600,9 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     js_to_c_write: String,
     /// Used in `get _fieldsForLifetime...` fields, which themselves are used in [`display_lifetime_edge`].
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
+
+    /// Used in the constructor() function to determine whether or not this field is required for construction.
+    is_optional: bool,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)

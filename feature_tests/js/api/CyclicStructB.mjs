@@ -12,13 +12,17 @@ export class CyclicStructB {
     set field(value) {
         this.#field = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#field = arguments[0];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("CyclicStructB's constructor takes an object of CyclicStructB's fields.");
         }
+
+        if ("field" in structObj) {
+            this.#field = structObj.field;
+        } else {
+            throw new Error("Missing required field field.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -45,9 +49,15 @@ export class CyclicStructB {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructB._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const fieldDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#field = fieldDeref;
+        structObj.field = fieldDeref;
+
+        return new CyclicStructB(structObj, internalConstructor);
     }
 
     static getA() {
@@ -56,7 +66,7 @@ export class CyclicStructB {
         const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
     
         try {
-            return new CyclicStructA(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

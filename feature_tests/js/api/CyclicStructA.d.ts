@@ -2,11 +2,15 @@
 import type { CyclicStructB } from "./CyclicStructB"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+type CyclicStructA_Obj = {
+    a: CyclicStructB;
+};
+
 export class CyclicStructA {
 
     get a() : CyclicStructB;
     set a(value: CyclicStructB); 
-    constructor(a: CyclicStructB);
+    constructor(structObj : CyclicStructA_Obj);
 
     static getB(): CyclicStructB;
 }

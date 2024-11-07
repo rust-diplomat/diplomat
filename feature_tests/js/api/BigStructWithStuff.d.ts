@@ -5,6 +5,14 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 /** Testing JS-specific layout/padding behavior
 */
+type BigStructWithStuff_Obj = {
+    first: number;
+    second: number;
+    third: number;
+    fourth: ScalarPairWithPadding;
+    fifth: number;
+};
+
 export class BigStructWithStuff {
 
     get first() : number;
@@ -21,7 +29,7 @@ export class BigStructWithStuff {
 
     get fifth() : number;
     set fifth(value: number); 
-    constructor(first: number, second: number, third: number, fourth: ScalarPairWithPadding, fifth: number);
+    constructor(structObj : BigStructWithStuff_Obj);
 
     assertValue(extraVal: number): void;
 }

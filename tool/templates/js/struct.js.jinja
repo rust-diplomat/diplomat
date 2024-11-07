@@ -2,6 +2,16 @@
 /** {{docs}}
 */
 {% endif -%}
+
+{%- if typescript && !is_out -%}
+type {{type_name}}_Obj = {
+    {%- for field in fields %}
+    {{field.field_name}}: {{field.js_type_name}};
+    {%- endfor %}
+};
+
+{% endif -%}
+
 export class {{type_name}} {
     {%- for field in fields %}
 
@@ -20,30 +30,31 @@ export class {{type_name}} {
     {%- endfor %}
 
     {%- if !(typescript && is_out) %}
-    constructor(
-        {%- if typescript -%}
-        {%- for field in fields -%}
-        {{field.field_name}}: {{field.js_type_name}}{% if !loop.last %}, {% endif %}
-        {%- endfor -%}
-        {%- endif -%}
-        ) {%- if typescript %};{% else %} {
-        {% if !fields.is_empty() -%}
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
+    constructor(structObj
+        {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
+        {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+    ) {%- if typescript %};{% else %} {
+        if (typeof structObj !== "object") {
+            throw new Error("{{type_name}}'s constructor takes an object of {{type_name}}'s fields.");
         }
-        {%- if !is_out %} else {
-            {% for field in fields %}
-            this.#{{ field.field_name }} = arguments[{{loop.index0}}];
-            {%- endfor %}
-        } {%- else %} else {
-            console.error("{{type_name}} is an out struct and can only be created internally.");
+        
+        {%~ if is_out %}
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}} is an out struct and can only be created internally.");
         }
         {%- endif -%}
-        {%- else if is_out -%}
-        if (!(arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor)) {
-            console.error("{{type_name}} is an out struct and can only be created internally.");
+
+        {%- for field in fields %}
+        if ("{{field.field_name}}" in structObj) {
+            this.#{{ field.field_name }} = structObj.{{field.field_name}};
+        } else {
+            {%- if field.is_optional %}
+            this.#{{ field.field_name }} = null;
+            {%- else %}
+            throw new Error("Missing required field {{field.field_name}}.");
+            {%- endif %}
         }
-        {%- endif %}
+        {%~ endfor %}
     }
     {%- endif -%}
     {%- endif %}
@@ -101,11 +112,17 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    #fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    static _fromFFI(internalConstructor, ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         {%- for field in fields %}
         const {{field.field_name}}Deref = {{field.c_to_js_deref}};
-        this.#{{field.field_name}} = {{field.c_to_js}};
+        structObj.{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
+
+        return new {{type_name}}(structObj, internalConstructor);
     }
     
     {%- for l in lifetimes.all_lifetimes() %}

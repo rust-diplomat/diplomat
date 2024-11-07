@@ -2,6 +2,12 @@
 import type { Foo } from "./Foo"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+type BorrowedFieldsWithBounds_Obj = {
+    fieldA: string;
+    fieldB: string;
+    fieldC: string;
+};
+
 export class BorrowedFieldsWithBounds {
 
     get fieldA() : string;
@@ -12,7 +18,7 @@ export class BorrowedFieldsWithBounds {
 
     get fieldC() : string;
     set fieldC(value: string); 
-    constructor(fieldA: string, fieldB: string, fieldC: string);
+    constructor(structObj : BorrowedFieldsWithBounds_Obj);
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 }

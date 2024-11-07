@@ -20,14 +20,23 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#groupingStrategy = arguments[0];
-            this.#someOtherConfig = arguments[1];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");
         }
+
+        if ("groupingStrategy" in structObj) {
+            this.#groupingStrategy = structObj.groupingStrategy;
+        } else {
+            throw new Error("Missing required field groupingStrategy.");
+        }
+
+        if ("someOtherConfig" in structObj) {
+            this.#someOtherConfig = structObj.someOtherConfig;
+        } else {
+            throw new Error("Missing required field someOtherConfig.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -60,11 +69,17 @@ export class FixedDecimalFormatterOptions {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("FixedDecimalFormatterOptions._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        this.#groupingStrategy = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, groupingStrategyDeref);
+        structObj.groupingStrategy = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, groupingStrategyDeref);
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
-        this.#someOtherConfig = someOtherConfigDeref;
+        structObj.someOtherConfig = someOtherConfigDeref;
+
+        return new FixedDecimalFormatterOptions(structObj, internalConstructor);
     }
 
     static default_() {
@@ -73,7 +88,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            return new FixedDecimalFormatterOptions(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

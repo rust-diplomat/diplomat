@@ -20,14 +20,23 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#foo = arguments[0];
-            this.#count = arguments[1];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("ImportedStruct's constructor takes an object of ImportedStruct's fields.");
         }
+
+        if ("foo" in structObj) {
+            this.#foo = structObj.foo;
+        } else {
+            throw new Error("Missing required field foo.");
+        }
+
+        if ("count" in structObj) {
+            this.#count = structObj.count;
+        } else {
+            throw new Error("Missing required field count.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -60,10 +69,16 @@ export class ImportedStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ImportedStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        this.#foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
+        structObj.foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#count = countDeref;
+        structObj.count = countDeref;
+
+        return new ImportedStruct(structObj, internalConstructor);
     }
 }

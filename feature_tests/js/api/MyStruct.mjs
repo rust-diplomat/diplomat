@@ -61,19 +61,53 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#a = arguments[0];
-            this.#b = arguments[1];
-            this.#c = arguments[2];
-            this.#d = arguments[3];
-            this.#e = arguments[4];
-            this.#f = arguments[5];
-            this.#g = arguments[6];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
         }
+
+        if ("a" in structObj) {
+            this.#a = structObj.a;
+        } else {
+            throw new Error("Missing required field a.");
+        }
+
+        if ("b" in structObj) {
+            this.#b = structObj.b;
+        } else {
+            throw new Error("Missing required field b.");
+        }
+
+        if ("c" in structObj) {
+            this.#c = structObj.c;
+        } else {
+            throw new Error("Missing required field c.");
+        }
+
+        if ("d" in structObj) {
+            this.#d = structObj.d;
+        } else {
+            throw new Error("Missing required field d.");
+        }
+
+        if ("e" in structObj) {
+            this.#e = structObj.e;
+        } else {
+            throw new Error("Missing required field e.");
+        }
+
+        if ("f" in structObj) {
+            this.#f = structObj.f;
+        } else {
+            throw new Error("Missing required field f.");
+        }
+
+        if ("g" in structObj) {
+            this.#g = structObj.g;
+        } else {
+            throw new Error("Missing required field g.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -106,21 +140,27 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("MyStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#a = aDeref;
+        structObj.a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
-        this.#b = bDeref;
+        structObj.b = bDeref;
         const cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
-        this.#c = cDeref;
+        structObj.c = cDeref;
         const dDeref = (new BigUint64Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        this.#d = dDeref;
+        structObj.d = dDeref;
         const eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
-        this.#e = eDeref;
+        structObj.e = eDeref;
         const fDeref = (new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0];
-        this.#f = fDeref;
+        structObj.f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
-        this.#g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
+        structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
+
+        return new MyStruct(structObj, internalConstructor);
     }
 
     static new_() {
@@ -129,7 +169,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return new MyStruct(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -156,7 +196,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -170,7 +210,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst(diplomatRuntime.internalConstructor);
+                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     

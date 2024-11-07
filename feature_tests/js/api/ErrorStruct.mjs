@@ -19,14 +19,23 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#i = arguments[0];
-            this.#j = arguments[1];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
         }
+
+        if ("i" in structObj) {
+            this.#i = structObj.i;
+        } else {
+            throw new Error("Missing required field i.");
+        }
+
+        if ("j" in structObj) {
+            this.#j = structObj.j;
+        } else {
+            throw new Error("Missing required field j.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -54,10 +63,16 @@ export class ErrorStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ErrorStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
-        this.#i = iDeref;
+        structObj.i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        this.#j = jDeref;
+        structObj.j = jDeref;
+
+        return new ErrorStruct(structObj, internalConstructor);
     }
 }

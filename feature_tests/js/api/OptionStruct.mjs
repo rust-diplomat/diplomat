@@ -29,12 +29,38 @@ export class OptionStruct {
         return this.#d;
     }
     
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            console.error("OptionStruct is an out struct and can only be created internally.");
+    constructor(structObj, internalConstructor) {
+        if (typeof structObj !== "object") {
+            throw new Error("OptionStruct's constructor takes an object of OptionStruct's fields.");
         }
+
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionStruct is an out struct and can only be created internally.");
+        }
+        if ("a" in structObj) {
+            this.#a = structObj.a;
+        } else {
+            throw new Error("Missing required field a.");
+        }
+
+        if ("b" in structObj) {
+            this.#b = structObj.b;
+        } else {
+            throw new Error("Missing required field b.");
+        }
+
+        if ("c" in structObj) {
+            this.#c = structObj.c;
+        } else {
+            throw new Error("Missing required field c.");
+        }
+
+        if ("d" in structObj) {
+            this.#d = structObj.d;
+        } else {
+            throw new Error("Missing required field d.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -64,14 +90,20 @@ export class OptionStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    #fromFFI(ptr) {
+    static _fromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
-        this.#a = aDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, aDeref, []);
+        structObj.a = aDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, aDeref, []);
         const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
-        this.#b = bDeref === 0 ? null : new OptionOpaqueChar(diplomatRuntime.internalConstructor, bDeref, []);
+        structObj.b = bDeref === 0 ? null : new OptionOpaqueChar(diplomatRuntime.internalConstructor, bDeref, []);
         const cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        this.#c = cDeref;
+        structObj.c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
-        this.#d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
+        structObj.d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
+
+        return new OptionStruct(structObj, internalConstructor);
     }
 }

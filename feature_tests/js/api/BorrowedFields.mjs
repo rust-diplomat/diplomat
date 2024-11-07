@@ -28,15 +28,29 @@ export class BorrowedFields {
     set c(value) {
         this.#c = value;
     }
-    constructor() {
-        if (arguments.length > 0 && arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#fromFFI(...Array.prototype.slice.call(arguments, 1));
-        } else {
-            
-            this.#a = arguments[0];
-            this.#b = arguments[1];
-            this.#c = arguments[2];
+    constructor(structObj) {
+        if (typeof structObj !== "object") {
+            throw new Error("BorrowedFields's constructor takes an object of BorrowedFields's fields.");
         }
+
+        if ("a" in structObj) {
+            this.#a = structObj.a;
+        } else {
+            throw new Error("Missing required field a.");
+        }
+
+        if ("b" in structObj) {
+            this.#b = structObj.b;
+        } else {
+            throw new Error("Missing required field b.");
+        }
+
+        if ("c" in structObj) {
+            this.#c = structObj.c;
+        } else {
+            throw new Error("Missing required field c.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -63,13 +77,19 @@ export class BorrowedFields {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
-    #fromFFI(ptr, aEdges) {
+    static _fromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFields._fromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        var structObj = {};
         const aDeref = ptr;
-        this.#a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
+        structObj.a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
         const bDeref = ptr + 8;
-        this.#b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
+        structObj.b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
         const cDeref = ptr + 16;
-        this.#c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
+        structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
+
+        return new BorrowedFields(structObj, internalConstructor);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -95,7 +115,7 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
     
         try {
-            return new BorrowedFields(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
+            return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {
