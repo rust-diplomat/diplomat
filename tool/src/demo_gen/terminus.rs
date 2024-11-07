@@ -458,12 +458,16 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 &mut child,
                 field.attrs.demo_attrs.clone(),
             );
-            fields.push(self.formatter.fmt_param_name(&field.name.to_string()).into());
+            fields.push(
+                self.formatter
+                    .fmt_param_name(&field.name.to_string())
+                    .into(),
+            );
         }
 
         child.method_js = StructInfo {
             type_name: type_name.clone(),
-            fields
+            fields,
         }
         .render()
         .unwrap();

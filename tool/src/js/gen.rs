@@ -605,7 +605,7 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 
     /// Used in the constructor() function to determine whether or not this field is required for construction.
-    is_optional : bool,
+    is_optional: bool,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
