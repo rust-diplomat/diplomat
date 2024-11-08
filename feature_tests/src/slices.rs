@@ -40,6 +40,10 @@ mod ffi {
             let _ = foo;
             let _ = write;
         }
+
+        pub fn borrow<'a>(&'a self) -> DiplomatStrSlice<'a> {
+            AsRef::<[u8]>::as_ref(&self.0).into()
+        }
     }
 
     #[diplomat::opaque]

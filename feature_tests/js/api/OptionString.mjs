@@ -75,7 +75,7 @@ export class OptionString {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges);
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
         
         finally {

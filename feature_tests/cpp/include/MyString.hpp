@@ -28,6 +28,8 @@ namespace capi {
     
     void MyString_string_transform(diplomat::capi::DiplomatStringView foo, diplomat::capi::DiplomatWrite* write);
     
+    diplomat::capi::DiplomatStringView MyString_borrow(const diplomat::capi::MyString* self);
+    
     
     void MyString_destroy(MyString* self);
     
@@ -75,6 +77,11 @@ inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_trans
   diplomat::capi::MyString_string_transform({foo.data(), foo.size()},
     &write);
   return diplomat::Ok<std::string>(std::move(output));
+}
+
+inline std::string_view MyString::borrow() const {
+  auto result = diplomat::capi::MyString_borrow(this->AsFFI());
+  return std::string_view(result.data, result.len);
 }
 
 inline const diplomat::capi::MyString* MyString::AsFFI() const {

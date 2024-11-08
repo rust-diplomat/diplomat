@@ -15,6 +15,7 @@ internal interface MyStringLib: Library {
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
     fun MyString_get_str(handle: Pointer, write: Pointer): Unit
     fun MyString_string_transform(foo: Slice, write: Pointer): Unit
+    fun MyString_borrow(handle: Pointer): Slice
 }
 
 class MyString internal constructor (
@@ -104,6 +105,12 @@ class MyString internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
+    }
+    
+    fun borrow(): String {
+        
+        val returnVal = lib.MyString_borrow(handle);
+            return PrimitiveArrayTools.getUtf8(returnVal)
     }
 
 }

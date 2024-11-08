@@ -83,11 +83,11 @@ export class BorrowedFields {
         }
         var structObj = {};
         const aDeref = ptr;
-        structObj.a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges);
+        structObj.a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges).getValue();
         const bDeref = ptr + 8;
-        structObj.b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges);
+        structObj.b = new diplomatRuntime.DiplomatSliceStr(wasm, bDeref,  "string8", aEdges).getValue();
         const cDeref = ptr + 16;
-        structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges);
+        structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges).getValue();
 
         return new BorrowedFields(structObj, internalConstructor);
     }

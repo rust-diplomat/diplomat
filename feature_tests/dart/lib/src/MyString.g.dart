@@ -61,6 +61,13 @@ final class MyString implements ffi.Finalizable {
     _MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
     return write.finalize();
   }
+
+  String borrow() {
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> aEdges = [this];
+    final result = _MyString_borrow(_ffi);
+    return result._toDart(aEdges);
+  }
 }
 
 @meta.RecordUse()
@@ -102,3 +109,8 @@ external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Op
 @ffi.Native<ffi.Void Function(_SliceUtf8, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
 external void _MyString_string_transform(_SliceUtf8 foo, ffi.Pointer<ffi.Opaque> write);
+
+@meta.RecordUse()
+@ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_borrow')
+// ignore: non_constant_identifier_names
+external _SliceUtf8 _MyString_borrow(ffi.Pointer<ffi.Opaque> self);

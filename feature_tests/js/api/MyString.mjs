@@ -141,4 +141,21 @@ export class MyString {
             write.free();
         }
     }
+
+    borrow() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+        
+        const result = wasm.MyString_borrow(diplomatReceive.buffer, this.ffiValue);
+    
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
+        }
+        
+        finally {
+            diplomatReceive.free();
+        }
+    }
 }

@@ -31,6 +31,8 @@ public:
 
   inline static diplomat::result<std::string, diplomat::Utf8Error> string_transform(std::string_view foo);
 
+  inline std::string_view borrow() const;
+
   inline const diplomat::capi::MyString* AsFFI() const;
   inline diplomat::capi::MyString* AsFFI();
   inline static const MyString* FromFFI(const diplomat::capi::MyString* ptr);

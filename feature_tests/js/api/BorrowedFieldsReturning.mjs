@@ -52,7 +52,7 @@ export class BorrowedFieldsReturning {
         }
         var structObj = {};
         const bytesDeref = ptr;
-        structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges);
+        structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
         return new BorrowedFieldsReturning(structObj, internalConstructor);
     }

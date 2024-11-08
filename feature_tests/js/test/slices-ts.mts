@@ -12,6 +12,11 @@ test("String List", (t) => {
   t.is(str.str, "This");
 });
 
+test("MyString borrow", (t) => {
+  let str = MyString.new_("This is a test.");
+  t.is(str.borrow(), "This is a test.");
+});
+
 test("Float64Vec", (t) => {
   let input = [1, 2, 3, 4, 5];
   let data = Float64Vec.newIsize(input);
