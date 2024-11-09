@@ -9,7 +9,7 @@ class ICU4XFixedDecimalFormatterTest {
         val locale = Locale.new_("en")
         val provider = DataProvider.newStatic()
         val options = FixedDecimalFormatterOptions.default_()
-        val formatter = FixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow()
+        val formatter = FixedDecimalFormatter.tryNew(locale, provider, options).getOrThrow()
         val decimal: FixedDecimal = FixedDecimal.new_(123)
         val formatted = formatter.formatWrite(decimal)
         assertEquals(formatted, "123")
