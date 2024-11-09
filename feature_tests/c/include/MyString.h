@@ -29,6 +29,8 @@ void MyString_get_str(const MyString* self, DiplomatWrite* write);
 
 void MyString_string_transform(DiplomatStringView foo, DiplomatWrite* write);
 
+DiplomatStringView MyString_borrow(const MyString* self);
+
 
 void MyString_destroy(MyString* self);
 

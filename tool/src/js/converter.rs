@@ -244,7 +244,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
-                        r#"new diplomatRuntime.DiplomatSliceStr(wasm, {variable_name},  "string{}", {edges})"#,
+                        r#"new diplomatRuntime.DiplomatSliceStr(wasm, {variable_name},  "string{}", {edges}).getValue()"#,
                         match encoding {
                             hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
                             hir::StringEncoding::UnvalidatedUtf16 => 16,
@@ -257,7 +257,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         // We basically iterate through and read each string into the array.
                         // TODO: Need a test for this.
                         format!(
-                            r#"new diplomatRuntime.DiplomatSliceStrings(wasm, {variable_name}, "string{}", {edges})"#,
+                            r#"new diplomatRuntime.DiplomatSliceStrings(wasm, {variable_name}, "string{}", {edges}).getValue()"#,
                             match encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => 8,
