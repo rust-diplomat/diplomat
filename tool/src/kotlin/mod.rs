@@ -273,12 +273,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
             ReturnType::Infallible(ref success) => self.gen_infallible_return_type_name(success),
-            ReturnType::Fallible(ref ok, ref err) => {
+            ReturnType::Fallible(ref ok, _) => {
                 let ok_type = self.gen_infallible_return_type_name(ok);
-                let err_type = err
-                    .as_ref()
-                    .map(|err| self.gen_type_name(err, None))
-                    .unwrap_or_else(|| "Unit".into());
                 format!("Result<{ok_type}>").into()
             }
             ReturnType::Nullable(ref success) => self
