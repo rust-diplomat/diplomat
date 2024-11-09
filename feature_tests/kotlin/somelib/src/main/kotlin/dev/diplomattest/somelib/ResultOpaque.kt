@@ -36,7 +36,7 @@ class ResultOpaque internal constructor (
         internal val libClass: Class<ResultOpaqueLib> = ResultOpaqueLib::class.java
         internal val lib: ResultOpaqueLib = Native.load("somelib", libClass)
         
-        fun new_(i: Int): Res<ResultOpaque, ErrorEnum> {
+        fun new_(i: Int): Result<ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new(i);
             if (returnVal.isOk == 1.toByte()) {
@@ -50,7 +50,7 @@ class ResultOpaque internal constructor (
             }
         }
         
-        fun newFailingFoo(): Res<ResultOpaque, ErrorEnum> {
+        fun newFailingFoo(): Result<ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new_failing_foo();
             if (returnVal.isOk == 1.toByte()) {
@@ -64,7 +64,7 @@ class ResultOpaque internal constructor (
             }
         }
         
-        fun newFailingBar(): Res<ResultOpaque, ErrorEnum> {
+        fun newFailingBar(): Result<ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new_failing_bar();
             if (returnVal.isOk == 1.toByte()) {
@@ -78,7 +78,7 @@ class ResultOpaque internal constructor (
             }
         }
         
-        fun newFailingUnit(): Res<ResultOpaque, Unit> {
+        fun newFailingUnit(): Result<ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new_failing_unit();
             if (returnVal.isOk == 1.toByte()) {
@@ -88,11 +88,11 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
         
-        fun newFailingStruct(i: Int): Res<ResultOpaque, ErrorStruct> {
+        fun newFailingStruct(i: Int): Result<ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new_failing_struct(i);
             if (returnVal.isOk == 1.toByte()) {
@@ -108,7 +108,7 @@ class ResultOpaque internal constructor (
             }
         }
         
-        fun newInErr(i: Int): Res<Unit, ResultOpaque> {
+        fun newInErr(i: Int): Result<Unit> {
             
             val returnVal = lib.ResultOpaque_new_in_err(i);
             if (returnVal.isOk == 1.toByte()) {
@@ -122,17 +122,17 @@ class ResultOpaque internal constructor (
             }
         }
         
-        fun newInt(i: Int): Res<Int, Unit> {
+        fun newInt(i: Int): Result<Int> {
             
             val returnVal = lib.ResultOpaque_new_int(i);
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok).ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
         
-        fun newInEnumErr(i: Int): Res<ErrorEnum, ResultOpaque> {
+        fun newInEnumErr(i: Int): Result<ErrorEnum> {
             
             val returnVal = lib.ResultOpaque_new_in_enum_err(i);
             if (returnVal.isOk == 1.toByte()) {

@@ -339,12 +339,12 @@ fun <T, E> Res<T, E>.wrapErrAndThrow(): T {
     }
 }
 
-fun <T, E> T.ok(): Res<T, E> {
-    return Ok(this)
+fun <T> T.ok(): Result<T> {
+    return Result.success(this)
 }
 
-fun <T, E> E.err(): Res<T, E> {
-    return Err(this)
+fun <T, E> E.err(): Result<T> {
+    return Result.failure(RuntimeException("Received error $this"))
 }
 
 internal class ResultIntUnitUnion: Union() {

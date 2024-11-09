@@ -58,7 +58,7 @@ class MyStruct internal constructor (
             return returnStruct
         }
         
-        fun returnsZstResult(): Res<Unit, MyZst> {
+        fun returnsZstResult(): Result<Unit> {
             
             val returnVal = lib.MyStruct_returns_zst_result();
             if (returnVal.isOk == 1.toByte()) {
@@ -68,7 +68,7 @@ class MyStruct internal constructor (
             }
         }
         
-        fun failsZstResult(): Res<Unit, MyZst> {
+        fun failsZstResult(): Result<Unit> {
             
             val returnVal = lib.MyStruct_fails_zst_result();
             if (returnVal.isOk == 1.toByte()) {
