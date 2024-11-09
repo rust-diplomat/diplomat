@@ -36,7 +36,7 @@ class FixedDecimalFormatter internal constructor (
         *
         *See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
         */
-        fun tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): Res<FixedDecimalFormatter, Unit> {
+        fun tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): Result<FixedDecimalFormatter> {
             
             val returnVal = lib.icu4x_FixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.nativeStruct);
             if (returnVal.isOk == 1.toByte()) {
@@ -46,7 +46,7 @@ class FixedDecimalFormatter internal constructor (
                 CLEANER.register(returnOpaque, FixedDecimalFormatter.FixedDecimalFormatterCleaner(handle, FixedDecimalFormatter.lib));
                 return returnOpaque.ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
     }

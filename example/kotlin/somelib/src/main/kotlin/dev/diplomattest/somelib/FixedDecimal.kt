@@ -58,7 +58,7 @@ class FixedDecimal internal constructor (
     *
     *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
     */
-    fun toString_(): Res<String, Unit> {
+    fun toString_(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.icu4x_FixedDecimal_to_string_mv1(handle, write);
         if (returnVal.isOk == 1.toByte()) {
@@ -66,7 +66,7 @@ class FixedDecimal internal constructor (
             val returnString = DW.writeToString(write)
             return returnString.ok()
         } else {
-            return Err(Unit)
+            return Unit.err()
         }
     }
 
