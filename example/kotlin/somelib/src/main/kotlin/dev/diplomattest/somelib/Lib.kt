@@ -320,31 +320,13 @@ class Slice: Structure(), Structure.ByValue {
     }
 }
 
-sealed interface Res<T, E>
-class Ok<T, E>(val inner: T) : Res<T, E>
-class Err<T, E>(val inner: E) : Res<T, E>
 
-
-fun <T> Res<T, Throwable>.reThrow(): T {
-    return when (this) {
-        is Ok -> this.inner
-        is Err -> throw this.inner
-    }
+internal fun <T> T.ok(): Result<T> {
+    return Result.success(this)
 }
 
-fun <T, E> Res<T, E>.wrapErrAndThrow(): T {
-    return when (this) {
-        is Ok -> this.inner
-        is Err -> throw RuntimeException("Received error ${this.inner}")
-    }
-}
-
-fun <T, E> T.ok(): Res<T, E> {
-    return Ok(this)
-}
-
-fun <T, E> E.err(): Res<T, E> {
-    return Err(this)
+internal fun <T, E> E.err(): Result<T> {
+    return Result.failure(RuntimeException("Received error $this"))
 }
 
 internal class ResultPointerUnitUnion: Union() {

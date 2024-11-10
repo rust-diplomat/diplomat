@@ -46,13 +46,13 @@ class DataProvider internal constructor (
         
         /** This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
         */
-        fun returnsResult(): Res<Unit, Unit> {
+        fun returnsResult(): Result<Unit> {
             
             val returnVal = lib.icu4x_DataProvider_returns_result_mv1();
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
     }

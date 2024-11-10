@@ -8,35 +8,35 @@ import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Benchmark)
 internal open class ICU4XFixedDecimalFormatterBench {
-    private val locale = ICU4XLocale.new_("en")
-    private val provider = ICU4XDataProvider.newStatic()
-    private val options = ICU4XFixedDecimalFormatterOptions.default_()
-    private val formatter = ICU4XFixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow()
-    private val decimal = ICU4XFixedDecimal.new_(123)
+    private val locale = Locale.new_("en")
+    private val provider = DataProvider.newStatic()
+    private val options = FixedDecimalFormatterOptions.default_()
+    private val formatter = FixedDecimalFormatter.tryNew(locale, provider, options).getOrThrow()
+    private val decimal = FixedDecimal.new_(123)
 
     @Benchmark
     fun benchLocale(bh: Blackhole) {
-        bh.consume(ICU4XLocale.new_("en"))
+        bh.consume(Locale.new_("en"))
     }
 
     @Benchmark
     fun benchProvider(bh: Blackhole) {
-        bh.consume(ICU4XDataProvider.newStatic())
+        bh.consume(DataProvider.newStatic())
     }
 
     @Benchmark
     fun benchOptions(bh: Blackhole) {
-        bh.consume(ICU4XFixedDecimalFormatterOptions.default_())
+        bh.consume(FixedDecimalFormatterOptions.default_())
     }
 
     @Benchmark
     fun benchDecimal(bh: Blackhole) {
-        bh.consume(ICU4XFixedDecimal.new_(123))
+        bh.consume(FixedDecimal.new_(123))
     }
 
     @Benchmark
     fun benchFormatter(bh: Blackhole) {
-        bh.consume(ICU4XFixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow())
+        bh.consume(FixedDecimalFormatter.tryNew(locale, provider, options).getOrThrow())
     }
 
     @Benchmark

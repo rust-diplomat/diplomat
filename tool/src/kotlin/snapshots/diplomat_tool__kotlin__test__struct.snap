@@ -1,6 +1,5 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2150
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -154,23 +153,23 @@ class MyNativeStruct internal constructor (
                 return PrimitiveArrayTools.getUByteArray(returnVal)
         }
         
-        fun booleanResult(): Res<Boolean, Unit> {
+        fun booleanResult(): Result<Boolean> {
             
             val returnVal = lib.MyNativeStruct_boolean_result();
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok > 0).ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
         
-        fun ubyteResult(): Res<UByte, Unit> {
+        fun ubyteResult(): Result<UByte> {
             
             val returnVal = lib.MyNativeStruct_ubyte_result();
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok.toUByte()).ok()
             } else {
-                return Err(Unit)
+                return Unit.err()
             }
         }
     }
