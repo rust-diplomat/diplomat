@@ -71,7 +71,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = byteArray.size.toLong()
+        slice.len = size_t(byteArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -81,7 +81,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = byteArray.size.toLong()
+        slice.len = size_t(byteArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -93,7 +93,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = uByteArray.size.toLong()
+        slice.len = size_t(uByteArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -103,7 +103,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = shortArray.size.toLong()
+        slice.len = size_t(shortArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -115,7 +115,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = uShortArray.size.toLong()
+        slice.len = size_t(uShortArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -125,7 +125,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, intArray, 0, intArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = intArray.size.toLong()
+        slice.len = size_t(intArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -137,7 +137,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, intArray, 0, intArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = uIntArray.size.toLong()
+        slice.len = size_t(uIntArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -148,7 +148,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, longArray, 0, longArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = longArray.size.toLong()
+        slice.len = size_t(longArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -160,7 +160,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = uLongArray.size.toLong()
+        slice.len = size_t(uLongArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -170,7 +170,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, floatArray, 0, floatArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = floatArray.size.toLong()
+        slice.len = size_t(floatArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -180,7 +180,7 @@ internal object PrimitiveArrayTools {
         ptr.write(0, doubleArray, 0, doubleArray.size)
         val slice = Slice()
         slice.data = ptr
-        slice.len = doubleArray.size.toLong()
+        slice.len = size_t(doubleArray.size.toLong())
         return Pair(mem, slice)
     }
 
@@ -257,12 +257,12 @@ internal object PrimitiveArrayTools {
         val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf8(str)
             ptr.setPointer(idx * sliceSize, slice.data)
-            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
             mem
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = array.size.toLong()
+        slice.len = size_t(array.size.toLong())
         return Pair(mems + mem, slice)
     }
 
@@ -273,42 +273,48 @@ internal object PrimitiveArrayTools {
         val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf16(str)
             ptr.setPointer(idx * sliceSize, slice.data)
-            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
             mem
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = array.size.toLong()
+        slice.len = size_t(array.size.toLong())
         return Pair(mems + mem, slice)
     }
 
     fun getUtf16s(slice: Slice): List<String> {
-        return (0..slice.len).map { idx ->
+        return (0..slice.len.toInt()).map { idx ->
             val thisSlice = Slice()
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = thisLen
+            thisSlice.len = size_t(thisLen)
             getUtf16(thisSlice)
         }
     }
 
     fun getUtf8s(slice: Slice): List<String> {
-        return (0..slice.len).map { idx ->
+        return (0..slice.len.toInt()).map { idx ->
             val thisSlice = Slice()
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = thisLen
+            thisSlice.len = size_t(thisLen)
             getUtf8(thisSlice)
         }
     }
 }
 
+class size_t(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
+    override fun toByte(): Byte = value.toByte()
+    override fun toChar(): Char = value.toInt().toChar()
+    override fun toShort(): Short = value.toShort()
+}
+
 class Slice: Structure(), Structure.ByValue {
 
     @JvmField var data: Pointer = Pointer(0)// Pointer to const char
-    @JvmField var len: Long = 0 // size_t
+    @JvmField var len: size_t = size_t() // size_t of 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
