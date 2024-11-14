@@ -100,8 +100,9 @@ internal class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
             {% endif -%}
             val native_wrapper = DiplomatTrait_{{trait_name}}_Wrapper_Native();
             native_wrapper.vtable = vtable;
-            native_wrapper.data_ = DiplomatJVMRuntime.buildRustCookie(native_wrapper as Object);
-            return DiplomatTrait_{{trait_name}}_Wrapper(native_wrapper);
+            val ret_val = DiplomatTrait_{{trait_name}}_Wrapper(native_wrapper);
+            ret_val.nativeStruct.data_ = DiplomatJVMRuntime.buildRustCookie(ret_val as Object);
+            return ret_val;
         }
     }
 }
