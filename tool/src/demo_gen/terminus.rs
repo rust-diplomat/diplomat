@@ -391,10 +391,15 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         self.module_name.clone(),
                         self.relative_import_path.clone(),
                     ));
+                
+                let owned_type = format!("{}{}", 
+                    node.owning_param.as_ref().map(|o| {format!("{o}:")}).unwrap_or_default(),
+                    param_name
+                );
 
                 let mut child = MethodDependency::new(
                     self.get_constructor_js(type_name.to_string(), method),
-                    Some(param_name),
+                    Some(owned_type),
                 );
 
                 let call = self.evaluate_constructor(method, &mut child);
@@ -439,8 +444,13 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.module_name.clone(),
                 self.relative_import_path.clone(),
             ));
+        
+        let owned_type = format!("{}{}", 
+            node.owning_param.as_ref().map(|o| {format!("{o}:")}).unwrap_or_default(),
+            param_name
+        );
 
-        let mut child = MethodDependency::new("".to_string(), Some(param_name));
+        let mut child = MethodDependency::new("".to_string(), Some(owned_type));
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
