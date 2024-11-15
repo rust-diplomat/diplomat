@@ -391,9 +391,13 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         self.module_name.clone(),
                         self.relative_import_path.clone(),
                     ));
-                
-                let owned_type = format!("{}{}", 
-                    node.owning_param.as_ref().map(|o| {format!("{o}:")}).unwrap_or_default(),
+
+                let owned_type = format!(
+                    "{}{}",
+                    node.owning_param
+                        .as_ref()
+                        .map(|o| { format!("{o}:") })
+                        .unwrap_or_default(),
                     param_name
                 );
 
@@ -444,9 +448,13 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.module_name.clone(),
                 self.relative_import_path.clone(),
             ));
-        
-        let owned_type = format!("{}{}", 
-            node.owning_param.as_ref().map(|o| {format!("{o}:")}).unwrap_or_default(),
+
+        let owned_type = format!(
+            "{}{}",
+            node.owning_param
+                .as_ref()
+                .map(|o| { format!("{o}:") })
+                .unwrap_or_default(),
             param_name
         );
 
