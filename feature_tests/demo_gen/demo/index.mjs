@@ -24,7 +24,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "SelfA:Field",
+                name: "Self:A:Field",
                 type: "number",
                 typeUse: "number"
             }
@@ -39,7 +39,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "SelfAA:Field",
+                name: "Self:A:A:Field",
                 type: "number",
                 typeUse: "number"
             }

@@ -199,7 +199,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             let owning_str = node
                 .owning_param
                 .as_ref()
-                .map(|p| format!("{}:", heck::AsUpperCamelCase(p)))
+                .map(|p| format!("{}:", p))
                 .unwrap_or_default();
             format!(
                 "{}{}",
@@ -398,7 +398,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         .as_ref()
                         .map(|o| { format!("{o}:") })
                         .unwrap_or_default(),
-                    param_name
+                    heck::AsUpperCamelCase(param_name)
                 );
 
                 let mut child = MethodDependency::new(
@@ -455,7 +455,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 .as_ref()
                 .map(|o| { format!("{o}:") })
                 .unwrap_or_default(),
-            param_name
+            heck::AsUpperCamelCase(param_name)
         );
 
         let mut child = MethodDependency::new("".to_string(), Some(owned_type));
