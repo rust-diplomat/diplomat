@@ -211,7 +211,7 @@ pub mod ffi {
     // For demo_gen testing. How many layers in are we going?
     #[derive(Default)]
     pub struct CyclicStructC {
-        pub a : CyclicStructA
+        pub a: CyclicStructA,
     }
 
     impl CyclicStructA {
@@ -219,7 +219,7 @@ pub mod ffi {
             Default::default()
         }
 
-        pub fn cyclic_out(self, out : &mut DiplomatWrite) {
+        pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.field.to_string()).unwrap();
         }
     }
@@ -231,7 +231,7 @@ pub mod ffi {
     }
 
     impl CyclicStructC {
-        pub fn cyclic_out(self, out : &mut DiplomatWrite) {
+        pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.a.field.to_string()).unwrap();
         }
     }
