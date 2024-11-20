@@ -208,14 +208,31 @@ pub mod ffi {
         pub field: u8,
     }
 
+    // For demo_gen testing. How many layers in are we going?
+    #[derive(Default)]
+    pub struct CyclicStructC {
+        pub a : CyclicStructA
+    }
+
     impl CyclicStructA {
         pub fn get_b() -> CyclicStructB {
             Default::default()
         }
+
+        pub fn cyclic_out(self, out : &mut DiplomatWrite) {
+            out.write_str(&self.a.field.to_string()).unwrap();
+        }
     }
+
     impl CyclicStructB {
         pub fn get_a() -> CyclicStructA {
             Default::default()
+        }
+    }
+
+    impl CyclicStructC {
+        pub fn cyclic_out(self, out : &mut DiplomatWrite) {
+            out.write_str(&self.a.a.field.to_string()).unwrap();
         }
     }
 
