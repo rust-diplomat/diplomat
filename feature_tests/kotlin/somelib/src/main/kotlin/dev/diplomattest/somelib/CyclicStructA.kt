@@ -38,7 +38,7 @@ class CyclicStructA internal constructor (
             return returnStruct
         }
     }
-
+    
     fun cyclicOut(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.CyclicStructA_cyclic_out(nativeStruct, write);
