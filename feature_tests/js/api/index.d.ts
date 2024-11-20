@@ -22,6 +22,8 @@ export { CyclicStructA } from "./CyclicStructA"
 
 export { CyclicStructB } from "./CyclicStructB"
 
+export { CyclicStructC } from "./CyclicStructC"
+
 export { MyStruct } from "./MyStruct"
 
 export { MyZst } from "./MyZst"
