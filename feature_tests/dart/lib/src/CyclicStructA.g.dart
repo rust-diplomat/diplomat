@@ -19,13 +19,6 @@ final class CyclicStructA {
   // ignore: unused_element
   CyclicStructA._fromFfi(_CyclicStructAFfi ffi) :
     a = CyclicStructB._fromFfi(ffi.a);
-  
-  String cyclicOut() {
-    final temp = _FinalizedArena();
-    final write = _Write();
-    _CyclicStructA_cyclic_out(_toFfi(temp.arena), write._ffi);
-    return write.finalize();
-  }
 
   // ignore: unused_element
   _CyclicStructAFfi _toFfi(ffi.Allocator temp) {
@@ -37,6 +30,13 @@ final class CyclicStructA {
   static CyclicStructB getB() {
     final result = _CyclicStructA_get_b();
     return CyclicStructB._fromFfi(result);
+  }
+
+  String cyclicOut() {
+    final temp = _FinalizedArena();
+    final write = _Write();
+    _CyclicStructA_cyclic_out(_toFfi(temp.arena), write._ffi);
+    return write.finalize();
   }
 
   @override

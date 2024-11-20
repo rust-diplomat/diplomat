@@ -39,4 +39,3 @@ class CyclicStructC internal constructor (
     }
 
 }
-
