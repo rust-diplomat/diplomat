@@ -20,5 +20,4 @@ typedef struct CyclicStructC_option {union { CyclicStructC ok; }; bool is_ok; } 
 
 
 
-
 #endif // CyclicStructC_D_H

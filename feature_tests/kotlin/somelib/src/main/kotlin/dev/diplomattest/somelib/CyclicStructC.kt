@@ -38,6 +38,5 @@ class CyclicStructC internal constructor (
         return returnString
     }
 
-
 }
 

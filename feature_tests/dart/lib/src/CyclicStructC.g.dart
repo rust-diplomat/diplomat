@@ -34,7 +34,6 @@ final class CyclicStructC {
     return write.finalize();
   }
 
-
   @override
   bool operator ==(Object other) =>
       other is CyclicStructC &&
@@ -50,5 +49,3 @@ final class CyclicStructC {
 @ffi.Native<ffi.Void Function(_CyclicStructCFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructC_cyclic_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructC_cyclic_out(_CyclicStructCFfi self, ffi.Pointer<ffi.Opaque> write);
-
-

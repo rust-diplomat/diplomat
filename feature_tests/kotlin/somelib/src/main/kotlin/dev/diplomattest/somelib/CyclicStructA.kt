@@ -8,6 +8,7 @@ import com.sun.jna.Structure
 
 internal interface CyclicStructALib: Library {
     fun CyclicStructA_get_b(): CyclicStructBNative
+    fun CyclicStructA_cyclic_out(nativeStruct: CyclicStructANative, write: Pointer): Unit
 }
 
 internal class CyclicStructANative: Structure(), Structure.ByValue {
@@ -35,6 +36,14 @@ class CyclicStructA internal constructor (
             
             val returnStruct = CyclicStructB(returnVal)
             return returnStruct
+        }
+
+        fun cyclicOut(): String {
+            val write = DW.lib.diplomat_buffer_write_create(0)
+            val returnVal = lib.CyclicStructA_cyclic_out(nativeStruct, write);
+
+            val returnString = DW.writeToString(write)
+            return returnString
         }
     }
 

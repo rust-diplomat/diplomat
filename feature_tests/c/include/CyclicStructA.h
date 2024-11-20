@@ -18,6 +18,8 @@
 
 CyclicStructB CyclicStructA_get_b(void);
 
+void CyclicStructA_cyclic_out(CyclicStructA self, DiplomatWrite* write);
+
 
 
 

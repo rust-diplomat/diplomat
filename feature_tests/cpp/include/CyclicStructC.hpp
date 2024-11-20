@@ -24,7 +24,6 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-
 inline std::string CyclicStructC::cyclic_out() {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
@@ -32,7 +31,6 @@ inline std::string CyclicStructC::cyclic_out() {
     &write);
   return output;
 }
-
 
 
 inline diplomat::capi::CyclicStructC CyclicStructC::AsFFI() const {
@@ -46,7 +44,6 @@ inline CyclicStructC CyclicStructC::FromFFI(diplomat::capi::CyclicStructC c_stru
     /* .a = */ CyclicStructA::FromFFI(c_struct.a),
   };
 }
-
 
 
 #endif // CyclicStructC_HPP

@@ -24,7 +24,6 @@ namespace capi {
 } // namespace
 
 
-
 struct CyclicStructC {
   CyclicStructA a;
 
@@ -33,7 +32,6 @@ struct CyclicStructC {
   inline diplomat::capi::CyclicStructC AsFFI() const;
   inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);
 };
-
 
 
 #endif // CyclicStructC_D_HPP
