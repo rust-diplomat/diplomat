@@ -37,6 +37,18 @@ export class BorrowedFieldsReturning {
         return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
     }
 
+    static _fromSuppliedValue(symbol, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof BorrowedFieldsReturning) {
+            return obj;
+        }
+
+        return new BorrowedFieldsReturning(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

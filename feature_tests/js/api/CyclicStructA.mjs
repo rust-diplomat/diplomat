@@ -32,7 +32,19 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#a._intoFFI(functionCleanupArena, {})]
+        return [...CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+    }
+
+    static _fromSuppliedValue(symbol, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof CyclicStructA) {
+            return obj;
+        }
+
+        return new CyclicStructA(obj);
     }
 
     _writeToArrayBuffer(
@@ -41,7 +53,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        this.#a._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
