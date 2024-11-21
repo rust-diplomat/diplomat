@@ -605,7 +605,8 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 gen_context,
                 PrimitiveType::Int(IntType::I32),
             ),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(
+            Type::Struct(ref s) => self.gen_js_to_c_for_struct_type(
+                self.formatter.fmt_type_name(s.id()),
                 js_name,
                 struct_borrow_info,
                 alloc.unwrap(),
@@ -697,6 +698,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     /// The end goal of this is to call `_intoFFI`, to convert a structure into a flattened list of values that WASM understands.
     pub(super) fn gen_js_to_c_for_struct_type(
         &self,
+        js_type: Cow<'tcx, str>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         allocator: &str,
@@ -725,6 +727,9 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
+
+        let js_call = format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
+
         match gen_context {
             JsToCConversionContext::List(force_padding) => {
                 let force_padding = match force_padding {
@@ -732,10 +737,10 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     ForcePaddingStatus::Force => ", true",
                     ForcePaddingStatus::PassThrough => ", forcePadding",
                 };
-                format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+                format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
-                "{js_name}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
+                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
             )
             .into(),
             JsToCConversionContext::SlicePrealloc => {

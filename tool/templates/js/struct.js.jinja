@@ -92,6 +92,18 @@ export class {{type_name}} {
         ]
     }
 
+    static _fromSuppliedValue(symbol, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof {{type_name}}) {
+            return obj;
+        }
+
+        return new {{type_name}}(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,
