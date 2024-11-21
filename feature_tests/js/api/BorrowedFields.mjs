@@ -66,7 +66,7 @@ export class BorrowedFields {
         return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).splat()]
     }
 
-    static _fromSuppliedValue(symbol, obj) {
+    static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
         }

@@ -35,7 +35,7 @@ export class CyclicStructB {
         return [this.#field]
     }
 
-    static _fromSuppliedValue(symbol, obj) {
+    static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
         }

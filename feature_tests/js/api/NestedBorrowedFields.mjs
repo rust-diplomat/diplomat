@@ -71,7 +71,7 @@ export class NestedBorrowedFields {
         return [...BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],}), ...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._intoFFI(functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
-    static _fromSuppliedValue(symbol, obj) {
+    static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
         }

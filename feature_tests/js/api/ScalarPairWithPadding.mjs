@@ -55,7 +55,7 @@ export class ScalarPairWithPadding {
         return [this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#second]
     }
 
-    static _fromSuppliedValue(symbol, obj) {
+    static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
         }

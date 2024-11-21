@@ -53,7 +53,7 @@ export class FixedDecimalFormatterOptions {
         return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
-    static _fromSuppliedValue(symbol, obj) {
+    static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
         }
