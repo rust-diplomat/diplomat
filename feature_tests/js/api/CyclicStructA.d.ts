@@ -13,4 +13,6 @@ export class CyclicStructA {
     constructor(structObj : CyclicStructA_Obj);
 
     static getB(): CyclicStructB;
+
+    cyclicOut(): string;
 }

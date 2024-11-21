@@ -18,6 +18,7 @@ part 'BorrowedFieldsWithBounds.g.dart';
 part 'ContiguousEnum.g.dart';
 part 'CyclicStructA.g.dart';
 part 'CyclicStructB.g.dart';
+part 'CyclicStructC.g.dart';
 part 'ErrorEnum.g.dart';
 part 'ErrorStruct.g.dart';
 part 'Float64Vec.g.dart';

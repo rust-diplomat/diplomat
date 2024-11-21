@@ -29,6 +29,8 @@ struct CyclicStructA {
 
   inline static CyclicStructB get_b();
 
+  inline std::string cyclic_out();
+
   inline diplomat::capi::CyclicStructA AsFFI() const;
   inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);
 };

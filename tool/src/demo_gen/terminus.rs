@@ -199,7 +199,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             let owning_str = node
                 .owning_param
                 .as_ref()
-                .map(|p| format!("{}:", heck::AsUpperCamelCase(p)))
+                .map(|p| format!("{}:", p))
                 .unwrap_or_default();
             format!(
                 "{}{}",
@@ -392,9 +392,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         self.relative_import_path.clone(),
                     ));
 
+                let owned_type = format!(
+                    "{}{}",
+                    node.owning_param
+                        .as_ref()
+                        .map(|o| { format!("{o}:") })
+                        .unwrap_or_default(),
+                    heck::AsUpperCamelCase(param_name)
+                );
+
                 let mut child = MethodDependency::new(
                     self.get_constructor_js(type_name.to_string(), method),
-                    Some(param_name),
+                    Some(owned_type),
                 );
 
                 let call = self.evaluate_constructor(method, &mut child);
@@ -440,7 +449,16 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 self.relative_import_path.clone(),
             ));
 
-        let mut child = MethodDependency::new("".to_string(), Some(param_name));
+        let owned_type = format!(
+            "{}{}",
+            node.owning_param
+                .as_ref()
+                .map(|o| { format!("{o}:") })
+                .unwrap_or_default(),
+            heck::AsUpperCamelCase(param_name)
+        );
+
+        let mut child = MethodDependency::new("".to_string(), Some(owned_type));
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]

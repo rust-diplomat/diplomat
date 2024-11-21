@@ -19,6 +19,8 @@ namespace capi {
     
     diplomat::capi::CyclicStructB CyclicStructA_get_b(void);
     
+    void CyclicStructA_cyclic_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
+    
     
     } // extern "C"
 } // namespace capi
@@ -27,6 +29,14 @@ namespace capi {
 inline CyclicStructB CyclicStructA::get_b() {
   auto result = diplomat::capi::CyclicStructA_get_b();
   return CyclicStructB::FromFFI(result);
+}
+
+inline std::string CyclicStructA::cyclic_out() {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::CyclicStructA_cyclic_out(this->AsFFI(),
+    &write);
+  return output;
 }
 
 
