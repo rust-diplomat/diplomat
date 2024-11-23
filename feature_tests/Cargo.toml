@@ -1,18 +1,20 @@
 [package]
 name = "diplomat-feature-tests"
-version = "0.0.0"
 publish = false
-authors = [
-    "Shadaj Laddad <shadaj@users.noreply.github.com>",
-    "Manish Goregaokar <manishsmail@gmail.com>",
-    "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
-]
-edition = "2021"
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+
 
 [lib]
 crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
-diplomat = { path = "../macro" }
-diplomat-runtime = { path = "../runtime", feature = ["log", "jvm-callback-support"] }
+diplomat.workspace = true
+diplomat-runtime = { workspace = true, features = ["log", "jvm-callback-support"] }
 log = { version = "0.4" }

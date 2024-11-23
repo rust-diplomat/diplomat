@@ -1,21 +1,17 @@
 [package]
 name = "diplomat-tool"
 description = "Tool for generating FFI bindings for various languages"
-version = "0.8.0"
-authors = [
-    "Shadaj Laddad <shadaj@users.noreply.github.com>",
-    "Manish Goregaokar <manishsmail@gmail.com>",
-    "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
-]
-edition = "2021"
-license = "MIT OR Apache-2.0"
-documentation = "https://docs.rs/diplomat_core/"
-keywords = ["ffi", "codegen"]
-categories = ["development-tools"]
-repository = "https://github.com/rust-diplomat/diplomat"
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
 
 [dependencies]
-diplomat_core = { path = "../core", version = "0.8.0", features = ["displaydoc", "hir"] }
+diplomat_core = { workspace = true, features = ["displaydoc", "hir"] }
 syn = { version = "2", features = [ "full", "extra-traits" ] }
 syn-inline-mod = "0.6.0"
 quote = "1.0"
