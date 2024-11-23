@@ -1,20 +1,21 @@
 [package]
 name = "diplomat-example"
-version = "0.0.0"
 publish = false
-authors = [
-    "Shadaj Laddad <shadaj@users.noreply.github.com>",
-    "Manish Goregaokar <manishsmail@gmail.com>",
-    "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
-]
-edition = "2018"
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
 
 [lib]
 crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
-diplomat = { path = "../macro" }
-diplomat-runtime = { path = "../runtime" }
+diplomat.workspace = true
+diplomat-runtime.workspace = true
 icu = "1.2"
 writeable = "0.5.2"
 fixed_decimal = "0.5.3"
