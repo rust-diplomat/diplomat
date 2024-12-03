@@ -12,8 +12,6 @@ export class CyclicStructA {
     set a(value: CyclicStructB); 
     constructor(structObj : CyclicStructA_Obj);
 
-    static new_(a: CyclicStructB): CyclicStructA;
-
     static getB(): CyclicStructB;
 
     cyclicOut(): string;

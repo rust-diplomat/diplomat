@@ -27,9 +27,11 @@ test("Test struct creation", t => {
 });
 
 test("Function Takes Nested Struct Parameters", t => {
-    const nested = CyclicStructC.new_({
+    const nested = CyclicStructC.takesNestedParameters({
         a: {
-            field: 10
+            a: {
+                field: 10
+            }
         }
     });
     t.is(nested.cyclicOut(), "10");

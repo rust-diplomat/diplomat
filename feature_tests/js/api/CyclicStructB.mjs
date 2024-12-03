@@ -72,20 +72,6 @@ export class CyclicStructB {
         return new CyclicStructB(structObj, internalConstructor);
     }
 
-    static new_(field) {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
-        
-        const result = wasm.CyclicStructB_new(diplomatReceive.buffer, field);
-    
-        try {
-            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-        }
-        
-        finally {
-            diplomatReceive.free();
-        }
-    }
-
     static getA() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
         
