@@ -35,7 +35,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.named_constructors = false; // TODO
     a.fallible_constructors = false; // TODO
     a.accessors = false;
-    a.stringifiers = false; // TODO
+    a.stringifiers = true;
     a.comparators = false; // TODO
     a.iterators = true;
     a.iterables = true;
@@ -1188,18 +1188,18 @@ returnVal.option() ?: return null
                     panic!("Can only have one iterable method per opaque struct")
                 }
             }
+            Some(SpecialMethod::Stringifier) => {
+                if !special_methods.has_stringifier {
+                    special_methods.has_stringifier = true;
+                    format!("override fun toString(): String")
+                } else {
+                    panic!("Can only have one stringifier method per opaque struct")
+                }
+            }
             _ => {
-                let should_be_overridden =
-                    self.formatter
-                        .method_should_be_overridden(method, &params, return_ty.as_ref());
                 format!(
-                    "{}fun {}({}): {return_ty}",
-                    if should_be_overridden {
-                        "override "
-                    } else {
-                        ""
-                    },
-                    self.formatter.fmt_method_name(method, should_be_overridden),
+                    "fun {}({}): {return_ty}",
+                    self.formatter.fmt_method_name(method),
                     params
                 )
             }
@@ -1911,6 +1911,7 @@ struct SpecialMethods {
     iterator_type: Option<String>,
     indexer_type: Option<IndexerType>,
     iterable_type: Option<String>,
+    has_stringifier: bool,
 }
 
 struct IndexerType {
@@ -1931,6 +1932,7 @@ impl SpecialMethodsImpl {
             iterator_type,
             indexer_type,
             iterable_type,
+            has_stringifier: _,
         }: SpecialMethods,
     ) -> Self {
         let interfaces = iterator_type
