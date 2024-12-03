@@ -129,9 +129,9 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn method_should_be_overridden<'a>(
+    pub fn method_should_be_overridden(
         &self,
-        method: &'a hir::Method,
+        method: &hir::Method,
         params: &str,
         return_type: &str,
     ) -> bool {

@@ -1192,7 +1192,7 @@ returnVal.option() ?: return null
                 let should_be_overridden = self.formatter.method_should_be_overridden(
                     method,
                     &params,
-                    &return_ty.to_string(),
+                    return_ty.as_ref(),
                 );
                 format!(
                     "{}fun {}({}): {return_ty}",
