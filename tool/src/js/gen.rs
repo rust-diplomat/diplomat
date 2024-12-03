@@ -30,7 +30,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
-    pub imports: RefCell<BTreeSet<String>>,
+    pub imports: RefCell<BTreeSet<ImportInfo<'tcx>>>,
 }
 
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
@@ -50,7 +50,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         for import in self.imports.borrow().iter() {
             new_imports.push(
                 self.formatter
-                    .fmt_import_statement(import, typescript, "./".into()),
+                    .fmt_import_statement(&import.import_type, typescript, "./".into()),
             );
         }
 
@@ -66,15 +66,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// A wrapper for `borrow_mut`ably inserting new imports.
     ///
     /// I do this to avoid borrow checking madness.
-    pub(super) fn add_import(&self, import_str: String) {
-        self.imports.borrow_mut().insert(import_str);
+    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>) {
+        self.imports.borrow_mut().insert(ImportInfo {
+            import_type: import_str,
+            import_file: Default::default()
+        });
     }
 
     /// Exists for the same reason as [`Self::add_import`].
     ///
     /// Right now, only used for removing any self imports.
-    pub(super) fn remove_import(&self, import_str: String) {
-        self.imports.borrow_mut().remove(&import_str);
+    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>) {
+        self.imports.borrow_mut().remove(&ImportInfo{
+            import_type: import_str,
+            import_file: Default::default()
+        });
     }
 
     /// Generate an enumerator type's body for a file from the given definition.
@@ -384,9 +390,19 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         }
 
         for param in method.params.iter() {
+            let base_type = self.gen_js_type_str(&param.ty);
+            let param_type_str = format!("{base_type}{}",
+                // If we're a struct, accept the StructType_Obj type as an input as well.
+                if let Type::Struct(..) = &param.ty {
+                    format!(" | {base_type}_Obj")
+                } else {
+                    "".into()
+                }
+            ).into();
+
             let param_info = ParamInfo {
                 name: self.formatter.fmt_param_name(param.name.as_str()),
-                ty: self.gen_js_type_str(&param.ty),
+                ty: param_type_str,
             };
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
@@ -603,6 +619,12 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
 
     /// Used in the constructor() function to determine whether or not this field is required for construction.
     is_optional: bool,
+}
+
+#[derive(PartialEq, PartialOrd, Eq, Ord)]
+pub(super) struct ImportInfo<'info> {
+    import_type : Cow<'info, str>,
+    import_file : Cow<'info, str>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
