@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct } from "diplomat-wasm-js-feature-tests";
+import { CyclicStructC, MyEnum, MyStruct } from "diplomat-wasm-js-feature-tests";
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_();
     t.is(s.a, 17);
@@ -22,4 +22,22 @@ test("Test struct creation", t => {
         g: MyEnum.B
     });
     t.is(s.intoA(), 17);
+});
+test("Nested Struct Construction Parameters", t => {
+    const nested = CyclicStructC.new_({
+        a: {
+            field: 10
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
+});
+test("Nested Struct Construction new keyword parameters", t => {
+    const nested = new CyclicStructC({
+        a: {
+            a: {
+                field: 10
+            }
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
 });

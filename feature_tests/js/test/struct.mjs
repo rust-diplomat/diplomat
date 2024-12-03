@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, ScalarPairWithPadding, BigStructWithStuff } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, ScalarPairWithPadding, BigStructWithStuff, CyclicStructC } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_("hello");
@@ -48,9 +48,20 @@ test("Test struct layout: complex struct with multiple padding types and contain
 });
 
 test("Nested Struct Construction Parameters", t => {
-    const nested = new CyclicStructA({
+    const nested = CyclicStructC.new_({
         a: {
             field: 10
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
+});
+
+test("Nested Struct Construction new keyword parameters", t => {
+    const nested = new CyclicStructC({
+        a: {
+            a: {
+                field: 10
+            }
         }
     });
     t.is(nested.cyclicOut(), "10");
