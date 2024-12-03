@@ -66,20 +66,21 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// A wrapper for `borrow_mut`ably inserting new imports.
     ///
     /// I do this to avoid borrow checking madness.
-    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>) {
+    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>, usage: ImportUsage) {
         self.imports.borrow_mut().insert(ImportInfo {
             import_type: import_str.clone(),
-            import_file: import_file.unwrap_or(self.formatter.fmt_file_name_extensionless(&import_str).into())
+            import_file: import_file.unwrap_or(self.formatter.fmt_file_name_extensionless(&import_str).into()),usage
         });
     }
 
     /// Exists for the same reason as [`Self::add_import`].
     ///
     /// Right now, only used for removing any self imports.
-    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>) {
+    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>, usage: ImportUsage) {
         self.imports.borrow_mut().remove(&ImportInfo{
             import_type: import_str,
-            import_file: import_file.unwrap_or_default()
+            import_file: import_file.unwrap_or_default(),
+            usage
         });
     }
 
@@ -395,7 +396,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 // If we're a struct, accept the StructType_Obj type as an input as well.
                 if let Type::Struct(..) = &param.ty {
                     let obj_ty : Cow<'tcx, str> = format!("{base_type}_Obj").into();
-                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&obj_ty).into()));
+                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&obj_ty).into()), ImportUsage::Typescript);
                     format!(" | {obj_ty}")
                 } else {
                     "".into()
@@ -624,9 +625,17 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
 }
 
 #[derive(PartialEq, PartialOrd, Eq, Ord)]
+pub(super) enum ImportUsage {
+    Module,
+    Typescript,
+    Both
+}
+
+#[derive(PartialEq, PartialOrd, Eq, Ord)]
 pub(super) struct ImportInfo<'info> {
     import_type : Cow<'info, str>,
     import_file : Cow<'info, str>,
+    usage : ImportUsage
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
