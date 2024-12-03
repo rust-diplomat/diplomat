@@ -47,7 +47,7 @@ test("Test struct layout: complex struct with multiple padding types and contain
     t.is(true, true); // Ava doesn't like tests without assertions
 });
 
-test("Nested Struct Construction Parameters", t => {
+test("Function Takes Nested Struct Parameters", t => {
     const nested = CyclicStructC.new_({
         a: {
             field: 10
@@ -56,7 +56,7 @@ test("Nested Struct Construction Parameters", t => {
     t.is(nested.cyclicOut(), "10");
 });
 
-test("Nested Struct Construction new keyword parameters", t => {
+test("Nested Struct Construction", t => {
     const nested = new CyclicStructC({
         a: {
             a: {
