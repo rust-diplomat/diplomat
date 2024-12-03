@@ -624,10 +624,14 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     is_optional: bool,
 }
 
+/// Where the imports are going to be used in.
 #[derive(PartialEq, PartialOrd, Eq, Ord)]
 pub(super) enum ImportUsage {
+    /// .mjs files only
     Module,
+    /// .d.ts files only
     Typescript,
+    /// Both .mjs and .d.ts
     Both
 }
 
