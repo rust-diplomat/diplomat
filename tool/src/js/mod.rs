@@ -160,14 +160,16 @@ pub(crate) fn run<'tcx>(
             files.add_file(file_name, context.generate_base(ts, contents));
         }
 
+        let export_filename = formatter.fmt_file_name_extensionless(&context.type_name);
+
         exports.push(
             formatter
-                .fmt_export_statement(&context.type_name, false, "./".into())
+                .fmt_export_statement(&context.type_name, false, "./".into(), &export_filename)
                 .into(),
         );
         ts_exports.push(
             formatter
-                .fmt_export_statement(&context.type_name, true, "./".into())
+                .fmt_export_statement(&context.type_name, true, "./".into(), &export_filename)
                 .into(),
         )
     }

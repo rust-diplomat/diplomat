@@ -48,10 +48,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         let mut new_imports = Vec::new();
         for import in self.imports.borrow().iter() {
-            new_imports.push(
-                self.formatter
-                    .fmt_import_statement(&import.import_type, typescript, "./".into()),
-            );
+            if import.usage == ImportUsage::Both || (import.usage == ImportUsage::Typescript && typescript) || (import.usage == ImportUsage::Module && !typescript) {
+                new_imports.push(
+                    self.formatter
+                        .fmt_import_statement(&import.import_type, typescript, "./".into(), &import.import_file),
+                );
+            }
         }
 
         BaseTemplate {
