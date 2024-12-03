@@ -398,7 +398,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                 // If we're a struct, accept the StructType_Obj type as an input as well.
                 if let Type::Struct(..) = &param.ty {
                     let obj_ty : Cow<'tcx, str> = format!("{base_type}_Obj").into();
-                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&obj_ty).into()), ImportUsage::Typescript);
+                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&base_type).into()), ImportUsage::Typescript);
                     format!(" | {obj_ty}")
                 } else {
                     "".into()
