@@ -1191,7 +1191,7 @@ returnVal.option() ?: return null
             Some(SpecialMethod::Stringifier) => {
                 if !special_methods.has_stringifier {
                     special_methods.has_stringifier = true;
-                    format!("override fun toString(): String")
+                    "override fun toString(): String".to_string()
                 } else {
                     panic!("Can only have one stringifier method per opaque struct")
                 }
