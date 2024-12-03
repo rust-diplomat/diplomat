@@ -66,20 +66,20 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// A wrapper for `borrow_mut`ably inserting new imports.
     ///
     /// I do this to avoid borrow checking madness.
-    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>) {
+    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>) {
         self.imports.borrow_mut().insert(ImportInfo {
-            import_type: import_str,
-            import_file: Default::default()
+            import_type: import_str.clone(),
+            import_file: import_file.unwrap_or(self.formatter.fmt_file_name_extensionless(&import_str).into())
         });
     }
 
     /// Exists for the same reason as [`Self::add_import`].
     ///
     /// Right now, only used for removing any self imports.
-    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>) {
+    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>) {
         self.imports.borrow_mut().remove(&ImportInfo{
             import_type: import_str,
-            import_file: Default::default()
+            import_file: import_file.unwrap_or_default()
         });
     }
 
@@ -394,7 +394,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let param_type_str = format!("{base_type}{}",
                 // If we're a struct, accept the StructType_Obj type as an input as well.
                 if let Type::Struct(..) = &param.ty {
-                    format!(" | {base_type}_Obj")
+                    let obj_ty : Cow<'tcx, str> = format!("{base_type}_Obj").into();
+                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&obj_ty).into()));
+                    format!(" | {obj_ty}")
                 } else {
                     "".into()
                 }

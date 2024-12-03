@@ -70,7 +70,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone().into(), None);
 
                 if self.tcx.resolve_type(opaque_id).attrs().disable {
                     self.errors
@@ -88,7 +88,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone().into(), None);
 
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -101,7 +101,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone().into(), None);
 
                 if self.tcx.resolve_type(enum_id).attrs().disable {
                     self.errors
@@ -430,7 +430,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let (requires_buf, error_ret) = match return_type {
                     ReturnType::Fallible(s, Some(e)) => {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        self.add_import(type_name.into());
+                        self.add_import(type_name.into(), None);
 
                         let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
                                 ReturnableStructDef::Struct(s) => s.fields.is_empty(),

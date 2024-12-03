@@ -155,7 +155,7 @@ pub(crate) fn run<'tcx>(
             let file_name = formatter.fmt_file_name(&context.type_name, &file_type);
 
             // Remove our self reference:
-            context.remove_import(context.type_name.clone().into());
+            context.remove_import(context.type_name.clone().into(), None);
 
             files.add_file(file_name, context.generate_base(ts, contents));
         }
