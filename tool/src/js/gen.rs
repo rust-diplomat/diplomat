@@ -48,11 +48,16 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         let mut new_imports = Vec::new();
         for import in self.imports.borrow().iter() {
-            if import.usage == ImportUsage::Both || (import.usage == ImportUsage::Typescript && typescript) || (import.usage == ImportUsage::Module && !typescript) {
-                new_imports.push(
-                    self.formatter
-                        .fmt_import_statement(&import.import_type, typescript, "./".into(), &import.import_file),
-                );
+            if import.usage == ImportUsage::Both
+                || (import.usage == ImportUsage::Typescript && typescript)
+                || (import.usage == ImportUsage::Module && !typescript)
+            {
+                new_imports.push(self.formatter.fmt_import_statement(
+                    &import.import_type,
+                    typescript,
+                    "./".into(),
+                    &import.import_file,
+                ));
             }
         }
 
@@ -68,21 +73,36 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// A wrapper for `borrow_mut`ably inserting new imports.
     ///
     /// I do this to avoid borrow checking madness.
-    pub(super) fn add_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>, usage: ImportUsage) {
+    pub(super) fn add_import(
+        &self,
+        import_str: Cow<'tcx, str>,
+        import_file: Option<Cow<'tcx, str>>,
+        usage: ImportUsage,
+    ) {
         self.imports.borrow_mut().insert(ImportInfo {
             import_type: import_str.clone(),
-            import_file: import_file.unwrap_or(self.formatter.fmt_file_name_extensionless(&import_str).into()),usage
+            import_file: import_file.unwrap_or(
+                self.formatter
+                    .fmt_file_name_extensionless(&import_str)
+                    .into(),
+            ),
+            usage,
         });
     }
 
     /// Exists for the same reason as [`Self::add_import`].
     ///
     /// Right now, only used for removing any self imports.
-    pub(super) fn remove_import(&self, import_str: Cow<'tcx, str>, import_file : Option<Cow<'tcx, str>>, usage: ImportUsage) {
-        self.imports.borrow_mut().remove(&ImportInfo{
+    pub(super) fn remove_import(
+        &self,
+        import_str: Cow<'tcx, str>,
+        import_file: Option<Cow<'tcx, str>>,
+        usage: ImportUsage,
+    ) {
+        self.imports.borrow_mut().remove(&ImportInfo {
             import_type: import_str,
             import_file: import_file.unwrap_or_default(),
-            usage
+            usage,
         });
     }
 
@@ -394,16 +414,26 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         for param in method.params.iter() {
             let base_type = self.gen_js_type_str(&param.ty);
-            let param_type_str = format!("{base_type}{}",
+            let param_type_str = format!(
+                "{base_type}{}",
                 // If we're a struct, accept the StructType_Obj type as an input as well.
                 if let Type::Struct(..) = &param.ty {
-                    let obj_ty : Cow<'tcx, str> = format!("{base_type}_Obj").into();
-                    self.add_import(obj_ty.clone(), Some(self.formatter.fmt_file_name_extensionless(&base_type).into()), ImportUsage::Typescript);
+                    let obj_ty: Cow<'tcx, str> = format!("{base_type}_Obj").into();
+                    self.add_import(
+                        obj_ty.clone(),
+                        Some(
+                            self.formatter
+                                .fmt_file_name_extensionless(&base_type)
+                                .into(),
+                        ),
+                        ImportUsage::Typescript,
+                    );
                     format!(" | {obj_ty}")
                 } else {
                     "".into()
                 }
-            ).into();
+            )
+            .into();
 
             let param_info = ParamInfo {
                 name: self.formatter.fmt_param_name(param.name.as_str()),
@@ -634,13 +664,13 @@ pub(super) enum ImportUsage {
     /// .d.ts files only
     Typescript,
     /// Both .mjs and .d.ts
-    Both
+    Both,
 }
 
 pub(super) struct ImportInfo<'info> {
-    import_type : Cow<'info, str>,
-    import_file : Cow<'info, str>,
-    usage : ImportUsage
+    import_type: Cow<'info, str>,
+    import_file: Cow<'info, str>,
+    usage: ImportUsage,
 }
 
 /// Imports are only unique if they use a different type. We don't care about anything else.

@@ -110,7 +110,7 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
-        file_name : &str
+        file_name: &str,
     ) -> String {
         format!(
             r#"{{ {type_name} }} from "{relative_path}{file_name}{}"#,
@@ -127,7 +127,7 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
-        file_name : &str
+        file_name: &str,
     ) -> String {
         format!(
             r#"import {}{}""#,
@@ -159,7 +159,7 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
-        file_name : &str
+        file_name: &str,
     ) -> String {
         format!(
             r#"export {}""#,
