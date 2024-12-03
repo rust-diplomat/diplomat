@@ -637,11 +637,33 @@ pub(super) enum ImportUsage {
     Both
 }
 
-#[derive(PartialEq, PartialOrd, Eq, Ord)]
+#[derive(PartialOrd, Eq, Ord)]
 pub(super) struct ImportInfo<'info> {
     import_type : Cow<'info, str>,
     import_file : Cow<'info, str>,
     usage : ImportUsage
+}
+
+/// Imports are only unique if they use a different type. We don't care about anything else.
+impl<'info> PartialEq for ImportInfo<'info> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                ImportInfo {
+                    import_type: import_type_self,
+                    import_file: _import_file_self,
+                    usage: _usage_self,
+                },
+                ImportInfo {
+                    import_type: import_type_other,
+                    import_file: _import_file_other,
+                    usage: _usage_other,
+                },
+            ) => {
+                import_type_self.eq(import_type_other)
+            }
+        }
+    }
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
