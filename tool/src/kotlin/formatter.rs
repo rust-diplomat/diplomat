@@ -16,10 +16,11 @@ pub(super) struct KotlinFormatter<'tcx> {
     docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &[
+const INVALID_RAW_METHOD_NAMES: &[&str] = &[
     "new", "static", "default", "private", "internal", "toString",
 ];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
+const OVERRIDE_METHOD_SIGS: &[&str] = &["fun toString(): String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
     pub fn new(
@@ -112,16 +113,35 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+    pub fn fmt_method_name<'a>(
+        &self,
+        method: &'a hir::Method,
+        should_be_overridden: bool,
+    ) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
 
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
-        if INVALID_METHOD_NAMES.contains(&&*name) {
+        if INVALID_RAW_METHOD_NAMES.contains(&&*name) && !should_be_overridden {
             format!("{name}_").into()
         } else {
             name
         }
+    }
+
+    pub fn method_should_be_overridden<'a>(
+        &self,
+        method: &'a hir::Method,
+        params: &str,
+        return_type: &str,
+    ) -> bool {
+        let method_sig = format!(
+            "fun {}({}): {}",
+            &&*method.name.as_str().to_lower_camel_case(),
+            params,
+            return_type
+        );
+        OVERRIDE_METHOD_SIGS.contains(&&*method_sig)
     }
 
     pub fn fmt_trait_method_name<'a>(&self, method: &'a hir::Callback) -> Cow<'a, str> {
@@ -134,7 +154,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         } else {
             name.into()
         };
-        if INVALID_METHOD_NAMES.contains(&&*name) {
+        if INVALID_RAW_METHOD_NAMES.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name

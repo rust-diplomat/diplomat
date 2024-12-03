@@ -1188,11 +1188,23 @@ returnVal.option() ?: return null
                     panic!("Can only have one iterable method per opaque struct")
                 }
             }
-            _ => format!(
-                "fun {}({}): {return_ty}",
-                self.formatter.fmt_method_name(method),
-                params
-            ),
+            _ => {
+                let should_be_overridden = self.formatter.method_should_be_overridden(
+                    method,
+                    &params,
+                    &return_ty.to_string(),
+                );
+                format!(
+                    "{}fun {}({}): {return_ty}",
+                    if should_be_overridden {
+                        "override "
+                    } else {
+                        ""
+                    },
+                    self.formatter.fmt_method_name(method, should_be_overridden),
+                    params
+                )
+            }
         };
 
         MethodTpl {
