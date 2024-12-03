@@ -1189,11 +1189,9 @@ returnVal.option() ?: return null
                 }
             }
             _ => {
-                let should_be_overridden = self.formatter.method_should_be_overridden(
-                    method,
-                    &params,
-                    return_ty.as_ref(),
-                );
+                let should_be_overridden =
+                    self.formatter
+                        .method_should_be_overridden(method, &params, return_ty.as_ref());
                 format!(
                     "{}fun {}({}): {return_ty}",
                     if should_be_overridden {
