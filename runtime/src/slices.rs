@@ -13,12 +13,12 @@ pub struct DiplomatSlice<'a, T> {
     phantom: PhantomData<&'a [T]>,
 }
 
-impl<'a, T> Clone for DiplomatSlice<'a, T> {
+impl<T> Clone for DiplomatSlice<'_, T> {
     fn clone(&self) -> Self {
         *self
     }
 }
-impl<'a, T> Copy for DiplomatSlice<'a, T> {}
+impl<T> Copy for DiplomatSlice<'_, T> {}
 
 impl<'a, T> From<&'a [T]> for DiplomatSlice<'a, T> {
     fn from(x: &'a [T]) -> Self {
@@ -46,7 +46,7 @@ impl<'a, T> From<DiplomatSlice<'a, T>> for &'a [T] {
     }
 }
 
-impl<'a, T> Deref for DiplomatSlice<'a, T> {
+impl<T> Deref for DiplomatSlice<'_, T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
         (*self).into()
@@ -87,7 +87,7 @@ impl<'a, T> From<DiplomatSliceMut<'a, T>> for &'a mut [T] {
     }
 }
 
-impl<'a, T> Deref for DiplomatSliceMut<'a, T> {
+impl<T> Deref for DiplomatSliceMut<'_, T> {
     type Target = [T];
     fn deref(&self) -> &[T] {
         if self.ptr.is_null() {
@@ -102,7 +102,7 @@ impl<'a, T> Deref for DiplomatSliceMut<'a, T> {
     }
 }
 
-impl<'a, T> DerefMut for DiplomatSliceMut<'a, T> {
+impl<T> DerefMut for DiplomatSliceMut<'_, T> {
     fn deref_mut(&mut self) -> &mut [T] {
         if self.ptr.is_null() {
             debug_assert!(self.len == 0);
@@ -210,7 +210,7 @@ impl<'a> From<DiplomatUtf8StrSlice<'a>> for &'a str {
     }
 }
 
-impl<'a> Deref for DiplomatUtf8StrSlice<'a> {
+impl Deref for DiplomatUtf8StrSlice<'_> {
     type Target = str;
     fn deref(&self) -> &str {
         (*self).into()
