@@ -627,7 +627,7 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
 }
 
 /// Where the imports are going to be used in.
-#[derive(PartialEq, PartialOrd, Eq, Ord)]
+#[derive(PartialEq)]
 pub(super) enum ImportUsage {
     /// .mjs files only
     Module,
@@ -637,7 +637,6 @@ pub(super) enum ImportUsage {
     Both
 }
 
-#[derive(PartialOrd, Eq, Ord)]
 pub(super) struct ImportInfo<'info> {
     import_type : Cow<'info, str>,
     import_file : Cow<'info, str>,
@@ -645,26 +644,25 @@ pub(super) struct ImportInfo<'info> {
 }
 
 /// Imports are only unique if they use a different type. We don't care about anything else.
-impl<'info> PartialEq for ImportInfo<'info> {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                ImportInfo {
-                    import_type: import_type_self,
-                    import_file: _import_file_self,
-                    usage: _usage_self,
-                },
-                ImportInfo {
-                    import_type: import_type_other,
-                    import_file: _import_file_other,
-                    usage: _usage_other,
-                },
-            ) => {
-                import_type_self.eq(import_type_other)
-            }
-        }
+impl<'info> Ord for ImportInfo<'info> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.import_type.cmp(&other.import_type)
     }
 }
+
+impl<'info> PartialOrd for ImportInfo<'info> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.import_type.partial_cmp(&other.import_type)
+    }
+}
+
+impl<'info> PartialEq for ImportInfo<'info> {
+    fn eq(&self, other: &Self) -> bool {
+        self.import_type.eq(&other.import_type)
+    }
+}
+
+impl<'info> Eq for ImportInfo<'info> {}
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
