@@ -728,7 +728,8 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             }
         }
 
-        let js_call = format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
+        let js_call =
+            format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
 
         match gen_context {
             JsToCConversionContext::List(force_padding) => {

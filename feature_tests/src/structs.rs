@@ -231,7 +231,7 @@ pub mod ffi {
     }
 
     impl CyclicStructC {
-        pub fn takes_nested_parameters(c : CyclicStructC) -> CyclicStructC {
+        pub fn takes_nested_parameters(c: CyclicStructC) -> CyclicStructC {
             c
         }
 
