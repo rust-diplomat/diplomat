@@ -12,5 +12,7 @@ export class CyclicStructC {
     set a(value: CyclicStructA); 
     constructor(structObj : CyclicStructC_Obj);
 
+    static new_(a: CyclicStructA): CyclicStructC;
+
     cyclicOut(): string;
 }

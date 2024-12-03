@@ -12,5 +12,7 @@ export class CyclicStructB {
     set field(value: number); 
     constructor(structObj : CyclicStructB_Obj);
 
+    static new_(field: number): CyclicStructB;
+
     static getA(): CyclicStructA;
 }

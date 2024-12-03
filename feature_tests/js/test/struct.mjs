@@ -46,3 +46,12 @@ test("Test struct layout: complex struct with multiple padding types and contain
     s.assertValue(853);
     t.is(true, true); // Ava doesn't like tests without assertions
 });
+
+test("Nested Struct Construction Parameters", t => {
+    const nested = new CyclicStructA({
+        a: {
+            field: 10
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
+});

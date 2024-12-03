@@ -215,6 +215,14 @@ pub mod ffi {
     }
 
     impl CyclicStructA {
+        // These constructor functions test the parameters that recursive
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(a : CyclicStructB) -> CyclicStructA {
+            CyclicStructA {
+                a
+            }
+        }
+
         pub fn get_b() -> CyclicStructB {
             Default::default()
         }
@@ -225,12 +233,26 @@ pub mod ffi {
     }
 
     impl CyclicStructB {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(field : u8) -> CyclicStructB {
+            CyclicStructB {
+                field
+            }
+        }
+
         pub fn get_a() -> CyclicStructA {
             Default::default()
         }
     }
 
     impl CyclicStructC {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(a : CyclicStructA) -> CyclicStructC {
+            CyclicStructC {
+                a
+            }
+        }
+
         pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.a.field.to_string()).unwrap();
         }

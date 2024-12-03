@@ -72,6 +72,24 @@ export class CyclicStructC {
         return new CyclicStructC(structObj, internalConstructor);
     }
 
+    static new_(a) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        
+        const result = wasm.CyclicStructC_new(diplomatReceive.buffer, ...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, a)._intoFFI(functionCleanupArena, {}));
+    
+        try {
+            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        
+            diplomatReceive.free();
+        }
+    }
+
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
