@@ -46,7 +46,7 @@ export class {{type_name}} {
 
         {%- for field in fields %}
         if ("{{field.field_name}}" in structObj) {
-            this.#{{ field.field_name }} = structObj.{{field.field_name}};
+            this.#{{ field.field_name }} = {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.{{field.field_name}}) {%- else %} structObj.{{field.field_name}} {%- endif %};
         } else {
             {%- if field.is_optional %}
             this.#{{ field.field_name }} = null;
