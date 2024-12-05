@@ -28,11 +28,15 @@ export class CyclicStructC {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
+    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
+    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
+    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
         functionCleanupArena,
-        appendArrayMap
+        appendArrayMap,
+        forcePadding
     ) {
-        return [...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        return [...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {}, forcePadding)]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -51,7 +55,8 @@ export class CyclicStructC {
         arrayBuffer,
         offset,
         functionCleanupArena,
-        appendArrayMap
+        appendArrayMap,
+        forcePadding
     ) {
         CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
     }
@@ -75,7 +80,7 @@ export class CyclicStructC {
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, false);
         
         const result = wasm.CyclicStructC_takes_nested_parameters(diplomatReceive.buffer, ...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
     

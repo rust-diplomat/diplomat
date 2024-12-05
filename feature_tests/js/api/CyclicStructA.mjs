@@ -12,6 +12,14 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
+
+    #b;
+    get b()  {
+        return this.#b;
+    }
+    set b(value) {
+        this.#b = value;
+    }
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
@@ -23,6 +31,12 @@ export class CyclicStructA {
             throw new Error("Missing required field a.");
         }
 
+        if ("b" in structObj) {
+            this.#b = structObj.b;
+        } else {
+            throw new Error("Missing required field b.");
+        }
+
     }
 
     // Return this struct in FFI function friendly format.
@@ -32,7 +46,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        return [...CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {}), this.#b]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -54,6 +68,7 @@ export class CyclicStructA {
         appendArrayMap
     ) {
         CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 1, this.#b, Uint8Array);
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -68,6 +83,8 @@ export class CyclicStructA {
         var structObj = {};
         const aDeref = ptr;
         structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
+        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0];
+        structObj.b = bDeref;
 
         return new CyclicStructA(structObj, internalConstructor);
     }

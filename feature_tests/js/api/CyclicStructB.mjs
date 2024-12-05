@@ -73,7 +73,7 @@ export class CyclicStructB {
     }
 
     static getA() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, false);
         
         const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
     

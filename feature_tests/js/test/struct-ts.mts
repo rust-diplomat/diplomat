@@ -31,7 +31,8 @@ test("Function Takes Nested Struct Parameters", t => {
         a: {
             a: {
                 field: 10
-            }
+            },
+            b: 0
         }
     });
     t.is(nested.cyclicOut(), "10");
@@ -42,7 +43,8 @@ test("Nested Struct Construction", t => {
         a: {
             a: {
                 field: 10
-            }
+            },
+            b: 0
         }
     });
     t.is(nested.cyclicOut(), "10");
@@ -54,7 +56,8 @@ test("Nested Struct with pre-built Object", t => {
     const existing = new CyclicStructB({ field: 15 });
     const nested = new CyclicStructC({
         a: {
-            a: existing
+            a: existing,
+            b: 0
         }
     });
     t.is(nested.cyclicOut(), "15");
