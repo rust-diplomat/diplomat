@@ -222,7 +222,6 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     ),
                     ImportUsage::Typescript,
                 );
-                // TODO: Get this info added only for 
             }
 
             let is_option = matches!(&field.ty, hir::Type::DiplomatOption(..));
@@ -430,8 +429,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         for param in method.params.iter() {
             let base_type = self.gen_js_type_str(&param.ty);
             let param_type_str = format!(
-                "{base_type}{}",
-                // If we're a struct, accept the StructType_Obj type as an input as well.
+                "{}",
+                // If we're a struct, we can substitute StructType_Obj (since it's the only thing we need to pass to WASM)
                 if let Type::Struct(..) = &param.ty {
                     let obj_ty: Cow<'tcx, str> = format!("{base_type}_Obj").into();
                     self.add_import(
@@ -443,9 +442,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                         ),
                         ImportUsage::Typescript,
                     );
-                    format!(" | {obj_ty}")
+                    obj_ty
                 } else {
-                    "".into()
+                    base_type
                 }
             )
             .into();
