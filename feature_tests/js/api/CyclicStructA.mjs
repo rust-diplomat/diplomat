@@ -18,7 +18,7 @@ export class CyclicStructA {
         }
 
         if ("a" in structObj) {
-            this.#a = structObj.a;
+            this.#a = CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.a);
         } else {
             throw new Error("Missing required field a.");
         }

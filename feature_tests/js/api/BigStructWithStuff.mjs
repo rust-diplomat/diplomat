@@ -71,7 +71,7 @@ export class BigStructWithStuff {
         }
 
         if ("fourth" in structObj) {
-            this.#fourth = structObj.fourth;
+            this.#fourth = ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.fourth);
         } else {
             throw new Error("Missing required field fourth.");
         }

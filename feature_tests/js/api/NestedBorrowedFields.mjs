@@ -37,19 +37,19 @@ export class NestedBorrowedFields {
         }
 
         if ("fields" in structObj) {
-            this.#fields = structObj.fields;
+            this.#fields = BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.fields);
         } else {
             throw new Error("Missing required field fields.");
         }
 
         if ("bounds" in structObj) {
-            this.#bounds = structObj.bounds;
+            this.#bounds = BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.bounds);
         } else {
             throw new Error("Missing required field bounds.");
         }
 
         if ("bounds2" in structObj) {
-            this.#bounds2 = structObj.bounds2;
+            this.#bounds2 = BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.bounds2);
         } else {
             throw new Error("Missing required field bounds2.");
         }
