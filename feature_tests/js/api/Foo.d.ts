@@ -3,8 +3,8 @@ import type { Bar } from "./Bar"
 import type { BorrowedFields } from "./BorrowedFields"
 import type { BorrowedFieldsReturning } from "./BorrowedFieldsReturning"
 import type { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
-import type { BorrowedFieldsWithBounds_Obj } from "./BorrowedFieldsWithBounds"
-import type { BorrowedFields_Obj } from "./BorrowedFields"
+import type { BorrowedFieldsWithBounds_obj } from "./BorrowedFieldsWithBounds"
+import type { BorrowedFields_obj } from "./BorrowedFields"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class Foo {
@@ -18,7 +18,7 @@ export class Foo {
 
     asReturning(): BorrowedFieldsReturning;
 
-    static extractFromFields(fields: BorrowedFields_Obj): Foo;
+    static extractFromFields(fields: BorrowedFields_obj): Foo;
 
-    static extractFromBounds(bounds: BorrowedFieldsWithBounds_Obj, anotherString: string): Foo;
+    static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;
 }
