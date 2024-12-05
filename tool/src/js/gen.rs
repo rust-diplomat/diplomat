@@ -211,7 +211,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let js_type_name = self.gen_js_type_str(&field.ty);
 
             if let Type::Struct(..) = &field.ty {
-                let obj_ty: Cow<'tcx, str> = format!("{js_type_name}_Obj").into();
+                let obj_ty: Cow<'tcx, str> = format!("{js_type_name}_obj").into();
 
                 self.add_import(
                     obj_ty.clone(),
@@ -430,9 +430,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let base_type = self.gen_js_type_str(&param.ty);
             let param_type_str = format!(
                 "{}",
-                // If we're a struct, we can substitute StructType_Obj (since it's the only thing we need to pass to WASM)
+                // If we're a struct, we can substitute StructType_obj (since it's the only thing we need to pass to WASM)
                 if let Type::Struct(..) = &param.ty {
-                    let obj_ty: Cow<'tcx, str> = format!("{base_type}_Obj").into();
+                    let obj_ty: Cow<'tcx, str> = format!("{base_type}_obj").into();
                     self.add_import(
                         obj_ty.clone(),
                         Some(

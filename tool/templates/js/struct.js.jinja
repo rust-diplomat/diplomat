@@ -4,9 +4,9 @@
 {% endif -%}
 
 {%- if typescript && !is_out -%}
-type {{type_name}}_Obj = {
+type {{type_name}}_obj = {
     {%- for field in fields %}
-    {{field.field_name}}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_Obj {%- else %} {{field.js_type_name}} {%- endif %};
+    {{field.field_name}}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
     {%- endfor %}
 };
 
@@ -31,7 +31,7 @@ export class {{type_name}} {
 
     {%- if !(typescript && is_out) %}
     constructor(structObj
-        {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
+        {%- if typescript %} : {{type_name}}_obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         if (typeof structObj !== "object") {

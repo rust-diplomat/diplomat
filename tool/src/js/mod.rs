@@ -163,9 +163,9 @@ pub(crate) fn run<'tcx>(
                 gen::ImportUsage::Both,
             );
 
-            // If we're a struct, remove importing our own StructType_Obj definition if it exists.
+            // If we're a struct, remove importing our own StructType_obj definition if it exists.
             if matches!(type_def, TypeDef::Struct(..)) {
-                context.remove_import(format!("{}_Obj", context.type_name).into(), None, gen::ImportUsage::Typescript);
+                context.remove_import(format!("{}_obj", context.type_name).into(), None, gen::ImportUsage::Typescript);
             }
 
             files.add_file(file_name, context.generate_base(ts, contents));
