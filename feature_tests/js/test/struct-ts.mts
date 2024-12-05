@@ -46,6 +46,8 @@ test("Nested Struct Construction", t => {
         }
     });
     t.is(nested.cyclicOut(), "10");
+    // Test that CyclicStructA is constructed from our object:
+    t.is(nested.a.cyclicOut(), "10");
 });
 
 test("Nested Struct with pre-built Object", t => {
