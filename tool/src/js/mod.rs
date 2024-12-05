@@ -107,14 +107,12 @@ pub(crate) fn run<'tcx>(
         let (m, special_method_presence, fields, fields_out) = match type_def {
             TypeDef::Enum(e) => (&e.methods, &e.special_method_presence, None, None),
             TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence, None, None),
-            TypeDef::Struct(s) => {
-                (
-                    &s.methods,
-                    &s.special_method_presence,
-                    Some(context.generate_fields(s)),
-                    None,
-                )
-            },
+            TypeDef::Struct(s) => (
+                &s.methods,
+                &s.special_method_presence,
+                Some(context.generate_fields(s)),
+                None,
+            ),
             TypeDef::OutStruct(s) => (
                 &s.methods,
                 &s.special_method_presence,
@@ -165,7 +163,11 @@ pub(crate) fn run<'tcx>(
 
             // If we're a struct, remove importing our own StructType_obj definition if it exists.
             if matches!(type_def, TypeDef::Struct(..)) {
-                context.remove_import(format!("{}_obj", context.type_name).into(), None, gen::ImportUsage::Typescript);
+                context.remove_import(
+                    format!("{}_obj", context.type_name).into(),
+                    None,
+                    gen::ImportUsage::Typescript,
+                );
             }
 
             files.add_file(file_name, context.generate_base(ts, contents));
