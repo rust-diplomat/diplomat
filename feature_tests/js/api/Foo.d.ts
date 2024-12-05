@@ -18,7 +18,7 @@ export class Foo {
 
     asReturning(): BorrowedFieldsReturning;
 
-    static extractFromFields(fields: BorrowedFields | BorrowedFields_Obj): Foo;
+    static extractFromFields(fields: BorrowedFields_Obj): Foo;
 
-    static extractFromBounds(bounds: BorrowedFieldsWithBounds | BorrowedFieldsWithBounds_Obj, anotherString: string): Foo;
+    static extractFromBounds(bounds: BorrowedFieldsWithBounds_Obj, anotherString: string): Foo;
 }

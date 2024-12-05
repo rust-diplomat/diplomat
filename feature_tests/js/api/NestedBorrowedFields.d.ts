@@ -2,13 +2,15 @@
 import type { Bar } from "./Bar"
 import type { BorrowedFields } from "./BorrowedFields"
 import type { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
+import type { BorrowedFieldsWithBounds_Obj } from "./BorrowedFieldsWithBounds"
+import type { BorrowedFields_Obj } from "./BorrowedFields"
 import type { Foo } from "./Foo"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 type NestedBorrowedFields_Obj = {
-    fields: BorrowedFields;
-    bounds: BorrowedFieldsWithBounds;
-    bounds2: BorrowedFieldsWithBounds;
+    fields: BorrowedFields_Obj;
+    bounds: BorrowedFieldsWithBounds_Obj;
+    bounds2: BorrowedFieldsWithBounds_Obj;
 };
 
 export class NestedBorrowedFields {
