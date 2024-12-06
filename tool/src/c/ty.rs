@@ -78,7 +78,7 @@ pub struct TyGenContext<'cx, 'tcx> {
     pub impl_header_path: &'cx String,
 }
 
-impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
+impl<'tcx> TyGenContext<'_, 'tcx> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
