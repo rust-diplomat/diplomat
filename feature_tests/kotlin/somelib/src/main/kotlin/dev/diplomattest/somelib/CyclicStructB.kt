@@ -21,7 +21,7 @@ internal class CyclicStructBNative: Structure(), Structure.ByValue {
 }
 
 class CyclicStructB internal constructor (
-    internal val nativeStruct: CyclicStructBNative) {
+    internal val nativeStruct: CyclicStructBNative): Exception("Rust error result for CyclicStructB") {
     val field: UByte = nativeStruct.field.toUByte()
 
     companion object {

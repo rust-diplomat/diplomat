@@ -22,7 +22,7 @@ internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
 class BorrowedFieldsReturning internal constructor (
     internal val nativeStruct: BorrowedFieldsReturningNative,
     internal val aEdges: List<Any>
-    ) {
+    ): Exception("Rust error result for BorrowedFieldsReturning") {
     val bytes: String = PrimitiveArrayTools.getUtf8(nativeStruct.bytes)
 
     companion object {

@@ -27,7 +27,7 @@ internal class BorrowedFieldsNative: Structure(), Structure.ByValue {
 class BorrowedFields internal constructor (
     internal val nativeStruct: BorrowedFieldsNative,
     internal val aEdges: List<Any>
-    ) {
+    ): Exception("Rust error result for BorrowedFields") {
     val a: String = PrimitiveArrayTools.getUtf16(nativeStruct.a)
     val b: String = PrimitiveArrayTools.getUtf8(nativeStruct.b)
     val c: String = PrimitiveArrayTools.getUtf8(nativeStruct.c)

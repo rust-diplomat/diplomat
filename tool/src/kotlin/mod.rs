@@ -851,7 +851,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     .as_ref()
                     .map(|err| {
                         let err_converter =
-                            if let OutType::Opaque(OpaquePath { tcx_id: _my_id, .. }) = err {
+                            if let OutType::Opaque(..) | OutType::Struct(..) = err {
                                 ".err()"
                             } else {
                                 ".primitive_err()"

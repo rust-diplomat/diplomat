@@ -22,7 +22,7 @@ internal class TraitWrapperNative: Structure(), Structure.ByValue {
 }
 
 class TraitWrapper internal constructor (
-    internal val nativeStruct: TraitWrapperNative) {
+    internal val nativeStruct: TraitWrapperNative): Exception("Rust error result for TraitWrapper") {
     val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
 
     companion object {

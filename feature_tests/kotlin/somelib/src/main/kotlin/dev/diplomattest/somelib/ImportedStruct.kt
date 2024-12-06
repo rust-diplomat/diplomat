@@ -22,7 +22,7 @@ internal class ImportedStructNative: Structure(), Structure.ByValue {
 }
 
 class ImportedStruct internal constructor (
-    internal val nativeStruct: ImportedStructNative) {
+    internal val nativeStruct: ImportedStructNative): Exception("Rust error result for ImportedStruct") {
     val foo: UnimportedEnum = UnimportedEnum.fromNative(nativeStruct.foo)
     val count: UByte = nativeStruct.count.toUByte()
 

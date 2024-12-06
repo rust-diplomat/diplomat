@@ -36,7 +36,7 @@ internal class MyStructNative: Structure(), Structure.ByValue {
 }
 
 class MyStruct internal constructor (
-    internal val nativeStruct: MyStructNative) {
+    internal val nativeStruct: MyStructNative): Exception("Rust error result for MyStruct") {
     val a: UByte = nativeStruct.a.toUByte()
     val b: Boolean = nativeStruct.b > 0
     val c: UByte = nativeStruct.c.toUByte()
@@ -64,7 +64,7 @@ class MyStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return MyZst().primitive_err()
+                return MyZst().err()
             }
         }
         
@@ -74,7 +74,7 @@ class MyStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return MyZst().primitive_err()
+                return MyZst().err()
             }
         }
     }

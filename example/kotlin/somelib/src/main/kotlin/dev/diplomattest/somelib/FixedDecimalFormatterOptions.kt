@@ -23,7 +23,7 @@ internal class FixedDecimalFormatterOptionsNative: Structure(), Structure.ByValu
 }
 
 class FixedDecimalFormatterOptions internal constructor (
-    internal val nativeStruct: FixedDecimalFormatterOptionsNative) {
+    internal val nativeStruct: FixedDecimalFormatterOptionsNative): Exception("Rust error result for FixedDecimalFormatterOptions") {
     val groupingStrategy: FixedDecimalGroupingStrategy = FixedDecimalGroupingStrategy.fromNative(nativeStruct.groupingStrategy)
     val someOtherConfig: Boolean = nativeStruct.someOtherConfig > 0
 

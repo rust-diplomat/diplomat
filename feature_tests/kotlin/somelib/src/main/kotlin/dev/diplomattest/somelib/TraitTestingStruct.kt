@@ -22,7 +22,7 @@ internal class TraitTestingStructNative: Structure(), Structure.ByValue {
 }
 
 class TraitTestingStruct internal constructor (
-    internal val nativeStruct: TraitTestingStructNative) {
+    internal val nativeStruct: TraitTestingStructNative): Exception("Rust error result for TraitTestingStruct") {
     val x: Int = nativeStruct.x
     val y: Int = nativeStruct.y
 

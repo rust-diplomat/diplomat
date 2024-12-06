@@ -88,7 +88,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return Unit.err()
+                return Unit.primitive_err()
             }
         }
         
@@ -104,7 +104,7 @@ class ResultOpaque internal constructor (
             } else {
                 
                 val returnStruct = ErrorStruct(returnVal.union.err)
-                return returnStruct.primitive_err()
+                return returnStruct.err()
             }
         }
         
@@ -128,7 +128,7 @@ class ResultOpaque internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok).ok()
             } else {
-                return Unit.err()
+                return Unit.primitive_err()
             }
         }
         
