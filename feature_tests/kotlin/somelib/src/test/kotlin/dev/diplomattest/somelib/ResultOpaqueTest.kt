@@ -16,7 +16,7 @@ class ResultOpaqueTest {
         assert(resultOpaque2.isFailure)
 
         val result2 = resultOpaque2.exceptionOrNull()?.message
-        val shouldRes: Result<ResultOpaque> = ErrorEnum.Bar.err()
+        val shouldRes: Result<ResultOpaque> = ErrorEnum.Bar.primitive_err()
 
         assertEquals(result2, shouldRes.exceptionOrNull()?.message)
 
@@ -24,7 +24,7 @@ class ResultOpaqueTest {
         val resultOpaque3 = ResultOpaque.newFailingFoo()
         assert(resultOpaque3.isFailure)
         val result3 = resultOpaque3.exceptionOrNull()?.message
-        val shouldRes3: Result<ResultOpaque> = ErrorEnum.Foo.err()
+        val shouldRes3: Result<ResultOpaque> = ErrorEnum.Foo.primitive_err()
         assertEquals(result3, shouldRes3.exceptionOrNull()?.message)
 
         val resultOpaque4 = ResultOpaque.newInErr(8)
