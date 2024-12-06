@@ -850,12 +850,11 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        let err_converter =
-                            if let OutType::Opaque(..) | OutType::Struct(..) = err {
-                                ".err()"
-                            } else {
-                                ".primitive_err()"
-                            };
+                        let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
+                            ".err()"
+                        } else {
+                            ".primitive_err()"
+                        };
 
                         self.gen_out_type_return_conversion(
                             method,
