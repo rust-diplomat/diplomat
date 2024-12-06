@@ -42,7 +42,7 @@ class {{type_name}} internal constructor (
     internal var finalizer_registered: Boolean = false,
     {%- endif %}
 ): Exception("Rust error result for {{type_name}}")
-{%- if special_methods.interfaces.is_empty() %} {% else %}: {% for interface in special_methods.interfaces %}
+{%- if special_methods.interfaces.is_empty() %} {% else %}, {% for interface in special_methods.interfaces %}
 {%- if loop.first %}{% else %}, {% endif %}{{interface}}
 {%- endfor %}
 {%- endif %} {
