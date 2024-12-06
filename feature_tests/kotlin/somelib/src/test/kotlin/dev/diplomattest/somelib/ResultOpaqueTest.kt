@@ -30,7 +30,7 @@ class ResultOpaqueTest {
         val resultOpaque4 = ResultOpaque.newInErr(8)
         assert(resultOpaque4.isFailure)
         val result4 = resultOpaque4.exceptionOrNull()?.message
-        val assertion = result4?.startsWith("Received error dev.diplomattest.somelib.ResultOpaque", true)
+        val assertion = result4?.startsWith("Rust error result for ResultOpaque", true)
         assert(assertion == true)
     }
 
