@@ -30,3 +30,8 @@ test("Function Returning Nested Struct of One Field", t => {
     const a = CyclicStructB.getA();
     t.is(a.cyclicOut(), "0");
 });
+
+test("Function De-Referencing Nested Struct of One Primitive", t => {
+    const a = CyclicStructB.getAOption();
+    t.is(a.cyclicOut(), "0");
+});
