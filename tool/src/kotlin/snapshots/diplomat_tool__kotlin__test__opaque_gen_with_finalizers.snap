@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2328
+assertion_line: 2377
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -24,7 +24,7 @@ class MyOpaqueStruct internal constructor (
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any>,
     internal var finalizer_registered: Boolean = false,
-)  {
+): Exception("Rust error result for MyOpaqueStruct")  {
     fun registerFinalizer() {
         this.finalizer_registered = true
     }

@@ -64,7 +64,7 @@ class MyStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return MyZst().err()
+                return MyZst().primitive_err()
             }
         }
         
@@ -74,7 +74,7 @@ class MyStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return MyZst().err()
+                return MyZst().primitive_err()
             }
         }
     }

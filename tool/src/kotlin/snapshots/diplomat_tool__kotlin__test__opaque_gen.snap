@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 1995
+assertion_line: 2326
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -22,7 +22,7 @@ class BorrowWrapper internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
-)  {
+): Exception("Rust error result for BorrowWrapper")  {
 
     internal class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
         override fun run() {

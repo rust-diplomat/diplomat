@@ -24,7 +24,7 @@ class ResultOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for ResultOpaque")  {
 
     internal class ResultOpaqueCleaner(val handle: Pointer, val lib: ResultOpaqueLib) : Runnable {
         override fun run() {
@@ -46,7 +46,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
             }
         }
         
@@ -60,7 +60,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
             }
         }
         
@@ -74,7 +74,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
             }
         }
         
@@ -104,7 +104,7 @@ class ResultOpaque internal constructor (
             } else {
                 
                 val returnStruct = ErrorStruct(returnVal.union.err)
-                return returnStruct.err()
+                return returnStruct.primitive_err()
             }
         }
         

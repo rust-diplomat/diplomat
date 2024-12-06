@@ -15,7 +15,7 @@ class AttrOpaque2 internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for AttrOpaque2")  {
 
     internal class AttrOpaque2Cleaner(val handle: Pointer, val lib: AttrOpaque2Lib) : Runnable {
         override fun run() {

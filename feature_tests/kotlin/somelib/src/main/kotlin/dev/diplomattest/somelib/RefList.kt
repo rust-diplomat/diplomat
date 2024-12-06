@@ -17,7 +17,7 @@ class RefList internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-)  {
+): Exception("Rust error result for RefList")  {
 
     internal class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
         override fun run() {

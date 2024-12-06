@@ -18,7 +18,7 @@ class OpaqueIterator internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Iterator<AttrOpaque1?> {
+): Exception("Rust error result for OpaqueIterator"): Iterator<AttrOpaque1?> {
 
     internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {
         override fun run() {

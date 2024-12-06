@@ -18,7 +18,7 @@ class Utf16Wrap internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for Utf16Wrap")  {
 
     internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {

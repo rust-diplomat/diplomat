@@ -23,7 +23,7 @@ class OpaqueMutexedString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for OpaqueMutexedString")  {
 
     internal class OpaqueMutexedStringCleaner(val handle: Pointer, val lib: OpaqueMutexedStringLib) : Runnable {
         override fun run() {

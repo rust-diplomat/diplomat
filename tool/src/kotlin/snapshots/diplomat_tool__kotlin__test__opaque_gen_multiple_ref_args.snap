@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2174
+assertion_line: 2217
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -21,7 +21,7 @@ class AnotherOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for AnotherOpaque")  {
 
     internal class AnotherOpaqueCleaner(val handle: Pointer, val lib: AnotherOpaqueLib) : Runnable {
         override fun run() {

@@ -19,7 +19,7 @@ class Locale internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for Locale")  {
 
     internal class LocaleCleaner(val handle: Pointer, val lib: LocaleLib) : Runnable {
         override fun run() {

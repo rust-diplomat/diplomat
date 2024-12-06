@@ -16,7 +16,7 @@ class OptionOpaqueChar internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for OptionOpaqueChar")  {
 
     internal class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {
         override fun run() {

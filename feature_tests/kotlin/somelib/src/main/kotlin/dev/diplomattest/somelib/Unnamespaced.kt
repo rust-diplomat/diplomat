@@ -17,7 +17,7 @@ class Unnamespaced internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for Unnamespaced")  {
 
     internal class UnnamespacedCleaner(val handle: Pointer, val lib: UnnamespacedLib) : Runnable {
         override fun run() {

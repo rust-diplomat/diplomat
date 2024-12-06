@@ -15,7 +15,7 @@ class RefListParameter internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): Exception("Rust error result for RefListParameter")  {
 
     internal class RefListParameterCleaner(val handle: Pointer, val lib: RefListParameterLib) : Runnable {
         override fun run() {

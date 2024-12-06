@@ -850,17 +850,24 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
+                        let err_converter =
+                            if let OutType::Opaque(OpaquePath { tcx_id: _my_id, .. }) = err {
+                                ".err()"
+                            } else {
+                                ".primitive_err()"
+                            };
+
                         self.gen_out_type_return_conversion(
                             method,
                             &method_lifetimes_map,
                             cleanups,
                             "returnVal.union.err",
-                            ".err()",
+                            err_converter,
                             err,
                             use_finalizers_not_cleaners,
                         )
                     })
-                    .unwrap_or_else(|| "return Unit.err()".into());
+                    .unwrap_or_else(|| "return Unit.primitive_err()".into());
 
                 #[derive(Template)]
                 #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
