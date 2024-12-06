@@ -47,7 +47,12 @@ test("Test struct layout: complex struct with multiple padding types and contain
     t.is(true, true); // Ava doesn't like tests without assertions
 });
 
-test("Function Returning Nested Struct of One Field", t => {
+test("Function Returning Nested Struct of One Primitive", t => {
     const a = CyclicStructB.getA();
+    t.is(a.cyclicOut(), "0");
+});
+
+test("Function De-Referencing Nested Struct of One Primitive", t => {
+    const a = CyclicStructB.getAOption();
     t.is(a.cyclicOut(), "0");
 });
