@@ -10,7 +10,8 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, StructPathLike, Type, TypeContext, TypeId
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
+    StructPathLike, Type, TypeContext, TypeId,
 };
 
 use askama::{self, Template};
@@ -292,7 +293,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         (fields, needs_force_padding)
     }
 
-    pub(super) fn only_primitive<P: hir::TyPosition>(&self, st : &hir::StructDef<P>) -> bool {
+    pub(super) fn only_primitive<P: hir::TyPosition>(&self, st: &hir::StructDef<P>) -> bool {
         if st.fields.len() != 1 {
             return false;
         }
@@ -301,14 +302,12 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         match &first.ty {
             hir::Type::Primitive(..) => true,
-            hir::Type::Struct(s) => {
-                match s.id() {
-                    hir::TypeId::Struct(s) => self.only_primitive(self.tcx.resolve_struct(s)),
-                    hir::TypeId::OutStruct(s) => self.only_primitive(self.tcx.resolve_out_struct(s)),
-                    _ => false
-                }
+            hir::Type::Struct(s) => match s.id() {
+                hir::TypeId::Struct(s) => self.only_primitive(self.tcx.resolve_struct(s)),
+                hir::TypeId::OutStruct(s) => self.only_primitive(self.tcx.resolve_out_struct(s)),
+                _ => false,
             },
-            _ => false
+            _ => false,
         }
     }
 
@@ -318,7 +317,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         match st.resolve(&self.tcx) {
             hir::ReturnableStructDef::OutStruct(s) => self.only_primitive(s),
             hir::ReturnableStructDef::Struct(s) => self.only_primitive(s),
-            _ => false
+            _ => false,
         }
     }
 
@@ -369,7 +368,11 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             methods,
 
             wraps_primitive: self.only_primitive(struct_def),
-            owns_wrapped_primitive: struct_def.fields.first().is_some() && matches!(struct_def.fields.first().unwrap().ty, hir::Type::Primitive(..)),
+            owns_wrapped_primitive: struct_def.fields.first().is_some()
+                && matches!(
+                    struct_def.fields.first().unwrap().ty,
+                    hir::Type::Primitive(..)
+                ),
 
             docs: self.formatter.fmt_docs(&struct_def.docs),
         }
