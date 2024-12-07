@@ -118,11 +118,11 @@ export class {{type_name}} {
         }
         var structObj = {};
 
-        {%- if wraps_primitive %}
+        {%- if wraps_primitive && owns_wrapped_primitive %}
         structObj.{{fields.first().unwrap().field_name}} = primitiveValue;
         {% else %}
         {%- for field in fields %}
-        const {{field.field_name}}Deref = {{field.c_to_js_deref}};
+        const {{field.field_name}}Deref = {%- if wraps_primitive && !owns_wrapped_primitive %} primitiveValue {%- else %} {{field.c_to_js_deref}} {%- endif %};
         structObj.{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
         {%- endif %}

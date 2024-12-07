@@ -351,6 +351,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             methods: &'a MethodsInfo<'a>,
 
             wraps_primitive: bool,
+            owns_wrapped_primitive: bool,
 
             docs: String,
         }
@@ -368,6 +369,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             methods,
 
             wraps_primitive: self.only_primitive(struct_def),
+            owns_wrapped_primitive: struct_def.fields.first().is_some() && matches!(struct_def.fields.first().unwrap().ty, hir::Type::Primitive(..)),
 
             docs: self.formatter.fmt_docs(&struct_def.docs),
         }

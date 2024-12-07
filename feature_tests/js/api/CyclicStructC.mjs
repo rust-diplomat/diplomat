@@ -54,8 +54,8 @@ export class CyclicStructC {
             throw new Error("CyclicStructC._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
         var structObj = {};
-        structObj.a = primitiveValue;
-        
+        const aDeref = primitiveValue;
+        structObj.a = CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
         return new CyclicStructC(structObj, internalConstructor);
     }
