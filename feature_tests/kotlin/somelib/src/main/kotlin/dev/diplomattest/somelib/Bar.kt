@@ -18,7 +18,7 @@ class Bar internal constructor (
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Exception("Rust error result for Bar")  {
+)  {
 
     internal class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
         override fun run() {

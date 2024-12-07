@@ -17,7 +17,7 @@ class Two internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
-): Exception("Rust error result for Two")  {
+)  {
 
     internal class TwoCleaner(val handle: Pointer, val lib: TwoLib) : Runnable {
         override fun run() {

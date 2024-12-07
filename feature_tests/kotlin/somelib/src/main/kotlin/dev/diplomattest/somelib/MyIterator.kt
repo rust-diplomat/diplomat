@@ -18,7 +18,7 @@ class MyIterator internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Exception("Rust error result for MyIterator"), Iterator<UByte> {
+): Iterator<UByte> {
 
     internal class MyIteratorCleaner(val handle: Pointer, val lib: MyIteratorLib) : Runnable {
         override fun run() {

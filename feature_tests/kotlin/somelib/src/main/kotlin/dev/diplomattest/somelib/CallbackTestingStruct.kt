@@ -22,7 +22,7 @@ internal class CallbackTestingStructNative: Structure(), Structure.ByValue {
 }
 
 class CallbackTestingStruct internal constructor (
-    internal val nativeStruct: CallbackTestingStructNative): Exception("Rust error result for CallbackTestingStruct") {
+    internal val nativeStruct: CallbackTestingStructNative) {
     val x: Int = nativeStruct.x
     val y: Int = nativeStruct.y
 

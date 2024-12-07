@@ -28,7 +28,7 @@ class Float64Vec internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-): Exception("Rust error result for Float64Vec")  {
+)  {
 
     internal class Float64VecCleaner(val handle: Pointer, val lib: Float64VecLib) : Runnable {
         override fun run() {

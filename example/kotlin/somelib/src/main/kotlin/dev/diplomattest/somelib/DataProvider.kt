@@ -20,7 +20,7 @@ class DataProvider internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-): Exception("Rust error result for DataProvider")  {
+)  {
 
     internal class DataProviderCleaner(val handle: Pointer, val lib: DataProviderLib) : Runnable {
         override fun run() {

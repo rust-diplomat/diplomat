@@ -36,7 +36,7 @@ internal class MyStructNative: Structure(), Structure.ByValue {
 }
 
 class MyStruct internal constructor (
-    internal val nativeStruct: MyStructNative): Exception("Rust error result for MyStruct") {
+    internal val nativeStruct: MyStructNative) {
     val a: UByte = nativeStruct.a.toUByte()
     val b: Boolean = nativeStruct.b > 0
     val c: UByte = nativeStruct.c.toUByte()

@@ -4,7 +4,7 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
     PrimitiveType, ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding,
-    StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
+    StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef, ReturnableStructPath
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -42,6 +42,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.indexing = true;
     a.callbacks = true;
     a.traits = true;
+    a.custom_errors = true;
 
     a
 }
@@ -851,6 +852,27 @@ val intermediateOption = {val_name}.option() ?: return null
                     .as_ref()
                     .map(|err| {
                         let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
+                            match err {
+                                OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
+                                    let resolved = self.tcx.resolve_opaque(*id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                },
+                                OutType::Struct(ReturnableStructPath::Struct(path)) => {
+                                    let resolved = self.tcx.resolve_struct(path.tcx_id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                },
+                                OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
+                                    let resolved = self.tcx.resolve_out_struct(path.tcx_id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                }
+                                _ => {}
+                            }
                             ".err()"
                         } else {
                             ".primitive_err()"
@@ -1361,6 +1383,7 @@ returnVal.option() ?: return null
             callback_params: &'a [CallbackParamInfo],
             use_finalizers_not_cleaners: bool,
             docs: String,
+            is_custom_error: bool,
         }
 
         (
@@ -1378,6 +1401,7 @@ returnVal.option() ?: return null
                 callback_params: self.callback_params.as_ref(),
                 use_finalizers_not_cleaners,
                 docs: self.formatter.fmt_docs(&ty.docs),
+                is_custom_error: ty.attrs.custom_errors,
             }
             .render()
             .expect("failed to generate struct"),
@@ -1468,6 +1492,7 @@ returnVal.option() ?: return null
             callback_params: &'a [CallbackParamInfo],
             lifetimes: Vec<Cow<'a, str>>,
             docs: String,
+            is_custom_error: bool,
         }
 
         let fields = ty
@@ -1504,6 +1529,7 @@ returnVal.option() ?: return null
                 callback_params: self.callback_params.as_ref(),
                 lifetimes,
                 docs: self.formatter.fmt_docs(&ty.docs),
+                is_custom_error: ty.attrs.custom_errors,
             }
             .render()
             .expect("Failed to render struct template"),

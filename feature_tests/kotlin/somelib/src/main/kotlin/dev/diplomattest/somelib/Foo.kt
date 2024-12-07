@@ -22,7 +22,7 @@ class Foo internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Exception("Rust error result for Foo")  {
+)  {
 
     internal class FooCleaner(val handle: Pointer, val lib: FooLib) : Runnable {
         override fun run() {

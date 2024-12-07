@@ -27,7 +27,7 @@ class One internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Exception("Rust error result for One")  {
+)  {
 
     internal class OneCleaner(val handle: Pointer, val lib: OneLib) : Runnable {
         override fun run() {

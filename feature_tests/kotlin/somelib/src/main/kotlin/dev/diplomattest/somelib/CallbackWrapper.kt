@@ -270,7 +270,7 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     }
 }
 class CallbackWrapper internal constructor (
-    internal val nativeStruct: CallbackWrapperNative): Exception("Rust error result for CallbackWrapper") {
+    internal val nativeStruct: CallbackWrapperNative) {
     val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
 
     companion object {

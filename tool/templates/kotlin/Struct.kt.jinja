@@ -50,7 +50,7 @@ class {{type_name}} internal constructor (
     internal val {{lt}}Edges: List<Any>{% if !loop.last%},{% endif %}
     {%- endfor %}
     {% endif -%}
-    ): Exception("Rust error result for {{type_name}}") {
+    ){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %} {
 
     {%- for field in fields %}
     val {{field.name}}: {{field.field_type}} = {{field.native_to_kt}}

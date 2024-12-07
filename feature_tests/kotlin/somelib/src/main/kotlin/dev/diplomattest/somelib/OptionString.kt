@@ -18,7 +18,7 @@ class OptionString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-): Exception("Rust error result for OptionString")  {
+)  {
 
     internal class OptionStringCleaner(val handle: Pointer, val lib: OptionStringLib) : Runnable {
         override fun run() {

@@ -26,7 +26,7 @@ internal class OptionStructNative: Structure(), Structure.ByValue {
 }
 
 class OptionStruct internal constructor (
-    internal val nativeStruct: OptionStructNative): Exception("Rust error result for OptionStruct") {
+    internal val nativeStruct: OptionStructNative) {
     val a: OptionOpaque? = if (nativeStruct.a == null) {
         null
     } else {

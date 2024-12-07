@@ -41,8 +41,8 @@ class {{type_name}} internal constructor (
     {%- if use_finalizers_not_cleaners %}
     internal var finalizer_registered: Boolean = false,
     {%- endif %}
-): Exception("Rust error result for {{type_name}}")
-{%- if special_methods.interfaces.is_empty() %} {% else %}, {% for interface in special_methods.interfaces %}
+){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %}
+{%- if special_methods.interfaces.is_empty() %} {% else %}{%- if is_custom_error %},{% else %}:{% endif %} {% for interface in special_methods.interfaces %}
 {%- if loop.first %}{% else %}, {% endif %}{{interface}}
 {%- endfor %}
 {%- endif %} {

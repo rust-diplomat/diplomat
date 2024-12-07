@@ -29,7 +29,7 @@ class NestedBorrowedFields internal constructor (
     internal val xEdges: List<Any>,
     internal val yEdges: List<Any>,
     internal val zEdges: List<Any>
-    ): Exception("Rust error result for NestedBorrowedFields") {
+    ) {
     val fields: BorrowedFields = BorrowedFields(nativeStruct.fields, xEdges)
     val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds, xEdges, yEdges, yEdges)
     val bounds2: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds2, zEdges, zEdges, zEdges)

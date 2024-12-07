@@ -22,7 +22,7 @@ internal class CyclicStructANative: Structure(), Structure.ByValue {
 }
 
 class CyclicStructA internal constructor (
-    internal val nativeStruct: CyclicStructANative): Exception("Rust error result for CyclicStructA") {
+    internal val nativeStruct: CyclicStructANative) {
     val a: CyclicStructB = CyclicStructB(nativeStruct.a)
 
     companion object {
