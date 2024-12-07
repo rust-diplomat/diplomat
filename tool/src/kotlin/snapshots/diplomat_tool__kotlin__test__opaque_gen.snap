@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 1995
+assertion_line: 2352
 expression: result
 ---
 package dev.gigapixel.somelib;

@@ -58,7 +58,7 @@ pub(super) enum JsToCConversionContext {
     WriteToBuffer(&'static str, usize),
 }
 
-impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
+impl<'tcx> TyGenContext<'_, 'tcx> {
     // #region C to JS
     /// Given a type from Rust, convert it into something Typescript will understand.
     /// We use this to double-check our Javascript work as well.

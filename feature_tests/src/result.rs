@@ -2,6 +2,7 @@
 pub mod ffi {
 
     #[diplomat::opaque]
+    #[diplomat::attr(auto, error)]
     pub struct ResultOpaque(i32);
 
     #[derive(PartialEq, Eq, Debug)]
@@ -11,6 +12,7 @@ pub mod ffi {
     }
 
     #[derive(Debug)]
+    #[diplomat::attr(auto, error)]
     pub struct ErrorStruct {
         i: i32,
         j: i32,

@@ -45,6 +45,7 @@ pub mod ffi {
         g: MyEnum,
     }
 
+    #[diplomat::attr(auto, error)]
     pub struct MyZst;
 
     impl Opaque {

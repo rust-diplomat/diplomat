@@ -52,7 +52,7 @@ class DataProvider internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Unit.ok()
             } else {
-                return Unit.err()
+                return Unit.primitive_err()
             }
         }
     }

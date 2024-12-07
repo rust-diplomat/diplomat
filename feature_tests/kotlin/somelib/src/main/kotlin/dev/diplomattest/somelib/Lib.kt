@@ -331,8 +331,12 @@ internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
 
-internal fun <T, E> E.err(): Result<T> {
+internal fun <T, E> E.primitive_err(): Result<T> {
     return Result.failure(RuntimeException("Received error $this"))
+}
+
+internal fun <T> Throwable.err(): Result<T> {
+    return Result.failure(this)
 }
 
 internal class ResultIntUnitUnion: Union() {

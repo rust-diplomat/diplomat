@@ -34,6 +34,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.option = true;
     a.callbacks = true;
     a.traits = true;
+    a.custom_errors = false;
 
     a
 }

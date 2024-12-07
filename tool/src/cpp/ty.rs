@@ -61,7 +61,7 @@ pub(super) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub generating_struct_fields: bool,
 }
 
-impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
+impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Adds an enum definition to the current decl and impl headers.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the

@@ -33,7 +33,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub imports: RefCell<BTreeSet<String>>,
 }
 
-impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
+impl<'tcx> TyGenContext<'_, 'tcx> {
     /// Generates the code at the top of every `.d.ts` and `.mjs` file.
     ///
     /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used.

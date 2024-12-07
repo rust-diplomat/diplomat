@@ -22,7 +22,7 @@ internal class ErrorStructNative: Structure(), Structure.ByValue {
 }
 
 class ErrorStruct internal constructor (
-    internal val nativeStruct: ErrorStructNative) {
+    internal val nativeStruct: ErrorStructNative): Exception("Rust error result for ErrorStruct") {
     val i: Int = nativeStruct.i
     val j: Int = nativeStruct.j
 

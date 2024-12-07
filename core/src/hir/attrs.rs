@@ -41,6 +41,8 @@ pub struct Attrs {
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
+    /// This user-defined type can be used as the error type in a Result.
+    pub custom_errors: bool,
 
     /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
     /// List of attributes specific to automatic demo generation.
@@ -349,9 +351,16 @@ impl Attrs {
                                 continue;
                             }
                         }
+                    } else if path == "error" {
+                        if !support.custom_errors {
+                            maybe_error_unsupported(auto_found, "error", backend, errors);
+                            continue;
+                        }
+                        auto_used = true;
+                        this.custom_errors = true;
                     } else {
                         errors.push(LoweringError::Other(format!(
-                            "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
+                            "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
                         )));
                     }
                     if auto_found && !auto_used {
@@ -361,7 +370,7 @@ impl Attrs {
                     }
                 } else {
                     errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
+                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
                     )));
                 }
             }
@@ -458,6 +467,7 @@ impl Attrs {
             rename,
             abi_rename,
             special_method,
+            custom_errors,
             demo_attrs: _,
         } = &self;
 
@@ -745,6 +755,17 @@ impl Attrs {
                 )));
             }
         }
+
+        if *custom_errors
+            && !matches!(
+                context,
+                AttributeContext::Type(..) | AttributeContext::Trait(..)
+            )
+        {
+            errors.push(LoweringError::Other(
+                "`error` can only be used on types".to_string(),
+            ));
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -773,6 +794,8 @@ impl Attrs {
             abi_rename: Default::default(),
             // Never inherited
             special_method: None,
+            // Not inherited
+            custom_errors: false,
             demo_attrs: Default::default(),
         }
     }
@@ -849,6 +872,8 @@ pub struct BackendAttrSupport {
     pub callbacks: bool,
     /// Allowing traits
     pub traits: bool,
+    /// Marking a user-defined type as being a valid error result type.
+    pub custom_errors: bool,
 }
 
 impl BackendAttrSupport {
@@ -875,6 +900,7 @@ impl BackendAttrSupport {
             option: true,
             callbacks: true,
             traits: true,
+            custom_errors: true,
         }
     }
 }
@@ -1007,6 +1033,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 option,
                 callbacks,
                 traits,
+                custom_errors,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1029,6 +1056,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "option" => option,
                 "callbacks" => callbacks,
                 "traits" => traits,
+                "custom_errors" => custom_errors,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
