@@ -3,8 +3,9 @@ use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo}
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
-    PrimitiveType, ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding,
-    StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef, ReturnableStructPath
+    PrimitiveType, ReturnableStructDef, ReturnableStructPath, SelfType, Slice, SpecialMethod,
+    StringEncoding, StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type,
+    TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
