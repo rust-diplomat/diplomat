@@ -35,6 +35,14 @@ pub mod ffi {
         F = 3,
     }
 
+    #[diplomat::opaque]
+    pub enum MyOpaqueEnum {
+        A(String),
+        B(Utf16Wrap),
+        C,
+        D(i32, ImportedStruct),
+    }
+
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -158,6 +166,26 @@ pub mod ffi {
 
         pub fn get_a() -> MyEnum {
             MyEnum::A
+        }
+    }
+
+    impl MyOpaqueEnum {
+        #[diplomat::demo(default_constructor)]
+        pub fn new() -> Box<MyOpaqueEnum> {
+            Box::new(MyOpaqueEnum::A("a".into()))
+        }
+
+        pub fn to_string(&self, write: &mut DiplomatWrite) {
+            let _infallible = write!(
+                write,
+                "MyOpaqueEnum::{}",
+                match self {
+                    MyOpaqueEnum::A(..) => "A",
+                    MyOpaqueEnum::B(..) => "B",
+                    MyOpaqueEnum::C => "C",
+                    MyOpaqueEnum::D(..) => "D",
+                }
+            );
         }
     }
 

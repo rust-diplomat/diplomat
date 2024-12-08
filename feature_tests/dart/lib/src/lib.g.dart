@@ -25,6 +25,7 @@ part 'Float64Vec.g.dart';
 part 'Foo.g.dart';
 part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
+part 'MyOpaqueEnum.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
 part 'MyZst.g.dart';

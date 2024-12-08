@@ -6,8 +6,8 @@ use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability,
-    OpaqueStruct, Path, PathType, RustLink, Struct, Trait,
+    AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueType,
+    Path, PathType, RustLink, Struct, Trait,
 };
 use crate::environment::*;
 
@@ -18,7 +18,7 @@ enum DiplomatStructAttribute {
     /// contain an owned opaque in the form of a `Box`.
     Out,
     /// An attribute that can correspond to a type (struct or enum).
-    TypeAttr(DiplomatTypeAttribute)
+    TypeAttr(DiplomatTypeAttribute),
 }
 
 /// Custom Diplomat attribute that can be placed on an enum or struct definition.
@@ -192,10 +192,10 @@ impl Module {
                                 CustomType::Struct(Struct::new(strct, true, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::Opaque))) => {
-                                CustomType::Opaque(OpaqueStruct::new_struct(strct, Mutability::Immutable, &type_parent_attrs))
+                                CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Immutable, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::OpaqueMut))) => {
-                                CustomType::Opaque(OpaqueStruct::new_struct(strct, Mutability::Mutable, &type_parent_attrs))
+                                CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Mutable, &type_parent_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
@@ -212,10 +212,10 @@ impl Module {
                         let custom_enum = match DiplomatTypeAttribute::parse(&enm.attrs[..]) {
                             Ok(None) => CustomType::Enum(Enum::new(enm, &type_parent_attrs)),
                             Ok(Some(DiplomatTypeAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueStruct::new_enum(enm, Mutability::Immutable, &type_parent_attrs))
+                                CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Immutable, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueStruct::new_enum(enm, Mutability::Mutable, &type_parent_attrs))
+                                CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Mutable, &type_parent_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
