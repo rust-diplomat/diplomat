@@ -416,7 +416,7 @@ impl<'ast> LoweringContext<'ast> {
         };
         let lifetimes = self.lower_type_lifetime_env(&ast_trait.lifetimes);
         let def = TraitDef::new(ast_trait.docs.clone(), trait_name, fcts, attrs, lifetimes?);
-
+        
         self.attr_validator
             .validate(&def.attrs, AttributeContext::Trait(&def), &mut self.errors);
         Ok(def)
