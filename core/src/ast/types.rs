@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct, Trait,
+    OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::Env;
 
@@ -19,8 +19,8 @@ use crate::Env;
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
-    /// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
-    Opaque(OpaqueStruct),
+    /// A type annotated with [`diplomat::opaque`] whose fields are not visible.
+    Opaque(OpaqueType),
     /// A fieldless enum.
     Enum(Enum),
 }

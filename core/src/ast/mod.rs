@@ -13,7 +13,10 @@ mod modules;
 pub use modules::{File, Module};
 
 mod structs;
-pub use structs::{OpaqueStruct, Struct};
+pub use structs::Struct;
+
+mod opaque;
+pub use opaque::OpaqueType;
 
 mod traits;
 pub use traits::{Trait, TraitMethod};

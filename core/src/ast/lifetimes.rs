@@ -155,7 +155,10 @@ impl LifetimeEnv {
         LifetimeEnv::new()
     }
 
-    pub fn from_enum_item(enm: &syn::ItemEnum, variant_fields: &[(Option<Ident>, TypeName, Docs, Attrs)]) -> Self {
+    pub fn from_enum_item(
+        enm: &syn::ItemEnum,
+        variant_fields: &[(Option<Ident>, TypeName, Docs, Attrs)],
+    ) -> Self {
         let mut this = LifetimeEnv::new();
         this.extend_generics(&enm.generics);
         for (_, typ, _, _) in variant_fields {
