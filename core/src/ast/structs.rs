@@ -52,8 +52,8 @@ impl Struct {
     }
 }
 
-/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
-/// Opaque structs cannot be passed by-value across the FFI boundary, so they
+/// A type annotated with [`diplomat::opaque`] whose fields/variants are not visible.
+/// Opaque types cannot be passed by-value across the FFI boundary, so they
 /// must be boxed or passed as references.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
 #[non_exhaustive]
@@ -69,8 +69,8 @@ pub struct OpaqueStruct {
 }
 
 impl OpaqueStruct {
-    /// Extract a [`OpaqueStruct`] metadata value from an AST node.
-    pub fn new(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
+    /// Extract a [`OpaqueStruct`] metadata value from an AST node representing a struct.
+    pub fn new_struct(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&strct.attrs);
         let name = Ident::from(&strct.ident);
@@ -81,6 +81,24 @@ impl OpaqueStruct {
             name,
             docs: Docs::from_attrs(&strct.attrs),
             lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
+            methods: vec![],
+            mutability,
+            attrs,
+            dtor_abi_name,
+        }
+    }
+
+    pub fn new_enum(enm: &syn::ItemEnum, mutability: Mutability, parent_attrs: &Attrs) -> Self {
+        let mut attrs = parent_attrs.clone();
+        attrs.add_attrs(&enm.attrs);
+        let name = Ident::from(&enm.ident);
+        let dtor_abi_name = format!("{}_destroy", name);
+        let dtor_abi_name = String::from(attrs.abi_rename.apply(dtor_abi_name.into()));
+        let dtor_abi_name = Ident::from(dtor_abi_name);
+        OpaqueStruct {
+            name,
+            docs: Docs::from_attrs(&enm.attrs),
+            lifetimes: LifetimeEnv::from_enum_item(enm, &[]),
             methods: vec![],
             mutability,
             attrs,

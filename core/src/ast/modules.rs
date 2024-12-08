@@ -17,13 +17,20 @@ enum DiplomatStructAttribute {
     /// The `#[diplomat::out]` attribute, used for non-opaque structs that
     /// contain an owned opaque in the form of a `Box`.
     Out,
-    /// The `#[diplomat::opaque]` attribute, used for marking a struct as opaque.
+    /// An attribute that can correspond to a type (struct or enum).
+    TypeAttr(DiplomatTypeAttribute)
+}
+
+/// Custom Diplomat attribute that can be placed on an enum or struct definition.
+#[derive(Debug)]
+enum DiplomatTypeAttribute {
+    /// The `#[diplomat::opaque]` attribute, used for marking a type as opaque.
     /// Note that opaque structs can be borrowed in return types, but cannot
     /// be passed into a function behind a mutable reference.
     Opaque,
-    /// The `#[diplomat::opaque_mut]` attribute, used for marking a struct as
+    /// The `#[diplomat::opaque_mut]` attribute, used for marking a type as
     /// opaque and mutable.
-    /// Note that mutable opaque structs can never be borrowed in return types
+    /// Note that mutable opaque types can never be borrowed in return types
     /// (even immutably!), but can be passed into a function behind a mutable
     /// reference.
     OpaqueMut,
@@ -41,6 +48,35 @@ impl DiplomatStructAttribute {
             write!(&mut buf, "{}", attr.path().to_token_stream()).unwrap();
             let parsed = match buf.as_str() {
                 "diplomat :: out" => Some(Self::Out),
+                "diplomat :: opaque" => Some(Self::TypeAttr(DiplomatTypeAttribute::Opaque)),
+                "diplomat :: opaque_mut" => Some(Self::TypeAttr(DiplomatTypeAttribute::OpaqueMut)),
+                _ => None,
+            };
+
+            if let Some(parsed) = parsed {
+                match res {
+                    Ok(None) => res = Ok(Some(parsed)),
+                    Ok(Some(first)) => res = Err(vec![first, parsed]),
+                    Err(ref mut errors) => errors.push(parsed),
+                }
+            }
+        }
+
+        res
+    }
+}
+
+impl DiplomatTypeAttribute {
+    /// Parses a [`DiplomatTypeAttribute`] from an array of [`syn::Attribute`]s.
+    /// If more than one kind is found, an error is returned containing all the
+    /// ones encountered, since all the current attributes are disjoint.
+    fn parse(attrs: &[syn::Attribute]) -> Result<Option<Self>, Vec<Self>> {
+        let mut buf = String::with_capacity(32);
+        let mut res = Ok(None);
+        for attr in attrs {
+            buf.clear();
+            write!(&mut buf, "{}", attr.path().to_token_stream()).unwrap();
+            let parsed = match buf.as_str() {
                 "diplomat :: opaque" => Some(Self::Opaque),
                 "diplomat :: opaque_mut" => Some(Self::OpaqueMut),
                 _ => None,
@@ -155,11 +191,11 @@ impl Module {
                             Ok(Some(DiplomatStructAttribute::Out)) => {
                                 CustomType::Struct(Struct::new(strct, true, &type_parent_attrs))
                             }
-                            Ok(Some(DiplomatStructAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &type_parent_attrs))
+                            Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::Opaque))) => {
+                                CustomType::Opaque(OpaqueStruct::new_struct(strct, Mutability::Immutable, &type_parent_attrs))
                             }
-                            Ok(Some(DiplomatStructAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &type_parent_attrs))
+                            Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::OpaqueMut))) => {
+                                CustomType::Opaque(OpaqueStruct::new_struct(strct, Mutability::Mutable, &type_parent_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
@@ -173,9 +209,20 @@ impl Module {
                 Item::Enum(enm) => {
                     if analyze_types {
                         let ident = (&enm.ident).into();
-                        let enm = Enum::new(enm, &type_parent_attrs);
+                        let custom_enum = match DiplomatTypeAttribute::parse(&enm.attrs[..]) {
+                            Ok(None) => CustomType::Enum(Enum::new(enm, &type_parent_attrs)),
+                            Ok(Some(DiplomatTypeAttribute::Opaque)) => {
+                                CustomType::Opaque(OpaqueStruct::new_enum(enm, Mutability::Immutable, &type_parent_attrs))
+                            }
+                            Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => {
+                                CustomType::Opaque(OpaqueStruct::new_enum(enm, Mutability::Mutable, &type_parent_attrs))
+                            }
+                            Err(errors) => {
+                                panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
+                            }
+                        };
                         custom_types_by_name
-                            .insert(ident, CustomType::Enum(enm));
+                            .insert(ident, custom_enum);
                     }
                 }
 
