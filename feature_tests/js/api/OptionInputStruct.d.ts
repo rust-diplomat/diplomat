@@ -2,7 +2,7 @@
 import type { OptionEnum } from "./OptionEnum"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type OptionInputStruct_Obj = {
+type OptionInputStruct_obj = {
     a: number | null;
     b: codepoint | null;
     c: OptionEnum | null;
@@ -18,5 +18,5 @@ export class OptionInputStruct {
 
     get c() : OptionEnum | null;
     set c(value: OptionEnum | null); 
-    constructor(structObj : OptionInputStruct_Obj);
+    constructor(structObj : OptionInputStruct_obj);
 }

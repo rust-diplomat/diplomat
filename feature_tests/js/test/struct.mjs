@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, ScalarPairWithPadding, BigStructWithStuff } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, ScalarPairWithPadding, BigStructWithStuff, CyclicStructC, CyclicStructB } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_("hello");
@@ -45,4 +45,41 @@ test("Test struct layout: complex struct with multiple padding types and contain
     });
     s.assertValue(853);
     t.is(true, true); // Ava doesn't like tests without assertions
+});
+
+test("Function Takes Nested Struct Parameters", t => {
+    const nested = CyclicStructC.takesNestedParameters({
+        a: {
+            a: {
+                field: 10
+            },
+            b: 0
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
+});
+
+test("Nested Struct Construction", t => {
+    const nested = new CyclicStructC({
+        a: {
+            a: {
+                field: 10
+            },
+            b: 0
+        }
+    });
+    t.is(nested.cyclicOut(), "10");
+    // Test that CyclicStructA is constructed from our object:
+    t.is(nested.a.cyclicOut(), "10");
+});
+
+test("Nested Struct with pre-built Object", t => {
+    const existing = new CyclicStructB({ field: 15 });
+    const nested = new CyclicStructC({
+        a: {
+            a: existing,
+            b: 0
+        }
+    });
+    t.is(nested.cyclicOut(), "15");
 });

@@ -110,8 +110,8 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
+        file_name: &str,
     ) -> String {
-        let file_name = self.fmt_file_name_extensionless(type_name);
         format!(
             r#"{{ {type_name} }} from "{relative_path}{file_name}{}"#,
             match typescript {
@@ -127,6 +127,7 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
+        file_name: &str,
     ) -> String {
         format!(
             r#"import {}{}""#,
@@ -134,7 +135,7 @@ impl<'tcx> JSFormatter<'tcx> {
                 true => "type ",
                 false => "",
             },
-            self.fmt_module_statement(type_name, typescript, relative_path)
+            self.fmt_module_statement(type_name, typescript, relative_path, file_name)
         )
     }
 
@@ -158,10 +159,11 @@ impl<'tcx> JSFormatter<'tcx> {
         type_name: &str,
         typescript: bool,
         relative_path: String,
+        file_name: &str,
     ) -> String {
         format!(
             r#"export {}""#,
-            self.fmt_module_statement(type_name, typescript, relative_path)
+            self.fmt_module_statement(type_name, typescript, relative_path, file_name)
         )
     }
 

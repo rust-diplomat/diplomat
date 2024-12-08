@@ -2,6 +2,7 @@
 import type { DataProvider } from "./DataProvider"
 import type { FixedDecimal } from "./FixedDecimal"
 import type { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions"
+import type { FixedDecimalFormatterOptions_obj } from "./FixedDecimalFormatterOptions"
 import type { Locale } from "./Locale"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
@@ -15,7 +16,7 @@ export class FixedDecimalFormatter {
 
     get ffiValue(): pointer;
 
-    static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): FixedDecimalFormatter | null;
+    static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions_obj): FixedDecimalFormatter | null;
 
     formatWrite(value: FixedDecimal): string;
 }

@@ -30,7 +30,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
-    pub imports: RefCell<BTreeSet<String>>,
+    pub imports: RefCell<BTreeSet<ImportInfo<'tcx>>>,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {
@@ -48,10 +48,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         let mut new_imports = Vec::new();
         for import in self.imports.borrow().iter() {
-            new_imports.push(
-                self.formatter
-                    .fmt_import_statement(import, typescript, "./".into()),
-            );
+            if import.usage == ImportUsage::Both
+                || (import.usage == ImportUsage::Typescript && typescript)
+                || (import.usage == ImportUsage::Module && !typescript)
+            {
+                new_imports.push(self.formatter.fmt_import_statement(
+                    &import.import_type,
+                    typescript,
+                    "./".into(),
+                    &import.import_file,
+                ));
+            }
         }
 
         BaseTemplate {
@@ -66,15 +73,37 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     /// A wrapper for `borrow_mut`ably inserting new imports.
     ///
     /// I do this to avoid borrow checking madness.
-    pub(super) fn add_import(&self, import_str: String) {
-        self.imports.borrow_mut().insert(import_str);
+    pub(super) fn add_import(
+        &self,
+        import_str: Cow<'tcx, str>,
+        import_file: Option<Cow<'tcx, str>>,
+        usage: ImportUsage,
+    ) {
+        self.imports.borrow_mut().insert(ImportInfo {
+            import_type: import_str.clone(),
+            import_file: import_file.unwrap_or(
+                self.formatter
+                    .fmt_file_name_extensionless(&import_str)
+                    .into(),
+            ),
+            usage,
+        });
     }
 
     /// Exists for the same reason as [`Self::add_import`].
     ///
     /// Right now, only used for removing any self imports.
-    pub(super) fn remove_import(&self, import_str: String) {
-        self.imports.borrow_mut().remove(&import_str);
+    pub(super) fn remove_import(
+        &self,
+        import_str: Cow<'tcx, str>,
+        import_file: Option<Cow<'tcx, str>>,
+        usage: ImportUsage,
+    ) {
+        self.imports.borrow_mut().remove(&ImportInfo {
+            import_type: import_str,
+            import_file: import_file.unwrap_or_default(),
+            usage,
+        });
     }
 
     /// Generate an enumerator type's body for a file from the given definition.
@@ -180,6 +209,20 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let js_type_name = self.gen_js_type_str(&field.ty);
+
+            if let Type::Struct(..) = &field.ty {
+                let obj_ty: Cow<'tcx, str> = format!("{js_type_name}_obj").into();
+
+                self.add_import(
+                    obj_ty.clone(),
+                    Some(
+                        self.formatter
+                            .fmt_file_name_extensionless(&js_type_name)
+                            .into(),
+                    ),
+                    ImportUsage::Typescript,
+                );
+            }
 
             let is_option = matches!(&field.ty, hir::Type::DiplomatOption(..));
 
@@ -384,9 +427,31 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
 
         for param in method.params.iter() {
+            let base_type = self.gen_js_type_str(&param.ty);
+            let param_type_str = format!(
+                "{}",
+                // If we're a struct, we can substitute StructType_obj (since it's the only thing we need to pass to WASM)
+                if let Type::Struct(..) = &param.ty {
+                    let obj_ty: Cow<'tcx, str> = format!("{base_type}_obj").into();
+                    self.add_import(
+                        obj_ty.clone(),
+                        Some(
+                            self.formatter
+                                .fmt_file_name_extensionless(&base_type)
+                                .into(),
+                        ),
+                        ImportUsage::Typescript,
+                    );
+                    obj_ty
+                } else {
+                    base_type
+                }
+            )
+            .into();
+
             let param_info = ParamInfo {
                 name: self.formatter.fmt_param_name(param.name.as_str()),
-                ty: self.gen_js_type_str(&param.ty),
+                ty: param_type_str,
             };
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
@@ -604,6 +669,44 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     /// Used in the constructor() function to determine whether or not this field is required for construction.
     is_optional: bool,
 }
+
+/// Where the imports are going to be used in.
+#[derive(PartialEq)]
+pub(super) enum ImportUsage {
+    /// .mjs files only
+    Module,
+    /// .d.ts files only
+    Typescript,
+    /// Both .mjs and .d.ts
+    Both,
+}
+
+pub(super) struct ImportInfo<'info> {
+    import_type: Cow<'info, str>,
+    import_file: Cow<'info, str>,
+    usage: ImportUsage,
+}
+
+/// Imports are only unique if they use a different type. We don't care about anything else.
+impl<'info> Ord for ImportInfo<'info> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.import_type.cmp(&other.import_type)
+    }
+}
+
+impl<'info> PartialOrd for ImportInfo<'info> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.import_type.partial_cmp(&other.import_type)
+    }
+}
+
+impl<'info> PartialEq for ImportInfo<'info> {
+    fn eq(&self, other: &Self) -> bool {
+        self.import_type.eq(&other.import_type)
+    }
+}
+
+impl<'info> Eq for ImportInfo<'info> {}
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 

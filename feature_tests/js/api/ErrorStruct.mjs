@@ -48,6 +48,18 @@ export class ErrorStruct {
         return [this.#i, this.#j]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof ErrorStruct) {
+            return obj;
+        }
+
+        return new ErrorStruct(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

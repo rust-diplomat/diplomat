@@ -2,7 +2,7 @@
 import type { Bar } from "./Bar"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type BorrowedFields_Obj = {
+type BorrowedFields_obj = {
     a: string;
     b: string;
     c: string;
@@ -18,7 +18,7 @@ export class BorrowedFields {
 
     get c() : string;
     set c(value: string); 
-    constructor(structObj : BorrowedFields_Obj);
+    constructor(structObj : BorrowedFields_obj);
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }

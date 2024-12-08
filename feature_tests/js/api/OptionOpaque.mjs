@@ -225,7 +225,7 @@ export class OptionOpaque {
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 21, 4, true);
         
-        const result = wasm.OptionOpaque_accepts_option_input_struct(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 20, 4, false, (arrayBuffer, offset, jsValue) => [jsValue._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]));
+        const result = wasm.OptionOpaque_accepts_option_input_struct(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 20, 4, false, (arrayBuffer, offset, jsValue) => [OptionInputStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]));
     
         try {
             if (!diplomatReceive.resultFlag) {

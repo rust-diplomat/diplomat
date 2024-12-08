@@ -35,6 +35,18 @@ export class CyclicStructB {
         return [this.#field]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof CyclicStructB) {
+            return obj;
+        }
+
+        return new CyclicStructB(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,
@@ -61,7 +73,7 @@ export class CyclicStructB {
     }
 
     static getA() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, false);
         
         const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
     

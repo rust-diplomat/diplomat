@@ -120,6 +120,18 @@ export class MyStruct {
         return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof MyStruct) {
+            return obj;
+        }
+
+        return new MyStruct(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

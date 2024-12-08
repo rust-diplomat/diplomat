@@ -53,6 +53,18 @@ export class FixedDecimalFormatterOptions {
         return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof FixedDecimalFormatterOptions) {
+            return obj;
+        }
+
+        return new FixedDecimalFormatterOptions(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

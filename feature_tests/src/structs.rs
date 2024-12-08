@@ -202,6 +202,8 @@ pub mod ffi {
     #[derive(Default)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
+        // To avoid https://github.com/rust-diplomat/diplomat/issues/739
+        pub b: u8
     }
     #[derive(Default)]
     pub struct CyclicStructB {
@@ -231,6 +233,10 @@ pub mod ffi {
     }
 
     impl CyclicStructC {
+        pub fn takes_nested_parameters(c: CyclicStructC) -> CyclicStructC {
+            c
+        }
+
         pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.a.field.to_string()).unwrap();
         }
