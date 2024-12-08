@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Method, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -48,43 +48,6 @@ impl Struct {
             methods: vec![],
             output_only,
             attrs,
-        }
-    }
-}
-
-/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
-/// Opaque structs cannot be passed by-value across the FFI boundary, so they
-/// must be boxed or passed as references.
-#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct OpaqueStruct {
-    pub name: Ident,
-    pub docs: Docs,
-    pub lifetimes: LifetimeEnv,
-    pub methods: Vec<Method>,
-    pub mutability: Mutability,
-    pub attrs: Attrs,
-    /// The ABI name of the generated destructor
-    pub dtor_abi_name: Ident,
-}
-
-impl OpaqueStruct {
-    /// Extract a [`OpaqueStruct`] metadata value from an AST node.
-    pub fn new(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
-        let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&strct.attrs);
-        let name = Ident::from(&strct.ident);
-        let dtor_abi_name = format!("{}_destroy", name);
-        let dtor_abi_name = String::from(attrs.abi_rename.apply(dtor_abi_name.into()));
-        let dtor_abi_name = Ident::from(dtor_abi_name);
-        OpaqueStruct {
-            name,
-            docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
-            methods: vec![],
-            mutability,
-            attrs,
-            dtor_abi_name,
         }
     }
 }
