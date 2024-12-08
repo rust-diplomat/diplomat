@@ -314,7 +314,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     /// WASM only returns a primitive (instead of a pointer) if our struct just wraps a primitive (or nests a struct that only has one primitive as a field).
     /// This is a quick way to verify that we are grabbing a value instead of a pointer.
     pub(super) fn wraps_a_primitive(&self, st: &hir::ReturnableStructPath) -> bool {
-        match st.resolve(&self.tcx) {
+        match st.resolve(self.tcx) {
             hir::ReturnableStructDef::OutStruct(s) => self.only_primitive(s),
             hir::ReturnableStructDef::Struct(s) => self.only_primitive(s),
             _ => false,
@@ -368,7 +368,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             methods,
 
             wraps_primitive: self.only_primitive(struct_def),
-            owns_wrapped_primitive: struct_def.fields.first().is_some()
+            owns_wrapped_primitive: !struct_def.fields.is_empty()
                 && matches!(
                     struct_def.fields.first().unwrap().ty,
                     hir::Type::Primitive(..)
