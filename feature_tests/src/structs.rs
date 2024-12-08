@@ -228,6 +228,10 @@ pub mod ffi {
         pub fn get_a() -> CyclicStructA {
             Default::default()
         }
+
+        pub fn get_a_option() -> Option<CyclicStructA> {
+            Some(Default::default())
+        }
     }
 
     impl CyclicStructC {

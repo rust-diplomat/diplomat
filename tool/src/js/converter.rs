@@ -284,25 +284,48 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         offset: usize,
     ) -> Cow<'tcx, str> {
         let pointer = if offset == 0 {
-            variable_name
+            variable_name.clone()
         } else {
             format!("{variable_name} + {offset}").into()
         };
-        match *ty {
+        match ty {
             Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {pointer})").into(),
             Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {pointer})").into(),
-            // Structs always assume they're being passed a pointer, so they handle this in their constructors:
-            // See NestedBorrowedFields
-            Type::Struct(..) | Type::Slice(..) | Type::DiplomatOption(..) => pointer,
             Type::Primitive(p) => format!(
                 "(new {ctor}(wasm.memory.buffer, {pointer}, 1))[0]{cmp}",
-                ctor = self.formatter.fmt_primitive_slice(p),
+                ctor = self.formatter.fmt_primitive_slice(*p),
                 cmp = match p {
                     PrimitiveType::Bool => " === 1",
                     _ => "",
                 }
             )
             .into(),
+            Type::Struct(st)
+                if match st.id() {
+                    hir::TypeId::OutStruct(s) => {
+                        self.only_primitive(self.tcx.resolve_out_struct(s))
+                    }
+                    hir::TypeId::Struct(s) => self.only_primitive(self.tcx.resolve_struct(s)),
+                    _ => false,
+                } =>
+            {
+                match st.id() {
+                    hir::TypeId::OutStruct(s) => {
+                        let first = self.tcx.resolve_out_struct(s).fields.first().unwrap();
+
+                        self.gen_c_to_js_deref_for_type(&first.ty, variable_name, offset)
+                    }
+                    hir::TypeId::Struct(s) => {
+                        let first = self.tcx.resolve_struct(s).fields.first().unwrap();
+
+                        self.gen_c_to_js_deref_for_type(&first.ty, variable_name, offset)
+                    }
+                    _ => unreachable!("Expected struct, got {:?}", st.id()),
+                }
+            }
+            // Structs (nearly) always assume they're being passed a pointer, so they handle this in their constructors:
+            // See NestedBorrowedFields
+            Type::Struct(..) | Type::Slice(..) | Type::DiplomatOption(..) => pointer,
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }
@@ -381,6 +404,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             ReturnType::Infallible(SuccessType::OutType(ref o)) => {
                 let mut result = "result";
                 match o {
+                    Type::Struct(s) if self.wraps_a_primitive(s) => {}
                     Type::Struct(_) | Type::Slice(_) => {
                         let layout = crate::js::layout::type_size_alignment(o, self.tcx);
                         let size = layout.size();

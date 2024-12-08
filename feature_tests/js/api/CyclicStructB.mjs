@@ -49,24 +49,37 @@ export class CyclicStructB {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    static _fromFFI(internalConstructor, primitiveValue) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructB._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
         var structObj = {};
-        const fieldDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        structObj.field = fieldDeref;
+        structObj.field = primitiveValue;
+        
 
         return new CyclicStructB(structObj, internalConstructor);
     }
 
     static getA() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
-        
-        const result = wasm.CyclicStructB_get_a(diplomatReceive.buffer);
+        const result = wasm.CyclicStructB_get_a();
     
         try {
-            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, result);
+        }
+        
+        finally {}
+    }
+
+    static getAOption() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
+        
+        const result = wasm.CyclicStructB_get_a_option(diplomatReceive.buffer);
+    
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
         }
         
         finally {

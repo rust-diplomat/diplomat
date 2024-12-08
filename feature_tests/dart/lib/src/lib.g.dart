@@ -118,6 +118,31 @@ class _FinalizedArena {
   }
 }
 
+final class _ResultCyclicStructAFfiVoidUnion extends ffi.Union {
+  external _CyclicStructAFfi ok;
+
+}
+
+final class _ResultCyclicStructAFfiVoid extends ffi.Struct {
+  external _ResultCyclicStructAFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+
+  
+  factory _ResultCyclicStructAFfiVoid.ok(_CyclicStructAFfi val) {
+    final struct = ffi.Struct.create<_ResultCyclicStructAFfiVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  factory _ResultCyclicStructAFfiVoid.err() {
+    final struct = ffi.Struct.create<_ResultCyclicStructAFfiVoid>();
+    struct.isOk = false;
+    return struct;
+  }
+}
+
 final class _ResultDoubleVoidUnion extends ffi.Union {
   @ffi.Double()
   external double ok;

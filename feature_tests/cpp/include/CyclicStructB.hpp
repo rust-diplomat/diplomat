@@ -19,6 +19,9 @@ namespace capi {
     
     diplomat::capi::CyclicStructA CyclicStructB_get_a(void);
     
+    typedef struct CyclicStructB_get_a_option_result {union {diplomat::capi::CyclicStructA ok; }; bool is_ok;} CyclicStructB_get_a_option_result;
+    CyclicStructB_get_a_option_result CyclicStructB_get_a_option(void);
+    
     
     } // extern "C"
 } // namespace capi
@@ -27,6 +30,11 @@ namespace capi {
 inline CyclicStructA CyclicStructB::get_a() {
   auto result = diplomat::capi::CyclicStructB_get_a();
   return CyclicStructA::FromFFI(result);
+}
+
+inline std::optional<CyclicStructA> CyclicStructB::get_a_option() {
+  auto result = diplomat::capi::CyclicStructB_get_a_option();
+  return result.is_ok ? std::optional<CyclicStructA>(CyclicStructA::FromFFI(result.ok)) : std::nullopt;
 }
 
 

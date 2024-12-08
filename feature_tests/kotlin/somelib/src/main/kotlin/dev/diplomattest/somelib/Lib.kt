@@ -495,6 +495,26 @@ internal class OptionByte: Structure(), Structure.ByValue  {
         }
     }
 }
+internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: CyclicStructANative = CyclicStructANative()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): CyclicStructANative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
 internal class OptionDouble: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Double = 0.0
