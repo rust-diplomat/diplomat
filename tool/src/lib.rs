@@ -211,7 +211,7 @@ struct ErrorContext<'tcx> {
     method: Option<Cow<'tcx, str>>,
 }
 
-impl<'tcx> fmt::Display for ErrorContext<'tcx> {
+impl fmt::Display for ErrorContext<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let ty = &self.ty;
         if let Some(ref method) = self.method {
@@ -226,7 +226,7 @@ impl<'tcx> fmt::Display for ErrorContext<'tcx> {
 #[must_use]
 pub struct ErrorContextGuard<'a, 'tcx, E>(&'a ErrorStore<'tcx, E>, ErrorContext<'tcx>);
 
-impl<'a, 'tcx, E> Drop for ErrorContextGuard<'a, 'tcx, E> {
+impl<E> Drop for ErrorContextGuard<'_, '_, E> {
     fn drop(&mut self) {
         let _ = mem::replace(&mut *self.0.context.borrow_mut(), mem::take(&mut self.1));
     }
