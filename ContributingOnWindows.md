@@ -37,10 +37,17 @@ So these commands help get rid of that:
 
 ```bash
 # Disable Git's CRLF to LF conversion:
-git config --global core.autocrlf false
+git config core.autocrlf false
 # Reset cached files to remove associations
 git rm --cached -r .
 git reset --hard
 ```
 
-You can re-enable the `core.autocrlf` option afterwards if you'd like: `git config --global core.autocrlf true`. Just don't reset the cache.
+Or you can add this line to `.git/config`:
+
+```
+[core]
+	autocrlf = false
+```
+
+And reset the cache.
