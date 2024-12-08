@@ -103,7 +103,7 @@ impl TypeContext {
             )
     }
 
-    pub fn all_traits<'tcx>(&'tcx self) -> impl Iterator<Item = (TraitId, &TraitDef)> {
+    pub fn all_traits<'tcx>(&'tcx self) -> impl Iterator<Item = (TraitId, &'tcx TraitDef)> {
         self.traits
             .iter()
             .enumerate()
@@ -203,7 +203,7 @@ impl TypeContext {
     pub(super) fn from_ast_without_validation<'ast>(
         env: &'ast Env,
         attr_validator: impl AttributeValidator + 'static,
-    ) -> Result<(LoweringContext, Self), Vec<ErrorAndContext>> {
+    ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
         let mut ast_structs = SmallVec::<[_; 16]>::new();
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
