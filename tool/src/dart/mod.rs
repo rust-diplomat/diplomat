@@ -146,7 +146,7 @@ struct TyGenContext<'a, 'cx> {
     helper_classes: &'a mut BTreeMap<String, String>,
 }
 
-impl<'a, 'cx> TyGenContext<'a, 'cx> {
+impl<'cx> TyGenContext<'_, 'cx> {
     fn gen(&mut self, id: TypeId) -> (String, String) {
         let ty = self.tcx.resolve_type(id);
 

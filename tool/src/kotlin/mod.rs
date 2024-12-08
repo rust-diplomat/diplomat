@@ -261,7 +261,7 @@ struct TyGenContext<'a, 'cx> {
     callback_params: &'a mut Vec<CallbackParamInfo>,
 }
 
-impl<'a, 'cx> TyGenContext<'a, 'cx> {
+impl<'cx> TyGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
