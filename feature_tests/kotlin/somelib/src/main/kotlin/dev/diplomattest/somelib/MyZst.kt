@@ -7,6 +7,6 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 class MyZst internal constructor (
-    ) {
+    ): Exception("Rust error result for MyZst") {
 
     }

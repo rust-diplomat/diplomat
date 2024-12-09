@@ -16,7 +16,7 @@ class ResultOpaqueTest {
         assert(resultOpaque2.isFailure)
 
         val result2 = resultOpaque2.exceptionOrNull()?.message
-        val shouldRes: Result<ResultOpaque> = ErrorEnum.Bar.err()
+        val shouldRes: Result<ResultOpaque> = ErrorEnum.Bar.primitive_err()
 
         assertEquals(result2, shouldRes.exceptionOrNull()?.message)
 
@@ -24,13 +24,13 @@ class ResultOpaqueTest {
         val resultOpaque3 = ResultOpaque.newFailingFoo()
         assert(resultOpaque3.isFailure)
         val result3 = resultOpaque3.exceptionOrNull()?.message
-        val shouldRes3: Result<ResultOpaque> = ErrorEnum.Foo.err()
+        val shouldRes3: Result<ResultOpaque> = ErrorEnum.Foo.primitive_err()
         assertEquals(result3, shouldRes3.exceptionOrNull()?.message)
 
         val resultOpaque4 = ResultOpaque.newInErr(8)
         assert(resultOpaque4.isFailure)
         val result4 = resultOpaque4.exceptionOrNull()?.message
-        val assertion = result4?.startsWith("Received error dev.diplomattest.somelib.ResultOpaque", true)
+        val assertion = result4?.startsWith("Rust error result for ResultOpaque", true)
         assert(assertion == true)
     }
 
