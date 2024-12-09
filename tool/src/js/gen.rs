@@ -10,8 +10,8 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, Type,
-    TypeContext, TypeId,
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
+    StructPathLike, Type, TypeContext, TypeId,
 };
 
 use askama::{self, Template};
@@ -293,6 +293,34 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         (fields, needs_force_padding)
     }
 
+    pub(super) fn only_primitive<P: hir::TyPosition>(&self, st: &hir::StructDef<P>) -> bool {
+        if st.fields.len() != 1 {
+            return false;
+        }
+
+        let first = st.fields.first().unwrap();
+
+        match &first.ty {
+            hir::Type::Primitive(..) => true,
+            hir::Type::Struct(s) => match s.id() {
+                hir::TypeId::Struct(s) => self.only_primitive(self.tcx.resolve_struct(s)),
+                hir::TypeId::OutStruct(s) => self.only_primitive(self.tcx.resolve_out_struct(s)),
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
+    /// WASM only returns a primitive (instead of a pointer) if our struct just wraps a primitive (or nests a struct that only has one primitive as a field).
+    /// This is a quick way to verify that we are grabbing a value instead of a pointer.
+    pub(super) fn wraps_a_primitive(&self, st: &hir::ReturnableStructPath) -> bool {
+        match st.resolve(self.tcx) {
+            hir::ReturnableStructDef::OutStruct(s) => self.only_primitive(s),
+            hir::ReturnableStructDef::Struct(s) => self.only_primitive(s),
+            _ => false,
+        }
+    }
+
     /// Generate a struct type's body for a file from the given definition.
     ///
     /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
@@ -321,6 +349,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             fields: &'a Vec<FieldInfo<'a, P>>,
             methods: &'a MethodsInfo<'a>,
 
+            wraps_primitive: bool,
+            owns_wrapped_primitive: bool,
+
             docs: String,
         }
 
@@ -335,6 +366,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &struct_def.lifetimes,
             fields,
             methods,
+
+            wraps_primitive: self.only_primitive(struct_def),
+            owns_wrapped_primitive: !struct_def.fields.is_empty()
+                && matches!(
+                    struct_def.fields.first().unwrap().ty,
+                    hir::Type::Primitive(..)
+                ),
 
             docs: self.formatter.fmt_docs(&struct_def.docs),
         }

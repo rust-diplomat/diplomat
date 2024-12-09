@@ -28,6 +28,8 @@ struct CyclicStructB {
 
   inline static CyclicStructA get_a();
 
+  inline static std::optional<CyclicStructA> get_a_option();
+
   inline diplomat::capi::CyclicStructB AsFFI() const;
   inline static CyclicStructB FromFFI(diplomat::capi::CyclicStructB c_struct);
 };
