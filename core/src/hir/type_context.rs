@@ -459,7 +459,7 @@ impl TypeContext {
 pub(super) struct LookupId<'ast> {
     out_struct_map: HashMap<&'ast ast::Struct, OutStructId>,
     struct_map: HashMap<&'ast ast::Struct, StructId>,
-    opaque_map: HashMap<&'ast ast::OpaqueStruct, OpaqueId>,
+    opaque_map: HashMap<&'ast ast::OpaqueType, OpaqueId>,
     enum_map: HashMap<&'ast ast::Enum, EnumId>,
     trait_map: HashMap<&'ast ast::Trait, TraitId>,
 }
@@ -469,7 +469,7 @@ impl<'ast> LookupId<'ast> {
     fn new(
         out_structs: &[ItemAndInfo<'ast, ast::Struct>],
         structs: &[ItemAndInfo<'ast, ast::Struct>],
-        opaques: &[ItemAndInfo<'ast, ast::OpaqueStruct>],
+        opaques: &[ItemAndInfo<'ast, ast::OpaqueType>],
         enums: &[ItemAndInfo<'ast, ast::Enum>],
         traits: &[ItemAndInfo<'ast, ast::Trait>],
     ) -> Self {
@@ -510,7 +510,7 @@ impl<'ast> LookupId<'ast> {
         self.struct_map.get(strct).copied()
     }
 
-    pub(super) fn resolve_opaque(&self, opaque: &ast::OpaqueStruct) -> Option<OpaqueId> {
+    pub(super) fn resolve_opaque(&self, opaque: &ast::OpaqueType) -> Option<OpaqueId> {
         self.opaque_map.get(opaque).copied()
     }
 
@@ -700,6 +700,21 @@ mod tests {
                     pub fn do_thing(&self) {}
                     pub fn do_thing_broken(self) {}
                     pub fn broken_differently(&self, x: &MyOpaqueStruct) {}
+                }
+
+                #[diplomat::opaque]
+                enum MyOpaqueEnum {
+                    A(UnknownType),
+                    B,
+                    C(i32, i32, UnknownType2),
+                }
+
+                impl MyOpaqueEnum {
+                    pub fn new() -> Box<MyOpaqueEnum> {}
+                    pub fn new_broken() -> MyOpaqueEnum {}
+                    pub fn do_thing(&self) {}
+                    pub fn do_thing_broken(self) {}
+                    pub fn broken_differently(&self, x: &MyOpaqueEnum) {}
                 }
             }
         }

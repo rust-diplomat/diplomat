@@ -9,6 +9,8 @@ import * as Float64VecDemo from "./Float64Vec.mjs";
 export * as Float64VecDemo from "./Float64Vec.mjs";
 import * as MyStringDemo from "./MyString.mjs";
 export * as MyStringDemo from "./MyString.mjs";
+import * as MyOpaqueEnumDemo from "./MyOpaqueEnum.mjs";
+export * as MyOpaqueEnumDemo from "./MyOpaqueEnum.mjs";
 import * as OpaqueDemo from "./Opaque.mjs";
 export * as OpaqueDemo from "./Opaque.mjs";
 import * as Utf16WrapDemo from "./Utf16Wrap.mjs";
@@ -103,6 +105,15 @@ let termini = Object.assign({
                 type: "string",
                 typeUse: "string"
             }
+            
+        ]
+    },
+
+    "MyOpaqueEnum.toString": {
+        func: MyOpaqueEnumDemo.toString,
+        // For avoiding webpacking minifying issues:
+        funcName: "MyOpaqueEnum.toString",
+        parameters: [
             
         ]
     },
