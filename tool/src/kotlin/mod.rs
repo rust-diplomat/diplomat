@@ -1106,7 +1106,7 @@ returnVal.option() ?: return null
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
                         Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
+                            self.gen_native_type_name(ty, None, false).into(),
                             match ty {
                                 Type::Enum(..) => ".toNative()",
                                 Type::Struct(..) => ".nativeStruct",
@@ -1286,7 +1286,7 @@ returnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty, additional_name.clone()),
+                self.gen_native_type_name(&param.ty, additional_name.clone(), false),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1603,7 +1603,7 @@ returnVal.option() ?: return null
             });
         let (native_output_type, return_modification) = match *method.output {
             Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
+                self.gen_native_type_name(ty, None, true).into(),
                 match ty {
                     Type::Enum(..) => ".toNative()",
                     Type::Struct(..) => ".nativeStruct",
@@ -1827,9 +1827,10 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
+        support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, support_unsigned).into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
