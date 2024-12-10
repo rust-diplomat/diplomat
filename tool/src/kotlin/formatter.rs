@@ -40,7 +40,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType) -> String {
         match prim {
-            // PrimitiveType::Bool => format!("{name}.toByte()"),
             PrimitiveType::Int(IntType::U8) => format!("{name}.toByte()"),
             PrimitiveType::Int(IntType::U16) => format!("{name}.toShort()"),
             PrimitiveType::Int(IntType::U32) => format!("{name}.toInt()"),
