@@ -18,7 +18,7 @@ mod ffi {
     impl TraitWrapper {
         pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
             t.test_void_trait_fn();
-            t.test_trait_fn(x)
+            t.test_trait_fn(x.try_into().unwrap()).try_into().unwrap()
         }
 
         pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
