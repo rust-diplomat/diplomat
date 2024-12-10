@@ -16,6 +16,7 @@ internal interface OpaqueMutexedStringLib: Library {
     fun OpaqueMutexedString_get_len_and_add(handle: Pointer, other: Long): Long
     fun OpaqueMutexedString_dummy_str(handle: Pointer): Slice
     fun OpaqueMutexedString_wrapper(handle: Pointer): Pointer
+    fun OpaqueMutexedString_to_unsigned_from_unsigned(handle: Pointer, input: Short): Short
 }
 
 class OpaqueMutexedString internal constructor (
@@ -99,6 +100,12 @@ class OpaqueMutexedString internal constructor (
         val returnOpaque = Utf16Wrap(handle, selfEdges)
         CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
         return returnOpaque
+    }
+    
+    fun toUnsignedFromUnsigned(input: UShort): UShort {
+        
+        val returnVal = lib.OpaqueMutexedString_to_unsigned_from_unsigned(handle, input.toShort());
+        return (returnVal.toUShort())
     }
 
 }

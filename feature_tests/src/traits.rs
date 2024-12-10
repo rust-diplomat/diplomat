@@ -6,7 +6,7 @@ mod ffi {
         y: i32,
     }
     pub trait TesterTrait {
-        fn test_trait_fn(&self, x: i32) -> i32;
+        fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
     }
@@ -18,7 +18,7 @@ mod ffi {
     impl TraitWrapper {
         pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32 {
             t.test_void_trait_fn();
-            t.test_trait_fn(x)
+            t.test_trait_fn(x.try_into().unwrap()).try_into().unwrap()
         }
 
         pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {

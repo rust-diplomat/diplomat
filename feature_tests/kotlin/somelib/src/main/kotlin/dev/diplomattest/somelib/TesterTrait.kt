@@ -7,14 +7,14 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 interface TesterTrait {
-    fun testTraitFn(x: Int): Int;
+    fun testTraitFn(x: UInt): UInt;
     fun testVoidTraitFn(): Unit;
     fun testStructTraitFn(s: TraitTestingStruct): Int;
 }
 
 
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testTraitFn: Callback {
-    fun invoke(ignored: Pointer?, x: Int ): Int
+    fun invoke(ignored: Pointer?, x: UInt ): UInt
 }
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn: Callback {
     fun invoke(ignored: Pointer?): Unit
@@ -40,7 +40,7 @@ internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.B
     @JvmField
     internal var run_testTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn
         = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: Int ): Int {
+                override fun invoke(ignored: Pointer?, x: UInt ): UInt {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
@@ -90,7 +90,7 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             
             
             val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: Int ): Int {
+                override fun invoke(ignored: Pointer?, x: UInt ): UInt {
                     return trt_obj.testTraitFn(x);
                 }
             }

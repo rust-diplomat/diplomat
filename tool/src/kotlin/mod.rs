@@ -597,11 +597,11 @@ return string{return_type_modifier}"#
                 _ => todo!(),
             },
             Slice::Primitive(Some(_), prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
             Slice::Primitive(None, prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
             }
@@ -1106,7 +1106,7 @@ returnVal.option() ?: return null
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
                         Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
+                            self.gen_native_type_name(ty, None, false).into(),
                             match ty {
                                 Type::Enum(..) => ".toNative()",
                                 Type::Struct(..) => ".nativeStruct",
@@ -1286,7 +1286,7 @@ returnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty, additional_name.clone()),
+                self.gen_native_type_name(&param.ty, additional_name.clone(), false),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1603,7 +1603,7 @@ returnVal.option() ?: return null
             });
         let (native_output_type, return_modification) = match *method.output {
             Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
+                self.gen_native_type_name(ty, None, true).into(),
                 match ty {
                     Type::Enum(..) => ".toNative()",
                     Type::Struct(..) => ".nativeStruct",
@@ -1827,9 +1827,18 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
+        // flag to represent whether the API this type is a part of has support for unsigned types.
+        // Non-trait methods do not, because they are called through the JNA library built in Java
+        // which doesn't support unsigned types.
+        // The true fix is to use JNA `IntegerType` to represent unsigned ints:
+        // TODO: https://github.com/rust-diplomat/diplomat/issues/748
+        support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
+            Type::Primitive(prim) => self
+                .formatter
+                .fmt_primitive_as_ffi(prim, support_unsigned)
+                .into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()

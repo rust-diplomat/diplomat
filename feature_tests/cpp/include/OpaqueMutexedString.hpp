@@ -33,6 +33,8 @@ namespace capi {
     
     diplomat::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const diplomat::capi::OpaqueMutexedString* self);
     
+    uint16_t OpaqueMutexedString_to_unsigned_from_unsigned(const diplomat::capi::OpaqueMutexedString* self, uint16_t input);
+    
     
     void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
     
@@ -80,6 +82,12 @@ inline std::string_view OpaqueMutexedString::dummy_str() const {
 inline std::unique_ptr<Utf16Wrap> OpaqueMutexedString::wrapper() const {
   auto result = diplomat::capi::OpaqueMutexedString_wrapper(this->AsFFI());
   return std::unique_ptr<Utf16Wrap>(Utf16Wrap::FromFFI(result));
+}
+
+inline uint16_t OpaqueMutexedString::to_unsigned_from_unsigned(uint16_t input) const {
+  auto result = diplomat::capi::OpaqueMutexedString_to_unsigned_from_unsigned(this->AsFFI(),
+    input);
+  return result;
 }
 
 inline const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString::AsFFI() const {
