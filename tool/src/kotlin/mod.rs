@@ -1830,7 +1830,10 @@ returnVal.option() ?: return null
         support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, support_unsigned).into(),
+            Type::Primitive(prim) => self
+                .formatter
+                .fmt_primitive_as_ffi(prim, support_unsigned)
+                .into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
