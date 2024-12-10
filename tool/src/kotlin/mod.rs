@@ -597,11 +597,11 @@ return string{return_type_modifier}"#
                 _ => todo!(),
             },
             Slice::Primitive(Some(_), prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
             Slice::Primitive(None, prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
             }

@@ -40,7 +40,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType) -> String {
         match prim {
-            PrimitiveType::Bool => format!("{name}.toByte()"),
+            // PrimitiveType::Bool => format!("{name}.toByte()"),
             PrimitiveType::Int(IntType::U8) => format!("{name}.toByte()"),
             PrimitiveType::Int(IntType::U16) => format!("{name}.toShort()"),
             PrimitiveType::Int(IntType::U32) => format!("{name}.toInt()"),
@@ -72,16 +72,16 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
         match prim {
-            PrimitiveType::Bool => "Byte",
+            PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
             PrimitiveType::Int(IntType::I8) => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
-            PrimitiveType::Int(IntType::U8) => "UByte",
-            PrimitiveType::Int(IntType::U16) => "UShort",
-            PrimitiveType::Int(IntType::U32) => "UInt",
-            PrimitiveType::Int(IntType::U64) => "ULong",
+            PrimitiveType::Int(IntType::U8) => "Byte",
+            PrimitiveType::Int(IntType::U16) => "Short",
+            PrimitiveType::Int(IntType::U32) => "Int",
+            PrimitiveType::Int(IntType::U64) => "Long",
             PrimitiveType::Byte => "Byte",
             PrimitiveType::IntSize(IntSizeType::Isize) => "Long",
             PrimitiveType::IntSize(IntSizeType::Usize) => "Long",
