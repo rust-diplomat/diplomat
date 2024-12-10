@@ -142,6 +142,10 @@ pub mod ffi {
                 .collect();
             Box::new(Utf16Wrap(chars))
         }
+
+        pub fn to_unsigned_from_unsigned(&self, input: u16) -> u16 {
+            input
+        }
     }
 
     impl Utf16Wrap {

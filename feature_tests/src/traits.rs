@@ -6,7 +6,7 @@ mod ffi {
         y: i32,
     }
     pub trait TesterTrait {
-        fn test_trait_fn(&self, x: i32) -> i32;
+        fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
     }

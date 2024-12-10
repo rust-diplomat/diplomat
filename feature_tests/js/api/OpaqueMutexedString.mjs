@@ -126,4 +126,14 @@ export class OpaqueMutexedString {
         
         finally {}
     }
+
+    toUnsignedFromUnsigned(input) {
+        const result = wasm.OpaqueMutexedString_to_unsigned_from_unsigned(this.ffiValue, input);
+    
+        try {
+            return result;
+        }
+        
+        finally {}
+    }
 }
