@@ -1827,6 +1827,11 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
+        // flag to represent whether the API this type is a part of has support for unsigned types.
+        // Non-trait methods do not, because they are called through the JNA library built in Java
+        // which doesn't support unsigned types.
+        // The true fix is to use JNA `IntegerType` to represent unsigned ints:
+        // TODO: https://github.com/rust-diplomat/diplomat/issues/748
         support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
