@@ -70,11 +70,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.add_import(
-                    type_name.clone(),
-                    None,
-                    super::gen::ImportUsage::Both,
-                );
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(opaque_id).attrs().disable {
                     self.errors
@@ -92,11 +88,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.add_import(
-                    type_name.clone(),
-                    None,
-                    super::gen::ImportUsage::Both,
-                );
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -109,11 +101,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.add_import(
-                    type_name.clone(),
-                    None,
-                    super::gen::ImportUsage::Both,
-                );
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(enum_id).attrs().disable {
                     self.errors

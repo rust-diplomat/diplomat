@@ -159,11 +159,7 @@ pub(crate) fn run<'tcx>(
             let file_name = formatter.fmt_file_name(&context.type_name, &file_type);
 
             // Remove our self reference:
-            context.remove_import(
-                context.type_name.clone(),
-                None,
-                gen::ImportUsage::Both,
-            );
+            context.remove_import(context.type_name.clone(), None, gen::ImportUsage::Both);
 
             // If we're a struct, remove importing our own StructType_obj definition if it exists.
             if matches!(type_def, TypeDef::Struct(..)) {
