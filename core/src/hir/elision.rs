@@ -114,7 +114,6 @@ pub trait LifetimeLowerer {
     /// Lowers a slice of [`ast::Lifetime`]s by calling
     /// [`LifetimeLowerer::lower_lifetime`] repeatedly.
     ///
-
     /// `type_generics` is the full list of generics on the type definition of the type
     /// this lifetimes list is found on (needed for generating anon lifetimes)
     fn lower_lifetimes(
@@ -143,7 +142,6 @@ pub trait LifetimeLowerer {
     ///
     /// `type_generics` is the full list of generics on the type definition of the type
     /// this generics list is found on (needed for generating anon lifetimes)
-
     fn lower_generics(
         &mut self,
         lifetimes: &[ast::Lifetime],

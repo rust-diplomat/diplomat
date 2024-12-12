@@ -171,7 +171,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
                 } else {
                     let prime = "'".to_string();
                     let lifetime = lifetime.to_syn();
-                    quote! { & #prime#lifetime }
+                    quote! { & #prime #lifetime }
                 };
                 let mutability_mod = if *mutability == ast::Mutability::Mutable {
                     quote! {mut}
@@ -194,7 +194,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
         let runner_method_name =
             Ident::new(&format!("run_{}_callback", method_name), Span::call_site());
         methods.push(syn::Item::Fn(syn::parse_quote!(
-            fn #method_name#lifetimes (#(#param_names_and_types),*) #return_tokens {
+            fn #method_name #lifetimes (#(#param_names_and_types),*) #return_tokens {
                 unsafe {
                     #(#all_params_conversion)*
                     ((self.vtable).#runner_method_name)(self.data #(#param_names)*)#end_token
@@ -331,7 +331,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
             #cfg
-            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+            extern "C" fn #extern_ident #lifetimes(#(#all_params),*) #return_tokens {
                 #(#all_params_conversion)*
                 #method_invocation(#(#all_params_names),*) #maybe_into
             }
@@ -340,7 +340,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
             #cfg
-            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+            extern "C" fn #extern_ident #lifetimes(#(#all_params),*) #return_tokens {
                 #(#all_params_conversion)*
                 let ret = #method_invocation(#(#all_params_names),*);
                 #(#write_flushes)*
@@ -518,7 +518,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             new_contents.push(Item::Fn(syn::parse_quote! {
                 #[no_mangle]
                 #cfg
-                extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
+                extern "C" fn #destroy_ident #lifetime_defs(this: Box<#type_ident #lifetimes>) {}
             }));
         }
     }

@@ -35,7 +35,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.named_constructors = false; // TODO
     a.fallible_constructors = false; // TODO
     a.accessors = false;
-    a.stringifiers = false; // TODO
+    a.stringifiers = true;
     a.comparators = false; // TODO
     a.iterators = true;
     a.iterables = true;
@@ -1188,11 +1188,21 @@ returnVal.option() ?: return null
                     panic!("Can only have one iterable method per opaque struct")
                 }
             }
-            _ => format!(
-                "fun {}({}): {return_ty}",
-                self.formatter.fmt_method_name(method),
-                params
-            ),
+            Some(SpecialMethod::Stringifier) => {
+                if !special_methods.has_stringifier {
+                    special_methods.has_stringifier = true;
+                    "override fun toString(): String".to_string()
+                } else {
+                    panic!("Can only have one stringifier method per opaque struct")
+                }
+            }
+            _ => {
+                format!(
+                    "fun {}({}): {return_ty}",
+                    self.formatter.fmt_method_name(method),
+                    params
+                )
+            }
         };
 
         MethodTpl {
@@ -1901,6 +1911,7 @@ struct SpecialMethods {
     iterator_type: Option<String>,
     indexer_type: Option<IndexerType>,
     iterable_type: Option<String>,
+    has_stringifier: bool,
 }
 
 struct IndexerType {
@@ -1921,6 +1932,7 @@ impl SpecialMethodsImpl {
             iterator_type,
             indexer_type,
             iterable_type,
+            has_stringifier: _,
         }: SpecialMethods,
     ) -> Self {
         let interfaces = iterator_type
