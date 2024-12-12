@@ -202,8 +202,6 @@ pub mod ffi {
     #[derive(Default)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
-        // To avoid https://github.com/rust-diplomat/diplomat/issues/739
-        pub b: u8
     }
     #[derive(Default)]
     pub struct CyclicStructB {
