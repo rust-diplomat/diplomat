@@ -75,18 +75,14 @@ export class CyclicStructC {
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 1, 1, false);
-        
-        const result = wasm.CyclicStructC_takes_nested_parameters(diplomatReceive.buffer, ...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
+        const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
     
         try {
-            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
         }
         
         finally {
             functionCleanupArena.free();
-        
-            diplomatReceive.free();
         }
     }
 
