@@ -27,6 +27,8 @@ namespace capi {
 struct CyclicStructC {
   CyclicStructA a;
 
+  inline static CyclicStructC takes_nested_parameters(CyclicStructC c);
+
   inline std::string cyclic_out();
 
   inline diplomat::capi::CyclicStructC AsFFI() const;
