@@ -1,6 +1,5 @@
 import test from "ava";
 import { MyString, Float64Vec } from "diplomat-wasm-js-feature-tests";
-import wasm from "../api/diplomat-wasm.mjs";
 
 test("MyString functionality", (t) => {
   let str = MyString.new_("This is a test value.");
