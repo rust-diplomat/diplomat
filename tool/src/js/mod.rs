@@ -102,7 +102,10 @@ pub(crate) fn run<'tcx>(
             type_name,
             formatter: &formatter,
             errors: &errors,
-            imports: RefCell::new(BTreeSet::new()),
+            imports: RefCell::new(gen::Imports {
+                js: BTreeSet::new(),
+                ts: BTreeSet::new()
+            }),
         };
 
         let (m, special_method_presence, fields, fields_out) = match type_def {

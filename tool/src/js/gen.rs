@@ -21,6 +21,13 @@ use crate::ErrorStore;
 
 use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
 
+/// Represents list of imports that our Type is going to use.
+/// Resolved in [`TyGenContext::generate_base`]
+pub(super) struct Imports<'tcx> {
+    pub js : BTreeSet<ImportInfo<'tcx>>,
+    pub ts : BTreeSet<ImportInfo<'tcx>>
+}
+
 /// Represents context for generating a Javascript class.
 ///
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
@@ -30,7 +37,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
-    pub imports: RefCell<BTreeSet<ImportInfo<'tcx>>>,
+    pub imports: RefCell<Imports<'tcx>>,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {
@@ -46,19 +53,22 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             imports: Vec<String>,
         }
 
+        let i = self.imports.borrow();
+
         let mut new_imports = Vec::new();
-        for import in self.imports.borrow().iter() {
-            if import.usage == ImportUsage::Both
-                || (import.usage == ImportUsage::Typescript && typescript)
-                || (import.usage == ImportUsage::Module && !typescript)
-            {
-                new_imports.push(self.formatter.fmt_import_statement(
-                    &import.import_type,
-                    typescript,
-                    "./".into(),
-                    &import.import_file,
-                ));
-            }
+        let imports = if typescript {
+            i.ts.iter()
+        } else {
+            i.js.iter()
+        };
+
+        for import in imports {
+            new_imports.push(self.formatter.fmt_import_statement(
+                &import.import_type,
+                typescript,
+                "./".into(),
+                &import.import_file,
+            ));
         }
 
         BaseTemplate {
@@ -79,15 +89,21 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         import_file: Option<Cow<'tcx, str>>,
         usage: ImportUsage,
     ) {
-        self.imports.borrow_mut().insert(ImportInfo {
+        let inf = ImportInfo {
             import_type: import_str.clone(),
             import_file: import_file.unwrap_or(
                 self.formatter
                     .fmt_file_name_extensionless(&import_str)
                     .into(),
             ),
-            usage,
-        });
+            usage: usage.clone(),
+        };
+        if usage == ImportUsage::Module || usage == ImportUsage::Both {
+            self.imports.borrow_mut().js.insert(inf.clone());
+        }
+        if usage == ImportUsage::Typescript || usage == ImportUsage::Both {
+            self.imports.borrow_mut().ts.insert(inf);
+        }
     }
 
     /// Exists for the same reason as [`Self::add_import`].
@@ -99,11 +115,19 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         import_file: Option<Cow<'tcx, str>>,
         usage: ImportUsage,
     ) {
-        self.imports.borrow_mut().remove(&ImportInfo {
+        let inf = ImportInfo {
             import_type: import_str,
             import_file: import_file.unwrap_or_default(),
-            usage,
-        });
+            usage: usage.clone(),
+        };
+
+        if usage == ImportUsage::Module || usage == ImportUsage::Both {
+            self.imports.borrow_mut().js.remove(&inf);
+        }
+
+        if usage == ImportUsage::Typescript || usage == ImportUsage::Both {
+            self.imports.borrow_mut().ts.remove(&inf);
+        }
     }
 
     /// Generate an enumerator type's body for a file from the given definition.
@@ -709,7 +733,7 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
 }
 
 /// Where the imports are going to be used in.
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub(super) enum ImportUsage {
     /// .mjs files only
     Module,
@@ -719,6 +743,7 @@ pub(super) enum ImportUsage {
     Both,
 }
 
+#[derive(Clone)]
 pub(super) struct ImportInfo<'info> {
     import_type: Cow<'info, str>,
     import_file: Cow<'info, str>,
