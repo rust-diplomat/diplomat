@@ -35,6 +35,14 @@ pub mod ffi {
         F = 3,
     }
 
+    #[diplomat::opaque]
+    pub enum MyOpaqueEnum {
+        A(String),
+        B(Utf16Wrap),
+        C,
+        D(i32, ImportedStruct),
+    }
+
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -45,6 +53,7 @@ pub mod ffi {
         g: MyEnum,
     }
 
+    #[diplomat::attr(auto, error)]
     pub struct MyZst;
 
     impl Opaque {
@@ -133,6 +142,10 @@ pub mod ffi {
                 .collect();
             Box::new(Utf16Wrap(chars))
         }
+
+        pub fn to_unsigned_from_unsigned(&self, input: u16) -> u16 {
+            input
+        }
     }
 
     impl Utf16Wrap {
@@ -157,6 +170,26 @@ pub mod ffi {
 
         pub fn get_a() -> MyEnum {
             MyEnum::A
+        }
+    }
+
+    impl MyOpaqueEnum {
+        #[diplomat::demo(default_constructor)]
+        pub fn new() -> Box<MyOpaqueEnum> {
+            Box::new(MyOpaqueEnum::A("a".into()))
+        }
+
+        pub fn to_string(&self, write: &mut DiplomatWrite) {
+            let _infallible = write!(
+                write,
+                "MyOpaqueEnum::{}",
+                match self {
+                    MyOpaqueEnum::A(..) => "A",
+                    MyOpaqueEnum::B(..) => "B",
+                    MyOpaqueEnum::C => "C",
+                    MyOpaqueEnum::D(..) => "D",
+                }
+            );
         }
     }
 
@@ -227,6 +260,10 @@ pub mod ffi {
     impl CyclicStructB {
         pub fn get_a() -> CyclicStructA {
             Default::default()
+        }
+
+        pub fn get_a_option() -> Option<CyclicStructA> {
+            Some(Default::default())
         }
     }
 

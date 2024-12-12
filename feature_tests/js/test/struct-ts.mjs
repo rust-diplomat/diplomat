@@ -1,5 +1,5 @@
 import test from 'ava';
-import { CyclicStructB, CyclicStructC, MyEnum, MyStruct } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, CyclicStructB } from "diplomat-wasm-js-feature-tests";
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_();
     t.is(s.a, 17);

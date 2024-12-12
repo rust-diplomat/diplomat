@@ -3,8 +3,9 @@ use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo}
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
-    PrimitiveType, ReturnableStructDef, SelfType, Slice, SpecialMethod, StringEncoding,
-    StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
+    PrimitiveType, ReturnableStructDef, ReturnableStructPath, SelfType, Slice, SpecialMethod,
+    StringEncoding, StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type,
+    TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -42,6 +43,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.indexing = true;
     a.callbacks = true;
     a.traits = true;
+    a.custom_errors = true;
 
     a
 }
@@ -261,7 +263,7 @@ struct TyGenContext<'a, 'cx> {
     callback_params: &'a mut Vec<CallbackParamInfo>,
 }
 
-impl<'a, 'cx> TyGenContext<'a, 'cx> {
+impl<'cx> TyGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
@@ -595,11 +597,11 @@ return string{return_type_modifier}"#
                 _ => todo!(),
             },
             Slice::Primitive(Some(_), prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
             Slice::Primitive(None, prim_ty) => {
-                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
             }
@@ -850,17 +852,44 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
+                        let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
+                            match err {
+                                OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
+                                    let resolved = self.tcx.resolve_opaque(*id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                },
+                                OutType::Struct(ReturnableStructPath::Struct(path)) => {
+                                    let resolved = self.tcx.resolve_struct(path.tcx_id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                },
+                                OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
+                                    let resolved = self.tcx.resolve_out_struct(path.tcx_id);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                                }
+                                _ => {}
+                            }
+                            ".err()"
+                        } else {
+                            ".primitive_err()"
+                        };
+
                         self.gen_out_type_return_conversion(
                             method,
                             &method_lifetimes_map,
                             cleanups,
                             "returnVal.union.err",
-                            ".err()",
+                            err_converter,
                             err,
                             use_finalizers_not_cleaners,
                         )
                     })
-                    .unwrap_or_else(|| "return Unit.err()".into());
+                    .unwrap_or_else(|| "return Unit.primitive_err()".into());
 
                 #[derive(Template)]
                 #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
@@ -1077,7 +1106,7 @@ returnVal.option() ?: return null
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
                         Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
+                            self.gen_native_type_name(ty, None, false).into(),
                             match ty {
                                 Type::Enum(..) => ".toNative()",
                                 Type::Struct(..) => ".nativeStruct",
@@ -1257,7 +1286,7 @@ returnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty, additional_name.clone()),
+                self.gen_native_type_name(&param.ty, additional_name.clone(), false),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1355,6 +1384,7 @@ returnVal.option() ?: return null
             callback_params: &'a [CallbackParamInfo],
             use_finalizers_not_cleaners: bool,
             docs: String,
+            is_custom_error: bool,
         }
 
         (
@@ -1372,6 +1402,7 @@ returnVal.option() ?: return null
                 callback_params: self.callback_params.as_ref(),
                 use_finalizers_not_cleaners,
                 docs: self.formatter.fmt_docs(&ty.docs),
+                is_custom_error: ty.attrs.custom_errors,
             }
             .render()
             .expect("failed to generate struct"),
@@ -1462,6 +1493,7 @@ returnVal.option() ?: return null
             callback_params: &'a [CallbackParamInfo],
             lifetimes: Vec<Cow<'a, str>>,
             docs: String,
+            is_custom_error: bool,
         }
 
         let fields = ty
@@ -1498,6 +1530,7 @@ returnVal.option() ?: return null
                 callback_params: self.callback_params.as_ref(),
                 lifetimes,
                 docs: self.formatter.fmt_docs(&ty.docs),
+                is_custom_error: ty.attrs.custom_errors,
             }
             .render()
             .expect("Failed to render struct template"),
@@ -1570,7 +1603,7 @@ returnVal.option() ?: return null
             });
         let (native_output_type, return_modification) = match *method.output {
             Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
+                self.gen_native_type_name(ty, None, true).into(),
                 match ty {
                     Type::Enum(..) => ".toNative()",
                     Type::Struct(..) => ".nativeStruct",
@@ -1794,9 +1827,18 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
+        // flag to represent whether the API this type is a part of has support for unsigned types.
+        // Non-trait methods do not, because they are called through the JNA library built in Java
+        // which doesn't support unsigned types.
+        // The true fix is to use JNA `IntegerType` to represent unsigned ints:
+        // TODO: https://github.com/rust-diplomat/diplomat/issues/748
+        support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
+            Type::Primitive(prim) => self
+                .formatter
+                .fmt_primitive_as_ffi(prim, support_unsigned)
+                .into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()

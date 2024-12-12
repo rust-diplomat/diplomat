@@ -67,6 +67,11 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     final result = _OpaqueMutexedString_wrapper(_ffi);
     return Utf16Wrap._fromFfi(result, []);
   }
+
+  int toUnsignedFromUnsigned(int input) {
+    final result = _OpaqueMutexedString_to_unsigned_from_unsigned(_ffi, input);
+    return result;
+  }
 }
 
 @meta.RecordUse()
@@ -113,3 +118,8 @@ external _SliceUtf8 _OpaqueMutexedString_dummy_str(ffi.Pointer<ffi.Opaque> self)
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_wrapper')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_wrapper(ffi.Pointer<ffi.Opaque> self);
+
+@meta.RecordUse()
+@ffi.Native<ffi.Uint16 Function(ffi.Pointer<ffi.Opaque>, ffi.Uint16)>(isLeaf: true, symbol: 'OpaqueMutexedString_to_unsigned_from_unsigned')
+// ignore: non_constant_identifier_names
+external int _OpaqueMutexedString_to_unsigned_from_unsigned(ffi.Pointer<ffi.Opaque> self, int input);

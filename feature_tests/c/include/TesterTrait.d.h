@@ -15,7 +15,7 @@
 typedef struct TesterTrait_VTable {
     void (*destructor)(const void*);
     size_t SIZE; size_t ALIGNMENT;
-    int32_t (*run_test_trait_fn_callback)(void*, int32_t);
+    uint32_t (*run_test_trait_fn_callback)(void*, uint32_t);
     void (*run_test_void_trait_fn_callback)(void*);
     int32_t (*run_test_struct_trait_fn_callback)(void*, TraitTestingStruct);
 } TesterTrait_VTable;

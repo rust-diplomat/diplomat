@@ -144,7 +144,7 @@ pub(super) struct TerminusInfo {
     pub imports: BTreeSet<String>,
 }
 
-impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
+impl RenderTerminusContext<'_, '_> {
     /// See [`TerminusInfo`] for more information on termini.
     ///
     /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.

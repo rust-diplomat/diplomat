@@ -179,7 +179,7 @@ impl<'ast> LoweringContext<'ast> {
     }
     pub(super) fn lower_all_opaques(
         &mut self,
-        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::OpaqueStruct>>,
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::OpaqueType>>,
     ) -> Result<Vec<OpaqueDef>, ()> {
         self.lower_all(ast_defs, Self::lower_opaque)
     }
@@ -257,10 +257,7 @@ impl<'ast> LoweringContext<'ast> {
         Ok(def)
     }
 
-    fn lower_opaque(
-        &mut self,
-        item: ItemAndInfo<'ast, ast::OpaqueStruct>,
-    ) -> Result<OpaqueDef, ()> {
+    fn lower_opaque(&mut self, item: ItemAndInfo<'ast, ast::OpaqueType>) -> Result<OpaqueDef, ()> {
         let ast_opaque = item.item;
         self.errors.set_item(ast_opaque.name.as_str());
         let name = self.lower_ident(&ast_opaque.name, "opaque name");

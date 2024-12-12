@@ -456,20 +456,23 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
 
         Item::Enum(e) => {
             let info = AttributeInfo::extract(&mut e.attrs);
-            if info.opaque {
-                panic!("#[diplomat::opaque] not allowed on enums")
-            }
+
             for v in &mut e.variants {
                 let info = AttributeInfo::extract(&mut v.attrs);
                 if info.opaque {
                     panic!("#[diplomat::opaque] not allowed on enum variants");
                 }
             }
-            *e = syn::parse_quote! {
-                #[repr(C)]
-                #[derive(Clone, Copy)]
-                #e
-            };
+
+            // Normal opaque types don't need repr(transparent) because the inner type is
+            // never referenced.
+            if !info.opaque {
+                *e = syn::parse_quote! {
+                    #[repr(C)]
+                    #[derive(Clone, Copy)]
+                    #e
+                };
+            }
         }
 
         Item::Impl(i) => {

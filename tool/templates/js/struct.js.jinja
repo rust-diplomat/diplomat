@@ -124,15 +124,20 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    static _fromFFI(internalConstructor, ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    static _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
         var structObj = {};
+
+        {%- if wraps_primitive && owns_wrapped_primitive %}
+        structObj.{{fields.first().unwrap().field_name}} = primitiveValue;
+        {% else %}
         {%- for field in fields %}
-        const {{field.field_name}}Deref = {{field.c_to_js_deref}};
+        const {{field.field_name}}Deref = {%- if wraps_primitive && !owns_wrapped_primitive %} primitiveValue {%- else %} {{field.c_to_js_deref}} {%- endif %};
         structObj.{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
+        {%- endif %}
 
         return new {{type_name}}(structObj, internalConstructor);
     }

@@ -331,8 +331,12 @@ internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
 
-internal fun <T, E> E.err(): Result<T> {
+internal fun <T, E> E.primitive_err(): Result<T> {
     return Result.failure(RuntimeException("Received error $this"))
+}
+
+internal fun <T> Throwable.err(): Result<T> {
+    return Result.failure(this)
 }
 
 internal class ResultIntUnitUnion: Union() {
@@ -488,6 +492,26 @@ internal class OptionByte: Structure(), Structure.ByValue  {
     }
 
     internal fun option(): Byte? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: CyclicStructANative = CyclicStructANative()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): CyclicStructANative? {
         if (isOk == 1.toByte()) {
             return value
         } else {
