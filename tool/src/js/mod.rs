@@ -104,7 +104,7 @@ pub(crate) fn run<'tcx>(
             errors: &errors,
             imports: RefCell::new(gen::Imports {
                 js: BTreeSet::new(),
-                ts: BTreeSet::new()
+                ts: BTreeSet::new(),
             }),
         };
 

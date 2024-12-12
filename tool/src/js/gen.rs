@@ -24,8 +24,8 @@ use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowC
 /// Represents list of imports that our Type is going to use.
 /// Resolved in [`TyGenContext::generate_base`]
 pub(super) struct Imports<'tcx> {
-    pub js : BTreeSet<ImportInfo<'tcx>>,
-    pub ts : BTreeSet<ImportInfo<'tcx>>
+    pub js: BTreeSet<ImportInfo<'tcx>>,
+    pub ts: BTreeSet<ImportInfo<'tcx>>,
 }
 
 /// Represents context for generating a Javascript class.
@@ -56,11 +56,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let i = self.imports.borrow();
 
         let mut new_imports = Vec::new();
-        let imports = if typescript {
-            i.ts.iter()
-        } else {
-            i.js.iter()
-        };
+        let imports = if typescript { i.ts.iter() } else { i.js.iter() };
 
         for import in imports {
             new_imports.push(self.formatter.fmt_import_statement(
