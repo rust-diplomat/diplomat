@@ -92,7 +92,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     .fmt_file_name_extensionless(&import_str)
                     .into(),
             ),
-            usage: usage.clone(),
         };
         if usage == ImportUsage::Module || usage == ImportUsage::Both {
             self.imports.borrow_mut().js.insert(inf.clone());
@@ -114,7 +113,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let inf = ImportInfo {
             import_type: import_str,
             import_file: import_file.unwrap_or_default(),
-            usage: usage.clone(),
         };
 
         if usage == ImportUsage::Module || usage == ImportUsage::Both {
@@ -743,7 +741,6 @@ pub(super) enum ImportUsage {
 pub(super) struct ImportInfo<'info> {
     import_type: Cow<'info, str>,
     import_file: Cow<'info, str>,
-    usage: ImportUsage,
 }
 
 /// Imports are only unique if they use a different type. We don't care about anything else.
@@ -755,7 +752,7 @@ impl<'info> Ord for ImportInfo<'info> {
 
 impl<'info> PartialOrd for ImportInfo<'info> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.import_type.partial_cmp(&other.import_type)
+        Some(self.import_type.cmp(&other.import_type))
     }
 }
 

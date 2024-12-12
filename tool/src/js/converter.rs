@@ -71,7 +71,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                 // Add to the import list:
                 self.add_import(
-                    type_name.clone().into(),
+                    type_name.clone(),
                     None,
                     super::gen::ImportUsage::Both,
                 );
@@ -93,7 +93,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                 // Add to the import list:
                 self.add_import(
-                    type_name.clone().into(),
+                    type_name.clone(),
                     None,
                     super::gen::ImportUsage::Both,
                 );
@@ -110,7 +110,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                 // Add to the import list:
                 self.add_import(
-                    type_name.clone().into(),
+                    type_name.clone(),
                     None,
                     super::gen::ImportUsage::Both,
                 );
@@ -466,7 +466,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let (requires_buf, error_ret) = match return_type {
                     ReturnType::Fallible(s, Some(e)) => {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        self.add_import(type_name.into(), None, super::gen::ImportUsage::Both);
+                        self.add_import(type_name, None, super::gen::ImportUsage::Both);
 
                         let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
                                 ReturnableStructDef::Struct(s) => s.fields.is_empty(),

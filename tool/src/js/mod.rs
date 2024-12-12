@@ -160,7 +160,7 @@ pub(crate) fn run<'tcx>(
 
             // Remove our self reference:
             context.remove_import(
-                context.type_name.clone().into(),
+                context.type_name.clone(),
                 None,
                 gen::ImportUsage::Both,
             );
