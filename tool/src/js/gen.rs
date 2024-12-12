@@ -744,25 +744,25 @@ pub(super) struct ImportInfo<'info> {
 }
 
 /// Imports are only unique if they use a different type. We don't care about anything else.
-impl<'info> Ord for ImportInfo<'info> {
+impl Ord for ImportInfo<'_> {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.import_type.cmp(&other.import_type)
     }
 }
 
-impl<'info> PartialOrd for ImportInfo<'info> {
+impl PartialOrd for ImportInfo<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.import_type.cmp(&other.import_type))
     }
 }
 
-impl<'info> PartialEq for ImportInfo<'info> {
+impl PartialEq for ImportInfo<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.import_type.eq(&other.import_type)
     }
 }
 
-impl<'info> Eq for ImportInfo<'info> {}
+impl Eq for ImportInfo<'_> {}
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
