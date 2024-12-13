@@ -35,6 +35,18 @@ export class CyclicStructB {
         return [this.#field]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof CyclicStructB) {
+            return obj;
+        }
+
+        return new CyclicStructB(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

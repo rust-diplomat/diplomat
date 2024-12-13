@@ -73,6 +73,18 @@ export class OptionStruct {
         return [this.#a.ffiValue ?? 0, this.#b.ffiValue ?? 0, this.#c, this.#d.ffiValue ?? 0]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof OptionStruct) {
+            return obj;
+        }
+
+        return new OptionStruct(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

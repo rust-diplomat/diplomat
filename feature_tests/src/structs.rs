@@ -268,6 +268,10 @@ pub mod ffi {
     }
 
     impl CyclicStructC {
+        pub fn takes_nested_parameters(c: CyclicStructC) -> CyclicStructC {
+            c
+        }
+
         pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.a.field.to_string()).unwrap();
         }

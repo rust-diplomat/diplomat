@@ -70,7 +70,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(opaque_id).attrs().disable {
                     self.errors
@@ -88,7 +88,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -101,7 +101,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.add_import(type_name.clone().into());
+                self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                 if self.tcx.resolve_type(enum_id).attrs().disable {
                     self.errors
@@ -454,7 +454,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let (requires_buf, error_ret) = match return_type {
                     ReturnType::Fallible(s, Some(e)) => {
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        self.add_import(type_name.into());
+                        self.add_import(type_name, None, super::gen::ImportUsage::Both);
 
                         let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
                                 ReturnableStructDef::Struct(s) => s.fields.is_empty(),
@@ -629,7 +629,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 gen_context,
                 PrimitiveType::Int(IntType::I32),
             ),
-            Type::Struct(..) => self.gen_js_to_c_for_struct_type(
+            Type::Struct(ref s) => self.gen_js_to_c_for_struct_type(
+                self.formatter.fmt_type_name(s.id()),
                 js_name,
                 struct_borrow_info,
                 alloc.unwrap(),
@@ -721,6 +722,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     /// The end goal of this is to call `_intoFFI`, to convert a structure into a flattened list of values that WASM understands.
     pub(super) fn gen_js_to_c_for_struct_type(
         &self,
+        js_type: Cow<'tcx, str>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         allocator: &str,
@@ -749,6 +751,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 write!(&mut params, "],").unwrap();
             }
         }
+
+        let js_call =
+            format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
+
         match gen_context {
             JsToCConversionContext::List(force_padding) => {
                 let force_padding = match force_padding {
@@ -756,10 +762,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     ForcePaddingStatus::Force => ", true",
                     ForcePaddingStatus::PassThrough => ", forcePadding",
                 };
-                format!("...{js_name}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+                format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
-                "{js_name}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
+                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
             )
             .into(),
             JsToCConversionContext::SlicePrealloc => {

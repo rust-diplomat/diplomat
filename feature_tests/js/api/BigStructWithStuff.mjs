@@ -71,7 +71,7 @@ export class BigStructWithStuff {
         }
 
         if ("fourth" in structObj) {
-            this.#fourth = structObj.fourth;
+            this.#fourth = ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.fourth);
         } else {
             throw new Error("Missing required field fourth.");
         }
@@ -91,7 +91,19 @@ export class BigStructWithStuff {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#first, /* [1 x i8] padding */ 0 /* end padding */, this.#second, this.#third, /* [1 x i16] padding */ 0 /* end padding */, ...this.#fourth._intoFFI(functionCleanupArena, {}, true), this.#fifth, /* [3 x i8] padding */ 0, 0, 0 /* end padding */]
+        return [this.#first, /* [1 x i8] padding */ 0 /* end padding */, this.#second, this.#third, /* [1 x i16] padding */ 0 /* end padding */, ...ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._intoFFI(functionCleanupArena, {}, true), this.#fifth, /* [3 x i8] padding */ 0, 0, 0 /* end padding */]
+    }
+
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof BigStructWithStuff) {
+            return obj;
+        }
+
+        return new BigStructWithStuff(obj);
     }
 
     _writeToArrayBuffer(
@@ -103,7 +115,7 @@ export class BigStructWithStuff {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#second, Uint16Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#third, Uint16Array);
-        this.#fourth._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
+        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#fifth, Uint8Array);
     }
 

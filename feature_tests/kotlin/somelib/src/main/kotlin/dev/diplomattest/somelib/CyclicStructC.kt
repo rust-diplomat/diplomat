@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface CyclicStructCLib: Library {
+    fun CyclicStructC_takes_nested_parameters(c: CyclicStructCNative): CyclicStructCNative
     fun CyclicStructC_cyclic_out(nativeStruct: CyclicStructCNative, write: Pointer): Unit
 }
 
@@ -28,6 +29,14 @@ class CyclicStructC internal constructor (
         internal val libClass: Class<CyclicStructCLib> = CyclicStructCLib::class.java
         internal val lib: CyclicStructCLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CyclicStructCNative::class.java).toLong()
+        
+        fun takesNestedParameters(c: CyclicStructC): CyclicStructC {
+            
+            val returnVal = lib.CyclicStructC_takes_nested_parameters(c.nativeStruct);
+            
+            val returnStruct = CyclicStructC(returnVal)
+            return returnStruct
+        }
     }
     
     fun cyclicOut(): String {

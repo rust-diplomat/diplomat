@@ -18,7 +18,7 @@ export class CyclicStructC {
         }
 
         if ("a" in structObj) {
-            this.#a = structObj.a;
+            this.#a = CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.a);
         } else {
             throw new Error("Missing required field a.");
         }
@@ -32,7 +32,19 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...this.#a._intoFFI(functionCleanupArena, {})]
+        return [...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+    }
+
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof CyclicStructC) {
+            return obj;
+        }
+
+        return new CyclicStructC(obj);
     }
 
     _writeToArrayBuffer(
@@ -41,7 +53,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        this.#a._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -58,6 +70,20 @@ export class CyclicStructC {
         structObj.a = CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
         return new CyclicStructC(structObj, internalConstructor);
+    }
+
+    static takesNestedParameters(c) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
+    
+        try {
+            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        }
     }
 
     cyclicOut() {

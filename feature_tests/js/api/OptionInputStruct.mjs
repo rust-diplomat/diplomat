@@ -63,6 +63,18 @@ export class OptionInputStruct {
         return [...diplomatRuntime.optionToArgsForCalling(this.#a, 1, 1, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]), /* [2 x i8] padding */ 0, 0 /* end padding */, ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint32Array)]), ...diplomatRuntime.optionToArgsForCalling(this.#c, 4, 4, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof OptionInputStruct) {
+            return obj;
+        }
+
+        return new OptionInputStruct(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,

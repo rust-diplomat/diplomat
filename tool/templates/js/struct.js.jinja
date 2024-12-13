@@ -4,9 +4,9 @@
 {% endif -%}
 
 {%- if typescript && !is_out -%}
-type {{type_name}}_Obj = {
+type {{type_name}}_obj = {
     {%- for field in fields %}
-    {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {{field.js_type_name}};
+    {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
     {%- endfor %}
 };
 
@@ -31,7 +31,7 @@ export class {{type_name}} {
 
     {%- if !(typescript && is_out) %}
     constructor(structObj
-        {%- if typescript %} : {{type_name}}_Obj {%- endif -%}
+        {%- if typescript %} : {{type_name}}_obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         if (typeof structObj !== "object") {
@@ -46,7 +46,7 @@ export class {{type_name}} {
 
         {%- for field in fields %}
         if ("{{field.field_name}}" in structObj) {
-            this.#{{ field.field_name }} = structObj.{{field.field_name}};
+            this.#{{ field.field_name }} = {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.{{field.field_name}}) {%- else %} structObj.{{field.field_name}} {%- endif %};
         } else {
             {%- if field.is_optional %}
             this.#{{ field.field_name }} = null;
@@ -90,6 +90,18 @@ export class {{type_name}} {
             {%- if !loop.last -%}, {% endif %}
             {%- endfor -%}
         ]
+    }
+
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof {{type_name}}) {
+            return obj;
+        }
+
+        return new {{type_name}}(obj);
     }
 
     _writeToArrayBuffer(

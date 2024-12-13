@@ -102,7 +102,10 @@ pub(crate) fn run<'tcx>(
             type_name,
             formatter: &formatter,
             errors: &errors,
-            imports: RefCell::new(BTreeSet::new()),
+            imports: RefCell::new(gen::Imports {
+                js: BTreeSet::new(),
+                ts: BTreeSet::new(),
+            }),
         };
 
         let (m, special_method_presence, fields, fields_out) = match type_def {
@@ -156,19 +159,30 @@ pub(crate) fn run<'tcx>(
             let file_name = formatter.fmt_file_name(&context.type_name, &file_type);
 
             // Remove our self reference:
-            context.remove_import(context.type_name.clone().into());
+            context.remove_import(context.type_name.clone(), None, gen::ImportUsage::Both);
+
+            // If we're a struct, remove importing our own StructType_obj definition if it exists.
+            if matches!(type_def, TypeDef::Struct(..)) {
+                context.remove_import(
+                    format!("{}_obj", context.type_name).into(),
+                    None,
+                    gen::ImportUsage::Typescript,
+                );
+            }
 
             files.add_file(file_name, context.generate_base(ts, contents));
         }
 
+        let export_filename = formatter.fmt_file_name_extensionless(&context.type_name);
+
         exports.push(
             formatter
-                .fmt_export_statement(&context.type_name, false, "./".into())
+                .fmt_export_statement(&context.type_name, false, "./".into(), &export_filename)
                 .into(),
         );
         ts_exports.push(
             formatter
-                .fmt_export_statement(&context.type_name, true, "./".into())
+                .fmt_export_statement(&context.type_name, true, "./".into(), &export_filename)
                 .into(),
         )
     }

@@ -17,12 +17,19 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
+    diplomat::capi::CyclicStructC CyclicStructC_takes_nested_parameters(diplomat::capi::CyclicStructC c);
+    
     void CyclicStructC_cyclic_out(diplomat::capi::CyclicStructC self, diplomat::capi::DiplomatWrite* write);
     
     
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline CyclicStructC CyclicStructC::takes_nested_parameters(CyclicStructC c) {
+  auto result = diplomat::capi::CyclicStructC_takes_nested_parameters(c.AsFFI());
+  return CyclicStructC::FromFFI(result);
+}
 
 inline std::string CyclicStructC::cyclic_out() {
   std::string output;

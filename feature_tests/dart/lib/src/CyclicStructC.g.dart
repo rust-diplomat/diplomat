@@ -27,6 +27,12 @@ final class CyclicStructC {
     return struct;
   }
 
+  static CyclicStructC takesNestedParameters(CyclicStructC c) {
+    final temp = _FinalizedArena();
+    final result = _CyclicStructC_takes_nested_parameters(c._toFfi(temp.arena));
+    return CyclicStructC._fromFfi(result);
+  }
+
   String cyclicOut() {
     final temp = _FinalizedArena();
     final write = _Write();
@@ -44,6 +50,11 @@ final class CyclicStructC {
         a,
       ]);
 }
+
+@meta.RecordUse()
+@ffi.Native<_CyclicStructCFfi Function(_CyclicStructCFfi)>(isLeaf: true, symbol: 'CyclicStructC_takes_nested_parameters')
+// ignore: non_constant_identifier_names
+external _CyclicStructCFfi _CyclicStructC_takes_nested_parameters(_CyclicStructCFfi c);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(_CyclicStructCFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructC_cyclic_out')

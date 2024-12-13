@@ -53,6 +53,18 @@ export class ImportedStruct {
         return [this.#foo.ffiValue, this.#count, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
     }
 
+    static _fromSuppliedValue(internalConstructor, obj) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("_fromSuppliedValue cannot be called externally.");
+        }
+
+        if (obj instanceof ImportedStruct) {
+            return obj;
+        }
+
+        return new ImportedStruct(obj);
+    }
+
     _writeToArrayBuffer(
         arrayBuffer,
         offset,
