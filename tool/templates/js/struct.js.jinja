@@ -6,7 +6,7 @@
 {%- if typescript && !is_out -%}
 type {{type_name}}_obj = {
     {%- for field in fields %}
-    {{field.field_name}}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
+    {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
     {%- endfor %}
 };
 

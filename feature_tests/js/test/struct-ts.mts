@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, CyclicStructB, CyclicStructC } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_();
@@ -60,7 +60,28 @@ test("Nested Struct with pre-built Object", t => {
     t.is(nested.cyclicOut(), "15");
 });
 
-test("Function Returning Nested Struct of One Field", t => {
+test("Test struct layout: scalar pair layout", t => {
+    const s = new ScalarPairWithPadding({
+        first: 122,
+        second: 414
+    });
+    s.assertValue();
+    t.is(true, true); // Ava doesn't like tests without assertions
+});
+
+test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
+    const s = new BigStructWithStuff({
+        first: 101, 
+        second: 505, 
+        third: 9345,
+        fourth: new ScalarPairWithPadding({first: 122, second: 414}),
+        fifth: 99
+    });
+    s.assertValue(853);
+    t.is(true, true); // Ava doesn't like tests without assertions
+});
+
+test("Function Returning Nested Struct of One Primitive", t => {
     const a = CyclicStructB.getA();
     t.is(a.cyclicOut(), "0");
 });
