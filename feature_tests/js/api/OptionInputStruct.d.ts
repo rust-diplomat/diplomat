@@ -3,9 +3,9 @@ import type { OptionEnum } from "./OptionEnum"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 type OptionInputStruct_Obj = {
-    a: number | null;
-    b: codepoint | null;
-    c: OptionEnum | null;
+    a?: number | null;
+    b?: codepoint | null;
+    c?: OptionEnum | null;
 };
 
 export class OptionInputStruct {

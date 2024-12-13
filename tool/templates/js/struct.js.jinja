@@ -6,7 +6,7 @@
 {%- if typescript && !is_out -%}
 type {{type_name}}_Obj = {
     {%- for field in fields %}
-    {{field.field_name}}: {{field.js_type_name}};
+    {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {{field.js_type_name}};
     {%- endfor %}
 };
 
