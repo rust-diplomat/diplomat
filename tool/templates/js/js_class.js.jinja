@@ -1,0 +1,16 @@
+{% if !doc_str.is_empty() %}
+/** {{doc_str}}
+*/
+{% endif -%}
+
+{% block header_info %}{% endblock %}
+
+export class {{type_name}} {
+	{% block class_body %}{% endblock %}
+
+	{%- for method in methods.methods %}
+
+    {{ method|indent(4) }}
+{%- endfor ~%}
+    {{~ methods.special_methods|indent(4) -}}
+}

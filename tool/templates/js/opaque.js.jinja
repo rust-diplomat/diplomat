@@ -1,7 +1,6 @@
-{%- if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif -%}
+{% extends "js/js_class.js.jinja" %}
+
+{% block header_info %}
 {%- if !typescript -%}
 
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
@@ -9,8 +8,9 @@ const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 {% endif -%}
+{% endblock %}
 
-export class {{type_name}} {
+{% block class_body %}
     {% if !typescript -%}
     // Internal ptr reference:
     #ptr = null;
@@ -46,10 +46,4 @@ export class {{type_name}} {
         return this.#ptr;
     }
     {%- endif -%}
-
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
-}
+{% endblock %}

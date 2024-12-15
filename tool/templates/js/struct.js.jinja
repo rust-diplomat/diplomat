@@ -1,8 +1,6 @@
-{%- if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif -%}
+{% extends "js/js_class.js.jinja" %}
 
+{% block header_info %}
 {%- if typescript && !is_out -%}
 type {{type_name}}_obj = {
     {%- for field in fields %}
@@ -11,8 +9,9 @@ type {{type_name}}_obj = {
 };
 
 {% endif -%}
+{% endblock %}
 
-export class {{type_name}} {
+{% block class_body %}
     {%- for field in fields %}
 
     {% if !typescript -%}
@@ -168,10 +167,4 @@ export class {{type_name}} {
     {%- endfor -%}
     {%- endif -%}
     {%- endif %}
-
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
-}
+{% endblock %}

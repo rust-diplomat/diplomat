@@ -186,7 +186,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &'a LifetimeEnv,
             destructor: &'a str,
 
-            docs: String,
+            doc_str: String,
 
             methods: &'a MethodsInfo<'a>,
         }
@@ -198,7 +198,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &opaque_def.lifetimes,
             destructor,
 
-            docs: self.formatter.fmt_docs(&opaque_def.docs),
+            doc_str: self.formatter.fmt_docs(&opaque_def.docs),
 
             methods,
         }
@@ -413,7 +413,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             wraps_primitive: bool,
             owns_wrapped_primitive: bool,
 
-            docs: String,
+            doc_str: String,
         }
 
         ImplTemplate {
@@ -435,7 +435,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     hir::Type::Primitive(..)
                 ),
 
-            docs: self.formatter.fmt_docs(&struct_def.docs),
+            doc_str: self.formatter.fmt_docs(&struct_def.docs),
         }
         .render()
         .unwrap()

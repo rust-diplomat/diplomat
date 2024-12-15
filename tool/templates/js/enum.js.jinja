@@ -1,9 +1,6 @@
-// Base enumerator definition
-{% if !doc_str.is_empty() -%}
-/** {{doc_str}}
-*/
-{% endif -%}
-export class {{type_name}} {
+{% extends "js/js_class.js.jinja" %}
+
+{% block class_body %}
 {%- if !typescript %}
     #value = undefined;
 
@@ -79,4 +76,4 @@ export class {{type_name}} {
     {{ method|indent(4) }}
 {%- endfor ~%}
     {{~ methods.special_methods|indent(4) -}}
-}
+{% endblock %}
