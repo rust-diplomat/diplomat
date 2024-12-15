@@ -598,6 +598,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
+            Some(SpecialMethod::Constructor) => {
+                "constructor".into()
+            },
+
             _ if method.param_self.is_none() => {
                 format!("static {}", self.formatter.fmt_method_name(method))
             }
@@ -623,6 +627,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         SpecialMethodInfo {
             iterator,
+            constructor: special_method_presence.constructor,
             typescript: false,
         }
     }
@@ -694,10 +699,11 @@ pub(super) struct MethodInfo<'info> {
 
 /// See [`TyGenContext::generate_special_method`].
 #[derive(Template)]
-#[template(path = "js/iterator.js.jinja", escape = "none")]
+#[template(path = "js/special_methods.js.jinja", escape = "none")]
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,
+    pub constructor: bool,
 }
 
 /// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.
