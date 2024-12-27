@@ -32,9 +32,9 @@ type {{type_name}}_obj = {
     /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    {#- 
-    # This function exists because some structs can override their default constructors.
-    # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor (for instance, demo_gen uses this function instead of the constructor).
+    {# This function exists because some structs can override their default constructors.
+     # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
+     # For instance, demo_gen uses this function instead of the constructor
     -#}
     static FromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} structObj);
