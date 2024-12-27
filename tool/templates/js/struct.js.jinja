@@ -28,9 +28,14 @@ type {{type_name}}_obj = {
     {%- endif -%}
     {%- endfor %}
 
-    static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
-        return new {{type_name}}(diplomatRuntime.internalConstructor, structObj, diplomatRuntime.internalConstructor);
+    {%~ if !is_out %}
+    /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
+        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} structObj);
     } {%- endif %}
+    {% endif -%}
 
     {%- if !(typescript && is_out) %}
     {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%} (structObj
