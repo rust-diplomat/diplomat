@@ -596,9 +596,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 format!("set {}", self.formatter.fmt_method_field_name(name, method))
             }
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
+            // TODO: Make this hidden in typescript.
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
             Some(SpecialMethod::Constructor) => {
+                // TODO: Make this hidden in typescript.
                 "#defaultConstructor".into()
             },
 
