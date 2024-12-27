@@ -2,7 +2,7 @@ import test from 'ava';
 import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
-    const s = MyStruct.new_();
+    const s = new MyStruct();
     t.is(s.a, 17);
     t.is(s.b, true);
     t.is(s.c, 209);
@@ -14,7 +14,7 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
-    const s = new MyStruct({
+    const s = MyStruct.FromFields({
         a: 17,
         b: true,
         c: 209,
