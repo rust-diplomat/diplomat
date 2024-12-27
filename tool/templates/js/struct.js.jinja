@@ -28,8 +28,10 @@ type {{type_name}}_obj = {
     {%- endif -%}
     {%- endfor %}
 
+    {# TODO: Add "fromFields" method #}
+
     {%- if !(typescript && is_out) %}
-    constructor(structObj
+    {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%} (structObj
         {%- if typescript %} : {{type_name}}_obj {%- endif -%}
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {

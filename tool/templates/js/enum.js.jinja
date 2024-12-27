@@ -13,10 +13,9 @@
     static getAllEntries() {
         return {{type_name}}.#values.entries();
     }
-
-    {# TODO: I think it's possible to allow for constructors,
-    but we just need to check if a constructor will be generated. -#}
-    constructor(value) {
+    
+    {# TODO: Add "fromValue" function. #}
+    {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%}(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
             // instances of this type, otherwise the enums are treated as singletons.

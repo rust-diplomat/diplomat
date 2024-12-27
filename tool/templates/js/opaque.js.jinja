@@ -22,7 +22,7 @@ const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
     {%- endfor %}
     
-    constructor(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+    {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%}(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("{{type_name}} is an Opaque type. You cannot call its constructor.");
             return;

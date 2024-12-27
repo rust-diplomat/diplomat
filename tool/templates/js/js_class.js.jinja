@@ -2,6 +2,7 @@
 /** {{doc_str}}
 */
 {% endif -%}
+{%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
 
 {% block header_info %}{% endblock %}
 
