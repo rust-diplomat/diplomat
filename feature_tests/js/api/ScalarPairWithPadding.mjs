@@ -26,7 +26,7 @@ export class ScalarPairWithPadding {
         this.#second = value;
     }
 
-    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`'s fields.
+    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj) {

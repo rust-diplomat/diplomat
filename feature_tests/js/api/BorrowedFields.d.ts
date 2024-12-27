@@ -22,7 +22,7 @@ export class BorrowedFields {
     get c() : string;
     set c(value: string); 
 
-    /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`'s fields.
+    /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : BorrowedFields_obj) : BorrowedFields;

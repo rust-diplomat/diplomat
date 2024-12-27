@@ -34,7 +34,7 @@ export class BigStructWithStuff {
     get fifth() : number;
     set fifth(value: number); 
 
-    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`'s fields.
+    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;

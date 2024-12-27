@@ -65,7 +65,7 @@ export class MyStruct {
         this.#g = value;
     }
 
-    /** Create `MyStruct` from an object that contains all of `MyStruct`'s fields.
+    /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj) {
@@ -245,7 +245,7 @@ export class MyStruct {
 
     constructor() {
         if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
+            this.#internalConstructor(...arguments);
         } else {
             this.#defaultConstructor(...arguments);
         }

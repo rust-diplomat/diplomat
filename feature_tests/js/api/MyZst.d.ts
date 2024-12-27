@@ -9,7 +9,7 @@ type MyZst_obj = {
 export class MyZst {
 	
 
-    /** Create `MyZst` from an object that contains all of `MyZst`'s fields.
+    /** Create `MyZst` from an object that contains all of `MyZst`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : MyZst_obj) : MyZst;

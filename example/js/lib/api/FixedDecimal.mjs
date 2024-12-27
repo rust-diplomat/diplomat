@@ -72,7 +72,7 @@ export class FixedDecimal {
 
     constructor() {
         if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
+            this.#internalConstructor(...arguments);
         } else {
             this.#defaultConstructor(...arguments);
         }

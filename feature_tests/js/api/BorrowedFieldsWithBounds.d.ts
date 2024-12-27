@@ -22,7 +22,7 @@ export class BorrowedFieldsWithBounds {
     get fieldC() : string;
     set fieldC(value: string); 
 
-    /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`'s fields.
+    /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;

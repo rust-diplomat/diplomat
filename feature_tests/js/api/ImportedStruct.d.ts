@@ -18,7 +18,7 @@ export class ImportedStruct {
     get count() : number;
     set count(value: number); 
 
-    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`'s fields.
+    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : ImportedStruct_obj) : ImportedStruct;
