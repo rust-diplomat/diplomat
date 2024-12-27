@@ -9,3 +9,15 @@ next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
     };
 }{% endif %}
 {% endif -%}
+
+{%- if let Some(ctor) = constructor %}
+constructor(
+    {%- for param in ctor.parameters -%}
+    {{- param.name -}}
+    {%- if typescript %}: {{ param.ty -}}{%- endif -%}
+    {%- if !loop.last -%}, {% endif -%}
+{%- endfor -%}
+) {
+
+}
+{% endif -%}

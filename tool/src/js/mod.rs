@@ -134,7 +134,7 @@ pub(crate) fn run<'tcx>(
             let inf = context.generate_method(id, method);
             if inf.is_some() {
                 if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method  {
-                    special_methods.constructor.replace(method);
+                    special_methods.constructor.replace(inf.clone().unwrap());
                 }
             }
             inf

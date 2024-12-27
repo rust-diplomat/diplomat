@@ -599,7 +599,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
             Some(SpecialMethod::Constructor) => {
-                "constructor".into()
+                "#defaultConstructor".into()
             },
 
             _ if method.param_self.is_none() => {
@@ -634,7 +634,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 }
 
 /// Represents a parameter of a method. Used as part of [`MethodInfo`], exclusively in the method definition.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(super) struct ParamInfo<'a> {
     ty: Cow<'a, str>,
     name: Cow<'a, str>,
@@ -647,6 +647,7 @@ pub(super) struct ParamInfo<'a> {
 /// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
 ///
 /// See `DiplomatBuf` in `runtime.mjs` for more.
+#[derive(Clone)]
 pub(super) struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
@@ -656,7 +657,7 @@ pub(super) struct SliceParam<'a> {
 /// Represents a Rust method that we invoke inside of WebAssembly with JS.
 ///
 /// Has an attached template to convert it into Javascript.
-#[derive(Default, Template)]
+#[derive(Default, Template, Clone)]
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
     /// Do we return the `()` type?
@@ -703,7 +704,7 @@ pub(super) struct MethodInfo<'info> {
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,
-    pub constructor: Option<&'a Method>,
+    pub constructor: Option<MethodInfo<'a>>,
 }
 
 /// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.
