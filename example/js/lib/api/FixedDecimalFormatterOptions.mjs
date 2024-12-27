@@ -3,7 +3,10 @@ import { FixedDecimalGroupingStrategy } from "./FixedDecimalGroupingStrategy.mjs
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class FixedDecimalFormatterOptions {
+	
 
     #groupingStrategy;
     get groupingStrategy()  {
@@ -20,7 +23,9 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-    constructor(structObj) {
+
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");
         }
@@ -94,7 +99,8 @@ export class FixedDecimalFormatterOptions {
         return new FixedDecimalFormatterOptions(structObj, internalConstructor);
     }
 
-    static default_() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
@@ -105,6 +111,14 @@ export class FixedDecimalFormatterOptions {
         
         finally {
             diplomatReceive.free();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
         }
     }
 }

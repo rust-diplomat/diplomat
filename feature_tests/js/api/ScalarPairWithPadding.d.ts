@@ -9,14 +9,20 @@ type ScalarPairWithPadding_obj = {
     second: number;
 };
 
+
+
 export class ScalarPairWithPadding {
+	
 
     get first() : number;
     set first(value: number); 
 
     get second() : number;
     set second(value: number); 
+
+    
     constructor(structObj : ScalarPairWithPadding_obj);
+
 
     assertValue(): void;
 }

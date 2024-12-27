@@ -3,7 +3,10 @@ import { CyclicStructB } from "./CyclicStructB.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class CyclicStructA {
+	
 
     #a;
     get a()  {
@@ -12,6 +15,8 @@ export class CyclicStructA {
     set a(value) {
         this.#a = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
@@ -71,6 +76,7 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj, internalConstructor);
     }
+
 
     static getB() {
         const result = wasm.CyclicStructA_get_b();

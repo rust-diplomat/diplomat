@@ -6,12 +6,18 @@ type ErrorStruct_obj = {
     j: number;
 };
 
+
+
 export class ErrorStruct {
+	
 
     get i() : number;
     set i(value: number); 
 
     get j() : number;
     set j(value: number); 
+
+    
     constructor(structObj : ErrorStruct_obj);
+
 }

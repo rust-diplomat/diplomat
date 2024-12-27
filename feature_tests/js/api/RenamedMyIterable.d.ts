@@ -2,12 +2,23 @@
 import type { RenamedMyIterator } from "./RenamedMyIterator"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class RenamedMyIterable {
+	
     
 
     get ffiValue(): pointer;
 
-    static new_(x: Array<number>): RenamedMyIterable;
+    #defaultConstructor(x: Array<number>): RenamedMyIterable;
 
     [Symbol.iterator](): RenamedMyIterator;
+
+    constructor(x: Array<number>) {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

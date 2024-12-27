@@ -2,7 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class BorrowedFieldsReturning {
+	
 
     #bytes;
     get bytes()  {
@@ -11,6 +14,8 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
@@ -77,4 +82,5 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
+
 }

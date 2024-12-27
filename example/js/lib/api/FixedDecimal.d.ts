@@ -4,14 +4,25 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 /** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
 */
+
+
 export class FixedDecimal {
+	
     
 
     get ffiValue(): pointer;
 
-    static new_(v: number): FixedDecimal;
+    #defaultConstructor(v: number): FixedDecimal;
 
     multiplyPow10(power: number): void;
 
     toString(): string | null;
+
+    constructor(v: number) {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

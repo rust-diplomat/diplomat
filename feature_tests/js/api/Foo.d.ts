@@ -7,12 +7,15 @@ import type { BorrowedFieldsWithBounds_obj } from "./BorrowedFieldsWithBounds"
 import type { BorrowedFields_obj } from "./BorrowedFields"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class Foo {
+	
     
 
     get ffiValue(): pointer;
 
-    static new_(x: string): Foo;
+    #defaultConstructor(x: string): Foo;
 
     get bar(): Bar;
 
@@ -21,4 +24,12 @@ export class Foo {
     static extractFromFields(fields: BorrowedFields_obj): Foo;
 
     static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;
+
+    constructor(x: string) {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

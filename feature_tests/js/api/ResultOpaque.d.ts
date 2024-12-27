@@ -3,7 +3,10 @@ import type { ErrorEnum } from "./ErrorEnum"
 import type { ErrorStruct } from "./ErrorStruct"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class ResultOpaque {
+	
     
 
     get ffiValue(): pointer;

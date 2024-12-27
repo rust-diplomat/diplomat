@@ -7,14 +7,28 @@ type FixedDecimalFormatterOptions_obj = {
     someOtherConfig: boolean;
 };
 
+
+
 export class FixedDecimalFormatterOptions {
+	
 
     get groupingStrategy() : FixedDecimalGroupingStrategy;
     set groupingStrategy(value: FixedDecimalGroupingStrategy); 
 
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
-    constructor(structObj : FixedDecimalFormatterOptions_obj);
 
-    static default_(): FixedDecimalFormatterOptions;
+    
+    #internalConstructor(structObj : FixedDecimalFormatterOptions_obj);
+
+
+    #defaultConstructor(): FixedDecimalFormatterOptions;
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

@@ -8,7 +8,10 @@ type BorrowedFields_obj = {
     c: string;
 };
 
+
+
 export class BorrowedFields {
+	
 
     get a() : string;
     set a(value: string); 
@@ -18,7 +21,10 @@ export class BorrowedFields {
 
     get c() : string;
     set c(value: string); 
+
+    
     constructor(structObj : BorrowedFields_obj);
+
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }

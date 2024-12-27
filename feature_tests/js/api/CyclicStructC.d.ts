@@ -7,11 +7,17 @@ type CyclicStructC_obj = {
     a: CyclicStructA_obj;
 };
 
+
+
 export class CyclicStructC {
+	
 
     get a() : CyclicStructA;
     set a(value: CyclicStructA); 
+
+    
     constructor(structObj : CyclicStructC_obj);
+
 
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
 

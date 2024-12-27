@@ -9,7 +9,10 @@ const OptionOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionOpaque_destroy(ptr);
 });
 
+
+
 export class OptionOpaque {
+	
     // Internal ptr reference:
     #ptr = null;
 

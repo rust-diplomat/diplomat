@@ -3,7 +3,10 @@ import { OptionEnum } from "./OptionEnum.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class OptionInputStruct {
+	
 
     #a;
     get a()  {
@@ -28,6 +31,8 @@ export class OptionInputStruct {
     set c(value) {
         this.#c = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("OptionInputStruct's constructor takes an object of OptionInputStruct's fields.");
@@ -105,4 +110,5 @@ export class OptionInputStruct {
 
         return new OptionInputStruct(structObj, internalConstructor);
     }
+
 }

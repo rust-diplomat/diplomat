@@ -2,8 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-// Base enumerator definition
+
+
 export class MyEnum {
+	
     #value = undefined;
 
     static #values = new Map([
@@ -18,7 +20,8 @@ export class MyEnum {
     static getAllEntries() {
         return MyEnum.#values.entries();
     }
-
+    
+    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -70,6 +73,27 @@ export class MyEnum {
     static D = MyEnum.#objectValues[1];
     static E = MyEnum.#objectValues[2];
     static F = MyEnum.#objectValues[3];
+
+    intoValue() {
+        const result = wasm.MyEnum_into_value(this.ffiValue);
+    
+        try {
+            return result;
+        }
+        
+        finally {}
+    }
+
+    static getA() {
+        const result = wasm.MyEnum_get_a();
+    
+        try {
+            return new MyEnum(diplomatRuntime.internalConstructor, result);
+        }
+        
+        finally {}
+    }
+
 
     intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);

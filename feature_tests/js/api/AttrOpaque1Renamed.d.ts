@@ -3,12 +3,15 @@ import type { RenamedAttrEnum } from "./RenamedAttrEnum"
 import type { Unnamespaced } from "./Unnamespaced"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class AttrOpaque1Renamed {
+	
     
 
     get ffiValue(): pointer;
 
-    static totallyNotNew(): AttrOpaque1Renamed;
+    #defaultConstructor(): AttrOpaque1Renamed;
 
     get methodRenamed(): number;
 
@@ -17,4 +20,12 @@ export class AttrOpaque1Renamed {
     useUnnamespaced(un: Unnamespaced): void;
 
     useNamespaced(n: RenamedAttrEnum): void;
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

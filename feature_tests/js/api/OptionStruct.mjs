@@ -4,7 +4,10 @@ import { OptionOpaqueChar } from "./OptionOpaqueChar.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class OptionStruct {
+	
 
     #a;
     get a()  {
@@ -28,6 +31,8 @@ export class OptionStruct {
     get d()  {
         return this.#d;
     }
+    
+
     
     constructor(structObj, internalConstructor) {
         if (typeof structObj !== "object") {
@@ -118,4 +123,5 @@ export class OptionStruct {
 
         return new OptionStruct(structObj, internalConstructor);
     }
+
 }

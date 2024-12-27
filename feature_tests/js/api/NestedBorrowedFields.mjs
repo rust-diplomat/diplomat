@@ -6,7 +6,10 @@ import { Foo } from "./Foo.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class NestedBorrowedFields {
+	
 
     #fields;
     get fields()  {
@@ -31,6 +34,8 @@ export class NestedBorrowedFields {
     set bounds2(value) {
         this.#bounds2 = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("NestedBorrowedFields's constructor takes an object of NestedBorrowedFields's fields.");
@@ -135,6 +140,7 @@ export class NestedBorrowedFields {
     get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };
+
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

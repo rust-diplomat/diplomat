@@ -3,7 +3,10 @@ import { CyclicStructA } from "./CyclicStructA.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class CyclicStructC {
+	
 
     #a;
     get a()  {
@@ -12,6 +15,8 @@ export class CyclicStructC {
     set a(value) {
         this.#a = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructC's constructor takes an object of CyclicStructC's fields.");
@@ -71,6 +76,7 @@ export class CyclicStructC {
 
         return new CyclicStructC(structObj, internalConstructor);
     }
+
 
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

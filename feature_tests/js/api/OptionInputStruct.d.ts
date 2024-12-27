@@ -8,7 +8,10 @@ type OptionInputStruct_obj = {
     c?: OptionEnum | null;
 };
 
+
+
 export class OptionInputStruct {
+	
 
     get a() : number | null;
     set a(value: number | null); 
@@ -18,5 +21,8 @@ export class OptionInputStruct {
 
     get c() : OptionEnum | null;
     set c(value: OptionEnum | null); 
+
+    
     constructor(structObj : OptionInputStruct_obj);
+
 }

@@ -5,7 +5,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** Testing JS-specific layout/padding behavior
 */
+
+
 export class ScalarPairWithPadding {
+	
 
     #first;
     get first()  {
@@ -22,6 +25,8 @@ export class ScalarPairWithPadding {
     set second(value) {
         this.#second = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");
@@ -95,6 +100,7 @@ export class ScalarPairWithPadding {
 
         return new ScalarPairWithPadding(structObj, internalConstructor);
     }
+
 
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

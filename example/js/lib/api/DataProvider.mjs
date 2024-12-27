@@ -11,7 +11,10 @@ const DataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_DataProvider_destroy_mv1(ptr);
 });
 
+
+
 export class DataProvider {
+	
     // Internal ptr reference:
     #ptr = null;
 

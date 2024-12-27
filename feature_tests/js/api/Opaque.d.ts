@@ -4,12 +4,15 @@ import type { MyStruct } from "./MyStruct"
 import type { MyStruct_obj } from "./MyStruct"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class Opaque {
+	
     
 
     get ffiValue(): pointer;
 
-    static new_(): Opaque;
+    #defaultConstructor(): Opaque;
 
     static tryFromUtf8(input: string): Opaque | null;
 
@@ -24,4 +27,12 @@ export class Opaque {
     static returnsImported(): ImportedStruct;
 
     static cmp(): number;
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

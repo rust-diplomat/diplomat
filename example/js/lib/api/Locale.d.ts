@@ -6,10 +6,21 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 *
 *See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
 */
+
+
 export class Locale {
+	
     
 
     get ffiValue(): pointer;
 
-    static new_(name: string): Locale;
+    #defaultConstructor(name: string): Locale;
+
+    constructor(name: string) {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

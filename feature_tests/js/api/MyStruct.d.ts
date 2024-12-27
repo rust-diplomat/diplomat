@@ -13,7 +13,10 @@ type MyStruct_obj = {
     g: MyEnum;
 };
 
+
+
 export class MyStruct {
+	
 
     get a() : number;
     set a(value: number); 
@@ -35,13 +38,24 @@ export class MyStruct {
 
     get g() : MyEnum;
     set g(value: MyEnum); 
-    constructor(structObj : MyStruct_obj);
 
-    static new_(): MyStruct;
+    
+    #internalConstructor(structObj : MyStruct_obj);
+
+
+    #defaultConstructor(): MyStruct;
 
     intoA(): number;
 
     static returnsZstResult(): void;
 
     static failsZstResult(): void;
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
+    }
 }

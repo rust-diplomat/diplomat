@@ -7,12 +7,18 @@ type ImportedStruct_obj = {
     count: number;
 };
 
+
+
 export class ImportedStruct {
+	
 
     get foo() : UnimportedEnum;
     set foo(value: UnimportedEnum); 
 
     get count() : number;
     set count(value: number); 
+
+    
     constructor(structObj : ImportedStruct_obj);
+
 }

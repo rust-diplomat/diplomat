@@ -4,7 +4,10 @@ import { MyZst } from "./MyZst.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class MyStruct {
+	
 
     #a;
     get a()  {
@@ -61,7 +64,9 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
-    constructor(structObj) {
+
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
         }
@@ -175,7 +180,8 @@ export class MyStruct {
         return new MyStruct(structObj, internalConstructor);
     }
 
-    static new_() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
         
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
@@ -229,5 +235,13 @@ export class MyStruct {
         }
         
         finally {}
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
     }
 }

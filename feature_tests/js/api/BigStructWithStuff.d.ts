@@ -14,7 +14,10 @@ type BigStructWithStuff_obj = {
     fifth: number;
 };
 
+
+
 export class BigStructWithStuff {
+	
 
     get first() : number;
     set first(value: number); 
@@ -30,7 +33,10 @@ export class BigStructWithStuff {
 
     get fifth() : number;
     set fifth(value: number); 
+
+    
     constructor(structObj : BigStructWithStuff_obj);
+
 
     assertValue(extraVal: number): void;
 }

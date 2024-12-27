@@ -3,7 +3,10 @@ import type { OptionOpaque } from "./OptionOpaque"
 import type { OptionOpaqueChar } from "./OptionOpaqueChar"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class OptionStruct {
+	
 
     get a() : OptionOpaque | null;
     
@@ -16,4 +19,7 @@ export class OptionStruct {
 
     get d() : OptionOpaque | null;
     
+
+    
+
 }

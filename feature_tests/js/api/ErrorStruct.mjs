@@ -2,7 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class ErrorStruct {
+	
 
     #i;
     get i()  {
@@ -19,6 +22,8 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
@@ -87,4 +92,5 @@ export class ErrorStruct {
 
         return new ErrorStruct(structObj, internalConstructor);
     }
+
 }

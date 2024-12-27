@@ -6,7 +6,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** Testing JS-specific layout/padding behavior
 */
+
+
 export class BigStructWithStuff {
+	
 
     #first;
     get first()  {
@@ -47,6 +50,8 @@ export class BigStructWithStuff {
     set fifth(value) {
         this.#fifth = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
@@ -142,6 +147,7 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj, internalConstructor);
     }
+
 
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

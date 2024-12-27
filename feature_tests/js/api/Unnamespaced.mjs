@@ -8,7 +8,10 @@ const Unnamespaced_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_Unnamespaced_destroy(ptr);
 });
 
+
+
 export class Unnamespaced {
+	
     // Internal ptr reference:
     #ptr = null;
 

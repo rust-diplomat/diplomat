@@ -3,7 +3,10 @@ import { Foo } from "./Foo.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class BorrowedFieldsWithBounds {
+	
 
     #fieldA;
     get fieldA()  {
@@ -28,6 +31,8 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value) {
         this.#fieldC = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsWithBounds's constructor takes an object of BorrowedFieldsWithBounds's fields.");
@@ -132,6 +137,7 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() { 
         return [fieldC];
     };
+
 
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

@@ -8,7 +8,10 @@ type BorrowedFieldsWithBounds_obj = {
     fieldC: string;
 };
 
+
+
 export class BorrowedFieldsWithBounds {
+	
 
     get fieldA() : string;
     set fieldA(value: string); 
@@ -18,7 +21,10 @@ export class BorrowedFieldsWithBounds {
 
     get fieldC() : string;
     set fieldC(value: string); 
+
+    
     constructor(structObj : BorrowedFieldsWithBounds_obj);
+
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 }

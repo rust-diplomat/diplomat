@@ -2,8 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-// Base enumerator definition
+
+
 export class FixedDecimalGroupingStrategy {
+	
     #value = undefined;
 
     static #values = new Map([
@@ -16,7 +18,8 @@ export class FixedDecimalGroupingStrategy {
     static getAllEntries() {
         return FixedDecimalGroupingStrategy.#values.entries();
     }
-
+    
+    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -60,4 +63,5 @@ export class FixedDecimalGroupingStrategy {
     static Never = FixedDecimalGroupingStrategy.#objectValues[1];
     static Always = FixedDecimalGroupingStrategy.#objectValues[2];
     static Min2 = FixedDecimalGroupingStrategy.#objectValues[3];
+
 }

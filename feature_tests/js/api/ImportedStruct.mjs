@@ -3,7 +3,10 @@ import { UnimportedEnum } from "./UnimportedEnum.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class ImportedStruct {
+	
 
     #foo;
     get foo()  {
@@ -20,6 +23,8 @@ export class ImportedStruct {
     set count(value) {
         this.#count = value;
     }
+
+    
     constructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ImportedStruct's constructor takes an object of ImportedStruct's fields.");
@@ -93,4 +98,5 @@ export class ImportedStruct {
 
         return new ImportedStruct(structObj, internalConstructor);
     }
+
 }

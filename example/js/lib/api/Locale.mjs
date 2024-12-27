@@ -11,7 +11,10 @@ const Locale_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_Locale_destroy_mv1(ptr);
 });
 
+
+
 export class Locale {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -19,7 +22,7 @@ export class Locale {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Locale is an Opaque type. You cannot call its constructor.");
             return;
@@ -38,7 +41,7 @@ export class Locale {
         return this.#ptr;
     }
 
-    static new_(name) {
+    #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const nameSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, name));
@@ -51,6 +54,14 @@ export class Locale {
         
         finally {
             functionCleanupArena.free();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments.slice(1));
+        } else {
+            this.#defaultConstructor(...arguments);
         }
     }
 }

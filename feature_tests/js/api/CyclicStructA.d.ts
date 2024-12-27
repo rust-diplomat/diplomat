@@ -7,11 +7,17 @@ type CyclicStructA_obj = {
     a: CyclicStructB_obj;
 };
 
+
+
 export class CyclicStructA {
+	
 
     get a() : CyclicStructB;
     set a(value: CyclicStructB); 
+
+    
     constructor(structObj : CyclicStructA_obj);
+
 
     static getB(): CyclicStructB;
 

@@ -5,9 +5,15 @@ type BorrowedFieldsReturning_obj = {
     bytes: string;
 };
 
+
+
 export class BorrowedFieldsReturning {
+	
 
     get bytes() : string;
     set bytes(value: string); 
+
+    
     constructor(structObj : BorrowedFieldsReturning_obj);
+
 }
