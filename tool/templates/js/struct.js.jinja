@@ -28,7 +28,9 @@ type {{type_name}}_obj = {
     {%- endif -%}
     {%- endfor %}
 
-    {# TODO: Add "fromFields" method #}
+    static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
+        return new {{type_name}}(diplomatRuntime.internalConstructor, structObj, diplomatRuntime.internalConstructor);
+    } {%- endif %}
 
     {%- if !(typescript && is_out) %}
     {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%} (structObj
