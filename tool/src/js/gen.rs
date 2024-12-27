@@ -602,7 +602,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Some(SpecialMethod::Constructor) => {
                 // TODO: Make this hidden in typescript.
                 "#defaultConstructor".into()
-            },
+            }
 
             _ if method.param_self.is_none() => {
                 format!("static {}", self.formatter.fmt_method_name(method))

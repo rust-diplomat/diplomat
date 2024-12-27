@@ -129,17 +129,19 @@ pub(crate) fn run<'tcx>(
         let mut special_methods = context.generate_special_method(special_method_presence);
 
         let methods = m
-        .iter()
-        .flat_map(|method| {
-            let inf = context.generate_method(id, method);
-            if inf.is_some() {
-                if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method  {
-                    special_methods.constructor.replace(inf.clone().unwrap());
+            .iter()
+            .flat_map(|method| {
+                let inf = context.generate_method(id, method);
+                if inf.is_some() {
+                    if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
+                        method.attrs.special_method
+                    {
+                        special_methods.constructor.replace(inf.clone().unwrap());
+                    }
                 }
-            }
-            inf
-        })
-        .collect::<Vec<_>>();
+                inf
+            })
+            .collect::<Vec<_>>();
 
         let mut methods_info = MethodsInfo {
             methods,
