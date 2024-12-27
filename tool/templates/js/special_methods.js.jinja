@@ -19,11 +19,11 @@ constructor(
     {%- if !loop.last -%}, {% endif -%}
     {%- endfor -%}
 {%- endif -%}
-) {
+) {%- if !typescript %} {
     if (arguments[0] === diplomatRuntime.internalConstructor) {
         this.#internalConstructor(...arguments.slice(1));
     } else {
         this.#defaultConstructor(...arguments);
     }
-}
+} {%- endif %}; {%- else %}
 {% endif -%}
