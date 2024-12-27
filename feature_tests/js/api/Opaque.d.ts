@@ -28,11 +28,5 @@ export class Opaque {
 
     static cmp(): number;
 
-    constructor() {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor();
 }

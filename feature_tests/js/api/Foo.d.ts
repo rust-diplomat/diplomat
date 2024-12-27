@@ -25,11 +25,5 @@ export class Foo {
 
     static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;
 
-    constructor(x: string) {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor(x: string);
 }

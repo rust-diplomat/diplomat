@@ -18,11 +18,5 @@ export class FixedDecimal {
 
     toString(): string | null;
 
-    constructor(v: number) {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor(v: number);
 }

@@ -51,11 +51,5 @@ export class MyStruct {
 
     static failsZstResult(): void;
 
-    constructor() {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor();
 }

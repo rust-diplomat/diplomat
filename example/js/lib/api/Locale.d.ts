@@ -16,11 +16,5 @@ export class Locale {
 
     #defaultConstructor(name: string): Locale;
 
-    constructor(name: string) {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor(name: string);
 }

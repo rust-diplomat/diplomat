@@ -35,11 +35,5 @@ export class Float64Vec {
 
     get(i: number): number | null;
 
-    constructor(v: Array<number>) {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor(v: Array<number>);
 }

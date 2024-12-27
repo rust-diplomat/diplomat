@@ -15,11 +15,5 @@ export class Utf16Wrap {
 
     borrowCont(): string;
 
-    constructor(input: string) {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments.slice(1));
-        } else {
-            this.#defaultConstructor(...arguments);
-        }
-    }
+    constructor(input: string);
 }
