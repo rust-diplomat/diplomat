@@ -15,6 +15,10 @@ export class CyclicStructA {
     get a() : CyclicStructB;
     set a(value: CyclicStructB); 
 
+    /** Create `CyclicStructA` from an object that contains all of `CyclicStructA`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : CyclicStructA_obj) : CyclicStructA;
     
     constructor(structObj : CyclicStructA_obj);
 

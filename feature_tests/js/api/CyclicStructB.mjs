@@ -16,6 +16,12 @@ export class CyclicStructB {
         this.#field = value;
     }
 
+    /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new CyclicStructB(structObj);
+    }
     
     constructor(structObj) {
         if (typeof structObj !== "object") {

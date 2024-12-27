@@ -18,6 +18,10 @@ export class FixedDecimalFormatterOptions {
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
 
+    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
     
     #internalConstructor(structObj : FixedDecimalFormatterOptions_obj);
 

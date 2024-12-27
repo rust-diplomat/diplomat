@@ -24,6 +24,12 @@ export class ImportedStruct {
         this.#count = value;
     }
 
+    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new ImportedStruct(structObj);
+    }
     
     constructor(structObj) {
         if (typeof structObj !== "object") {

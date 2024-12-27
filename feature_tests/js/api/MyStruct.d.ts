@@ -39,6 +39,10 @@ export class MyStruct {
     get g() : MyEnum;
     set g(value: MyEnum); 
 
+    /** Create `MyStruct` from an object that contains all of `MyStruct`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : MyStruct_obj) : MyStruct;
     
     #internalConstructor(structObj : MyStruct_obj);
 

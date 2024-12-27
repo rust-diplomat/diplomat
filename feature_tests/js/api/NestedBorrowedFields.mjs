@@ -35,6 +35,12 @@ export class NestedBorrowedFields {
         this.#bounds2 = value;
     }
 
+    /** Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new NestedBorrowedFields(structObj);
+    }
     
     constructor(structObj) {
         if (typeof structObj !== "object") {

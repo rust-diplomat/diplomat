@@ -33,7 +33,6 @@ export class OptionStruct {
     }
     
 
-    
     constructor(structObj, internalConstructor) {
         if (typeof structObj !== "object") {
             throw new Error("OptionStruct's constructor takes an object of OptionStruct's fields.");

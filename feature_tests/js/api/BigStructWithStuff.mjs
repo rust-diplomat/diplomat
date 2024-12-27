@@ -51,6 +51,12 @@ export class BigStructWithStuff {
         this.#fifth = value;
     }
 
+    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`'s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new BigStructWithStuff(structObj);
+    }
     
     constructor(structObj) {
         if (typeof structObj !== "object") {

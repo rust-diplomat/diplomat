@@ -24,6 +24,12 @@ export class FixedDecimalFormatterOptions {
         this.#someOtherConfig = value;
     }
 
+    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new FixedDecimalFormatterOptions(diplomatRuntime.internalConstructor, structObj);
+    }
     
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
