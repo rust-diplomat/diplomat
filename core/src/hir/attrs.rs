@@ -141,7 +141,6 @@ pub enum SpecialMethod {
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct SpecialMethodPresence {
-    pub constructor : bool,
     pub comparator: bool,
     /// If it is an iterator, the type it iterates over
     pub iterator: Option<SuccessType>,
@@ -515,10 +514,6 @@ impl Attrs {
                             errors.push(LoweringError::Other(
                                 "Constructors must return Self!".to_string(),
                             ));
-                        }
-
-                        if let SpecialMethod::Constructor = special {
-                            special_method_presence.constructor = true;
                         }
                     }
                     SpecialMethod::Getter(_) => {

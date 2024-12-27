@@ -627,7 +627,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         SpecialMethodInfo {
             iterator,
-            constructor: special_method_presence.constructor,
+            constructor: None,
             typescript: false,
         }
     }
@@ -703,7 +703,7 @@ pub(super) struct MethodInfo<'info> {
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,
-    pub constructor: bool,
+    pub constructor: Option<&'a Method>,
 }
 
 /// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.

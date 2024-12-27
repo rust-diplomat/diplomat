@@ -126,12 +126,24 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
         };
 
+        let mut special_methods = context.generate_special_method(special_method_presence);
+
+        let methods = m
+        .iter()
+        .flat_map(|method| {
+            let inf = context.generate_method(id, method);
+            if inf.is_some() {
+                if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method  {
+                    special_methods.constructor.replace(method);
+                }
+            }
+            inf
+        })
+        .collect::<Vec<_>>();
+
         let mut methods_info = MethodsInfo {
-            methods: m
-                .iter()
-                .flat_map(|method| context.generate_method(id, method))
-                .collect::<Vec<_>>(),
-            special_methods: context.generate_special_method(special_method_presence),
+            methods,
+            special_methods,
         };
 
         for file_type in [FileType::Module, FileType::Typescript] {
