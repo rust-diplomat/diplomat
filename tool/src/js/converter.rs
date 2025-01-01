@@ -205,13 +205,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}({{}}, diplomatRuntime.internalConstructor)").into()
+                        format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
                         format!("{type_name}._fromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
-                        format!("new {type_name}({{}}, diplomatRuntime.internalConstructor)").into()
+                        format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::OutStruct(..) => {
                         format!("{type_name}._fromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
