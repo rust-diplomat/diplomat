@@ -49,7 +49,7 @@ export class Locale {
         const result = wasm.icu4x_Locale_new_mv1(...nameSlice.splat());
     
         try {
-            return new Locale(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

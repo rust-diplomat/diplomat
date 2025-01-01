@@ -44,7 +44,7 @@ export class MyString {
         const result = wasm.MyString_new(...vSlice.splat());
     
         try {
-            return new MyString(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

@@ -42,7 +42,7 @@ export class Opaque {
         const result = wasm.Opaque_new();
     
         try {
-            return new Opaque(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

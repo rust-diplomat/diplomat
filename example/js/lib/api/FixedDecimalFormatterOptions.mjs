@@ -112,7 +112,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

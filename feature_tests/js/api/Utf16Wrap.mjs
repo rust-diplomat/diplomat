@@ -44,7 +44,7 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
     
         try {
-            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

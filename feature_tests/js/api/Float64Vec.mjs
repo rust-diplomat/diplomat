@@ -140,7 +140,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_from_owned(...vSlice.splat());
     
         try {
-            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

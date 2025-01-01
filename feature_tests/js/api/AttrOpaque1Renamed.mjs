@@ -42,7 +42,7 @@ export class AttrOpaque1Renamed {
         const result = wasm.namespace_AttrOpaque1_new();
     
         try {
-            return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

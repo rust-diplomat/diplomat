@@ -193,7 +193,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -220,7 +220,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -234,7 +234,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
