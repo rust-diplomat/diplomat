@@ -58,7 +58,7 @@ export class BigStructWithStuff {
         return new BigStructWithStuff(structObj);
     }
     
-    constructor(structObj) {
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
         }
@@ -93,6 +93,9 @@ export class BigStructWithStuff {
             throw new Error("Missing required field fifth.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -135,7 +138,7 @@ export class BigStructWithStuff {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -147,11 +150,21 @@ export class BigStructWithStuff {
         const thirdDeref = (new Uint16Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.third = thirdDeref;
         const fourthDeref = ptr + 8;
-        structObj.fourth = ScalarPairWithPadding._fromFFI(diplomatRuntime.internalConstructor, fourthDeref);
+        structObj.fourth = ScalarPairWithPadding._createFromFFI(diplomatRuntime.internalConstructor, fourthDeref);
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
         structObj.fifth = fifthDeref;
 
-        return new BigStructWithStuff(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BigStructWithStuff._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new BigStructWithStuff({});
+        return self._fromFFI(...arguments);
     }
 
 

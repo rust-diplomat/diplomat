@@ -23,7 +23,6 @@ export class FixedDecimalFormatterOptions {
     */
     static FromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
     
-    #internalConstructor(structObj : FixedDecimalFormatterOptions_obj);
 
 
     #defaultConstructor(): FixedDecimalFormatterOptions;

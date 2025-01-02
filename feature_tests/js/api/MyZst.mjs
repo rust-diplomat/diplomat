@@ -14,11 +14,14 @@ export class MyZst {
         return new MyZst(structObj);
     }
     
-    constructor(structObj) {
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
 

@@ -22,7 +22,7 @@ export class BorrowedFieldsReturning {
         return new BorrowedFieldsReturning(structObj);
     }
     
-    constructor(structObj) {
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
         }
@@ -33,6 +33,9 @@ export class BorrowedFieldsReturning {
             throw new Error("Missing required field bytes.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -69,7 +72,7 @@ export class BorrowedFieldsReturning {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
-    static _fromFFI(internalConstructor, ptr, aEdges) {
+    _fromFFI(internalConstructor, ptr, aEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -77,7 +80,17 @@ export class BorrowedFieldsReturning {
         const bytesDeref = ptr;
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
-        return new BorrowedFieldsReturning(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFieldsReturning._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new BorrowedFieldsReturning({});
+        return self._fromFFI(...arguments);
     }
 
     // Return all fields corresponding to lifetime `'a` 

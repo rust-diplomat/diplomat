@@ -23,7 +23,7 @@ export class CyclicStructA {
         return new CyclicStructA(structObj);
     }
     
-    constructor(structObj) {
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
         }
@@ -34,6 +34,9 @@ export class CyclicStructA {
             throw new Error("Missing required field a.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -72,15 +75,25 @@ export class CyclicStructA {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, primitiveValue) {
+    _fromFFI(internalConstructor, primitiveValue) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructA._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
         var structObj = {};
         const aDeref = primitiveValue;
-        structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
+        structObj.a = CyclicStructB._createFromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return new CyclicStructA(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, primitiveValue) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructA._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new CyclicStructA({});
+        return self._fromFFI(...arguments);
     }
 
 
@@ -88,7 +101,7 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b();
     
         try {
-            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
+            return CyclicStructB._createFromFFI(diplomatRuntime.internalConstructor, result);
         }
         
         finally {}

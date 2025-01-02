@@ -44,7 +44,6 @@ export class MyStruct {
     */
     static FromFields(structObj : MyStruct_obj) : MyStruct;
     
-    #internalConstructor(structObj : MyStruct_obj);
 
 
     #defaultConstructor(): MyStruct;

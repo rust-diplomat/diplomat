@@ -163,7 +163,7 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("MyStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -183,7 +183,17 @@ export class MyStruct {
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
 
-        return new MyStruct(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("MyStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new MyStruct(diplomatRuntime.internalConstructor, {});
+        return self._fromFFI(...arguments);
     }
 
 
@@ -193,7 +203,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            MyStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
