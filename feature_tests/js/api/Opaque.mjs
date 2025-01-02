@@ -8,7 +8,10 @@ const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Opaque_destroy(ptr);
 });
 
+
+
 export class Opaque {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +19,7 @@ export class Opaque {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Opaque is an Opaque type. You cannot call its constructor.");
             return;
@@ -35,11 +38,11 @@ export class Opaque {
         return this.#ptr;
     }
 
-    static new_() {
+    #defaultConstructor() {
         const result = wasm.Opaque_new();
     
         try {
-            return new Opaque(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -117,7 +120,7 @@ export class Opaque {
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
-            return ImportedStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return ImportedStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -133,5 +136,13 @@ export class Opaque {
         }
         
         finally {}
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
     }
 }

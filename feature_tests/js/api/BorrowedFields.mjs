@@ -3,7 +3,10 @@ import { Bar } from "./Bar.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class BorrowedFields {
+	
 
     #a;
     get a()  {
@@ -28,7 +31,15 @@ export class BorrowedFields {
     set c(value) {
         this.#c = value;
     }
-    constructor(structObj) {
+
+    /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new BorrowedFields(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFields's constructor takes an object of BorrowedFields's fields.");
         }
@@ -51,6 +62,9 @@ export class BorrowedFields {
             throw new Error("Missing required field c.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -89,7 +103,7 @@ export class BorrowedFields {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
-    static _fromFFI(internalConstructor, ptr, aEdges) {
+    _fromFFI(internalConstructor, ptr, aEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFields._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -101,7 +115,17 @@ export class BorrowedFields {
         const cDeref = ptr + 16;
         structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges).getValue();
 
-        return new BorrowedFields(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFields._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new BorrowedFields({});
+        return self._fromFFI(...arguments);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -112,6 +136,7 @@ export class BorrowedFields {
     get _fieldsForLifetimeA() { 
         return [a, b, c];
     };
+
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
@@ -127,7 +152,7 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
     
         try {
-            return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
+            return BorrowedFields._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {

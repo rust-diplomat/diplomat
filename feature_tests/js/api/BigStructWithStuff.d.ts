@@ -14,7 +14,10 @@ type BigStructWithStuff_obj = {
     fifth: number;
 };
 
+
+
 export class BigStructWithStuff {
+	
 
     get first() : number;
     set first(value: number); 
@@ -30,7 +33,14 @@ export class BigStructWithStuff {
 
     get fifth() : number;
     set fifth(value: number); 
+
+    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
+    
     constructor(structObj : BigStructWithStuff_obj);
+
 
     assertValue(extraVal: number): void;
 }

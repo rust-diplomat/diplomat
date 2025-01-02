@@ -1,8 +1,6 @@
-{%- if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif -%}
+{% extends "js/js_class.js.jinja" %}
 
+{% block header_info %}
 {%- if typescript && !is_out -%}
 type {{type_name}}_obj = {
     {%- for field in fields %}
@@ -11,8 +9,9 @@ type {{type_name}}_obj = {
 };
 
 {% endif -%}
+{% endblock %}
 
-export class {{type_name}} {
+{% block class_body %}
     {%- for field in fields %}
 
     {% if !typescript -%}
@@ -29,9 +28,22 @@ export class {{type_name}} {
     {%- endif -%}
     {%- endfor %}
 
+    {%~ if !is_out %}
+    /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    {# This function exists because some structs can override their default constructors.
+     # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
+     # For instance, demo_gen uses this function instead of the constructor
+    -#}
+    static FromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
+        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} structObj);
+    } {%- endif %}
+    {% endif -%}
+
     {%- if !(typescript && is_out) %}
-    constructor(structObj
-        {%- if typescript %} : {{type_name}}_obj {%- endif -%}
+    {%- if !typescript %}
+    #internalConstructor(structObj
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         if (typeof structObj !== "object") {
@@ -57,7 +69,16 @@ export class {{type_name}} {
         {%~ endfor %}
     }
     {%- endif -%}
-    {%- endif %}
+    {%- endif -%}
+    
+    {%- if !overrides_constructor %}
+    constructor(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}) {%- if typescript %};{% else %} {
+        this.#internalConstructor(structObj {%- if is_out %}, internalConstructor {%- endif %});
+    }
+    {%- endif -%}
+
+    {%- endif -%}
+    {%- endif -%}
 
     {%- if !typescript %}
     {%~ if !fields.is_empty() %}
@@ -124,7 +145,7 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    static _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -139,7 +160,17 @@ export class {{type_name}} {
         {%- endfor %}
         {%- endif %}
 
-        return new {{type_name}}(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}}._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} {});
+        return self._fromFFI(...arguments);
     }
     
     {%- for l in lifetimes.all_lifetimes() %}
@@ -168,10 +199,4 @@ export class {{type_name}} {
     {%- endfor -%}
     {%- endif -%}
     {%- endif %}
-
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
-}
+{% endblock %}

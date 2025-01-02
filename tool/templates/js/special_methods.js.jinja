@@ -1,0 +1,29 @@
+{%- if let Some(it) = iterator %}
+
+next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
+    const out = this.#iteratorNext();
+
+    return {
+        value: out,
+        done: out === null,
+    };
+}{% endif %}
+{% endif -%}
+
+{%- if let Some(ctor) = constructor %}
+constructor(
+{%- if typescript -%}
+    {%- for param in ctor.parameters -%}
+    {{- param.name -}}
+    {%- if typescript %}: {{ param.ty -}}{%- endif -%}
+    {%- if !loop.last -%}, {% endif -%}
+    {%- endfor -%}
+{%- endif -%}
+) {%- if !typescript %} {
+    if (arguments[0] === diplomatRuntime.internalConstructor) {
+        this.#internalConstructor(...arguments);
+    } else {
+        this.#defaultConstructor(...arguments);
+    }
+} {%- else %}; {%- endif %}
+{% endif -%}

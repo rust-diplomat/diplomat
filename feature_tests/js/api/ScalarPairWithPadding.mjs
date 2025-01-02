@@ -5,7 +5,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** Testing JS-specific layout/padding behavior
 */
+
+
 export class ScalarPairWithPadding {
+	
 
     #first;
     get first()  {
@@ -22,7 +25,15 @@ export class ScalarPairWithPadding {
     set second(value) {
         this.#second = value;
     }
-    constructor(structObj) {
+
+    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new ScalarPairWithPadding(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");
         }
@@ -39,6 +50,9 @@ export class ScalarPairWithPadding {
             throw new Error("Missing required field second.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -83,7 +97,7 @@ export class ScalarPairWithPadding {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ScalarPairWithPadding._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -93,8 +107,19 @@ export class ScalarPairWithPadding {
         const secondDeref = (new Uint32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.second = secondDeref;
 
-        return new ScalarPairWithPadding(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
     }
+
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ScalarPairWithPadding._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new ScalarPairWithPadding({});
+        return self._fromFFI(...arguments);
+    }
+
 
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

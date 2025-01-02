@@ -2,8 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-// Base enumerator definition
+
+
 export class ContiguousEnum {
+	
     #value = undefined;
 
     static #values = new Map([
@@ -16,7 +18,8 @@ export class ContiguousEnum {
     static getAllEntries() {
         return ContiguousEnum.#values.entries();
     }
-
+    
+    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -60,4 +63,5 @@ export class ContiguousEnum {
     static D = ContiguousEnum.#objectValues[1];
     static E = ContiguousEnum.#objectValues[2];
     static F = ContiguousEnum.#objectValues[3];
+
 }

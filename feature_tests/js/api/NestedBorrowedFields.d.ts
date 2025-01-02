@@ -13,7 +13,10 @@ type NestedBorrowedFields_obj = {
     bounds2: BorrowedFieldsWithBounds_obj;
 };
 
+
+
 export class NestedBorrowedFields {
+	
 
     get fields() : BorrowedFields;
     set fields(value: BorrowedFields); 
@@ -23,7 +26,14 @@ export class NestedBorrowedFields {
 
     get bounds2() : BorrowedFieldsWithBounds;
     set bounds2(value: BorrowedFieldsWithBounds); 
+
+    /** Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : NestedBorrowedFields_obj) : NestedBorrowedFields;
+    
     constructor(structObj : NestedBorrowedFields_obj);
+
 
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
 }

@@ -6,7 +6,10 @@ const RenamedAttrOpaque2_box_destroy_registry = new FinalizationRegistry((ptr) =
     wasm.namespace_AttrOpaque2_destroy(ptr);
 });
 
+
+
 export class RenamedAttrOpaque2 {
+	
     // Internal ptr reference:
     #ptr = null;
 

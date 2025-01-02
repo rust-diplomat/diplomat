@@ -2,7 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class BorrowedFieldsReturning {
+	
 
     #bytes;
     get bytes()  {
@@ -11,7 +14,15 @@ export class BorrowedFieldsReturning {
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor(structObj) {
+
+    /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new BorrowedFieldsReturning(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
         }
@@ -22,6 +33,9 @@ export class BorrowedFieldsReturning {
             throw new Error("Missing required field bytes.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -58,7 +72,7 @@ export class BorrowedFieldsReturning {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
-    static _fromFFI(internalConstructor, ptr, aEdges) {
+    _fromFFI(internalConstructor, ptr, aEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -66,7 +80,17 @@ export class BorrowedFieldsReturning {
         const bytesDeref = ptr;
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
-        return new BorrowedFieldsReturning(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFieldsReturning._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new BorrowedFieldsReturning({});
+        return self._fromFFI(...arguments);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -77,4 +101,5 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
+
 }

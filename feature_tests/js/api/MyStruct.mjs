@@ -4,7 +4,10 @@ import { MyZst } from "./MyZst.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class MyStruct {
+	
 
     #a;
     get a()  {
@@ -61,7 +64,15 @@ export class MyStruct {
     set g(value) {
         this.#g = value;
     }
-    constructor(structObj) {
+
+    /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new MyStruct(diplomatRuntime.internalConstructor, structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
         }
@@ -152,7 +163,7 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("MyStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -172,16 +183,27 @@ export class MyStruct {
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
 
-        return new MyStruct(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
     }
 
-    static new_() {
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("MyStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new MyStruct(diplomatRuntime.internalConstructor, {});
+        return self._fromFFI(...arguments);
+    }
+
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
         
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            MyStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -208,7 +230,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -222,12 +244,20 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = new MyZst({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
         }
         
         finally {}
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
     }
 }

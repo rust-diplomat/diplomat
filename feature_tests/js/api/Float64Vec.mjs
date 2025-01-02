@@ -6,7 +6,10 @@ const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Float64Vec_destroy(ptr);
 });
 
+
+
 export class Float64Vec {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -14,7 +17,7 @@ export class Float64Vec {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Float64Vec is an Opaque type. You cannot call its constructor.");
             return;
@@ -129,7 +132,7 @@ export class Float64Vec {
         }
     }
 
-    static newFromOwned(v) {
+    #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64"));
@@ -137,7 +140,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_new_from_owned(...vSlice.splat());
     
         try {
-            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -232,6 +235,14 @@ export class Float64Vec {
         
         finally {
             diplomatReceive.free();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
         }
     }
 }

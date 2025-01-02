@@ -6,7 +6,10 @@ const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Utf16Wrap_destroy(ptr);
 });
 
+
+
 export class Utf16Wrap {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -14,7 +17,7 @@ export class Utf16Wrap {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Utf16Wrap is an Opaque type. You cannot call its constructor.");
             return;
@@ -33,7 +36,7 @@ export class Utf16Wrap {
         return this.#ptr;
     }
 
-    static fromUtf16(input) {
+    #defaultConstructor(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, input));
@@ -41,7 +44,7 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
     
         try {
-            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -76,6 +79,14 @@ export class Utf16Wrap {
         
         finally {
             diplomatReceive.free();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
         }
     }
 }

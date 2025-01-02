@@ -7,7 +7,10 @@ const One_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.One_destroy(ptr);
 });
 
+
+
 export class One {
+	
     // Internal ptr reference:
     #ptr = null;
 

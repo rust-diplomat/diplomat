@@ -2,7 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class ErrorStruct {
+	
 
     #i;
     get i()  {
@@ -19,7 +22,15 @@ export class ErrorStruct {
     set j(value) {
         this.#j = value;
     }
-    constructor(structObj) {
+
+    /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new ErrorStruct(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
         }
@@ -36,6 +47,9 @@ export class ErrorStruct {
             throw new Error("Missing required field j.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -75,7 +89,7 @@ export class ErrorStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ErrorStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -85,6 +99,17 @@ export class ErrorStruct {
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.j = jDeref;
 
-        return new ErrorStruct(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
     }
+
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ErrorStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new ErrorStruct({});
+        return self._fromFFI(...arguments);
+    }
+
 }

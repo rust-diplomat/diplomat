@@ -8,7 +8,10 @@ const AttrOpaque1Renamed_box_destroy_registry = new FinalizationRegistry((ptr) =
     wasm.namespace_AttrOpaque1_destroy(ptr);
 });
 
+
+
 export class AttrOpaque1Renamed {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +19,7 @@ export class AttrOpaque1Renamed {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("AttrOpaque1Renamed is an Opaque type. You cannot call its constructor.");
             return;
@@ -35,11 +38,11 @@ export class AttrOpaque1Renamed {
         return this.#ptr;
     }
 
-    static totallyNotNew() {
+    #defaultConstructor() {
         const result = wasm.namespace_AttrOpaque1_new();
     
         try {
-            return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -77,5 +80,13 @@ export class AttrOpaque1Renamed {
         try {}
         
         finally {}
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
     }
 }

@@ -2,7 +2,10 @@
 import type { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class RenamedOpaqueIterable {
+	
     
 
     get ffiValue(): pointer;

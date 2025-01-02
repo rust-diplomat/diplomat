@@ -7,7 +7,10 @@ const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) =>
     wasm.namespace_MyIterable_destroy(ptr);
 });
 
+
+
 export class RenamedMyIterable {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -15,7 +18,7 @@ export class RenamedMyIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedMyIterable is an Opaque type. You cannot call its constructor.");
             return;
@@ -34,7 +37,7 @@ export class RenamedMyIterable {
         return this.#ptr;
     }
 
-    static new_(x) {
+    #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8"));
@@ -42,7 +45,7 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_new(...xSlice.splat());
     
         try {
-            return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -61,5 +64,13 @@ export class RenamedMyIterable {
         }
         
         finally {}
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
+        }
     }
 }

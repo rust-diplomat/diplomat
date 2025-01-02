@@ -3,7 +3,10 @@ import { CyclicStructA } from "./CyclicStructA.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class CyclicStructC {
+	
 
     #a;
     get a()  {
@@ -12,7 +15,15 @@ export class CyclicStructC {
     set a(value) {
         this.#a = value;
     }
-    constructor(structObj) {
+
+    /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new CyclicStructC(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructC's constructor takes an object of CyclicStructC's fields.");
         }
@@ -23,6 +34,9 @@ export class CyclicStructC {
             throw new Error("Missing required field a.");
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -61,16 +75,27 @@ export class CyclicStructC {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, primitiveValue) {
+    _fromFFI(internalConstructor, primitiveValue) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructC._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
         var structObj = {};
         const aDeref = primitiveValue;
-        structObj.a = CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, aDeref);
+        structObj.a = CyclicStructA._createFromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return new CyclicStructC(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
     }
+
+    static _createFromFFI(internalConstructor, primitiveValue) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructC._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new CyclicStructC({});
+        return self._fromFFI(...arguments);
+    }
+
 
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
@@ -78,7 +103,7 @@ export class CyclicStructC {
         const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
     
         try {
-            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
+            return CyclicStructC._createFromFFI(diplomatRuntime.internalConstructor, result);
         }
         
         finally {

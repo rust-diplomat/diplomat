@@ -2,8 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-// Base enumerator definition
+
+
 export class ErrorEnum {
+	
     #value = undefined;
 
     static #values = new Map([
@@ -14,7 +16,8 @@ export class ErrorEnum {
     static getAllEntries() {
         return ErrorEnum.#values.entries();
     }
-
+    
+    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -54,4 +57,5 @@ export class ErrorEnum {
 
     static Foo = ErrorEnum.#objectValues[0];
     static Bar = ErrorEnum.#objectValues[1];
+
 }

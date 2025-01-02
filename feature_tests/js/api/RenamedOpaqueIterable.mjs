@@ -7,7 +7,10 @@ const RenamedOpaqueIterable_box_destroy_registry = new FinalizationRegistry((ptr
     wasm.namespace_OpaqueIterable_destroy(ptr);
 });
 
+
+
 export class RenamedOpaqueIterable {
+	
     // Internal ptr reference:
     #ptr = null;
 

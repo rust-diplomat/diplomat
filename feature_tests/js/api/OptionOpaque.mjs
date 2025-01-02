@@ -9,7 +9,10 @@ const OptionOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionOpaque_destroy(ptr);
 });
 
+
+
 export class OptionOpaque {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -65,7 +68,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -147,7 +150,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
     
         try {
-            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -161,7 +164,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
     
         try {
-            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -231,7 +234,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return OptionInputStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionInputStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -247,7 +250,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_returns_option_input_struct(diplomatReceive.buffer);
     
         try {
-            return OptionInputStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionInputStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

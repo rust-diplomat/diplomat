@@ -7,14 +7,25 @@ type FixedDecimalFormatterOptions_obj = {
     someOtherConfig: boolean;
 };
 
+
+
 export class FixedDecimalFormatterOptions {
+	
 
     get groupingStrategy() : FixedDecimalGroupingStrategy;
     set groupingStrategy(value: FixedDecimalGroupingStrategy); 
 
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
-    constructor(structObj : FixedDecimalFormatterOptions_obj);
 
-    static default_(): FixedDecimalFormatterOptions;
+    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
+    
+
+
+    #defaultConstructor(): FixedDecimalFormatterOptions;
+
+    constructor();
 }

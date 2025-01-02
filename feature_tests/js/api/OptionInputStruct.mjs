@@ -3,7 +3,10 @@ import { OptionEnum } from "./OptionEnum.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class OptionInputStruct {
+	
 
     #a;
     get a()  {
@@ -28,7 +31,15 @@ export class OptionInputStruct {
     set c(value) {
         this.#c = value;
     }
-    constructor(structObj) {
+
+    /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj) {
+        return new OptionInputStruct(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("OptionInputStruct's constructor takes an object of OptionInputStruct's fields.");
         }
@@ -51,6 +62,9 @@ export class OptionInputStruct {
             this.#c = null;
         }
 
+    }
+    constructor(structObj) {
+        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.
@@ -91,7 +105,7 @@ export class OptionInputStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, ptr) {
+    _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionInputStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -103,6 +117,17 @@ export class OptionInputStruct {
         const cDeref = ptr + 12;
         structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
 
-        return new OptionInputStruct(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
     }
+
+    static _createFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionInputStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new OptionInputStruct({});
+        return self._fromFFI(...arguments);
+    }
+
 }

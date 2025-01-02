@@ -8,7 +8,10 @@ const ResultOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.ResultOpaque_destroy(ptr);
 });
 
+
+
 export class ResultOpaque {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -113,7 +116,7 @@ export class ResultOpaque {
     
         try {
             if (!diplomatReceive.resultFlag) {
-                const cause = ErrorStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+                const cause = ErrorStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
                 throw new globalThis.Error('ErrorStruct: ' + cause.toString(), { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);

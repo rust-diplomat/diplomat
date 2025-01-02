@@ -13,7 +13,10 @@ type MyStruct_obj = {
     g: MyEnum;
 };
 
+
+
 export class MyStruct {
+	
 
     get a() : number;
     set a(value: number); 
@@ -35,13 +38,21 @@ export class MyStruct {
 
     get g() : MyEnum;
     set g(value: MyEnum); 
-    constructor(structObj : MyStruct_obj);
 
-    static new_(): MyStruct;
+    /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static FromFields(structObj : MyStruct_obj) : MyStruct;
+    
+
+
+    #defaultConstructor(): MyStruct;
 
     intoA(): number;
 
     static returnsZstResult(): void;
 
     static failsZstResult(): void;
+
+    constructor();
 }

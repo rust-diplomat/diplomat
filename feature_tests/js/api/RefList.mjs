@@ -7,7 +7,10 @@ const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.RefList_destroy(ptr);
 });
 
+
+
 export class RefList {
+	
     // Internal ptr reference:
     #ptr = null;
 

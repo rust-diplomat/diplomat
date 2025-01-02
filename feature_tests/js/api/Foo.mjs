@@ -10,7 +10,10 @@ const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Foo_destroy(ptr);
 });
 
+
+
 export class Foo {
+	
     // Internal ptr reference:
     #ptr = null;
 
@@ -19,7 +22,7 @@ export class Foo {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Foo is an Opaque type. You cannot call its constructor.");
             return;
@@ -41,7 +44,7 @@ export class Foo {
         return this.#ptr;
     }
 
-    static new_(x) {
+    #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, x));
         
@@ -51,7 +54,7 @@ export class Foo {
         const result = wasm.Foo_new(...xSlice.splat());
     
         try {
-            return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
+            this.#internalConstructor(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {
@@ -84,7 +87,7 @@ export class Foo {
         const result = wasm.Foo_as_returning(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return BorrowedFieldsReturning._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
+            return BorrowedFieldsReturning._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
         }
         
         finally {
@@ -128,6 +131,14 @@ export class Foo {
             functionCleanupArena.free();
         
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.internalConstructor) {
+            this.#internalConstructor(...arguments);
+        } else {
+            this.#defaultConstructor(...arguments);
         }
     }
 }

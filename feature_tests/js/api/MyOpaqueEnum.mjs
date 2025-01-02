@@ -6,7 +6,10 @@ const MyOpaqueEnum_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.MyOpaqueEnum_destroy(ptr);
 });
 
+
+
 export class MyOpaqueEnum {
+	
     // Internal ptr reference:
     #ptr = null;
 
