@@ -212,13 +212,18 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
-                        format!("{type_name}._fromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
-                        format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
+                        format!("{}{{}}, diplomatRuntime.internalConstructor)",
+                        match usage {
+                            Some(SpecialMethod::Constructor) => format!("new {type_name}(diplomatRuntime.internalConstructor, "),
+                            _ => format!("new {type_name}(")
+                        }                        
+                        ).into()
                     }
                     hir::TypeDef::OutStruct(..) => {
-                        format!("{type_name}._fromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }

@@ -42,8 +42,8 @@ type {{type_name}}_obj = {
     {% endif -%}
 
     {%- if !(typescript && is_out) %}
-    {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%} (structObj
-        {%- if typescript %} : {{type_name}}_obj {%- endif -%}
+    {%- if !typescript %}
+    #internalConstructor(structObj
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         if (typeof structObj !== "object") {
@@ -69,7 +69,16 @@ type {{type_name}}_obj = {
         {%~ endfor %}
     }
     {%- endif -%}
-    {%- endif %}
+    
+    {%- if !overrides_constructor %}
+    constructor(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}) {%- if typescript %};{% else %} {
+        this.#internalConstructor(structObj {%- if is_out %}, internalConstructor {%- endif %});
+    }
+    {%- endif -%}
+    {%- endif -%}
+
+    {%- endif -%}
+    {%- endif -%}
 
     {%- if !typescript %}
     {%~ if !fields.is_empty() %}
@@ -136,7 +145,7 @@ type {{type_name}}_obj = {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    static _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -151,7 +160,17 @@ type {{type_name}}_obj = {
         {%- endfor %}
         {%- endif %}
 
-        return new {{type_name}}(structObj, internalConstructor);
+        this.#internalConstructor(structObj, internalConstructor);
+        return this;
+    }
+
+    static _createFromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}}._createFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+        
+        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} {});
+        return self._fromFFI(...arguments);
     }
     
     {%- for l in lifetimes.all_lifetimes() %}
