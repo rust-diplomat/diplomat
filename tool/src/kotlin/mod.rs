@@ -1129,7 +1129,7 @@ returnVal.option() ?: return null
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
                         Some(ref ty) => (
-                            self.gen_native_type_name(ty, None, false).into(),
+                            self.gen_native_type_name(ty, None).into(),
                             match ty {
                                 Type::Enum(..) => ".toNative()",
                                 Type::Struct(..) => ".nativeStruct",
@@ -1309,7 +1309,7 @@ returnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty, additional_name.clone(), false),
+                self.gen_native_type_name(&param.ty, additional_name.clone()),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1624,17 +1624,24 @@ returnVal.option() ?: return null
                     + (if !cur.is_empty() { ", " } else { "" })
                     + &format!("{}: {}", in_name, in_ty)
             });
-        let (native_output_type, return_modification) = match *method.output {
+        let (native_output_type, return_modification, return_cast) = match *method.output {
             Some(ref ty) => (
-                self.gen_native_type_name(ty, None, true).into(),
+                self.gen_native_type_name(ty, None).into(),
                 match ty {
                     Type::Enum(..) => ".toNative()",
                     Type::Struct(..) => ".nativeStruct",
                     _ => "",
                 }
                 .into(),
+                match ty {
+                    Type::Primitive(prim) => {
+                        self.formatter.fmt_unsigned_primitive_ffi_cast(prim).into()
+                    }
+                    _ => "",
+                }
+                .into(),
             ),
-            None => ("Unit".into(), "".into()),
+            None => ("Unit".into(), "".into(), "".into()),
         };
         TraitMethodInfo {
             name: method_name,
@@ -1644,6 +1651,7 @@ returnVal.option() ?: return null
             },
             native_output_type,
             return_modification,
+            return_cast,
             input_params_and_types: native_input_params_and_types.join(", "),
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
@@ -1852,17 +1860,11 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
-        // flag to represent whether the API this type is a part of has support for unsigned types.
-        // Non-trait methods do not, because they are called through the JNA library built in Java
-        // which doesn't support unsigned types.
-        // The true fix is to use JNA `IntegerType` to represent unsigned ints:
-        // TODO: https://github.com/rust-diplomat/diplomat/issues/748
-        support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
-                .fmt_primitive_as_ffi(prim, support_unsigned)
+                .fmt_primitive_as_ffi(prim)
                 .into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
@@ -2046,6 +2048,7 @@ struct TraitMethodInfo {
     output_type: String,
     native_output_type: String,
     return_modification: String,
+    return_cast: String,
     non_native_params_and_types: String,
     docs: String,
 }

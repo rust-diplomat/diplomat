@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 
 internal interface MyIteratorLib: Library {
     fun namespace_MyIterator_destroy(handle: Pointer)
-    fun namespace_MyIterator_next(handle: Pointer): OptionByte
+    fun namespace_MyIterator_next(handle: Pointer): Optionu_byte
 }
 typealias MyIteratorIteratorItem = UByte
 

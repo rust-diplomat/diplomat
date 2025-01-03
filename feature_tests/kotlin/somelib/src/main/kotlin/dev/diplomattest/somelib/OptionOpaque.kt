@@ -11,10 +11,10 @@ internal interface OptionOpaqueLib: Library {
     fun OptionOpaque_new(i: Int): Pointer?
     fun OptionOpaque_new_none(): Pointer?
     fun OptionOpaque_returns(): OptionOptionStructNative
-    fun OptionOpaque_option_isize(handle: Pointer): OptionLong
-    fun OptionOpaque_option_usize(handle: Pointer): OptionLong
+    fun OptionOpaque_option_isize(handle: Pointer): Optionisize_t
+    fun OptionOpaque_option_usize(handle: Pointer): Optionsize_t
     fun OptionOpaque_option_i32(handle: Pointer): OptionInt
-    fun OptionOpaque_option_u32(handle: Pointer): OptionInt
+    fun OptionOpaque_option_u32(handle: Pointer): Optionu_int
     fun OptionOpaque_new_struct(): OptionStructNative
     fun OptionOpaque_new_struct_nones(): OptionStructNative
     fun OptionOpaque_assert_integer(handle: Pointer, i: Int): Unit
@@ -95,7 +95,7 @@ class OptionOpaque internal constructor (
     fun optionIsize(): Long? {
         
         val returnVal = lib.OptionOpaque_option_isize(handle);
-        return returnVal.option()
+        return returnVal.option()?.toLong()
     }
     
     fun optionUsize(): ULong? {

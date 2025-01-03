@@ -14,7 +14,7 @@ interface TesterTrait {
 
 
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testTraitFn: Callback {
-    fun invoke(ignored: Pointer?, x: UInt ): UInt
+    fun invoke(ignored: Pointer?, x: UInt ): u_int
 }
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn: Callback {
     fun invoke(ignored: Pointer?): Unit
@@ -40,7 +40,7 @@ internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.B
     @JvmField
     internal var run_testTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn
         = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: UInt ): UInt {
+                override fun invoke(ignored: Pointer?, x: UInt ): u_int {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
@@ -90,20 +90,20 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             
             
             val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: UInt ): UInt {
-                    return trt_obj.testTraitFn(x);
+                override fun invoke(ignored: Pointer?, x: UInt ): u_int {
+                    return u_int(trt_obj.testTraitFn(x));
                 }
             }
             vtable.run_testTraitFn_callback = testTraitFn;
             val testVoidTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn {
                 override fun invoke(ignored: Pointer?): Unit {
-                    return trt_obj.testVoidTraitFn();
+                    return (trt_obj.testVoidTraitFn());
                 }
             }
             vtable.run_testVoidTraitFn_callback = testVoidTraitFn;
             val testStructTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn {
                 override fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int {
-                    return trt_obj.testStructTraitFn(TraitTestingStruct(s));
+                    return (trt_obj.testStructTraitFn(TraitTestingStruct(s)));
                 }
             }
             vtable.run_testStructTraitFn_callback = testStructTraitFn;

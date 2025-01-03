@@ -84,7 +84,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(byteArray.size.toLong())
+        slice.len = size_t(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -98,7 +98,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(byteArray.size.toLong())
+        slice.len = size_t(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -114,7 +114,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uByteArray.size.toLong())
+        slice.len = size_t(uByteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -128,7 +128,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(shortArray.size.toLong())
+        slice.len = size_t(shortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -144,7 +144,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uShortArray.size.toLong())
+        slice.len = size_t(uShortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -158,7 +158,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(intArray.size.toLong())
+        slice.len = size_t(intArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -174,7 +174,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uIntArray.size.toLong())
+        slice.len = size_t(uIntArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -189,7 +189,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(longArray.size.toLong())
+        slice.len = size_t(longArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -205,7 +205,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uLongArray.size.toLong())
+        slice.len = size_t(uLongArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -219,7 +219,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(floatArray.size.toLong())
+        slice.len = size_t(floatArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -233,7 +233,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(doubleArray.size.toLong())
+        slice.len = size_t(doubleArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -319,7 +319,7 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = size_t(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
@@ -339,7 +339,7 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = size_t(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
@@ -349,7 +349,7 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = size_t(thisLen.toULong())
             getUtf16(thisSlice)
         }
     }
@@ -360,16 +360,56 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = size_t(thisLen.toULong())
             getUtf8(thisSlice)
         }
     }
 }
 
-class size_t(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
-    override fun toByte(): Byte = value.toByte()
-    override fun toChar(): Char = value.toInt().toChar()
-    override fun toShort(): Short = value.toShort()
+class size_t(val value: ULong = 0u): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
+}
+
+class isize_t(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+}
+
+class u_byte(val value: UByte = 0u): com.sun.jna.IntegerType(1, value.toByte().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUByte(): UByte = this.toByte().toUByte()
+    constructor(): this(0u)
+}
+
+class u_short(val value: UShort = 0u): com.sun.jna.IntegerType(2, value.toShort().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUShort(): UShort = this.toShort().toUShort()
+    constructor(): this(0u)
+}
+
+class u_int(val value: UInt = 0u): com.sun.jna.IntegerType(4, value.toInt().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUInt(): UInt = this.toInt().toUInt()
+    constructor(): this(0u)
+}
+
+class u_long(val value: ULong = 0u): com.sun.jna.IntegerType(8, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
 }
 
 class Slice: Structure(), Structure.ByValue {
@@ -655,26 +695,6 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 }
 
 
-internal class OptionByte: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: Byte = 0
-    
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): Byte? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
 internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: CyclicStructANative = CyclicStructANative()
@@ -735,26 +755,6 @@ internal class OptionInt: Structure(), Structure.ByValue  {
         }
     }
 }
-internal class OptionLong: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: Long = 0
-    
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): Long? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
 internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: OptionStructNative = OptionStructNative()
@@ -788,6 +788,86 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
     }
 
     internal fun option(): Slice? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class Optionisize_t: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: isize_t = isize_t()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): isize_t? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class Optionsize_t: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: size_t = size_t()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): size_t? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class Optionu_byte: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: u_byte = u_byte()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): u_byte? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class Optionu_int: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: u_int = u_int()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): u_int? {
         if (isOk == 1.toByte()) {
             return value
         } else {
