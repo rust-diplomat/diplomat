@@ -1612,7 +1612,7 @@ returnVal.option() ?: return null
                 .into(),
                 match ty {
                     Type::Primitive(prim) => {
-                        self.formatter.fmt_unsigned_primitive_ffi_cast(prim).into()
+                        self.formatter.fmt_unsigned_primitive_ffi_cast(prim)
                     }
                     _ => "",
                 }
