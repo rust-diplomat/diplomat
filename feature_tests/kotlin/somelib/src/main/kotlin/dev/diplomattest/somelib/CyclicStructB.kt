@@ -13,7 +13,7 @@ internal interface CyclicStructBLib: Library {
 
 internal class CyclicStructBNative: Structure(), Structure.ByValue {
     @JvmField
-    internal var field: Byte = 0;
+    internal var field: u_byte = u_byte();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

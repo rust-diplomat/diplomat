@@ -13,7 +13,7 @@ internal class ImportedStructNative: Structure(), Structure.ByValue {
     @JvmField
     internal var foo: Int = UnimportedEnum.default().toNative();
     @JvmField
-    internal var count: Byte = 0;
+    internal var count: u_byte = u_byte();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

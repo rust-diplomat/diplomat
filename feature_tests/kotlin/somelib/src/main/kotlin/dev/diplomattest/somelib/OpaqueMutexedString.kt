@@ -8,15 +8,15 @@ import com.sun.jna.Structure
 
 internal interface OpaqueMutexedStringLib: Library {
     fun OpaqueMutexedString_destroy(handle: Pointer)
-    fun OpaqueMutexedString_from_usize(number: Long): Pointer
-    fun OpaqueMutexedString_change(handle: Pointer, number: Long): Unit
+    fun OpaqueMutexedString_from_usize(number: size_t): Pointer
+    fun OpaqueMutexedString_change(handle: Pointer, number: size_t): Unit
     fun OpaqueMutexedString_borrow(handle: Pointer): Pointer
     fun OpaqueMutexedString_borrow_other(other: Pointer): Pointer
     fun OpaqueMutexedString_borrow_self_or_other(handle: Pointer, other: Pointer): Pointer
-    fun OpaqueMutexedString_get_len_and_add(handle: Pointer, other: Long): Long
+    fun OpaqueMutexedString_get_len_and_add(handle: Pointer, other: size_t): size_t
     fun OpaqueMutexedString_dummy_str(handle: Pointer): Slice
     fun OpaqueMutexedString_wrapper(handle: Pointer): Pointer
-    fun OpaqueMutexedString_to_unsigned_from_unsigned(handle: Pointer, input: Short): Short
+    fun OpaqueMutexedString_to_unsigned_from_unsigned(handle: Pointer, input: u_short): u_short
 }
 
 class OpaqueMutexedString internal constructor (
@@ -38,7 +38,7 @@ class OpaqueMutexedString internal constructor (
         
         fun fromUsize(number: ULong): OpaqueMutexedString {
             
-            val returnVal = lib.OpaqueMutexedString_from_usize(number.toLong());
+            val returnVal = lib.OpaqueMutexedString_from_usize(size_t(number));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = OpaqueMutexedString(handle, selfEdges)
@@ -58,7 +58,7 @@ class OpaqueMutexedString internal constructor (
     
     fun change(number: ULong): Unit {
         
-        val returnVal = lib.OpaqueMutexedString_change(handle, number.toLong());
+        val returnVal = lib.OpaqueMutexedString_change(handle, size_t(number));
         
     }
     
@@ -82,7 +82,7 @@ class OpaqueMutexedString internal constructor (
     
     fun getLenAndAdd(other: ULong): ULong {
         
-        val returnVal = lib.OpaqueMutexedString_get_len_and_add(handle, other.toLong());
+        val returnVal = lib.OpaqueMutexedString_get_len_and_add(handle, size_t(other));
         return (returnVal.toULong())
     }
     
@@ -104,7 +104,7 @@ class OpaqueMutexedString internal constructor (
     
     fun toUnsignedFromUnsigned(input: UShort): UShort {
         
-        val returnVal = lib.OpaqueMutexedString_to_unsigned_from_unsigned(handle, input.toShort());
+        val returnVal = lib.OpaqueMutexedString_to_unsigned_from_unsigned(handle, u_short(input));
         return (returnVal.toUShort())
     }
 
