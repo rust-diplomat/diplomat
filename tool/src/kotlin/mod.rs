@@ -1862,10 +1862,7 @@ returnVal.option() ?: return null
         additional_name: Option<String>,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self
-                .formatter
-                .fmt_primitive_as_ffi(prim)
-                .into(),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
