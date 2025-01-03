@@ -64,8 +64,18 @@ internal class DiplomatJVMRuntime {
 
 internal object PrimitiveArrayTools {
 
+    fun allocateMemory(size: Long): Memory {
+        // we can't use the Memory constructor for a memory of size 0
+        // so, if the size is zero, then we actually build a Memory of
+        // size 1 and then clear it.
+        val mem = Memory(size + if (size == 0L) 1 else 0)
+        if (size == 0L)
+            mem.clear()
+        return mem
+    }
+
     fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
-        val mem = Memory(boolArray.size.toLong())
+        val mem = allocateMemory(boolArray.size.toLong())
         val ptr = mem.share(0)
         val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
         ptr.write(0, byteArray, 0, byteArray.size)
@@ -75,8 +85,8 @@ internal object PrimitiveArrayTools {
         return Pair(mem, slice)
     }
 
-    fun native(byteArray: ByteArray):  Pair<Memory, Slice>{
-        val mem = Memory(byteArray.size.toLong())
+    fun native(byteArray: ByteArray):  Pair<Memory, Slice> {
+        val mem = allocateMemory(byteArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
@@ -88,7 +98,7 @@ internal object PrimitiveArrayTools {
     @ExperimentalUnsignedTypes
     fun native(uByteArray: UByteArray): Pair<Memory, Slice> {
         val byteArray = uByteArray.asByteArray()
-        val mem = Memory(byteArray.size.toLong())
+        val mem = allocateMemory(byteArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
@@ -98,7 +108,7 @@ internal object PrimitiveArrayTools {
     }
 
     fun native(shortArray: ShortArray): Pair<Memory, Slice> {
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
@@ -110,7 +120,7 @@ internal object PrimitiveArrayTools {
     @ExperimentalUnsignedTypes
     fun native(uShortArray: UShortArray): Pair<Memory, Slice> {
         val shortArray = uShortArray.asShortArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
@@ -120,7 +130,7 @@ internal object PrimitiveArrayTools {
     }
 
     fun native(intArray: IntArray): Pair<Memory, Slice> {
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, intArray, 0, intArray.size)
         val slice = Slice()
@@ -132,7 +142,7 @@ internal object PrimitiveArrayTools {
     @ExperimentalUnsignedTypes
     fun native(uIntArray: UIntArray): Pair<Memory, Slice> {
         val intArray = uIntArray.asIntArray()
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, intArray, 0, intArray.size)
         val slice = Slice()
@@ -143,7 +153,7 @@ internal object PrimitiveArrayTools {
 
 
     fun native(longArray: LongArray): Pair<Memory, Slice> {
-        val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
+        val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, longArray, 0, longArray.size)
         val slice = Slice()
@@ -155,7 +165,7 @@ internal object PrimitiveArrayTools {
     @ExperimentalUnsignedTypes
     fun native(uLongArray: ULongArray): Pair<Memory, Slice> {
         val shortArray = uLongArray.asLongArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
         val slice = Slice()
@@ -165,7 +175,7 @@ internal object PrimitiveArrayTools {
     }
 
     fun native(floatArray: FloatArray): Pair<Memory, Slice> {
-        val mem = Memory(Float.SIZE_BYTES * floatArray.size.toLong())
+        val mem = allocateMemory(Float.SIZE_BYTES * floatArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, floatArray, 0, floatArray.size)
         val slice = Slice()
@@ -175,7 +185,7 @@ internal object PrimitiveArrayTools {
     }
 
     fun native(doubleArray: DoubleArray): Pair<Memory, Slice> {
-        val mem = Memory(Double.SIZE_BYTES * doubleArray.size.toLong())
+        val mem = allocateMemory(Double.SIZE_BYTES * doubleArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, doubleArray, 0, doubleArray.size)
         val slice = Slice()
@@ -252,7 +262,7 @@ internal object PrimitiveArrayTools {
 
     fun readUtf8s(array: Array<String>): Pair<List<Memory>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
+        val mem = allocateMemory(sliceSize * array.size.toLong())
         val ptr = mem.share(0)
         val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf8(str)
@@ -268,7 +278,7 @@ internal object PrimitiveArrayTools {
 
     fun readUtf16s(array: Array<String>): Pair<List<Memory>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
+        val mem = allocateMemory(sliceSize * array.size.toLong())
         val ptr = mem.share(0)
         val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf16(str)
