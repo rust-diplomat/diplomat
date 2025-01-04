@@ -163,6 +163,18 @@ type {{type_name}}_obj = {
         return structObj;
     }
 
+    #setFieldsFromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("{{type_name}}._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = {{type_name}}._fromFFI(...arguments);  
+
+        {% for field in fields %}   
+        this.#{{field.field_name}} = structObj.{{field.field_name}};
+        {% endfor %}   
+    }
+
     static _createFromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._createFromFFI is not meant to be called externally. Please use the default constructor.");

@@ -206,24 +206,29 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     }
                 }
 
+                let create_from = match usage {
+                    Some(SpecialMethod::Constructor) => format!("this.#setFieldsFromFFI"),
+                    _ => format!("{type_name}._createFromFFI")
+                };
+
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
                         format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
-                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{create_from}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
                         format!("{}{{}}, diplomatRuntime.internalConstructor)",
                         match usage {
-                            Some(SpecialMethod::Constructor) => format!("new {type_name}(diplomatRuntime.internalConstructor, "),
+                            Some(SpecialMethod::Constructor) => format!("new {type_name}(diplomatRuntime.exposeConstructor, "),
                             _ => format!("new {type_name}(")
                         }                        
                         ).into()
                     }
                     hir::TypeDef::OutStruct(..) => {
-                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{create_from}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
