@@ -8,20 +8,20 @@ import com.sun.jna.Structure
 
 internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
-    fun MyStruct_into_a(nativeStruct: MyStructNative): u_byte
+    fun MyStruct_into_a(nativeStruct: MyStructNative): FFIUint8
     fun MyStruct_returns_zst_result(): ResultUnitMyZstNative
     fun MyStruct_fails_zst_result(): ResultUnitMyZstNative
 }
 
 internal class MyStructNative: Structure(), Structure.ByValue {
     @JvmField
-    internal var a: u_byte = u_byte();
+    internal var a: FFIUint8 = FFIUint8();
     @JvmField
     internal var b: Byte = 0;
     @JvmField
-    internal var c: u_byte = u_byte();
+    internal var c: FFIUint8 = FFIUint8();
     @JvmField
-    internal var d: u_long = u_long();
+    internal var d: FFIUint64 = FFIUint64();
     @JvmField
     internal var e: Int = 0;
     @JvmField

@@ -16,7 +16,7 @@ internal interface MyNativeStructLib: Library {
     fun MyNativeStruct_test_multi_arg_callback(f: DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native, x: Int): Int
     fun MyNativeStruct_get_u_byte_slice(): Slice
     fun MyNativeStruct_boolean_result(): ResultByteUnit
-    fun MyNativeStruct_ubyte_result(): Resultu_byteUnit
+    fun MyNativeStruct_ubyte_result(): ResultFFIUint8Unit
 }
 
 internal class MyNativeStructNative: Structure(), Structure.ByValue {
@@ -25,21 +25,21 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
     @JvmField
     internal var b: Byte = 0;
     @JvmField
-    internal var c: u_byte = u_byte();
+    internal var c: FFIUint8 = FFIUint8();
     @JvmField
     internal var d: Short = 0;
     @JvmField
-    internal var e: u_short = u_short();
+    internal var e: FFIUint16 = FFIUint16();
     @JvmField
     internal var f: Int = 0;
     @JvmField
-    internal var g: u_int = u_int();
+    internal var g: FFIUint32 = FFIUint32();
     @JvmField
     internal var h: Long = 0;
     /** Documentation for the struct field `i`
     */
     @JvmField
-    internal var i: u_long = u_long();
+    internal var i: FFIUint64 = FFIUint64();
     @JvmField
     internal var j: Int = 0;
     @JvmField

@@ -14,7 +14,7 @@ interface TesterTrait {
 
 
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testTraitFn: Callback {
-    fun invoke(ignored: Pointer?, x: UInt ): u_int
+    fun invoke(ignored: Pointer?, x: UInt ): FFIUint32
 }
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn: Callback {
     fun invoke(ignored: Pointer?): Unit
@@ -40,7 +40,7 @@ internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.B
     @JvmField
     internal var run_testTraitFn_callback: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn
         = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: UInt ): u_int {
+                override fun invoke(ignored: Pointer?, x: UInt ): FFIUint32 {
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
@@ -90,8 +90,8 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             
             
             val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
-                override fun invoke(ignored: Pointer?, x: UInt ): u_int {
-                    return u_int(trt_obj.testTraitFn(x));
+                override fun invoke(ignored: Pointer?, x: UInt ): FFIUint32 {
+                    return FFIUint32(trt_obj.testTraitFn(x));
                 }
             }
             vtable.run_testTraitFn_callback = testTraitFn;

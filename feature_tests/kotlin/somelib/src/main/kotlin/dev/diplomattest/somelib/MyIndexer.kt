@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 
 internal interface MyIndexerLib: Library {
     fun namespace_MyIndexer_destroy(handle: Pointer)
-    fun namespace_MyIndexer_get(handle: Pointer, i: size_t): OptionSlice
+    fun namespace_MyIndexer_get(handle: Pointer, i: FFISizet): OptionSlice
 }
 
 class MyIndexer internal constructor (
@@ -31,7 +31,7 @@ class MyIndexer internal constructor (
     
     internal fun getInternal(i: ULong): String? {
         
-        val returnVal = lib.namespace_MyIndexer_get(handle, size_t(i));
+        val returnVal = lib.namespace_MyIndexer_get(handle, FFISizet(i));
         
         val intermediateOption = returnVal.option() ?: return null
             return PrimitiveArrayTools.getUtf8(intermediateOption)

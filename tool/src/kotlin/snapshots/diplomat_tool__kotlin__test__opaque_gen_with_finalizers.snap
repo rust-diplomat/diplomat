@@ -13,7 +13,7 @@ import com.sun.jna.Structure
 
 internal interface MyOpaqueStructLib: Library {
     fun MyOpaqueStruct_destroy(handle: Pointer)
-    fun MyOpaqueStruct_get_byte(): u_byte
+    fun MyOpaqueStruct_get_byte(): FFIUint8
     fun MyOpaqueStruct_get_string_wrapper(in1: Int): Int
 }
 
