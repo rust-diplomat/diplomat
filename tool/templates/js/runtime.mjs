@@ -1,5 +1,7 @@
 /** For internal Diplomat use when constructing opaques or structs. */
 export const internalConstructor = Symbol("constructor");
+/** For internal Diplomat use when accessing an internal constructor.  */
+export const exposeConstructor = Symbol("exposeConstructor");
 
 export function readString8(wasm, ptr, len) {
     const buf = new Uint8Array(wasm.memory.buffer, ptr, len);

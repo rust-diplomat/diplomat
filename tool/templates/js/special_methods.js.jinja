@@ -18,10 +18,10 @@ constructor(
     {%- if typescript %}: {{ param.ty -}}{%- endif -%}
     {%- if !loop.last -%}, {% endif -%}
     {%- endfor -%}
-{%- endif -%}
+{%- else -%} exposeConstructor, ...args {%- endif -%}
 ) {%- if !typescript %} {
-    if (arguments[0] === diplomatRuntime.internalConstructor) {
-        this.#internalConstructor(...arguments);
+    if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+        this.#internalConstructor(...args);
     } else {
         this.#defaultConstructor(...arguments);
     }
