@@ -475,45 +475,6 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             }
         }
 
-        #[cfg(any(feature = "traits_are_send", feature = "traits_are_sync"))]
-        Item::Trait(t) => {
-            let mut supertraits = &mut t.supertraits;
-            #[cfg(feature = "traits_are_send")]
-            supertraits.push(TypeParamBound::Trait(
-                    TraitBound {
-                        paren_token: None,
-                        modifier: TraitBoundModifier::None,
-                        lifetimes: None,
-                        path: syn::Path {
-                            leading_colon: None,
-                            segments: punctuated::Punctuated::from_iter(vec![
-                                PathSegment::from(Ident::new("std", Span::call_site())),
-                                PathSegment::from(Ident::new("marker", Span::call_site())),
-                                PathSegment::from(Ident::new("Send", Span::call_site())),
-                            ]),
-                        },
-                    },
-                ),
-            );
-            #[cfg(feature = "traits_are_sync")]
-            supertraits.push(TypeParamBound::Trait(
-                    TraitBound {
-                        paren_token: None,
-                        modifier: TraitBoundModifier::None,
-                        lifetimes: None,
-                        path: syn::Path {
-                            leading_colon: None,
-                            segments: punctuated::Punctuated::from_iter(vec![
-                                PathSegment::from(Ident::new("std", Span::call_site())),
-                                PathSegment::from(Ident::new("marker", Span::call_site())),
-                                PathSegment::from(Ident::new("Sync", Span::call_site())),
-                            ]),
-                        },
-                    },
-                ),
-            );
-        }
-
         Item::Impl(i) => {
             for item in &mut i.items {
                 if let syn::ImplItem::Fn(ref mut m) = *item {
@@ -584,14 +545,16 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 pub vtable: #custom_trait_vtable_type,
             }
         });
-        #[cfg(feature = "traits_are_send")]
-        new_contents.push(syn::parse_quote! {
-            unsafe impl std::marker::Send for #custom_trait_name {}
-        });
-        #[cfg(feature = "traits_are_sync")]
-        new_contents.push(syn::parse_quote! {
-            unsafe impl std::marker::Sync for #custom_trait_name {}
-        });
+        if custom_trait.is_send {
+            new_contents.push(syn::parse_quote! {
+                unsafe impl std::marker::Send for #custom_trait_name {}
+            });
+        }
+        if custom_trait.is_sync {
+            new_contents.push(syn::parse_quote! {
+                unsafe impl std::marker::Sync for #custom_trait_name {}
+            });
+        }
 
         // trait struct wrapper for all methods
         new_contents.push(gen_custom_trait_impl(custom_trait, &custom_trait_name));
@@ -1111,7 +1074,7 @@ mod tests {
                         y: i32,
                     }
 
-                    pub trait TesterTrait {
+                    pub trait TesterTrait: std::marker::Send {
                         fn test_trait_fn(&self, x: i32) -> i32;
                         fn test_void_trait_fn(&self);
                         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;

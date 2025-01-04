@@ -1,7 +1,7 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 1059
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct TestingStruct { x: i32, y: i32, } pub trait\n                                TesterTrait\n                                {\n                                    fn test_trait_fn(&self, x: i32) -> i32; fn\n                                    test_void_trait_fn(&self); fn\n                                    test_struct_trait_fn(&self, s: TestingStruct) -> i32; fn\n                                    test_slice_trait_fn(&self, s: &[u8]) -> i32;\n                                } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n                                {\n                                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n                                    { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n                                    test_trait_with_struct(t: impl TesterTrait) -> i32\n                                    {\n                                        let arg = TestingStruct { x: 1, y: 5, };\n                                        t.test_struct_trait_fn(arg)\n                                    }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
+assertion_line: 1069
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct TestingStruct { x: i32, y: i32, } pub trait\n                                TesterTrait: std::marker::Send\n                                {\n                                    fn test_trait_fn(&self, x: i32) -> i32; fn\n                                    test_void_trait_fn(&self); fn\n                                    test_struct_trait_fn(&self, s: TestingStruct) -> i32; fn\n                                    test_slice_trait_fn(&self, s: &[u8]) -> i32;\n                                } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n                                {\n                                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n                                    { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n                                    test_trait_with_struct(t: impl TesterTrait) -> i32\n                                    {\n                                        let arg = TestingStruct { x: 1, y: 5, };\n                                        t.test_struct_trait_fn(arg)\n                                    }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[repr(C)]
@@ -9,7 +9,7 @@ mod ffi {
         x: i32,
         y: i32,
     }
-    pub trait TesterTrait {
+    pub trait TesterTrait: std::marker::Send {
         fn test_trait_fn(&self, x: i32) -> i32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;
@@ -56,6 +56,7 @@ mod ffi {
         data: *const c_void,
         pub vtable: TesterTrait_VTable,
     }
+    unsafe impl std::marker::Send for DiplomatTraitStruct_TesterTrait {}
     impl TesterTrait for DiplomatTraitStruct_TesterTrait {
         fn test_trait_fn(&self, x: i32) -> i32 {
             unsafe { ((self.vtable).run_test_trait_fn_callback)(self.data, x) }
