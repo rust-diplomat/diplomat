@@ -20,7 +20,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
     fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
-    fun Float64Vec_get(handle: Pointer, i: size_t): OptionDouble
+    fun Float64Vec_get(handle: Pointer, i: FFISizet): OptionDouble
 }
 
 class Float64Vec internal constructor (
@@ -160,7 +160,7 @@ class Float64Vec internal constructor (
     
     internal fun getInternal(i: ULong): Double? {
         
-        val returnVal = lib.Float64Vec_get(handle, size_t(i));
+        val returnVal = lib.Float64Vec_get(handle, FFISizet(i));
         return returnVal.option()
     }
 
