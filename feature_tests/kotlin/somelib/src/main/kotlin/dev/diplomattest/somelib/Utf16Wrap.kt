@@ -38,7 +38,7 @@ class Utf16Wrap internal constructor (
             val handle = returnVal 
             val returnOpaque = Utf16Wrap(handle, selfEdges)
             CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
-            inputMem.close()
+            if (inputMem != null) inputMem.close()
             return returnOpaque
         }
     }

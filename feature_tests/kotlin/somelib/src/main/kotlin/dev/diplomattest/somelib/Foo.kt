@@ -21,7 +21,7 @@ class Foo internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val aEdges: List<Any>,
+    internal val aEdges: List<Any?>,
 )  {
 
     internal class FooCleaner(val handle: Pointer, val lib: FooLib) : Runnable {
@@ -39,7 +39,7 @@ class Foo internal constructor (
             
             val returnVal = lib.Foo_new(xSlice);
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = listOf(xMem)
+            val aEdges: List<Any?> = listOf(xMem)
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -51,11 +51,11 @@ class Foo internal constructor (
             
             val returnVal = lib.Foo_new_static(xSlice);
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = listOf()
+            val aEdges: List<Any?> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            xMem.close()
+            if (xMem != null) xMem.close()
             return returnOpaque
         }
         
@@ -63,7 +63,7 @@ class Foo internal constructor (
             
             val returnVal = lib.Foo_extract_from_fields(fields.nativeStruct);
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = fields.aEdges
+            val aEdges: List<Any?> = fields.aEdges
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -77,7 +77,7 @@ class Foo internal constructor (
             
             val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = bounds.bEdges + bounds.cEdges + listOf(anotherStringMem)
+            val aEdges: List<Any?> = bounds.bEdges + bounds.cEdges + listOf(anotherStringMem)
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -89,8 +89,8 @@ class Foo internal constructor (
         
         val returnVal = lib.Foo_get_bar(handle);
         val selfEdges: List<Any> = listOf()
-        val bEdges: List<Any> = listOf(this)
-        val aEdges: List<Any> = listOf(this)
+        val bEdges: List<Any?> = listOf(this)
+        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Bar(handle, selfEdges, bEdges, aEdges)
         CLEANER.register(returnOpaque, Bar.BarCleaner(handle, Bar.lib));
@@ -101,7 +101,7 @@ class Foo internal constructor (
         
         val returnVal = lib.Foo_as_returning(handle);
         
-        val aEdges: List<Any> = listOf(this)
+        val aEdges: List<Any?> = listOf(this)
         val returnStruct = BorrowedFieldsReturning(returnVal, aEdges)
         return returnStruct
     }

@@ -47,7 +47,7 @@ class {{type_name}} internal constructor (
     internal val nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},{% endif %}{% endif -%}
     {% if !lifetimes.is_empty() %}
     {%- for lt in lifetimes %}
-    internal val {{lt}}Edges: List<Any>{% if !loop.last%},{% endif %}
+    internal val {{lt}}Edges: List<Any?>{% if !loop.last%},{% endif %}
     {%- endfor %}
     {% endif -%}
     ){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %} {

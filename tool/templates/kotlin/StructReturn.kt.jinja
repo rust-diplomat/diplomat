@@ -1,5 +1,5 @@
 {%- for borrow in borrows %}
-val {{borrow.lt}}Edges: List<Any> = {% if borrow.params.is_empty() -%}
+val {{borrow.lt}}Edges: List<Any?> = {% if borrow.params.is_empty() -%}
 listOf()
 {%- else -%}
 {%- for param in borrow.params %}{%- if !loop.first %} + {% endif -%}{{param}}{%- endfor %}

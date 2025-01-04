@@ -16,8 +16,8 @@ class Bar internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val bEdges: List<Any>,
-    internal val aEdges: List<Any>,
+    internal val bEdges: List<Any?>,
+    internal val aEdges: List<Any?>,
 )  {
 
     internal class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
@@ -35,7 +35,7 @@ class Bar internal constructor (
         
         val returnVal = lib.Bar_foo(handle);
         val selfEdges: List<Any> = listOf(this)
-        val aEdges: List<Any> = listOf(this)
+        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Foo(handle, selfEdges, aEdges)
         return returnOpaque

@@ -26,7 +26,7 @@ internal class BorrowedFieldsNative: Structure(), Structure.ByValue {
 
 class BorrowedFields internal constructor (
     internal val nativeStruct: BorrowedFieldsNative,
-    internal val aEdges: List<Any>
+    internal val aEdges: List<Any?>
     ) {
     val a: String = PrimitiveArrayTools.getUtf16(nativeStruct.a)
     val b: String = PrimitiveArrayTools.getUtf8(nativeStruct.b)
@@ -43,7 +43,7 @@ class BorrowedFields internal constructor (
             
             val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice);
             
-            val xEdges: List<Any> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
+            val xEdges: List<Any?> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
             val returnStruct = BorrowedFields(returnVal, xEdges)
             return returnStruct
         }

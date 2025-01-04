@@ -43,7 +43,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -55,7 +55,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -78,7 +78,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vMem.forEach {it.close()}
+            vMem.forEach {if (it != null) it.close()}
             return returnOpaque
         }
         
