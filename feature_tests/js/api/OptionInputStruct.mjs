@@ -105,7 +105,7 @@ export class OptionInputStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(internalConstructor, ptr) {
+    static _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionInputStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -117,17 +117,18 @@ export class OptionInputStruct {
         const cDeref = ptr + 12;
         structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionInputStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = OptionInputStruct._fromFFI(...arguments);
         
-        let self = new OptionInputStruct({});
-        return self._fromFFI(...arguments);
+        let self = new OptionInputStruct(structObj);
+        return self;
     }
 
 }

@@ -75,7 +75,7 @@ export class CyclicStructA {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(internalConstructor, primitiveValue) {
+    static _fromFFI(internalConstructor, primitiveValue) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructA._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -83,17 +83,18 @@ export class CyclicStructA {
         const aDeref = primitiveValue;
         structObj.a = CyclicStructB._createFromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, primitiveValue) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructA._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = CyclicStructA._fromFFI(...arguments);
         
-        let self = new CyclicStructA({});
-        return self._fromFFI(...arguments);
+        let self = new CyclicStructA(structObj);
+        return self;
     }
 
 

@@ -105,7 +105,7 @@ export class BorrowedFieldsWithBounds {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
-    _fromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {
+    static _fromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsWithBounds._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -117,17 +117,18 @@ export class BorrowedFieldsWithBounds {
         const fieldCDeref = ptr + 16;
         structObj.fieldC = new diplomatRuntime.DiplomatSliceStr(wasm, fieldCDeref,  "string8", cEdges).getValue();
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsWithBounds._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = BorrowedFieldsWithBounds._fromFFI(...arguments);
         
-        let self = new BorrowedFieldsWithBounds({});
-        return self._fromFFI(...arguments);
+        let self = new BorrowedFieldsWithBounds(structObj);
+        return self;
     }
 
     // Return all fields corresponding to lifetime `'a` 

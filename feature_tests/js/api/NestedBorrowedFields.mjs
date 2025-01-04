@@ -108,7 +108,7 @@ export class NestedBorrowedFields {
         BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],});
     }
 
-    _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
+    static _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("NestedBorrowedFields._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -120,17 +120,18 @@ export class NestedBorrowedFields {
         const bounds2Deref = ptr + 48;
         structObj.bounds2 = BorrowedFieldsWithBounds._createFromFFI(diplomatRuntime.internalConstructor, bounds2Deref, zEdges, zEdges, zEdges);
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("NestedBorrowedFields._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = NestedBorrowedFields._fromFFI(...arguments);
         
-        let self = new NestedBorrowedFields({});
-        return self._fromFFI(...arguments);
+        let self = new NestedBorrowedFields(structObj);
+        return self;
     }
 
     // Return all fields corresponding to lifetime `'x` 

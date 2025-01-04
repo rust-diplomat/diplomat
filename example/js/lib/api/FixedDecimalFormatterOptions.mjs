@@ -92,7 +92,7 @@ export class FixedDecimalFormatterOptions {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(internalConstructor, ptr) {
+    static _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("FixedDecimalFormatterOptions._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -102,17 +102,18 @@ export class FixedDecimalFormatterOptions {
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         structObj.someOtherConfig = someOtherConfigDeref;
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("FixedDecimalFormatterOptions._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = FixedDecimalFormatterOptions._fromFFI(...arguments);
         
-        let self = new FixedDecimalFormatterOptions(diplomatRuntime.internalConstructor, {});
-        return self._fromFFI(...arguments);
+        let self = new FixedDecimalFormatterOptions(internalConstructor, structObj);
+        return self;
     }
 
 

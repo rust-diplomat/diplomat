@@ -138,7 +138,7 @@ export class BigStructWithStuff {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    _fromFFI(internalConstructor, ptr) {
+    static _fromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -154,17 +154,18 @@ export class BigStructWithStuff {
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
         structObj.fifth = fifthDeref;
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BigStructWithStuff._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = BigStructWithStuff._fromFFI(...arguments);
         
-        let self = new BigStructWithStuff({});
-        return self._fromFFI(...arguments);
+        let self = new BigStructWithStuff(structObj);
+        return self;
     }
 
 
