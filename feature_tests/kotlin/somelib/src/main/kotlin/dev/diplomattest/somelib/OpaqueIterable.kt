@@ -33,7 +33,7 @@ class OpaqueIterable internal constructor (
         
         val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
-        val aEdges: List<Any> = listOf(this)
+        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = OpaqueIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, OpaqueIterator.OpaqueIteratorCleaner(handle, OpaqueIterator.lib));

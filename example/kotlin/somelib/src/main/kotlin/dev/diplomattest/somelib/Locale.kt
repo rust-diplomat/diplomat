@@ -41,7 +41,7 @@ class Locale internal constructor (
             val handle = returnVal 
             val returnOpaque = Locale(handle, selfEdges)
             CLEANER.register(returnOpaque, Locale.LocaleCleaner(handle, Locale.lib));
-            nameMem.close()
+            if (nameMem != null) nameMem.close()
             return returnOpaque
         }
     }

@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2243
+assertion_line: 2252
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -43,8 +43,8 @@ class AnotherOpaque internal constructor (
         val handle = returnVal 
         val returnOpaque = RustOwnedBytes(handle, selfEdges)
         CLEANER.register(returnOpaque, RustOwnedBytes.RustOwnedBytesCleaner(handle, RustOwnedBytes.lib));
-        aMem.close()
-        bMem.close()
+        if (aMem != null) aMem.close()
+        if (bMem != null) bMem.close()
         return returnOpaque
     }
 

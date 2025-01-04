@@ -26,9 +26,9 @@ internal class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
 
 class NestedBorrowedFields internal constructor (
     internal val nativeStruct: NestedBorrowedFieldsNative,
-    internal val xEdges: List<Any>,
-    internal val yEdges: List<Any>,
-    internal val zEdges: List<Any>
+    internal val xEdges: List<Any?>,
+    internal val yEdges: List<Any?>,
+    internal val zEdges: List<Any?>
     ) {
     val fields: BorrowedFields = BorrowedFields(nativeStruct.fields, xEdges)
     val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds, xEdges, yEdges, yEdges)
@@ -47,9 +47,9 @@ class NestedBorrowedFields internal constructor (
             
             val returnVal = lib.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.handle, foo.handle, dstr16XSlice, dstr16ZSlice, utf8StrYSlice, utf8StrZSlice);
             
-            val xEdges: List<Any> = listOf(bar) + listOf(dstr16XMem) + listOf(utf8StrYMem)
-            val yEdges: List<Any> = listOf(bar) + listOf(utf8StrYMem)
-            val zEdges: List<Any> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)
+            val xEdges: List<Any?> = listOf(bar) + listOf(dstr16XMem) + listOf(utf8StrYMem)
+            val yEdges: List<Any?> = listOf(bar) + listOf(utf8StrYMem)
+            val zEdges: List<Any?> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)
             val returnStruct = NestedBorrowedFields(returnVal, xEdges, yEdges, zEdges)
             return returnStruct
         }
