@@ -169,7 +169,7 @@ type {{type_name}}_obj = {
             throw new Error("{{type_name}}._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
         
-        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} {});
+        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} {} {%- if is_out %}, internalConstructor{% endif -%});
         return self._fromFFI(...arguments);
     }
     
