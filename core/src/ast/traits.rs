@@ -116,19 +116,19 @@ impl Trait {
             {
                 let mut seg_iter = segments.iter();
                 if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
-                    if ident.to_string() != "std" {
+                    if *ident != "std" {
                         continue;
                     }
                 }
                 if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
-                    if ident.to_string() != "marker" {
+                    if *ident != "marker" {
                         continue;
                     }
                 }
                 if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
-                    if ident.to_string() == "Send" {
+                    if *ident == "Send" {
                         is_send = true;
-                    } else if ident.to_string() == "Sync" {
+                    } else if *ident == "Sync" {
                         is_sync = true;
                     }
                 }
