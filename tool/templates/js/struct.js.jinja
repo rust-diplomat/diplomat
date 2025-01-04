@@ -145,7 +145,7 @@ type {{type_name}}_obj = {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+    static _fromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
@@ -160,17 +160,18 @@ type {{type_name}}_obj = {
         {%- endfor %}
         {%- endif %}
 
-        this.#internalConstructor(structObj, internalConstructor);
-        return this;
+        return structObj;
     }
 
     static _createFromFFI(internalConstructor, {%- if !wraps_primitive %} ptr {%- else %} primitiveValue {%- endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._createFromFFI is not meant to be called externally. Please use the default constructor.");
         }
+
+        const structObj = {{type_name}}._fromFFI(...arguments);
         
-        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} {} {%- if is_out %}, internalConstructor{% endif -%});
-        return self._fromFFI(...arguments);
+        let self = new {{type_name}}({% if overrides_constructor %}internalConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
+        return self;
     }
     
     {%- for l in lifetimes.all_lifetimes() %}
