@@ -37,7 +37,7 @@ type {{type_name}}_obj = {
      # For instance, demo_gen uses this function instead of the constructor
     -#}
     static FromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
-        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.internalConstructor, {% endif -%} structObj);
+        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj);
     } {%- endif %}
     {% endif -%}
 
@@ -122,7 +122,7 @@ type {{type_name}}_obj = {
             return obj;
         }
 
-        return new {{type_name}}(obj);
+        return {{type_name}}.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -170,7 +170,7 @@ type {{type_name}}_obj = {
 
         const structObj = {{type_name}}._fromFFI(...arguments);
         
-        let self = new {{type_name}}({% if overrides_constructor %}internalConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
+        let self = new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
         return self;
     }
     
