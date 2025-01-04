@@ -13,7 +13,7 @@ internal interface OpaqueLib: Library {
     fun Opaque_from_str(input: Slice): Pointer
     fun Opaque_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Opaque_assert_struct(handle: Pointer, s: MyStructNative): Unit
-    fun Opaque_returns_usize(): Long
+    fun Opaque_returns_usize(): FFISizet
     fun Opaque_returns_imported(): ImportedStructNative
     fun Opaque_cmp(): Byte
 }

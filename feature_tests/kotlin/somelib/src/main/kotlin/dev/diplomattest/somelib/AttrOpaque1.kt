@@ -9,8 +9,8 @@ import com.sun.jna.Structure
 internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_destroy(handle: Pointer)
     fun namespace_AttrOpaque1_new(): Pointer
-    fun namespace_AttrOpaque1_method(handle: Pointer): Byte
-    fun renamed_on_abi_only(handle: Pointer): Byte
+    fun namespace_AttrOpaque1_method(handle: Pointer): FFIUint8
+    fun renamed_on_abi_only(handle: Pointer): FFIUint8
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
     fun namespace_AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
 }

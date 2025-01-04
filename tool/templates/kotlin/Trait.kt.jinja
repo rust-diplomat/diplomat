@@ -92,7 +92,7 @@ internal class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
                 {%- for trait_method in trait_methods %}
             val {{trait_method.name}}: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {
                 override fun invoke(ignored: Pointer?{% if trait_method.input_params_and_types != "" %}, {{trait_method.input_params_and_types}} {% endif %}): {{trait_method.native_output_type}} {
-                    return trt_obj.{{trait_method.name}}({{trait_method.input_params}}){{trait_method.return_modification}};
+                    return {{trait_method.return_cast}}(trt_obj.{{trait_method.name}}({{trait_method.input_params}})){{trait_method.return_modification}};
                 }
             }
             vtable.run_{{trait_method.name}}_callback = {{trait_method.name}};
