@@ -17,7 +17,7 @@ class OpaqueIterator internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val aEdges: List<Any>,
+    internal val aEdges: List<Any?>,
 ): Iterator<AttrOpaque1?> {
 
     internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {

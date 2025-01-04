@@ -111,7 +111,7 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
 */
 class MyNativeStruct internal constructor (
     internal val nativeStruct: MyNativeStructNative,
-    internal val bEdges: List<Any>
+    internal val bEdges: List<Any?>
     ) {
     val a: Boolean = nativeStruct.a > 0
     val b: Byte = nativeStruct.b
@@ -137,7 +137,7 @@ class MyNativeStruct internal constructor (
             
             val returnVal = lib.MyNativeStruct_new();
             
-            val bEdges: List<Any> = listOf()
+            val bEdges: List<Any?> = listOf()
             val returnStruct = MyNativeStruct(returnVal, bEdges)
             return returnStruct
         }

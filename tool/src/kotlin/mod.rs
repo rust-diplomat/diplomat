@@ -980,11 +980,17 @@ returnVal.option() ?: return null
 
     fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Option<Cow<'cx, str>> {
         match slice {
-            Slice::Str(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Str(Some(_), _) => {
+                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
+            }
             Slice::Str(_, _) => None,
-            Slice::Primitive(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Primitive(Some(_), _) => {
+                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
+            }
             Slice::Primitive(_, _) => None,
-            Slice::Strs(_) => Some(format!("{param_name}Mem.forEach {{it.close()}}").into()),
+            Slice::Strs(_) => {
+                Some(format!("{param_name}Mem.forEach {{if (it != null) it.close()}}").into())
+            }
             _ => todo!(),
         }
     }

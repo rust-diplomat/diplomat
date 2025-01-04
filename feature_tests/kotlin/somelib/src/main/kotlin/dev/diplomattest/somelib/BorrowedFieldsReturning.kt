@@ -21,7 +21,7 @@ internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
 
 class BorrowedFieldsReturning internal constructor (
     internal val nativeStruct: BorrowedFieldsReturningNative,
-    internal val aEdges: List<Any>
+    internal val aEdges: List<Any?>
     ) {
     val bytes: String = PrimitiveArrayTools.getUtf8(nativeStruct.bytes)
 

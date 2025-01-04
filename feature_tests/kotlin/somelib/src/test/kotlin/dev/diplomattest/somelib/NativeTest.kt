@@ -13,7 +13,7 @@ class NativeTest {
             val array = random.nextBytes(1000)
             val (mem, slice) = PrimitiveArrayTools.native(array)
             val got = slice.data.getByteArray(0, array.size)
-            mem.close()
+            if (mem != null) mem.close()
             assertEquals(got.toList(), array.toList())
         }
 
@@ -22,7 +22,7 @@ class NativeTest {
             val uByteArray = array.map { it.toUByte()}.toUByteArray()
             val (mem, slice) = PrimitiveArrayTools.native(array)
             val got = slice.data.getByteArray(0, array.size).asUByteArray()
-            mem.close()
+            if (mem != null) mem.close()
             assertEquals(got.map { it.toUByte()}, uByteArray.toList())
         }
 
@@ -32,7 +32,7 @@ class NativeTest {
             val intArray = (0..size).map { random.nextInt() }.toIntArray()
             val (mem, slice) = PrimitiveArrayTools.native(intArray)
             val got = slice.data.getIntArray(0, intArray.size)
-            mem.close()
+            if (mem != null) mem.close()
             assertEquals(got.toList(), intArray.toList())
         }
 
@@ -41,7 +41,7 @@ class NativeTest {
             val intArray = (0..size).map { random.nextInt().toUInt() }.toUIntArray()
             val (mem, slice) = PrimitiveArrayTools.native(intArray)
             val got = slice.data.getIntArray(0, intArray.size).asUIntArray()
-            mem.close()
+            if (mem != null) mem.close()
             assertEquals(got.toList(), intArray.toList())
         }
 
