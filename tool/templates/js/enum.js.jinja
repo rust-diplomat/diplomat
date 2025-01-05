@@ -32,7 +32,7 @@
         let intVal = {{type_name}}.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return {{type_name}}.#objectValues[intVal];
         }
 
