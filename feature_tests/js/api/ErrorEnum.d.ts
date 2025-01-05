@@ -7,6 +7,9 @@ export class ErrorEnum {
 	
     constructor(value : ErrorEnum | string);
 
+
+    static FromValue(value : ErrorEnum | string) : ErrorEnum; 
+
     get value() : string;
 
     get ffiValue() : number;

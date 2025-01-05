@@ -7,6 +7,9 @@ export class ContiguousEnum {
 	
     constructor(value : ContiguousEnum | string);
 
+
+    static FromValue(value : ContiguousEnum | string) : ContiguousEnum; 
+
     get value() : string;
 
     get ffiValue() : number;

@@ -7,6 +7,9 @@ export class OptionEnum {
 	
     constructor(value : OptionEnum | string);
 
+
+    static FromValue(value : OptionEnum | string) : OptionEnum; 
+
     get value() : string;
 
     get ffiValue() : number;

@@ -19,7 +19,6 @@ export class FixedDecimalGroupingStrategy {
         return FixedDecimalGroupingStrategy.#values.entries();
     }
     
-    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -43,6 +42,11 @@ export class FixedDecimalGroupingStrategy {
         }
 
         throw TypeError(value + " is not a FixedDecimalGroupingStrategy and does not correspond to any of its enumerator values.");
+    }
+
+
+    static FromValue(value) {
+        return new FixedDecimalGroupingStrategy(value);
     }
 
     get value() {

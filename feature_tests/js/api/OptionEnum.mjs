@@ -17,7 +17,6 @@ export class OptionEnum {
         return OptionEnum.#values.entries();
     }
     
-    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -41,6 +40,11 @@ export class OptionEnum {
         }
 
         throw TypeError(value + " is not a OptionEnum and does not correspond to any of its enumerator values.");
+    }
+
+
+    static FromValue(value) {
+        return new OptionEnum(value);
     }
 
     get value() {

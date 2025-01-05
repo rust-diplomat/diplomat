@@ -21,7 +21,6 @@ export class MyEnum {
         return MyEnum.#values.entries();
     }
     
-    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -45,6 +44,11 @@ export class MyEnum {
         }
 
         throw TypeError(value + " is not a MyEnum and does not correspond to any of its enumerator values.");
+    }
+
+
+    static FromValue(value) {
+        return new MyEnum(value);
     }
 
     get value() {

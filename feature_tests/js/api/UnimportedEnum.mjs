@@ -18,7 +18,6 @@ export class UnimportedEnum {
         return UnimportedEnum.#values.entries();
     }
     
-    
     constructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -42,6 +41,11 @@ export class UnimportedEnum {
         }
 
         throw TypeError(value + " is not a UnimportedEnum and does not correspond to any of its enumerator values.");
+    }
+
+
+    static FromValue(value) {
+        return new UnimportedEnum(value);
     }
 
     get value() {

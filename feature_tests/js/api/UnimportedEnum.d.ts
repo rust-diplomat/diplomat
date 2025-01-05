@@ -7,6 +7,9 @@ export class UnimportedEnum {
 	
     constructor(value : UnimportedEnum | string);
 
+
+    static FromValue(value : UnimportedEnum | string) : UnimportedEnum; 
+
     get value() : string;
 
     get ffiValue() : number;

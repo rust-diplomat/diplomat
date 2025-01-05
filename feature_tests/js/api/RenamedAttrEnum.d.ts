@@ -7,6 +7,9 @@ export class RenamedAttrEnum {
 	
     constructor(value : RenamedAttrEnum | string);
 
+
+    static FromValue(value : RenamedAttrEnum | string) : RenamedAttrEnum; 
+
     get value() : string;
 
     get ffiValue() : number;

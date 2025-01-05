@@ -7,6 +7,9 @@ export class MyEnum {
 	
     constructor(value : MyEnum | string);
 
+
+    static FromValue(value : MyEnum | string) : MyEnum; 
+
     get value() : string;
 
     get ffiValue() : number;
