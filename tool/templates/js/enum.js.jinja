@@ -14,7 +14,6 @@
         return {{type_name}}.#values.entries();
     }
     
-    {# TODO: Add "fromValue" function. #}
     {% if overrides_constructor -%} #internalConstructor {%- else -%} constructor {%- endif -%}(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -39,9 +38,15 @@
 
         throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
     }
-{% else %}
+{% else if !overrides_constructor %}
     constructor(value : {{type_name}} | string);
 {% endif %}
+
+    static FromValue(value {%- if typescript %} : {{type_name}} | string {%- endif %}) {%- if typescript %} : {{type_name}}; {% else %} {
+        return new {{type_name}}({% if overrides_constructor -%} diplomatRuntime.exposeConstructor, {% endif -%} value);
+    }
+    {%- endif %}
+
     get value() {% if typescript %}: string;{% else %}{
         {%- if is_contiguous %}
         return [...{{type_name}}.#values.keys()][this.#value];
