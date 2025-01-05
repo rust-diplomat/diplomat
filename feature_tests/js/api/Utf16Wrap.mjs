@@ -44,7 +44,7 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
     
         try {
-            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
+            return this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
@@ -82,11 +82,13 @@ export class Utf16Wrap {
         }
     }
 
-    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
-            this.#internalConstructor(...args);
-        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {
+        if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
         } else {
-            this.#defaultConstructor(...arguments);
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

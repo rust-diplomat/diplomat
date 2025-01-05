@@ -43,7 +43,7 @@ export class FixedDecimal {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
-            this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
+            return this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}
@@ -70,11 +70,13 @@ export class FixedDecimal {
         }
     }
 
-    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
-            this.#internalConstructor(...args);
-        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {
+        if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
         } else {
-            this.#defaultConstructor(...arguments);
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

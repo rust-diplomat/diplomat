@@ -137,7 +137,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            this.#setFieldsFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return this.#setFieldsFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -145,11 +145,13 @@ export class FixedDecimalFormatterOptions {
         }
     }
 
-    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
-            this.#internalConstructor(...args);
-        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {
+        if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
         } else {
-            this.#defaultConstructor(...arguments);
+            return this.#defaultConstructor(...arguments);
         }
     }
 }
