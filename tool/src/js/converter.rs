@@ -238,13 +238,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Type::Enum(ref enum_path) => {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{}(diplomatRuntime.internalConstructor, {variable_name})",
+                format!(
+                    "{}(diplomatRuntime.internalConstructor, {variable_name})",
                     match usage {
                         Some(SpecialMethod::Constructor) => "this.#internalConstructor".into(),
-                        _ => format!("new {type_name}")
+                        _ => format!("new {type_name}"),
                     }
                 )
-                    .into()
+                .into()
             }
             Type::Slice(slice) => {
                 let edges = match slice.lifetime() {

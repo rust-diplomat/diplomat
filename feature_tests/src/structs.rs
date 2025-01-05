@@ -45,7 +45,7 @@ pub mod ffi {
 
     pub enum DefaultEnum {
         A,
-        B
+        B,
     }
 
     pub struct MyStruct {
