@@ -687,13 +687,16 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &'d str,
+        err_cast: &'d str,
         o: &'d OutType,
         use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
-                format!("return ({val_name}{maybe_unsized_modifier}){return_type_modifier}")
+                format!(
+                    "return {err_cast}({val_name}{maybe_unsized_modifier}){return_type_modifier}"
+                )
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
@@ -812,6 +815,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 val_name,
                 return_type_postfix,
+                "", // error cast
                 o,
                 use_finalizers_not_cleaners,
             ),
@@ -852,7 +856,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
+                        // let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
                             match err {
                                 OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
                                     let resolved = self.tcx.resolve_opaque(*id);
@@ -874,9 +878,15 @@ val intermediateOption = {val_name}.option() ?: return null
                                 }
                                 _ => {}
                             }
-                            ".err()"
+                        //     ".err()"
+                        // } else {
+                        //     ".err()"
+                        // };
+                        let err_converter = ".err()";
+                        let err_cast = if let Type::Primitive(prim) = err {
+                            self.formatter.fmt_primitive_error_type(*prim)
                         } else {
-                            ".primitive_err()"
+                            "".into()
                         };
 
                         self.gen_out_type_return_conversion(
@@ -885,11 +895,12 @@ val intermediateOption = {val_name}.option() ?: return null
                             cleanups,
                             "returnVal.union.err",
                             err_converter,
+                            &err_cast,
                             err,
                             use_finalizers_not_cleaners,
                         )
                     })
-                    .unwrap_or_else(|| "return Unit.primitive_err()".into());
+                    .unwrap_or_else(|| "return UnitError().err()".into());
 
                 #[derive(Template)]
                 #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
