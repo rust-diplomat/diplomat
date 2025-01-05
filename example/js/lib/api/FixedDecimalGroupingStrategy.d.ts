@@ -5,9 +5,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class FixedDecimalGroupingStrategy {
 	
-    constructor(value : FixedDecimalGroupingStrategy | number);
+    constructor(value : FixedDecimalGroupingStrategy | string);
 
-    static FromValue(value : FixedDecimalGroupingStrategy | number) : FixedDecimalGroupingStrategy; 
+    static FromValue(value : FixedDecimalGroupingStrategy | string) : FixedDecimalGroupingStrategy; 
 
     get value() : string;
 

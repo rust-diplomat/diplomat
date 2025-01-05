@@ -5,9 +5,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class UnimportedEnum {
 	
-    constructor(value : UnimportedEnum | number);
+    constructor(value : UnimportedEnum | string);
 
-    static FromValue(value : UnimportedEnum | number) : UnimportedEnum; 
+    static FromValue(value : UnimportedEnum | string) : UnimportedEnum; 
 
     get value() : string;
 

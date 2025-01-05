@@ -5,9 +5,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class RenamedAttrEnum {
 	
-    constructor(value : RenamedAttrEnum | number);
+    constructor(value : RenamedAttrEnum | string);
 
-    static FromValue(value : RenamedAttrEnum | number) : RenamedAttrEnum; 
+    static FromValue(value : RenamedAttrEnum | string) : RenamedAttrEnum; 
 
     get value() : string;
 
