@@ -20,8 +20,16 @@ constructor(
     {%- endfor -%}
 {%- else -%} exposeConstructor, ...args {%- endif -%}
 ) {%- if !typescript %} {
+    {#- Quick and dirty way to access an exposedConstructor if we don't want to provide the internalConstructor
+    symbol to our constructor (for instance, if we are a struct that only takes structObj as a parameter for the constructor) -#}
     if (exposeConstructor === diplomatRuntime.exposeConstructor) {
         this.#internalConstructor(...args);
+    } else if (exposeConstructor === diplomatRuntime.internalConstructor) { 
+        {#-
+        If the first symbol is an internal constructor symbol, that means we can't possibly be looking for the internal
+        #defaultConstructor. So instead we just pass along all of the arguments to the internalConstructor.
+        -#}
+        this.#internalConstructor(...arguments);
     } else {
         this.#defaultConstructor(...arguments);
     }
