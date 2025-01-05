@@ -1,5 +1,5 @@
 (function (...args) {
-    return new {{type_name}}({
+    return {{type_name}}.FromFields({
         {%- for field in fields %}
         {{field}}: args[{{loop.index0}}]{% if !loop.last %},{% endif %}
         {%- endfor -%}

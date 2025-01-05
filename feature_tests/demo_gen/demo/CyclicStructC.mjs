@@ -6,19 +6,19 @@ export function cyclicOut(field) {
         null,
         [
             (function (...args) {
-                return new CyclicStructC({
+                return CyclicStructC.FromFields({
                     a: args[0]});
             }).apply(
                 null,
                 [
                     (function (...args) {
-                        return new CyclicStructA({
+                        return CyclicStructA.FromFields({
                             a: args[0]});
                     }).apply(
                         null,
                         [
                             (function (...args) {
-                                return new CyclicStructB({
+                                return CyclicStructB.FromFields({
                                     field: args[0]});
                             }).apply(
                                 null,
