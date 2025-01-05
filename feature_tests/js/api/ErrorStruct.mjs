@@ -71,7 +71,7 @@ export class ErrorStruct {
             return obj;
         }
 
-        return new ErrorStruct(obj);
+        return ErrorStruct.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -100,6 +100,20 @@ export class ErrorStruct {
         structObj.j = jDeref;
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ErrorStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = ErrorStruct._fromFFI(...arguments);  
+
+           
+        this.#i = structObj.i;
+           
+        this.#j = structObj.j;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {

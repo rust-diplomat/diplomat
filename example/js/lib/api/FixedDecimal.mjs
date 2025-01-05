@@ -70,9 +70,9 @@ export class FixedDecimal {
         }
     }
 
-    constructor() {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
         } else {
             this.#defaultConstructor(...arguments);
         }

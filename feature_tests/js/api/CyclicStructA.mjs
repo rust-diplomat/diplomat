@@ -58,7 +58,7 @@ export class CyclicStructA {
             return obj;
         }
 
-        return new CyclicStructA(obj);
+        return CyclicStructA.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -84,6 +84,18 @@ export class CyclicStructA {
         structObj.a = CyclicStructB._createFromFFI(diplomatRuntime.internalConstructor, aDeref);
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, primitiveValue) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("CyclicStructA._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = CyclicStructA._fromFFI(...arguments);  
+
+           
+        this.#a = structObj.a;
+           
     }
 
     static _createFromFFI(internalConstructor, primitiveValue) {

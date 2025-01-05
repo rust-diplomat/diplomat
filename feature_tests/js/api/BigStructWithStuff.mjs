@@ -117,7 +117,7 @@ export class BigStructWithStuff {
             return obj;
         }
 
-        return new BigStructWithStuff(obj);
+        return BigStructWithStuff.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -155,6 +155,26 @@ export class BigStructWithStuff {
         structObj.fifth = fifthDeref;
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BigStructWithStuff._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = BigStructWithStuff._fromFFI(...arguments);  
+
+           
+        this.#first = structObj.first;
+           
+        this.#second = structObj.second;
+           
+        this.#third = structObj.third;
+           
+        this.#fourth = structObj.fourth;
+           
+        this.#fifth = structObj.fifth;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {

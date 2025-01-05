@@ -78,7 +78,7 @@ export class ScalarPairWithPadding {
             return obj;
         }
 
-        return new ScalarPairWithPadding(obj);
+        return ScalarPairWithPadding.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -108,6 +108,20 @@ export class ScalarPairWithPadding {
         structObj.second = secondDeref;
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ScalarPairWithPadding._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = ScalarPairWithPadding._fromFFI(...arguments);  
+
+           
+        this.#first = structObj.first;
+           
+        this.#second = structObj.second;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {

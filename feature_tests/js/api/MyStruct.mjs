@@ -69,7 +69,7 @@ export class MyStruct {
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj) {
-        return new MyStruct(diplomatRuntime.internalConstructor, structObj);
+        return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
     
     #internalConstructor(structObj) {
@@ -140,7 +140,7 @@ export class MyStruct {
             return obj;
         }
 
-        return new MyStruct(obj);
+        return MyStruct.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -186,6 +186,30 @@ export class MyStruct {
         return structObj;
     }
 
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("MyStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = MyStruct._fromFFI(...arguments);  
+
+           
+        this.#a = structObj.a;
+           
+        this.#b = structObj.b;
+           
+        this.#c = structObj.c;
+           
+        this.#d = structObj.d;
+           
+        this.#e = structObj.e;
+           
+        this.#f = structObj.f;
+           
+        this.#g = structObj.g;
+           
+    }
+
     static _createFromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("MyStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
@@ -193,7 +217,7 @@ export class MyStruct {
 
         const structObj = MyStruct._fromFFI(...arguments);
         
-        let self = new MyStruct(internalConstructor, structObj);
+        let self = new MyStruct(diplomatRuntime.exposeConstructor, structObj);
         return self;
     }
 
@@ -204,7 +228,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            MyStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            this.#setFieldsFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -254,9 +278,9 @@ export class MyStruct {
         finally {}
     }
 
-    constructor() {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
         } else {
             this.#defaultConstructor(...arguments);
         }

@@ -28,7 +28,7 @@ export class FixedDecimalFormatterOptions {
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj) {
-        return new FixedDecimalFormatterOptions(diplomatRuntime.internalConstructor, structObj);
+        return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
     
     #internalConstructor(structObj) {
@@ -73,7 +73,7 @@ export class FixedDecimalFormatterOptions {
             return obj;
         }
 
-        return new FixedDecimalFormatterOptions(obj);
+        return FixedDecimalFormatterOptions.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -105,6 +105,20 @@ export class FixedDecimalFormatterOptions {
         return structObj;
     }
 
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("FixedDecimalFormatterOptions._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = FixedDecimalFormatterOptions._fromFFI(...arguments);  
+
+           
+        this.#groupingStrategy = structObj.groupingStrategy;
+           
+        this.#someOtherConfig = structObj.someOtherConfig;
+           
+    }
+
     static _createFromFFI(internalConstructor, ptr) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("FixedDecimalFormatterOptions._createFromFFI is not meant to be called externally. Please use the default constructor.");
@@ -112,7 +126,7 @@ export class FixedDecimalFormatterOptions {
 
         const structObj = FixedDecimalFormatterOptions._fromFFI(...arguments);
         
-        let self = new FixedDecimalFormatterOptions(internalConstructor, structObj);
+        let self = new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
         return self;
     }
 
@@ -123,7 +137,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            FixedDecimalFormatterOptions._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            this.#setFieldsFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -131,9 +145,9 @@ export class FixedDecimalFormatterOptions {
         }
     }
 
-    constructor() {
-        if (arguments[0] === diplomatRuntime.internalConstructor) {
-            this.#internalConstructor(...arguments);
+    constructor(exposeConstructor, ...args) {if (exposeConstructor === diplomatRuntime.exposeConstructor) {
+            this.#internalConstructor(...args);
+        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {this.#internalConstructor(...arguments);
         } else {
             this.#defaultConstructor(...arguments);
         }

@@ -60,7 +60,7 @@ export class BorrowedFieldsReturning {
             return obj;
         }
 
-        return new BorrowedFieldsReturning(obj);
+        return BorrowedFieldsReturning.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -81,6 +81,18 @@ export class BorrowedFieldsReturning {
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr, aEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("BorrowedFieldsReturning._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = BorrowedFieldsReturning._fromFFI(...arguments);  
+
+           
+        this.#bytes = structObj.bytes;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr, aEdges) {

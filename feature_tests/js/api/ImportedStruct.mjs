@@ -76,7 +76,7 @@ export class ImportedStruct {
             return obj;
         }
 
-        return new ImportedStruct(obj);
+        return ImportedStruct.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -106,6 +106,20 @@ export class ImportedStruct {
         structObj.count = countDeref;
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("ImportedStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = ImportedStruct._fromFFI(...arguments);  
+
+           
+        this.#foo = structObj.foo;
+           
+        this.#count = structObj.count;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {

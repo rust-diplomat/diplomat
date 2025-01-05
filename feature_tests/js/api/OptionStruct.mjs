@@ -89,7 +89,7 @@ export class OptionStruct {
             return obj;
         }
 
-        return new OptionStruct(obj);
+        return OptionStruct.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -124,6 +124,24 @@ export class OptionStruct {
         structObj.d = dDeref === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, dDeref, []);
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = OptionStruct._fromFFI(...arguments);  
+
+           
+        this.#a = structObj.a;
+           
+        this.#b = structObj.b;
+           
+        this.#c = structObj.c;
+           
+        this.#d = structObj.d;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {

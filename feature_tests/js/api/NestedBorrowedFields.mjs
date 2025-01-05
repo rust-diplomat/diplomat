@@ -94,7 +94,7 @@ export class NestedBorrowedFields {
             return obj;
         }
 
-        return new NestedBorrowedFields(obj);
+        return NestedBorrowedFields.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -121,6 +121,22 @@ export class NestedBorrowedFields {
         structObj.bounds2 = BorrowedFieldsWithBounds._createFromFFI(diplomatRuntime.internalConstructor, bounds2Deref, zEdges, zEdges, zEdges);
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("NestedBorrowedFields._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = NestedBorrowedFields._fromFFI(...arguments);  
+
+           
+        this.#fields = structObj.fields;
+           
+        this.#bounds = structObj.bounds;
+           
+        this.#bounds2 = structObj.bounds2;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {

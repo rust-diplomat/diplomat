@@ -86,7 +86,7 @@ export class OptionInputStruct {
             return obj;
         }
 
-        return new OptionInputStruct(obj);
+        return OptionInputStruct.FromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -118,6 +118,22 @@ export class OptionInputStruct {
         structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
 
         return structObj;
+    }
+
+    #setFieldsFromFFI(internalConstructor, ptr) {
+        if (internalConstructor !== diplomatRuntime.internalConstructor) {
+            throw new Error("OptionInputStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
+        }
+
+        const structObj = OptionInputStruct._fromFFI(...arguments);  
+
+           
+        this.#a = structObj.a;
+           
+        this.#b = structObj.b;
+           
+        this.#c = structObj.c;
+           
     }
 
     static _createFromFFI(internalConstructor, ptr) {
