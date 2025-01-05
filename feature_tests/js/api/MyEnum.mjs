@@ -39,7 +39,7 @@ export class MyEnum {
         let intVal = MyEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return MyEnum.#objectValues[intVal];
         }
 

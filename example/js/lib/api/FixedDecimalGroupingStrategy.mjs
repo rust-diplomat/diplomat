@@ -37,7 +37,7 @@ export class FixedDecimalGroupingStrategy {
         let intVal = FixedDecimalGroupingStrategy.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return FixedDecimalGroupingStrategy.#objectValues[intVal];
         }
 

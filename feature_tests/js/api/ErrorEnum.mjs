@@ -35,7 +35,7 @@ export class ErrorEnum {
         let intVal = ErrorEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return ErrorEnum.#objectValues[intVal];
         }
 

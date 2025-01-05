@@ -36,7 +36,7 @@ export class UnimportedEnum {
         let intVal = UnimportedEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return UnimportedEnum.#objectValues[intVal];
         }
 

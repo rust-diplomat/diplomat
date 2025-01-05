@@ -36,7 +36,7 @@ export class RenamedAttrEnum {
         let intVal = RenamedAttrEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return RenamedAttrEnum.#objectValues[intVal];
         }
 

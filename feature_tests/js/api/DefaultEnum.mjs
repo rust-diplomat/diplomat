@@ -35,7 +35,7 @@ export class DefaultEnum {
         let intVal = DefaultEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return DefaultEnum.#objectValues[intVal];
         }
 

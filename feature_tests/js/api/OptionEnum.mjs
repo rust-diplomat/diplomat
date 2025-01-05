@@ -35,7 +35,7 @@ export class OptionEnum {
         let intVal = OptionEnum.#values.get(value);
 
         // Nullish check, checks for null or undefined
-        if (intVal == null) {
+        if (intVal != null) {
             return OptionEnum.#objectValues[intVal];
         }
 
