@@ -53,6 +53,7 @@ pub mod ffi {
             Ok(i)
         }
 
+        #[diplomat::attr(not(supports = custom_errors), disable)]
         pub fn new_failing_int(i: i32) -> Result<(), i32> {
             Err(i)
         }
