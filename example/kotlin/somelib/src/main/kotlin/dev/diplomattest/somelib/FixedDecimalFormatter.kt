@@ -46,7 +46,7 @@ class FixedDecimalFormatter internal constructor (
                 CLEANER.register(returnOpaque, FixedDecimalFormatter.FixedDecimalFormatterCleaner(handle, FixedDecimalFormatter.lib));
                 return returnOpaque.ok()
             } else {
-                return Unit.primitive_err()
+                return UnitError().err()
             }
         }
     }

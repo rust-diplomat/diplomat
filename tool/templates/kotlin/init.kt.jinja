@@ -333,10 +333,6 @@ internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
 
-internal fun <T, E> E.primitive_err(): Result<T> {
-    return Result.failure(RuntimeException("Received error $this"))
-}
-
 internal fun <T> Throwable.err(): Result<T> {
     return Result.failure(this)
 }
@@ -435,6 +431,12 @@ class BooleanError internal constructor(internal val value: Boolean): Exception(
     }
 
     fun getValue(): Boolean = value
+}
+
+class UnitError internal constructor(): Exception("Rust error result for Unit") {
+    override fun toString(): String {
+        return "Unit error"
+    }
 }
            
 {% for native_result in native_results -%}

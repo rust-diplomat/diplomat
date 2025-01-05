@@ -15,6 +15,7 @@ internal interface ResultOpaqueLib: Library {
     fun ResultOpaque_new_failing_struct(i: Int): ResultPointerErrorStructNative
     fun ResultOpaque_new_in_err(i: Int): ResultUnitPointer
     fun ResultOpaque_new_int(i: Int): ResultIntUnit
+    fun ResultOpaque_new_failing_int(i: Int): ResultUnitInt
     fun ResultOpaque_new_in_enum_err(i: Int): ResultIntPointer
     fun ResultOpaque_assert_integer(handle: Pointer, i: Int): Unit
 }
@@ -46,7 +47,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
+                return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
         
@@ -60,7 +61,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
+                return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
         
@@ -74,7 +75,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return ErrorEnum.fromNative(returnVal.union.err).primitive_err()
+                return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
         
@@ -88,7 +89,7 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                return Unit.primitive_err()
+                return UnitError().err()
             }
         }
         
@@ -128,7 +129,17 @@ class ResultOpaque internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok).ok()
             } else {
-                return Unit.primitive_err()
+                return UnitError().err()
+            }
+        }
+        
+        fun newFailingInt(i: Int): Result<Unit> {
+            
+            val returnVal = lib.ResultOpaque_new_failing_int(i);
+            if (returnVal.isOk == 1.toByte()) {
+                return Unit.ok()
+            } else {
+                return IntError(returnVal.union.err).err()
             }
         }
         
@@ -136,7 +147,7 @@ class ResultOpaque internal constructor (
             
             val returnVal = lib.ResultOpaque_new_in_enum_err(i);
             if (returnVal.isOk == 1.toByte()) {
-                return ErrorEnum.fromNative(returnVal.union.ok).ok()
+                return (ErrorEnum.fromNative(returnVal.union.ok)).ok()
             } else {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.err 
