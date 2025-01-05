@@ -4,7 +4,9 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, IntType, LifetimeEnv, Method, OpaqueOwner, PrimitiveType, ReturnType, ReturnableStructDef, SelfType, SpecialMethod, StructPathLike, SuccessType, TyPosition, Type
+    self, borrowing_param::StructBorrowInfo, IntType, LifetimeEnv, Method, OpaqueOwner,
+    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, SpecialMethod, StructPathLike,
+    SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -138,7 +140,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         ty: &Type<P>,
         variable_name: Cow<'tcx, str>,
         lifetime_environment: &LifetimeEnv,
-        usage : Option<SpecialMethod>
+        usage: Option<SpecialMethod>,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => variable_name,
@@ -173,7 +175,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                 let func_call = match usage {
                     Some(SpecialMethod::Constructor) => "this.#internalConstructor".to_string(),
-                    _ => format!("new {type_name}")
+                    _ => format!("new {type_name}"),
                 };
 
                 if op.is_optional() {
@@ -208,7 +210,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                 let create_from = match usage {
                     Some(SpecialMethod::Constructor) => format!("this.#setFieldsFromFFI"),
-                    _ => format!("{type_name}._createFromFFI")
+                    _ => format!("{type_name}._createFromFFI"),
                 };
 
                 let type_def = self.tcx.resolve_type(id);
@@ -224,7 +226,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         match usage {
                             Some(SpecialMethod::Constructor) => format!("new {type_name}(diplomatRuntime.exposeConstructor, "),
                             _ => format!("new {type_name}(")
-                        }                        
+                        }
                         ).into()
                     }
                     hir::TypeDef::OutStruct(..) => {
@@ -444,9 +446,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         "{}{};",
                         match method.attrs.special_method {
                             Some(hir::SpecialMethod::Constructor) => "",
-                            _ => "return "
+                            _ => "return ",
                         },
-                        self.gen_c_to_js_for_type(o, result.into(), &method.lifetime_env, method.attrs.special_method.clone())
+                        self.gen_c_to_js_for_type(
+                            o,
+                            result.into(),
+                            &method.lifetime_env,
+                            method.attrs.special_method.clone()
+                        )
                     )
                     .into(),
                 )
@@ -499,8 +506,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         );
 
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        let cause =
-                            self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env, method.attrs.special_method.clone());
+                        let cause = self.gen_c_to_js_for_type(
+                            e,
+                            receive_deref,
+                            &method.lifetime_env,
+                            method.attrs.special_method.clone(),
+                        );
                         // We still require an out buffer even if our error types is empty
                         (!fields_empty || (is_out && !success_empty), format!(
                         "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
@@ -591,7 +602,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             );
                             format!(
                                 "{err_check}return {};",
-                                self.gen_c_to_js_for_type(o, ptr_deref, &method.lifetime_env, method.attrs.special_method.clone())
+                                self.gen_c_to_js_for_type(
+                                    o,
+                                    ptr_deref,
+                                    &method.lifetime_env,
+                                    method.attrs.special_method.clone()
+                                )
                             )
                         }
                         _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
