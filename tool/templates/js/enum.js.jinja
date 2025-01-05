@@ -38,9 +38,9 @@
 
         throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
     }
-{% else if !overrides_constructor %}
+{%- else if !overrides_constructor %}
     constructor(value : {{type_name}} | string);
-{% endif ~%}
+{%- endif %}
 
     static FromValue(value {%- if typescript %} : {{type_name}} | string {%- endif %}) {%- if typescript %} : {{type_name}}; {% else %} {
         return new {{type_name}}({% if overrides_constructor -%} diplomatRuntime.exposeConstructor, {% endif -%} value);
@@ -75,9 +75,4 @@
     static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = {{type_name}}.#objectValues[{{ variant.discriminant }}] {%- endif -%};
 {%- endfor -%}
 
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
 {% endblock %}
