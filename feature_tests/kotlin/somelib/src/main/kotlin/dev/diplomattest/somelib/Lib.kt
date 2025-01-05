@@ -331,14 +331,112 @@ internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
 
-internal fun <T, E> E.primitive_err(): Result<T> {
-    return Result.failure(RuntimeException("Received error $this"))
-}
-
 internal fun <T> Throwable.err(): Result<T> {
     return Result.failure(this)
 }
 
+class UByteError internal constructor(internal val value: UByte): Exception("Rust error result for UByte") {
+    override fun toString(): String {
+        return "UByte error with value " + value
+    }
+
+    fun getValue(): UByte = value
+}
+
+class ByteError internal constructor(internal val value: Byte): Exception("Rust error result for Byte") {
+    override fun toString(): String {
+        return "Byte error with value " + value
+    }
+
+    fun getValue(): Byte = value
+}
+
+class UShortError internal constructor(internal val value: UShort): Exception("Rust error result for UShort") {
+    override fun toString(): String {
+        return "UShort error with value " + value
+    }
+
+    fun getValue(): UShort = value
+}
+
+class ShortError internal constructor(internal val value: Short): Exception("Rust error result for Short") {
+    override fun toString(): String {
+        return "Short error with value " + value
+    }
+
+    fun getValue(): Short = value
+}
+
+class UIntError internal constructor(internal val value: UInt): Exception("Rust error result for UInt") {
+    override fun toString(): String {
+        return "UInt error with value " + value
+    }
+
+    fun getValue(): UInt = value
+}
+
+class IntError internal constructor(internal val value: Int): Exception("Rust error result for Int") {
+    override fun toString(): String {
+        return "Int error with value " + value
+    }
+
+    fun getValue(): Int = value
+}
+
+class ULongError internal constructor(internal val value: ULong): Exception("Rust error result for ULong") {
+    override fun toString(): String {
+        return "ULong error with value " + value
+    }
+
+    fun getValue(): ULong = value
+}
+
+class LongError internal constructor(internal val value: Long): Exception("Rust error result for Long") {
+    override fun toString(): String {
+        return "Long error with value " + value
+    }
+
+    fun getValue(): Long = value
+}
+
+class FloatError internal constructor(internal val value: Float): Exception("Rust error result for Float") {
+    override fun toString(): String {
+        return "Float error with value " + value
+    }
+
+    fun getValue(): Float = value
+}
+
+class DoubleError internal constructor(internal val value: Double): Exception("Rust error result for Double") {
+    override fun toString(): String {
+        return "Double error with value " + value
+    }
+
+    fun getValue(): Double = value
+}
+
+class CharError internal constructor(internal val value: Char): Exception("Rust error result for Char") {
+    override fun toString(): String {
+        return "Char error with value " + value
+    }
+
+    fun getValue(): Char = value
+}
+
+class BooleanError internal constructor(internal val value: Boolean): Exception("Rust error result for Boolean") {
+    override fun toString(): String {
+        return "Boolean error with value " + value
+    }
+
+    fun getValue(): Boolean = value
+}
+
+class UnitError internal constructor(): Exception("Rust error result for Unit") {
+    override fun toString(): String {
+        return "Unit error"
+    }
+}
+           
 internal class ResultIntUnitUnion: Union() {
     @JvmField
     internal var ok: Int = 0
@@ -421,6 +519,23 @@ internal class ResultPointerUnitUnion: Union() {
 class ResultPointerUnit: Structure(), Structure.ByValue  {
     @JvmField
     internal var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultUnitIntUnion: Union() {
+    @JvmField
+    internal var err: Int = 0
+}
+
+class ResultUnitInt: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitIntUnion = ResultUnitIntUnion()
 
     @JvmField
     internal var isOk: Byte = 0

@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2191
+assertion_line: 2217
 expression: struct_code
 ---
 package dev.gigapixel.somelib
@@ -160,7 +160,7 @@ class MyNativeStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok > 0).ok()
             } else {
-                return Unit.primitive_err()
+                return UnitError().err()
             }
         }
         
@@ -170,7 +170,7 @@ class MyNativeStruct internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return (returnVal.union.ok.toUByte()).ok()
             } else {
-                return Unit.primitive_err()
+                return UnitError().err()
             }
         }
     }

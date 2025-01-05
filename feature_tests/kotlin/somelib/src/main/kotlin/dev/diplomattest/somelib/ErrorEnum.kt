@@ -29,3 +29,10 @@ enum class ErrorEnum {
         }
     }
 }
+class ErrorEnumError internal constructor(internal val value: ErrorEnum): Exception("Rust error result for ErrorEnum") {
+    override fun toString(): String {
+        return "ErrorEnum error with value " + value
+    }
+
+    fun getValue(): ErrorEnum = value
+}

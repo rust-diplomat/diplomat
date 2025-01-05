@@ -249,6 +249,27 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_primitive_error_type(&self, prim: PrimitiveType) -> Cow<str> {
+        match prim {
+            PrimitiveType::Bool => "BoolError".into(),
+            PrimitiveType::Int(IntType::U8) => "UByteError".into(),
+            PrimitiveType::Int(IntType::I8) => "ByteError".into(),
+            PrimitiveType::Int(IntType::U16) => "UShortError".into(),
+            PrimitiveType::Int(IntType::I16) => "ShortError".into(),
+            PrimitiveType::Int(IntType::U32) => "UIntError".into(),
+            PrimitiveType::Int(IntType::I32) => "IntError".into(),
+            PrimitiveType::Int(IntType::U64) => "ULongError".into(),
+            PrimitiveType::Int(IntType::I64) => "LongError".into(),
+            PrimitiveType::Byte => "ByteError".into(),
+            PrimitiveType::IntSize(IntSizeType::Isize) => "LongError".into(),
+            PrimitiveType::IntSize(IntSizeType::Usize) => "ULongError".into(),
+            PrimitiveType::Float(FloatType::F32) => "FloatError".into(),
+            PrimitiveType::Float(FloatType::F64) => "DoubleError".into(),
+            PrimitiveType::Char => "CharError".into(),
+            PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
+        }
+    }
+
     pub fn fmt_struct_field_native_to_kt<'a, P: TyPosition>(
         &'a self,
         field_name: &'a str,

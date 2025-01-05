@@ -687,13 +687,16 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &'d str,
+        err_cast: &'d str,
         o: &'d OutType,
         use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
-                format!("return ({val_name}{maybe_unsized_modifier}){return_type_modifier}")
+                format!(
+                    "return {err_cast}({val_name}{maybe_unsized_modifier}){return_type_modifier}"
+                )
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
@@ -719,7 +722,7 @@ return string{return_type_modifier}"#
             Type::Enum(enm) => {
                 let return_type = enm.resolve(self.tcx);
                 format!(
-                    "return {}.fromNative({val_name}){return_type_modifier}",
+                    "return {err_cast}({}.fromNative({val_name})){return_type_modifier}",
                     return_type.name
                 )
             }
@@ -812,6 +815,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 val_name,
                 return_type_postfix,
+                "", // error cast
                 o,
                 use_finalizers_not_cleaners,
             ),
@@ -852,31 +856,41 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
-                            match err {
-                                OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
-                                    let resolved = self.tcx.resolve_opaque(*id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::Struct(path)) => {
-                                    let resolved = self.tcx.resolve_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
-                                    let resolved = self.tcx.resolve_out_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
+                        match err {
+                            OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
+                                let resolved = self.tcx.resolve_opaque(*id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
                                 }
-                                _ => {}
+                            },
+                            OutType::Struct(ReturnableStructPath::Struct(path)) => {
+                                let resolved = self.tcx.resolve_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
+                            },
+                            OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
+                                let resolved = self.tcx.resolve_out_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
                             }
-                            ".err()"
+                            Type::Enum(enm) => {
+                                let resolved = enm.resolve(self.tcx);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                            }
+                            _ => {}
+                        }
+                        let err_converter = ".err()";
+                        let err_cast = if let Type::Primitive(prim) = err {
+                            self.formatter.fmt_primitive_error_type(*prim)
+                        } else if let Type::Enum(enm) = err {
+                            let return_type = enm.resolve(self.tcx);
+                            (return_type.name.to_string() + "Error").into()
                         } else {
-                            ".primitive_err()"
+                            "".into()
                         };
 
                         self.gen_out_type_return_conversion(
@@ -885,11 +899,12 @@ val intermediateOption = {val_name}.option() ?: return null
                             cleanups,
                             "returnVal.union.err",
                             err_converter,
+                            &err_cast,
                             err,
                             use_finalizers_not_cleaners,
                         )
                     })
-                    .unwrap_or_else(|| "return Unit.primitive_err()".into());
+                    .unwrap_or_else(|| "return UnitError().err()".into());
 
                 #[derive(Template)]
                 #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
@@ -1798,6 +1813,7 @@ returnVal.option() ?: return null
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
             callback_params: &'d [CallbackParamInfo],
+            is_custom_error: bool,
             docs: String,
         }
 
@@ -1813,6 +1829,7 @@ returnVal.option() ?: return null
             native_methods: native_methods.as_ref(),
             callback_params: self.callback_params.as_ref(),
             docs: self.formatter.fmt_docs(&ty.docs),
+            is_custom_error: ty.attrs.custom_errors,
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));

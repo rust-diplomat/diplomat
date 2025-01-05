@@ -51,7 +51,7 @@ class OptionString internal constructor (
             val returnString = DW.writeToString(write)
             return returnString.ok()
         } else {
-            return Unit.primitive_err()
+            return UnitError().err()
         }
     }
     

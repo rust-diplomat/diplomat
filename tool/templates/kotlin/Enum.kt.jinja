@@ -80,3 +80,13 @@ enum class {{type_name}}
     {{m|indent(4)}}
 {%- endfor %}
 }
+
+{%- if is_custom_error %}
+class {{type_name}}Error internal constructor(internal val value: {{type_name}}): Exception("Rust error result for {{type_name}}") {
+    override fun toString(): String {
+        return "{{type_name}} error with value " + value
+    }
+
+    fun getValue(): {{type_name}} = value
+}
+{%- endif %}
