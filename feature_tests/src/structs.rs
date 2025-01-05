@@ -43,6 +43,11 @@ pub mod ffi {
         D(i32, ImportedStruct),
     }
 
+    pub enum DefaultEnum {
+        A,
+        B
+    }
+
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -190,6 +195,13 @@ pub mod ffi {
                     MyOpaqueEnum::D(..) => "D",
                 }
             );
+        }
+    }
+
+    impl DefaultEnum {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> DefaultEnum {
+            DefaultEnum::A
         }
     }
 
