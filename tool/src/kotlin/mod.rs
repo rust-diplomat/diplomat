@@ -722,7 +722,7 @@ return string{return_type_modifier}"#
             Type::Enum(enm) => {
                 let return_type = enm.resolve(self.tcx);
                 format!(
-                    "return {}.fromNative({val_name}){return_type_modifier}",
+                    "return {err_cast}({}.fromNative({val_name})){return_type_modifier}",
                     return_type.name
                 )
             }
@@ -856,35 +856,39 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        // let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
-                            match err {
-                                OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
-                                    let resolved = self.tcx.resolve_opaque(*id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::Struct(path)) => {
-                                    let resolved = self.tcx.resolve_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
-                                    let resolved = self.tcx.resolve_out_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
+                        match err {
+                            OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
+                                let resolved = self.tcx.resolve_opaque(*id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
                                 }
-                                _ => {}
+                            },
+                            OutType::Struct(ReturnableStructPath::Struct(path)) => {
+                                let resolved = self.tcx.resolve_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
+                            },
+                            OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
+                                let resolved = self.tcx.resolve_out_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
                             }
-                        //     ".err()"
-                        // } else {
-                        //     ".err()"
-                        // };
+                            Type::Enum(enm) => {
+                                let resolved = enm.resolve(self.tcx);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                            }
+                            _ => {}
+                        }
                         let err_converter = ".err()";
                         let err_cast = if let Type::Primitive(prim) = err {
                             self.formatter.fmt_primitive_error_type(*prim)
+                        } else if let Type::Enum(enm) = err {
+                            let return_type = enm.resolve(self.tcx);
+                            (return_type.name.to_string() + "Error").into()
                         } else {
                             "".into()
                         };
@@ -1809,6 +1813,7 @@ returnVal.option() ?: return null
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
             callback_params: &'d [CallbackParamInfo],
+            is_custom_error: bool,
             docs: String,
         }
 
@@ -1824,6 +1829,7 @@ returnVal.option() ?: return null
             native_methods: native_methods.as_ref(),
             callback_params: self.callback_params.as_ref(),
             docs: self.formatter.fmt_docs(&ty.docs),
+            is_custom_error: ty.attrs.custom_errors,
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
