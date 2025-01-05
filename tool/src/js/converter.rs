@@ -209,7 +209,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 }
 
                 let create_from = match usage {
-                    Some(SpecialMethod::Constructor) => format!("this.#setFieldsFromFFI"),
+                    Some(SpecialMethod::Constructor) => "this.#setFieldsFromFFI".into(),
                     _ => format!("{type_name}._createFromFFI"),
                 };
 
