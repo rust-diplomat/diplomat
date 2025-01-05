@@ -7,7 +7,6 @@ export class ErrorEnum {
 	
     constructor(value : ErrorEnum | string);
 
-
     static FromValue(value : ErrorEnum | string) : ErrorEnum; 
 
     get value() : string;
@@ -16,5 +15,4 @@ export class ErrorEnum {
 
     static Foo : ErrorEnum;
     static Bar : ErrorEnum;
-
 }

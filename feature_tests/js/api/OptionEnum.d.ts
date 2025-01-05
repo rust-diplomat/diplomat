@@ -7,7 +7,6 @@ export class OptionEnum {
 	
     constructor(value : OptionEnum | string);
 
-
     static FromValue(value : OptionEnum | string) : OptionEnum; 
 
     get value() : string;
@@ -16,5 +15,4 @@ export class OptionEnum {
 
     static Foo : OptionEnum;
     static Bar : OptionEnum;
-
 }

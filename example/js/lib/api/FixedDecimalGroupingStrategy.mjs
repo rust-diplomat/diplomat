@@ -44,7 +44,6 @@ export class FixedDecimalGroupingStrategy {
         throw TypeError(value + " is not a FixedDecimalGroupingStrategy and does not correspond to any of its enumerator values.");
     }
 
-
     static FromValue(value) {
         return new FixedDecimalGroupingStrategy(value);
     }
@@ -67,5 +66,4 @@ export class FixedDecimalGroupingStrategy {
     static Never = FixedDecimalGroupingStrategy.#objectValues[1];
     static Always = FixedDecimalGroupingStrategy.#objectValues[2];
     static Min2 = FixedDecimalGroupingStrategy.#objectValues[3];
-
 }

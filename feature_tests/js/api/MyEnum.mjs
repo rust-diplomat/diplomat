@@ -46,7 +46,6 @@ export class MyEnum {
         throw TypeError(value + " is not a MyEnum and does not correspond to any of its enumerator values.");
     }
 
-
     static FromValue(value) {
         return new MyEnum(value);
     }
@@ -77,27 +76,6 @@ export class MyEnum {
     static D = MyEnum.#objectValues[1];
     static E = MyEnum.#objectValues[2];
     static F = MyEnum.#objectValues[3];
-
-    intoValue() {
-        const result = wasm.MyEnum_into_value(this.ffiValue);
-    
-        try {
-            return result;
-        }
-        
-        finally {}
-    }
-
-    static getA() {
-        const result = wasm.MyEnum_get_a();
-    
-        try {
-            return new MyEnum(diplomatRuntime.internalConstructor, result);
-        }
-        
-        finally {}
-    }
-
 
     intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);

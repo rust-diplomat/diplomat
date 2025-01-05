@@ -88,4 +88,6 @@ export { ErrorEnum } from "./ErrorEnum"
 
 export { ContiguousEnum } from "./ContiguousEnum"
 
+export { DefaultEnum } from "./DefaultEnum"
+
 export { MyEnum } from "./MyEnum"

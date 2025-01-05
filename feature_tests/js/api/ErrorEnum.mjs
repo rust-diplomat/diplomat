@@ -42,7 +42,6 @@ export class ErrorEnum {
         throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
     }
 
-
     static FromValue(value) {
         return new ErrorEnum(value);
     }
@@ -61,5 +60,4 @@ export class ErrorEnum {
 
     static Foo = ErrorEnum.#objectValues[0];
     static Bar = ErrorEnum.#objectValues[1];
-
 }

@@ -44,7 +44,6 @@ export class ContiguousEnum {
         throw TypeError(value + " is not a ContiguousEnum and does not correspond to any of its enumerator values.");
     }
 
-
     static FromValue(value) {
         return new ContiguousEnum(value);
     }
@@ -67,5 +66,4 @@ export class ContiguousEnum {
     static D = ContiguousEnum.#objectValues[1];
     static E = ContiguousEnum.#objectValues[2];
     static F = ContiguousEnum.#objectValues[3];
-
 }

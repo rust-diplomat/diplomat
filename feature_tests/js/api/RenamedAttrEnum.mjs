@@ -43,7 +43,6 @@ export class RenamedAttrEnum {
         throw TypeError(value + " is not a RenamedAttrEnum and does not correspond to any of its enumerator values.");
     }
 
-
     static FromValue(value) {
         return new RenamedAttrEnum(value);
     }
@@ -64,5 +63,4 @@ export class RenamedAttrEnum {
     static A = RenamedAttrEnum.#objectValues[0];
     static B = RenamedAttrEnum.#objectValues[1];
     static Renamed = RenamedAttrEnum.#objectValues[2];
-
 }

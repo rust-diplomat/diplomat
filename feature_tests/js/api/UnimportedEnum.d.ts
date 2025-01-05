@@ -7,7 +7,6 @@ export class UnimportedEnum {
 	
     constructor(value : UnimportedEnum | string);
 
-
     static FromValue(value : UnimportedEnum | string) : UnimportedEnum; 
 
     get value() : string;
@@ -17,5 +16,4 @@ export class UnimportedEnum {
     static A : UnimportedEnum;
     static B : UnimportedEnum;
     static C : UnimportedEnum;
-
 }
