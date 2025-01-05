@@ -12,6 +12,8 @@ pub struct Trait {
     pub methods: Vec<TraitMethod>,
     pub docs: Docs,
     pub attrs: Attrs,
+    pub is_sync: bool,
+    pub is_send: bool,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -105,6 +107,33 @@ impl Trait {
                 });
             }
         }
+        let (mut is_sync, mut is_send) = (false, false);
+        for supertrait in &trt.supertraits {
+            if let syn::TypeParamBound::Trait(syn::TraitBound {
+                path: syn::Path { segments, .. },
+                ..
+            }) = supertrait
+            {
+                let mut seg_iter = segments.iter();
+                if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
+                    if *ident != "std" {
+                        continue;
+                    }
+                }
+                if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
+                    if *ident != "marker" {
+                        continue;
+                    }
+                }
+                if let Some(syn::PathSegment { ident, .. }) = seg_iter.next() {
+                    if *ident == "Send" {
+                        is_send = true;
+                    } else if *ident == "Sync" {
+                        is_sync = true;
+                    }
+                }
+            }
+        }
 
         Self {
             name: (&trt.ident).into(),
@@ -112,6 +141,8 @@ impl Trait {
             docs: Docs::from_attrs(&trt.attrs),
             lifetimes: LifetimeEnv::from_trait(trt), // TODO
             attrs,
+            is_send,
+            is_sync,
         }
     }
 }
