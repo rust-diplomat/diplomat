@@ -238,7 +238,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Type::Enum(ref enum_path) => {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
+                format!("{}(diplomatRuntime.internalConstructor, {variable_name})",
+                    match usage {
+                        Some(SpecialMethod::Constructor) => "this.#internalConstructor".into(),
+                        _ => format!("new {type_name}")
+                    }
+                )
                     .into()
             }
             Type::Slice(slice) => {
@@ -443,11 +448,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 }
                 Some(
                     format!(
-                        "{}{};",
-                        match method.attrs.special_method {
-                            Some(hir::SpecialMethod::Constructor) => "",
-                            _ => "return ",
-                        },
+                        "return {};",
                         self.gen_c_to_js_for_type(
                             o,
                             result.into(),
