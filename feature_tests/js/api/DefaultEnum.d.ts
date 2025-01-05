@@ -6,7 +6,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class DefaultEnum {
 	
 
-    static FromValue(value : DefaultEnum | string) : DefaultEnum; 
+    static FromValue(value : DefaultEnum | number) : DefaultEnum; 
 
     get value() : string;
 

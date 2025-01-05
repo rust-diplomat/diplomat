@@ -93,6 +93,6 @@ test("Function De-Referencing Nested Struct of One Primitive", t => {
 
 test("Verify Enum Construction", t => {
     t.is(new DefaultEnum(), DefaultEnum.A);
-    
-	t.is(DefaultEnum.FromValue("B"), DefaultEnum.B);
+
+	t.is(DefaultEnum.FromValue(1), DefaultEnum.B);
 });
