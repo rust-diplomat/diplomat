@@ -32,7 +32,7 @@ enum class DefaultEnum {
         fun new_(): DefaultEnum {
             
             val returnVal = lib.DefaultEnum_new();
-            return DefaultEnum.fromNative(returnVal)
+            return (DefaultEnum.fromNative(returnVal))
         }
     }
 }
