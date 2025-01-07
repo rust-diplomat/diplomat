@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2403
+assertion_line: 2412
 expression: result
 ---
 package dev.gigapixel.somelib;
@@ -13,7 +13,7 @@ import com.sun.jna.Structure
 
 internal interface MyOpaqueStructLib: Library {
     fun MyOpaqueStruct_destroy(handle: Pointer)
-    fun MyOpaqueStruct_get_byte(): Byte
+    fun MyOpaqueStruct_get_byte(): FFIUint8
     fun MyOpaqueStruct_get_string_wrapper(in1: Int): Int
 }
 
@@ -22,7 +22,7 @@ class MyOpaqueStruct internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val bEdges: List<Any>,
+    internal val bEdges: List<Any?>,
     internal var finalizer_registered: Boolean = false,
 )  {
     fun registerFinalizer() {

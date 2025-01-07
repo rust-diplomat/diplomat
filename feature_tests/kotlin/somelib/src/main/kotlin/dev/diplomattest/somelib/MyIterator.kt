@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 
 internal interface MyIteratorLib: Library {
     fun namespace_MyIterator_destroy(handle: Pointer)
-    fun namespace_MyIterator_next(handle: Pointer): OptionByte
+    fun namespace_MyIterator_next(handle: Pointer): OptionFFIUint8
 }
 typealias MyIteratorIteratorItem = UByte
 
@@ -17,7 +17,7 @@ class MyIterator internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-    internal val aEdges: List<Any>,
+    internal val aEdges: List<Any?>,
 ): Iterator<UByte> {
 
     internal class MyIteratorCleaner(val handle: Pointer, val lib: MyIteratorLib) : Runnable {

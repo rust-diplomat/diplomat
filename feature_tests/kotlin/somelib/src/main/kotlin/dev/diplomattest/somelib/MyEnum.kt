@@ -45,7 +45,7 @@ enum class MyEnum(val inner: Int) {
         fun getA(): MyEnum {
             
             val returnVal = lib.MyEnum_get_a();
-            return MyEnum.fromNative(returnVal)
+            return (MyEnum.fromNative(returnVal))
         }
     }
     

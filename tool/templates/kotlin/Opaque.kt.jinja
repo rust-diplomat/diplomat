@@ -35,7 +35,7 @@ class {{type_name}} internal constructor (
     internal val selfEdges: List<Any>,
     {%- if !lifetimes.is_empty() %}
     {%- for lt in lifetimes %}
-    internal val {{lt}}Edges: List<Any>,
+    internal val {{lt}}Edges: List<Any?>,
     {%- endfor %}
     {%- endif %}
     {%- if use_finalizers_not_cleaners %}

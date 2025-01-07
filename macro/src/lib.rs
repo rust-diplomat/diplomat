@@ -545,6 +545,16 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 pub vtable: #custom_trait_vtable_type,
             }
         });
+        if custom_trait.is_send {
+            new_contents.push(syn::parse_quote! {
+                unsafe impl std::marker::Send for #custom_trait_name {}
+            });
+        }
+        if custom_trait.is_sync {
+            new_contents.push(syn::parse_quote! {
+                unsafe impl std::marker::Sync for #custom_trait_name {}
+            });
+        }
 
         // trait struct wrapper for all methods
         new_contents.push(gen_custom_trait_impl(custom_trait, &custom_trait_name));
@@ -1064,7 +1074,7 @@ mod tests {
                         y: i32,
                     }
 
-                    pub trait TesterTrait {
+                    pub trait TesterTrait: std::marker::Send {
                         fn test_trait_fn(&self, x: i32) -> i32;
                         fn test_void_trait_fn(&self);
                         fn test_struct_trait_fn(&self, s: TestingStruct) -> i32;

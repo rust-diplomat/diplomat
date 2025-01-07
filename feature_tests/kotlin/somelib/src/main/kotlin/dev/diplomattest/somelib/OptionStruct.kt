@@ -15,7 +15,7 @@ internal class OptionStructNative: Structure(), Structure.ByValue {
     @JvmField
     internal var b: Pointer? = null;
     @JvmField
-    internal var c: Int = 0;
+    internal var c: FFIUint32 = FFIUint32();
     @JvmField
     internal var d: Pointer? = null;
   

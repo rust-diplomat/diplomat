@@ -38,7 +38,7 @@ class OptionString internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionString(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
-            diplomatStrMem.close()
+            if (diplomatStrMem != null) diplomatStrMem.close()
             return returnOpaque
         }
     }
@@ -51,7 +51,7 @@ class OptionString internal constructor (
             val returnString = DW.writeToString(write)
             return returnString.ok()
         } else {
-            return Unit.primitive_err()
+            return UnitError().err()
         }
     }
     

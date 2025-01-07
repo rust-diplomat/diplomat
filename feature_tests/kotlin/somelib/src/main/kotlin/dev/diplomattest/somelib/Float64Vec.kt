@@ -20,7 +20,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
     fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
-    fun Float64Vec_get(handle: Pointer, i: Long): OptionDouble
+    fun Float64Vec_get(handle: Pointer, i: FFISizet): OptionDouble
 }
 
 class Float64Vec internal constructor (
@@ -48,7 +48,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -60,7 +60,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -72,7 +72,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -84,7 +84,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -96,7 +96,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -108,7 +108,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            if (vMem != null) vMem.close()
             return returnOpaque
         }
         
@@ -160,7 +160,7 @@ class Float64Vec internal constructor (
     
     internal fun getInternal(i: ULong): Double? {
         
-        val returnVal = lib.Float64Vec_get(handle, i.toLong());
+        val returnVal = lib.Float64Vec_get(handle, FFISizet(i));
         return returnVal.option()
     }
 

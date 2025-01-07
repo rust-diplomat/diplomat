@@ -6,6 +6,7 @@ pub mod ffi {
     pub struct ResultOpaque(i32);
 
     #[derive(PartialEq, Eq, Debug)]
+    #[diplomat::attr(auto, error)]
     pub enum ErrorEnum {
         Foo,
         Bar,
@@ -50,6 +51,11 @@ pub mod ffi {
 
         pub fn new_int(i: i32) -> Result<i32, ()> {
             Ok(i)
+        }
+
+        #[diplomat::attr(not(supports = custom_errors), disable)]
+        pub fn new_failing_int(i: i32) -> Result<(), i32> {
+            Err(i)
         }
 
         pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, Box<ResultOpaque>> {

@@ -64,123 +64,176 @@ internal class DiplomatJVMRuntime {
 
 internal object PrimitiveArrayTools {
 
-    fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
-        val mem = Memory(boolArray.size.toLong())
-        val ptr = mem.share(0)
+    fun allocateMemory(size: Long): Memory? {
+        // we can't use the Memory constructor for a memory of size 0
+        // so, if the size is zero, then we return null
+        if (size > 0L)
+            return Memory(size)
+        else
+            return null
+    }
+
+    fun native(boolArray: BooleanArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(boolArray.size.toLong())
         val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
-        ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(byteArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
-    fun native(byteArray: ByteArray):  Pair<Memory, Slice>{
-        val mem = Memory(byteArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, byteArray, 0, byteArray.size)
+    fun native(byteArray: ByteArray):  Pair<Memory?, Slice> {
+        val mem = allocateMemory(byteArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(byteArray.size.toLong())
+        slice.data = if (mem != null) { 
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uByteArray: UByteArray): Pair<Memory, Slice> {
+    fun native(uByteArray: UByteArray): Pair<Memory?, Slice> {
         val byteArray = uByteArray.asByteArray()
-        val mem = Memory(byteArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, byteArray, 0, byteArray.size)
+        val mem = allocateMemory(byteArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(uByteArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(uByteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
-    fun native(shortArray: ShortArray): Pair<Memory, Slice> {
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+    fun native(shortArray: ShortArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(shortArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(shortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uShortArray: UShortArray): Pair<Memory, Slice> {
+    fun native(uShortArray: UShortArray): Pair<Memory?, Slice> {
         val shortArray = uShortArray.asShortArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(uShortArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(uShortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
-    fun native(intArray: IntArray): Pair<Memory, Slice> {
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, intArray, 0, intArray.size)
+    fun native(intArray: IntArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(intArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, intArray, 0, intArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(intArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uIntArray: UIntArray): Pair<Memory, Slice> {
+    fun native(uIntArray: UIntArray): Pair<Memory?, Slice> {
         val intArray = uIntArray.asIntArray()
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, intArray, 0, intArray.size)
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(uIntArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, intArray, 0, intArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(uIntArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
 
-    fun native(longArray: LongArray): Pair<Memory, Slice> {
-        val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, longArray, 0, longArray.size)
+    fun native(longArray: LongArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(longArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, longArray, 0, longArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(longArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uLongArray: ULongArray): Pair<Memory, Slice> {
+    fun native(uLongArray: ULongArray): Pair<Memory?, Slice> {
         val shortArray = uLongArray.asLongArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(uLongArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(uLongArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
-    fun native(floatArray: FloatArray): Pair<Memory, Slice> {
-        val mem = Memory(Float.SIZE_BYTES * floatArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, floatArray, 0, floatArray.size)
+    fun native(floatArray: FloatArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Float.SIZE_BYTES * floatArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(floatArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, floatArray, 0, floatArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(floatArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
-    fun native(doubleArray: DoubleArray): Pair<Memory, Slice> {
-        val mem = Memory(Double.SIZE_BYTES * doubleArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, doubleArray, 0, doubleArray.size)
+    fun native(doubleArray: DoubleArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Double.SIZE_BYTES * doubleArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
-        slice.len = size_t(doubleArray.size.toLong())
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, doubleArray, 0, doubleArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(doubleArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -228,12 +281,12 @@ internal object PrimitiveArrayTools {
         return slice.data.getDoubleArray(0, slice.len.toInt())
     }
 
-    fun readUtf8(str: String): Pair<Memory, Slice> {
+    fun readUtf8(str: String): Pair<Memory?, Slice> {
         return native(str.toByteArray())
     }
 
     @ExperimentalUnsignedTypes
-    fun readUtf16(str: String): Pair<Memory, Slice> {
+    fun readUtf16(str: String): Pair<Memory?, Slice> {
         return native(str.map {it.code.toUShort()}.toUShortArray())
     }
 
@@ -250,11 +303,15 @@ internal object PrimitiveArrayTools {
         return charArray
     }
 
-    fun readUtf8s(array: Array<String>): Pair<List<Memory>, Slice> {
+    fun readUtf8s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
-        val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val ptr = if (mem != null) {
+            mem.share(0)
+        } else {
+            Pointer(0)
+        }
+        val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf8(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
@@ -262,15 +319,19 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = FFISizet(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
-    fun readUtf16s(array: Array<String>): Pair<List<Memory>, Slice> {
+    fun readUtf16s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
-        val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val ptr = if (mem != null) {
+            mem.share(0)
+        } else {
+            Pointer(0)
+        }
+        val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf16(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
@@ -278,7 +339,7 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = FFISizet(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
@@ -288,7 +349,7 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = FFISizet(thisLen.toULong())
             getUtf16(thisSlice)
         }
     }
@@ -299,22 +360,62 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = FFISizet(thisLen.toULong())
             getUtf8(thisSlice)
         }
     }
 }
 
-class size_t(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
-    override fun toByte(): Byte = value.toByte()
-    override fun toChar(): Char = value.toInt().toChar()
-    override fun toShort(): Short = value.toShort()
+class FFISizet(val value: ULong = 0u): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
+}
+
+class FFIIsizet(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+}
+
+class FFIUint8(val value: UByte = 0u): com.sun.jna.IntegerType(1, value.toByte().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUByte(): UByte = this.toByte().toUByte()
+    constructor(): this(0u)
+}
+
+class FFIUint16(val value: UShort = 0u): com.sun.jna.IntegerType(2, value.toShort().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUShort(): UShort = this.toShort().toUShort()
+    constructor(): this(0u)
+}
+
+class FFIUint32(val value: UInt = 0u): com.sun.jna.IntegerType(4, value.toInt().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUInt(): UInt = this.toInt().toUInt()
+    constructor(): this(0u)
+}
+
+class FFIUint64(val value: ULong = 0u): com.sun.jna.IntegerType(8, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
 }
 
 class Slice: Structure(), Structure.ByValue {
 
     @JvmField var data: Pointer = Pointer(0)// Pointer to const char
-    @JvmField var len: size_t = size_t() // size_t of 0
+    @JvmField var len: FFISizet = FFISizet() // FFISizet of 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -331,14 +432,112 @@ internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
 
-internal fun <T, E> E.primitive_err(): Result<T> {
-    return Result.failure(RuntimeException("Received error $this"))
-}
-
 internal fun <T> Throwable.err(): Result<T> {
     return Result.failure(this)
 }
 
+class UByteError internal constructor(internal val value: UByte): Exception("Rust error result for UByte") {
+    override fun toString(): String {
+        return "UByte error with value " + value
+    }
+
+    fun getValue(): UByte = value
+}
+
+class ByteError internal constructor(internal val value: Byte): Exception("Rust error result for Byte") {
+    override fun toString(): String {
+        return "Byte error with value " + value
+    }
+
+    fun getValue(): Byte = value
+}
+
+class UShortError internal constructor(internal val value: UShort): Exception("Rust error result for UShort") {
+    override fun toString(): String {
+        return "UShort error with value " + value
+    }
+
+    fun getValue(): UShort = value
+}
+
+class ShortError internal constructor(internal val value: Short): Exception("Rust error result for Short") {
+    override fun toString(): String {
+        return "Short error with value " + value
+    }
+
+    fun getValue(): Short = value
+}
+
+class UIntError internal constructor(internal val value: UInt): Exception("Rust error result for UInt") {
+    override fun toString(): String {
+        return "UInt error with value " + value
+    }
+
+    fun getValue(): UInt = value
+}
+
+class IntError internal constructor(internal val value: Int): Exception("Rust error result for Int") {
+    override fun toString(): String {
+        return "Int error with value " + value
+    }
+
+    fun getValue(): Int = value
+}
+
+class ULongError internal constructor(internal val value: ULong): Exception("Rust error result for ULong") {
+    override fun toString(): String {
+        return "ULong error with value " + value
+    }
+
+    fun getValue(): ULong = value
+}
+
+class LongError internal constructor(internal val value: Long): Exception("Rust error result for Long") {
+    override fun toString(): String {
+        return "Long error with value " + value
+    }
+
+    fun getValue(): Long = value
+}
+
+class FloatError internal constructor(internal val value: Float): Exception("Rust error result for Float") {
+    override fun toString(): String {
+        return "Float error with value " + value
+    }
+
+    fun getValue(): Float = value
+}
+
+class DoubleError internal constructor(internal val value: Double): Exception("Rust error result for Double") {
+    override fun toString(): String {
+        return "Double error with value " + value
+    }
+
+    fun getValue(): Double = value
+}
+
+class CharError internal constructor(internal val value: Char): Exception("Rust error result for Char") {
+    override fun toString(): String {
+        return "Char error with value " + value
+    }
+
+    fun getValue(): Char = value
+}
+
+class BooleanError internal constructor(internal val value: Boolean): Exception("Rust error result for Boolean") {
+    override fun toString(): String {
+        return "Boolean error with value " + value
+    }
+
+    fun getValue(): Boolean = value
+}
+
+class UnitError internal constructor(): Exception("Rust error result for Unit") {
+    override fun toString(): String {
+        return "Unit error"
+    }
+}
+           
 internal class ResultIntUnitUnion: Union() {
     @JvmField
     internal var ok: Int = 0
@@ -430,6 +629,23 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
+internal class ResultUnitIntUnion: Union() {
+    @JvmField
+    internal var err: Int = 0
+}
+
+class ResultUnitInt: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitIntUnion = ResultUnitIntUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
 internal class ResultUnitMyZstNativeUnion: Union() {
 }
 
@@ -479,26 +695,6 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 }
 
 
-internal class OptionByte: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: Byte = 0
-    
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): Byte? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
 internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: CyclicStructANative = CyclicStructANative()
@@ -539,6 +735,86 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
         }
     }
 }
+internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIIsizet = FFIIsizet()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIIsizet? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionFFISizet: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFISizet = FFISizet()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFISizet? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionFFIUint32: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint32 = FFIUint32()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint32? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionFFIUint8: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint8 = FFIUint8()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint8? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
 internal class OptionInt: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Int = 0
@@ -552,26 +828,6 @@ internal class OptionInt: Structure(), Structure.ByValue  {
     }
 
     internal fun option(): Int? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
-internal class OptionLong: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: Long = 0
-    
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): Long? {
         if (isOk == 1.toByte()) {
             return value
         } else {

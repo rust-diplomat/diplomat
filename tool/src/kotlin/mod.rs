@@ -44,6 +44,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.callbacks = true;
     a.traits = true;
     a.custom_errors = true;
+    a.traits_are_send = true;
+    a.traits_are_sync = true;
 
     a
 }
@@ -687,13 +689,16 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &'d str,
+        err_cast: &'d str,
         o: &'d OutType,
         use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
-                format!("return ({val_name}{maybe_unsized_modifier}){return_type_modifier}")
+                format!(
+                    "return {err_cast}({val_name}{maybe_unsized_modifier}){return_type_modifier}"
+                )
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
@@ -719,7 +724,7 @@ return string{return_type_modifier}"#
             Type::Enum(enm) => {
                 let return_type = enm.resolve(self.tcx);
                 format!(
-                    "return {}.fromNative({val_name}){return_type_modifier}",
+                    "return {err_cast}({}.fromNative({val_name})){return_type_modifier}",
                     return_type.name
                 )
             }
@@ -812,6 +817,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 val_name,
                 return_type_postfix,
+                "", // error cast
                 o,
                 use_finalizers_not_cleaners,
             ),
@@ -852,31 +858,41 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        let err_converter = if let OutType::Opaque(..) | OutType::Struct(..) = err {
-                            match err {
-                                OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
-                                    let resolved = self.tcx.resolve_opaque(*id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::Struct(path)) => {
-                                    let resolved = self.tcx.resolve_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                                },
-                                OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
-                                    let resolved = self.tcx.resolve_out_struct(path.tcx_id);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
+                        match err {
+                            OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
+                                let resolved = self.tcx.resolve_opaque(*id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
                                 }
-                                _ => {}
+                            },
+                            OutType::Struct(ReturnableStructPath::Struct(path)) => {
+                                let resolved = self.tcx.resolve_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
+                            },
+                            OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
+                                let resolved = self.tcx.resolve_out_struct(path.tcx_id);
+                                if !resolved.attrs.custom_errors {
+                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                }
                             }
-                            ".err()"
+                            Type::Enum(enm) => {
+                                let resolved = enm.resolve(self.tcx);
+                                    if !resolved.attrs.custom_errors {
+                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
+                                    }
+                            }
+                            _ => {}
+                        }
+                        let err_converter = ".err()";
+                        let err_cast = if let Type::Primitive(prim) = err {
+                            self.formatter.fmt_primitive_error_type(*prim)
+                        } else if let Type::Enum(enm) = err {
+                            let return_type = enm.resolve(self.tcx);
+                            (return_type.name.to_string() + "Error").into()
                         } else {
-                            ".primitive_err()"
+                            "".into()
                         };
 
                         self.gen_out_type_return_conversion(
@@ -885,11 +901,12 @@ val intermediateOption = {val_name}.option() ?: return null
                             cleanups,
                             "returnVal.union.err",
                             err_converter,
+                            &err_cast,
                             err,
                             use_finalizers_not_cleaners,
                         )
                     })
-                    .unwrap_or_else(|| "return Unit.primitive_err()".into());
+                    .unwrap_or_else(|| "return UnitError().err()".into());
 
                 #[derive(Template)]
                 #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
@@ -963,11 +980,17 @@ returnVal.option() ?: return null
 
     fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Option<Cow<'cx, str>> {
         match slice {
-            Slice::Str(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Str(Some(_), _) => {
+                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
+            }
             Slice::Str(_, _) => None,
-            Slice::Primitive(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Primitive(Some(_), _) => {
+                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
+            }
             Slice::Primitive(_, _) => None,
-            Slice::Strs(_) => Some(format!("{param_name}Mem.forEach {{it.close()}}").into()),
+            Slice::Strs(_) => {
+                Some(format!("{param_name}Mem.forEach {{if (it != null) it.close()}}").into())
+            }
             _ => todo!(),
         }
     }
@@ -1106,7 +1129,7 @@ returnVal.option() ?: return null
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
                         Some(ref ty) => (
-                            self.gen_native_type_name(ty, None, false).into(),
+                            self.gen_native_type_name(ty, None).into(),
                             match ty {
                                 Type::Enum(..) => ".toNative()",
                                 Type::Struct(..) => ".nativeStruct",
@@ -1286,7 +1309,7 @@ returnVal.option() ?: return null
 
             param_decls.push(format!(
                 "{param_name}: {}",
-                self.gen_native_type_name(&param.ty, additional_name.clone(), false),
+                self.gen_native_type_name(&param.ty, additional_name.clone()),
             ));
         }
         if let ReturnType::Infallible(SuccessType::Write)
@@ -1601,17 +1624,22 @@ returnVal.option() ?: return null
                     + (if !cur.is_empty() { ", " } else { "" })
                     + &format!("{}: {}", in_name, in_ty)
             });
-        let (native_output_type, return_modification) = match *method.output {
+        let (native_output_type, return_modification, return_cast) = match *method.output {
             Some(ref ty) => (
-                self.gen_native_type_name(ty, None, true).into(),
+                self.gen_native_type_name(ty, None).into(),
                 match ty {
                     Type::Enum(..) => ".toNative()",
                     Type::Struct(..) => ".nativeStruct",
                     _ => "",
                 }
                 .into(),
+                match ty {
+                    Type::Primitive(prim) => self.formatter.fmt_unsigned_primitive_ffi_cast(prim),
+                    _ => "",
+                }
+                .into(),
             ),
-            None => ("Unit".into(), "".into()),
+            None => ("Unit".into(), "".into(), "".into()),
         };
         TraitMethodInfo {
             name: method_name,
@@ -1621,6 +1649,7 @@ returnVal.option() ?: return null
             },
             native_output_type,
             return_modification,
+            return_cast,
             input_params_and_types: native_input_params_and_types.join(", "),
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
@@ -1798,6 +1827,7 @@ returnVal.option() ?: return null
             companion_methods: &'d [String],
             native_methods: &'d [NativeMethodInfo],
             callback_params: &'d [CallbackParamInfo],
+            is_custom_error: bool,
             docs: String,
         }
 
@@ -1813,6 +1843,7 @@ returnVal.option() ?: return null
             native_methods: native_methods.as_ref(),
             callback_params: self.callback_params.as_ref(),
             docs: self.formatter.fmt_docs(&ty.docs),
+            is_custom_error: ty.attrs.custom_errors,
         }
         .render()
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
@@ -1827,18 +1858,9 @@ returnVal.option() ?: return null
         &self,
         ty: &Type<P>,
         additional_name: Option<String>,
-        // flag to represent whether the API this type is a part of has support for unsigned types.
-        // Non-trait methods do not, because they are called through the JNA library built in Java
-        // which doesn't support unsigned types.
-        // The true fix is to use JNA `IntegerType` to represent unsigned ints:
-        // TODO: https://github.com/rust-diplomat/diplomat/issues/748
-        support_unsigned: bool,
     ) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self
-                .formatter
-                .fmt_primitive_as_ffi(prim, support_unsigned)
-                .into(),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
@@ -2021,6 +2043,7 @@ struct TraitMethodInfo {
     output_type: String,
     native_output_type: String,
     return_modification: String,
+    return_cast: String,
     non_native_params_and_types: String,
     docs: String,
 }

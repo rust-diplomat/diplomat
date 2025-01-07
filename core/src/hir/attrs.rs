@@ -874,6 +874,10 @@ pub struct BackendAttrSupport {
     pub traits: bool,
     /// Marking a user-defined type as being a valid error result type.
     pub custom_errors: bool,
+    /// Traits are safe to Send between threads (safe to mark as std::marker::Send)
+    pub traits_are_send: bool,
+    /// Traits are safe to Sync between threads (safe to mark as std::marker::Sync)
+    pub traits_are_sync: bool,
 }
 
 impl BackendAttrSupport {
@@ -901,6 +905,8 @@ impl BackendAttrSupport {
             callbacks: true,
             traits: true,
             custom_errors: true,
+            traits_are_send: true,
+            traits_are_sync: true,
         }
     }
 }
@@ -1034,6 +1040,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 callbacks,
                 traits,
                 custom_errors,
+                traits_are_send,
+                traits_are_sync,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1057,6 +1065,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 "callbacks" => callbacks,
                 "traits" => traits,
                 "custom_errors" => custom_errors,
+                "traits_are_send" => traits_are_send,
+                "traits_are_sync" => traits_are_sync,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

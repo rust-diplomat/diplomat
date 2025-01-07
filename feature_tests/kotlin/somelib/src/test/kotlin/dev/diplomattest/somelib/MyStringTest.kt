@@ -7,6 +7,7 @@ class MyStringTest {
 
     val javaStr = "下面是一句中文"
     val ukrainian = "І це українською мовою"
+    val emptyString = ""
     // this should be ancient egyptian for "his brother elder"
     // transcribed from the wikipedia article on "a tale of two brothers
     // used to verify correct function of codepoints beyond U+FFFF
@@ -27,5 +28,11 @@ class MyStringTest {
         val myString = MyString.newFromFirst(javaStrs)
 
         assertEquals(ancientEgyptian, myString.getStr())
+    }
+
+    @Test
+    fun testEmptyString() {
+        val myString = MyString.new_(emptyString)
+        assertEquals(myString.getStr(), "")
     }
 }

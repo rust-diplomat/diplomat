@@ -402,6 +402,17 @@ impl<'ast> LoweringContext<'ast> {
             &mut self.errors,
         );
 
+        if ast_trait.is_send && !self.attr_validator.attrs_supported().traits_are_send {
+            self.errors.push(LoweringError::Other(
+                "Traits are not safe to std::marker::Send in this backend".into(),
+            ));
+        }
+        if ast_trait.is_sync && !self.attr_validator.attrs_supported().traits_are_sync {
+            self.errors.push(LoweringError::Other(
+                "Traits are not safe to std::marker::Send in this backend".into(),
+            ));
+        }
+
         let fcts = if attrs.disable {
             Vec::new()
         } else {
