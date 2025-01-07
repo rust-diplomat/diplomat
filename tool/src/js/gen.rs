@@ -249,8 +249,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty,
                 format!("{field_name}Deref").into(), 
-                &struct_def.lifetimes,
-                None
+                &struct_def.lifetimes
             );
 
             let alloc = if let &hir::Type::Slice(slice) = &field.ty {

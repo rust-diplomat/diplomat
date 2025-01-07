@@ -5,7 +5,7 @@ use std::borrow::Cow;
 
 use diplomat_core::hir::{
     self, borrowing_param::StructBorrowInfo, IntType, LifetimeEnv, Method, OpaqueOwner,
-    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, SpecialMethod, StructPathLike,
+    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike,
     SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
@@ -140,7 +140,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         ty: &Type<P>,
         variable_name: Cow<'tcx, str>,
         lifetime_environment: &LifetimeEnv,
-        usage: Option<SpecialMethod>,
     ) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(..) => variable_name,
@@ -173,24 +172,19 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     }
                 }
 
-                let func_call = match usage {
-                    Some(SpecialMethod::Constructor) => "this.#internalConstructor".to_string(),
-                    _ => format!("new {type_name}"),
-                };
-
                 if op.is_optional() {
                     format!(
-                        "{variable_name} === 0 ? null : {func_call}(diplomatRuntime.internalConstructor, {variable_name}, {edges})"
+                        "{variable_name} === 0 ? null : new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})"
                     )
                     .into()
                 } else {
-                    format!("{func_call}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
+                    format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name}, {edges})").into()
                 }
             }
             Type::DiplomatOption(ref inner) => {
                 let inner_deref = self.gen_c_to_js_deref_for_type(inner, "offset".into(), 0);
                 let inner_conversion =
-                    self.gen_c_to_js_for_type(inner, "deref".into(), lifetime_environment, usage);
+                    self.gen_c_to_js_for_type(inner, "deref".into(), lifetime_environment);
                 let size = crate::js::layout::type_size_alignment(inner, self.tcx).size();
                 format!("diplomatRuntime.readOption(wasm, {variable_name}, {size}, (wasm, offset) => {{ const deref = {inner_deref}; return {inner_conversion} }})").into()
             }
@@ -208,29 +202,19 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     }
                 }
 
-                let create_from = match usage {
-                    Some(SpecialMethod::Constructor) => "this.#setFieldsFromFFI".into(),
-                    _ => format!("{type_name}._createFromFFI"),
-                };
-
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
                         format!("{type_name}.FromFields({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::Struct(..) => {
-                        format!("{create_from}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
-                        format!("{}{{}}, diplomatRuntime.internalConstructor)",
-                        match usage {
-                            Some(SpecialMethod::Constructor) => format!("new {type_name}(diplomatRuntime.exposeConstructor, "),
-                            _ => format!("new {type_name}(")
-                        }
-                        ).into()
+                        format!("new {type_name}({{}}, diplomatRuntime.internalConstructor)").into()
                     }
                     hir::TypeDef::OutStruct(..) => {
-                        format!("{create_from}(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
+                        format!("{type_name}._createFromFFI(diplomatRuntime.internalConstructor, {variable_name}{edges})").into()
                     }
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
@@ -239,11 +223,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
                 format!(
-                    "{}(diplomatRuntime.internalConstructor, {variable_name})",
-                    match usage {
-                        Some(SpecialMethod::Constructor) => "this.#internalConstructor".into(),
-                        _ => format!("new {type_name}"),
-                    }
+                    "new {type_name}(diplomatRuntime.internalConstructor, {variable_name})"
                 )
                 .into()
             }
@@ -453,8 +433,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         self.gen_c_to_js_for_type(
                             o,
                             result.into(),
-                            &method.lifetime_env,
-                            method.attrs.special_method.clone()
+                            &method.lifetime_env
                         )
                     )
                     .into(),
@@ -511,8 +490,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         let cause = self.gen_c_to_js_for_type(
                             e,
                             receive_deref,
-                            &method.lifetime_env,
-                            method.attrs.special_method.clone(),
+                            &method.lifetime_env
                         );
                         // We still require an out buffer even if our error types is empty
                         (!fields_empty || (is_out && !success_empty), format!(
@@ -607,8 +585,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                                 self.gen_c_to_js_for_type(
                                     o,
                                     ptr_deref,
-                                    &method.lifetime_env,
-                                    method.attrs.special_method.clone()
+                                    &method.lifetime_env
                                 )
                             )
                         }
