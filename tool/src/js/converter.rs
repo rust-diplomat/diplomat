@@ -5,8 +5,8 @@ use std::borrow::Cow;
 
 use diplomat_core::hir::{
     self, borrowing_param::StructBorrowInfo, IntType, LifetimeEnv, Method, OpaqueOwner,
-    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike,
-    SuccessType, TyPosition, Type,
+    PrimitiveType, ReturnType, ReturnableStructDef, SelfType, StructPathLike, SuccessType,
+    TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -222,10 +222,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Type::Enum(ref enum_path) => {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!(
-                    "new {type_name}(diplomatRuntime.internalConstructor, {variable_name})"
-                )
-                .into()
+                format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
+                    .into()
             }
             Type::Slice(slice) => {
                 let edges = match slice.lifetime() {
@@ -430,11 +428,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 Some(
                     format!(
                         "return {};",
-                        self.gen_c_to_js_for_type(
-                            o,
-                            result.into(),
-                            &method.lifetime_env
-                        )
+                        self.gen_c_to_js_for_type(o, result.into(), &method.lifetime_env)
                     )
                     .into(),
                 )
@@ -487,11 +481,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         );
 
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        let cause = self.gen_c_to_js_for_type(
-                            e,
-                            receive_deref,
-                            &method.lifetime_env
-                        );
+                        let cause =
+                            self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
                         // We still require an out buffer even if our error types is empty
                         (!fields_empty || (is_out && !success_empty), format!(
                         "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
@@ -582,11 +573,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             );
                             format!(
                                 "{err_check}return {};",
-                                self.gen_c_to_js_for_type(
-                                    o,
-                                    ptr_deref,
-                                    &method.lifetime_env
-                                )
+                                self.gen_c_to_js_for_type(o, ptr_deref, &method.lifetime_env)
                             )
                         }
                         _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
