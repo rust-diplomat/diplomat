@@ -43,7 +43,7 @@ export class FixedDecimal {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
-            return this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
+            return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {}

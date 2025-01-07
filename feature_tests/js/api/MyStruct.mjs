@@ -228,7 +228,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return this.#setFieldsFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return MyStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

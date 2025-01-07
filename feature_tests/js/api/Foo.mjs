@@ -54,7 +54,7 @@ export class Foo {
         const result = wasm.Foo_new(...xSlice.splat());
     
         try {
-            return this.#internalConstructor(diplomatRuntime.internalConstructor, result, [], aEdges);
+            return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
         
         finally {

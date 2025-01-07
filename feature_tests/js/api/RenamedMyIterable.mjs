@@ -45,7 +45,7 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_new(...xSlice.splat());
     
         try {
-            return this.#internalConstructor(diplomatRuntime.internalConstructor, result, []);
+            return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {

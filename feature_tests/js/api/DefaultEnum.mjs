@@ -65,7 +65,7 @@ export class DefaultEnum {
         const result = wasm.DefaultEnum_new();
     
         try {
-            return this.#internalConstructor(diplomatRuntime.internalConstructor, result);
+            return new DefaultEnum(diplomatRuntime.internalConstructor, result);
         }
         
         finally {}
