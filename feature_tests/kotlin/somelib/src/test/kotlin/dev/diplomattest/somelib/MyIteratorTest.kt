@@ -18,4 +18,18 @@ class MyIteratorTest {
         assertEquals(mutableList.toList(), list)
 
     }
+
+    @Test
+    fun testEmptyIterator() {
+        val list: List<Int> = listOf()
+        val array = list.map { it.toByte().toUByte()}.toUByteArray()
+
+        val myIterable = MyIterable.new_(array)
+        val mutableList : MutableList<Int> = mutableListOf()
+        val myIterator = myIterable.iterator()
+        for (it in myIterator) {
+            mutableList.add(it.toInt())
+        }
+        assertEquals(mutableList.toList(), list)
+    }
 }

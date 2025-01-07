@@ -64,122 +64,175 @@ internal class DiplomatJVMRuntime {
 
 internal object PrimitiveArrayTools {
 
-    fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
-        val mem = Memory(boolArray.size.toLong())
-        val ptr = mem.share(0)
+    fun allocateMemory(size: Long): Memory? {
+        // we can't use the Memory constructor for a memory of size 0
+        // so, if the size is zero, then we return null
+        if (size > 0L)
+            return Memory(size)
+        else
+            return null
+    }
+
+    fun native(boolArray: BooleanArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(boolArray.size.toLong())
         val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
-        ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(byteArray.size.toLong())
         return Pair(mem, slice)
     }
 
-    fun native(byteArray: ByteArray):  Pair<Memory, Slice>{
-        val mem = Memory(byteArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, byteArray, 0, byteArray.size)
+    fun native(byteArray: ByteArray):  Pair<Memory?, Slice> {
+        val mem = allocateMemory(byteArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) { 
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(byteArray.size.toLong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uByteArray: UByteArray): Pair<Memory, Slice> {
+    fun native(uByteArray: UByteArray): Pair<Memory?, Slice> {
         val byteArray = uByteArray.asByteArray()
-        val mem = Memory(byteArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, byteArray, 0, byteArray.size)
+        val mem = allocateMemory(byteArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, byteArray, 0, byteArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(uByteArray.size.toLong())
         return Pair(mem, slice)
     }
 
-    fun native(shortArray: ShortArray): Pair<Memory, Slice> {
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+    fun native(shortArray: ShortArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(shortArray.size.toLong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uShortArray: UShortArray): Pair<Memory, Slice> {
+    fun native(uShortArray: UShortArray): Pair<Memory?, Slice> {
         val shortArray = uShortArray.asShortArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(uShortArray.size.toLong())
         return Pair(mem, slice)
     }
 
-    fun native(intArray: IntArray): Pair<Memory, Slice> {
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, intArray, 0, intArray.size)
+    fun native(intArray: IntArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, intArray, 0, intArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(intArray.size.toLong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uIntArray: UIntArray): Pair<Memory, Slice> {
+    fun native(uIntArray: UIntArray): Pair<Memory?, Slice> {
         val intArray = uIntArray.asIntArray()
-        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, intArray, 0, intArray.size)
+        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, intArray, 0, intArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(uIntArray.size.toLong())
         return Pair(mem, slice)
     }
 
 
-    fun native(longArray: LongArray): Pair<Memory, Slice> {
-        val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, longArray, 0, longArray.size)
+    fun native(longArray: LongArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, longArray, 0, longArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(longArray.size.toLong())
         return Pair(mem, slice)
     }
 
     @ExperimentalUnsignedTypes
-    fun native(uLongArray: ULongArray): Pair<Memory, Slice> {
+    fun native(uLongArray: ULongArray): Pair<Memory?, Slice> {
         val shortArray = uLongArray.asLongArray()
-        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, shortArray, 0, shortArray.size)
+        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, shortArray, 0, shortArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(uLongArray.size.toLong())
         return Pair(mem, slice)
     }
 
-    fun native(floatArray: FloatArray): Pair<Memory, Slice> {
-        val mem = Memory(Float.SIZE_BYTES * floatArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, floatArray, 0, floatArray.size)
+    fun native(floatArray: FloatArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Float.SIZE_BYTES * floatArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, floatArray, 0, floatArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(floatArray.size.toLong())
         return Pair(mem, slice)
     }
 
-    fun native(doubleArray: DoubleArray): Pair<Memory, Slice> {
-        val mem = Memory(Double.SIZE_BYTES * doubleArray.size.toLong())
-        val ptr = mem.share(0)
-        ptr.write(0, doubleArray, 0, doubleArray.size)
+    fun native(doubleArray: DoubleArray): Pair<Memory?, Slice> {
+        val mem = allocateMemory(Double.SIZE_BYTES * doubleArray.size.toLong())
         val slice = Slice()
-        slice.data = ptr
+        slice.data = if (mem != null) {
+            val ptr = mem.share(0)
+            ptr.write(0, doubleArray, 0, doubleArray.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
         slice.len = size_t(doubleArray.size.toLong())
         return Pair(mem, slice)
     }
@@ -228,12 +281,12 @@ internal object PrimitiveArrayTools {
         return slice.data.getDoubleArray(0, slice.len.toInt())
     }
 
-    fun readUtf8(str: String): Pair<Memory, Slice> {
+    fun readUtf8(str: String): Pair<Memory?, Slice> {
         return native(str.toByteArray())
     }
 
     @ExperimentalUnsignedTypes
-    fun readUtf16(str: String): Pair<Memory, Slice> {
+    fun readUtf16(str: String): Pair<Memory?, Slice> {
         return native(str.map {it.code.toUShort()}.toUShortArray())
     }
 
@@ -250,11 +303,15 @@ internal object PrimitiveArrayTools {
         return charArray
     }
 
-    fun readUtf8s(array: Array<String>): Pair<List<Memory>, Slice> {
+    fun readUtf8s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
-        val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val ptr = if (mem != null) {
+            mem.share(0)
+        } else {
+            Pointer(0)
+        }
+        val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf8(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
@@ -266,11 +323,15 @@ internal object PrimitiveArrayTools {
         return Pair(mems + mem, slice)
     }
 
-    fun readUtf16s(array: Array<String>): Pair<List<Memory>, Slice> {
+    fun readUtf16s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = Memory(sliceSize * array.size.toLong())
-        val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val ptr = if (mem != null) {
+            mem.share(0)
+        } else {
+            Pointer(0)
+        }
+        val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
             val (mem, slice) = readUtf16(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
