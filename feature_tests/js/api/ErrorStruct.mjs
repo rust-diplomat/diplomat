@@ -93,38 +93,13 @@ export class ErrorStruct {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ErrorStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.j = jDeref;
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("ErrorStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = ErrorStruct._fromFFI(...arguments);  
-
-           
-        this.#i = structObj.i;
-           
-        this.#j = structObj.j;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("ErrorStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = ErrorStruct._fromFFI(...arguments);
-        
-        let self = new ErrorStruct(structObj);
-        return self;
+        return new ErrorStruct(structObj);
     }
 
 }

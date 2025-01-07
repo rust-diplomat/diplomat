@@ -76,34 +76,11 @@ export class BorrowedFieldsReturning {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const bytesDeref = ptr;
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr, aEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFieldsReturning._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFieldsReturning._fromFFI(...arguments);  
-
-           
-        this.#bytes = structObj.bytes;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr, aEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFieldsReturning._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFieldsReturning._fromFFI(...arguments);
-        
-        let self = new BorrowedFieldsReturning(structObj);
-        return self;
+        return new BorrowedFieldsReturning(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 

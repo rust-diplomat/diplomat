@@ -167,7 +167,7 @@ export class MyStruct {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("MyStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
@@ -183,42 +183,7 @@ export class MyStruct {
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("MyStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = MyStruct._fromFFI(...arguments);  
-
-           
-        this.#a = structObj.a;
-           
-        this.#b = structObj.b;
-           
-        this.#c = structObj.c;
-           
-        this.#d = structObj.d;
-           
-        this.#e = structObj.e;
-           
-        this.#f = structObj.f;
-           
-        this.#g = structObj.g;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("MyStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = MyStruct._fromFFI(...arguments);
-        
-        let self = new MyStruct(diplomatRuntime.exposeConstructor, structObj);
-        return self;
+        return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
 
 
@@ -228,7 +193,7 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
-            return MyStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

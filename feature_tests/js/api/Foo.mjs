@@ -87,7 +87,7 @@ export class Foo {
         const result = wasm.Foo_as_returning(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return BorrowedFieldsReturning._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
+            return BorrowedFieldsReturning._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
         }
         
         finally {

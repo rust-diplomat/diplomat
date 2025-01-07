@@ -96,38 +96,13 @@ export class FixedDecimalFormatterOptions {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("FixedDecimalFormatterOptions._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         structObj.groupingStrategy = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, groupingStrategyDeref);
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         structObj.someOtherConfig = someOtherConfigDeref;
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("FixedDecimalFormatterOptions._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = FixedDecimalFormatterOptions._fromFFI(...arguments);  
-
-           
-        this.#groupingStrategy = structObj.groupingStrategy;
-           
-        this.#someOtherConfig = structObj.someOtherConfig;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("FixedDecimalFormatterOptions._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = FixedDecimalFormatterOptions._fromFFI(...arguments);
-        
-        let self = new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
-        return self;
+        return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
 
 
@@ -137,7 +112,7 @@ export class FixedDecimalFormatterOptions {
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            return FixedDecimalFormatterOptions._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

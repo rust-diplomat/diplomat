@@ -142,7 +142,7 @@ export class BigStructWithStuff {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const firstDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.first = firstDeref;
         const secondDeref = (new Uint16Array(wasm.memory.buffer, ptr + 2, 1))[0];
@@ -150,42 +150,11 @@ export class BigStructWithStuff {
         const thirdDeref = (new Uint16Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.third = thirdDeref;
         const fourthDeref = ptr + 8;
-        structObj.fourth = ScalarPairWithPadding._createFromFFI(diplomatRuntime.internalConstructor, fourthDeref);
+        structObj.fourth = ScalarPairWithPadding._fromFFI(diplomatRuntime.internalConstructor, fourthDeref);
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
         structObj.fifth = fifthDeref;
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BigStructWithStuff._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BigStructWithStuff._fromFFI(...arguments);  
-
-           
-        this.#first = structObj.first;
-           
-        this.#second = structObj.second;
-           
-        this.#third = structObj.third;
-           
-        this.#fourth = structObj.fourth;
-           
-        this.#fifth = structObj.fifth;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BigStructWithStuff._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BigStructWithStuff._fromFFI(...arguments);
-        
-        let self = new BigStructWithStuff(structObj);
-        return self;
+        return new BigStructWithStuff(structObj);
     }
 
 

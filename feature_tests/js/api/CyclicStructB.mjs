@@ -79,34 +79,11 @@ export class CyclicStructB {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructB._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         structObj.field = primitiveValue;
         
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, primitiveValue) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("CyclicStructB._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = CyclicStructB._fromFFI(...arguments);  
-
-           
-        this.#field = structObj.field;
-           
-    }
-
-    static _createFromFFI(internalConstructor, primitiveValue) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("CyclicStructB._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = CyclicStructB._fromFFI(...arguments);
-        
-        let self = new CyclicStructB(structObj);
-        return self;
+        return new CyclicStructB(structObj);
     }
 
 
@@ -114,7 +91,7 @@ export class CyclicStructB {
         const result = wasm.CyclicStructB_get_a();
     
         try {
-            return CyclicStructA._createFromFFI(diplomatRuntime.internalConstructor, result);
+            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, result);
         }
         
         finally {}
@@ -129,7 +106,7 @@ export class CyclicStructB {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return CyclicStructA._createFromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
+            return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
         }
         
         finally {

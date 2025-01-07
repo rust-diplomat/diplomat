@@ -79,34 +79,11 @@ export class CyclicStructC {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructC._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = primitiveValue;
-        structObj.a = CyclicStructA._createFromFFI(diplomatRuntime.internalConstructor, aDeref);
+        structObj.a = CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, primitiveValue) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("CyclicStructC._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = CyclicStructC._fromFFI(...arguments);  
-
-           
-        this.#a = structObj.a;
-           
-    }
-
-    static _createFromFFI(internalConstructor, primitiveValue) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("CyclicStructC._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = CyclicStructC._fromFFI(...arguments);
-        
-        let self = new CyclicStructC(structObj);
-        return self;
+        return new CyclicStructC(structObj);
     }
 
 
@@ -116,7 +93,7 @@ export class CyclicStructC {
         const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
     
         try {
-            return CyclicStructC._createFromFFI(diplomatRuntime.internalConstructor, result);
+            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
         }
         
         finally {

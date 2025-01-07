@@ -68,7 +68,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -150,7 +150,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
     
         try {
-            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -164,7 +164,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
     
         try {
-            return OptionStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -234,7 +234,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return OptionInputStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionInputStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {
@@ -250,7 +250,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_returns_option_input_struct(diplomatReceive.buffer);
     
         try {
-            return OptionInputStruct._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+            return OptionInputStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
         
         finally {

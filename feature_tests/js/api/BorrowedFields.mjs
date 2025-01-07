@@ -107,7 +107,7 @@ export class BorrowedFields {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFields._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = ptr;
         structObj.a = new diplomatRuntime.DiplomatSliceStr(wasm, aDeref,  "string16", aEdges).getValue();
         const bDeref = ptr + 8;
@@ -115,34 +115,7 @@ export class BorrowedFields {
         const cDeref = ptr + 16;
         structObj.c = new diplomatRuntime.DiplomatSliceStr(wasm, cDeref,  "string8", aEdges).getValue();
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr, aEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFields._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFields._fromFFI(...arguments);  
-
-           
-        this.#a = structObj.a;
-           
-        this.#b = structObj.b;
-           
-        this.#c = structObj.c;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr, aEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFields._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFields._fromFFI(...arguments);
-        
-        let self = new BorrowedFields(structObj);
-        return self;
+        return new BorrowedFields(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -169,7 +142,7 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
     
         try {
-            return BorrowedFields._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
+            return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
         
         finally {

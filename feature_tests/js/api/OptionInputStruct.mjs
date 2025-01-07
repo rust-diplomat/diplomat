@@ -109,7 +109,7 @@ export class OptionInputStruct {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("OptionInputStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = ptr;
         structObj.a = diplomatRuntime.readOption(wasm, aDeref, 1, (wasm, offset) => { const deref = (new Uint8Array(wasm.memory.buffer, offset, 1))[0]; return deref });
         const bDeref = ptr + 4;
@@ -117,34 +117,7 @@ export class OptionInputStruct {
         const cDeref = ptr + 12;
         structObj.c = diplomatRuntime.readOption(wasm, cDeref, 4, (wasm, offset) => { const deref = diplomatRuntime.enumDiscriminant(wasm, offset); return new OptionEnum(diplomatRuntime.internalConstructor, deref) });
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("OptionInputStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = OptionInputStruct._fromFFI(...arguments);  
-
-           
-        this.#a = structObj.a;
-           
-        this.#b = structObj.b;
-           
-        this.#c = structObj.c;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("OptionInputStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = OptionInputStruct._fromFFI(...arguments);
-        
-        let self = new OptionInputStruct(structObj);
-        return self;
+        return new OptionInputStruct(structObj);
     }
 
 }

@@ -109,7 +109,7 @@ export class BorrowedFieldsWithBounds {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsWithBounds._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const fieldADeref = ptr;
         structObj.fieldA = new diplomatRuntime.DiplomatSliceStr(wasm, fieldADeref,  "string16", aEdges).getValue();
         const fieldBDeref = ptr + 8;
@@ -117,34 +117,7 @@ export class BorrowedFieldsWithBounds {
         const fieldCDeref = ptr + 16;
         structObj.fieldC = new diplomatRuntime.DiplomatSliceStr(wasm, fieldCDeref,  "string8", cEdges).getValue();
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFieldsWithBounds._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFieldsWithBounds._fromFFI(...arguments);  
-
-           
-        this.#fieldA = structObj.fieldA;
-           
-        this.#fieldB = structObj.fieldB;
-           
-        this.#fieldC = structObj.fieldC;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("BorrowedFieldsWithBounds._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = BorrowedFieldsWithBounds._fromFFI(...arguments);
-        
-        let self = new BorrowedFieldsWithBounds(structObj);
-        return self;
+        return new BorrowedFieldsWithBounds(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -195,7 +168,7 @@ export class BorrowedFieldsWithBounds {
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, ...dstr16XSlice.splat(), ...utf8StrZSlice.splat());
     
         try {
-            return BorrowedFieldsWithBounds._createFromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
+            return BorrowedFieldsWithBounds._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
         
         finally {

@@ -99,38 +99,13 @@ export class ImportedStruct {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ImportedStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         structObj.foo = new UnimportedEnum(diplomatRuntime.internalConstructor, fooDeref);
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.count = countDeref;
 
-        return structObj;
-    }
-
-    #setFieldsFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("ImportedStruct._setFieldsFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = ImportedStruct._fromFFI(...arguments);  
-
-           
-        this.#foo = structObj.foo;
-           
-        this.#count = structObj.count;
-           
-    }
-
-    static _createFromFFI(internalConstructor, ptr) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("ImportedStruct._createFromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-
-        const structObj = ImportedStruct._fromFFI(...arguments);
-        
-        let self = new ImportedStruct(structObj);
-        return self;
+        return new ImportedStruct(structObj);
     }
 
 }
