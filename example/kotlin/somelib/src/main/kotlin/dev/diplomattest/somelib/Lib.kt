@@ -84,7 +84,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(byteArray.size.toLong())
+        slice.len = FFISizet(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -98,7 +98,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(byteArray.size.toLong())
+        slice.len = FFISizet(byteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -114,7 +114,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uByteArray.size.toLong())
+        slice.len = FFISizet(uByteArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -128,7 +128,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(shortArray.size.toLong())
+        slice.len = FFISizet(shortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -144,7 +144,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uShortArray.size.toLong())
+        slice.len = FFISizet(uShortArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -158,7 +158,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(intArray.size.toLong())
+        slice.len = FFISizet(intArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -174,7 +174,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uIntArray.size.toLong())
+        slice.len = FFISizet(uIntArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -189,7 +189,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(longArray.size.toLong())
+        slice.len = FFISizet(longArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -205,7 +205,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(uLongArray.size.toLong())
+        slice.len = FFISizet(uLongArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -219,7 +219,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(floatArray.size.toLong())
+        slice.len = FFISizet(floatArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -233,7 +233,7 @@ internal object PrimitiveArrayTools {
         } else {
             Pointer(0)
         }
-        slice.len = size_t(doubleArray.size.toLong())
+        slice.len = FFISizet(doubleArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
 
@@ -319,7 +319,7 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = FFISizet(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
@@ -339,7 +339,7 @@ internal object PrimitiveArrayTools {
         }
         val slice = Slice()
         slice.data = ptr
-        slice.len = size_t(array.size.toLong())
+        slice.len = FFISizet(array.size.toLong().toULong())
         return Pair(mems + mem, slice)
     }
 
@@ -349,7 +349,7 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = FFISizet(thisLen.toULong())
             getUtf16(thisSlice)
         }
     }
@@ -360,22 +360,62 @@ internal object PrimitiveArrayTools {
             val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
             val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
             thisSlice.data = thisPtr
-            thisSlice.len = size_t(thisLen)
+            thisSlice.len = FFISizet(thisLen.toULong())
             getUtf8(thisSlice)
         }
     }
 }
 
-class size_t(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
-    override fun toByte(): Byte = value.toByte()
-    override fun toChar(): Char = value.toInt().toChar()
-    override fun toShort(): Short = value.toShort()
+class FFISizet(val value: ULong = 0u): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
+}
+
+class FFIIsizet(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+}
+
+class FFIUint8(val value: UByte = 0u): com.sun.jna.IntegerType(1, value.toByte().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUByte(): UByte = this.toByte().toUByte()
+    constructor(): this(0u)
+}
+
+class FFIUint16(val value: UShort = 0u): com.sun.jna.IntegerType(2, value.toShort().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUShort(): UShort = this.toShort().toUShort()
+    constructor(): this(0u)
+}
+
+class FFIUint32(val value: UInt = 0u): com.sun.jna.IntegerType(4, value.toInt().toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toUInt(): UInt = this.toInt().toUInt()
+    constructor(): this(0u)
+}
+
+class FFIUint64(val value: ULong = 0u): com.sun.jna.IntegerType(8, value.toLong(), true)  {
+    override fun toByte(): Byte = this.toLong().toByte()
+    override fun toChar(): Char = this.toLong().toInt().toChar()
+    override fun toShort(): Short = this.toLong().toShort()
+    fun toULong(): ULong = this.toLong().toULong()
+    constructor(): this(0u)
 }
 
 class Slice: Structure(), Structure.ByValue {
 
     @JvmField var data: Pointer = Pointer(0)// Pointer to const char
-    @JvmField var len: size_t = size_t() // size_t of 0
+    @JvmField var len: FFISizet = FFISizet() // FFISizet of 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

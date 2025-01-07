@@ -1,6 +1,6 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2422
+assertion_line: 2479
 expression: result
 ---
 package dev.gigapixel.somelib
@@ -132,37 +132,37 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             
             val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
                 override fun invoke(ignored: Pointer?, x: Int, y: Int, z: UByte ): Int {
-                    return trt_obj.testTraitFn(x, y, z);
+                    return (trt_obj.testTraitFn(x, y, z));
                 }
             }
             vtable.run_testTraitFn_callback = testTraitFn;
             val testVoidTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn {
                 override fun invoke(ignored: Pointer?): Unit {
-                    return trt_obj.testVoidTraitFn();
+                    return (trt_obj.testVoidTraitFn());
                 }
             }
             vtable.run_testVoidTraitFn_callback = testVoidTraitFn;
             val testStructTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn {
                 override fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int {
-                    return trt_obj.testStructTraitFn(TraitTestingStruct(s));
+                    return (trt_obj.testStructTraitFn(TraitTestingStruct(s)));
                 }
             }
             vtable.run_testStructTraitFn_callback = testStructTraitFn;
             val testWithSlices: Runner_DiplomatTraitMethod_TesterTrait_testWithSlices = object :  Runner_DiplomatTraitMethod_TesterTrait_testWithSlices {
                 override fun invoke(ignored: Pointer?, a: Slice, b: Slice ): Int {
-                    return trt_obj.testWithSlices(PrimitiveArrayTools.getUByteArray(a), PrimitiveArrayTools.getShortArray(b));
+                    return (trt_obj.testWithSlices(PrimitiveArrayTools.getUByteArray(a), PrimitiveArrayTools.getShortArray(b)));
                 }
             }
             vtable.run_testWithSlices_callback = testWithSlices;
             val testStructReturn: Runner_DiplomatTraitMethod_TesterTrait_testStructReturn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructReturn {
                 override fun invoke(ignored: Pointer?): TraitTestingStructNative {
-                    return trt_obj.testStructReturn().nativeStruct;
+                    return (trt_obj.testStructReturn()).nativeStruct;
                 }
             }
             vtable.run_testStructReturn_callback = testStructReturn;
             val testEnumReturn: Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn = object :  Runner_DiplomatTraitMethod_TesterTrait_testEnumReturn {
                 override fun invoke(ignored: Pointer?): Int {
-                    return trt_obj.testEnumReturn().toNative();
+                    return (trt_obj.testEnumReturn()).toNative();
                 }
             }
             vtable.run_testEnumReturn_callback = testEnumReturn;

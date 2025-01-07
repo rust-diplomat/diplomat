@@ -40,11 +40,12 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType) -> String {
         match prim {
-            PrimitiveType::Int(IntType::U8) => format!("{name}.toByte()"),
-            PrimitiveType::Int(IntType::U16) => format!("{name}.toShort()"),
-            PrimitiveType::Int(IntType::U32) => format!("{name}.toInt()"),
-            PrimitiveType::Int(IntType::U64) => format!("{name}.toLong()"),
-            PrimitiveType::IntSize(IntSizeType::Usize) => format!("{name}.toLong()"),
+            PrimitiveType::Int(IntType::U8) => format!("FFIUint8({name})"),
+            PrimitiveType::Int(IntType::U16) => format!("FFIUint16({name})"),
+            PrimitiveType::Int(IntType::U32) => format!("FFIUint32({name})"),
+            PrimitiveType::Int(IntType::U64) => format!("FFIUint64({name})"),
+            PrimitiveType::IntSize(IntSizeType::Usize) => format!("FFISizet({name})"),
+            PrimitiveType::IntSize(IntSizeType::Isize) => format!("FFIIsizet({name})"),
             PrimitiveType::Int128(_) => panic!("128 bit ints not supported"),
             _ => name.into(),
         }
@@ -69,11 +70,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Array<String>"
     }
 
-    pub fn fmt_primitive_as_ffi(
-        &self,
-        prim: PrimitiveType,
-        support_unsigned: bool,
-    ) -> &'static str {
+    pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
@@ -81,43 +78,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
-            PrimitiveType::Int(IntType::U8) => {
-                if support_unsigned {
-                    "UByte"
-                } else {
-                    "Byte"
-                }
-            }
-            PrimitiveType::Int(IntType::U16) => {
-                if support_unsigned {
-                    "UShort"
-                } else {
-                    "Short"
-                }
-            }
-            PrimitiveType::Int(IntType::U32) => {
-                if support_unsigned {
-                    "UInt"
-                } else {
-                    "Int"
-                }
-            }
-            PrimitiveType::Int(IntType::U64) => {
-                if support_unsigned {
-                    "ULong"
-                } else {
-                    "Long"
-                }
-            }
+            PrimitiveType::Int(IntType::U8) => "FFIUint8",
+            PrimitiveType::Int(IntType::U16) => "FFIUint16",
+            PrimitiveType::Int(IntType::U32) => "FFIUint32",
+            PrimitiveType::Int(IntType::U64) => "FFIUint64",
             PrimitiveType::Byte => "Byte",
-            PrimitiveType::IntSize(IntSizeType::Isize) => "Long",
-            PrimitiveType::IntSize(IntSizeType::Usize) => {
-                if support_unsigned {
-                    "ULong"
-                } else {
-                    "Long"
-                }
-            }
+            PrimitiveType::IntSize(IntSizeType::Isize) => "FFIIsizet",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "FFISizet",
             PrimitiveType::Float(FloatType::F32) => "Float",
             PrimitiveType::Float(FloatType::F64) => "Double",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
@@ -208,9 +175,28 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Float(FloatType::F32) => "0.0F",
             PrimitiveType::Float(FloatType::F64) => "0.0",
+            PrimitiveType::Int(IntType::U8) => "FFIUint8()",
+            PrimitiveType::Int(IntType::U16) => "FFIUint16()",
+            PrimitiveType::Int(IntType::U32) => "FFIUint32()",
+            PrimitiveType::Int(IntType::U64) => "FFIUint64()",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "FFISizet()",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "FFIIsizet()",
             _ => "0",
         }
     }
+
+    pub fn fmt_unsigned_primitive_ffi_cast(&self, prim: &PrimitiveType) -> &'static str {
+        match prim {
+            PrimitiveType::Int(IntType::U8) => "FFIUint8",
+            PrimitiveType::Int(IntType::U16) => "FFIUint16",
+            PrimitiveType::Int(IntType::U32) => "FFIUint32",
+            PrimitiveType::Int(IntType::U64) => "FFIUint64",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "FFISizet",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "FFIIsizet",
+            _ => "",
+        }
+    }
+
     pub fn fmt_field_default<'a, P: TyPosition>(&'a self, ty: &'a Type<P>) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => self.fmt_primitive_default(*prim).into(),
@@ -243,6 +229,9 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::Int(IntType::U64) => format!("{optional_conversion}.toULong()").into(),
             PrimitiveType::IntSize(IntSizeType::Usize) => {
                 format!("{optional_conversion}.toULong()").into()
+            }
+            PrimitiveType::IntSize(IntSizeType::Isize) => {
+                format!("{optional_conversion}.toLong()").into()
             }
             PrimitiveType::Int128(_) => panic!("Int128 not supported"),
             _ => "".into(),
@@ -391,12 +380,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn fmt_primitive_type_native(&self, prim: PrimitiveType) -> &'static str {
         match prim {
             PrimitiveType::Bool => "Byte",
-            PrimitiveType::Int(IntType::U8) => "Byte",
-            PrimitiveType::Int(IntType::U16) => "Short",
-            PrimitiveType::Int(IntType::U32) => "Int",
-            PrimitiveType::Int(IntType::U64) => "Long",
-            PrimitiveType::IntSize(_) => "Long",
-            prim => self.fmt_primitive_as_ffi(prim, false),
+            PrimitiveType::Int(IntType::U8) => "FFIUint8",
+            PrimitiveType::Int(IntType::U16) => "FFIUint16",
+            PrimitiveType::Int(IntType::U32) => "FFIUint32",
+            PrimitiveType::Int(IntType::U64) => "FFIUint64",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "FFISizet",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "FFIIsizet",
+            prim => self.fmt_primitive_as_ffi(prim),
         }
     }
 
