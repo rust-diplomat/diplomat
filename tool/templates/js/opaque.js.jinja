@@ -7,11 +7,11 @@ const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.{{destructor}}(ptr);
 });
 
-{% endif -%}
-{% endblock %}
+{%- endif -%}
+{%- endblock %}
 
-{% block class_body %}
-    {% if !typescript -%}
+{% block class_body -%}
+    {%- if !typescript %}
     // Internal ptr reference:
     #ptr = null;
 
@@ -41,7 +41,6 @@ const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     }
 
     {%- endif %}
-
     get ffiValue(){% if typescript %}: pointer;{% else %} {
         return this.#ptr;
     }
