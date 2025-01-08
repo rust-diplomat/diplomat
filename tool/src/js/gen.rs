@@ -600,7 +600,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
             Some(SpecialMethod::Constructor) => {
-                // TODO: Make this hidden in typescript.
                 "#defaultConstructor".into()
             }
 
