@@ -7,7 +7,7 @@ enum DefaultEnum {
 
   b;
 
-  factory DefaultEnum() {
+  static DefaultEnum new_() {
     final result = _DefaultEnum_new();
     return DefaultEnum.values[result];
   }

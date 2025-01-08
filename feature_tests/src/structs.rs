@@ -199,7 +199,7 @@ pub mod ffi {
     }
 
     impl DefaultEnum {
-        #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(all(supports=constructors, not(dart)), constructor)]
         pub fn new() -> DefaultEnum {
             DefaultEnum::A
         }
