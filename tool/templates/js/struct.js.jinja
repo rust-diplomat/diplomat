@@ -72,6 +72,7 @@ type {{type_name}}_obj = {
     {%- endif -%}
     
     {%- if !overrides_constructor %}
+    
     constructor(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}) {%- if typescript %};{% else %} {
         this.#internalConstructor(structObj {%- if is_out %}, internalConstructor {%- endif %});
     }
