@@ -225,7 +225,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
@@ -239,7 +239,7 @@ export class MyStruct {
     
         try {
             if (result !== 1) {
-                const cause = MyZst.FromFields({}, diplomatRuntime.internalConstructor);
+                const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
     
