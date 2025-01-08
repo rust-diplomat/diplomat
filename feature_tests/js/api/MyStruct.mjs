@@ -8,63 +8,69 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class MyStruct {
 	
-
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-
+    
     #b;
+    
     get b()  {
         return this.#b;
-    }
+    } 
     set b(value) {
         this.#b = value;
     }
-
+    
     #c;
+    
     get c()  {
         return this.#c;
-    }
+    } 
     set c(value) {
         this.#c = value;
     }
-
+    
     #d;
+    
     get d()  {
         return this.#d;
-    }
+    } 
     set d(value) {
         this.#d = value;
     }
-
+    
     #e;
+    
     get e()  {
         return this.#e;
-    }
+    } 
     set e(value) {
         this.#e = value;
     }
-
+    
     #f;
+    
     get f()  {
         return this.#f;
-    }
+    } 
     set f(value) {
         this.#f = value;
     }
-
+    
     #g;
+    
     get g()  {
         return this.#g;
-    }
+    } 
     set g(value) {
         this.#g = value;
     }
-
+    
     /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -185,7 +191,6 @@ export class MyStruct {
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
-
 
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);

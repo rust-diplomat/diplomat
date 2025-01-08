@@ -10,31 +10,33 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class NestedBorrowedFields {
 	
-
     #fields;
+    
     get fields()  {
         return this.#fields;
-    }
+    } 
     set fields(value) {
         this.#fields = value;
     }
-
+    
     #bounds;
+    
     get bounds()  {
         return this.#bounds;
-    }
+    } 
     set bounds(value) {
         this.#bounds = value;
     }
-
+    
     #bounds2;
+    
     get bounds2()  {
         return this.#bounds2;
-    }
+    } 
     set bounds2(value) {
         this.#bounds2 = value;
     }
-
+    
     /** Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -149,7 +151,6 @@ export class NestedBorrowedFields {
     get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };
-
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

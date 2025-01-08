@@ -10,47 +10,51 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BigStructWithStuff {
 	
-
     #first;
+    
     get first()  {
         return this.#first;
-    }
+    } 
     set first(value) {
         this.#first = value;
     }
-
+    
     #second;
+    
     get second()  {
         return this.#second;
-    }
+    } 
     set second(value) {
         this.#second = value;
     }
-
+    
     #third;
+    
     get third()  {
         return this.#third;
-    }
+    } 
     set third(value) {
         this.#third = value;
     }
-
+    
     #fourth;
+    
     get fourth()  {
         return this.#fourth;
-    }
+    } 
     set fourth(value) {
         this.#fourth = value;
     }
-
+    
     #fifth;
+    
     get fifth()  {
         return this.#fifth;
-    }
+    } 
     set fifth(value) {
         this.#fifth = value;
     }
-
+    
     /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -156,7 +160,6 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj);
     }
-
 
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

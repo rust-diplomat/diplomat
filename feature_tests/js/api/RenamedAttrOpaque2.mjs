@@ -6,8 +6,6 @@ const RenamedAttrOpaque2_box_destroy_registry = new FinalizationRegistry((ptr) =
     wasm.namespace_AttrOpaque2_destroy(ptr);
 });
 
-
-
 export class RenamedAttrOpaque2 {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class RenamedAttrOpaque2 {
             RenamedAttrOpaque2_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

@@ -10,8 +10,6 @@ const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Foo_destroy(ptr);
 });
 
-
-
 export class Foo {
 	
     // Internal ptr reference:
@@ -39,7 +37,6 @@ export class Foo {
             Foo_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

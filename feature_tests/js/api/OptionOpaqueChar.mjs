@@ -6,8 +6,6 @@ const OptionOpaqueChar_box_destroy_registry = new FinalizationRegistry((ptr) => 
     wasm.OptionOpaqueChar_destroy(ptr);
 });
 
-
-
 export class OptionOpaqueChar {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class OptionOpaqueChar {
             OptionOpaqueChar_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

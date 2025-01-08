@@ -9,23 +9,24 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class ScalarPairWithPadding {
 	
-
     #first;
+    
     get first()  {
         return this.#first;
-    }
+    } 
     set first(value) {
         this.#first = value;
     }
-
+    
     #second;
+    
     get second()  {
         return this.#second;
-    }
+    } 
     set second(value) {
         this.#second = value;
     }
-
+    
     /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -109,7 +110,6 @@ export class ScalarPairWithPadding {
 
         return new ScalarPairWithPadding(structObj);
     }
-
 
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

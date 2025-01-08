@@ -7,31 +7,33 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class OptionInputStruct {
 	
-
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-
+    
     #b;
+    
     get b()  {
         return this.#b;
-    }
+    } 
     set b(value) {
         this.#b = value;
     }
-
+    
     #c;
+    
     get c()  {
         return this.#c;
-    }
+    } 
     set c(value) {
         this.#c = value;
     }
-
+    
     /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -119,5 +121,4 @@ export class OptionInputStruct {
 
         return new OptionInputStruct(structObj);
     }
-
 }

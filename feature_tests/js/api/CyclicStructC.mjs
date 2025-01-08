@@ -7,15 +7,15 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class CyclicStructC {
 	
-
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-
+    
     /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -85,7 +85,6 @@ export class CyclicStructC {
 
         return new CyclicStructC(structObj);
     }
-
 
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

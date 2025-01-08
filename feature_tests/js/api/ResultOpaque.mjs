@@ -8,8 +8,6 @@ const ResultOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.ResultOpaque_destroy(ptr);
 });
 
-
-
 export class ResultOpaque {
 	
     // Internal ptr reference:
@@ -33,7 +31,6 @@ export class ResultOpaque {
             ResultOpaque_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

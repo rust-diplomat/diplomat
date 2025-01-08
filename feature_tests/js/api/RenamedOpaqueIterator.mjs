@@ -7,8 +7,6 @@ const RenamedOpaqueIterator_box_destroy_registry = new FinalizationRegistry((ptr
     wasm.namespace_OpaqueIterator_destroy(ptr);
 });
 
-
-
 export class RenamedOpaqueIterator {
 	
     // Internal ptr reference:
@@ -36,7 +34,6 @@ export class RenamedOpaqueIterator {
             RenamedOpaqueIterator_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

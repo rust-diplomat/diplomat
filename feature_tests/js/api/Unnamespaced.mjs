@@ -8,8 +8,6 @@ const Unnamespaced_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_Unnamespaced_destroy(ptr);
 });
 
-
-
 export class Unnamespaced {
 	
     // Internal ptr reference:
@@ -33,7 +31,6 @@ export class Unnamespaced {
             Unnamespaced_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

@@ -11,8 +11,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class Foo {
 	
-    
-
     get ffiValue(): pointer;
 
     #defaultConstructor(x: string): Foo;

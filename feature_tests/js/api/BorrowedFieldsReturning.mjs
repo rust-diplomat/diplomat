@@ -6,15 +6,15 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFieldsReturning {
 	
-
     #bytes;
+    
     get bytes()  {
         return this.#bytes;
-    }
+    } 
     set bytes(value) {
         this.#bytes = value;
     }
-
+    
     /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -91,5 +91,4 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
-
 }

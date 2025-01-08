@@ -6,8 +6,6 @@ const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Utf16Wrap_destroy(ptr);
 });
 
-
-
 export class Utf16Wrap {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class Utf16Wrap {
             Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

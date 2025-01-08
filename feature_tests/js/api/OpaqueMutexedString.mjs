@@ -7,8 +7,6 @@ const OpaqueMutexedString_box_destroy_registry = new FinalizationRegistry((ptr) 
     wasm.OpaqueMutexedString_destroy(ptr);
 });
 
-
-
 export class OpaqueMutexedString {
 	
     // Internal ptr reference:
@@ -32,7 +30,6 @@ export class OpaqueMutexedString {
             OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

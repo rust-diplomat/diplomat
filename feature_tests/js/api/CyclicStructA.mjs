@@ -7,15 +7,15 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class CyclicStructA {
 	
-
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-
+    
     /** Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -85,7 +85,6 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj);
     }
-
 
     static getB() {
         const result = wasm.CyclicStructA_get_b();

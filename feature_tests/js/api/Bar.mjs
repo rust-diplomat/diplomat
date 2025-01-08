@@ -7,8 +7,6 @@ const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Bar_destroy(ptr);
 });
 
-
-
 export class Bar {
 	
     // Internal ptr reference:
@@ -40,7 +38,6 @@ export class Bar {
             Bar_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

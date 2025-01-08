@@ -11,8 +11,6 @@ const Locale_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_Locale_destroy_mv1(ptr);
 });
 
-
-
 export class Locale {
 	
     // Internal ptr reference:
@@ -36,7 +34,6 @@ export class Locale {
             Locale_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

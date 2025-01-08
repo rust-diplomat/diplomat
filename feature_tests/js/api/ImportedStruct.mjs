@@ -7,23 +7,24 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class ImportedStruct {
 	
-
     #foo;
+    
     get foo()  {
         return this.#foo;
-    }
+    } 
     set foo(value) {
         this.#foo = value;
     }
-
+    
     #count;
+    
     get count()  {
         return this.#count;
-    }
+    } 
     set count(value) {
         this.#count = value;
     }
-
+    
     /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -107,5 +108,4 @@ export class ImportedStruct {
 
         return new ImportedStruct(structObj);
     }
-
 }

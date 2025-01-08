@@ -6,8 +6,6 @@ const MyOpaqueEnum_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.MyOpaqueEnum_destroy(ptr);
 });
 
-
-
 export class MyOpaqueEnum {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class MyOpaqueEnum {
             MyOpaqueEnum_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

@@ -11,8 +11,6 @@ const DataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_DataProvider_destroy_mv1(ptr);
 });
 
-
-
 export class DataProvider {
 	
     // Internal ptr reference:
@@ -36,7 +34,6 @@ export class DataProvider {
             DataProvider_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

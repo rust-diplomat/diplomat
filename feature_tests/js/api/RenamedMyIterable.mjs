@@ -7,8 +7,6 @@ const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) =>
     wasm.namespace_MyIterable_destroy(ptr);
 });
 
-
-
 export class RenamedMyIterable {
 	
     // Internal ptr reference:
@@ -32,7 +30,6 @@ export class RenamedMyIterable {
             RenamedMyIterable_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

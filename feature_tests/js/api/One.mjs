@@ -7,8 +7,6 @@ const One_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.One_destroy(ptr);
 });
 
-
-
 export class One {
 	
     // Internal ptr reference:
@@ -36,7 +34,6 @@ export class One {
             One_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

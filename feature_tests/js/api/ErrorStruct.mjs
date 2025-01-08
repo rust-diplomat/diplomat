@@ -6,23 +6,24 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class ErrorStruct {
 	
-
     #i;
+    
     get i()  {
         return this.#i;
-    }
+    } 
     set i(value) {
         this.#i = value;
     }
-
+    
     #j;
+    
     get j()  {
         return this.#j;
-    }
+    } 
     set j(value) {
         this.#j = value;
     }
-
+    
     /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -101,5 +102,4 @@ export class ErrorStruct {
 
         return new ErrorStruct(structObj);
     }
-
 }

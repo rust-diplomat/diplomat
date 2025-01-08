@@ -7,23 +7,24 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class FixedDecimalFormatterOptions {
 	
-
     #groupingStrategy;
+    
     get groupingStrategy()  {
         return this.#groupingStrategy;
-    }
+    } 
     set groupingStrategy(value) {
         this.#groupingStrategy = value;
     }
-
+    
     #someOtherConfig;
+    
     get someOtherConfig()  {
         return this.#someOtherConfig;
-    }
+    } 
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-
+    
     /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -104,7 +105,6 @@ export class FixedDecimalFormatterOptions {
 
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
-
 
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);

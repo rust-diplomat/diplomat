@@ -11,19 +11,17 @@ type FixedDecimalFormatterOptions_obj = {
 
 export class FixedDecimalFormatterOptions {
 	
-
-    get groupingStrategy() : FixedDecimalGroupingStrategy;
+    get groupingStrategy() : FixedDecimalGroupingStrategy; 
     set groupingStrategy(value: FixedDecimalGroupingStrategy); 
-
-    get someOtherConfig() : boolean;
+    
+    get someOtherConfig() : boolean; 
     set someOtherConfig(value: boolean); 
-
+    
     /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
     
-
 
     #defaultConstructor(): FixedDecimalFormatterOptions;
 

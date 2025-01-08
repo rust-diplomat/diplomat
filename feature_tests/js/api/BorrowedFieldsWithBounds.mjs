@@ -7,31 +7,33 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFieldsWithBounds {
 	
-
     #fieldA;
+    
     get fieldA()  {
         return this.#fieldA;
-    }
+    } 
     set fieldA(value) {
         this.#fieldA = value;
     }
-
+    
     #fieldB;
+    
     get fieldB()  {
         return this.#fieldB;
-    }
+    } 
     set fieldB(value) {
         this.#fieldB = value;
     }
-
+    
     #fieldC;
+    
     get fieldC()  {
         return this.#fieldC;
-    }
+    } 
     set fieldC(value) {
         this.#fieldC = value;
     }
-
+    
     /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -146,7 +148,6 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() { 
         return [fieldC];
     };
-
 
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

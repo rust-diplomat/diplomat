@@ -12,23 +12,21 @@ type BorrowedFieldsWithBounds_obj = {
 
 export class BorrowedFieldsWithBounds {
 	
-
-    get fieldA() : string;
+    get fieldA() : string; 
     set fieldA(value: string); 
-
-    get fieldB() : string;
+    
+    get fieldB() : string; 
     set fieldB(value: string); 
-
-    get fieldC() : string;
+    
+    get fieldC() : string; 
     set fieldC(value: string); 
-
+    
     /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static FromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
     
     constructor(structObj : BorrowedFieldsWithBounds_obj);
-
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 }

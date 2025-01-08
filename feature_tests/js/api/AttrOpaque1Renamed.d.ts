@@ -7,8 +7,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class AttrOpaque1Renamed {
 	
-    
-
     get ffiValue(): pointer;
 
     #defaultConstructor(): AttrOpaque1Renamed;

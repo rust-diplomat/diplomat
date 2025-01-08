@@ -6,8 +6,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class One {
 	
-    
-
     get ffiValue(): pointer;
 
     static transitivity(hold: One, nohold: One): One;

@@ -6,8 +6,6 @@ const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Float64Vec_destroy(ptr);
 });
 
-
-
 export class Float64Vec {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class Float64Vec {
             Float64Vec_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

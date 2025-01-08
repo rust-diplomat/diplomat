@@ -6,8 +6,6 @@ const Two_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Two_destroy(ptr);
 });
 
-
-
 export class Two {
 	
     // Internal ptr reference:
@@ -39,7 +37,6 @@ export class Two {
             Two_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

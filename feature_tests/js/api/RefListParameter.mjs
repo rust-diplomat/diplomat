@@ -6,8 +6,6 @@ const RefListParameter_box_destroy_registry = new FinalizationRegistry((ptr) => 
     wasm.RefListParameter_destroy(ptr);
 });
 
-
-
 export class RefListParameter {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class RefListParameter {
             RefListParameter_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

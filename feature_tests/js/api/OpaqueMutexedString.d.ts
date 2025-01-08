@@ -6,8 +6,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class OpaqueMutexedString {
 	
-    
-
     get ffiValue(): pointer;
 
     static fromUsize(number: number): OpaqueMutexedString;

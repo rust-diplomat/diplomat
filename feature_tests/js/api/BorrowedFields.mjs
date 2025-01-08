@@ -7,31 +7,33 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFields {
 	
-
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-
+    
     #b;
+    
     get b()  {
         return this.#b;
-    }
+    } 
     set b(value) {
         this.#b = value;
     }
-
+    
     #c;
+    
     get c()  {
         return this.#c;
-    }
+    } 
     set c(value) {
         this.#c = value;
     }
-
+    
     /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -126,7 +128,6 @@ export class BorrowedFields {
     get _fieldsForLifetimeA() { 
         return [a, b, c];
     };
-
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

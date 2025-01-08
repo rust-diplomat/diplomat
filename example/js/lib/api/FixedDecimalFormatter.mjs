@@ -15,8 +15,6 @@ const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr
     wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
 });
 
-
-
 export class FixedDecimalFormatter {
 	
     // Internal ptr reference:
@@ -40,7 +38,6 @@ export class FixedDecimalFormatter {
             FixedDecimalFormatter_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

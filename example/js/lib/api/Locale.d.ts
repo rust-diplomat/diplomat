@@ -10,8 +10,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class Locale {
 	
-    
-
     get ffiValue(): pointer;
 
     #defaultConstructor(name: string): Locale;

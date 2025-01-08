@@ -6,8 +6,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class RenamedOpaqueIterator {
 	
-    
-
     get ffiValue(): pointer;
 
     #iteratorNext(): AttrOpaque1Renamed | null;

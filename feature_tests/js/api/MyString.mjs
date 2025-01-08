@@ -6,8 +6,6 @@ const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.MyString_destroy(ptr);
 });
 
-
-
 export class MyString {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class MyString {
             MyString_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }

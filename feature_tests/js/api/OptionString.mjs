@@ -6,8 +6,6 @@ const OptionString_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionString_destroy(ptr);
 });
 
-
-
 export class OptionString {
 	
     // Internal ptr reference:
@@ -31,7 +29,6 @@ export class OptionString {
             OptionString_box_destroy_registry.register(this, this.#ptr);
         }
     }
-
     get ffiValue() {
         return this.#ptr;
     }
