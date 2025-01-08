@@ -357,9 +357,7 @@ impl RenderTerminusContext<'_, '_> {
                 if !is_getter { "(...args.slice(1))" } else { "" }
             )
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
-            format!(
-                "(function (...args) {{ return new {owner_type_name}(...args) }} )"
-            )
+            format!("(function (...args) {{ return new {owner_type_name}(...args) }} )")
         } else {
             format!("{owner_type_name}.{method_name}")
         }
