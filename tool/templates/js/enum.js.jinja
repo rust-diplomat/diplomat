@@ -42,7 +42,7 @@
     constructor(value : {{type_name}} | string);
 {%- endif %}
 
-    static FromValue(value {%- if typescript %} : {{type_name}} | string {%- endif %}) {%- if typescript %} : {{type_name}}; {% else %} {
+    static fromValue(value {%- if typescript %} : {{type_name}} | string {%- endif %}) {%- if typescript %} : {{type_name}}; {% else %} {
         return new {{type_name}}({% if overrides_constructor -%} diplomatRuntime.exposeConstructor, {% endif -%} value);
     }
     {%- endif %}

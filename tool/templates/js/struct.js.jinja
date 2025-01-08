@@ -36,7 +36,7 @@ type {{type_name}}_obj = {
      # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
      # For instance, demo_gen uses this function instead of the constructor
     -#}
-    static FromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
+    static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj);
     } {%- endif %}
     {% endif -%}
@@ -72,7 +72,7 @@ type {{type_name}}_obj = {
     {%- endif -%}
     
     {%- if !overrides_constructor %}
-    
+
     constructor(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}) {%- if typescript %};{% else %} {
         this.#internalConstructor(structObj {%- if is_out %}, internalConstructor {%- endif %});
     }
@@ -123,7 +123,7 @@ type {{type_name}}_obj = {
             return obj;
         }
 
-        return {{type_name}}.FromFields(obj);
+        return {{type_name}}.fromFields(obj);
     }
 
     _writeToArrayBuffer(
