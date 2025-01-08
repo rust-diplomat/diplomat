@@ -82,10 +82,10 @@ export class Utf16Wrap {
         }
     }
 
-    constructor(exposeConstructor, ...args) {
-        if (exposeConstructor === diplomatRuntime.exposeConstructor) {
-            return this.#internalConstructor(...args);
-        } else if (exposeConstructor === diplomatRuntime.internalConstructor) {
+    constructor(input) {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
             return this.#internalConstructor(...arguments);
         } else {
             return this.#defaultConstructor(...arguments);
