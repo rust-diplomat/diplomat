@@ -65,6 +65,7 @@ export class OptionStruct {
         }
 
     }
+    
     constructor(structObj, internalConstructor) {
         this.#internalConstructor(structObj, internalConstructor);
     }

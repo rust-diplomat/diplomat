@@ -19,9 +19,10 @@ export class CyclicStructA {
     */
     static FromFields(structObj : CyclicStructA_obj) : CyclicStructA;
     
+    
     constructor(structObj : CyclicStructA_obj);
-
+	
     static getB(): CyclicStructB;
-
+	
     cyclicOut(): string;
 }

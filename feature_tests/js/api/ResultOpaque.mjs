@@ -34,7 +34,7 @@ export class ResultOpaque {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     static new_(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -52,7 +52,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newFailingFoo() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -70,7 +70,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newFailingBar() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -88,7 +88,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newFailingUnit() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -105,7 +105,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newFailingStruct(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
@@ -123,7 +123,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newInErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -141,7 +141,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newInt(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -158,7 +158,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     static newInEnumErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
@@ -176,7 +176,7 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-
+	
     assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
     
         try {}

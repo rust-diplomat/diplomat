@@ -24,7 +24,8 @@ export class ScalarPairWithPadding {
     */
     static FromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
     
+    
     constructor(structObj : ScalarPairWithPadding_obj);
-
+	
     assertValue(): void;
 }

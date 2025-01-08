@@ -50,6 +50,7 @@ export class ImportedStruct {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }

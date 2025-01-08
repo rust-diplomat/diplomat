@@ -35,6 +35,7 @@ export class CyclicStructC {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -85,7 +86,7 @@ export class CyclicStructC {
 
         return new CyclicStructC(structObj);
     }
-
+	
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -99,7 +100,7 @@ export class CyclicStructC {
             functionCleanupArena.free();
         }
     }
-
+	
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         

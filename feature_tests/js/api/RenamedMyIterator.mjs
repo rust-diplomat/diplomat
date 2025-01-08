@@ -36,7 +36,7 @@ export class RenamedMyIterator {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #iteratorNext() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
         

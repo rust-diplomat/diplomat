@@ -7,9 +7,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class RenamedMyIterable {
 	
     get ffiValue(): pointer;
-
-    #defaultConstructor(x: Array<number>): RenamedMyIterable;
-
+	
     [Symbol.iterator](): RenamedMyIterator;
 
     constructor(x: Array<number>);

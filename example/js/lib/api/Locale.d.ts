@@ -12,7 +12,5 @@ export class Locale {
 	
     get ffiValue(): pointer;
 
-    #defaultConstructor(name: string): Locale;
-
     constructor(name: string);
 }

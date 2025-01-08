@@ -11,8 +11,8 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class DataProvider {
 	
     get ffiValue(): pointer;
-
+	
     static newStatic(): DataProvider;
-
+	
     static returnsResult(): boolean;
 }

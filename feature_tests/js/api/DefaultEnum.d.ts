@@ -15,7 +15,5 @@ export class DefaultEnum {
     static A : DefaultEnum;
     static B : DefaultEnum;
 
-    #defaultConstructor(): DefaultEnum;
-
     constructor();
 }

@@ -65,6 +65,7 @@ export class BorrowedFieldsWithBounds {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -148,7 +149,7 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() { 
         return [fieldC];
     };
-
+	
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));

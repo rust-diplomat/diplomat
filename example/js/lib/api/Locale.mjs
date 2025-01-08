@@ -37,7 +37,7 @@ export class Locale {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         

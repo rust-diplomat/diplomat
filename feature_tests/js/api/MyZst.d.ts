@@ -13,5 +13,6 @@ export class MyZst {
     */
     static FromFields(structObj : MyZst_obj) : MyZst;
     
+    
     constructor(structObj : MyZst_obj);
 }

@@ -35,7 +35,7 @@ export class FixedDecimal {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #defaultConstructor(v) {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
@@ -45,14 +45,14 @@ export class FixedDecimal {
         
         finally {}
     }
-
+	
     multiplyPow10(power) {wasm.icu4x_FixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
     
         try {}
         
         finally {}
     }
-
+	
     toString() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         

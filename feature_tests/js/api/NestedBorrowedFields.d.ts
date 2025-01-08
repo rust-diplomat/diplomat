@@ -31,7 +31,8 @@ export class NestedBorrowedFields {
     */
     static FromFields(structObj : NestedBorrowedFields_obj) : NestedBorrowedFields;
     
+    
     constructor(structObj : NestedBorrowedFields_obj);
-
+	
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
 }

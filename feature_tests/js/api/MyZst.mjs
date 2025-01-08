@@ -19,6 +19,7 @@ export class MyZst {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }

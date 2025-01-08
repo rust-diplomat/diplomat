@@ -34,6 +34,7 @@ export class BorrowedFieldsReturning {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }

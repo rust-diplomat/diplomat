@@ -34,7 +34,7 @@ export class Opaque {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #defaultConstructor() {
         const result = wasm.Opaque_new();
     
@@ -44,7 +44,7 @@ export class Opaque {
         
         finally {}
     }
-
+	
     static tryFromUtf8(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -60,7 +60,7 @@ export class Opaque {
             functionCleanupArena.free();
         }
     }
-
+	
     static fromStr(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -76,7 +76,7 @@ export class Opaque {
             functionCleanupArena.free();
         }
     }
-
+	
     getDebugStr() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
@@ -89,7 +89,7 @@ export class Opaque {
             write.free();
         }
     }
-
+	
     assertStruct(s) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         wasm.Opaque_assert_struct(this.ffiValue, ...MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(functionCleanupArena, {}));
@@ -100,7 +100,7 @@ export class Opaque {
             functionCleanupArena.free();
         }
     }
-
+	
     static returnsUsize() {
         const result = wasm.Opaque_returns_usize();
     
@@ -110,7 +110,7 @@ export class Opaque {
         
         finally {}
     }
-
+	
     static returnsImported() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
@@ -124,7 +124,7 @@ export class Opaque {
             diplomatReceive.free();
         }
     }
-
+	
     static cmp() {
         const result = wasm.Opaque_cmp();
     

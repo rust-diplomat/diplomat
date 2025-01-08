@@ -21,5 +21,6 @@ export class ErrorStruct {
     */
     static FromFields(structObj : ErrorStruct_obj) : ErrorStruct;
     
+    
     constructor(structObj : ErrorStruct_obj);
 }

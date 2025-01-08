@@ -38,7 +38,8 @@ export class BigStructWithStuff {
     */
     static FromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
     
+    
     constructor(structObj : BigStructWithStuff_obj);
-
+	
     assertValue(extraVal: number): void;
 }

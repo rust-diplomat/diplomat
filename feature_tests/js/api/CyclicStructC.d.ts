@@ -19,9 +19,10 @@ export class CyclicStructC {
     */
     static FromFields(structObj : CyclicStructC_obj) : CyclicStructC;
     
+    
     constructor(structObj : CyclicStructC_obj);
-
+	
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
-
+	
     cyclicOut(): string;
 }

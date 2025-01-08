@@ -49,6 +49,7 @@ export class ErrorStruct {
         }
 
     }
+    
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }

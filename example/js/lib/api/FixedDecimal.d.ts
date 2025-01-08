@@ -9,11 +9,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class FixedDecimal {
 	
     get ffiValue(): pointer;
-
-    #defaultConstructor(v: number): FixedDecimal;
-
+	
     multiplyPow10(power: number): void;
-
+	
     toString(): string | null;
 
     constructor(v: number);

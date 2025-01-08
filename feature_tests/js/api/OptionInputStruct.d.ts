@@ -26,5 +26,6 @@ export class OptionInputStruct {
     */
     static FromFields(structObj : OptionInputStruct_obj) : OptionInputStruct;
     
+    
     constructor(structObj : OptionInputStruct_obj);
 }

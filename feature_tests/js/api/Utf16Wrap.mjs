@@ -32,7 +32,7 @@ export class Utf16Wrap {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #defaultConstructor(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -48,7 +48,7 @@ export class Utf16Wrap {
             functionCleanupArena.free();
         }
     }
-
+	
     getDebugStr() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
@@ -61,7 +61,7 @@ export class Utf16Wrap {
             write.free();
         }
     }
-
+	
     borrowCont() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         

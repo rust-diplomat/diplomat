@@ -37,7 +37,7 @@ export class DataProvider {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     static newStatic() {
         const result = wasm.icu4x_DataProvider_new_static_mv1();
     
@@ -47,7 +47,7 @@ export class DataProvider {
         
         finally {}
     }
-
+	
     static returnsResult() {
         const result = wasm.icu4x_DataProvider_returns_result_mv1();
     

@@ -32,7 +32,7 @@ export class Float64Vec {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     static newBool(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -48,7 +48,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     static newI16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -64,7 +64,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     static newU16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -80,7 +80,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     static newIsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -96,7 +96,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     static newUsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -112,7 +112,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     static newF64BeBytes(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -128,7 +128,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -144,7 +144,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     get asSlice() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
@@ -161,7 +161,7 @@ export class Float64Vec {
             diplomatReceive.free();
         }
     }
-
+	
     fillSlice(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -174,7 +174,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     setValue(newSlice) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -187,7 +187,7 @@ export class Float64Vec {
             functionCleanupArena.free();
         }
     }
-
+	
     toString() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Float64Vec_to_string(this.ffiValue, write.buffer);
@@ -200,7 +200,7 @@ export class Float64Vec {
             write.free();
         }
     }
-
+	
     borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
@@ -217,7 +217,7 @@ export class Float64Vec {
             diplomatReceive.free();
         }
     }
-
+	
     get(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
         

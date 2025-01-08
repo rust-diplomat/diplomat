@@ -40,7 +40,7 @@ export class Foo {
     get ffiValue() {
         return this.#ptr;
     }
-
+	
     #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, x));
@@ -58,7 +58,7 @@ export class Foo {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
-
+	
     get bar() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -74,7 +74,7 @@ export class Foo {
         
         finally {}
     }
-
+	
     asReturning() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
@@ -91,7 +91,7 @@ export class Foo {
             diplomatReceive.free();
         }
     }
-
+	
     static extractFromFields(fields) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -108,7 +108,7 @@ export class Foo {
             functionCleanupArena.free();
         }
     }
-
+	
     static extractFromBounds(bounds, anotherString) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
