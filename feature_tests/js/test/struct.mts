@@ -65,8 +65,7 @@ test("Test struct layout: scalar pair layout", t => {
         first: 122,
         second: 414
     });
-    s.assertValue();
-    t.is(true, true); // Ava doesn't like tests without assertions
+    t.notThrows(() => { s.assertValue() });
 });
 
 test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
@@ -77,8 +76,7 @@ test("Test struct layout: complex struct with multiple padding types and contain
         fourth: new ScalarPairWithPadding({first: 122, second: 414}),
         fifth: 99
     });
-    s.assertValue(853);
-    t.is(true, true); // Ava doesn't like tests without assertions
+    t.notThrows(() => { s.assertValue(853) });
 });
 
 test("Function Returning Nested Struct of One Primitive", t => {
