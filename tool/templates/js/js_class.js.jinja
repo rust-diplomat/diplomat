@@ -13,7 +13,7 @@ export class {{type_name}} {
 
 	{#- Do not include the method in typescript if it is meant to be private: -#}
 	{%- if !method.method_decl.starts_with('#') || !typescript %}
-	
+
     {{ method|indent(4) }}
 	{%- endif -%}
 {%- endfor ~%}
