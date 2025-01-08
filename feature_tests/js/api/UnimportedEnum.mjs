@@ -43,7 +43,7 @@ export class UnimportedEnum {
         throw TypeError(value + " is not a UnimportedEnum and does not correspond to any of its enumerator values.");
     }
 
-    static FromValue(value) {
+    static fromValue(value) {
         return new UnimportedEnum(value);
     }
 

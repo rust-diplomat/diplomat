@@ -37,7 +37,7 @@ export class BorrowedFields {
     /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new BorrowedFields(structObj);
     }
     
@@ -65,7 +65,7 @@ export class BorrowedFields {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -92,7 +92,7 @@ export class BorrowedFields {
             return obj;
         }
 
-        return BorrowedFields.FromFields(obj);
+        return BorrowedFields.fromFields(obj);
     }
 
     _writeToArrayBuffer(

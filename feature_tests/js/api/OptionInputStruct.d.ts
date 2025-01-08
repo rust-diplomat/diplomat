@@ -24,8 +24,8 @@ export class OptionInputStruct {
     /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj : OptionInputStruct_obj) : OptionInputStruct;
+    static fromFields(structObj : OptionInputStruct_obj) : OptionInputStruct;
     
-    
+
     constructor(structObj : OptionInputStruct_obj);
 }

@@ -22,7 +22,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                         ]
                     ),
                     (function (...args) {
-                        return FixedDecimalFormatterOptions.FromFields({
+                        return FixedDecimalFormatterOptions.fromFields({
                             groupingStrategy: args[0],
                             someOtherConfig: args[1]});
                     }).apply(

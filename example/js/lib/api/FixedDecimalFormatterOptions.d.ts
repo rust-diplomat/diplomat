@@ -20,7 +20,7 @@ export class FixedDecimalFormatterOptions {
     /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
+    static fromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
     
 
     constructor();

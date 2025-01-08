@@ -58,7 +58,7 @@ export class BigStructWithStuff {
     /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new BigStructWithStuff(structObj);
     }
     
@@ -98,7 +98,7 @@ export class BigStructWithStuff {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -122,7 +122,7 @@ export class BigStructWithStuff {
             return obj;
         }
 
-        return BigStructWithStuff.FromFields(obj);
+        return BigStructWithStuff.fromFields(obj);
     }
 
     _writeToArrayBuffer(

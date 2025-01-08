@@ -19,7 +19,7 @@ export class CyclicStructA {
     /** Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new CyclicStructA(structObj);
     }
     
@@ -35,7 +35,7 @@ export class CyclicStructA {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -59,7 +59,7 @@ export class CyclicStructA {
             return obj;
         }
 
-        return CyclicStructA.FromFields(obj);
+        return CyclicStructA.fromFields(obj);
     }
 
     _writeToArrayBuffer(

@@ -24,9 +24,9 @@ export class BorrowedFieldsWithBounds {
     /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
+    static fromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
     
-    
+
     constructor(structObj : BorrowedFieldsWithBounds_obj);
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;

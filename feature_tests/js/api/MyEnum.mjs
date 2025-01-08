@@ -46,7 +46,7 @@ export class MyEnum {
         throw TypeError(value + " is not a MyEnum and does not correspond to any of its enumerator values.");
     }
 
-    static FromValue(value) {
+    static fromValue(value) {
         return new MyEnum(value);
     }
 

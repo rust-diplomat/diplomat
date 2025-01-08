@@ -27,7 +27,7 @@ export class ErrorStruct {
     /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new ErrorStruct(structObj);
     }
     
@@ -49,7 +49,7 @@ export class ErrorStruct {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -73,7 +73,7 @@ export class ErrorStruct {
             return obj;
         }
 
-        return ErrorStruct.FromFields(obj);
+        return ErrorStruct.fromFields(obj);
     }
 
     _writeToArrayBuffer(

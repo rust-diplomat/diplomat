@@ -30,7 +30,7 @@ export class ScalarPairWithPadding {
     /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new ScalarPairWithPadding(structObj);
     }
     
@@ -52,7 +52,7 @@ export class ScalarPairWithPadding {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -80,7 +80,7 @@ export class ScalarPairWithPadding {
             return obj;
         }
 
-        return ScalarPairWithPadding.FromFields(obj);
+        return ScalarPairWithPadding.fromFields(obj);
     }
 
     _writeToArrayBuffer(

@@ -37,7 +37,7 @@ export class OptionInputStruct {
     /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new OptionInputStruct(structObj);
     }
     
@@ -65,7 +65,7 @@ export class OptionInputStruct {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -89,7 +89,7 @@ export class OptionInputStruct {
             return obj;
         }
 
-        return OptionInputStruct.FromFields(obj);
+        return OptionInputStruct.fromFields(obj);
     }
 
     _writeToArrayBuffer(

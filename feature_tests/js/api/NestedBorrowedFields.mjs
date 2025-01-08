@@ -40,7 +40,7 @@ export class NestedBorrowedFields {
     /** Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new NestedBorrowedFields(structObj);
     }
     
@@ -68,7 +68,7 @@ export class NestedBorrowedFields {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -97,7 +97,7 @@ export class NestedBorrowedFields {
             return obj;
         }
 
-        return NestedBorrowedFields.FromFields(obj);
+        return NestedBorrowedFields.fromFields(obj);
     }
 
     _writeToArrayBuffer(

@@ -28,7 +28,7 @@ export class ImportedStruct {
     /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new ImportedStruct(structObj);
     }
     
@@ -50,7 +50,7 @@ export class ImportedStruct {
         }
 
     }
-    
+
     constructor(structObj) {
         this.#internalConstructor(structObj);
     }
@@ -78,7 +78,7 @@ export class ImportedStruct {
             return obj;
         }
 
-        return ImportedStruct.FromFields(obj);
+        return ImportedStruct.fromFields(obj);
     }
 
     _writeToArrayBuffer(

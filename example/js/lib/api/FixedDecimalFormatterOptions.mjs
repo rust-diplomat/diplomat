@@ -28,7 +28,7 @@ export class FixedDecimalFormatterOptions {
     /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj) {
+    static fromFields(structObj) {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
     
@@ -74,7 +74,7 @@ export class FixedDecimalFormatterOptions {
             return obj;
         }
 
-        return FixedDecimalFormatterOptions.FromFields(obj);
+        return FixedDecimalFormatterOptions.fromFields(obj);
     }
 
     _writeToArrayBuffer(

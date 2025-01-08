@@ -7,7 +7,7 @@ export class FixedDecimalGroupingStrategy {
 	
     constructor(value : FixedDecimalGroupingStrategy | string);
 
-    static FromValue(value : FixedDecimalGroupingStrategy | string) : FixedDecimalGroupingStrategy; 
+    static fromValue(value : FixedDecimalGroupingStrategy | string) : FixedDecimalGroupingStrategy; 
 
     get value() : string;
 

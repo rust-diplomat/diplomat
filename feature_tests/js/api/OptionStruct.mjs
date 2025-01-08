@@ -65,7 +65,7 @@ export class OptionStruct {
         }
 
     }
-    
+
     constructor(structObj, internalConstructor) {
         this.#internalConstructor(structObj, internalConstructor);
     }
@@ -89,7 +89,7 @@ export class OptionStruct {
             return obj;
         }
 
-        return OptionStruct.FromFields(obj);
+        return OptionStruct.fromFields(obj);
     }
 
     _writeToArrayBuffer(

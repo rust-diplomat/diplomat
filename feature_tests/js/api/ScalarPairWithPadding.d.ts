@@ -22,9 +22,9 @@ export class ScalarPairWithPadding {
     /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
     * Optional fields do not need to be included in the provided object.
     */
-    static FromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
+    static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
     
-    
+
     constructor(structObj : ScalarPairWithPadding_obj);
 
     assertValue(): void;
