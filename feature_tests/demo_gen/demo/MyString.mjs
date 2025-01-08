@@ -3,7 +3,7 @@ export function getStr(v) {
     return (function (...args) { return args[0].getStr }).apply(
         null,
         [
-            MyString.new_.apply(
+            (function (...args) { return new MyString(...args) } ).apply(
                 null,
                 [
                     v

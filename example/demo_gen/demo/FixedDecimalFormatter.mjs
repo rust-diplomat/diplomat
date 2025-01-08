@@ -10,7 +10,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             FixedDecimalFormatter.tryNew.apply(
                 null,
                 [
-                    Locale.new_.apply(
+                    (function (...args) { return new Locale(...args) } ).apply(
                         null,
                         [
                             name
@@ -34,7 +34,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                     )
                 ]
             ),
-            FixedDecimal.new_.apply(
+            (function (...args) { return new FixedDecimal(...args) } ).apply(
                 null,
                 [
                     v
