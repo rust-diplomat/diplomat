@@ -11,22 +11,22 @@ type {{type_name}}_obj = {
 {% endif -%}
 {% endblock %}
 
-{% block class_body %}
-    {%- for field in fields %}
+{% block class_body -%}
+    {%- for field in fields -%}
 
-    {% if !typescript -%}
+    {%- if !typescript %}
     #{{field.field_name}};
-    {% endif -%}
+    {% endif %}
     get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
         return this.#{{field.field_name}};
-    }{% endif %}
-    {% if mutable -%} 
+    }{% endif -%}
+    {%- if mutable %} 
     set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {% if !typescript -%} {
         this.#{{field.field_name}} = value;
     }
     {%- endif -%}
-    {%- endif -%}
-    {%- endfor %}
+    {%- endif %}
+    {% endfor -%}
 
     {%~ if !is_out %}
     /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
