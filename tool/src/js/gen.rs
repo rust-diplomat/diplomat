@@ -599,9 +599,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // TODO: Make this hidden in typescript.
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
-            Some(SpecialMethod::Constructor) => {
-                "#defaultConstructor".into()
-            }
+            Some(SpecialMethod::Constructor) => "#defaultConstructor".into(),
 
             _ if method.param_self.is_none() => {
                 format!("static {}", self.formatter.fmt_method_name(method))
