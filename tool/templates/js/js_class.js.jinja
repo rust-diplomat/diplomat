@@ -9,9 +9,13 @@
 export class {{type_name}} {
 	{% block class_body %}{% endblock %}
 
-	{%- for method in methods.methods %}
+	{%- for method in methods.methods -%}
 
+	{#- Do not include the method in typescript if it is meant to be private: -#}
+	{%- if !method.method_decl.starts_with('#') || !typescript %}
+	
     {{ method|indent(4) }}
+	{%- endif -%}
 {%- endfor ~%}
     {{~ methods.special_methods|indent(4) -}}
 }
