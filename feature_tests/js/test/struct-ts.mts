@@ -14,7 +14,7 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
-    const s = MyStruct.FromFields({
+    const s = MyStruct.fromFields({
         a: 17,
         b: true,
         c: 209,
@@ -94,5 +94,5 @@ test("Function De-Referencing Nested Struct of One Primitive", t => {
 test("Verify Enum Construction", t => {
     t.is(new DefaultEnum(), DefaultEnum.A);
 
-	t.is(DefaultEnum.FromValue("B"), DefaultEnum.B);
+	t.is(DefaultEnum.fromValue("B"), DefaultEnum.B);
 });
