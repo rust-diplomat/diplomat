@@ -37,7 +37,7 @@ export class One {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     static transitivity(hold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd, 'e
         let aEdges = [hold];
@@ -50,7 +50,7 @@ export class One {
         
         finally {}
     }
-	
+
     static cycle(hold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c
         let aEdges = [hold];
@@ -63,7 +63,7 @@ export class One {
         
         finally {}
     }
-	
+
     static manyDependents(a, b, c, d, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [a, b, c, d];
@@ -76,7 +76,7 @@ export class One {
         
         finally {}
     }
-	
+
     static returnOutlivesParam(hold, nohold) {
         // This lifetime edge depends on lifetimes 'long
         let longEdges = [hold];
@@ -89,7 +89,7 @@ export class One {
         
         finally {}
     }
-	
+
     static diamondTop(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'top, 'left, 'right, 'bottom
         let topEdges = [top, left, right, bottom];
@@ -102,7 +102,7 @@ export class One {
         
         finally {}
     }
-	
+
     static diamondLeft(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'left, 'bottom
         let leftEdges = [left, bottom];
@@ -115,7 +115,7 @@ export class One {
         
         finally {}
     }
-	
+
     static diamondRight(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'right, 'bottom
         let rightEdges = [right, bottom];
@@ -128,7 +128,7 @@ export class One {
         
         finally {}
     }
-	
+
     static diamondBottom(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'bottom
         let bottomEdges = [bottom];
@@ -141,7 +141,7 @@ export class One {
         
         finally {}
     }
-	
+
     static diamondAndNestedTypes(a, b, c, d, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [a, b, c, d];
@@ -154,7 +154,7 @@ export class One {
         
         finally {}
     }
-	
+
     static implicitBounds(explicitHold, implicitHold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd, 'x
         let aEdges = [explicitHold, implicitHold];
@@ -167,7 +167,7 @@ export class One {
         
         finally {}
     }
-	
+
     static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [explicit, implicit1, implicit2];

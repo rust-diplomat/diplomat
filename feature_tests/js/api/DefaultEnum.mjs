@@ -60,7 +60,7 @@ export class DefaultEnum {
 
     static A = DefaultEnum.#objectValues[0];
     static B = DefaultEnum.#objectValues[1];
-	
+
     #defaultConstructor() {
         const result = wasm.DefaultEnum_new();
     

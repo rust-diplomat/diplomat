@@ -21,8 +21,8 @@ export class CyclicStructA {
     
     
     constructor(structObj : CyclicStructA_obj);
-	
+
     static getB(): CyclicStructB;
-	
+
     cyclicOut(): string;
 }

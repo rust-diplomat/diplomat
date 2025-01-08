@@ -28,6 +28,6 @@ export class BorrowedFieldsWithBounds {
     
     
     constructor(structObj : BorrowedFieldsWithBounds_obj);
-	
+
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 }

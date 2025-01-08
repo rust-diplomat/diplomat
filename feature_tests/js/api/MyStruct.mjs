@@ -191,7 +191,7 @@ export class MyStruct {
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
-	
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
         
@@ -205,7 +205,7 @@ export class MyStruct {
             diplomatReceive.free();
         }
     }
-	
+
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -219,7 +219,7 @@ export class MyStruct {
             functionCleanupArena.free();
         }
     }
-	
+
     static returnsZstResult() {
         const result = wasm.MyStruct_returns_zst_result();
     
@@ -233,7 +233,7 @@ export class MyStruct {
         
         finally {}
     }
-	
+
     static failsZstResult() {
         const result = wasm.MyStruct_fails_zst_result();
     

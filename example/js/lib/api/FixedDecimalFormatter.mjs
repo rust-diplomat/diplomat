@@ -41,7 +41,7 @@ export class FixedDecimalFormatter {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     static tryNew(locale, provider, options) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -62,7 +62,7 @@ export class FixedDecimalFormatter {
             diplomatReceive.free();
         }
     }
-	
+
     formatWrite(value) {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);

@@ -32,7 +32,7 @@ export class MyOpaqueEnum {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     static new_() {
         const result = wasm.MyOpaqueEnum_new();
     
@@ -42,7 +42,7 @@ export class MyOpaqueEnum {
         
         finally {}
     }
-	
+
     toString() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyOpaqueEnum_to_string(this.ffiValue, write.buffer);

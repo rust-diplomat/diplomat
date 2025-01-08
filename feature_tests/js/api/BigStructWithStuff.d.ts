@@ -40,6 +40,6 @@ export class BigStructWithStuff {
     
     
     constructor(structObj : BigStructWithStuff_obj);
-	
+
     assertValue(extraVal: number): void;
 }

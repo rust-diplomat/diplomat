@@ -26,6 +26,6 @@ export class ScalarPairWithPadding {
     
     
     constructor(structObj : ScalarPairWithPadding_obj);
-	
+
     assertValue(): void;
 }

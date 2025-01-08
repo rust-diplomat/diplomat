@@ -34,7 +34,7 @@ export class AttrOpaque1Renamed {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     #defaultConstructor() {
         const result = wasm.namespace_AttrOpaque1_new();
     
@@ -44,7 +44,7 @@ export class AttrOpaque1Renamed {
         
         finally {}
     }
-	
+
     get methodRenamed() {
         const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
     
@@ -54,7 +54,7 @@ export class AttrOpaque1Renamed {
         
         finally {}
     }
-	
+
     get abirenamed() {
         const result = wasm.renamed_on_abi_only(this.ffiValue);
     
@@ -64,14 +64,14 @@ export class AttrOpaque1Renamed {
         
         finally {}
     }
-	
+
     useUnnamespaced(un) {wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
         try {}
         
         finally {}
     }
-	
+
     useNamespaced(n) {wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}

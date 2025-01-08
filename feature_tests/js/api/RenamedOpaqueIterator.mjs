@@ -37,7 +37,7 @@ export class RenamedOpaqueIterator {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     #iteratorNext() {
         const result = wasm.namespace_OpaqueIterator_next(this.ffiValue);
     

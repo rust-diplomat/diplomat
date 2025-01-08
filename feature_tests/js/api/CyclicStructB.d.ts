@@ -20,8 +20,8 @@ export class CyclicStructB {
     
     
     constructor(structObj : CyclicStructB_obj);
-	
+
     static getA(): CyclicStructA;
-	
+
     static getAOption(): CyclicStructA | null;
 }

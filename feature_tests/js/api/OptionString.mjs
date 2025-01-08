@@ -32,7 +32,7 @@ export class OptionString {
     get ffiValue() {
         return this.#ptr;
     }
-	
+
     static new_(diplomatStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -48,7 +48,7 @@ export class OptionString {
             functionCleanupArena.free();
         }
     }
-	
+
     write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         
@@ -62,7 +62,7 @@ export class OptionString {
             write.free();
         }
     }
-	
+
     borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         

@@ -43,11 +43,11 @@ export class MyStruct {
     */
     static FromFields(structObj : MyStruct_obj) : MyStruct;
     
-	
+
     intoA(): number;
-	
+
     static returnsZstResult(): void;
-	
+
     static failsZstResult(): void;
 
     constructor();

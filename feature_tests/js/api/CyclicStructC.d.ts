@@ -21,8 +21,8 @@ export class CyclicStructC {
     
     
     constructor(structObj : CyclicStructC_obj);
-	
+
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
-	
+
     cyclicOut(): string;
 }

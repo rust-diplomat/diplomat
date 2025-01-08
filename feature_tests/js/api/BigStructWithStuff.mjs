@@ -161,7 +161,7 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj);
     }
-	
+
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         wasm.BigStructWithStuff_assert_value(...this._intoFFI(), extraVal);

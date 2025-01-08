@@ -28,6 +28,6 @@ export class BorrowedFields {
     
     
     constructor(structObj : BorrowedFields_obj);
-	
+
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 }
