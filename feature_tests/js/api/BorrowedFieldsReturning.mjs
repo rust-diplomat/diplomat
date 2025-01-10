@@ -33,6 +33,7 @@ export class BorrowedFieldsReturning {
             throw new Error("Missing required field bytes.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

@@ -125,6 +125,7 @@ export class MyStruct {
             throw new Error("Missing required field g.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

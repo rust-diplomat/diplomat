@@ -48,6 +48,7 @@ export class ErrorStruct {
             throw new Error("Missing required field j.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

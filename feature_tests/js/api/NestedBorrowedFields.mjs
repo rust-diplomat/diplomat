@@ -67,6 +67,7 @@ export class NestedBorrowedFields {
             throw new Error("Missing required field bounds2.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

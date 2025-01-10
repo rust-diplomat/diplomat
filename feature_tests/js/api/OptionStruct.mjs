@@ -64,6 +64,7 @@ export class OptionStruct {
             throw new Error("Missing required field d.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

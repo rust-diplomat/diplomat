@@ -64,6 +64,7 @@ export class OptionInputStruct {
             this.#c = null;
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

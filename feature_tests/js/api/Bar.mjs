@@ -37,6 +37,8 @@ export class Bar {
         if (this.#selfEdge.length === 0) {
             Bar_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

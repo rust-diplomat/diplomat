@@ -18,6 +18,7 @@ export class MyZst {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");
         }
 
+        return this;
     }
 
 

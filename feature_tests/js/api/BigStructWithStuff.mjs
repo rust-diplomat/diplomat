@@ -97,6 +97,7 @@ export class BigStructWithStuff {
             throw new Error("Missing required field fifth.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

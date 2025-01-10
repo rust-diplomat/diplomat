@@ -64,6 +64,7 @@ export class BorrowedFieldsWithBounds {
             throw new Error("Missing required field fieldC.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

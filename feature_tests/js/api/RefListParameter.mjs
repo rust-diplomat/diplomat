@@ -28,6 +28,8 @@ export class RefListParameter {
         if (this.#selfEdge.length === 0) {
             RefListParameter_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

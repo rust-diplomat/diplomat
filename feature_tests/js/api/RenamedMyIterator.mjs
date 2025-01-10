@@ -32,6 +32,8 @@ export class RenamedMyIterator {
         if (this.#selfEdge.length === 0) {
             RenamedMyIterator_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

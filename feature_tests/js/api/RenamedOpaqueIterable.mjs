@@ -29,6 +29,8 @@ export class RenamedOpaqueIterable {
         if (this.#selfEdge.length === 0) {
             RenamedOpaqueIterable_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

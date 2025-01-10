@@ -30,6 +30,8 @@ export class AttrOpaque1Renamed {
         if (this.#selfEdge.length === 0) {
             AttrOpaque1Renamed_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

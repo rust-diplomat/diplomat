@@ -37,6 +37,8 @@ export class FixedDecimalFormatter {
         if (this.#selfEdge.length === 0) {
             FixedDecimalFormatter_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

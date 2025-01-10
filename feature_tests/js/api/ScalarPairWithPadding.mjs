@@ -51,6 +51,7 @@ export class ScalarPairWithPadding {
             throw new Error("Missing required field second.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

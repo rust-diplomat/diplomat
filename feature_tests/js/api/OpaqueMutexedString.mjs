@@ -29,6 +29,8 @@ export class OpaqueMutexedString {
         if (this.#selfEdge.length === 0) {
             OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

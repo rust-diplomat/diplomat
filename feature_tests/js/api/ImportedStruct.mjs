@@ -49,6 +49,7 @@ export class ImportedStruct {
             throw new Error("Missing required field count.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

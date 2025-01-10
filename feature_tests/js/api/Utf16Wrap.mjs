@@ -28,6 +28,8 @@ export class Utf16Wrap {
         if (this.#selfEdge.length === 0) {
             Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

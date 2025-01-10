@@ -36,6 +36,8 @@ export class Foo {
         if (this.#selfEdge.length === 0) {
             Foo_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

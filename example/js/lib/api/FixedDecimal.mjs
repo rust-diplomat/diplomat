@@ -31,6 +31,8 @@ export class FixedDecimal {
         if (this.#selfEdge.length === 0) {
             FixedDecimal_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
     get ffiValue() {
         return this.#ptr;

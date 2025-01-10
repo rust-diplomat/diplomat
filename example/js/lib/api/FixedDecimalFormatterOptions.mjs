@@ -49,6 +49,7 @@ export class FixedDecimalFormatterOptions {
             throw new Error("Missing required field someOtherConfig.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.

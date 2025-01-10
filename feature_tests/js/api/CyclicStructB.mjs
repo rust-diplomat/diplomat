@@ -34,6 +34,7 @@ export class CyclicStructB {
             throw new Error("Missing required field field.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
