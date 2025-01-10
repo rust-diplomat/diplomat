@@ -151,6 +151,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods: &'a MethodsInfo<'a>,
 
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
             show_default_ctor: bool,
         }
 
@@ -194,6 +195,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods: &'a MethodsInfo<'a>,
 
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
+            /// Useful for hiding opaque constructors in typescript headers, for instance.
             show_default_ctor: bool,
         }
 
@@ -423,6 +426,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: String,
 
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
+            /// Useful for hiding the fact that an out_struct has a constructor in typescript headers, for instance.
             show_default_ctor: bool,
         }
 
