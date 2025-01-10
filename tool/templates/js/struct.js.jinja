@@ -71,6 +71,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
             {%- endif %}
         }
         {%~ endfor %}
+        return this;
     }
     {%- endif -%}
     {%- endif -%}

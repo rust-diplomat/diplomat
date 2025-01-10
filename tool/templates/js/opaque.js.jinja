@@ -42,6 +42,8 @@ symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifeti
         if (this.#selfEdge.length === 0) {
             {{type_name}}_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
 
     {%- endif %}
