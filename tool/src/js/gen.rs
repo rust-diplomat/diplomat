@@ -447,7 +447,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
 
-            show_default_ctor: !is_out && typescript,
+            show_default_ctor: !is_out || !typescript,
         }
         .render()
         .unwrap()
