@@ -99,4 +99,8 @@ export class ErrorStruct {
 
         return new ErrorStruct(structObj);
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

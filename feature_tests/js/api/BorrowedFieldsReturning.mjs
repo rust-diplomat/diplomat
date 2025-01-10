@@ -88,4 +88,8 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

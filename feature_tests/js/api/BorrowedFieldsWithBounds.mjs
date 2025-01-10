@@ -175,4 +175,8 @@ export class BorrowedFieldsWithBounds {
             diplomatReceive.free();
         }
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

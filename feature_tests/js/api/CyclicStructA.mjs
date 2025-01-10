@@ -109,4 +109,8 @@ export class CyclicStructA {
             write.free();
         }
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

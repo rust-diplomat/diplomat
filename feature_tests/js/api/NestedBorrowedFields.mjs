@@ -182,4 +182,8 @@ export class NestedBorrowedFields {
             diplomatReceive.free();
         }
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

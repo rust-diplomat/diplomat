@@ -20,4 +20,8 @@ export class MyZst {
 
     }
 
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

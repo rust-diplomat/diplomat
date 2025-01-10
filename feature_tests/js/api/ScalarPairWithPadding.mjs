@@ -118,4 +118,8 @@ export class ScalarPairWithPadding {
             functionCleanupArena.free();
         }
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

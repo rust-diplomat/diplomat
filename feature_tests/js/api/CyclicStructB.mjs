@@ -109,4 +109,8 @@ export class CyclicStructB {
             diplomatReceive.free();
         }
     }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }
