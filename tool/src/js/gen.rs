@@ -151,7 +151,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods: &'a MethodsInfo<'a>,
 
-            show_ctor: bool,
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -165,7 +165,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods,
 
-            show_ctor: true,
+            show_default_ctor: true,
         }
         .render()
         .unwrap()
@@ -194,7 +194,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods: &'a MethodsInfo<'a>,
 
-            show_ctor: bool,
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -208,7 +208,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             methods,
 
-            show_ctor: !typescript,
+            show_default_ctor: !typescript,
         }
         .render()
         .unwrap()
@@ -423,7 +423,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: String,
 
-            show_ctor: bool,
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -447,7 +447,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
 
-            show_ctor: !is_out && typescript,
+            show_default_ctor: !is_out && typescript,
         }
         .render()
         .unwrap()

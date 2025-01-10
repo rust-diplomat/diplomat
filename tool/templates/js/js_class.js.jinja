@@ -29,7 +29,7 @@ export class {{type_name}} {
     }{%- endif -%}
     {%- endif -%}
 
-{%- if show_ctor %}
+{%- if show_default_ctor || overrides_constructor %}
 
     constructor(
     {%- if let Some(ctor) = methods.special_methods.constructor %}
