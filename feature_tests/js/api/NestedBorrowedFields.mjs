@@ -9,7 +9,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class NestedBorrowedFields {
-	
+    
     #fields;
     
     get fields()  {
@@ -67,10 +67,6 @@ export class NestedBorrowedFields {
             throw new Error("Missing required field bounds2.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

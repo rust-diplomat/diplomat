@@ -11,7 +11,7 @@ type OptionInputStruct_obj = {
 
 
 export class OptionInputStruct {
-	
+    
     get a() : number | null; 
     set a(value: number | null); 
     

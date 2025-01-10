@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ImportedStruct {
-	
+    
     #foo;
     
     get foo()  {
@@ -49,10 +49,6 @@ export class ImportedStruct {
             throw new Error("Missing required field count.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

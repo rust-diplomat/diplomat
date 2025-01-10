@@ -9,7 +9,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BigStructWithStuff {
-	
+    
     #first;
     
     get first()  {
@@ -97,10 +97,6 @@ export class BigStructWithStuff {
             throw new Error("Missing required field fifth.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

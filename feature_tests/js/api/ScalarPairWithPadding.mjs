@@ -8,7 +8,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ScalarPairWithPadding {
-	
+    
     #first;
     
     get first()  {
@@ -51,10 +51,6 @@ export class ScalarPairWithPadding {
             throw new Error("Missing required field second.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

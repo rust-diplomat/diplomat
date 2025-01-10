@@ -7,7 +7,7 @@ const OptionString_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class OptionString {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -15,7 +15,7 @@ export class OptionString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("OptionString is an Opaque type. You cannot call its constructor.");
             return;
@@ -81,5 +81,9 @@ export class OptionString {
         finally {
             diplomatReceive.free();
         }
+    }
+
+    constructor(symbol, ptr, selfEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

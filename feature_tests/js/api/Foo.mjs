@@ -11,7 +11,7 @@ const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Foo {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

@@ -9,7 +9,7 @@ type ErrorStruct_obj = {
 
 
 export class ErrorStruct {
-	
+    
     get i() : number; 
     set i(value: number); 
     

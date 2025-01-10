@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionStruct {
-	
+    
     #a;
     
     get a()  {
@@ -64,10 +64,6 @@ export class OptionStruct {
             throw new Error("Missing required field d.");
         }
 
-    }
-
-    constructor(structObj, internalConstructor) {
-        this.#internalConstructor(structObj, internalConstructor);
     }
 
     // Return this struct in FFI function friendly format.

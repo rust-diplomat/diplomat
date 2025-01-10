@@ -10,7 +10,7 @@ type ImportedStruct_obj = {
 
 
 export class ImportedStruct {
-	
+    
     get foo() : UnimportedEnum; 
     set foo(value: UnimportedEnum); 
     

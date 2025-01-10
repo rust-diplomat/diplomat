@@ -12,7 +12,7 @@ const Locale_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Locale {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

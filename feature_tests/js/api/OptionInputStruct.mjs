@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionInputStruct {
-	
+    
     #a;
     
     get a()  {
@@ -64,10 +64,6 @@ export class OptionInputStruct {
             this.#c = null;
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

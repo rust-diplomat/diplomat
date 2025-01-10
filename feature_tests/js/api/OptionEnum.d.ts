@@ -4,8 +4,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionEnum {
-	
-    constructor(value : OptionEnum | string);
+    
 
     static fromValue(value : OptionEnum | string) : OptionEnum; 
 
@@ -15,4 +14,6 @@ export class OptionEnum {
 
     static Foo : OptionEnum;
     static Bar : OptionEnum;
+
+    constructor(value: OptionEnum | string );
 }

@@ -7,7 +7,7 @@ const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Utf16Wrap {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

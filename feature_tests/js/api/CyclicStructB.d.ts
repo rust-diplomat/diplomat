@@ -9,7 +9,7 @@ type CyclicStructB_obj = {
 
 
 export class CyclicStructB {
-	
+    
     get field() : number; 
     set field(value: number); 
     
@@ -19,9 +19,9 @@ export class CyclicStructB {
     static fromFields(structObj : CyclicStructB_obj) : CyclicStructB;
     
 
-    constructor(structObj : CyclicStructB_obj);
-
     static getA(): CyclicStructA;
 
     static getAOption(): CyclicStructA | null;
+
+    constructor(structObj : CyclicStructB_obj);
 }

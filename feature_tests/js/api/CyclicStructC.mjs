@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class CyclicStructC {
-	
+    
     #a;
     
     get a()  {
@@ -34,10 +34,6 @@ export class CyclicStructC {
             throw new Error("Missing required field a.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

@@ -17,7 +17,7 @@ type BigStructWithStuff_obj = {
 
 
 export class BigStructWithStuff {
-	
+    
     get first() : number; 
     set first(value: number); 
     
@@ -39,7 +39,7 @@ export class BigStructWithStuff {
     static fromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
     
 
-    constructor(structObj : BigStructWithStuff_obj);
-
     assertValue(extraVal: number): void;
+
+    constructor(structObj : BigStructWithStuff_obj);
 }

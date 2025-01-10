@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFields {
-	
+    
     #a;
     
     get a()  {
@@ -64,10 +64,6 @@ export class BorrowedFields {
             throw new Error("Missing required field c.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

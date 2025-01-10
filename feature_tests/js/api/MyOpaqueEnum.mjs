@@ -7,7 +7,7 @@ const MyOpaqueEnum_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class MyOpaqueEnum {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -15,7 +15,7 @@ export class MyOpaqueEnum {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("MyOpaqueEnum is an Opaque type. You cannot call its constructor.");
             return;
@@ -54,5 +54,9 @@ export class MyOpaqueEnum {
         finally {
             write.free();
         }
+    }
+
+    constructor(symbol, ptr, selfEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

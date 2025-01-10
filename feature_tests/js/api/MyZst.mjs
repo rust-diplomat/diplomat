@@ -5,7 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyZst {
-	
+    
     /** Create `MyZst` from an object that contains all of `MyZst`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -18,10 +18,6 @@ export class MyZst {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
 }

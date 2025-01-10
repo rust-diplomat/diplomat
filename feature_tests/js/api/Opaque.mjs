@@ -9,7 +9,7 @@ const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Opaque {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

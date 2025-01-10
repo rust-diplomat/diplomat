@@ -8,7 +8,7 @@ const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Bar {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -18,7 +18,7 @@ export class Bar {
     #bEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, bEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Bar is an Opaque type. You cannot call its constructor.");
             return;
@@ -56,5 +56,9 @@ export class Bar {
         }
         
         finally {}
+    }
+
+    constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

@@ -8,7 +8,7 @@ type BorrowedFieldsReturning_obj = {
 
 
 export class BorrowedFieldsReturning {
-	
+    
     get bytes() : string; 
     set bytes(value: string); 
     

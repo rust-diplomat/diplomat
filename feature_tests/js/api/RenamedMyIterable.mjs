@@ -8,7 +8,7 @@ const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) =>
 });
 
 export class RenamedMyIterable {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

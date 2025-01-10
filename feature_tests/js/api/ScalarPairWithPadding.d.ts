@@ -12,7 +12,7 @@ type ScalarPairWithPadding_obj = {
 
 
 export class ScalarPairWithPadding {
-	
+    
     get first() : number; 
     set first(value: number); 
     
@@ -25,7 +25,7 @@ export class ScalarPairWithPadding {
     static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
     
 
-    constructor(structObj : ScalarPairWithPadding_obj);
-
     assertValue(): void;
+
+    constructor(structObj : ScalarPairWithPadding_obj);
 }

@@ -4,7 +4,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Utf16Wrap {
-	
+    
     get ffiValue(): pointer;
 
     getDebugStr(): string;

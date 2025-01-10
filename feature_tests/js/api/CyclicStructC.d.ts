@@ -10,7 +10,7 @@ type CyclicStructC_obj = {
 
 
 export class CyclicStructC {
-	
+    
     get a() : CyclicStructA; 
     set a(value: CyclicStructA); 
     
@@ -20,9 +20,9 @@ export class CyclicStructC {
     static fromFields(structObj : CyclicStructC_obj) : CyclicStructC;
     
 
-    constructor(structObj : CyclicStructC_obj);
-
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
 
     cyclicOut(): string;
+
+    constructor(structObj : CyclicStructC_obj);
 }

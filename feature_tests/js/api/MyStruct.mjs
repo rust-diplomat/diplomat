@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyStruct {
-	
+    
     #a;
     
     get a()  {

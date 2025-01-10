@@ -6,7 +6,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionStruct {
-	
+    
     get a() : OptionOpaque | null;
     
     get b() : OptionOpaqueChar | null;

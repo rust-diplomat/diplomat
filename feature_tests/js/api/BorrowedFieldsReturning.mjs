@@ -5,7 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsReturning {
-	
+    
     #bytes;
     
     get bytes()  {
@@ -33,10 +33,6 @@ export class BorrowedFieldsReturning {
             throw new Error("Missing required field bytes.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

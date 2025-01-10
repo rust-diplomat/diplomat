@@ -5,7 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyEnum {
-	
+    
     #value = undefined;
 
     static #values = new Map([
@@ -21,13 +21,13 @@ export class MyEnum {
         return MyEnum.#values.entries();
     }
     
-    constructor(value) {
+    #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
             // instances of this type, otherwise the enums are treated as singletons.
             if (arguments[1] === diplomatRuntime.internalConstructor ) {
                 this.#value = arguments[2];
-                return;
+                return this;
             }
             return MyEnum.#objectValues[arguments[1]];
         }
@@ -95,5 +95,9 @@ export class MyEnum {
         }
         
         finally {}
+    }
+
+    constructor(value) {
+        return this.#internalConstructor(...arguments)
     }
 }

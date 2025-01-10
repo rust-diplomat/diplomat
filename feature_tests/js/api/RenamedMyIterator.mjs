@@ -7,7 +7,7 @@ const RenamedMyIterator_box_destroy_registry = new FinalizationRegistry((ptr) =>
 });
 
 export class RenamedMyIterator {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +16,7 @@ export class RenamedMyIterator {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedMyIterator is an Opaque type. You cannot call its constructor.");
             return;
@@ -54,13 +54,16 @@ export class RenamedMyIterator {
         }
     }
 
-    
     next() {
         const out = this.#iteratorNext();
-    
+
         return {
             value: out,
             done: out === null,
         };
+    }
+
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

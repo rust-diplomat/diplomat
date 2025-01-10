@@ -7,7 +7,7 @@ const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Float64Vec {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 

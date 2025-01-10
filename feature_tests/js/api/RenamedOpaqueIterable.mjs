@@ -8,7 +8,7 @@ const RenamedOpaqueIterable_box_destroy_registry = new FinalizationRegistry((ptr
 });
 
 export class RenamedOpaqueIterable {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +16,7 @@ export class RenamedOpaqueIterable {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedOpaqueIterable is an Opaque type. You cannot call its constructor.");
             return;
@@ -45,5 +45,9 @@ export class RenamedOpaqueIterable {
         }
         
         finally {}
+    }
+
+    constructor(symbol, ptr, selfEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

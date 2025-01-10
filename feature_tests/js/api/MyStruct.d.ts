@@ -16,7 +16,7 @@ type MyStruct_obj = {
 
 
 export class MyStruct {
-	
+    
     get a() : number; 
     set a(value: number); 
     

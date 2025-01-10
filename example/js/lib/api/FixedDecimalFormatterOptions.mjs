@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class FixedDecimalFormatterOptions {
-	
+    
     #groupingStrategy;
     
     get groupingStrategy()  {

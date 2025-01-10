@@ -5,7 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class DefaultEnum {
-	
+    
     #value = undefined;
 
     static #values = new Map([
@@ -23,7 +23,7 @@ export class DefaultEnum {
             // instances of this type, otherwise the enums are treated as singletons.
             if (arguments[1] === diplomatRuntime.internalConstructor ) {
                 this.#value = arguments[2];
-                return;
+                return this;
             }
             return DefaultEnum.#objectValues[arguments[1]];
         }

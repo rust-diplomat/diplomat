@@ -5,7 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ErrorStruct {
-	
+    
     #i;
     
     get i()  {
@@ -48,10 +48,6 @@ export class ErrorStruct {
             throw new Error("Missing required field j.");
         }
 
-    }
-
-    constructor(structObj) {
-        this.#internalConstructor(structObj);
     }
 
     // Return this struct in FFI function friendly format.

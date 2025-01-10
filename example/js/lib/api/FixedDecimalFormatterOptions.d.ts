@@ -10,7 +10,7 @@ type FixedDecimalFormatterOptions_obj = {
 
 
 export class FixedDecimalFormatterOptions {
-	
+    
     get groupingStrategy() : FixedDecimalGroupingStrategy; 
     set groupingStrategy(value: FixedDecimalGroupingStrategy); 
     

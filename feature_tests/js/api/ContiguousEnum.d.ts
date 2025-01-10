@@ -4,8 +4,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class ContiguousEnum {
-	
-    constructor(value : ContiguousEnum | string);
+    
 
     static fromValue(value : ContiguousEnum | string) : ContiguousEnum; 
 
@@ -17,4 +16,6 @@ export class ContiguousEnum {
     static D : ContiguousEnum;
     static E : ContiguousEnum;
     static F : ContiguousEnum;
+
+    constructor(value: ContiguousEnum | string );
 }

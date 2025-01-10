@@ -8,7 +8,7 @@ const One_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class One {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -17,7 +17,7 @@ export class One {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("One is an Opaque type. You cannot call its constructor.");
             return;
@@ -179,5 +179,9 @@ export class One {
         }
         
         finally {}
+    }
+
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

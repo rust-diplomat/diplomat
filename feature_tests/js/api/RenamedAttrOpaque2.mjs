@@ -7,7 +7,7 @@ const RenamedAttrOpaque2_box_destroy_registry = new FinalizationRegistry((ptr) =
 });
 
 export class RenamedAttrOpaque2 {
-	
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -15,7 +15,7 @@ export class RenamedAttrOpaque2 {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedAttrOpaque2 is an Opaque type. You cannot call its constructor.");
             return;
@@ -31,5 +31,9 @@ export class RenamedAttrOpaque2 {
     }
     get ffiValue() {
         return this.#ptr;
+    }
+
+    constructor(symbol, ptr, selfEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }
