@@ -150,6 +150,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             doc_str: String,
 
             methods: &'a MethodsInfo<'a>,
+
+            show_ctor : bool
         }
 
         ImplTemplate {
@@ -162,6 +164,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             is_contiguous,
 
             methods,
+
+            show_ctor: true
         }
         .render()
         .unwrap()
@@ -189,6 +193,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             doc_str: String,
 
             methods: &'a MethodsInfo<'a>,
+
+            show_ctor: bool
         }
 
         ImplTemplate {
@@ -201,6 +207,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             doc_str: self.formatter.fmt_docs(&opaque_def.docs),
 
             methods,
+
+            show_ctor: !typescript
         }
         .render()
         .unwrap()
@@ -414,6 +422,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             owns_wrapped_primitive: bool,
 
             doc_str: String,
+
+            show_ctor: bool
         }
 
         ImplTemplate {
@@ -436,6 +446,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 ),
 
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
+
+            show_ctor: !is_out && typescript
         }
         .render()
         .unwrap()
@@ -698,8 +710,7 @@ pub(super) struct MethodInfo<'info> {
 }
 
 /// See [`TyGenContext::generate_special_method`].
-#[derive(Template)]
-#[template(path = "js/special_methods.js.jinja", escape = "none")]
+/// Used in `js_class.js.jinja`
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,

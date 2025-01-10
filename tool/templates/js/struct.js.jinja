@@ -11,6 +11,10 @@ type {{type_name}}_obj = {
 {% endif -%}
 {% endblock %}
 
+{% block internal_ctor_params -%}
+structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+{%- endblock %}
+
 {% block class_body -%}
     {%- for field in fields -%}
 
@@ -71,14 +75,6 @@ type {{type_name}}_obj = {
     {%- endif -%}
     {%- endif -%}
     
-    {%- if !overrides_constructor %}
-
-    constructor(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}) {%- if typescript %};{% else %} {
-        this.#internalConstructor(structObj {%- if is_out %}, internalConstructor {%- endif %});
-    }
-    {%- endif -%}
-
-    {%- endif -%}
     {%- endif -%}
 
     {%- if !typescript %}
