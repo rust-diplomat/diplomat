@@ -17,7 +17,6 @@ void main() {
     expect(sn.a, null);
     expect(sn.b, null);
     expect(sn.c, 908);
-    expect(sn.d, null);
 
     var maybeU8 = OptionOpaque.acceptsOptionU8(null);
     expect(maybeU8, null);

@@ -20,7 +20,6 @@ test("Verify option methods", t => {
     t.assert(!sn.a);
     t.assert(!sn.b);
     t.is(sn.c, 908);
-    t.assert(!sn.d);
 });
 
 test("DiplomatOption tests", t => {

@@ -14,7 +14,7 @@ final class OptionStruct {
   final OptionOpaque? a;
   final OptionOpaqueChar? b;
   final int c;
-  final OptionOpaque? d;
+  final OptionOpaque d;
 
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -26,7 +26,7 @@ final class OptionStruct {
     a = ffi.a.address == 0 ? null : OptionOpaque._fromFfi(ffi.a, []),
     b = ffi.b.address == 0 ? null : OptionOpaqueChar._fromFfi(ffi.b, []),
     c = ffi.c,
-    d = ffi.d.address == 0 ? null : OptionOpaque._fromFfi(ffi.d, []);
+    d = OptionOpaque._fromFfi(ffi.d, []);
 
   // ignore: unused_element
   _OptionStructFfi _toFfi(ffi.Allocator temp) {
@@ -34,7 +34,7 @@ final class OptionStruct {
     struct.a = a?._ffi ?? ffi.Pointer.fromAddress(0);
     struct.b = b?._ffi ?? ffi.Pointer.fromAddress(0);
     struct.c = c;
-    struct.d = d?._ffi ?? ffi.Pointer.fromAddress(0);
+    struct.d = d._ffi;
     return struct;
   }
 

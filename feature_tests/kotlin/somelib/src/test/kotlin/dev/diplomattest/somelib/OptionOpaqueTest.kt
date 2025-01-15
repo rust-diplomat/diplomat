@@ -30,7 +30,6 @@ class OptionOpaqueTest {
         assertNull(noneStruct.a)
         assertNull(noneStruct.b)
         assertEquals(noneStruct.c, 908.toUInt())
-        assertNull(noneStruct.d)
 
     }
 
