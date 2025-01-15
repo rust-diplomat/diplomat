@@ -37,7 +37,7 @@ export class ResultOpaque {
         return this.#ptr;
     }
 
-    static new_(i) {
+    #defaultConstructor(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
@@ -186,7 +186,13 @@ export class ResultOpaque {
         finally {}
     }
 
-    constructor(symbol, ptr, selfEdge) {
-        return this.#internalConstructor(...arguments)
+    constructor(i) {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
+        }
     }
 }

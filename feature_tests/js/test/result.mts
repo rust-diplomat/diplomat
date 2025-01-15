@@ -2,7 +2,7 @@ import test from 'ava';
 import { ErrorEnum, ErrorStruct, MyStruct, ResultOpaque } from 'diplomat-wasm-js-feature-tests';
 
 test('Verify result methods', t => {
-    const s = ResultOpaque.new_(5);
+    const s = new ResultOpaque(5);
     s.assertInteger(5);
 
     const error1 = t.throws(() => ResultOpaque.newFailingFoo());
