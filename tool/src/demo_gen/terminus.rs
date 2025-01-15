@@ -45,6 +45,7 @@ struct MethodDependency {
     variable_name : String,
 
     /// Parameters names to pass into the method.
+    /// TODO: Global parameter name collisions?
     params: Vec<String>,
 
     /// The Rust parameter that we're attempting to construct with this method. Currently used by [`OutParam`] for better default parameter names.
