@@ -31,7 +31,7 @@ pub struct OutParam {
 /// But this represents one step in the building block, so something like:
 ///
 /// ```typescript
-/// FixedDecimalFormatter.tryNew.apply(null, [...])
+/// let decimal_formatter = FixedDecimalFormatter.tryNew(...);
 /// ```
 ///
 /// Where we expand `...` with further MethodDependencies.
@@ -40,6 +40,9 @@ pub struct OutParam {
 struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
+
+    /// The variable name to assign to this method.
+    variable_name : String,
 
     /// Parameters to pass into the method.
     params: Vec<ParamInfo>,
@@ -62,9 +65,10 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
 }
 
 impl MethodDependency {
-    pub fn new(method_js: String, owning_param: Option<String>) -> Self {
+    pub fn new(method_js: String, variable_name : String, owning_param: Option<String>) -> Self {
         MethodDependency {
             method_js,
+            variable_name,
             params: Vec::new(),
             owning_param,
         }
@@ -163,7 +167,7 @@ impl RenderTerminusContext<'_, '_> {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root =
-            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
+            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), "out".into(), None);
 
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
@@ -400,11 +404,12 @@ impl RenderTerminusContext<'_, '_> {
                         .as_ref()
                         .map(|o| { format!("{o}:") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name)
+                    heck::AsUpperCamelCase(param_name.clone())
                 );
 
                 let mut child = MethodDependency::new(
                     self.get_constructor_js(type_name.to_string(), method),
+                    param_name,
                     Some(owned_type),
                 );
 
@@ -457,10 +462,10 @@ impl RenderTerminusContext<'_, '_> {
                 .as_ref()
                 .map(|o| { format!("{o}:") })
                 .unwrap_or_default(),
-            heck::AsUpperCamelCase(param_name)
+            heck::AsUpperCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new("".to_string(), Some(owned_type));
+        let mut child = MethodDependency::new("".to_string(), param_name, Some(owned_type));
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
