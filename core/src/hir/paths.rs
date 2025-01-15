@@ -70,6 +70,10 @@ impl<Owner: OpaqueOwner> OpaquePath<Optional, Owner> {
     pub fn is_optional(&self) -> bool {
         self.optional.0
     }
+
+    pub fn is_owned(&self) -> bool {
+        self.owner.is_owned()
+    }
 }
 
 impl<Owner: OpaqueOwner> OpaquePath<NonOptional, Owner> {

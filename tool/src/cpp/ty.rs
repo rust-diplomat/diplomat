@@ -549,6 +549,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(ref op) if op.is_optional() => {
                 format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
             }
+            Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
