@@ -138,9 +138,8 @@ pub(super) struct TerminusInfo {
 
     pub js_file_name: String,
 
-    /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
-    /// TODO: Replace with actually appending results of [`RenderTerminusContext::evaluate_constructor`] to this (like a stack).
-    pub node_call_stack: String,
+    /// Stack of results from calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`].
+    pub node_call_stack: Vec<String>,
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
     pub typescript: bool,
@@ -171,7 +170,7 @@ impl RenderTerminusContext<'_, '_> {
             MethodDependency::new(self.get_constructor_js(type_name.clone(), method), "out".into(), None);
 
         // And then we just treat the terminus as a regular constructor method:
-        self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
+        self.evaluate_constructor(method, &mut root);
 
         let type_n = type_name.clone();
         let format = self.formatter.fmt_import_module(
@@ -264,9 +263,7 @@ impl RenderTerminusContext<'_, '_> {
 
         self.terminus_info.out_params.push(out_param);
 
-        let param_info = ParamInfo { js: p };
-
-        node.params.push(param_info);
+        node.params.push(p);
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
@@ -414,8 +411,8 @@ impl RenderTerminusContext<'_, '_> {
                     Some(owned_type),
                 );
 
-                let call = self.evaluate_constructor(method, &mut child);
-                node.params.push(ParamInfo { js: call });
+                self.evaluate_constructor(method, &mut child);
+                // TODO: Add to params.
                 break;
             }
         }
@@ -430,14 +427,12 @@ impl RenderTerminusContext<'_, '_> {
                     You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
                     op.name.as_str(), node.method_js)
             );
-            node.params.push(ParamInfo {
-                js: format!(
-                    "null \
-                    /*Could not find a usable constructor for {}. \
-                    Try adding #[diplomat::demo(default_constructor)]*/",
-                    op.name.as_str()
-                ),
-            });
+            node.params.push(format!(
+                "null \
+                /*Could not find a usable constructor for {}. \
+                Try adding #[diplomat::demo(default_constructor)]*/",
+                op.name.as_str()
+            ));
         }
     }
 
@@ -494,13 +489,11 @@ impl RenderTerminusContext<'_, '_> {
         .render()
         .unwrap();
 
-        node.params.push(ParamInfo {
-            js: child.render().unwrap(),
-        });
+        node.params.push("temp".into());
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
-    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
+    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
         let param_self = method.param_self.as_ref();
 
         if param_self.is_some() {
@@ -519,7 +512,7 @@ impl RenderTerminusContext<'_, '_> {
             );
         }
 
-        // The node that is awaiting this node as a child needs the rendered output:
-        node.render().unwrap()
+        // Add this method to the call stack:
+        self.terminus_info.node_call_stack.push(node.render().unwrap());
     }
 }
