@@ -139,6 +139,7 @@ pub(super) struct TerminusInfo {
     pub js_file_name: String,
 
     /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
+    /// TODO: Replace with actually appending results of [`RenderTerminusContext::evaluate_constructor`] to this (like a stack).
     pub node_call_stack: String,
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
