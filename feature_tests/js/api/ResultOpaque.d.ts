@@ -9,8 +9,6 @@ export class ResultOpaque {
     
     get ffiValue(): pointer;
 
-    static new_(i: number): ResultOpaque;
-
     static newFailingFoo(): ResultOpaque;
 
     static newFailingBar(): ResultOpaque;
@@ -26,4 +24,6 @@ export class ResultOpaque {
     static newInEnumErr(i: number): ErrorEnum;
 
     assertInteger(i: number): void;
+
+    constructor(i: number);
 }
