@@ -1,5 +1,5 @@
 let {{variable_name}} = {{ method_js }}(
     {%- for param in params -%}
-    {{ param.js }}{% if !loop.last %},{% endif -%}
+    {{ param }}{% if !loop.last %},{% endif -%}
     {%- endfor -%}
 );

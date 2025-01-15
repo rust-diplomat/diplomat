@@ -44,8 +44,8 @@ struct MethodDependency {
     /// The variable name to assign to this method.
     variable_name : String,
 
-    /// Parameters to pass into the method.
-    params: Vec<ParamInfo>,
+    /// Parameters names to pass into the method.
+    params: Vec<String>,
 
     /// The Rust parameter that we're attempting to construct with this method. Currently used by [`OutParam`] for better default parameter names.
     owning_param: Option<String>,
