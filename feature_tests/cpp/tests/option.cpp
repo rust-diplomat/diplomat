@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
     simple_assert("new_struct_nones() returns None", !s.a);
     simple_assert("new_struct_nones() returns None", !s.b);
     simple_assert_eq("correct struct returned", s.c, 908);
-    simple_assert("new_struct_nones() returns None", !s.d);
 
     auto opt_u8 = OptionOpaque::accepts_option_u8(std::nullopt);
     simple_assert("accepts_option_u8 is idempotent", !opt_u8.has_value());

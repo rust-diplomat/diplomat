@@ -13,6 +13,6 @@ export class OptionStruct {
     
     get c() : number;
     
-    get d() : OptionOpaque | null;
+    get d() : OptionOpaque;
     
 }

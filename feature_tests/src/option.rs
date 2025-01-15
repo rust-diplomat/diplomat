@@ -35,7 +35,7 @@ pub mod ffi {
         a: Option<Box<OptionOpaque>>,
         b: Option<Box<OptionOpaqueChar>>,
         c: u32,
-        d: Option<Box<OptionOpaque>>,
+        d: Box<OptionOpaque>,
     }
 
     #[diplomat::attr(not(supports = option), disable)]
@@ -101,7 +101,7 @@ pub mod ffi {
                 a: Some(Box::new(OptionOpaque(101))),
                 b: Some(Box::new(OptionOpaqueChar('餐'))),
                 c: 904,
-                d: Some(Box::new(OptionOpaque(926535))),
+                d: Box::new(OptionOpaque(926535)),
             }
         }
 
@@ -110,7 +110,7 @@ pub mod ffi {
                 a: None,
                 b: None,
                 c: 908,
-                d: None,
+                d: Box::new(OptionOpaque(926535)),
             }
         }
 

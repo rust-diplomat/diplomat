@@ -17,7 +17,7 @@ internal class OptionStructNative: Structure(), Structure.ByValue {
     @JvmField
     internal var c: FFIUint32 = FFIUint32();
     @JvmField
-    internal var d: Pointer? = null;
+    internal var d: Pointer = Pointer(0);
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -38,11 +38,7 @@ class OptionStruct internal constructor (
         OptionOpaqueChar(nativeStruct.b!!, listOf())
     }
     val c: UInt = nativeStruct.c.toUInt()
-    val d: OptionOpaque? = if (nativeStruct.d == null) {
-        null
-    } else {
-        OptionOpaque(nativeStruct.d!!, listOf())
-    }
+    val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf())
 
     companion object {
         internal val libClass: Class<OptionStructLib> = OptionStructLib::class.java
