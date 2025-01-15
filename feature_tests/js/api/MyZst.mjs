@@ -2,12 +2,27 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+
+
 export class MyZst {
-    constructor(structObj) {
+    
+    /** Create `MyZst` from an object that contains all of `MyZst`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new MyZst(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");
         }
 
+        return this;
     }
 
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

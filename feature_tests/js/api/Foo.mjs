@@ -11,6 +11,7 @@ const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Foo {
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -19,7 +20,7 @@ export class Foo {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Foo is an Opaque type. You cannot call its constructor.");
             return;
@@ -35,13 +36,14 @@ export class Foo {
         if (this.#selfEdge.length === 0) {
             Foo_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
-
     get ffiValue() {
         return this.#ptr;
     }
 
-    static new_(x) {
+    #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, x));
         
@@ -128,6 +130,16 @@ export class Foo {
             functionCleanupArena.free();
         
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+        }
+    }
+
+    constructor(x) {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

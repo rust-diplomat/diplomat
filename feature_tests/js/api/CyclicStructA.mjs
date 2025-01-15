@@ -3,16 +3,27 @@ import { CyclicStructB } from "./CyclicStructB.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class CyclicStructA {
 
+
+export class CyclicStructA {
+    
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-    constructor(structObj) {
+    
+    /** Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new CyclicStructA(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructA's constructor takes an object of CyclicStructA's fields.");
         }
@@ -23,6 +34,7 @@ export class CyclicStructA {
             throw new Error("Missing required field a.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -44,7 +56,7 @@ export class CyclicStructA {
             return obj;
         }
 
-        return new CyclicStructA(obj);
+        return CyclicStructA.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -65,11 +77,11 @@ export class CyclicStructA {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructA._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = primitiveValue;
         structObj.a = CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return new CyclicStructA(structObj, internalConstructor);
+        return new CyclicStructA(structObj);
     }
 
     static getB() {
@@ -97,5 +109,9 @@ export class CyclicStructA {
         
             write.free();
         }
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }

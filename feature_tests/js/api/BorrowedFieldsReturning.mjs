@@ -2,16 +2,27 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class BorrowedFieldsReturning {
 
+
+export class BorrowedFieldsReturning {
+    
     #bytes;
+    
     get bytes()  {
         return this.#bytes;
-    }
+    } 
     set bytes(value) {
         this.#bytes = value;
     }
-    constructor(structObj) {
+    
+    /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new BorrowedFieldsReturning(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
         }
@@ -22,6 +33,7 @@ export class BorrowedFieldsReturning {
             throw new Error("Missing required field bytes.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -46,7 +58,7 @@ export class BorrowedFieldsReturning {
             return obj;
         }
 
-        return new BorrowedFieldsReturning(obj);
+        return BorrowedFieldsReturning.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -62,11 +74,11 @@ export class BorrowedFieldsReturning {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BorrowedFieldsReturning._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const bytesDeref = ptr;
         structObj.bytes = new diplomatRuntime.DiplomatSliceStr(wasm, bytesDeref,  "string8", aEdges).getValue();
 
-        return new BorrowedFieldsReturning(structObj, internalConstructor);
+        return new BorrowedFieldsReturning(structObj);
     }
 
     // Return all fields corresponding to lifetime `'a` 
@@ -77,4 +89,8 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
+    }
 }

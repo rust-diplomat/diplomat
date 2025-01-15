@@ -5,24 +5,36 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** Testing JS-specific layout/padding behavior
 */
-export class ScalarPairWithPadding {
 
+
+export class ScalarPairWithPadding {
+    
     #first;
+    
     get first()  {
         return this.#first;
-    }
+    } 
     set first(value) {
         this.#first = value;
     }
-
+    
     #second;
+    
     get second()  {
         return this.#second;
-    }
+    } 
     set second(value) {
         this.#second = value;
     }
-    constructor(structObj) {
+    
+    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new ScalarPairWithPadding(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");
         }
@@ -39,6 +51,7 @@ export class ScalarPairWithPadding {
             throw new Error("Missing required field second.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -64,7 +77,7 @@ export class ScalarPairWithPadding {
             return obj;
         }
 
-        return new ScalarPairWithPadding(obj);
+        return ScalarPairWithPadding.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -87,13 +100,13 @@ export class ScalarPairWithPadding {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ScalarPairWithPadding._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const firstDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.first = firstDeref;
         const secondDeref = (new Uint32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.second = secondDeref;
 
-        return new ScalarPairWithPadding(structObj, internalConstructor);
+        return new ScalarPairWithPadding(structObj);
     }
 
     assertValue() {
@@ -105,5 +118,9 @@ export class ScalarPairWithPadding {
         finally {
             functionCleanupArena.free();
         }
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }

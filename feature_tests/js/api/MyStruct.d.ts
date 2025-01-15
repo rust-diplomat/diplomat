@@ -13,35 +13,42 @@ type MyStruct_obj = {
     g: MyEnum;
 };
 
+
+
 export class MyStruct {
-
-    get a() : number;
+    
+    get a() : number; 
     set a(value: number); 
-
-    get b() : boolean;
+    
+    get b() : boolean; 
     set b(value: boolean); 
-
-    get c() : number;
+    
+    get c() : number; 
     set c(value: number); 
-
-    get d() : bigint;
+    
+    get d() : bigint; 
     set d(value: bigint); 
-
-    get e() : number;
+    
+    get e() : number; 
     set e(value: number); 
-
-    get f() : codepoint;
+    
+    get f() : codepoint; 
     set f(value: codepoint); 
-
-    get g() : MyEnum;
+    
+    get g() : MyEnum; 
     set g(value: MyEnum); 
-    constructor(structObj : MyStruct_obj);
-
-    static new_(): MyStruct;
+    
+    /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj : MyStruct_obj) : MyStruct;
+    
 
     intoA(): number;
 
     static returnsZstResult(): void;
 
     static failsZstResult(): void;
+
+    constructor();
 }

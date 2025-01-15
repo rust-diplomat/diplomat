@@ -5,13 +5,13 @@ export function cyclicOut(field) {
         null,
         [
             (function (...args) {
-                return new CyclicStructA({
+                return CyclicStructA.fromFields({
                     a: args[0]});
             }).apply(
                 null,
                 [
                     (function (...args) {
-                        return new CyclicStructB({
+                        return CyclicStructB.fromFields({
                             field: args[0]});
                     }).apply(
                         null,

@@ -6,48 +6,63 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** Testing JS-specific layout/padding behavior
 */
-export class BigStructWithStuff {
 
+
+export class BigStructWithStuff {
+    
     #first;
+    
     get first()  {
         return this.#first;
-    }
+    } 
     set first(value) {
         this.#first = value;
     }
-
+    
     #second;
+    
     get second()  {
         return this.#second;
-    }
+    } 
     set second(value) {
         this.#second = value;
     }
-
+    
     #third;
+    
     get third()  {
         return this.#third;
-    }
+    } 
     set third(value) {
         this.#third = value;
     }
-
+    
     #fourth;
+    
     get fourth()  {
         return this.#fourth;
-    }
+    } 
     set fourth(value) {
         this.#fourth = value;
     }
-
+    
     #fifth;
+    
     get fifth()  {
         return this.#fifth;
-    }
+    } 
     set fifth(value) {
         this.#fifth = value;
     }
-    constructor(structObj) {
+    
+    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new BigStructWithStuff(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");
         }
@@ -82,6 +97,7 @@ export class BigStructWithStuff {
             throw new Error("Missing required field fifth.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -103,7 +119,7 @@ export class BigStructWithStuff {
             return obj;
         }
 
-        return new BigStructWithStuff(obj);
+        return BigStructWithStuff.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -128,7 +144,7 @@ export class BigStructWithStuff {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("BigStructWithStuff._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const firstDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.first = firstDeref;
         const secondDeref = (new Uint16Array(wasm.memory.buffer, ptr + 2, 1))[0];
@@ -140,7 +156,7 @@ export class BigStructWithStuff {
         const fifthDeref = (new Uint8Array(wasm.memory.buffer, ptr + 16, 1))[0];
         structObj.fifth = fifthDeref;
 
-        return new BigStructWithStuff(structObj, internalConstructor);
+        return new BigStructWithStuff(structObj);
     }
 
     assertValue(extraVal) {
@@ -152,5 +168,9 @@ export class BigStructWithStuff {
         finally {
             functionCleanupArena.free();
         }
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }

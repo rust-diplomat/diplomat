@@ -2,24 +2,36 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class ErrorStruct {
 
+
+export class ErrorStruct {
+    
     #i;
+    
     get i()  {
         return this.#i;
-    }
+    } 
     set i(value) {
         this.#i = value;
     }
-
+    
     #j;
+    
     get j()  {
         return this.#j;
-    }
+    } 
     set j(value) {
         this.#j = value;
     }
-    constructor(structObj) {
+    
+    /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new ErrorStruct(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");
         }
@@ -36,6 +48,7 @@ export class ErrorStruct {
             throw new Error("Missing required field j.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -57,7 +70,7 @@ export class ErrorStruct {
             return obj;
         }
 
-        return new ErrorStruct(obj);
+        return ErrorStruct.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -79,12 +92,16 @@ export class ErrorStruct {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("ErrorStruct._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
         structObj.i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         structObj.j = jDeref;
 
-        return new ErrorStruct(structObj, internalConstructor);
+        return new ErrorStruct(structObj);
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }

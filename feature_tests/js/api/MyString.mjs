@@ -7,6 +7,7 @@ const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class MyString {
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -14,7 +15,7 @@ export class MyString {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("MyString is an Opaque type. You cannot call its constructor.");
             return;
@@ -27,13 +28,14 @@ export class MyString {
         if (this.#selfEdge.length === 0) {
             MyString_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
-
     get ffiValue() {
         return this.#ptr;
     }
 
-    static new_(v) {
+    #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
@@ -156,6 +158,16 @@ export class MyString {
         
         finally {
             diplomatReceive.free();
+        }
+    }
+
+    constructor(v) {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

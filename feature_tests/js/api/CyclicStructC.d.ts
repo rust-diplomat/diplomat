@@ -7,13 +7,22 @@ type CyclicStructC_obj = {
     a: CyclicStructA_obj;
 };
 
-export class CyclicStructC {
 
-    get a() : CyclicStructA;
+
+export class CyclicStructC {
+    
+    get a() : CyclicStructA; 
     set a(value: CyclicStructA); 
-    constructor(structObj : CyclicStructC_obj);
+    
+    /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj : CyclicStructC_obj) : CyclicStructC;
+    
 
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
 
     cyclicOut(): string;
+
+    constructor(structObj : CyclicStructC_obj);
 }

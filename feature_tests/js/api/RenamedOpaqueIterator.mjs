@@ -8,6 +8,7 @@ const RenamedOpaqueIterator_box_destroy_registry = new FinalizationRegistry((ptr
 });
 
 export class RenamedOpaqueIterator {
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +17,7 @@ export class RenamedOpaqueIterator {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedOpaqueIterator is an Opaque type. You cannot call its constructor.");
             return;
@@ -32,8 +33,9 @@ export class RenamedOpaqueIterator {
         if (this.#selfEdge.length === 0) {
             RenamedOpaqueIterator_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
-
     get ffiValue() {
         return this.#ptr;
     }
@@ -48,13 +50,16 @@ export class RenamedOpaqueIterator {
         finally {}
     }
 
-    
     next() {
         const out = this.#iteratorNext();
-    
+
         return {
             value: out,
             done: out === null,
         };
+    }
+
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

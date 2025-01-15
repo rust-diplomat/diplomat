@@ -3,16 +3,27 @@ import { CyclicStructA } from "./CyclicStructA.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class CyclicStructB {
 
+
+export class CyclicStructB {
+    
     #field;
+    
     get field()  {
         return this.#field;
-    }
+    } 
     set field(value) {
         this.#field = value;
     }
-    constructor(structObj) {
+    
+    /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new CyclicStructB(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructB's constructor takes an object of CyclicStructB's fields.");
         }
@@ -23,6 +34,7 @@ export class CyclicStructB {
             throw new Error("Missing required field field.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -44,7 +56,7 @@ export class CyclicStructB {
             return obj;
         }
 
-        return new CyclicStructB(obj);
+        return CyclicStructB.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -65,11 +77,11 @@ export class CyclicStructB {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructB._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         structObj.field = primitiveValue;
         
 
-        return new CyclicStructB(structObj, internalConstructor);
+        return new CyclicStructB(structObj);
     }
 
     static getA() {
@@ -97,5 +109,9 @@ export class CyclicStructB {
         finally {
             diplomatReceive.free();
         }
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }

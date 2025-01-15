@@ -11,9 +11,10 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 *
 *See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
 */
+
+
 export class FixedDecimalFormatter {
     
-
     get ffiValue(): pointer;
 
     static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions_obj): FixedDecimalFormatter | null;

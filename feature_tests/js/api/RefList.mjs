@@ -8,6 +8,7 @@ const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class RefList {
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,7 +17,7 @@ export class RefList {
     #selfEdge = [];
     #aEdge = [];
     
-    constructor(symbol, ptr, selfEdge, aEdge) {
+    #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RefList is an Opaque type. You cannot call its constructor.");
             return;
@@ -32,8 +33,9 @@ export class RefList {
         if (this.#selfEdge.length === 0) {
             RefList_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
-
     get ffiValue() {
         return this.#ptr;
     }
@@ -49,5 +51,9 @@ export class RefList {
         }
         
         finally {}
+    }
+
+    constructor(symbol, ptr, selfEdge, aEdge) {
+        return this.#internalConstructor(...arguments)
     }
 }

@@ -1,17 +1,21 @@
-{%- if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif -%}
+{% extends "js/js_class.js.jinja" %}
+
+{% block header_info %}
 {%- if !typescript -%}
 
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.{{destructor}}(ptr);
 });
 
-{% endif -%}
+{%- endif -%}
+{%- endblock %}
 
-export class {{type_name}} {
-    {% if !typescript -%}
+{% block internal_ctor_params -%}
+symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}
+{%- endblock %}
+
+{% block class_body -%}
+    {%- if !typescript %}
     // Internal ptr reference:
     #ptr = null;
 
@@ -22,7 +26,7 @@ export class {{type_name}} {
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
     {%- endfor %}
     
-    constructor(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+    #internalConstructor(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("{{type_name}} is an Opaque type. You cannot call its constructor.");
             return;
@@ -38,18 +42,13 @@ export class {{type_name}} {
         if (this.#selfEdge.length === 0) {
             {{type_name}}_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
 
     {%- endif %}
-
     get ffiValue(){% if typescript %}: pointer;{% else %} {
         return this.#ptr;
     }
     {%- endif -%}
-
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
-}
+{% endblock %}

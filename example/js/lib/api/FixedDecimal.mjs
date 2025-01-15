@@ -10,6 +10,7 @@ const FixedDecimal_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class FixedDecimal {
+    
     // Internal ptr reference:
     #ptr = null;
 
@@ -17,7 +18,7 @@ export class FixedDecimal {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    constructor(symbol, ptr, selfEdge) {
+    #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("FixedDecimal is an Opaque type. You cannot call its constructor.");
             return;
@@ -30,13 +31,14 @@ export class FixedDecimal {
         if (this.#selfEdge.length === 0) {
             FixedDecimal_box_destroy_registry.register(this, this.#ptr);
         }
+        
+        return this;
     }
-
     get ffiValue() {
         return this.#ptr;
     }
 
-    static new_(v) {
+    #defaultConstructor(v) {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
@@ -64,6 +66,16 @@ export class FixedDecimal {
         
         finally {
             write.free();
+        }
+    }
+
+    constructor(v) {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

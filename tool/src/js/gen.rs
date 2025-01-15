@@ -150,6 +150,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             doc_str: String,
 
             methods: &'a MethodsInfo<'a>,
+
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -162,6 +165,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             is_contiguous,
 
             methods,
+
+            show_default_ctor: true,
         }
         .render()
         .unwrap()
@@ -186,9 +191,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &'a LifetimeEnv,
             destructor: &'a str,
 
-            docs: String,
+            doc_str: String,
 
             methods: &'a MethodsInfo<'a>,
+
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
+            /// Useful for hiding opaque constructors in typescript headers, for instance.
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -198,9 +207,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &opaque_def.lifetimes,
             destructor,
 
-            docs: self.formatter.fmt_docs(&opaque_def.docs),
+            doc_str: self.formatter.fmt_docs(&opaque_def.docs),
 
             methods,
+
+            show_default_ctor: !typescript,
         }
         .render()
         .unwrap()
@@ -413,7 +424,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             wraps_primitive: bool,
             owns_wrapped_primitive: bool,
 
-            docs: String,
+            doc_str: String,
+
+            /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
+            /// Useful for hiding the fact that an out_struct has a constructor in typescript headers, for instance.
+            show_default_ctor: bool,
         }
 
         ImplTemplate {
@@ -435,7 +450,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     hir::Type::Primitive(..)
                 ),
 
-            docs: self.formatter.fmt_docs(&struct_def.docs),
+            doc_str: self.formatter.fmt_docs(&struct_def.docs),
+
+            show_default_ctor: !is_out || !typescript,
         }
         .render()
         .unwrap()
@@ -596,7 +613,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 format!("set {}", self.formatter.fmt_method_field_name(name, method))
             }
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
+            // TODO: Make this hidden in typescript.
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
+
+            Some(SpecialMethod::Constructor) => "#defaultConstructor".into(),
 
             _ if method.param_self.is_none() => {
                 format!("static {}", self.formatter.fmt_method_name(method))
@@ -623,13 +643,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         SpecialMethodInfo {
             iterator,
+            constructor: None,
             typescript: false,
         }
     }
 }
 
 /// Represents a parameter of a method. Used as part of [`MethodInfo`], exclusively in the method definition.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(super) struct ParamInfo<'a> {
     ty: Cow<'a, str>,
     name: Cow<'a, str>,
@@ -642,6 +663,7 @@ pub(super) struct ParamInfo<'a> {
 /// [`ParamInfo`] represents the conversion of the slice into C-friendly terms. This just represents an extra stage for Diplomat to convert whatever slice type we're given into a type that returns a `.ptr` and `.size` field.
 ///
 /// See `DiplomatBuf` in `runtime.mjs` for more.
+#[derive(Clone)]
 pub(super) struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
@@ -651,7 +673,7 @@ pub(super) struct SliceParam<'a> {
 /// Represents a Rust method that we invoke inside of WebAssembly with JS.
 ///
 /// Has an attached template to convert it into Javascript.
-#[derive(Default, Template)]
+#[derive(Default, Template, Clone)]
 #[template(path = "js/method.js.jinja", escape = "none")]
 pub(super) struct MethodInfo<'info> {
     /// Do we return the `()` type?
@@ -693,11 +715,11 @@ pub(super) struct MethodInfo<'info> {
 }
 
 /// See [`TyGenContext::generate_special_method`].
-#[derive(Template)]
-#[template(path = "js/iterator.js.jinja", escape = "none")]
+/// Used in `js_class.js.jinja`
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
     pub typescript: bool,
+    pub constructor: Option<MethodInfo<'a>>,
 }
 
 /// An amalgamation of both [`SpecialMethodInfo`] and [`MethodInfo`], since these two always get passed together in methods.

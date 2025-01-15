@@ -2,13 +2,11 @@
 import type { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
+
+
 export class RenamedOpaqueIterator {
     
-
     get ffiValue(): pointer;
 
-    #iteratorNext(): AttrOpaque1Renamed | null;
-
-    
     next() : IteratorResult<AttrOpaque1Renamed>;
 }

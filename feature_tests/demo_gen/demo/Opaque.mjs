@@ -3,7 +3,7 @@ export function getDebugStr() {
     return (function (...args) { return args[0].getDebugStr(...args.slice(1)) }).apply(
         null,
         [
-            Opaque.new_.apply(
+            (function (...args) { return new Opaque(...args) } ).apply(
                 null,
                 [
                 ]

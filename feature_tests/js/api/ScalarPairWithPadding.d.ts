@@ -9,14 +9,23 @@ type ScalarPairWithPadding_obj = {
     second: number;
 };
 
+
+
 export class ScalarPairWithPadding {
-
-    get first() : number;
+    
+    get first() : number; 
     set first(value: number); 
-
-    get second() : number;
+    
+    get second() : number; 
     set second(value: number); 
-    constructor(structObj : ScalarPairWithPadding_obj);
+    
+    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
+    
 
     assertValue(): void;
+
+    constructor(structObj : ScalarPairWithPadding_obj);
 }

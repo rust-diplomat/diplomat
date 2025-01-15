@@ -3,24 +3,36 @@ import { FixedDecimalGroupingStrategy } from "./FixedDecimalGroupingStrategy.mjs
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class FixedDecimalFormatterOptions {
 
+
+export class FixedDecimalFormatterOptions {
+    
     #groupingStrategy;
+    
     get groupingStrategy()  {
         return this.#groupingStrategy;
-    }
+    } 
     set groupingStrategy(value) {
         this.#groupingStrategy = value;
     }
-
+    
     #someOtherConfig;
+    
     get someOtherConfig()  {
         return this.#someOtherConfig;
-    }
+    } 
     set someOtherConfig(value) {
         this.#someOtherConfig = value;
     }
-    constructor(structObj) {
+    
+    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");
         }
@@ -37,6 +49,7 @@ export class FixedDecimalFormatterOptions {
             throw new Error("Missing required field someOtherConfig.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -62,7 +75,7 @@ export class FixedDecimalFormatterOptions {
             return obj;
         }
 
-        return new FixedDecimalFormatterOptions(obj);
+        return FixedDecimalFormatterOptions.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -85,16 +98,16 @@ export class FixedDecimalFormatterOptions {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("FixedDecimalFormatterOptions._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         structObj.groupingStrategy = new FixedDecimalGroupingStrategy(diplomatRuntime.internalConstructor, groupingStrategyDeref);
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         structObj.someOtherConfig = someOtherConfigDeref;
 
-        return new FixedDecimalFormatterOptions(structObj, internalConstructor);
+        return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
 
-    static default_() {
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
@@ -105,6 +118,16 @@ export class FixedDecimalFormatterOptions {
         
         finally {
             diplomatReceive.free();
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
         }
     }
 }

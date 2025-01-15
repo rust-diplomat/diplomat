@@ -1,8 +1,8 @@
 import test from 'ava';
-import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
-    const s = MyStruct.new_();
+    const s = new MyStruct();
     t.is(s.a, 17);
     t.is(s.b, true);
     t.is(s.c, 209);
@@ -14,7 +14,7 @@ test("Verify invariants of struct", t => {
 });
 
 test("Test struct creation", t => {
-    const s = new MyStruct({
+    const s = MyStruct.fromFields({
         a: 17,
         b: true,
         c: 209,
@@ -87,4 +87,10 @@ test("Function Returning Nested Struct of One Primitive", t => {
 test("Function De-Referencing Nested Struct of One Primitive", t => {
     const a = CyclicStructB.getAOption();
     t.is(a.cyclicOut(), "0");
+});
+
+test("Verify Enum Construction", t => {
+    t.is(new DefaultEnum(), DefaultEnum.A);
+
+	t.is(DefaultEnum.fromValue("B"), DefaultEnum.B);
 });

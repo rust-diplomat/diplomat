@@ -1,8 +1,6 @@
-{%- if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif -%}
+{% extends "js/js_class.js.jinja" %}
 
+{% block header_info %}
 {%- if typescript && !is_out -%}
 type {{type_name}}_obj = {
     {%- for field in fields %}
@@ -11,27 +9,45 @@ type {{type_name}}_obj = {
 };
 
 {% endif -%}
+{% endblock %}
 
-export class {{type_name}} {
-    {%- for field in fields %}
+{% block internal_ctor_params -%}
+structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+{%- endblock %}
 
-    {% if !typescript -%}
+{% block class_body -%}
+    {%- for field in fields -%}
+
+    {%- if !typescript %}
     #{{field.field_name}};
-    {% endif -%}
+    {% endif %}
     get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
         return this.#{{field.field_name}};
-    }{% endif %}
-    {% if mutable -%} 
+    }{% endif -%}
+    {%- if mutable %} 
     set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {% if !typescript -%} {
         this.#{{field.field_name}} = value;
     }
     {%- endif -%}
-    {%- endif -%}
-    {%- endfor %}
+    {%- endif %}
+    {% endfor -%}
+
+    {%~ if !is_out %}
+    /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    {# This function exists because some structs can override their default constructors.
+     # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
+     # For instance, demo_gen uses this function instead of the constructor
+    -#}
+    static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
+        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj);
+    } {%- endif %}
+    {% endif -%}
 
     {%- if !(typescript && is_out) %}
-    constructor(structObj
-        {%- if typescript %} : {{type_name}}_obj {%- endif -%}
+    {%- if !typescript %}
+    #internalConstructor(structObj
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
         if (typeof structObj !== "object") {
@@ -55,9 +71,12 @@ export class {{type_name}} {
             {%- endif %}
         }
         {%~ endfor %}
+        return this;
     }
     {%- endif -%}
-    {%- endif %}
+    {%- endif -%}
+    
+    {%- endif -%}
 
     {%- if !typescript %}
     {%~ if !fields.is_empty() %}
@@ -101,7 +120,7 @@ export class {{type_name}} {
             return obj;
         }
 
-        return new {{type_name}}(obj);
+        return {{type_name}}.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -128,7 +147,7 @@ export class {{type_name}} {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}}._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
 
         {%- if wraps_primitive && owns_wrapped_primitive %}
         structObj.{{fields.first().unwrap().field_name}} = primitiveValue;
@@ -139,7 +158,7 @@ export class {{type_name}} {
         {%- endfor %}
         {%- endif %}
 
-        return new {{type_name}}(structObj, internalConstructor);
+        return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
     }
     
     {%- for l in lifetimes.all_lifetimes() %}
@@ -167,11 +186,5 @@ export class {{type_name}} {
     };
     {%- endfor -%}
     {%- endif -%}
-    {%- endif %}
-
-{%- for method in methods.methods %}
-
-    {{ method|indent(4) }}
-{%- endfor ~%}
-    {{~ methods.special_methods|indent(4) -}}
-}
+    {%- endif -%}
+{% endblock %}

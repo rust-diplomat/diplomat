@@ -86,4 +86,6 @@ export { ErrorEnum } from "./ErrorEnum.mjs"
 
 export { ContiguousEnum } from "./ContiguousEnum.mjs"
 
+export { DefaultEnum } from "./DefaultEnum.mjs"
+
 export { MyEnum } from "./MyEnum.mjs"

@@ -3,16 +3,27 @@ import { CyclicStructA } from "./CyclicStructA.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-export class CyclicStructC {
 
+
+export class CyclicStructC {
+    
     #a;
+    
     get a()  {
         return this.#a;
-    }
+    } 
     set a(value) {
         this.#a = value;
     }
-    constructor(structObj) {
+    
+    /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    static fromFields(structObj) {
+        return new CyclicStructC(structObj);
+    }
+    
+    #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructC's constructor takes an object of CyclicStructC's fields.");
         }
@@ -23,6 +34,7 @@ export class CyclicStructC {
             throw new Error("Missing required field a.");
         }
 
+        return this;
     }
 
     // Return this struct in FFI function friendly format.
@@ -44,7 +56,7 @@ export class CyclicStructC {
             return obj;
         }
 
-        return new CyclicStructC(obj);
+        return CyclicStructC.fromFields(obj);
     }
 
     _writeToArrayBuffer(
@@ -65,11 +77,11 @@ export class CyclicStructC {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("CyclicStructC._fromFFI is not meant to be called externally. Please use the default constructor.");
         }
-        var structObj = {};
+        let structObj = {};
         const aDeref = primitiveValue;
         structObj.a = CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, aDeref);
 
-        return new CyclicStructC(structObj, internalConstructor);
+        return new CyclicStructC(structObj);
     }
 
     static takesNestedParameters(c) {
@@ -101,5 +113,9 @@ export class CyclicStructC {
         
             write.free();
         }
+    }
+
+    constructor(structObj) {
+        return this.#internalConstructor(...arguments)
     }
 }
