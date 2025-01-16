@@ -469,35 +469,38 @@ impl RenderTerminusContext<'_, '_> {
             heck::AsUpperCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new("".to_string(), param_name, Some(owned_type));
+        let mut child = MethodDependency::new(format!("{type_name}.fromFields"), param_name.clone(), Some(owned_type));
+
+        struct FieldInfo {
+            field_name: String,
+            param_name : String,
+        }
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
         struct StructInfo {
-            type_name: String,
-            fields: Vec<String>,
+            fields: Vec<FieldInfo>,
         }
 
         let mut fields = Vec::new();
 
         for field in st.fields.iter() {
-            self.evaluate_param(
-                &field.ty,
-                field.name.to_string(),
-                &mut child,
-                field.attrs.demo_attrs.clone(),
-            );
-            fields.push(self.formatter.fmt_param_name(field.name.as_ref()).into());
+            fields.push(FieldInfo {
+                field_name: self.formatter.fmt_param_name(field.name.as_ref()).into(),
+                param_name: self.evaluate_param(
+                    &field.ty,
+                    field.name.to_string(),
+                    &mut child,
+                    field.attrs.demo_attrs.clone(),
+                )
+            });
         }
 
-        child.method_js = StructInfo {
-            type_name: type_name.clone(),
-            fields,
-        }
-        .render()
-        .unwrap();
+        child.params.push(StructInfo { fields }.render().unwrap());
 
-        "TODO:".into()
+        self.terminus_info.node_call_stack.push(child.render().unwrap());
+
+        param_name
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.

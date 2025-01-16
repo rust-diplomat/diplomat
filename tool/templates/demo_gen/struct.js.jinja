@@ -1,7 +1,5 @@
-(function (...args) {
-    return {{type_name}}.fromFields({
-        {%- for field in fields %}
-        {{field}}: args[{{loop.index0}}]{% if !loop.last %},{% endif %}
-        {%- endfor -%}
-    });
-})
+{
+    {%- for field in fields %}
+    {{field.field_name}}: {{field.param_name}}{% if !loop.last %},{% endif %}
+    {%- endfor %}
+}
