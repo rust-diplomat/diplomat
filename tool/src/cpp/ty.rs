@@ -2,6 +2,7 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
+use crate::hir::CallbackInstantiationFunctionality;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
@@ -498,11 +499,30 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 self.formatter.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
+        let return_type = cb
+            .get_output_type()
+            .unwrap()
+            .as_ref()
+            .map(|t| self.gen_type_name(t))
+            .unwrap_or("void".into());
+        let params_types = cb
+            .get_inputs()
+            .unwrap()
+            .iter()
+            .map(|p| self.gen_type_name(&p.ty).to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!("{return_type}({params_types})")
     }
 
     /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
@@ -559,6 +579,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
+            }
+            Type::Callback(..) => {
+                format!("{{new decltype({cpp_name})({cpp_name}), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

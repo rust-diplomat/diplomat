@@ -28,7 +28,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.iterables = false; // TODO
     a.indexing = false; // TODO
     a.option = true;
-    a.callbacks = false;
+    a.callbacks = true;
     a.traits = false;
     a.custom_errors = false;
     a.traits_are_send = false;
