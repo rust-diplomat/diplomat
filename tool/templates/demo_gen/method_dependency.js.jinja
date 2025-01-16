@@ -2,4 +2,4 @@ let {{variable_name}} = {{ method_js }}(
     {%- for param in params -%}
     {{ param }}{% if !loop.last %},{% endif -%}
     {%- endfor -%}
-);
+)
