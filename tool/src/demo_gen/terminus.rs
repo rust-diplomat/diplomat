@@ -263,8 +263,6 @@ impl RenderTerminusContext<'_, '_> {
         };
 
         self.terminus_info.out_params.push(out_param);
-
-        node.params.push(p);
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
@@ -272,18 +270,23 @@ impl RenderTerminusContext<'_, '_> {
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     ///
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
+    /// 
+    /// Returns the name of the parameter that has been added to the [`TerminusInfo::node_call_stack`].
     fn evaluate_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
         param_type: &Type<P>,
         param_name: String,
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
-    ) {
+    ) -> String {
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
+
+        // TODO: Instead of flat returning param_name, need to add info based on the node's parameters (and all other variables) to avoid collisions.
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
+                return param_name;
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -293,10 +296,12 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
+                return param_name;
             }
             Type::Slice(..) => {
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
+                return param_name;
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -310,11 +315,11 @@ impl RenderTerminusContext<'_, '_> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name, param_type, node, Some(param_attrs));
-                    return;
+                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
+                    return param_name;
                 }
 
-                self.evaluate_op_constructors(op, type_name.to_string(), param_name, node);
+                self.evaluate_op_constructors(op, type_name.to_string(), param_name, node)
             }
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
@@ -325,7 +330,7 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.evaluate_struct_fields(st, type_name.to_string(), param_name, node);
+                self.evaluate_struct_fields(st, type_name.to_string(), param_name, node)
             }
             Type::DiplomatOption(ref inner) => {
                 self.evaluate_param(inner, param_name, node, param_attrs)
@@ -360,7 +365,7 @@ impl RenderTerminusContext<'_, '_> {
                 if !is_getter { "(...args.slice(1))" } else { "" }
             )
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
-            format!("(function (...args) {{ return new {owner_type_name}(...args) }} )")
+            format!("new {owner_type_name}")
         } else {
             format!("{owner_type_name}.{method_name}")
         }
@@ -373,13 +378,11 @@ impl RenderTerminusContext<'_, '_> {
         type_name: String,
         param_name: String,
         node: &mut MethodDependency,
-    ) {
-        let mut usable_constructor = false;
-
+    ) -> String {
         for method in op.methods.iter() {
             let method_attrs = &method.attrs.demo_attrs;
 
-            usable_constructor = method_attrs.default_constructor;
+            let mut usable_constructor = method_attrs.default_constructor;
 
             // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
             if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
@@ -397,29 +400,29 @@ impl RenderTerminusContext<'_, '_> {
                         self.relative_import_path.clone(),
                     ));
 
+                let var_name = heck::AsLowerCamelCase(param_name.clone()).to_string();
+
                 let owned_type = format!(
                     "{}{}",
                     node.owning_param
                         .as_ref()
                         .map(|o| { format!("{o}:") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name.clone())
+                    heck::AsUpperCamelCase(param_name)
                 );
 
                 let mut child = MethodDependency::new(
                     self.get_constructor_js(type_name.to_string(), method),
-                    param_name,
+                    var_name.clone(),
                     Some(owned_type),
                 );
 
                 self.evaluate_constructor(method, &mut child);
-                // TODO: Add to params.
-                break;
+                return var_name;
             }
         }
 
-        if !usable_constructor {
-            self.errors.push_error(
+        self.errors.push_error(
                 format!(
                     "You must set a default constructor for the opaque type {}, \
                     as it is required for the function {}. \
@@ -427,24 +430,25 @@ impl RenderTerminusContext<'_, '_> {
                     above a method that you wish to be the default constructor.\
                     You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
                     op.name.as_str(), node.method_js)
-            );
-            node.params.push(format!(
-                "null \
-                /*Could not find a usable constructor for {}. \
-                Try adding #[diplomat::demo(default_constructor)]*/",
-                op.name.as_str()
-            ));
-        }
+        );
+
+        format!(
+            "null \
+            /*Could not find a usable constructor for {}. \
+            Try adding #[diplomat::demo(default_constructor)]*/",
+            op.name.as_str()
+        )
     }
 
     /// Search through each field in the struct, and find constructors for each.
+    /// Return the name of our parameter.
     fn evaluate_struct_fields(
         &mut self,
         st: &StructDef,
         type_name: String,
         param_name: String,
         node: &mut MethodDependency,
-    ) {
+    ) -> String {
         self.terminus_info
             .imports
             .insert(self.formatter.fmt_import_module(
@@ -490,7 +494,7 @@ impl RenderTerminusContext<'_, '_> {
         .render()
         .unwrap();
 
-        node.params.push("temp".into());
+        "TODO:".into()
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
@@ -501,16 +505,20 @@ impl RenderTerminusContext<'_, '_> {
             let s = param_self.unwrap();
 
             let ty = s.ty.clone().into();
-            self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
+
+            let self_param = self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
+            // TODO: Add "self_param"
+            node.params.push(self_param);
         }
 
         for param in method.params.iter() {
-            self.evaluate_param(
+            let new_param = self.evaluate_param(
                 &param.ty,
                 self.formatter.fmt_param_name(param.name.as_str()).into(),
                 node,
                 param.attrs.demo_attrs.clone(),
             );
+            node.params.push(new_param);
         }
 
         // Add this method to the call stack:
