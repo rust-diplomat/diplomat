@@ -121,9 +121,12 @@ impl fmt::Write for Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let header_guard = &self.path;
-        let header_guard = header_guard.replace(".d.hpp", "_D_HPP").replace('/', "_");
-        let header_guard = header_guard.replace(".hpp", "_HPP").replace('/', "_");
+        let header_guard = &self
+            .path
+            .replace(".d.hpp", "_D_HPP")
+            .replace(".hpp", "_HPP")
+            .replace("\\", "_")
+            .replace("/", "_");
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
@@ -146,10 +149,20 @@ impl fmt::Display for Header {
                             if ns == other_ns {
                                 Cow::Borrowed(file)
                             } else {
-                                Cow::Owned(format!("../{s}"))
+                                Cow::Owned(format!(
+                                    "{}{s}",
+                                    "../".repeat(
+                                        s.chars().filter(|c| *c == '/' || *c == '\\').count() + 1
+                                    )
+                                ))
                             }
                         } else {
-                            Cow::Owned(format!("../{s}"))
+                            Cow::Owned(format!(
+                                "{}{s}",
+                                "../".repeat(
+                                    ns.chars().filter(|c| *c == '/' || *c == '\\').count() + 1
+                                )
+                            ))
                         }
                     } else {
                         Cow::Borrowed(s.as_str())
