@@ -4,42 +4,22 @@ import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
 export function formatWrite(name, grouping_strategy, some_other_config, v) {
-    return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
-        null,
-        [
-            FixedDecimalFormatter.tryNew.apply(
-                null,
-                [
-                    (function (...args) { return new Locale(...args) } ).apply(
-                        null,
-                        [
-                            name
-                        ]
-                    ),
-                    DataProvider.newStatic.apply(
-                        null,
-                        [
-                        ]
-                    ),
-                    (function (...args) {
-                        return FixedDecimalFormatterOptions.fromFields({
-                            groupingStrategy: args[0],
-                            someOtherConfig: args[1]});
-                    }).apply(
-                        null,
-                        [
-                            grouping_strategy,
-                            some_other_config
-                        ]
-                    )
-                ]
-            ),
-            (function (...args) { return new FixedDecimal(...args) } ).apply(
-                null,
-                [
-                    v
-                ]
-            )
-        ]
-    );
+    
+    let locale = new Locale(name);
+    
+    let provider = DataProvider.newStatic();
+    
+    let options = FixedDecimalFormatterOptions.fromFields({
+        groupingStrategy: grouping_strategy,
+        someOtherConfig: some_other_config
+    });
+    
+    let self = FixedDecimalFormatter.tryNew(locale,provider,options);
+    
+    let value = new FixedDecimal(v);
+    
+    let out = self.formatWrite(value);
+    
+
+    return out;
 }
