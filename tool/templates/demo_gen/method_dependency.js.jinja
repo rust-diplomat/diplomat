@@ -1,4 +1,4 @@
-let {{variable_name}} = {{ method_js }}(
+let {{variable_name}} = {% if let Some(s) = self_param -%} {{s}}. {%- endif -%} {{ method_js }}(
     {%- for param in params -%}
     {{ param }}{% if !loop.last %},{% endif -%}
     {%- endfor -%}
