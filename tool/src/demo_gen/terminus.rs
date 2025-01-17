@@ -42,14 +42,14 @@ struct MethodDependency {
     method_js: String,
 
     /// The variable name to assign to this method.
-    variable_name : String,
+    variable_name: String,
 
     /// Parameters names to pass into the method.
     /// TODO: Global parameter name collisions?
     params: Vec<String>,
 
     /// Parameter that calls this method.
-    self_param : Option<String>,
+    self_param: Option<String>,
 
     /// The Rust parameter that we're attempting to construct with this method. Currently used by [`OutParam`] for better default parameter names.
     owning_param: Option<String>,
@@ -69,7 +69,7 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
 }
 
 impl MethodDependency {
-    pub fn new(method_js: String, variable_name : String, owning_param: Option<String>) -> Self {
+    pub fn new(method_js: String, variable_name: String, owning_param: Option<String>) -> Self {
         MethodDependency {
             method_js,
             variable_name,
@@ -171,8 +171,11 @@ impl RenderTerminusContext<'_, '_> {
 
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root =
-            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), "out".into(), None);
+        let mut root = MethodDependency::new(
+            self.get_constructor_js(type_name.clone(), method),
+            "out".into(),
+            None,
+        );
 
         // And then we just treat the terminus as a regular constructor method:
         self.evaluate_constructor(method, &mut root);
@@ -274,7 +277,7 @@ impl RenderTerminusContext<'_, '_> {
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     ///
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
-    /// 
+    ///
     /// Returns the name of the parameter that has been added to the [`TerminusInfo::node_call_stack`].
     fn evaluate_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
@@ -469,11 +472,15 @@ impl RenderTerminusContext<'_, '_> {
             heck::AsUpperCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new(format!("{type_name}.fromFields"), param_name.clone(), Some(owned_type));
+        let mut child = MethodDependency::new(
+            format!("{type_name}.fromFields"),
+            param_name.clone(),
+            Some(owned_type),
+        );
 
         struct FieldInfo {
             field_name: String,
-            param_name : String,
+            param_name: String,
         }
 
         #[derive(Template)]
@@ -492,13 +499,15 @@ impl RenderTerminusContext<'_, '_> {
                     field.name.to_string(),
                     &mut child,
                     field.attrs.demo_attrs.clone(),
-                )
+                ),
             });
         }
 
         child.params.push(StructInfo { fields }.render().unwrap());
 
-        self.terminus_info.node_call_stack.push(child.render().unwrap());
+        self.terminus_info
+            .node_call_stack
+            .push(child.render().unwrap());
 
         param_name
     }
@@ -512,7 +521,8 @@ impl RenderTerminusContext<'_, '_> {
 
             let ty = s.ty.clone().into();
 
-            let self_param = self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
+            let self_param =
+                self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
         }
 
@@ -527,6 +537,8 @@ impl RenderTerminusContext<'_, '_> {
         }
 
         // Add this method to the call stack:
-        self.terminus_info.node_call_stack.push(node.render().unwrap());
+        self.terminus_info
+            .node_call_stack
+            .push(node.render().unwrap());
     }
 }
