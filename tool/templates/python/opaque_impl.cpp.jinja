@@ -1,0 +1,12 @@
+{% let const_ptr = fmt.fmt_c_ptr(type_name, Mutability::Immutable) -%}
+{% let mut_ptr = fmt.fmt_c_ptr(type_name, Mutability::Mutable) -%}
+{% let const_cptr = fmt.fmt_c_ptr(ctype, Mutability::Immutable) -%}
+{% let mut_cptr = fmt.fmt_c_ptr(ctype, Mutability::Mutable) -%}
+{% let const_ref = fmt.fmt_borrowed(type_name, Mutability::Immutable) -%}
+{% let move_ref = fmt.fmt_move_ref(type_name) -%}
+
+{% include "module_impl.cpp.jinja" %}
+nb::class_<{{type_name}}>({{ module }}_mod, "{{type_name_unnamespaced}}")
+{%- for m in methods %}
+{% include "method_impl.cpp.jinja" %}
+{%- endfor %};

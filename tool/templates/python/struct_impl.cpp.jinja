@@ -1,0 +1,8 @@
+{% include "module_impl.cpp.jinja" %}
+nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
+{%- for f in fields %}
+    .def_ro("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
+{%- endfor %}
+{%- for m in methods %}
+{% include "method_impl.cpp.jinja" %}
+{%- endfor %};

@@ -1,0 +1,6 @@
+	.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
+	("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
+	{%- for param in m.method.params -%}
+	  , "{{param.name}}"_a
+    {%- endfor -%}
+	)

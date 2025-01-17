@@ -1,0 +1,6 @@
+{% include "module_impl.cpp.jinja" %}
+nb::enum_<{{type_name}}::Value>({{module}}_mod, "{{type_name}}")
+	{%- for v in values %}
+	.value("{{v.name}}", {{type_name}}::{{v.name}})
+	{%- endfor -%};
+	
