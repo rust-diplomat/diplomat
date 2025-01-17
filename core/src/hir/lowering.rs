@@ -921,8 +921,13 @@ impl<'ast> LoweringContext<'ast> {
                     let hir_in_ty = self
                         .lower_out_type(in_ty, ltl, in_path, false, false)
                         .unwrap();
-                    if hir_in_ty.lifetimes().next().is_some() {
-                        self.errors.push(LoweringError::Other("Callback parameters can't be borrowed, and therefore can't have lifetimes".into()));
+
+                    if !matches!(hir_in_ty, super::Type::Slice(super::Slice::Str(_, _)))
+                        && hir_in_ty.lifetimes().next().is_some()
+                    {
+                        self.errors.push(LoweringError::Other(
+                            "Callback parameters can't be borrowed, and therefore can't have lifetimes".into(),
+                        ));
                         return Err(());
                     }
                     params.push(CallbackParam {

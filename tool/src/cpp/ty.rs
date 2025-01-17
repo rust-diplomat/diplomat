@@ -2,9 +2,10 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
-use crate::hir::CallbackInstantiationFunctionality;
 use crate::ErrorStore;
 use askama::Template;
+use diplomat_core::hir::CallbackInstantiationFunctionality;
+use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
     Type, TypeDef, TypeId,
@@ -328,7 +329,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) {
                 param_validations.push(format!(
-                    "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
+                    "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>();\n}}",
                     param = param.name.as_str(),
                 ));
                 returns_utf8_err = true;
@@ -352,8 +353,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
                 return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
-                c_to_cpp_return_expression =
-                    Some("diplomat::Ok<std::monostate>(std::monostate)".into());
+                c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
                 return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
             }
         };
@@ -573,6 +573,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Slice(Slice::Strs(..)) => format!( 
+                // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
+                "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
+            ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
