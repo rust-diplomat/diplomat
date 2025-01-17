@@ -8,6 +8,7 @@ mod dart;
 mod demo_gen;
 mod js;
 mod kotlin;
+mod python;
 
 use colored::*;
 use core::mem;
@@ -57,6 +58,7 @@ pub fn gen(
             demo_gen::attr_support()
         }
         "kotlin" => kotlin::attr_support(),
+        "python" => python::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
 
@@ -73,6 +75,7 @@ pub fn gen(
         "cpp" => cpp::run(&tcx),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
+        "python" => python::run(&tcx),
         "demo_gen" => {
             let conf = library_config.map(|c| {
                 let str = std::fs::read_to_string(c)

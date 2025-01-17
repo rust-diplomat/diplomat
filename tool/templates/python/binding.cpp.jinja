@@ -1,0 +1,16 @@
+#include <nanobind/nanobind.h>
+
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+#include <nanobind/stl/string_view.h>
+
+namespace nb = nanobind;
+using namespace nb::literals;
+
+NB_MODULE({{module_name}}, {{module_name}})
+{
+	{%- for line in body.lines() %}
+    {{ line }}
+	{%- endfor %}
+}
