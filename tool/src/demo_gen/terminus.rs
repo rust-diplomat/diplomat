@@ -490,12 +490,16 @@ impl RenderTerminusContext<'_, '_> {
 
         let mut fields = Vec::new();
 
+        let owning_param = node.owning_param.clone().map(|s| {
+            format!("{s}_")
+        }).unwrap_or_default();
+
         for field in st.fields.iter() {
             fields.push(FieldInfo {
                 field_name: self.formatter.fmt_param_name(field.name.as_ref()).into(),
                 param_name: self.evaluate_param(
                     &field.ty,
-                    field.name.to_string(),
+                    heck::AsLowerCamelCase(format!("{}{}", owning_param, field.name.clone())).to_string(),
                     &mut child,
                     field.attrs.demo_attrs.clone(),
                 ),
@@ -515,20 +519,30 @@ impl RenderTerminusContext<'_, '_> {
     fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
         let param_self = method.param_self.as_ref();
 
+        let owning_param = node.owning_param.clone().map(|s| {
+            format!("{s}_")
+        }).unwrap_or_default();
+
         if param_self.is_some() {
             let s = param_self.unwrap();
 
-            let ty = s.ty.clone().into();
+            let ty : Type = s.ty.clone().into();
+
+            let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
 
             let self_param =
-                self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
+                self.evaluate_param(&ty, format!("{owning_param}{type_name}"), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
         }
 
         for param in method.params.iter() {
+            let param_name : String = heck::AsLowerCamelCase(
+                format!("{}{}", owning_param, param.name)
+            ).to_string();
+
             let new_param = self.evaluate_param(
                 &param.ty,
-                self.formatter.fmt_param_name(param.name.as_str()).into(),
+                param_name,
                 node,
                 param.attrs.demo_attrs.clone(),
             );
