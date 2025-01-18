@@ -198,13 +198,15 @@ impl RenderTerminusContext<'_, '_> {
 
     /// Helper function for quickly passing a parameter to both our node and the render terminus.
     /// Appends to [TerminusInfo::out_params]
+    /// 
+    /// Returns the name of the parameter attached to the render terminus.
     fn append_out_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
         param_name: String,
         type_info: &Type<P>,
         node: &mut MethodDependency,
         attrs: Option<DemoInfo>,
-    ) {
+    ) -> String {
         let attrs_default = attrs.unwrap_or_default();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
@@ -270,6 +272,7 @@ impl RenderTerminusContext<'_, '_> {
         };
 
         self.terminus_info.out_params.push(out_param);
+        p
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
@@ -292,8 +295,7 @@ impl RenderTerminusContext<'_, '_> {
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
-                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
-                return param_name;
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -303,12 +305,10 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
-                return param_name;
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Slice(..) => {
-                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
-                return param_name;
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -322,8 +322,7 @@ impl RenderTerminusContext<'_, '_> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
-                    return param_name;
+                    return self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
                 }
 
                 self.evaluate_op_constructors(op, type_name.to_string(), param_name, node)
