@@ -536,6 +536,7 @@ impl RenderTerminusContext<'_, '_> {
         }
 
         for param in method.params.iter() {
+            // TODO: Check FixedDecimalFormatter.mjs, this is creating a weird variable name
             let param_name : String = heck::AsLowerCamelCase(
                 format!("{}{}", owning_param, param.name)
             ).to_string();
