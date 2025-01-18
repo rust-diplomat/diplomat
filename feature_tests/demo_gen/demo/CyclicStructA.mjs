@@ -1,16 +1,16 @@
 import { CyclicStructA } from "../../js/api/index.mjs"
 import { CyclicStructB } from "../../js/api/index.mjs"
-export function cyclicOut(field) {
+export function cyclicOut(cyclicStructAField) {
     
     let a = CyclicStructB.fromFields({
-        field: field
+        field: cyclicStructAField
     });
     
-    let self = CyclicStructA.fromFields({
+    let CyclicStructA = CyclicStructA.fromFields({
         a: a
     });
     
-    let out = self.cyclicOut();
+    let out = CyclicStructA.cyclicOut();
     
 
     return out;

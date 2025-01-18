@@ -1,9 +1,9 @@
 import { FixedDecimal } from "../../js/lib/api/index.mjs"
-export function toString(v) {
+export function toString(fixedDecimalV) {
     
-    let self = new FixedDecimal(v);
+    let fixedDecimal = new FixedDecimal(fixedDecimalV);
     
-    let out = self.toString();
+    let out = fixedDecimal.toString();
     
 
     return out;

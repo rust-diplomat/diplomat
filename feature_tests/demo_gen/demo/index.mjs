@@ -26,7 +26,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:A:Field",
+                name: "CyclicStructA:A:CyclicStructAField",
                 type: "number",
                 typeUse: "number"
             }
@@ -41,7 +41,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:A:A:Field",
+                name: "CyclicStructC:A:CyclicStructCa:CyclicStructCaField",
                 type: "number",
                 typeUse: "number"
             }
@@ -56,7 +56,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:DiplomatStr",
+                name: "OptionString:OptionStringDiplomatStr",
                 type: "string",
                 typeUse: "string"
             }
@@ -71,7 +71,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:V",
+                name: "Float64Vec:Float64VecV",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -86,7 +86,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:V",
+                name: "MyString:MyStringV",
                 type: "string",
                 typeUse: "string"
             }
@@ -134,7 +134,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Self:Input",
+                name: "Utf16Wrap:Utf16WrapInput",
                 type: "string",
                 typeUse: "string"
             }

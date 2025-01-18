@@ -3,22 +3,22 @@ import { FixedDecimal } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
-export function formatWrite(name, grouping_strategy, some_other_config, v) {
+export function formatWrite(fixedDecimalFormatterFixedDecimalFormatterLocaleName, fixedDecimalFormatterGroupingStrategy, fixedDecimalFormatterSomeOtherConfig, valueV) {
     
-    let locale = new Locale(name);
+    let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterFixedDecimalFormatterLocaleName);
     
-    let provider = DataProvider.newStatic();
+    let fixedDecimalFormatterProvider = DataProvider.newStatic();
     
-    let options = FixedDecimalFormatterOptions.fromFields({
-        groupingStrategy: grouping_strategy,
-        someOtherConfig: some_other_config
+    let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
+        groupingStrategy: fixedDecimalFormatterGroupingStrategy,
+        someOtherConfig: fixedDecimalFormatterSomeOtherConfig
     });
     
-    let self = FixedDecimalFormatter.tryNew(locale,provider,options);
+    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
     
-    let value = new FixedDecimal(v);
+    let value = new FixedDecimal(valueV);
     
-    let out = self.formatWrite(value);
+    let out = fixedDecimalFormatter.formatWrite(value);
     
 
     return out;

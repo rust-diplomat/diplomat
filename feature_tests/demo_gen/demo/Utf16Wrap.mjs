@@ -1,9 +1,9 @@
 import { Utf16Wrap } from "../../js/api/index.mjs"
-export function getDebugStr(input) {
+export function getDebugStr(utf16WrapInput) {
     
-    let self = new Utf16Wrap(input);
+    let utf16Wrap = new Utf16Wrap(utf16WrapInput);
     
-    let out = self.getDebugStr();
+    let out = utf16Wrap.getDebugStr();
     
 
     return out;

@@ -1,9 +1,9 @@
 import { OptionString } from "../../js/api/index.mjs"
-export function write(diplomatStr) {
+export function write(optionStringDiplomatStr) {
     
-    let self = OptionString.new_(diplomatStr);
+    let optionString = OptionString.new_(optionStringDiplomatStr);
     
-    let out = self.write();
+    let out = optionString.write();
     
 
     return out;
