@@ -5,6 +5,7 @@
 #include <string>
 #include <type_traits>
 #include <variant>
+#include <cstdint>
 
 #if __cplusplus >= 202002L
 #include <span>
