@@ -8,12 +8,6 @@ use crate::{js::formatter::JSFormatter, ErrorStore};
 
 use askama::{self, Template};
 
-#[derive(Clone)]
-pub struct ParamInfo {
-    /// The javascript that represents this parameter.
-    pub js: String,
-}
-
 pub struct OutParam {
     /// Param JS representation (i.e., `arg_1`)
     pub param_name: String,
