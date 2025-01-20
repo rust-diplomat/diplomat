@@ -210,16 +210,16 @@ impl RenderTerminusContext<'_, '_> {
         let attrs_default = attrs.unwrap_or_default();
 
         let owning_str = node
-                .owning_param
-                .as_ref()
-                .map(|p| format!("{}:", p))
-                .unwrap_or_default();
+            .owning_param
+            .as_ref()
+            .map(|p| format!("{}:", p))
+            .unwrap_or_default();
         let owned_full_name = format!(
-                "{}{}",
-                owning_str,
-                heck::AsUpperCamelCase(param_name.clone())
-            )
-            .to_string();
+            "{}{}",
+            owning_str,
+            heck::AsUpperCamelCase(param_name.clone())
+        )
+        .to_string();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
             owned_full_name.clone()
@@ -538,18 +538,18 @@ impl RenderTerminusContext<'_, '_> {
 
             let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
 
-            let self_param = self.evaluate_param(
-                &ty,
-                type_name.to_string(),
-                node,
-                s.attrs.demo_attrs.clone(),
-            );
+            let self_param =
+                self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
         }
 
         for param in method.params.iter() {
-            let new_param =
-                self.evaluate_param(&param.ty, param.name.to_string(), node, param.attrs.demo_attrs.clone());
+            let new_param = self.evaluate_param(
+                &param.ty,
+                param.name.to_string(),
+                node,
+                param.attrs.demo_attrs.clone(),
+            );
             node.params.push(new_param);
         }
 
