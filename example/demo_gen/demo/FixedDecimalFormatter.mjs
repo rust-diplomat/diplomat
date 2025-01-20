@@ -3,18 +3,18 @@ import { FixedDecimal } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
-export function formatWrite(fixedDecimalFormatterFixedDecimalFormatterLocaleName, fixedDecimalFormatterGroupingStrategy, fixedDecimalFormatterSomeOtherConfig, valueV) {
+export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsFixedDecimalFormatterGroupingStrategy, fixedDecimalFormatterOptionsFixedDecimalFormatterSomeOtherConfig, valueV) {
     
-    let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterFixedDecimalFormatterLocaleName);
+    let locale = new Locale(fixedDecimalFormatterLocaleName);
     
-    let fixedDecimalFormatterProvider = DataProvider.newStatic();
+    let provider = DataProvider.newStatic();
     
-    let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
-        groupingStrategy: fixedDecimalFormatterGroupingStrategy,
-        someOtherConfig: fixedDecimalFormatterSomeOtherConfig
+    let options = FixedDecimalFormatterOptions.fromFields({
+        groupingStrategy: fixedDecimalFormatterOptionsFixedDecimalFormatterGroupingStrategy,
+        someOtherConfig: fixedDecimalFormatterOptionsFixedDecimalFormatterSomeOtherConfig
     });
     
-    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
+    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(locale,provider,options);
     
     let value = new FixedDecimal(valueV);
     
