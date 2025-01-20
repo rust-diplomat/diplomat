@@ -208,19 +208,21 @@ impl RenderTerminusContext<'_, '_> {
         attrs: Option<DemoInfo>,
     ) -> String {
         let attrs_default = attrs.unwrap_or_default();
-        // This only works for enums, since otherwise we break the type into its component parts.
-        let label = if attrs_default.input_cfg.label.is_empty() {
-            let owning_str = node
+
+        let owning_str = node
                 .owning_param
                 .as_ref()
                 .map(|p| format!("{}:", p))
                 .unwrap_or_default();
-            format!(
+        let owned_full_name = format!(
                 "{}{}",
                 owning_str,
                 heck::AsUpperCamelCase(param_name.clone())
             )
-            .to_string()
+            .to_string();
+        // This only works for enums, since otherwise we break the type into its component parts.
+        let label = if attrs_default.input_cfg.label.is_empty() {
+            owned_full_name.clone()
         } else {
             attrs_default.input_cfg.label
         };
@@ -253,15 +255,17 @@ impl RenderTerminusContext<'_, '_> {
             }
         };
 
-        let (p, n) = if self.out_param_collision.contains_key(&param_name) {
-            let n = self.out_param_collision.get(&param_name).unwrap();
+        let full_param_name = heck::AsLowerCamelCase(owned_full_name).to_string();
 
-            (format!("{param_name}_{n}"), n + 1)
+        let (p, n) = if self.out_param_collision.contains_key(&full_param_name) {
+            let n = self.out_param_collision.get(&full_param_name).unwrap();
+
+            (format!("{full_param_name}_{n}"), n + 1)
         } else {
-            (param_name.clone(), 1)
+            (full_param_name.clone(), 1)
         };
 
-        self.out_param_collision.insert(param_name, n);
+        self.out_param_collision.insert(full_param_name, n);
 
         let out_param = OutParam {
             param_name: p.clone(),
@@ -498,7 +502,7 @@ impl RenderTerminusContext<'_, '_> {
         let owning_param = node
             .owning_param
             .clone()
-            .map(|s| format!("{s}_"))
+            .map(|s| format!("{s}:"))
             .unwrap_or_default();
 
         for field in st.fields.iter() {
@@ -527,12 +531,6 @@ impl RenderTerminusContext<'_, '_> {
     fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
         let param_self = method.param_self.as_ref();
 
-        let owning_param = node
-            .owning_param
-            .clone()
-            .map(|s| format!("{s}_"))
-            .unwrap_or_default();
-
         if param_self.is_some() {
             let s = param_self.unwrap();
 
@@ -542,7 +540,7 @@ impl RenderTerminusContext<'_, '_> {
 
             let self_param = self.evaluate_param(
                 &ty,
-                format!("{owning_param}{type_name}"),
+                type_name.to_string(),
                 node,
                 s.attrs.demo_attrs.clone(),
             );
@@ -550,12 +548,8 @@ impl RenderTerminusContext<'_, '_> {
         }
 
         for param in method.params.iter() {
-            // TODO: Check FixedDecimalFormatter.mjs, this is creating a weird variable name
-            let param_name: String =
-                heck::AsLowerCamelCase(format!("{}{}", owning_param, param.name)).to_string();
-
             let new_param =
-                self.evaluate_param(&param.ty, param_name, node, param.attrs.demo_attrs.clone());
+                self.evaluate_param(&param.ty, param.name.to_string(), node, param.attrs.demo_attrs.clone());
             node.params.push(new_param);
         }
 
