@@ -110,7 +110,7 @@ jobs:
       uses: taiki-e/install-action@cargo-make
 
     - name: clang
-      run: CXX=clang++-14 cargo make test-cpp
+      run: CXX=clang++-16 cargo make test-cpp
 
     - name: gcc
       run: CXX=g++ cargo make test-cpp
