@@ -7,7 +7,7 @@ test("My String", (t) => {
 
 test("Cyclic Parameters", (t) => {
 	t.is(RenderInfo.termini["CyclicStructA.cyclicOut"].parameters[0].name, "CyclicStructA:A:Field");
-	t.is(RenderInfo.termini["CyclicStructC.cyclicOut"].parameters[0].name, "CyclicStructA:A:A:Field");
+	t.is(RenderInfo.termini["CyclicStructC.cyclicOut"].parameters[0].name, "CyclicStructC:A:A:Field");
 	t.is(CyclicStructADemo.cyclicOut(10), "10");
 	t.is(CyclicStructCDemo.cyclicOut(15), "15");
 });
