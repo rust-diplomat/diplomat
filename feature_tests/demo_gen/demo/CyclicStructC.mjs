@@ -1,14 +1,14 @@
 import { CyclicStructA } from "../../js/api/index.mjs"
 import { CyclicStructB } from "../../js/api/index.mjs"
 import { CyclicStructC } from "../../js/api/index.mjs"
-export function cyclicOut(cyclicStructCACyclicStructCaCyclicStructCaField) {
+export function cyclicOut(cyclicStructCAAField) {
     
-    let cyclicStructCACyclicStructCa = CyclicStructB.fromFields({
-        field: cyclicStructCACyclicStructCaCyclicStructCaField
+    let cyclicStructCAA = CyclicStructB.fromFields({
+        field: cyclicStructCAAField
     });
     
     let cyclicStructCA = CyclicStructA.fromFields({
-        a: cyclicStructCACyclicStructCa
+        a: cyclicStructCAA
     });
     
     let cyclicStructC = CyclicStructC.fromFields({

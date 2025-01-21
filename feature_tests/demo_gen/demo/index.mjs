@@ -26,7 +26,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructA:A:CyclicStructAField",
+                name: "CyclicStructA:A:Field",
                 type: "number",
                 typeUse: "number"
             }
@@ -41,7 +41,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructC:A:CyclicStructCa:CyclicStructCaField",
+                name: "CyclicStructC:A:A:Field",
                 type: "number",
                 typeUse: "number"
             }
