@@ -48,7 +48,7 @@ export function getterOut(cyclicStructAAField) {
         a: cyclicStructAA
     });
     
-    let out = cyclicStructA.getterOut();
+    let out = cyclicStructA.getterOut;
     
 
     return out;

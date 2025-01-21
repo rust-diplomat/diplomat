@@ -3,7 +3,7 @@ export function getStr(myStringV) {
     
     let myString = new MyString(myStringV);
     
-    let out = myString.getStr();
+    let out = myString.getStr;
     
 
     return out;
