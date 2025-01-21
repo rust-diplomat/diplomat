@@ -31,6 +31,8 @@ struct CyclicStructA {
 
   inline std::string cyclic_out();
 
+  inline std::string double_cyclic_out(CyclicStructA cyclic_struct_a);
+
   inline diplomat::capi::CyclicStructA AsFFI() const;
   inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);
 };
