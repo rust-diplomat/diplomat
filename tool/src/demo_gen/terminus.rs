@@ -42,7 +42,6 @@ struct MethodDependency {
     variable_name: String,
 
     /// Parameters names to pass into the method.
-    /// TODO: Global parameter name collisions?
     params: Vec<String>,
 
     /// Parameter that calls this method.
@@ -178,10 +177,6 @@ impl RenderTerminusContext<'_, '_> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate(&mut self, type_name: String, method: &Method) {
-        // TODO: I think it would be nice to have a stack of the current namespace a given parameter.
-        // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
-        // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
-
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root = MethodDependency::new(
@@ -307,9 +302,6 @@ impl RenderTerminusContext<'_, '_> {
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
     ) -> String {
-        // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
-
-        // TODO: Instead of flat returning param_name, need to add info based on the node's parameters (and all other variables) to avoid collisions.
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
