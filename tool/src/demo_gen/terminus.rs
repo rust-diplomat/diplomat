@@ -495,19 +495,12 @@ impl RenderTerminusContext<'_, '_> {
 
         let mut fields = Vec::new();
 
-        let owning_param = node
-            .owning_param
-            .clone()
-            .map(|s| format!("{s}:"))
-            .unwrap_or_default();
-
         for field in st.fields.iter() {
             fields.push(FieldInfo {
                 field_name: self.formatter.fmt_param_name(field.name.as_ref()).into(),
                 param_name: self.evaluate_param(
                     &field.ty,
-                    heck::AsLowerCamelCase(format!("{}{}", owning_param, field.name.clone()))
-                        .to_string(),
+                    field.name.to_string(),
                     &mut child,
                     field.attrs.demo_attrs.clone(),
                 ),
