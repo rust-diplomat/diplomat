@@ -38,3 +38,18 @@ export function doubleCyclicOut(cyclicStructAAField, cyclicStructAAField_1) {
 
     return out;
 }
+export function getterOut(cyclicStructAAField) {
+    
+    let cyclicStructAA = CyclicStructB.fromFields({
+        field: cyclicStructAAField
+    });
+    
+    let cyclicStructA = CyclicStructA.fromFields({
+        a: cyclicStructAA
+    });
+    
+    let out = cyclicStructA.getterOut();
+    
+
+    return out;
+}

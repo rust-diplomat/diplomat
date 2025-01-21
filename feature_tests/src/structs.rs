@@ -276,6 +276,11 @@ pub mod ffi {
             ))
             .unwrap();
         }
+
+        #[diplomat::attr(auto, getter)]
+        pub fn getter_out(self, out: &mut DiplomatWrite) {
+            out.write_str(&self.a.field.to_string()).unwrap();
+        }
     }
 
     impl CyclicStructB {

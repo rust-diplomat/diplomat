@@ -128,6 +128,23 @@ export class CyclicStructA {
         }
     }
 
+    get getterOut() {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.CyclicStructA_getter_out(...this._intoFFI(), write.buffer);
+    
+        try {
+            return write.readString8();
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        
+            write.free();
+        }
+    }
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

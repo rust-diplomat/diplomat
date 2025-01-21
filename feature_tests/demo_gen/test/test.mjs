@@ -20,3 +20,7 @@ test("Variable Name Collisions", (t) => {
 
 	t.is(CyclicStructADemo.doubleCyclicOut(10, 20), "10 20");
 });
+
+test("Getter", (t) => {
+	t.is(CyclicStructADemo.getterOut(10), "10");
+});
