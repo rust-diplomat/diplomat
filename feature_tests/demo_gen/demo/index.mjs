@@ -34,6 +34,27 @@ let termini = Object.assign({
         ]
     },
 
+    "CyclicStructA.doubleCyclicOut": {
+        func: CyclicStructADemo.doubleCyclicOut,
+        // For avoiding webpacking minifying issues:
+        funcName: "CyclicStructA.doubleCyclicOut",
+        parameters: [
+            
+            {
+                name: "CyclicStructA:A:Field",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "CyclicStructA:A:Field",
+                type: "number",
+                typeUse: "number"
+            }
+            
+        ]
+    },
+
     "CyclicStructC.cyclicOut": {
         func: CyclicStructCDemo.cyclicOut,
         // For avoiding webpacking minifying issues:

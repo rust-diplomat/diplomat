@@ -15,3 +15,26 @@ export function cyclicOut(cyclicStructAAField) {
 
     return out;
 }
+export function doubleCyclicOut(cyclicStructAAField, cyclicStructAAField_1) {
+    
+    let cyclicStructAA = CyclicStructB.fromFields({
+        field: cyclicStructAAField
+    });
+    
+    let cyclicStructA = CyclicStructA.fromFields({
+        a: cyclicStructAA
+    });
+    
+    let cyclicStructAA = CyclicStructB.fromFields({
+        field: cyclicStructAAField_1
+    });
+    
+    let cyclicStructA = CyclicStructA.fromFields({
+        a: cyclicStructAA
+    });
+    
+    let out = cyclicStructA.doubleCyclicOut(cyclicStructA);
+    
+
+    return out;
+}
