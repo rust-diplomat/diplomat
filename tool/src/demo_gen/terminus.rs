@@ -55,18 +55,28 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 
-    /// To avoid similar parameter names while we're collecting [`OutParam`]s.
-    pub out_param_collision: HashMap<String, i32>,
+    /// To avoid similar parameter and variable names while we're collecting [`OutParam`]s and [`MethodDependency`]s.
+    pub name_collision: HashMap<String, i32>,
 
     pub relative_import_path: String,
     pub module_name: String,
 }
 
 impl MethodDependency {
-    pub fn new(method_js: String, variable_name: String, owning_param: Option<String>) -> Self {
+    pub fn new(ctx : &mut RenderTerminusContext, method_js: String, variable_name: String, owning_param: Option<String>) -> Self {
+        let (var_name, n) = if ctx.name_collision.contains_key(&variable_name) {
+            let n = ctx.name_collision.get(&variable_name).unwrap();
+
+            (format!("{variable_name}_{n}"), n + 1)
+        } else {
+            (variable_name.clone(), 1)
+        };
+
+        ctx.name_collision.insert(var_name.clone(), n);
+
         MethodDependency {
             method_js,
-            variable_name,
+            variable_name: var_name,
             params: Vec::new(),
             self_param: None,
             owning_param,
@@ -166,6 +176,7 @@ impl RenderTerminusContext<'_, '_> {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root = MethodDependency::new(
+            self,
             self.get_constructor_js(type_name.clone(), method),
             "out".into(),
             None,
@@ -251,15 +262,15 @@ impl RenderTerminusContext<'_, '_> {
 
         let full_param_name = heck::AsLowerCamelCase(owned_full_name).to_string();
 
-        let (p, n) = if self.out_param_collision.contains_key(&full_param_name) {
-            let n = self.out_param_collision.get(&full_param_name).unwrap();
+        let (p, n) = if self.name_collision.contains_key(&full_param_name) {
+            let n = self.name_collision.get(&full_param_name).unwrap();
 
             (format!("{full_param_name}_{n}"), n + 1)
         } else {
             (full_param_name.clone(), 1)
         };
 
-        self.out_param_collision.insert(full_param_name, n);
+        self.name_collision.insert(full_param_name, n);
 
         let out_param = OutParam {
             param_name: p.clone(),
@@ -420,13 +431,14 @@ impl RenderTerminusContext<'_, '_> {
                 let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
+                    self,
                     self.get_constructor_js(type_name.to_string(), method),
-                    var_name.clone(),
+                    var_name,
                     Some(owned_type),
                 );
 
                 self.evaluate_constructor(method, &mut child);
-                return var_name;
+                return child.variable_name;
             }
         }
 
@@ -477,8 +489,9 @@ impl RenderTerminusContext<'_, '_> {
         let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
         let mut child = MethodDependency::new(
+            self,
             format!("{type_name}.fromFields"),
-            var_name.clone(),
+            var_name,
             Some(owned_type),
         );
 
@@ -513,7 +526,7 @@ impl RenderTerminusContext<'_, '_> {
             .node_call_stack
             .push(child.render().unwrap());
 
-        var_name
+        child.variable_name
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.

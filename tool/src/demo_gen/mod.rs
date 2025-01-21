@@ -204,7 +204,7 @@ pub(crate) fn run<'tcx>(
                         imports: BTreeSet::new(),
                     },
 
-                    out_param_collision: HashMap::new(),
+                    name_collision: HashMap::new(),
 
                     relative_import_path: import_path.clone(),
                     module_name: module_name.clone(),
