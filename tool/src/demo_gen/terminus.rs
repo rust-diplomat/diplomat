@@ -408,16 +408,16 @@ impl RenderTerminusContext<'_, '_> {
                         self.relative_import_path.clone(),
                     ));
 
-                let var_name = heck::AsLowerCamelCase(param_name.clone()).to_string();
-
                 let owned_type = format!(
                     "{}{}",
                     node.owning_param
                         .as_ref()
                         .map(|o| { format!("{o}:") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name)
+                    heck::AsUpperCamelCase(param_name.clone())
                 );
+                
+                let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
                     self.get_constructor_js(type_name.to_string(), method),
@@ -474,9 +474,11 @@ impl RenderTerminusContext<'_, '_> {
             heck::AsUpperCamelCase(param_name.clone())
         );
 
+        let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
+
         let mut child = MethodDependency::new(
             format!("{type_name}.fromFields"),
-            param_name.clone(),
+            var_name.clone(),
             Some(owned_type),
         );
 
@@ -518,7 +520,7 @@ impl RenderTerminusContext<'_, '_> {
             .node_call_stack
             .push(child.render().unwrap());
 
-        param_name
+        var_name
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
