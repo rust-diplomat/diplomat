@@ -114,23 +114,24 @@ impl MethodDependency {
 ///
 /// The final render looks something like this:
 /// ```typescript
-/// function formatWrite(locale : Locale, provider : DataProvider, options : FixedDecimalFormatterOptions, v : number) {
-///     return function(...args) { let self = args[0]; self.formatWrite(...args.slice(1)); }
-///     .apply(
-///         null,
-///         [
-///             FixedDecimalFormatter.tryNew.apply(
-///                 null,
-///                 [locale,
-///                 provider,
-///                 options]
-///             ),
-///             FixedDecimal.new_.apply(
-///                 null,
-///                 [v]
-///             ),
-///         ]
-///     );
+/// export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsGroupingStrategy, fixedDecimalFormatterOptionsSomeOtherConfig, valueV) {
+///
+///     let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
+/// 
+///     let fixedDecimalFormatterProvider = DataProvider.newStatic();
+///     
+///     let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
+///         groupingStrategy: fixedDecimalFormatterOptionsGroupingStrategy,
+///         someOtherConfig: fixedDecimalFormatterOptionsSomeOtherConfig
+///     });
+///     
+///     let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
+/// 
+///     let value = new FixedDecimal(valueV);
+/// 
+///     let out = fixedDecimalFormatter.formatWrite(value);
+/// 
+///     return out;
 /// }
 /// ```
 #[derive(Template)]
