@@ -416,7 +416,7 @@ impl RenderTerminusContext<'_, '_> {
                         .unwrap_or_default(),
                     heck::AsUpperCamelCase(param_name.clone())
                 );
-                
+
                 let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
