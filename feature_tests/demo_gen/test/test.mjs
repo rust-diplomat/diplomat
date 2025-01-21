@@ -17,4 +17,6 @@ test("Variable Name Collisions", (t) => {
 	// As long as this test passes and the Javascript compiles, we should be good to go.
 	t.is(RenderInfo.termini["CyclicStructA.doubleCyclicOut"].parameters[0].name, "CyclicStructA:A:Field");
 	t.is(RenderInfo.termini["CyclicStructA.doubleCyclicOut"].parameters[1].name, "CyclicStructA:A:Field");
+
+	t.is(CyclicStructADemo.doubleCyclicOut(10, 20), "10 20");
 });

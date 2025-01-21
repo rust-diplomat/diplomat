@@ -25,15 +25,15 @@ export function doubleCyclicOut(cyclicStructAAField, cyclicStructAAField_1) {
         a: cyclicStructAA
     });
     
-    let cyclicStructAA = CyclicStructB.fromFields({
+    let cyclicStructAA_1 = CyclicStructB.fromFields({
         field: cyclicStructAAField_1
     });
     
-    let cyclicStructA = CyclicStructA.fromFields({
-        a: cyclicStructAA
+    let cyclicStructA_1 = CyclicStructA.fromFields({
+        a: cyclicStructAA_1
     });
     
-    let out = cyclicStructA.doubleCyclicOut(cyclicStructA);
+    let out = cyclicStructA.doubleCyclicOut(cyclicStructA_1);
     
 
     return out;

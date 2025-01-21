@@ -24,5 +24,7 @@ export class CyclicStructA {
 
     cyclicOut(): string;
 
+    doubleCyclicOut(cyclicStructA: CyclicStructA_obj): string;
+
     constructor(structObj : CyclicStructA_obj);
 }
