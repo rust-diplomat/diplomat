@@ -11,7 +11,7 @@ pub mod ffi {
         /// Construct an [`Locale`] from a locale identifier represented as a string.
         #[diplomat::attr(auto, constructor)]
         pub fn new(
-            #[diplomat::demo(input(label = "Locale Name"))] name: &DiplomatStr,
+            name: &DiplomatStr,
         ) -> Box<Locale> {
             Box::new(Locale(icu::locid::Locale::try_from_bytes(name).unwrap()))
         }
