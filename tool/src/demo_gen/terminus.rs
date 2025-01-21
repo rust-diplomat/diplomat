@@ -35,6 +35,9 @@ struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
 
+    /// Used to detect whether or not we need to add parentheses to the function call.
+    is_getter: bool,
+
     /// The variable name to assign to this method.
     variable_name: String,
 
@@ -81,6 +84,7 @@ impl MethodDependency {
 
         MethodDependency {
             method_js,
+            is_getter: false,
             variable_name: var_name,
             params: Vec::new(),
             self_param: None,
@@ -376,17 +380,7 @@ impl RenderTerminusContext<'_, '_> {
     /// `method` - The method we're trying to call.
     fn get_constructor_js(&self, owner_type_name: String, method: &Method) -> String {
         let method_name = self.formatter.fmt_method_name(method);
-
-        // TODO: Add support for getters back in.
         if method.param_self.is_some() {
-            // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
-
-            // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
-            // let is_getter = matches!(
-            //     method.attrs.special_method,
-            //     Some(hir::SpecialMethod::Getter(_))
-            // );
-
             method_name
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
             format!("new {owner_type_name}")
@@ -548,6 +542,14 @@ impl RenderTerminusContext<'_, '_> {
             let self_param =
                 self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
+
+            
+            let is_getter = matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Getter(_))
+            );
+
+            node.is_getter = is_getter;
         }
 
         for param in method.params.iter() {
