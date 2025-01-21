@@ -269,8 +269,12 @@ pub mod ffi {
         }
 
         // For demo gen: tests having the same variables in the namespace
-        pub fn double_cyclic_out(self, cyclic_struct_a : Self, out : &mut DiplomatWrite) {
-            out.write_fmt(format_args!("{} {}", &self.a.field, cyclic_struct_a.a.field)).unwrap();
+        pub fn double_cyclic_out(self, cyclic_struct_a: Self, out: &mut DiplomatWrite) {
+            out.write_fmt(format_args!(
+                "{} {}",
+                &self.a.field, cyclic_struct_a.a.field
+            ))
+            .unwrap();
         }
     }
 

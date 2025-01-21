@@ -63,7 +63,12 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
 }
 
 impl MethodDependency {
-    pub fn new(ctx : &mut RenderTerminusContext, method_js: String, variable_name: String, owning_param: Option<String>) -> Self {
+    pub fn new(
+        ctx: &mut RenderTerminusContext,
+        method_js: String,
+        variable_name: String,
+        owning_param: Option<String>,
+    ) -> Self {
         let (var_name, n) = if ctx.name_collision.contains_key(&variable_name) {
             let n = ctx.name_collision.get(&variable_name).unwrap();
 
