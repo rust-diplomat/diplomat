@@ -3,19 +3,19 @@ import { CyclicStructB } from "../../js/api/index.mjs"
 import { CyclicStructC } from "../../js/api/index.mjs"
 export function cyclicOut(cyclicStructCACyclicStructCaCyclicStructCaField) {
     
-    let cyclicStructCA = CyclicStructB.fromFields({
+    let cyclicStructCACyclicStructCa = CyclicStructB.fromFields({
         field: cyclicStructCACyclicStructCaCyclicStructCaField
     });
     
-    let a = CyclicStructA.fromFields({
+    let cyclicStructCA = CyclicStructA.fromFields({
+        a: cyclicStructCACyclicStructCa
+    });
+    
+    let cyclicStructC = CyclicStructC.fromFields({
         a: cyclicStructCA
     });
     
-    let CyclicStructC = CyclicStructC.fromFields({
-        a: a
-    });
-    
-    let out = CyclicStructC.cyclicOut();
+    let out = cyclicStructC.cyclicOut();
     
 
     return out;

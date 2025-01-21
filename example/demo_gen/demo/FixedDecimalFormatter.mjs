@@ -5,16 +5,16 @@ import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
 export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsFixedDecimalFormatterGroupingStrategy, fixedDecimalFormatterOptionsFixedDecimalFormatterSomeOtherConfig, valueV) {
     
-    let locale = new Locale(fixedDecimalFormatterLocaleName);
+    let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
     
-    let provider = DataProvider.newStatic();
+    let fixedDecimalFormatterProvider = DataProvider.newStatic();
     
-    let options = FixedDecimalFormatterOptions.fromFields({
+    let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
         groupingStrategy: fixedDecimalFormatterOptionsFixedDecimalFormatterGroupingStrategy,
         someOtherConfig: fixedDecimalFormatterOptionsFixedDecimalFormatterSomeOtherConfig
     });
     
-    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(locale,provider,options);
+    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
     
     let value = new FixedDecimal(valueV);
     

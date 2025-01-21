@@ -2,15 +2,15 @@ import { CyclicStructA } from "../../js/api/index.mjs"
 import { CyclicStructB } from "../../js/api/index.mjs"
 export function cyclicOut(cyclicStructAACyclicStructAField) {
     
-    let a = CyclicStructB.fromFields({
+    let cyclicStructAA = CyclicStructB.fromFields({
         field: cyclicStructAACyclicStructAField
     });
     
-    let CyclicStructA = CyclicStructA.fromFields({
-        a: a
+    let cyclicStructA = CyclicStructA.fromFields({
+        a: cyclicStructAA
     });
     
-    let out = CyclicStructA.cyclicOut();
+    let out = cyclicStructA.cyclicOut();
     
 
     return out;
