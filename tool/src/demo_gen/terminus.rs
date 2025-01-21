@@ -535,7 +535,6 @@ impl RenderTerminusContext<'_, '_> {
                 self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
 
-            
             let is_getter = matches!(
                 method.attrs.special_method,
                 Some(hir::SpecialMethod::Getter(_))
