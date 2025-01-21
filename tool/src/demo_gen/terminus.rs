@@ -117,7 +117,7 @@ impl MethodDependency {
 /// export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsGroupingStrategy, fixedDecimalFormatterOptionsSomeOtherConfig, valueV) {
 ///
 ///     let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
-/// 
+///
 ///     let fixedDecimalFormatterProvider = DataProvider.newStatic();
 ///     
 ///     let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
@@ -126,11 +126,11 @@ impl MethodDependency {
 ///     });
 ///     
 ///     let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
-/// 
+///
 ///     let value = new FixedDecimal(valueV);
-/// 
+///
 ///     let out = fixedDecimalFormatter.formatWrite(value);
-/// 
+///
 ///     return out;
 /// }
 /// ```
