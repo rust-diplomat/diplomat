@@ -19,14 +19,22 @@ pub(crate) struct PyFormatter<'tcx> {
 
 impl<'tcx> PyFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
-        Self { c: CFormatter::new(tcx, true) }
+        Self {
+            c: CFormatter::new(tcx, true),
+        }
     }
 
     /// Resolve and format the nested module names for this type
     /// Returns an iterator to the namespaces. Will always have at least one entry
     pub fn fmt_namespaces(&self, id: TypeId) -> impl Iterator<Item = Cow<'tcx, str>> {
         let resolved = self.c.tcx().resolve_type(id);
-        resolved.attrs().namespace.as_deref().unwrap_or("m").split("::").map(Cow::Borrowed)
+        resolved
+            .attrs()
+            .namespace
+            .as_deref()
+            .unwrap_or("default_root")
+            .split("::")
+            .map(Cow::Borrowed)
     }
 
     /// Resolve the name of the module to use
@@ -38,13 +46,19 @@ impl<'tcx> PyFormatter<'tcx> {
     pub fn fmt_type_name_unnamespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
 
-        resolved.attrs().rename.apply(resolved.name().as_str().into())
+        resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into())
     }
 
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
-        let name = resolved.attrs().rename.apply(resolved.name().as_str().into());
+        let name = resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
             format!("{ns}::{name}").into()
         } else {
@@ -55,24 +69,30 @@ impl<'tcx> PyFormatter<'tcx> {
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
         let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved.attrs().rename.apply(resolved.name().as_str().into());
+        let type_name = resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
             let ns = ns.replace("::", "/");
-            format!("../cpp/{ns}/{type_name}.d.hpp")
+            format!("{ns}/{type_name}.d.hpp")
         } else {
-            format!("../cpp/{type_name}.d.hpp")
+            format!("{type_name}.d.hpp")
         }
     }
 
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_impl_file_path(&self, id: TypeId) -> String {
         let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved.attrs().rename.apply(resolved.name().as_str().into());
+        let type_name = resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
             let ns = ns.replace("::", "/");
-            format!("../cpp/{ns}/{type_name}.hpp")
+            format!("{ns}/{type_name}.hpp")
         } else {
-            format!("../cpp/{type_name}.hpp")
+            format!("{type_name}.hpp")
         }
     }
 
@@ -107,7 +127,11 @@ impl<'tcx> PyFormatter<'tcx> {
         format!("{ident}&&").into()
     }
 
-    pub fn fmt_optional_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+    pub fn fmt_optional_borrowed<'a>(
+        &self,
+        ident: &'a str,
+        mutability: hir::Mutability,
+    ) -> Cow<'a, str> {
         self.c.fmt_ptr(ident, mutability)
     }
 
@@ -115,7 +139,11 @@ impl<'tcx> PyFormatter<'tcx> {
         format!("std::unique_ptr<{ident}>").into()
     }
 
-    pub fn fmt_borrowed_slice<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+    pub fn fmt_borrowed_slice<'a>(
+        &self,
+        ident: &'a str,
+        mutability: hir::Mutability,
+    ) -> Cow<'a, str> {
         // TODO: This needs to change if an abstraction other than std::span is used
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {

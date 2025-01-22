@@ -20,65 +20,44 @@ CXX_FLAGS_FOR_CHECK="-Wc++98-compat-extra-semi -Wextra-semi"
 [tasks.test-native]
 description = "Test only the native"
 category = "Tests"
-dependencies = [
-    "test-cpp",
-    "test-c",
-]
+dependencies = ["test-cpp", "test-c"]
 
 [tasks.gen]
 category = "Code generation"
-dependencies = [
-    "gen-feature",
-    "gen-example",
-]
+dependencies = ["gen-feature", "gen-example"]
 
 # Tests
 [tasks.test-all]
 category = "Tests"
-dependencies = [
-    "test-example",
-    "test-feature",
-]
+dependencies = ["test-example", "test-feature"]
 
 [tasks.test-cpp]
 category = "Tests"
-dependencies = [
-    "test-cpp-example",
-    "test-cpp-feature",
-]
+dependencies = ["test-cpp-example", "test-cpp-feature"]
 
 [tasks.test-c]
 category = "Tests"
-dependencies = [
-    "test-c-example",
-]
+dependencies = ["test-c-example"]
 
 [tasks.test-js]
 category = "Tests"
-dependencies = [
-    "test-js-feature",
-]
+dependencies = ["test-js-feature"]
 
 [tasks.test-demo]
 category = "Tests"
-dependencies = [
-    "test-demo-feature",
-    "test-demo-example"
-]
+dependencies = ["test-demo-feature", "test-demo-example"]
 
 [tasks.test-dart]
 category = "Tests"
-dependencies = [
-    "test-dart-example",
-    "test-dart-feature",
-]
+dependencies = ["test-dart-example", "test-dart-feature"]
 
 [tasks.test-kotlin]
 category = "Tests"
-dependencies = [
-    "test-kotlin-example",
-    "test-kotlin-feature",
-]
+dependencies = ["test-kotlin-example", "test-kotlin-feature"]
+
+[tasks.test-py-nb]
+category = "Tests"
+dependencies = ["test-py-nb-feature"]
 
 [tasks.test-example]
 category = "Tests"
@@ -88,6 +67,7 @@ dependencies = [
     "test-demo-example",
     "test-dart-example",
     "test-kotlin-example",
+
 ]
 
 [tasks.test-feature]
@@ -98,6 +78,7 @@ dependencies = [
     "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
+    "test-py-nb-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -190,10 +171,10 @@ exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
 [tasks.test-kotlin-example.mac]
-env = {"OUT_FILE" = "dylib"}
+env = { "OUT_FILE" = "dylib" }
 
 [tasks.test-kotlin-example.linux]
-env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
+env = { "OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./" }
 
 [tasks.test-kotlin-example]
 category = "Tests"
@@ -207,10 +188,10 @@ exec --fail-on-error gradle test --warning-mode all
 '''
 
 [tasks.test-kotlin-feature.mac]
-env = {"OUT_FILE" = "dylib"}
+env = { "OUT_FILE" = "dylib" }
 
 [tasks.test-kotlin-feature.linux]
-env = {"OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./"}
+env = { "OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./" }
 
 [tasks.test-kotlin-feature]
 category = "Tests"
@@ -221,6 +202,17 @@ exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
 cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test  --warning-mode all 
+'''
+
+[tasks.test-py-nb-feature]
+category = "Tests"
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/py-nb
+rm tests/*.out
+exec --fail-on-error make
 '''
 
 [tasks.check-c-example]
@@ -275,10 +267,7 @@ exit ${exit_code}
 
 [tasks.check-c]
 category = "Tests"
-dependencies = [
-    "check-c-feature",
-    "check-c-example",
-]
+dependencies = ["check-c-feature", "check-c-example"]
 
 [tasks.check-cpp-example]
 category = "Tests"
@@ -340,10 +329,7 @@ exit ${exit_code}
 
 [tasks.check-cpp]
 category = "Tests"
-dependencies = [
-    "check-cpp-feature",
-    "check-cpp-example",
-]
+dependencies = ["check-cpp-feature", "check-cpp-example"]
 
 
 # Generation
@@ -372,31 +358,17 @@ dependencies = [
 
 [tasks.gen-c]
 category = "Code generation"
-dependencies = [
-    "gen-c-feature",
-    "gen-c-example"
-]
+dependencies = ["gen-c-feature", "gen-c-example"]
 [tasks.gen-cpp]
 category = "Code generation"
-dependencies = [
-    "gen-cpp-feature",
-    "gen-cpp-example"
-]
+dependencies = ["gen-cpp-feature", "gen-cpp-example"]
 
 [tasks.gen-dart]
 category = "Code generation"
-dependencies = [
-    "gen-dart-feature",
-    "gen-dart-example",
-]
+dependencies = ["gen-dart-feature", "gen-dart-example"]
 [tasks.gen-kotlin]
 category = "Code generation"
-dependencies = [
-    "gen-kotlin-feature",
-    "gen-kotlin-example",
-]
-
-
+dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 
 
 [tasks.gen-c-feature]
@@ -536,19 +508,37 @@ args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
+args = [
+    "build",
+    "-p",
+    "diplomat-feature-tests",
+    "--target",
+    "wasm32-unknown-unknown",
+]
 
 
 [tasks.build-example-jvm]
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-args = ["build", "-p", "diplomat-example", "--features", "diplomat-runtime/jvm-callback-support"]
+args = [
+    "build",
+    "-p",
+    "diplomat-example",
+    "--features",
+    "diplomat-runtime/jvm-callback-support",
+]
 [tasks.build-feature-jvm]
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-args = ["build", "-p", "diplomat-feature-tests", "--features", "diplomat-runtime/jvm-callback-support"]
+args = [
+    "build",
+    "-p",
+    "diplomat-feature-tests",
+    "--features",
+    "diplomat-runtime/jvm-callback-support",
+]
 
 
 [tasks.bench-rust-example]
