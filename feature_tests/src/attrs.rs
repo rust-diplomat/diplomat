@@ -62,12 +62,12 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "nested::ns")]
-    #[diplomat::attr(not(kotlin), rename = "Nested")]
+    #[diplomat::attr(supports = namespacing, rename = "Nested")]
     pub struct Nested;
 
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "nested::ns2")]
-    #[diplomat::attr(not(kotlin), rename = "Nested")]
+    #[diplomat::attr(supports = namespacing, rename = "Nested")]
     pub struct Nested2;
 
     #[diplomat::opaque]

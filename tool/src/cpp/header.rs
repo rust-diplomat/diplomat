@@ -181,11 +181,11 @@ fn path_diff<'a>(base: &'a str, path: &'a str) -> Cow<'a, str> {
     }
 
     // Base has run out without a mismatch, the relative path is a strict subset of path & can be borrowed
-    if base_ns.len() == 0 {
-        return path.split_at(matching_chars).1.into();
+    if base_ns.is_empty() {
+        path.split_at(matching_chars).1.into()
     } else {
         let up_dirs = base_ns.matches('/').count();
-        return ("../".repeat(up_dirs) + path_ns + file).into();
+        ("../".repeat(up_dirs) + path_ns + file).into()
     }
 }
 

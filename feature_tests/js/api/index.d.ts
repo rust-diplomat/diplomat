@@ -40,6 +40,10 @@ export { RenamedMyIterable } from "./RenamedMyIterable"
 
 export { RenamedMyIterator } from "./RenamedMyIterator"
 
+export { RenamedNested } from "./RenamedNested"
+
+export { RenamedNested2 } from "./RenamedNested2"
+
 export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
