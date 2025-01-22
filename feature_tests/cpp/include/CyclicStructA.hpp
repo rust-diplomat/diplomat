@@ -21,6 +21,10 @@ namespace capi {
     
     void CyclicStructA_cyclic_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
     
+    void CyclicStructA_double_cyclic_out(diplomat::capi::CyclicStructA self, diplomat::capi::CyclicStructA cyclic_struct_a, diplomat::capi::DiplomatWrite* write);
+    
+    void CyclicStructA_getter_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
+    
     
     } // extern "C"
 } // namespace capi
@@ -35,6 +39,23 @@ inline std::string CyclicStructA::cyclic_out() {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   diplomat::capi::CyclicStructA_cyclic_out(this->AsFFI(),
+    &write);
+  return output;
+}
+
+inline std::string CyclicStructA::double_cyclic_out(CyclicStructA cyclic_struct_a) {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::CyclicStructA_double_cyclic_out(this->AsFFI(),
+    cyclic_struct_a.AsFFI(),
+    &write);
+  return output;
+}
+
+inline std::string CyclicStructA::getter_out() {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::CyclicStructA_getter_out(this->AsFFI(),
     &write);
   return output;
 }

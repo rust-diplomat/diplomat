@@ -20,6 +20,10 @@ CyclicStructB CyclicStructA_get_b(void);
 
 void CyclicStructA_cyclic_out(CyclicStructA self, DiplomatWrite* write);
 
+void CyclicStructA_double_cyclic_out(CyclicStructA self, CyclicStructA cyclic_struct_a, DiplomatWrite* write);
+
+void CyclicStructA_getter_out(CyclicStructA self, DiplomatWrite* write);
+
 
 
 

@@ -3,6 +3,10 @@ export function {{function_name}}(
     {{param.param_name}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
     {%- endfor -%}
 ){% if typescript %};{% else %} {
-    return {{node_call_stack|indent(4)}};
+    {% for method in node_call_stack %}
+    {{ method|indent(4) }};
+    {% endfor %}
+
+    return out;
 }
 {%- endif %}

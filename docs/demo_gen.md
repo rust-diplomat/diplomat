@@ -120,6 +120,8 @@ From there, we need to look at each Termini's parameters. Our ultimate goal for 
 
 So we have what's called a `MethodDependency` struct, to represent dependencies for any given method. Let's explore how each possible parameter type impacts our `MethodDependency`s fields.
 
+Once we've fully evaluated a `MethodDependency`, we render the call of that method to Javascript and push it to a stack of similar Javascript calls, each dependent on the prior `MethodDependency`. This way, we convert the tree into a stack of calls.
+
 The HIR splits parameters into a few different types:
 
 ##### 1. Primitive Types
@@ -148,21 +150,19 @@ The nice thing about Javascript is that we can evaluate a parameter as a functio
 
 ##### 5. Structs
 
-Structs are a little different because they can be created through pure JS. So we treat each Struct as a `MethodDependency`, when in fact the "method" is just a function that assigns fields to the struct sequentially:
+Structs are a little different because they can be created through pure JS. So we just use the helpful `FromFields` function that comes with every non-out struct[^out]:
 
 ```js
-function (a, b, c, d) {
-	return new Struct(a, b, c, d);
-}
+Struct.FromFields(a, b, c, d);
 ```
+
+[^out]: Out Structs cannot be generated from a simple function call, so demo_gen finds these as the result of other functions.
 
 #### Step Two: Constructing RenderInfo
 
-Now that we have a tree[^tree] of `MethodDependency`s, we can now create two items:
+Now that we have a call stack of `MethodDependency`s, we can now create two items:
 1. A Javascript function for our [renderer](#front-end-renderer) to call.
 2. A JSON object for our [renderer](#front-end-renderer) to evaluate to know what Render Termini exist.
-
-[^tree]: This tree only exists on the call stack. As we find each `MethodDependency`, it is quickly turned into Javascript and then passed up the call stack.
 
 In this case, we just export an object called `RenderInfo`, with all the information any renderer will need to know about how we expect our Render Terminus to be called in Javascript.
 
@@ -252,53 +252,28 @@ pub fn new_static() -> Box<DataProvider> { /* ... */ }
 
 We only have a static data provider in this case, but ICU4X has more complicated data providers in the real library. This is where we might use something like `#[diplomat::demo(external)]` to tell demo_gen that we would like to be able to provide `DataProvider` ourselves when calling `formatWrite` (see [attributes](#attributes) for more).
 
-And so we continue to recurse through all opaque methods until we finally get the following JS output of all the recursive calls:
+And so we continue to recurse through all opaque methods until we finally get the following stack of JS calls:
 
 ```js
-export function formatWrite() {
-    var terminusArgs = arguments;
-    return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
-        null,
-        [
-            FixedDecimalFormatter.tryNew.apply(
-                null,
-                [
-                    Locale.new_.apply(
-                        null,
-                        [
-                            terminusArgs[0]
-                        ]
-                    ),
-                    DataProvider.newStatic.apply(
-                        null,
-                        [
-                        ]
-                    ),
-                    (function (...args) {
-                        let out = new FixedDecimalFormatterOptions();
-                        
-                        out.groupingStrategy = args[0];
-                        
-                        out.someOtherConfig = args[1];
-                        
-                        return out;
-                    }).apply(
-                        null,
-                        [
-                            terminusArgs[1],
-                            terminusArgs[2]
-                        ]
-                    )
-                ]
-            ),
-            FixedDecimal.new_.apply(
-                null,
-                [
-                    terminusArgs[3]
-                ]
-            )
-        ]
-    );
+export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsGroupingStrategy, fixedDecimalFormatterOptionsSomeOtherConfig, valueV) {
+    
+    let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
+    
+    let fixedDecimalFormatterProvider = DataProvider.newStatic();
+    
+    let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
+        groupingStrategy: fixedDecimalFormatterOptionsGroupingStrategy,
+        someOtherConfig: fixedDecimalFormatterOptionsSomeOtherConfig
+    });
+    
+    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
+    
+    let value = new FixedDecimal(valueV);
+    
+    let out = fixedDecimalFormatter.formatWrite(value);
+    
+
+    return out;
 }
 ```
 

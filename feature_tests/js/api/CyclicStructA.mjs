@@ -111,6 +111,40 @@ export class CyclicStructA {
         }
     }
 
+    doubleCyclicOut(cyclicStructA) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.CyclicStructA_double_cyclic_out(...this._intoFFI(), ...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}), write.buffer);
+    
+        try {
+            return write.readString8();
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        
+            write.free();
+        }
+    }
+
+    get getterOut() {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.CyclicStructA_getter_out(...this._intoFFI(), write.buffer);
+    
+        try {
+            return write.readString8();
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        
+            write.free();
+        }
+    }
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

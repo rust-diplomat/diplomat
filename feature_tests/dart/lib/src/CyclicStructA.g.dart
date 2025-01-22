@@ -39,6 +39,20 @@ final class CyclicStructA {
     return write.finalize();
   }
 
+  String doubleCyclicOut(CyclicStructA cyclicStructA) {
+    final temp = _FinalizedArena();
+    final write = _Write();
+    _CyclicStructA_double_cyclic_out(_toFfi(temp.arena), cyclicStructA._toFfi(temp.arena), write._ffi);
+    return write.finalize();
+  }
+
+  String get getterOut {
+    final temp = _FinalizedArena();
+    final write = _Write();
+    _CyclicStructA_getter_out(_toFfi(temp.arena), write._ffi);
+    return write.finalize();
+  }
+
   @override
   bool operator ==(Object other) =>
       other is CyclicStructA &&
@@ -59,3 +73,13 @@ external _CyclicStructBFfi _CyclicStructA_get_b();
 @ffi.Native<ffi.Void Function(_CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_cyclic_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructA_cyclic_out(_CyclicStructAFfi self, ffi.Pointer<ffi.Opaque> write);
+
+@meta.RecordUse()
+@ffi.Native<ffi.Void Function(_CyclicStructAFfi, _CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_double_cyclic_out')
+// ignore: non_constant_identifier_names
+external void _CyclicStructA_double_cyclic_out(_CyclicStructAFfi self, _CyclicStructAFfi cyclicStructA, ffi.Pointer<ffi.Opaque> write);
+
+@meta.RecordUse()
+@ffi.Native<ffi.Void Function(_CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_getter_out')
+// ignore: non_constant_identifier_names
+external void _CyclicStructA_getter_out(_CyclicStructAFfi self, ffi.Pointer<ffi.Opaque> write);

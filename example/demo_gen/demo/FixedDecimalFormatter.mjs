@@ -3,43 +3,23 @@ import { FixedDecimal } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
 import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
 import { Locale } from "../../js/lib/api/index.mjs"
-export function formatWrite(name, grouping_strategy, some_other_config, v) {
-    return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
-        null,
-        [
-            FixedDecimalFormatter.tryNew.apply(
-                null,
-                [
-                    (function (...args) { return new Locale(...args) } ).apply(
-                        null,
-                        [
-                            name
-                        ]
-                    ),
-                    DataProvider.newStatic.apply(
-                        null,
-                        [
-                        ]
-                    ),
-                    (function (...args) {
-                        return FixedDecimalFormatterOptions.fromFields({
-                            groupingStrategy: args[0],
-                            someOtherConfig: args[1]});
-                    }).apply(
-                        null,
-                        [
-                            grouping_strategy,
-                            some_other_config
-                        ]
-                    )
-                ]
-            ),
-            (function (...args) { return new FixedDecimal(...args) } ).apply(
-                null,
-                [
-                    v
-                ]
-            )
-        ]
-    );
+export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsGroupingStrategy, fixedDecimalFormatterOptionsSomeOtherConfig, valueV) {
+    
+    let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
+    
+    let fixedDecimalFormatterProvider = DataProvider.newStatic();
+    
+    let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
+        groupingStrategy: fixedDecimalFormatterOptionsGroupingStrategy,
+        someOtherConfig: fixedDecimalFormatterOptionsSomeOtherConfig
+    });
+    
+    let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
+    
+    let value = new FixedDecimal(valueV);
+    
+    let out = fixedDecimalFormatter.formatWrite(value);
+    
+
+    return out;
 }

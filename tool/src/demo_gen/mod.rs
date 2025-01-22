@@ -196,7 +196,7 @@ pub(crate) fn run<'tcx>(
 
                         js_file_name: js_file_name.clone(),
 
-                        node_call_stack: String::default(),
+                        node_call_stack: Vec::default(),
 
                         // We set this in the init function of WebDemoGenerationContext.
                         typescript: false,
@@ -204,7 +204,7 @@ pub(crate) fn run<'tcx>(
                         imports: BTreeSet::new(),
                     },
 
-                    out_param_collision: HashMap::new(),
+                    name_collision: HashMap::new(),
 
                     relative_import_path: import_path.clone(),
                     module_name: module_name.clone(),

@@ -8,12 +8,6 @@ use crate::{js::formatter::JSFormatter, ErrorStore};
 
 use askama::{self, Template};
 
-#[derive(Clone)]
-pub struct ParamInfo {
-    /// The javascript that represents this parameter.
-    pub js: String,
-}
-
 pub struct OutParam {
     /// Param JS representation (i.e., `arg_1`)
     pub param_name: String,
@@ -31,7 +25,7 @@ pub struct OutParam {
 /// But this represents one step in the building block, so something like:
 ///
 /// ```typescript
-/// FixedDecimalFormatter.tryNew.apply(null, [...])
+/// let decimal_formatter = FixedDecimalFormatter.tryNew(...);
 /// ```
 ///
 /// Where we expand `...` with further MethodDependencies.
@@ -41,8 +35,17 @@ struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
 
-    /// Parameters to pass into the method.
-    params: Vec<ParamInfo>,
+    /// Used to detect whether or not we need to add parentheses to the function call.
+    is_getter: bool,
+
+    /// The variable name to assign to this method.
+    variable_name: String,
+
+    /// Parameters names to pass into the method.
+    params: Vec<String>,
+
+    /// Parameter that calls this method.
+    self_param: Option<String>,
 
     /// The Rust parameter that we're attempting to construct with this method. Currently used by [`OutParam`] for better default parameter names.
     owning_param: Option<String>,
@@ -54,18 +57,36 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 
-    /// To avoid similar parameter names while we're collecting [`OutParam`]s.
-    pub out_param_collision: HashMap<String, i32>,
+    /// To avoid similar parameter and variable names while we're collecting [`OutParam`]s and [`MethodDependency`]s.
+    pub name_collision: HashMap<String, i32>,
 
     pub relative_import_path: String,
     pub module_name: String,
 }
 
 impl MethodDependency {
-    pub fn new(method_js: String, owning_param: Option<String>) -> Self {
+    pub fn new(
+        ctx: &mut RenderTerminusContext,
+        method_js: String,
+        variable_name: String,
+        owning_param: Option<String>,
+    ) -> Self {
+        let (var_name, n) = if ctx.name_collision.contains_key(&variable_name) {
+            let n = ctx.name_collision.get(&variable_name).unwrap();
+
+            (format!("{variable_name}_{n}"), n + 1)
+        } else {
+            (variable_name.clone(), 1)
+        };
+
+        ctx.name_collision.insert(var_name.clone(), n);
+
         MethodDependency {
             method_js,
+            is_getter: false,
+            variable_name: var_name,
             params: Vec::new(),
+            self_param: None,
             owning_param,
         }
     }
@@ -93,23 +114,24 @@ impl MethodDependency {
 ///
 /// The final render looks something like this:
 /// ```typescript
-/// function formatWrite(locale : Locale, provider : DataProvider, options : FixedDecimalFormatterOptions, v : number) {
-///     return function(...args) { let self = args[0]; self.formatWrite(...args.slice(1)); }
-///     .apply(
-///         null,
-///         [
-///             FixedDecimalFormatter.tryNew.apply(
-///                 null,
-///                 [locale,
-///                 provider,
-///                 options]
-///             ),
-///             FixedDecimal.new_.apply(
-///                 null,
-///                 [v]
-///             ),
-///         ]
-///     );
+/// export function formatWrite(fixedDecimalFormatterLocaleName, fixedDecimalFormatterOptionsGroupingStrategy, fixedDecimalFormatterOptionsSomeOtherConfig, valueV) {
+///
+///     let fixedDecimalFormatterLocale = new Locale(fixedDecimalFormatterLocaleName);
+///
+///     let fixedDecimalFormatterProvider = DataProvider.newStatic();
+///     
+///     let fixedDecimalFormatterOptions = FixedDecimalFormatterOptions.fromFields({
+///         groupingStrategy: fixedDecimalFormatterOptionsGroupingStrategy,
+///         someOtherConfig: fixedDecimalFormatterOptionsSomeOtherConfig
+///     });
+///     
+///     let fixedDecimalFormatter = FixedDecimalFormatter.tryNew(fixedDecimalFormatterLocale,fixedDecimalFormatterProvider,fixedDecimalFormatterOptions);
+///
+///     let value = new FixedDecimal(valueV);
+///
+///     let out = fixedDecimalFormatter.formatWrite(value);
+///
+///     return out;
 /// }
 /// ```
 #[derive(Template)]
@@ -134,8 +156,8 @@ pub(super) struct TerminusInfo {
 
     pub js_file_name: String,
 
-    /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
-    pub node_call_stack: String,
+    /// Stack of results from calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`].
+    pub node_call_stack: Vec<String>,
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
     pub typescript: bool,
@@ -156,17 +178,17 @@ impl RenderTerminusContext<'_, '_> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate(&mut self, type_name: String, method: &Method) {
-        // TODO: I think it would be nice to have a stack of the current namespace a given parameter.
-        // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
-        // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
-
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root =
-            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
+        let mut root = MethodDependency::new(
+            self,
+            self.get_constructor_js(type_name.clone(), method),
+            "out".into(),
+            None,
+        );
 
         // And then we just treat the terminus as a regular constructor method:
-        self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
+        self.evaluate_constructor(method, &mut root);
 
         let type_n = type_name.clone();
         let format = self.formatter.fmt_import_module(
@@ -186,27 +208,31 @@ impl RenderTerminusContext<'_, '_> {
 
     /// Helper function for quickly passing a parameter to both our node and the render terminus.
     /// Appends to [TerminusInfo::out_params]
+    ///
+    /// Returns the name of the parameter attached to the render terminus.
     fn append_out_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
         param_name: String,
         type_info: &Type<P>,
         node: &mut MethodDependency,
         attrs: Option<DemoInfo>,
-    ) {
+    ) -> String {
         let attrs_default = attrs.unwrap_or_default();
+
+        let owning_str = node
+            .owning_param
+            .as_ref()
+            .map(|p| format!("{}:", p))
+            .unwrap_or_default();
+        let owned_full_name = format!(
+            "{}{}",
+            owning_str,
+            heck::AsUpperCamelCase(param_name.clone())
+        )
+        .to_string();
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = if attrs_default.input_cfg.label.is_empty() {
-            let owning_str = node
-                .owning_param
-                .as_ref()
-                .map(|p| format!("{}:", p))
-                .unwrap_or_default();
-            format!(
-                "{}{}",
-                owning_str,
-                heck::AsUpperCamelCase(param_name.clone())
-            )
-            .to_string()
+            owned_full_name.clone()
         } else {
             attrs_default.input_cfg.label
         };
@@ -239,15 +265,17 @@ impl RenderTerminusContext<'_, '_> {
             }
         };
 
-        let (p, n) = if self.out_param_collision.contains_key(&param_name) {
-            let n = self.out_param_collision.get(&param_name).unwrap();
+        let full_param_name = heck::AsLowerCamelCase(owned_full_name).to_string();
 
-            (format!("{param_name}_{n}"), n + 1)
+        let (p, n) = if self.name_collision.contains_key(&full_param_name) {
+            let n = self.name_collision.get(&full_param_name).unwrap();
+
+            (format!("{full_param_name}_{n}"), n + 1)
         } else {
-            (param_name.clone(), 1)
+            (full_param_name.clone(), 1)
         };
 
-        self.out_param_collision.insert(param_name, n);
+        self.name_collision.insert(full_param_name, n);
 
         let out_param = OutParam {
             param_name: p.clone(),
@@ -258,10 +286,7 @@ impl RenderTerminusContext<'_, '_> {
         };
 
         self.terminus_info.out_params.push(out_param);
-
-        let param_info = ParamInfo { js: p };
-
-        node.params.push(param_info);
+        p
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
@@ -269,18 +294,19 @@ impl RenderTerminusContext<'_, '_> {
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     ///
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
+    ///
+    /// Returns the name of the parameter that has been added to the [`TerminusInfo::node_call_stack`].
     fn evaluate_param<P: TyPosition<StructPath = StructPath>>(
         &mut self,
         param_type: &Type<P>,
         param_name: String,
         node: &mut MethodDependency,
         param_attrs: DemoInfo,
-    ) {
-        // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
+    ) -> String {
         match param_type {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -290,10 +316,10 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Slice(..) => {
-                self.append_out_param(param_name, param_type, node, Some(param_attrs));
+                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
@@ -307,11 +333,15 @@ impl RenderTerminusContext<'_, '_> {
                 }
 
                 if all_attrs.demo_attrs.external {
-                    self.append_out_param(param_name, param_type, node, Some(param_attrs));
-                    return;
+                    return self.append_out_param(
+                        param_name.clone(),
+                        param_type,
+                        node,
+                        Some(param_attrs),
+                    );
                 }
 
-                self.evaluate_op_constructors(op, type_name.to_string(), param_name, node);
+                self.evaluate_op_constructors(op, type_name.to_string(), param_name, node)
             }
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
@@ -322,7 +352,7 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.evaluate_struct_fields(st, type_name.to_string(), param_name, node);
+                self.evaluate_struct_fields(st, type_name.to_string(), param_name, node)
             }
             Type::DiplomatOption(ref inner) => {
                 self.evaluate_param(inner, param_name, node, param_attrs)
@@ -344,20 +374,9 @@ impl RenderTerminusContext<'_, '_> {
     fn get_constructor_js(&self, owner_type_name: String, method: &Method) -> String {
         let method_name = self.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
-            // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
-
-            // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
-            let is_getter = matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Getter(_))
-            );
-
-            format!(
-                "(function (...args) {{ return args[0].{method_name}{} }})",
-                if !is_getter { "(...args.slice(1))" } else { "" }
-            )
+            method_name
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
-            format!("(function (...args) {{ return new {owner_type_name}(...args) }} )")
+            format!("new {owner_type_name}")
         } else {
             format!("{owner_type_name}.{method_name}")
         }
@@ -370,13 +389,11 @@ impl RenderTerminusContext<'_, '_> {
         type_name: String,
         param_name: String,
         node: &mut MethodDependency,
-    ) {
-        let mut usable_constructor = false;
-
+    ) -> String {
         for method in op.methods.iter() {
             let method_attrs = &method.attrs.demo_attrs;
 
-            usable_constructor = method_attrs.default_constructor;
+            let mut usable_constructor = method_attrs.default_constructor;
 
             // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
             if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
@@ -400,22 +417,24 @@ impl RenderTerminusContext<'_, '_> {
                         .as_ref()
                         .map(|o| { format!("{o}:") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name)
+                    heck::AsUpperCamelCase(param_name.clone())
                 );
 
+                let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
+
                 let mut child = MethodDependency::new(
+                    self,
                     self.get_constructor_js(type_name.to_string(), method),
+                    var_name,
                     Some(owned_type),
                 );
 
-                let call = self.evaluate_constructor(method, &mut child);
-                node.params.push(ParamInfo { js: call });
-                break;
+                self.evaluate_constructor(method, &mut child);
+                return child.variable_name;
             }
         }
 
-        if !usable_constructor {
-            self.errors.push_error(
+        self.errors.push_error(
                 format!(
                     "You must set a default constructor for the opaque type {}, \
                     as it is required for the function {}. \
@@ -423,26 +442,25 @@ impl RenderTerminusContext<'_, '_> {
                     above a method that you wish to be the default constructor.\
                     You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
                     op.name.as_str(), node.method_js)
-            );
-            node.params.push(ParamInfo {
-                js: format!(
-                    "null \
-                    /*Could not find a usable constructor for {}. \
-                    Try adding #[diplomat::demo(default_constructor)]*/",
-                    op.name.as_str()
-                ),
-            });
-        }
+        );
+
+        format!(
+            "null \
+            /*Could not find a usable constructor for {}. \
+            Try adding #[diplomat::demo(default_constructor)]*/",
+            op.name.as_str()
+        )
     }
 
     /// Search through each field in the struct, and find constructors for each.
+    /// Return the name of our parameter.
     fn evaluate_struct_fields(
         &mut self,
         st: &StructDef,
         type_name: String,
         param_name: String,
         node: &mut MethodDependency,
-    ) {
+    ) -> String {
         self.terminus_info
             .imports
             .insert(self.formatter.fmt_import_module(
@@ -457,63 +475,88 @@ impl RenderTerminusContext<'_, '_> {
                 .as_ref()
                 .map(|o| { format!("{o}:") })
                 .unwrap_or_default(),
-            heck::AsUpperCamelCase(param_name)
+            heck::AsUpperCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new("".to_string(), Some(owned_type));
+        let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
+
+        let mut child = MethodDependency::new(
+            self,
+            format!("{type_name}.fromFields"),
+            var_name,
+            Some(owned_type),
+        );
+
+        struct FieldInfo {
+            field_name: String,
+            param_name: String,
+        }
 
         #[derive(Template)]
         #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
         struct StructInfo {
-            type_name: String,
-            fields: Vec<String>,
+            fields: Vec<FieldInfo>,
         }
 
         let mut fields = Vec::new();
 
         for field in st.fields.iter() {
-            self.evaluate_param(
-                &field.ty,
-                field.name.to_string(),
-                &mut child,
-                field.attrs.demo_attrs.clone(),
-            );
-            fields.push(self.formatter.fmt_param_name(field.name.as_ref()).into());
+            fields.push(FieldInfo {
+                field_name: self.formatter.fmt_param_name(field.name.as_ref()).into(),
+                param_name: self.evaluate_param(
+                    &field.ty,
+                    field.name.to_string(),
+                    &mut child,
+                    field.attrs.demo_attrs.clone(),
+                ),
+            });
         }
 
-        child.method_js = StructInfo {
-            type_name: type_name.clone(),
-            fields,
-        }
-        .render()
-        .unwrap();
+        child.params.push(StructInfo { fields }.render().unwrap());
 
-        node.params.push(ParamInfo {
-            js: child.render().unwrap(),
-        });
+        self.terminus_info
+            .node_call_stack
+            .push(child.render().unwrap());
+
+        child.variable_name
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
-    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
+    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
         let param_self = method.param_self.as_ref();
 
         if param_self.is_some() {
             let s = param_self.unwrap();
 
-            let ty = s.ty.clone().into();
-            self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
+            let ty: Type = s.ty.clone().into();
+
+            let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
+
+            let self_param =
+                self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
+            node.self_param.replace(self_param);
+
+            let is_getter = matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Getter(_))
+            );
+
+            node.is_getter = is_getter;
         }
 
         for param in method.params.iter() {
-            self.evaluate_param(
+            let new_param = self.evaluate_param(
                 &param.ty,
-                self.formatter.fmt_param_name(param.name.as_str()).into(),
+                param.name.to_string(),
                 node,
                 param.attrs.demo_attrs.clone(),
             );
+            node.params.push(new_param);
         }
 
-        // The node that is awaiting this node as a child needs the rendered output:
-        node.render().unwrap()
+        // Add this method to the call stack:
+        self.terminus_info
+            .node_call_stack
+            .push(node.render().unwrap());
     }
 }

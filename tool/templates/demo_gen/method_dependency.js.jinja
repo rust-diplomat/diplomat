@@ -1,8 +1,5 @@
-{{ method_js }}.apply(
-    null,
-    [
-        {%- for param in params %}
-        {{ param.js|indent(8) }}{% if !loop.last %},{% endif -%}
-        {% endfor %}
-    ]
-)
+let {{variable_name}} = {% if let Some(s) = self_param -%} {{s}}. {%- endif -%} {{ method_js }} {%- if !is_getter -%} (
+    {%- for param in params -%}
+    {{ param }}{% if !loop.last %},{% endif -%}
+    {%- endfor -%}
+) {%- endif %}
