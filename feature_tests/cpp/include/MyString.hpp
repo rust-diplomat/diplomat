@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
@@ -44,7 +45,7 @@ inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
 
 inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString::new_unsafe(std::string_view v) {
   if (!diplomat::capi::diplomat_is_str(v.data(), v.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   auto result = diplomat::capi::MyString_new_unsafe({v.data(), v.size()});
   return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
@@ -70,7 +71,7 @@ inline std::string MyString::get_str() const {
 
 inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_transform(std::string_view foo) {
   if (!diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);

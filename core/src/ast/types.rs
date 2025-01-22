@@ -951,6 +951,11 @@ impl TypeName {
                     if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments.last().unwrap().arguments
                     {
+                        assert!(
+                            type_args.args.len() > 1,
+                            "Not enough arguments given to Result<T,E>. Are you using a non-std Result type?"
+                        );
+
                         if let (syn::GenericArgument::Type(ok), syn::GenericArgument::Type(err)) =
                             (&type_args.args[0], &type_args.args[1])
                         {

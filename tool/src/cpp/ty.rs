@@ -4,6 +4,8 @@ use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
+use diplomat_core::hir::CallbackInstantiationFunctionality;
+use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
     Type, TypeDef, TypeId,
@@ -327,7 +329,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) {
                 param_validations.push(format!(
-                    "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
+                    "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>();\n}}",
                     param = param.name.as_str(),
                 ));
                 returns_utf8_err = true;
@@ -351,8 +353,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
                 return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
-                c_to_cpp_return_expression =
-                    Some("diplomat::Ok<std::monostate>(std::monostate)".into());
+                c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
                 return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
             }
         };
@@ -498,11 +499,30 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 self.formatter.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
+        let return_type = cb
+            .get_output_type()
+            .unwrap()
+            .as_ref()
+            .map(|t| self.gen_type_name(t))
+            .unwrap_or("void".into());
+        let params_types = cb
+            .get_inputs()
+            .unwrap()
+            .iter()
+            .map(|p| self.gen_type_name(&p.ty).to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!("{return_type}({params_types})")
     }
 
     /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
@@ -553,12 +573,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Slice(Slice::Strs(..)) => format!(
+                // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
+                "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
+            ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
                     self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
+            }
+            Type::Callback(..) => {
+                format!("{{new decltype({cpp_name})({cpp_name}), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
