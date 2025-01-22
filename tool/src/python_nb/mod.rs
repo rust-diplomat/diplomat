@@ -12,6 +12,7 @@ use ty::TyGenContext;
 
 /// Python support using the nanobind c++ library to create a python binding.
 ///
+/// The generated nanobind.cpp files requires linking with nanobind
 /// Support for automated python package building is still outstanding.
 /// To build, modify the following in the build.rs for your diplomat library:
 ///

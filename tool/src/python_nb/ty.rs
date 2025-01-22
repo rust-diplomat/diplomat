@@ -53,7 +53,6 @@ pub(super) struct TyGenContext<'cx, 'tcx> {
 
 impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
     /// Checks for & outputs a list of modules with their parents that still need to be defined for this type
-    ///
     pub fn get_module_defs(
         &mut self,
         id: TypeId,
@@ -62,15 +61,16 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         let mut namespaces = self.formatter.fmt_namespaces(id);
         let mut modules: Vec<(Cow<'_, str>, Cow<'_, str>)> = Default::default();
 
-        while let Some(parent) = namespaces.next() {
-            if let Some(module) = namespaces.next() {
-                if self.submodules.contains(&module) {
-                    continue;
-                }
-                self.submodules.insert(module.clone());
-
-                modules.push((module, parent));
+        let mut parent = "".into();
+        while let Some(module) = namespaces.next() {
+            if self.submodules.contains(&module) {
+                continue;
             }
+            println!("Adding submodule entry for {module}");
+            self.submodules.insert(module.clone());
+
+            modules.push((module.clone(), parent));
+            parent = module;
         }
         modules
     }
@@ -88,7 +88,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         let values = ty.variants.iter().collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python/enum_impl.cpp.jinja", escape = "none")]
+        #[template(path = "python_nb/enum_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             _ty: &'a hir::EnumDef,
             _fmt: &'a PyFormatter<'a>,
@@ -129,7 +129,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python/opaque_impl.cpp.jinja", escape = "none")]
+        #[template(path = "python_nb/opaque_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a PyFormatter<'a>,
@@ -180,10 +180,8 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python/struct_impl.cpp.jinja", escape = "none")]
+        #[template(path = "python_nb/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
-            // ty: &'a hir::OpaqueDef,
-            // fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             _ctype: &'a str,
             fields: &'a [NamedType<'a>],
@@ -195,8 +193,6 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         }
 
         ImplTemplate {
-            // ty,
-            // fmt: &self.formatter,
             type_name: &type_name,
             _ctype: &ctype,
             fields: field_decls.as_slice(),
