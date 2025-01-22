@@ -56,7 +56,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .rename
             .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
-            let ns = ns.replace("::", std::path::MAIN_SEPARATOR_STR);
+            let ns = ns.replace("::", "/");
             format!("{ns}/{type_name}.d.hpp")
         } else {
             format!("{type_name}.d.hpp")
@@ -71,7 +71,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .rename
             .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
-            let ns = ns.replace("::", std::path::MAIN_SEPARATOR_STR);
+            let ns = ns.replace("::", "/");
             format!("{ns}/{type_name}.hpp")
         } else {
             format!("{type_name}.hpp")
