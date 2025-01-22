@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "ImportedStruct.hpp"
 #include "MyStruct.hpp"
@@ -53,7 +54,7 @@ inline std::unique_ptr<Opaque> Opaque::try_from_utf8(std::string_view input) {
 
 inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::from_str(std::string_view input) {
   if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   auto result = diplomat::capi::Opaque_from_str({input.data(), input.size()});
   return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));

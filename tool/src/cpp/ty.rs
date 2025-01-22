@@ -573,7 +573,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
-            Type::Slice(Slice::Strs(..)) => format!( 
+            Type::Slice(Slice::Strs(..)) => format!(
                 // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
                 "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),

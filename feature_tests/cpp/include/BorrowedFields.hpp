@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "Bar.hpp"
 #include "diplomat_runtime.hpp"
@@ -26,7 +27,7 @@ namespace capi {
 
 inline diplomat::result<BorrowedFields, diplomat::Utf8Error> BorrowedFields::from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
   if (!diplomat::capi::diplomat_is_str(utf8_str.data(), utf8_str.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   auto result = diplomat::capi::BorrowedFields_from_bar_and_strings(bar.AsFFI(),
     {dstr16.data(), dstr16.size()},

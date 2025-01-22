@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "UnimportedEnum.d.hpp"
 #include "diplomat_runtime.hpp"

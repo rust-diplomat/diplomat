@@ -25,5 +25,9 @@ mod ffi {
         pub fn test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32) -> i32 {
             f() + g(5)
         }
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_str_cb_arg(f: impl Fn(&str) -> i32) -> i32 {
+            f("bananna")
+        }
     }
 }

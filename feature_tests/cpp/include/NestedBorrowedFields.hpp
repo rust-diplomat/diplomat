@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
@@ -29,10 +30,10 @@ namespace capi {
 
 inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowedFields::from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z) {
   if (!diplomat::capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   if (!diplomat::capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+    return diplomat::Err<diplomat::Utf8Error>();
   }
   auto result = diplomat::capi::NestedBorrowedFields_from_bar_and_foo_and_strings(bar.AsFFI(),
     foo.AsFFI(),

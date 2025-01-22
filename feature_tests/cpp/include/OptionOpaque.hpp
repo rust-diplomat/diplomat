@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <memory>
+#include <functional>
 #include <optional>
 #include "OptionEnum.hpp"
 #include "OptionInputStruct.hpp"
