@@ -61,6 +61,16 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(auto, namespace = "nested::ns")]
+    #[diplomat::attr(supports = namespacing, rename = "Nested")]
+    pub struct Nested;
+
+    #[diplomat::opaque]
+    #[diplomat::attr(auto, namespace = "nested::ns2")]
+    #[diplomat::attr(supports = namespacing, rename = "Nested")]
+    pub struct Nested2;
+
+    #[diplomat::opaque]
     #[diplomat::attr(not(supports = comparators), disable)]
     pub struct Comparable(u8);
 

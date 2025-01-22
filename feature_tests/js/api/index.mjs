@@ -38,6 +38,10 @@ export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
 
 export { RenamedMyIterator } from "./RenamedMyIterator.mjs"
 
+export { RenamedNested } from "./RenamedNested.mjs"
+
+export { RenamedNested2 } from "./RenamedNested2.mjs"
+
 export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable.mjs"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"

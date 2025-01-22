@@ -121,9 +121,12 @@ impl fmt::Write for Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let header_guard = &self.path;
-        let header_guard = header_guard.replace(".d.hpp", "_D_HPP").replace('/', "_");
-        let header_guard = header_guard.replace(".hpp", "_HPP").replace('/', "_");
+        let header_guard = &self
+            .path
+            .replace(".d.hpp", "_D_HPP")
+            .replace(".hpp", "_HPP")
+            .replace("\\", "_")
+            .replace("/", "_");
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
@@ -140,21 +143,7 @@ impl fmt::Display for Header {
             includes: self
                 .includes
                 .iter()
-                .map(|s| {
-                    if let Some((ns, _)) = self.path.split_once('/') {
-                        if let Some((other_ns, file)) = s.split_once('/') {
-                            if ns == other_ns {
-                                Cow::Borrowed(file)
-                            } else {
-                                Cow::Owned(format!("../{s}"))
-                            }
-                        } else {
-                            Cow::Owned(format!("../{s}"))
-                        }
-                    } else {
-                        Cow::Borrowed(s.as_str())
-                    }
-                })
+                .map(|s| path_diff(&self.path, s))
                 .collect(),
             forwards: &self.forwards,
             body,
@@ -163,4 +152,59 @@ impl fmt::Display for Header {
         .unwrap();
         f.write_char('\n')
     }
+}
+
+// As rsplit_once, except the first of the tuple will include the delimiter pattern
+fn rsplit_once_inclusive(str: &str, delim: char) -> Option<(&str, &str)> {
+    str.rfind(delim).map(|i| str.split_at(i + 1))
+}
+
+/// Returns the path to 'path', relative to 'base'
+fn path_diff<'a>(base: &'a str, path: &'a str) -> Cow<'a, str> {
+    let (mut base_ns, _) = rsplit_once_inclusive(base, '/').unwrap_or(("", base));
+    let (mut path_ns, file) = rsplit_once_inclusive(path, '/').unwrap_or(("", path));
+
+    let mut matching_chars = 0;
+    // Consume and count the length of the matching section
+    loop {
+        let b = base_ns.split_once('/');
+        let p = path_ns.split_once('/');
+        if let (Some(b), Some(p)) = (b, p) {
+            if b.0 == p.0 {
+                base_ns = b.1;
+                path_ns = p.1;
+                matching_chars += b.0.len() + 1; // 1 for the consumed delimiter
+                continue;
+            }
+        }
+        break;
+    }
+
+    // Base has run out without a mismatch, the relative path is a strict subset of path & can be borrowed
+    if base_ns.is_empty() {
+        path.split_at(matching_chars).1.into()
+    } else {
+        let up_dirs = base_ns.matches('/').count();
+        ("../".repeat(up_dirs) + path_ns + file).into()
+    }
+}
+
+#[test]
+fn test_path_diff() {
+    let a = "a/same.hpp";
+    let b = "a/same2.hpp";
+    assert_eq!(path_diff(a, b), "same2.hpp");
+
+    let a = "root.hpp";
+    let b = "a/nested.hpp";
+    assert_eq!(path_diff(a, b), "a/nested.hpp");
+
+    let a = "a/nested.hpp";
+    let b = "root.hpp";
+    assert_eq!(path_diff(a, b), "../root.hpp");
+
+    let a = "a/b/c/d.hpp";
+    let b = "a/b/z/c/d.hpp";
+
+    assert_eq!(path_diff(a, b), "../z/c/d.hpp");
 }
