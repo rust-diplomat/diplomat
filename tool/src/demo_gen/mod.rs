@@ -14,8 +14,7 @@ use serde::{Deserialize, Serialize};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    js::{self, formatter::JSFormatter, FileType},
-    ErrorStore, FileMap,
+    js::{self, formatter::JSFormatter, FileType}, Config, ErrorStore, FileMap
 };
 
 mod terminus;
@@ -62,7 +61,7 @@ pub(crate) fn run<'tcx>(
     entry: &std::path::Path,
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
-    conf: Option<DemoConfig>,
+    conf: Config,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
@@ -70,19 +69,17 @@ pub(crate) fn run<'tcx>(
 
     let root = entry.parent().unwrap();
 
-    let unwrapped_conf = conf.unwrap_or_default();
-
     let import_path_exists =
-        unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
+        conf.demo_gen_config.relative_js_path.is_some() || conf.demo_gen_config.module_name.is_some();
 
-    let import_path = unwrapped_conf
+    let import_path = conf.demo_gen_config
         .relative_js_path
-        .unwrap_or(match unwrapped_conf.module_name {
+        .unwrap_or(match conf.demo_gen_config.module_name {
             Some(_) => "".into(),
             None => "./js/".into(),
         });
 
-    let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
+    let module_name = conf.demo_gen_config.module_name.unwrap_or("index.mjs".into());
 
     struct TerminusExport {
         type_name: String,
@@ -109,7 +106,7 @@ pub(crate) fn run<'tcx>(
         custom_func_objs: Vec::new(),
     };
 
-    let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
+    let is_explicit = conf.demo_gen_config.explicit_generation.unwrap_or(false);
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
@@ -252,7 +249,7 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.mjs".into(), out_info.render().unwrap());
 
-    let hide_default_renderer = unwrapped_conf.hide_default_renderer.unwrap_or(false);
+    let hide_default_renderer = conf.demo_gen_config.hide_default_renderer.unwrap_or(false);
 
     if !hide_default_renderer {
         files.add_file(

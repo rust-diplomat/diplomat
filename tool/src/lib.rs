@@ -1,6 +1,8 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
+mod config;
+
 // Backends
 pub mod c;
 mod cpp;
@@ -10,6 +12,7 @@ mod js;
 mod kotlin;
 
 use colored::*;
+use config::Config;
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -26,7 +29,7 @@ pub fn gen(
     target_language: &str,
     out_folder: &Path,
     docs_url_gen: &DocsUrlGenerator,
-    library_config: Option<&Path>,
+    config: Config,
     silent: bool,
 ) -> std::io::Result<()> {
     if !entry.exists() {
@@ -74,29 +77,19 @@ pub fn gen(
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
-            let conf = library_config.map(|c| {
-                let str = std::fs::read_to_string(c)
-                    .unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
-                toml::from_str::<demo_gen::DemoConfig>(&str)
-                    .unwrap_or_else(|err| panic!("Parsing error in {c:?}: {err}"))
-            });
-
             // If we don't already have an import path set up, generate our own imports:
-            if !conf
-                .clone()
-                .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
-                .unwrap_or(false)
+            if config.demo_gen_config.module_name.is_some() || config.demo_gen_config.relative_js_path.is_some()
             {
                 gen(
                     entry,
                     "js",
                     &out_folder.join("js"),
                     docs_url_gen,
-                    library_config,
+                    config,
                     silent,
                 )?;
             }
-            demo_gen::run(entry, &tcx, docs_url_gen, conf)
+            demo_gen::run(entry, &tcx, docs_url_gen, config)
         }
         "kotlin" => kotlin::run(&tcx, library_config, docs_url_gen),
         o => panic!("Unknown target: {}", o),

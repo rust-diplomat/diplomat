@@ -51,7 +51,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-struct KotlinConfig {
+pub(crate) struct KotlinConfig {
     domain: String,
     lib_name: String,
     use_finalizers_not_cleaners: Option<bool>,

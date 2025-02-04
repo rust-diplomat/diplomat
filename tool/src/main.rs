@@ -24,9 +24,9 @@ struct Opt {
     entry: PathBuf,
 
     /// The path to an optional config file to override code generation defaults.
-    /// This is currently used by kotlin and demo_gen.
+    /// This is where [`config::Config`] is filled in.
     #[clap(short, long, value_parser)]
-    library_config: Option<PathBuf>,
+    config_file: Option<PathBuf>,
 
     #[clap(short = 's', long)]
     silent: bool,
@@ -34,6 +34,16 @@ struct Opt {
 
 fn main() -> std::io::Result<()> {
     let opt = Opt::parse();
+
+    // -- Config Parsing --
+    let path = opt.config_file.as_deref().unwrap_or(&opt.entry.join("config.toml"));
+    let config : Config = if path.exists() {
+        let file_buf = std::fs::read(path)?;
+        toml::from_slice(&file_buf)?
+    } else {
+        Config::default()
+    };
+    // -- Config Parsing --
 
     diplomat_tool::gen(
         &opt.entry,
@@ -59,7 +69,7 @@ fn main() -> std::io::Result<()> {
                 })
                 .collect(),
         ),
-        opt.library_config.as_deref(),
+        config,
         opt.silent,
     )
 }
