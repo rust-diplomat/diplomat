@@ -27,8 +27,10 @@ struct Opt {
 
     /// The path to an optional config file to override code generation defaults.
     /// This is where [`config::Config`] is filled in.
-    #[clap(short, long, value_parser)]
-    config_file: Option<PathBuf>,
+    /// 
+    /// We assume by default that this is located in the root directory.
+    #[clap(short, long, value_parser, default_value = "config.toml")]
+    config_file: PathBuf,
 
     #[clap(short = 's', long)]
     silent: bool,
@@ -39,9 +41,7 @@ fn main() -> std::io::Result<()> {
 
     // -- Config Parsing --
 
-    // We assume by default that this is located in the directory with all other source files:
-    let default_pth = opt.entry.join("../config.toml");
-    let path = opt.config_file.as_deref().unwrap_or(&default_pth);
+    let path = opt.config_file;
     let config: Config = if path.exists() {
         let file_buf = std::fs::read(path)?;
         toml::from_slice(&file_buf)?
