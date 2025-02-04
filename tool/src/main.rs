@@ -1,6 +1,8 @@
 use clap::Parser;
 use std::path::PathBuf;
 
+use diplomat_tool::config::Config;
+
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
 #[clap(
@@ -36,7 +38,8 @@ fn main() -> std::io::Result<()> {
     let opt = Opt::parse();
 
     // -- Config Parsing --
-    let path = opt.config_file.as_deref().unwrap_or(&opt.entry.join("config.toml"));
+    let default_pth = opt.entry.join("config.toml");
+    let path = opt.config_file.as_deref().unwrap_or(&default_pth);
     let config : Config = if path.exists() {
         let file_buf = std::fs::read(path)?;
         toml::from_slice(&file_buf)?

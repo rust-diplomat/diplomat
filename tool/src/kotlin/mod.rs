@@ -13,12 +13,11 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter::once;
-use std::path::Path;
 
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::{ErrorStore, FileMap};
+use crate::{Config, ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
@@ -51,7 +50,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct KotlinConfig {
+pub struct KotlinConfig {
     domain: String,
     lib_name: String,
     use_finalizers_not_cleaners: Option<bool>,
@@ -59,19 +58,15 @@ pub(crate) struct KotlinConfig {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
-    conf_path: Option<&Path>,
+    conf : Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
-    let conf_path = conf_path.expect("Kotlin library needs to be called with config");
-
-    let conf_str = std::fs::read_to_string(conf_path)
-        .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
     let KotlinConfig {
         domain,
         lib_name,
         use_finalizers_not_cleaners,
-    } = toml::from_str::<KotlinConfig>(&conf_str)
-        .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
+    } = conf.kotlin_config
+        .expect("Failed to parse Kotlin config. Required fields are `domain` and `lib_name`");
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
     let formatter = KotlinFormatter::new(tcx, None, docs_url_gen);
 

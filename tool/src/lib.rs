@@ -1,7 +1,7 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
-mod config;
+pub mod config;
 
 // Backends
 pub mod c;
@@ -78,20 +78,22 @@ pub fn gen(
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:
-            if config.demo_gen_config.module_name.is_some() || config.demo_gen_config.relative_js_path.is_some()
+            if config.demo_gen_config.as_ref()
+                .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
+                .unwrap_or(false)
             {
                 gen(
                     entry,
                     "js",
                     &out_folder.join("js"),
                     docs_url_gen,
-                    config,
+                    config.clone(),
                     silent,
                 )?;
             }
-            demo_gen::run(entry, &tcx, docs_url_gen, config)
+            demo_gen::run(entry, &tcx, docs_url_gen, config.clone())
         }
-        "kotlin" => kotlin::run(&tcx, library_config, docs_url_gen),
+        "kotlin" => kotlin::run(&tcx, config.clone(), docs_url_gen),
         o => panic!("Unknown target: {}", o),
     };
 

@@ -33,7 +33,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 /// Configuration for demo_gen generation. Set from a `.toml` file, you can specify the path of the file with `--library-config` option flag.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) struct DemoConfig {
+pub struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
     pub explicit_generation: Option<bool>,
 
@@ -69,17 +69,19 @@ pub(crate) fn run<'tcx>(
 
     let root = entry.parent().unwrap();
 
-    let import_path_exists =
-        conf.demo_gen_config.relative_js_path.is_some() || conf.demo_gen_config.module_name.is_some();
+    let unwrapped_conf = conf.demo_gen_config.unwrap_or_default();
 
-    let import_path = conf.demo_gen_config
+    let import_path_exists =
+        unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();
+
+    let import_path = unwrapped_conf
         .relative_js_path
-        .unwrap_or(match conf.demo_gen_config.module_name {
+        .unwrap_or(match unwrapped_conf.module_name {
             Some(_) => "".into(),
             None => "./js/".into(),
         });
 
-    let module_name = conf.demo_gen_config.module_name.unwrap_or("index.mjs".into());
+    let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
 
     struct TerminusExport {
         type_name: String,
@@ -106,7 +108,7 @@ pub(crate) fn run<'tcx>(
         custom_func_objs: Vec::new(),
     };
 
-    let is_explicit = conf.demo_gen_config.explicit_generation.unwrap_or(false);
+    let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
@@ -249,7 +251,7 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.mjs".into(), out_info.render().unwrap());
 
-    let hide_default_renderer = conf.demo_gen_config.hide_default_renderer.unwrap_or(false);
+    let hide_default_renderer = unwrapped_conf.hide_default_renderer.unwrap_or(false);
 
     if !hide_default_renderer {
         files.add_file(

@@ -2,8 +2,9 @@ use serde::{Serialize, Deserialize};
 
 use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) struct Config {
-	pub demo_gen_config : DemoConfig
+pub struct Config {
+	pub kotlin_config : Option<KotlinConfig>,
+	pub demo_gen_config : Option<DemoConfig>
 }
