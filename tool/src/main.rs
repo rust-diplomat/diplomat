@@ -38,7 +38,9 @@ fn main() -> std::io::Result<()> {
     let opt = Opt::parse();
 
     // -- Config Parsing --
-    let default_pth = opt.entry.join("config.toml");
+
+    // We assume by default that this is located in the directory with all other source files:
+    let default_pth = opt.entry.join("../config.toml");
     let path = opt.config_file.as_deref().unwrap_or(&default_pth);
     let config : Config = if path.exists() {
         let file_buf = std::fs::read(path)?;
