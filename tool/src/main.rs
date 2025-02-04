@@ -27,7 +27,7 @@ struct Opt {
 
     /// The path to an optional config file to override code generation defaults.
     /// This is where [`config::Config`] is filled in.
-    /// 
+    ///
     /// We assume by default that this is located in the root directory.
     #[clap(short, long, value_parser, default_value = "config.toml")]
     config_file: PathBuf,
