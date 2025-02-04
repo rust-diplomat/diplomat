@@ -78,7 +78,9 @@ pub fn gen(
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:
-            if config.demo_gen_config.as_ref()
+            if config
+                .demo_gen_config
+                .as_ref()
                 .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
                 .unwrap_or(false)
             {

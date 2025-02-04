@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    js::{self, formatter::JSFormatter, FileType}, Config, ErrorStore, FileMap
+    js::{self, formatter::JSFormatter, FileType},
+    Config, ErrorStore, FileMap,
 };
 
 mod terminus;
