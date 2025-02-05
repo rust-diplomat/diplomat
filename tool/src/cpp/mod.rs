@@ -107,8 +107,6 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
 #[cfg(test)]
 mod test {
 
-    use std::collections::HashMap;
-
     use diplomat_core::hir::TypeDef;
     use quote::quote;
 

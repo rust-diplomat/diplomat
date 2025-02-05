@@ -12,7 +12,7 @@ keywords.workspace = true
 
 [dependencies]
 diplomat_core = { workspace = true, features = ["displaydoc", "hir"] }
-syn = { version = "2", features = [ "full", "extra-traits" ] }
+syn = { version = "2", features = ["full", "extra-traits"] }
 syn-inline-mod = "0.6.0"
 quote = "1.0"
 indenter = "0.3.3"
@@ -21,11 +21,12 @@ clap = { features = ["color", "derive", "std", "suggestions"], version = "4.2" }
 colored = "2.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.5.8"
-heck = "0.4" # conversion between naming convention
+heck = "0.4"                                                                     # conversion between naming convention
 displaydoc = "0.2"
 askama = "0.12"
+once_cell = "1.20.2"
 
 [dev-dependencies]
-insta = { version = "1.7.1", features = [ "yaml" ] }
+insta = { version = "1.7.1", features = ["yaml"] }
 quote = "1.0"
 proc-macro2 = "1.0.79"
