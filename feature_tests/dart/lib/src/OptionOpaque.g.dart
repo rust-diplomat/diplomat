@@ -85,12 +85,12 @@ final class OptionOpaque implements ffi.Finalizable {
     _OptionOpaque_assert_integer(_ffi, i);
   }
 
-  static bool optionOpaqueArgument(OptionOpaque? arg) {
+  static bool optionOpaqueArgument([OptionOpaque? arg]) {
     final result = _OptionOpaque_option_opaque_argument(arg?._ffi ?? ffi.Pointer.fromAddress(0));
     return result;
   }
 
-  static int? acceptsOptionU8(int? arg) {
+  static int? acceptsOptionU8([int? arg]) {
     final result = _OptionOpaque_accepts_option_u8(arg != null ? _ResultUint8Void.ok(arg) : _ResultUint8Void.err());
     if (!result.isOk) {
       return null;
@@ -98,7 +98,7 @@ final class OptionOpaque implements ffi.Finalizable {
     return result.union.ok;
   }
 
-  static OptionEnum? acceptsOptionEnum(OptionEnum? arg) {
+  static OptionEnum? acceptsOptionEnum([OptionEnum? arg]) {
     final result = _OptionOpaque_accepts_option_enum(arg != null ? _ResultInt32Void.ok(arg.index) : _ResultInt32Void.err());
     if (!result.isOk) {
       return null;
@@ -106,7 +106,7 @@ final class OptionOpaque implements ffi.Finalizable {
     return OptionEnum.values[result.union.ok];
   }
 
-  static OptionInputStruct? acceptsOptionInputStruct(OptionInputStruct? arg) {
+  static OptionInputStruct? acceptsOptionInputStruct([OptionInputStruct? arg]) {
     final temp = _FinalizedArena();
     final result = _OptionOpaque_accepts_option_input_struct(arg != null ? _ResultOptionInputStructFfiVoid.ok(arg._toFfi(temp.arena)) : _ResultOptionInputStructFfiVoid.err());
     if (!result.isOk) {

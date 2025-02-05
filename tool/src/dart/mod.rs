@@ -368,10 +368,20 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 // ZST
                 Some(format!("{type_name}();"))
             } else {
-                // Otherwise we create a constructor with required values for all fields.
+                // Otherwise we create a constructor with required values for all non-optional fields.
                 let args = fields
                     .iter()
-                    .map(|field| format!("required this.{}", field.name))
+                    .map(|field| {
+                        format!(
+                            "{}this.{}",
+                            if field.ty.is_option() {
+                                ""
+                            } else {
+                                "required "
+                            },
+                            field.name
+                        )
+                    })
                     .collect::<Vec<_>>();
 
                 Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
@@ -426,7 +436,8 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
         let abi_name = method.abi_name.as_str();
 
-        let mut param_decls_dart = Vec::new();
+        let mut param_decls_dart_required = Vec::new();
+        let mut param_decls_dart_optional = Vec::new();
         let mut param_types_ffi = Vec::new();
         let mut param_types_ffi_cast = Vec::new();
         let mut param_names_ffi = Vec::new();
@@ -450,7 +461,12 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
+            if param.ty.is_option() {
+                &mut param_decls_dart_optional
+            } else {
+                &mut param_decls_dart_required
+            }
+            .push(format!("{} {param_name}", self.gen_type_name(&param.ty),));
             param_names_ffi.push(param_name.clone());
             param_types_ffi.push(self.gen_type_name_ffi(&param.ty, false));
             param_types_ffi_cast.push(self.gen_type_name_ffi(&param.ty, true));
@@ -549,8 +565,24 @@ impl<'cx> TyGenContext<'_, 'cx> {
         let return_expression =
             self.gen_c_to_dart_for_return_type(&method.output, &method.lifetime_env);
 
-        let params = param_decls_dart.join(", ");
-
+        let params = match (
+            param_decls_dart_required.len(),
+            param_decls_dart_optional.len(),
+        ) {
+            (_, 0) => param_decls_dart_required.join(", "),
+            (0, 1) => format!("[{}]", param_decls_dart_optional[0]),
+            (_, 1) => format!(
+                "{}, [{}]",
+                param_decls_dart_required.join(", "),
+                param_decls_dart_optional[0]
+            ),
+            (0, _) => format!("{{{}}}", param_decls_dart_optional.join(", ")),
+            (_, _) => format!(
+                "{}, {{{}}}",
+                param_decls_dart_required.join(", "),
+                param_decls_dart_optional.join(", ")
+            ),
+        };
         let declaration = match &method.attrs.special_method {
             Some(SpecialMethod::Constructor) => format!("factory {type_name}({params})"),
             Some(SpecialMethod::NamedConstructor(name)) => format!(
