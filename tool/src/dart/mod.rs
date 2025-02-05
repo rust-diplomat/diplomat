@@ -368,10 +368,20 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 // ZST
                 Some(format!("{type_name}();"))
             } else {
-                // Otherwise we create a constructor with required values for all fields.
+                // Otherwise we create a constructor with required values for all non-optional fields.
                 let args = fields
                     .iter()
-                    .map(|field| format!("required this.{}", field.name))
+                    .map(|field| {
+                        format!(
+                            "{}this.{}",
+                            if field.ty.is_option() {
+                                ""
+                            } else {
+                                "required "
+                            },
+                            field.name
+                        )
+                    })
                     .collect::<Vec<_>>();
 
                 Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
