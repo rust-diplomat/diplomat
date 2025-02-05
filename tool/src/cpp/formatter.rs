@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashSet, sync::LazyLock};
 
 /// This type mediates all formatting
 ///
@@ -185,10 +185,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Replace any keywords used
     pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
-        if name == "new" {
-            "new_".into()
-        } else if name == "default" {
-            "default_".into()
+        static KEYWORDS: LazyLock<HashSet<&str>> =
+            LazyLock::new(|| ["new", "default", "delete"].into());
+
+        if KEYWORDS.contains(name.as_ref()) {
+            format!("{name}_").into()
         } else {
             name
         }
