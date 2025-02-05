@@ -1,0 +1,28 @@
+---
+source: tool/src/cpp/mod.rs
+expression: decl_header.body
+---
+namespace diplomat {
+namespace capi {
+    struct MyStruct;
+} // namespace capi
+} // namespace
+
+class MyStruct {
+public:
+
+	inline void keywordparam(uint8_t default_) const;
+
+	inline const diplomat::capi::MyStruct* AsFFI() const;
+	inline diplomat::capi::MyStruct* AsFFI();
+	inline static const MyStruct* FromFFI(const diplomat::capi::MyStruct* ptr);
+	inline static MyStruct* FromFFI(diplomat::capi::MyStruct* ptr);
+	inline static void operator delete(void* ptr);
+private:
+	MyStruct() = delete;
+	MyStruct(const MyStruct&) = delete;
+	MyStruct(MyStruct&&) noexcept = delete;
+	MyStruct operator=(const MyStruct&) = delete;
+	MyStruct operator=(MyStruct&&) noexcept = delete;
+	static void operator delete[](void*, size_t) = delete;
+};

@@ -198,11 +198,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 #[cfg(test)]
 pub mod test {
     use super::*;
-
     use proc_macro2::TokenStream;
 
     pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+        let file = syn::parse2::<syn::File>(tk_stream).unwrap();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("cpp_test");
         attr_validator.support = super::super::attr_support();

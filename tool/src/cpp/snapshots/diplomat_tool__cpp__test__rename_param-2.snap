@@ -1,0 +1,41 @@
+---
+source: tool/src/cpp/mod.rs
+expression: impl_header.body
+---
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    void MyStruct_keywordparam(const diplomat::capi::MyStruct* self, uint8_t default);
+    
+    
+    void MyStruct_destroy(MyStruct* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline void MyStruct::keywordparam(uint8_t default_) const {
+	diplomat::capi::MyStruct_keywordparam(this->AsFFI(),
+		default_);
+}
+
+inline const diplomat::capi::MyStruct* MyStruct::AsFFI() const {
+	return reinterpret_cast<const diplomat::capi::MyStruct*>(this);
+}
+
+inline diplomat::capi::MyStruct* MyStruct::AsFFI() {
+	return reinterpret_cast<diplomat::capi::MyStruct*>(this);
+}
+
+inline const MyStruct* MyStruct::FromFFI(const diplomat::capi::MyStruct* ptr) {
+	return reinterpret_cast<const MyStruct*>(ptr);
+}
+
+inline MyStruct* MyStruct::FromFFI(diplomat::capi::MyStruct* ptr) {
+	return reinterpret_cast<MyStruct*>(ptr);
+}
+
+inline void MyStruct::operator delete(void* ptr) {
+	diplomat::capi::MyStruct_destroy(reinterpret_cast<diplomat::capi::MyStruct*>(ptr));
+}

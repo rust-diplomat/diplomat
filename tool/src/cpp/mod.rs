@@ -107,8 +107,7 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
 #[cfg(test)]
 mod test {
 
-    use std::cell::RefCell;
-    use std::collections::{BTreeSet, HashMap};
+    use std::collections::HashMap;
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
@@ -119,7 +118,7 @@ mod test {
     use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
 
     #[test]
-    fn test_enum() {
+    fn test_rename_param() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -127,7 +126,7 @@ mod test {
                 struct MyStruct(u64);
 
                 impl MyStruct {
-                    pub fn(&self, default: u8) {
+                    pub fn keywordparam(&self, default: u8) {
                         self.0 = default;
                     }
                 }
@@ -141,11 +140,7 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
-            let docs_urls = HashMap::new();
-            let docs_generator =
-                diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = Cpp2Formatter::new(&tcx);
-            let mut callback_params = Vec::new();
             let mut decl_header = header::Header::new("decl_thing".into());
             let mut impl_header = header::Header::new("impl_thing".into());
 
@@ -166,9 +161,9 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            let type_name = opaque_def.name.to_string();
-
-            insta::assert_snapshot!(opaque_def)
+            ty_gen_cx.gen_opaque_def(opaque_def, id);
+            insta::assert_snapshot!(decl_header.body);
+            insta::assert_snapshot!(impl_header.body);
         }
     }
 }
