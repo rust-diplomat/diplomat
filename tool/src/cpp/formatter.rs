@@ -92,10 +92,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'tcx, str> {
         self.c.fmt_enum_variant(ctype, variant)
     }
+
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here
     pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        ident.into()
+        self.fmt_identifier(ident.into())
     }
 
     pub fn fmt_c_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
@@ -164,16 +165,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
-        let name = method.attrs.rename.apply(method.name.as_str().into());
-
-        // TODO(#60): handle other keywords
-        if name == "new" {
-            "new_".into()
-        } else if name == "default" {
-            "default_".into()
-        } else {
-            name
-        }
+        self.fmt_identifier(method.attrs.rename.apply(method.name.as_str().into()))
     }
 
     pub fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
@@ -188,5 +180,41 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
         self.c.fmt_primitive_as_c(prim)
+    }
+
+    /// Replace any keywords used
+    pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
+        if name == "new" {
+            "new_".into()
+        } else if name == "default" {
+            "default_".into()
+        } else {
+            name
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+
+    use proc_macro2::TokenStream;
+
+    pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("cpp_test");
+        attr_validator.support = super::super::attr_support();
+
+        match TypeContext::from_syn(&file, attr_validator) {
+            Ok(context) => context,
+            Err(e) => {
+                for (_cx, err) in e {
+                    eprintln!("Lowering error: {}", err);
+                }
+                panic!("Failed to create context")
+            }
+        }
     }
 }
