@@ -103,3 +103,65 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
 
     (files, errors)
 }
+
+#[cfg(test)]
+mod test {
+
+    use diplomat_core::hir::TypeDef;
+    use quote::quote;
+
+    use crate::cpp::header;
+    use crate::ErrorStore;
+
+    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
+
+    #[test]
+    fn test_rename_param() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(u64);
+
+                impl MyStruct {
+                    pub fn new(&self, default: u8) {
+                        self.0 = default;
+                    }
+                }
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+        let mut all_types = tcx.all_types();
+        if let (id, TypeDef::Opaque(opaque_def)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
+            let error_store = ErrorStore::default();
+            let formatter = Cpp2Formatter::new(&tcx);
+            let mut decl_header = header::Header::new("decl_thing".into());
+            let mut impl_header = header::Header::new("impl_thing".into());
+
+            let mut ty_gen_cx = TyGenContext {
+                errors: &error_store,
+                formatter: &formatter,
+                c: crate::c::TyGenContext {
+                    tcx: &tcx,
+                    formatter: &formatter.c,
+                    errors: &error_store,
+                    is_for_cpp: true,
+                    id: id.into(),
+                    decl_header_path: "test/",
+                    impl_header_path: "test/",
+                },
+                decl_header: &mut decl_header,
+                impl_header: &mut impl_header,
+                generating_struct_fields: false,
+            };
+
+            ty_gen_cx.gen_opaque_def(opaque_def, id);
+            insta::assert_snapshot!(decl_header.body);
+            insta::assert_snapshot!(impl_header.body);
+        }
+    }
+}

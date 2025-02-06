@@ -241,6 +241,30 @@ impl<'tcx> CFormatter<'tcx> {
         )
     }
 
+    pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
+        // TODO: Replace with LazyLock when MSRV is bumped to >= 1.80.0
+        static C_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
+            once_cell::sync::Lazy::new(|| [].into());
+
+        static CPP_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
+            once_cell::sync::Lazy::new(|| ["new", "default", "delete"].into());
+
+        let lang_keywords = {
+            if self.is_for_cpp {
+                &CPP_KEYWORDS
+            } else {
+                &C_KEYWORDS
+            }
+        };
+
+        if lang_keywords.contains(name.as_ref()) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
+    }
+
     fn diplomat_namespace(&self, ty: Cow<'tcx, str>) -> Cow<'tcx, str> {
         if self.is_for_cpp {
             format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()

@@ -8,7 +8,6 @@ use diplomat_core::hir::{
     SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
-use std::fmt::Write;
 
 #[derive(Template)]
 #[template(path = "c/enum.h.jinja", escape = "none")]
@@ -74,13 +73,13 @@ pub struct TyGenContext<'cx, 'tcx> {
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
     pub id: SymbolId,
-    pub decl_header_path: &'cx String,
-    pub impl_header_path: &'cx String,
+    pub decl_header_path: &'cx str,
+    pub impl_header_path: &'cx str,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
-        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
         EnumTemplate {
             ty: def,
@@ -95,7 +94,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
-        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
         OpaqueTemplate {
             ty_name,
@@ -108,7 +107,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
-        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
@@ -134,7 +133,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
-        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let trt_name = self.formatter.fmt_trait_name(self.id.try_into().unwrap());
         let mut method_sigs = vec![];
         for m in &def.methods {
@@ -169,7 +168,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
-        let mut impl_header = Header::new(self.impl_header_path.clone(), self.is_for_cpp);
+        let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
         let mut methods = vec![];
         let mut cb_structs_and_defs = vec![];
         for method in ty.methods() {
@@ -203,7 +202,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         .render_into(&mut impl_header)
         .unwrap();
 
-        impl_header.decl_include = Some(self.decl_header_path.clone());
+        impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own includes. Instead of
@@ -282,21 +281,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let mut params = String::new();
-        let mut first = true;
-        for (decl_ty, decl_name) in param_decls {
-            let comma = if first {
-                first = false;
-                ""
-            } else {
-                ", "
-            };
-            write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
-        }
-
-        if params.is_empty() {
-            params.push_str("void");
-        }
+        use itertools::Itertools;
+        let params = if !param_decls.is_empty() {
+            param_decls
+                .into_iter()
+                .map(|(ty, name)| {
+                    format!("{ty} {name}", name = self.formatter.fmt_identifier(name))
+                })
+                .join(", ")
+        } else {
+            "void".to_owned()
+        };
 
         (
             MethodTemplate {
