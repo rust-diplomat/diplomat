@@ -4,13 +4,13 @@ use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
-    pub lib_name : Option<String>
+    pub lib_name: Option<String>,
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Config {
     #[serde(flatten)]
-    pub shared_config : SharedConfig,
+    pub shared_config: SharedConfig,
     #[serde(rename = "kotlin")]
     pub kotlin_config: Option<KotlinConfig>,
     #[serde(rename = "demo-gen")]
