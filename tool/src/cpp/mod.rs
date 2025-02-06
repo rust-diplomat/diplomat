@@ -124,7 +124,7 @@ mod test {
                 struct MyStruct(u64);
 
                 impl MyStruct {
-                    pub fn keywordparam(&self, default: u8) {
+                    pub fn new(&self, default: u8) {
                         self.0 = default;
                     }
                 }

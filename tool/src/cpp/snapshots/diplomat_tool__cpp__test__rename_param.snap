@@ -11,7 +11,7 @@ namespace capi {
 class MyStruct {
 public:
 
-	inline void keywordparam(uint8_t default_) const;
+	inline void new_(uint8_t default_) const;
 
 	inline const diplomat::capi::MyStruct* AsFFI() const;
 	inline diplomat::capi::MyStruct* AsFFI();

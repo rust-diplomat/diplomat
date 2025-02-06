@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
-use std::{borrow::Cow, collections::HashSet};
+use std::borrow::Cow;
 
 /// This type mediates all formatting
 ///
@@ -184,16 +184,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Replace any keywords used
     pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
-        // TODO(#60): handle other keywords
-        // TODO: Replace with LazyLock when MSRV is bumped to >= 1.80.0
-        static KEYWORDS: once_cell::sync::Lazy<HashSet<&str>> =
-            once_cell::sync::Lazy::new(|| ["new", "default", "delete"].into());
-
-        if KEYWORDS.contains(name.as_ref()) {
-            format!("{name}_").into()
-        } else {
-            name
-        }
+        self.c.fmt_identifier(name)
     }
 }
 

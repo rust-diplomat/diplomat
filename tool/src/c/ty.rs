@@ -8,7 +8,6 @@ use diplomat_core::hir::{
     SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
-use std::fmt::Write;
 
 #[derive(Template)]
 #[template(path = "c/enum.h.jinja", escape = "none")]
@@ -282,21 +281,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let mut params = String::new();
-        let mut first = true;
-        for (decl_ty, decl_name) in param_decls {
-            let comma = if first {
-                first = false;
-                ""
-            } else {
-                ", "
-            };
-            write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
-        }
-
-        if params.is_empty() {
-            params.push_str("void");
-        }
+        use itertools::Itertools;
+        let params = if !param_decls.is_empty() {
+            param_decls
+                .into_iter()
+                .map(|(ty, name)| {
+                    format!("{ty} {name}", name = self.formatter.fmt_identifier(name))
+                })
+                .join(", ")
+        } else {
+            "void".to_owned()
+        };
 
         (
             MethodTemplate {

@@ -6,7 +6,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    void MyStruct_keywordparam(const diplomat::capi::MyStruct* self, uint8_t default);
+    void MyStruct_new(const diplomat::capi::MyStruct* self, uint8_t default_);
     
     
     void MyStruct_destroy(MyStruct* self);
@@ -15,8 +15,8 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline void MyStruct::keywordparam(uint8_t default_) const {
-	diplomat::capi::MyStruct_keywordparam(this->AsFFI(),
+inline void MyStruct::new_(uint8_t default_) const {
+	diplomat::capi::MyStruct_new(this->AsFFI(),
 		default_);
 }
 
