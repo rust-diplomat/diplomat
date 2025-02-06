@@ -39,6 +39,8 @@ public:
 
   inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
+  inline diplomat::result<ResultOpaque&, diplomat::Utf8Error> takes_str(std::string_view _v);
+
   inline void assert_integer(int32_t i) const;
 
   inline const diplomat::capi::ResultOpaque* AsFFI() const;
