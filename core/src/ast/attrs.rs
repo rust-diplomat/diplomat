@@ -38,6 +38,9 @@ pub struct Attrs {
     /// not see the impl blocks.
     pub attrs: Vec<DiplomatBackendAttr>,
 
+    /// Backend specific configuration attributes:
+    pub config_attrs : Vec<DiplomatBackendConfigAttr>,
+
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
     /// Affects method names when inherited onto methods.
@@ -56,6 +59,7 @@ impl Attrs {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
+            Attr::DiplomatBackendConfig(attr) => self.config_attrs.push(attr),
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
             Attr::DemoBackend(attr) => self.demo_attrs.push(attr),
         }
@@ -86,6 +90,7 @@ impl Attrs {
             cfg: self.cfg.clone(),
 
             attrs,
+            config_attrs: self.config_attrs.clone(),
             abi_rename,
             demo_attrs,
         }
@@ -112,6 +117,7 @@ impl From<&[Attribute]> for Attrs {
 enum Attr {
     Cfg(Attribute),
     DiplomatBackend(DiplomatBackendAttr),
+    DiplomatBackendConfig(DiplomatBackendConfigAttr),
     CRename(RenameAttr),
     DemoBackend(DemoBackendAttr),
     // More goes here
@@ -120,6 +126,7 @@ enum Attr {
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
+    let dconfig_path : syn::Path = syn::parse_str("diplomat::config").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
     attrs.iter().filter_map(move |a| {
@@ -130,6 +137,8 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
+        } else if a.path() == &dconfig_path {
+            Some(Attr::DiplomatBackendConfig(a.parse_args().expect("Failed to parse malformed diplomat::config")))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &demo_path {
@@ -260,6 +269,37 @@ impl Parse for DiplomatBackendAttr {
         let _comma: Token![,] = input.parse()?;
         let meta = input.parse()?;
         Ok(Self { cfg, meta })
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
+pub struct DiplomatBackendConfigAttr {
+    pub key_value_pairs : Vec<DiplomatBackendConfigKeyValue>,
+}
+
+impl Parse for DiplomatBackendConfigAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        let _paren = syn::parenthesized!(content in input);
+        let list = content.parse_terminated(DiplomatBackendConfigKeyValue::parse, Token![,])?;
+        let vec = list.into_iter().collect();
+        Ok(Self {key_value_pairs: vec})
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+pub struct DiplomatBackendConfigKeyValue {
+    pub key : String,
+    pub value : String
+}
+
+impl Parse for DiplomatBackendConfigKeyValue {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let key : Ident = input.parse()?;
+        let _equals : Token![=] = input.parse()?;
+        let value : Ident = input.parse()?;
+        Ok(Self {key: key.to_string(), value: value.to_string()})
     }
 }
 

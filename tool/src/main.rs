@@ -55,7 +55,18 @@ fn main() -> std::io::Result<()> {
     };
 
     // Read CLI:
-    let (cli_config, errors) = table_from_values(opt.config);
+    let mut key_values = Vec::new();
+    for c in opt.config {
+        let split = c.split_once("=");
+        if let Some((key, value)) = split {
+            key_values.push((key.to_string(), value.to_string()));
+        } else {
+            eprintln!("Could not read {c}, expected =");
+        }
+    }
+
+    let (cli_config, errors) = table_from_values(key_values);
+    
     for e in errors {
         eprintln!("{e}");
     }

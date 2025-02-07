@@ -1,3 +1,4 @@
+use diplomat_core::ast::Attrs;
 use serde::{Deserialize, Serialize};
 use toml::value::Table;
 
@@ -59,30 +60,42 @@ pub fn merge_config(base: &mut Table, other: Table) {
     }
 }
 
-pub fn table_from_values(values: Vec<String>) -> (Table, Vec<String>) {
+/// Returns a constructed table from a list of `key=value` pairs. Assumes that whatever is passing us these pairs has already parsed for `key=value` and found no issue there.
+/// 
+/// Also returns a list of errors for outputting error information.
+pub fn table_from_values(values: Vec<(String, String)>) -> (Table, Vec<String>) {
     let mut errors = Vec::new();
 
     let mut out_table = Table::new();
-    for v in values {
-        let split_opt = v.split_once("=");
-        if let Some((key, val)) = split_opt {
-            // Check if this is a value that can be parsed correctly, otherwise we need to add string quotes:
-            let val_str = if toml::from_str::<toml::Value>(&v).is_err() {
-                format!(r#""{}""#, val)
-            } else {
-                val.to_string()
-            };
-
-            let some_table = toml::from_str::<Table>(&format!("{key}={val_str}"));
-            if let Ok(t) = some_table {
-                merge_config(&mut out_table, t);
-            } else {
-                errors.push(format!("Could not read {v}: {}", some_table.unwrap_err()));
-            }
+    for (key, value) in values {
+        // Check if this is a value that can be parsed correctly, otherwise we need to add string quotes:
+        let val_str = if toml::from_str::<toml::Value>(&value).is_err() {
+            format!(r#""{}""#, value)
         } else {
-            errors.push(format!("Could not read {v}, expected ="));
+            value.clone()
+        };
+
+        let some_table = toml::from_str::<Table>(&format!("{key}={val_str}"));
+        if let Ok(t) = some_table {
+            merge_config(&mut out_table, t);
+        } else {
+            errors.push(format!("Could not read {key}={value}: {}", some_table.unwrap_err()));
         }
     }
 
     (out_table, errors)
+}
+
+
+pub(crate) fn table_from_attrs(attrs : Attrs) -> (Table, Vec<String>) {
+    let mut values = Vec::new();
+
+    for config in attrs.config_attrs {
+        for key_value in config.key_value_pairs {
+            // Coerce the two into something table_from_values understands:
+            values.push((key_value.key, key_value.value));
+        }
+    }
+
+    table_from_values(values)
 }

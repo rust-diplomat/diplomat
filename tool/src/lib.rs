@@ -12,7 +12,10 @@ mod js;
 mod kotlin;
 
 use colored::*;
+use config::merge_config;
+use config::table_from_attrs;
 use config::Config;
+use diplomat_core::ast::Attrs;
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -64,6 +67,24 @@ pub fn gen(
     };
 
     let module = syn_inline_mod::parse_and_inline_modules(entry);
+
+    // Config:
+    // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
+    let cfg = module.attrs.clone();
+    let module_attrs = Attrs::from(cfg.as_slice());
+    let (attrs_config, errs) = table_from_attrs(module_attrs);
+
+    for e in errs {
+        eprintln!("Could not read {} attribute: {e}", entry.display());
+    }
+
+    // Now we convert the passed in config to a table (through some light gymnastic):
+    let mut base = toml::from_slice::<toml::value::Table>(&toml::to_vec(&config).unwrap())?;
+    merge_config(&mut base, attrs_config);
+
+    // Then some more gymnastics to go back:
+    let config = toml::from_slice::<Config>(&toml::to_vec(&base).unwrap())?;
+
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {
             eprintln!("Lowering error in {ctx}: {err}");
