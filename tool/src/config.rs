@@ -67,7 +67,7 @@ pub fn table_from_values(values: Vec<String>) -> (Table, Vec<String>) {
         let split_opt = v.split_once("=");
         if let Some((key, val)) = split_opt {
             // Check if this is a value that can be parsed correctly, otherwise we need to add string quotes:
-            let val_str = if let Err(_) = toml::from_str::<toml::Value>(&v) {
+            let val_str = if toml::from_str::<toml::Value>(&v).is_err() {
                 format!(r#""{}""#, val)
             } else {
                 val.to_string()
