@@ -31,7 +31,7 @@ export class ImportedStruct {
     static fromFields(structObj) {
         return new ImportedStruct(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ImportedStruct's constructor takes an object of ImportedStruct's fields.");

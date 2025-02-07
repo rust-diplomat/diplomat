@@ -30,7 +30,7 @@ export class ErrorStruct {
     static fromFields(structObj) {
         return new ErrorStruct(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ErrorStruct's constructor takes an object of ErrorStruct's fields.");

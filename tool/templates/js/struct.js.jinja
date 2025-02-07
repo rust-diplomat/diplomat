@@ -43,7 +43,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj);
     } {%- endif %}
-    {% endif -%}
+    {%~ endif -%}
 
     {%- if !(typescript && is_out) %}
     {%- if !typescript %}
@@ -53,7 +53,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         if (typeof structObj !== "object") {
             throw new Error("{{type_name}}'s constructor takes an object of {{type_name}}'s fields.");
         }
-        
+
         {%~ if is_out %}
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("{{type_name}} is an out struct and can only be created internally.");
@@ -75,7 +75,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     }
     {%- endif -%}
     {%- endif -%}
-    
+
     {%- endif -%}
 
     {%- if !typescript %}

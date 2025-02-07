@@ -22,7 +22,7 @@ export class CyclicStructC {
     static fromFields(structObj) {
         return new CyclicStructC(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("CyclicStructC's constructor takes an object of CyclicStructC's fields.");

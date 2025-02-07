@@ -12,7 +12,7 @@ export class MyZst {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : MyZst_obj) : MyZst;
-    
+
 
     constructor(structObj : MyZst_obj);
 }

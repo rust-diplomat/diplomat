@@ -33,7 +33,7 @@ export class ScalarPairWithPadding {
     static fromFields(structObj) {
         return new ScalarPairWithPadding(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("ScalarPairWithPadding's constructor takes an object of ScalarPairWithPadding's fields.");

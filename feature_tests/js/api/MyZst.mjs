@@ -12,7 +12,7 @@ export class MyZst {
     static fromFields(structObj) {
         return new MyZst(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyZst's constructor takes an object of MyZst's fields.");

@@ -30,7 +30,7 @@ export class NestedBorrowedFields {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : NestedBorrowedFields_obj) : NestedBorrowedFields;
-    
+
 
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
 
