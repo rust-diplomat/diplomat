@@ -1,6 +1,6 @@
 use clap::Parser;
-use toml::value::Table;
 use std::path::PathBuf;
+use toml::value::Table;
 
 use diplomat_tool::config::{merge_config, table_from_values, Config};
 
@@ -34,7 +34,7 @@ struct Opt {
     config_file: PathBuf,
 
     #[arg(long, value_parser, action=clap::ArgAction::Append)]
-    config : Vec<String>,
+    config: Vec<String>,
 
     #[clap(short = 's', long)]
     silent: bool,
@@ -67,11 +67,14 @@ fn main() -> std::io::Result<()> {
     let config_parse = toml::from_slice(&toml::to_vec(&toml::Value::Table(config_table)).unwrap());
 
     if let Err(e) = config_parse {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, format!("Could not parse config: {} ", e)));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("Could not parse config: {} ", e),
+        ));
     }
 
     // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
-    let config : Config = config_parse.unwrap();
+    let config: Config = config_parse.unwrap();
 
     // -- Config Parsing --
 
