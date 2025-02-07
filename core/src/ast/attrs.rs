@@ -496,7 +496,7 @@ mod tests {
 
     use syn;
 
-    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, RenameAttr};
+    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, DiplomatBackendConfigAttr, RenameAttr};
 
     #[test]
     fn test_cfgs() {
@@ -518,6 +518,13 @@ mod tests {
         let attr: syn::Attribute =
             syn::parse_quote!(#[diplomat::attr(any(cpp, has = "overloading"), namespacing)]);
         let attr: DiplomatBackendAttr = attr.parse_args().unwrap();
+        insta::assert_yaml_snapshot!(attr);
+    }
+
+    #[test]
+    fn test_cfg_attr() {
+        let attr : syn::Attribute = syn::parse_quote!(#[diplomat::config(test.out=some_value)]);
+        let attr : DiplomatBackendConfigAttr = attr.parse_args().unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 
