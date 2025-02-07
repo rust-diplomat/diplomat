@@ -17,7 +17,7 @@ export class CyclicStructB {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : CyclicStructB_obj) : CyclicStructB;
-    
+
 
     static getA(): CyclicStructA;
 

@@ -31,7 +31,7 @@ export class FixedDecimalFormatterOptions {
     static fromFields(structObj) {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("FixedDecimalFormatterOptions's constructor takes an object of FixedDecimalFormatterOptions's fields.");

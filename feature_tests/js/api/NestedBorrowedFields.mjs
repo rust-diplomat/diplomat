@@ -43,7 +43,7 @@ export class NestedBorrowedFields {
     static fromFields(structObj) {
         return new NestedBorrowedFields(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("NestedBorrowedFields's constructor takes an object of NestedBorrowedFields's fields.");

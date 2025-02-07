@@ -21,7 +21,7 @@ export class ImportedStruct {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : ImportedStruct_obj) : ImportedStruct;
-    
+
 
     constructor(structObj : ImportedStruct_obj);
 }

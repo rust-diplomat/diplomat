@@ -20,7 +20,7 @@ export class ErrorStruct {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : ErrorStruct_obj) : ErrorStruct;
-    
+
 
     constructor(structObj : ErrorStruct_obj);
 }

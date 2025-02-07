@@ -42,7 +42,7 @@ export class MyStruct {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : MyStruct_obj) : MyStruct;
-    
+
 
     intoA(): number;
 

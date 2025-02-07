@@ -25,7 +25,7 @@ export class BorrowedFields {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : BorrowedFields_obj) : BorrowedFields;
-    
+
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
 

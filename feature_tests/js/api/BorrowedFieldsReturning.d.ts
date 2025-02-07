@@ -16,7 +16,7 @@ export class BorrowedFieldsReturning {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : BorrowedFieldsReturning_obj) : BorrowedFieldsReturning;
-    
+
 
     constructor(structObj : BorrowedFieldsReturning_obj);
 }

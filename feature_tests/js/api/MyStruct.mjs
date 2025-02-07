@@ -77,7 +77,7 @@ export class MyStruct {
     static fromFields(structObj) {
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("MyStruct's constructor takes an object of MyStruct's fields.");
