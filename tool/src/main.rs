@@ -62,8 +62,7 @@ fn main() -> std::io::Result<()> {
 
     merge_config(&mut config_table, cli_config);
 
-    // Merge:
-
+    // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
     let config_parse = toml::from_slice(&toml::to_vec(&toml::Value::Table(config_table)).unwrap());
 
     if let Err(e) = config_parse {
@@ -72,8 +71,6 @@ fn main() -> std::io::Result<()> {
             format!("Could not parse config: {} ", e),
         ));
     }
-
-    // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
     let config: Config = config_parse.unwrap();
 
     // -- Config Parsing --
