@@ -1,7 +1,8 @@
 use clap::Parser;
+use toml::value::Table;
 use std::path::PathBuf;
 
-use diplomat_tool::config::Config;
+use diplomat_tool::config::{merge_config, table_from_values, Config};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -32,6 +33,9 @@ struct Opt {
     #[clap(short, long, value_parser, default_value = "config.toml")]
     config_file: PathBuf,
 
+    #[arg(long, value_parser, action=clap::ArgAction::Append)]
+    config : Vec<String>,
+
     #[clap(short = 's', long)]
     silent: bool,
 }
@@ -41,13 +45,34 @@ fn main() -> std::io::Result<()> {
 
     // -- Config Parsing --
 
+    // Read file:
     let path = opt.config_file;
-    let config: Config = if path.exists() {
+    let mut config_table: Table = if path.exists() {
         let file_buf = std::fs::read(path)?;
         toml::from_slice(&file_buf)?
     } else {
-        Config::default()
+        Table::default()
     };
+
+    // Read CLI:
+    let (cli_config, errors) = table_from_values(opt.config);
+    for e in errors {
+        eprintln!("{e}");
+    }
+
+    merge_config(&mut config_table, cli_config);
+
+    // Merge:
+
+    let config_parse = toml::from_slice(&toml::to_vec(&toml::Value::Table(config_table)).unwrap());
+
+    if let Err(e) = config_parse {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, format!("Could not parse config: {} ", e)));
+    }
+
+    // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
+    let config : Config = config_parse.unwrap();
+
     // -- Config Parsing --
 
     diplomat_tool::gen(
