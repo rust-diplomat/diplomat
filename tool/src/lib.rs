@@ -71,13 +71,15 @@ pub fn gen(
     // Config:
     // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
 
-    // FIXME: Currently just a proof of concept. If we continue with this current system, we'd definitely need to make use of TypeContext:
-    let cfg = module.items.iter().find_map(|i| {
-        match i {
+    // FIXME: Currently just a proof of concept. If we continue with this current system, we'd definitely need to make use of TypeContext's parsing loop:
+    let cfg = module
+        .items
+        .iter()
+        .find_map(|i| match i {
             syn::Item::Struct(s) => Some(s.attrs.clone()),
-            _ => None
-        }
-    }).unwrap();
+            _ => None,
+        })
+        .unwrap();
     let module_attrs = Attrs::from(cfg.as_slice());
     let (attrs_config, errs) = table_from_attrs(module_attrs);
 
