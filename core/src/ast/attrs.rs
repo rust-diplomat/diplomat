@@ -1,5 +1,6 @@
 //! This module contains utilities for dealing with Rust attributes
 
+use quote::ToTokens;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 use std::borrow::Cow;
@@ -280,9 +281,7 @@ pub struct DiplomatBackendConfigAttr {
 
 impl Parse for DiplomatBackendConfigAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        let _paren = syn::parenthesized!(content in input);
-        let list = content.parse_terminated(DiplomatBackendConfigKeyValue::parse, Token![,])?;
+        let list = input.parse_terminated(DiplomatBackendConfigKeyValue::parse, Token![,])?;
         let vec = list.into_iter().collect();
         Ok(Self {key_value_pairs: vec})
     }
@@ -296,10 +295,29 @@ pub struct DiplomatBackendConfigKeyValue {
 
 impl Parse for DiplomatBackendConfigKeyValue {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let key : Ident = input.parse()?;
+
+        let mut key_str : Vec<String> = Vec::new();
+
+        loop {
+
+            let i : Ident = input.parse()?;
+
+            key_str.push(i.to_string());
+
+            if input.peek(Token![.]) {
+                let _period : Token![.] = input.parse()?;
+            } else {
+                break;
+            }
+        }
+
         let _equals : Token![=] = input.parse()?;
-        let value : Ident = input.parse()?;
-        Ok(Self {key: key.to_string(), value: value.to_string()})
+
+        let val_expr : Expr = input.parse()?;
+
+        let value = val_expr.to_token_stream().to_string();
+
+        Ok(Self {key: key_str.join("."), value})
     }
 }
 
@@ -523,7 +541,7 @@ mod tests {
 
     #[test]
     fn test_cfg_attr() {
-        let attr : syn::Attribute = syn::parse_quote!(#[diplomat::config(test.out=some_value)]);
+        let attr : syn::Attribute = syn::parse_quote!(#[diplomat::config(test.out = 24, other.out =test, somefinal.out= "testing spaces")]);
         let attr : DiplomatBackendConfigAttr = attr.parse_args().unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
