@@ -79,7 +79,7 @@ pub fn gen(
             syn::Item::Struct(s) => Some(s.attrs.clone()),
             _ => None,
         })
-        .unwrap();
+        .unwrap_or_default();
     let module_attrs = Attrs::from(cfg.as_slice());
     let (attrs_config, errs) = table_from_attrs(module_attrs);
 
