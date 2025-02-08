@@ -9,11 +9,7 @@
     clippy::should_implement_trait
 )]
 
-#[diplomat::bridge]
-mod ffi {
-    #[diplomat::config(lib_name = somelib)]
-    struct Dummy;
-}
+#![diplomat::config(lib_name = somelib)]
 
 extern crate alloc;
 

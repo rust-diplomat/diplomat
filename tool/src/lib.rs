@@ -80,7 +80,8 @@ pub fn gen(
 
     // Now we convert the passed in config to a table (through some light gymnastic):
     let mut base = toml::from_slice::<toml::value::Table>(&toml::to_vec(&config).unwrap())?;
-    merge_config(&mut base, attrs_config);
+    
+    merge_config(&mut base, attrs_config.clone());
 
     // Then some more gymnastics to go back:
     let config = toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(base)).unwrap())?;

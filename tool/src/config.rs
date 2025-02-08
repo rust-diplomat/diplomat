@@ -39,13 +39,14 @@ fn merge_subconfig(base: &mut Table, other: Table) {
 }
 
 pub fn merge_config(base: &mut Table, other: Table) {
-    for (key, subconfig) in other {
+    for (key, val) in other {
         if !base.contains_key(&key) {
-            base.insert(key, subconfig);
+            base.insert(key, val);
             continue;
         }
 
-        match subconfig {
+        match val {
+            // If this is a table, go into the table for the base:
             toml::Value::Table(t) => {
                 merge_subconfig(
                     base.get_mut(&key)
@@ -55,7 +56,10 @@ pub fn merge_config(base: &mut Table, other: Table) {
                     t,
                 );
             }
-            _ => panic!("Expected a table of values for configuration, got {subconfig:?}"),
+            // Otherwise just overwrite whatever's already there:
+            _ => {
+                base.insert(key, val);
+            },
         }
     }
 }
