@@ -293,6 +293,7 @@ impl Parse for DiplomatBackendConfigAttr {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
 pub struct DiplomatBackendConfigKeyValue {
     pub key: String,
     pub value: String,
