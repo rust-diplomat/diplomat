@@ -83,7 +83,7 @@ pub fn gen(
     merge_config(&mut base, attrs_config);
 
     // Then some more gymnastics to go back:
-    let config = toml::from_slice::<Config>(&toml::to_vec(&base).unwrap())?;
+    let config = toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(base)).unwrap())?;
 
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {
