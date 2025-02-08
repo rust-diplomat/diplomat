@@ -8,7 +8,6 @@
     clippy::result_unit_err,
     clippy::should_implement_trait
 )]
-
 #![diplomat::config(lib_name = somelib)]
 
 extern crate alloc;

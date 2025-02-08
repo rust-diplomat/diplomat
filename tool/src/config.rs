@@ -59,13 +59,13 @@ pub fn merge_config(base: &mut Table, other: Table) {
             // Otherwise just overwrite whatever's already there:
             _ => {
                 base.insert(key, val);
-            },
+            }
         }
     }
 }
 
 /// Returns a constructed table from a list of `key=value` pairs. Assumes that whatever is passing us these pairs has already parsed for `key=value` and found no issue there.
-/// 
+///
 /// Also returns a list of errors for outputting error information.
 pub fn table_from_values(values: Vec<(String, String)>) -> (Table, Vec<String>) {
     let mut errors = Vec::new();
@@ -83,15 +83,17 @@ pub fn table_from_values(values: Vec<(String, String)>) -> (Table, Vec<String>) 
         if let Ok(t) = some_table {
             merge_config(&mut out_table, t);
         } else {
-            errors.push(format!("Could not read {key}={value}: {}", some_table.unwrap_err()));
+            errors.push(format!(
+                "Could not read {key}={value}: {}",
+                some_table.unwrap_err()
+            ));
         }
     }
 
     (out_table, errors)
 }
 
-
-pub(crate) fn table_from_attrs(attrs : Attrs) -> (Table, Vec<String>) {
+pub(crate) fn table_from_attrs(attrs: Attrs) -> (Table, Vec<String>) {
     let mut values = Vec::new();
 
     for config in attrs.config_attrs {

@@ -66,7 +66,7 @@ fn main() -> std::io::Result<()> {
     }
 
     let (cli_config, errors) = table_from_values(key_values);
-    
+
     for e in errors {
         eprintln!("{e}");
     }

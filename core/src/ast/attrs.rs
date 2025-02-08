@@ -40,7 +40,7 @@ pub struct Attrs {
     pub attrs: Vec<DiplomatBackendAttr>,
 
     /// Backend specific configuration attributes:
-    pub config_attrs : Vec<DiplomatBackendConfigAttr>,
+    pub config_attrs: Vec<DiplomatBackendConfigAttr>,
 
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
@@ -127,7 +127,7 @@ enum Attr {
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
-    let dconfig_path : syn::Path = syn::parse_str("diplomat::config").unwrap();
+    let dconfig_path: syn::Path = syn::parse_str("diplomat::config").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
     attrs.iter().filter_map(move |a| {
@@ -139,7 +139,10 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
         } else if a.path() == &dconfig_path {
-            Some(Attr::DiplomatBackendConfig(a.parse_args().expect("Failed to parse malformed diplomat::config")))
+            Some(Attr::DiplomatBackendConfig(
+                a.parse_args()
+                    .expect("Failed to parse malformed diplomat::config"),
+            ))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &demo_path {
@@ -276,48 +279,51 @@ impl Parse for DiplomatBackendAttr {
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 #[non_exhaustive]
 pub struct DiplomatBackendConfigAttr {
-    pub key_value_pairs : Vec<DiplomatBackendConfigKeyValue>,
+    pub key_value_pairs: Vec<DiplomatBackendConfigKeyValue>,
 }
 
 impl Parse for DiplomatBackendConfigAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let list = input.parse_terminated(DiplomatBackendConfigKeyValue::parse, Token![,])?;
         let vec = list.into_iter().collect();
-        Ok(Self {key_value_pairs: vec})
+        Ok(Self {
+            key_value_pairs: vec,
+        })
     }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 pub struct DiplomatBackendConfigKeyValue {
-    pub key : String,
-    pub value : String
+    pub key: String,
+    pub value: String,
 }
 
 impl Parse for DiplomatBackendConfigKeyValue {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-
-        let mut key_str : Vec<String> = Vec::new();
+        let mut key_str: Vec<String> = Vec::new();
 
         loop {
-
-            let i : Ident = input.parse()?;
+            let i: Ident = input.parse()?;
 
             key_str.push(i.to_string());
 
             if input.peek(Token![.]) {
-                let _period : Token![.] = input.parse()?;
+                let _period: Token![.] = input.parse()?;
             } else {
                 break;
             }
         }
 
-        let _equals : Token![=] = input.parse()?;
+        let _equals: Token![=] = input.parse()?;
 
-        let val_expr : Expr = input.parse()?;
+        let val_expr: Expr = input.parse()?;
 
         let value = val_expr.to_token_stream().to_string();
 
-        Ok(Self {key: key_str.join("."), value})
+        Ok(Self {
+            key: key_str.join("."),
+            value,
+        })
     }
 }
 
@@ -514,7 +520,9 @@ mod tests {
 
     use syn;
 
-    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, DiplomatBackendConfigAttr, RenameAttr};
+    use super::{
+        DiplomatBackendAttr, DiplomatBackendAttrCfg, DiplomatBackendConfigAttr, RenameAttr,
+    };
 
     #[test]
     fn test_cfgs() {
@@ -541,8 +549,8 @@ mod tests {
 
     #[test]
     fn test_cfg_attr() {
-        let attr : syn::Attribute = syn::parse_quote!(#[diplomat::config(test.out = 24, other.out =test, somefinal.out= "testing spaces")]);
-        let attr : DiplomatBackendConfigAttr = attr.parse_args().unwrap();
+        let attr: syn::Attribute = syn::parse_quote!(#[diplomat::config(test.out = 24, other.out =test, somefinal.out= "testing spaces")]);
+        let attr: DiplomatBackendConfigAttr = attr.parse_args().unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 

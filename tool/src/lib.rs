@@ -15,9 +15,9 @@ use colored::*;
 use config::merge_config;
 use config::table_from_attrs;
 use config::Config;
-use diplomat_core::ast::Attrs;
 use core::mem;
 use core::panic;
+use diplomat_core::ast::Attrs;
 use diplomat_core::hir;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -80,7 +80,7 @@ pub fn gen(
 
     // Now we convert the passed in config to a table (through some light gymnastic):
     let mut base = toml::from_slice::<toml::value::Table>(&toml::to_vec(&config).unwrap())?;
-    
+
     merge_config(&mut base, attrs_config.clone());
 
     // Then some more gymnastics to go back:
