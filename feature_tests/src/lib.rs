@@ -9,6 +9,8 @@
     clippy::should_implement_trait
 )]
 
+#[diplomat::config(lib_name = somelib)]
+
 extern crate alloc;
 
 pub mod attrs;

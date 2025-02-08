@@ -1,4 +1,4 @@
-lib_name = "somelib"
+lib_name = "This Will Be Ignored For Testing Purposes (Check src/lib.rs)"
 
 [kotlin]
 domain = "dev.diplomattest"
