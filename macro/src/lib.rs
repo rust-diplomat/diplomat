@@ -595,6 +595,15 @@ pub fn bridge(
     proc_macro::TokenStream::from(expanded.to_token_stream())
 }
 
+// Config is done in [`diplomat_tool::gen`], so we just set things to be ignored here.
+#[proc_macro_attribute]
+pub fn config(
+    _attr: proc_macro::TokenStream,
+    _input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    "".parse().unwrap()
+}
+
 /// Generate From and Into implementations for a Diplomat enum
 ///
 /// This is invoked as `#[diplomat::enum_convert(OtherEnumName)]`

@@ -8,7 +8,9 @@
     clippy::result_unit_err,
     clippy::should_implement_trait
 )]
-#![diplomat::config(lib_name = somelib)]
+
+#[diplomat::config(lib_name = somelib)]
+struct Config;
 
 extern crate alloc;
 
