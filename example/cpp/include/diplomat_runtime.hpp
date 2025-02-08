@@ -103,7 +103,7 @@ inline capi::DiplomatWrite WriteFromString(std::string& string) {
 
 template<class T> struct Ok {
   T inner;
-  Ok(T&& i): inner(std::move(i)) {}
+  Ok(T&& i): inner(std::forward<T>(i)) {}
   // We don't want to expose an lvalue-capable constructor in general
   // however there is no problem doing this for trivially copyable types
   template<typename X = T, typename = typename std::enable_if<std::is_trivially_copyable<X>::value>::type>
@@ -117,7 +117,7 @@ template<class T> struct Ok {
 
 template<class T> struct Err {
   T inner;
-  Err(T&& i): inner(std::move(i)) {}
+  Err(T&& i): inner(std::forward<T>(i)) {}
   // We don't want to expose an lvalue-capable constructor in general
   // however there is no problem doing this for trivially copyable types
   template<typename X = T, typename = typename std::enable_if<std::is_trivially_copyable<X>::value>::type>

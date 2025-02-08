@@ -179,6 +179,25 @@ export class ResultOpaque {
         }
     }
 
+    takesStr(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+        
+        const result = wasm.ResultOpaque_takes_str(this.ffiValue, ...vSlice.splat());
+    
+        try {
+            return new ResultOpaque(diplomatRuntime.internalConstructor, result, aEdges);
+        }
+        
+        finally {
+            functionCleanupArena.free();
+        }
+    }
+
     assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
     
         try {}
