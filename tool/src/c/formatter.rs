@@ -72,6 +72,15 @@ impl<'tcx> CFormatter<'tcx> {
         match ty {
             hir::Type::Primitive(prim) => self.diplomat_namespace(format!("Option{}", self.fmt_primitive_name_for_derived_type(*prim)).into()).into(),
             hir::Type::Struct(..) | hir::Type::Enum(..) => format!("{ty_name}_option"),
+            hir::Type::Slice(hir::Slice::Strs(encoding)) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf8 => "OptionStringsView".into(),
+                    StringEncoding::UnvalidatedUtf16 => "OptionStrings16View".into(),
+                    _ => unimplemented!("Utf8 StringEncoding unsupported")
+                    }
+                ).to_string()
+            },
             _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }

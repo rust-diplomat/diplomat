@@ -849,6 +849,9 @@ impl<'ast> LoweringContext<'ast> {
                             PrimitiveType::from_ast(*prim),
                         ))))
                     }
+                    ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::DiplomatOption(
+                        Box::new(Type::Slice(Slice::Strs(*encoding))),
+                    )),
                     ast::TypeName::Box(box_ty) => {
                         // we could see whats in the box here too
                         self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));

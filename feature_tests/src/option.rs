@@ -145,6 +145,11 @@ pub mod ffi {
                 c: Some(OptionEnum::Bar).into(),
             }
         }
+
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
+        pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>) -> bool {
+            arg.is_some()
+        }
     }
 
     impl OptionOpaqueChar {

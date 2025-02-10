@@ -56,6 +56,8 @@ OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_inpu
 
 OptionInputStruct OptionOpaque_returns_option_input_struct(void);
 
+bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg);
+
 
 void OptionOpaque_destroy(OptionOpaque* self);
 

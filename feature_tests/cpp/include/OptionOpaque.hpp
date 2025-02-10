@@ -58,6 +58,8 @@ namespace capi {
     
     diplomat::capi::OptionInputStruct OptionOpaque_returns_option_input_struct(void);
     
+    bool OptionOpaque_accepts_option_str_slice(diplomat::capi::OptionStringsView arg);
+    
     
     void OptionOpaque_destroy(OptionOpaque* self);
     
@@ -138,6 +140,11 @@ inline std::optional<OptionInputStruct> OptionOpaque::accepts_option_input_struc
 inline OptionInputStruct OptionOpaque::returns_option_input_struct() {
   auto result = diplomat::capi::OptionOpaque_returns_option_input_struct();
   return OptionInputStruct::FromFFI(result);
+}
+
+inline bool OptionOpaque::accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (diplomat::capi::OptionStringsView{ { {reinterpret_cast<const diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (diplomat::capi::OptionStringsView{ {}, false }));
+  return result;
 }
 
 inline const diplomat::capi::OptionOpaque* OptionOpaque::AsFFI() const {

@@ -54,6 +54,8 @@ public:
 
   inline static OptionInputStruct returns_option_input_struct();
 
+  inline static bool accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg);
+
   inline const diplomat::capi::OptionOpaque* AsFFI() const;
   inline diplomat::capi::OptionOpaque* AsFFI();
   inline static const OptionOpaque* FromFFI(const diplomat::capi::OptionOpaque* ptr);

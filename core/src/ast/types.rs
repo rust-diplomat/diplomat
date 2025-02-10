@@ -451,7 +451,7 @@ pub enum TypeName {
         PrimitiveType,
         StdlibOrDiplomat,
     ),
-    /// `&[&DiplomatStr]`, etc. Equivalent to `&[&str]`
+    /// `&[DiplomatStrSlice]`, etc. Equivalent to `&[&str]`
     ///
     /// If StdlibOrDiplomat::Stdlib, it's specified as `&[&DiplomatFoo]`, if StdlibOrDiplomat::Diplomat it's specified
     /// as `DiplomatSlice<&DiplomatFoo>`
@@ -614,7 +614,10 @@ impl TypeName {
                     TypeName::Option(inner.clone(), StdlibOrDiplomat::Stdlib)
                 }
                 // For other types (primitives, structs, enums) we need DiplomatOption
-                _ => TypeName::Option(inner.clone(), StdlibOrDiplomat::Diplomat),
+                _ => TypeName::Option(
+                    Box::new(inner.ffi_safe_version()),
+                    StdlibOrDiplomat::Diplomat,
+                ),
             },
             _ => self.clone(),
         }
