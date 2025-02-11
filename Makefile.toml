@@ -11,6 +11,11 @@ default_to_workspace = false
 # You will likely also want to add {gen, test}-{feature, example}-[backend] and
 # {gen, test}-[backend]
 
+[env]
+# C++ flags to pass when running check-cpp with clang
+# Based on what our clients care about
+CXX_FLAGS_FOR_CHECK="-Wc++98-compat-extra-semi -Wextra-semi"
+
 # Metatasks invoked by CI
 [tasks.test-native]
 description = "Test only the native"
@@ -277,8 +282,12 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cxx = get_env CXX
+cxx_flags = set ""
 if is_empty ${cxx}
-    cxx = set "g++"
+    cxx = set "clang++"
+end
+if starts_with ${cxx} "clang"
+    cxx_flags = set "${CXX_FLAGS_FOR_CHECK}"
 end
 cxx_std = get_env CXX_STD
 if is_empty ${cxx_std}
@@ -286,11 +295,11 @@ if is_empty ${cxx_std}
 end
 
 cd example/cpp/include
-files_list = glob_array "./*.hpp"
+files_list = glob_array "./**/*.hpp"
 exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
-    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall %{cxx_flags} ${file}
     exit_code = set ${exit_code} or ${output}
 end
 exit ${exit_code}
@@ -302,8 +311,12 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cxx = get_env CXX
+cxx_flags = set ""
 if is_empty ${cxx}
-    cxx = set "g++"
+    cxx = set "clang++"
+end
+if starts_with ${cxx} "clang"
+    cxx_flags = set "${CXX_FLAGS_FOR_CHECK}"
 end
 cxx_std = get_env CXX_STD
 if is_empty ${cxx_std}
@@ -311,11 +324,11 @@ if is_empty ${cxx_std}
 end
 
 cd feature_tests/cpp/include
-files_list = glob_array "./*.hpp"
+files_list = glob_array "./**/*.hpp"
 exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
-    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall %{cxx_flags} ${file}
     exit_code = set ${exit_code} or ${output}
 end
 exit ${exit_code}
