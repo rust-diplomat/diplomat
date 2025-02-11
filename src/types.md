@@ -2,7 +2,6 @@
 
 Diplomat only supports a small set of types that can be passed over FFI.
 
-
  - Builtins:
      - All integers
      - `bool`
@@ -13,14 +12,16 @@ Diplomat only supports a small set of types that can be passed over FFI.
          - `bool`
          - `char`
          - `DiplomatByte` (`u8`): The same as `u8` except in languages where "byte buffer" and "list of integers" are different types
+         - `Box<OpaqueType>`
+         - `DiplomatStrSlice`: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends
      - String slices:
          - `&str`: A validated, UTF-8 string. Will be converted/validated by the target language bindings if necessary.
          - `&DiplomatStr`: An unvalidated string expected to be UTF-8.
          - `&DiplomatStr16`: An unvalidated string expected to be UTF-16.
      - [`DiplomatWriteable`](./writeable.md) for returning strings. This needs to be the last parameter of the method.
-     - [`Option<&T>` ,`Option<Box<T>>`](./option.md) of opaque types, `Option<T>` of structs, enums, and primitives
+     - [`Option<&T>` ,`Option<Box<T>>`](./option.md) of opaque types, `Option<T>` of structs, enums, primitives, or the above slice types
      - Callbacks in parameters (Undocumented in the book, but implemented in some backends. See [tracking issue](https://github.com/rust-diplomat/diplomat/issues/146))
-     - [`Result<T, E>` in return values
+     - `Result<T, E>` in return values
      - `()` as a `Result` `Ok`/`Error` type, or as a return value
  - Custom types
      - Custom [opaque types](./opaque.md) (passed as references or via `Box<T>`)
