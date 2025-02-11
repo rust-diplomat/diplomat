@@ -72,6 +72,31 @@ impl<'tcx> CFormatter<'tcx> {
         match ty {
             hir::Type::Primitive(prim) => self.diplomat_namespace(format!("Option{}", self.fmt_primitive_name_for_derived_type(*prim)).into()).into(),
             hir::Type::Struct(..) | hir::Type::Enum(..) => format!("{ty_name}_option"),
+            hir::Type::Slice(hir::Slice::Strs(encoding)) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf8 => "OptionStringsView".into(),
+                    StringEncoding::UnvalidatedUtf16 => "OptionStrings16View".into(),
+                    _ => unimplemented!("Utf8 StringEncoding unsupported")
+                    }
+                ).to_string()
+            },
+            hir::Type::Slice(hir::Slice::Str(_lifetime, encoding )) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf16 => "OptionString16View".into(),
+                    _ => "OptionStringView".into(),
+                    }
+                ).to_string()
+            }
+            hir::Type::Slice(hir::Slice::Primitive(borrow, prim)) => {
+                let prim = self.fmt_primitive_name_for_derived_type(*prim);
+                let mtb = match borrow {
+                    Some(borrow) if borrow.mutability.is_immutable() => "",
+                    _ => "Mut",
+                };
+                self.diplomat_namespace(format!("Option{prim}View{mtb}").into()).to_string()
+            }
             _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }
