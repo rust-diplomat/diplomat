@@ -2,7 +2,7 @@
 
 Option types in Diplomat are relatively straightforward, you simply use `Option<T>` and it turns into the idiomatic equivalent over FFI.
 
-`Option<T>` currently only works when wrapping reference types (`Box<OpaqueType>` and `&OpaqueType`), structs/enums/primitives, strings or arrays of strings. It may be used as an input argument, or in return type position:
+`Option<T>` currently only works when wrapping reference types (`Box<OpaqueType>` and `&OpaqueType`), structs/enums/primitives, or slices of the above. It may be used as an input argument, or in return type position:
 
 ```rust
 #[diplomat::bridge]

@@ -155,6 +155,11 @@ pub mod ffi {
         pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>) -> bool {
             arg.is_some()
         }
+
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
+        pub fn accepts_option_primitive(arg: Option<&[u32]>) -> i64 {
+            arg.map(|v| v.iter().sum::<u32>().into()).unwrap_or(-1)
+        }
     }
 
     impl OptionOpaqueChar {

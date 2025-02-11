@@ -89,6 +89,14 @@ impl<'tcx> CFormatter<'tcx> {
                     }
                 ).to_string()
             }
+            hir::Type::Slice(hir::Slice::Primitive(borrow, prim)) => {
+                let prim = self.fmt_primitive_name_for_derived_type(*prim);
+                let mtb = match borrow {
+                    Some(borrow) if borrow.mutability.is_immutable() => "",
+                    _ => "Mut",
+                };
+                self.diplomat_namespace(format!("Option{prim}View{mtb}").into()).to_string()
+            }
             _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }

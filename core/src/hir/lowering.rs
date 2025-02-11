@@ -852,7 +852,7 @@ impl<'ast> LoweringContext<'ast> {
                     ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::DiplomatOption(
                         Box::new(Type::Slice(Slice::Strs(*encoding))),
                     )),
-                    ast::TypeName::StrReference(..) => {
+                    ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
                         let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
