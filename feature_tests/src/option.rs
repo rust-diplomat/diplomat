@@ -147,6 +147,11 @@ pub mod ffi {
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
+        pub fn accepts_option_str(arg: Option<&str>) -> usize {
+            arg.unwrap_or_default().len()
+        }
+
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
         pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>) -> bool {
             arg.is_some()
         }

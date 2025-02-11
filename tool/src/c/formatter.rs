@@ -81,6 +81,14 @@ impl<'tcx> CFormatter<'tcx> {
                     }
                 ).to_string()
             },
+            hir::Type::Slice(hir::Slice::Str(_lifetime, encoding )) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf16 => "OptionString16View".into(),
+                    _ => "OptionStringView".into(),
+                    }
+                ).to_string()
+            }
             _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }
