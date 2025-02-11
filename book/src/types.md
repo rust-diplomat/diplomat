@@ -19,7 +19,7 @@ Diplomat only supports a small set of types that can be passed over FFI.
          - `&DiplomatStr`: An unvalidated string expected to be UTF-8.
          - `&DiplomatStr16`: An unvalidated string expected to be UTF-16.
      - [`DiplomatWriteable`](./writeable.md) for returning strings. This needs to be the last parameter of the method.
-     - [`Option<&T>` ,`Option<Box<T>>`](./option.md) of opaque types, `Option<T>` of structs, enums, and primitives
+     - [`Option<&T>` ,`Option<Box<T>>`](./option.md) of opaque types, `Option<T>` of structs, enums, primitives, 
      - Callbacks in parameters (Undocumented in the book, but implemented in some backends. See [tracking issue](https://github.com/rust-diplomat/diplomat/issues/146))
      - `Result<T, E>` in return values
      - `()` as a `Result` `Ok`/`Error` type, or as a return value
