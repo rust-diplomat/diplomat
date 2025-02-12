@@ -55,9 +55,9 @@ dependencies = ["test-dart-example", "test-dart-feature"]
 category = "Tests"
 dependencies = ["test-kotlin-example", "test-kotlin-feature"]
 
-[tasks.test-py-nb]
+[tasks.test-nanobind]
 category = "Tests"
-dependencies = ["test-py-nb-feature"]
+dependencies = ["test-nanobind-feature", "fetch-nanobind"]
 
 [tasks.test-example]
 category = "Tests"
@@ -78,7 +78,7 @@ dependencies = [
     "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
-    "test-py-nb-feature",
+    "test-nanobind-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -204,13 +204,13 @@ cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test  --warning-mode all 
 '''
 
-[tasks.test-py-nb-feature]
+[tasks.test-nanobind-feature]
 category = "Tests"
 dependencies = ["build-feature"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd feature_tests/py-nb
+cd feature_tests/nanobind
 rm tests/*.out
 exec --fail-on-error make
 '''
@@ -342,6 +342,7 @@ dependencies = [
     "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
+    "gen-nanobind-feature",
 ]
 
 [tasks.gen-example]
@@ -482,6 +483,14 @@ exit_on_error true
 generate_generic example kotlin somelib "" /src/main/kotlin
 '''
 
+[tasks.gen-nanobind-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests nanobind src "-l diplomat-py-conf.toml"
+'''
 # Build deps
 
 [tasks.build-tool]
@@ -540,6 +549,18 @@ args = [
     "diplomat-runtime/jvm-callback-support",
 ]
 
+[tasks.fetch-nanobind]
+description = "Fetch nanobind library"
+category = "Plumbing"
+script_runner = "@duckscript"
+script = '''
+mkdir vendor
+cd vendor
+nanobind_present = is_path_exists nanobind
+if !nanobind_present
+    exec git clone https://github.com/wjakob/nanobind.git --depth=1 -b "v2.4.0" --recursive -q
+end
+'''
 
 [tasks.bench-rust-example]
 description = "Benchmark rust example"
