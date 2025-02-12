@@ -81,7 +81,7 @@ MAKE_SLICES_AND_OPTIONS(Strings16, DiplomatString16View)
 extern "C" inline void _flush(capi::DiplomatWrite* w) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(w->len);
-};
+}
 
 extern "C" inline bool _grow(capi::DiplomatWrite* w, uintptr_t requested) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
@@ -89,7 +89,7 @@ extern "C" inline bool _grow(capi::DiplomatWrite* w, uintptr_t requested) {
   w->cap = string->length();
   w->buf = &(*string)[0];
   return true;
-};
+}
 
 inline capi::DiplomatWrite WriteFromString(std::string& string) {
   capi::DiplomatWrite w;
@@ -102,7 +102,7 @@ inline capi::DiplomatWrite WriteFromString(std::string& string) {
   w.flush = _flush;
   w.grow = _grow;
   return w;
-};
+}
 
 template<class T> struct Ok {
   T inner;
@@ -147,17 +147,17 @@ public:
   ~result() = default;
   bool is_ok() const {
     return std::holds_alternative<Ok<T>>(this->val);
-  };
+  }
   bool is_err() const {
     return std::holds_alternative<Err<E>>(this->val);
-  };
+  }
 
   std::optional<T> ok() && {
     if (!this->is_ok()) {
       return std::nullopt;
     }
     return std::make_optional(std::move(std::get<Ok<T>>(std::move(this->val)).inner));
-  };
+  }
   std::optional<E> err() && {
     if (!this->is_err()) {
       return std::nullopt;
