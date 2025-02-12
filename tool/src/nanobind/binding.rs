@@ -7,7 +7,7 @@ use std::string::String;
 /// This abstraction allows us to build up the binding piece by piece without needing
 /// to precalculate things like the list of dependent headers or classes
 #[derive(Default, Template)]
-#[template(path = "python_nb/binding.cpp.jinja", escape = "none")]
+#[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
 pub(super) struct Binding<'a> {
     /// The module name for this binding
     pub module_name: Cow<'a, str>,

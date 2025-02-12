@@ -19,8 +19,8 @@ NANOBIND_LIB:
 ../../target/debug/libdiplomat_feature_tests.a: $(ALL_RUST)
 	cargo build
 
-./tests/structs.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) nanobindings.cpp
-	$(CXX) -std=c++20 ./nanobindings.cpp -I ../cpp/include -I nanobind/include -I ${PYTHON_INCLUDE} ../../target/debug/libdiplomat_feature_tests.a ${PYTHON_LIBDIR} -lpython3 -lstdc++ -ldl -lpthread -lm -g -o ./tests/feature_tests.pyd
+./tests/structs.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) src/somelib_ext.cpp
+	$(CXX) -std=c++20 ./src/somelib_ext.cpp -I ../cpp/include -I nanobind/include -I ${PYTHON_INCLUDE} ../../target/debug/libdiplomat_feature_tests.a ${PYTHON_LIBDIR} -lpython3 -lstdc++ -ldl -lpthread -lm -g -o ./tests/feature_tests.pyd
 
 test: ./tests/structs.out
 	./tests/structs.out

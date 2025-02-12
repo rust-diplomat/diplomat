@@ -88,7 +88,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         let values = ty.variants.iter().collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python_nb/enum_impl.cpp.jinja", escape = "none")]
+        #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             _ty: &'a hir::EnumDef,
             _fmt: &'a PyFormatter<'a>,
@@ -129,7 +129,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python_nb/opaque_impl.cpp.jinja", escape = "none")]
+        #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a PyFormatter<'a>,
@@ -180,7 +180,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "python_nb/struct_impl.cpp.jinja", escape = "none")]
+        #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             _ctype: &'a str,

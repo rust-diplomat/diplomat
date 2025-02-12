@@ -37,6 +37,8 @@
 #include "UnimportedEnum.hpp"
 #include "Unnamespaced.hpp"
 #include "Utf16Wrap.hpp"
+#include "nested/ns/Nested.hpp"
+#include "nested/ns2/Nested.hpp"
 #include "ns/AttrOpaque1Renamed.hpp"
 #include "ns/RenamedAttrEnum.hpp"
 #include "ns/RenamedAttrOpaque2.hpp"
@@ -45,7 +47,7 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-NB_MODULE(ns, ns)
+NB_MODULE(somelib, somelib)
 {
     
     nb::module_ default_root_mod();
@@ -126,6 +128,10 @@ NB_MODULE(ns, ns)
     	.def("use_unnamespaced", &ns::AttrOpaque1Renamed::use_unnamespaced, "_un"_a)
     	.def("use_namespaced", &ns::AttrOpaque1Renamed::use_namespaced, "_n"_a);
     nb::class_<ns::RenamedAttrOpaque2>(ns_mod, "RenamedAttrOpaque2");
+    nb::module_ nested_mod();
+    nb::class_<nested::ns::Nested>(ns_mod, "Nested");
+    nb::module_ ns2_mod();
+    nb::class_<nested::ns2::Nested>(ns2_mod, "Nested");
     nb::class_<Unnamespaced>(default_root_mod, "Unnamespaced")
     	.def_static("make", &Unnamespaced::make, "_e"_a)
     	.def("use_namespaced", &Unnamespaced::use_namespaced, "_n"_a);
