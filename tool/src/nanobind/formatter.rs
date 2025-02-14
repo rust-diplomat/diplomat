@@ -26,20 +26,20 @@ impl<'tcx> PyFormatter<'tcx> {
 
     /// Resolve and format the nested module names for this type
     /// Returns an iterator to the namespaces. Will always have at least one entry
-    pub fn fmt_namespaces(&self, id: TypeId) -> impl Iterator<Item = Cow<'tcx, str>> {
+    pub fn fmt_namespaces(&self, id: TypeId) -> impl Iterator<Item = &'tcx str> {
         let resolved = self.c.tcx().resolve_type(id);
         resolved
             .attrs()
             .namespace
-            .as_deref()
-            .unwrap_or("default_root")
-            .split("::")
-            .map(Cow::Borrowed)
+            .as_ref()
+            .map(|v| v.split("::"))
+            .into_iter()
+            .flatten()
     }
 
     /// Resolve the name of the module to use
-    pub fn fmt_module(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.fmt_namespaces(id).last().unwrap()
+    pub fn fmt_module(&'tcx self, id: TypeId, default: &'tcx str) -> Cow<'tcx, str> {
+        self.fmt_namespaces(id).last().unwrap_or(default).into()
     }
 
     /// Resolve and format a named type for use in code (without the namespace)
@@ -94,6 +94,11 @@ impl<'tcx> PyFormatter<'tcx> {
         } else {
             format!("{type_name}.hpp")
         }
+    }
+
+    /// Format an enum variant.
+    pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
+        variant.attrs.rename.apply(variant.name.as_str().into())
     }
 
     /// Format a field name or parameter name
