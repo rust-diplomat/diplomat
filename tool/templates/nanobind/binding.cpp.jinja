@@ -1,15 +1,62 @@
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/string_view.h>
+#include <../src/nb_internals.h>  // Required for shimming
+
 
 {%- for include in includes %}
 #include "{{ include }}"
 {%- endfor %}
-#include <nanobind/stl/string_view.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
 
-NB_MODULE({{module_name}}, {{module_name}})
+// Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
+// On module init, the dummy type will have the normal nanobind inst_dealloc function in the tp_dealloc slot, so we
+// pull it out, store it here, and then call it in the tp_dealloc function we are shimming in to all our types.
+// Our custom tp_dealloc function will call the tp_free function instead of `delete`, allowing us effectively to override
+// the delete operator.
+// See https://nanobind.readthedocs.io/en/latest/lowlevel.html#customizing-type-creation and
+// https://github.com/wjakob/nanobind/discussions/932
+static void (*nb_tp_dealloc)(void *) = nullptr;
+
+void diplomat_tp_dealloc(PyObject *self)
 {
+	using namespace nb::detail;
+	PyTypeObject *tp = Py_TYPE(self);
+    const type_data *t = nb_type_data(tp);
+
+	nb_inst *inst = (nb_inst *)self;
+	if (inst->destruct)
+    {
+		inst->destruct = false;
+        check(t->flags & (uint32_t)type_flags::is_destructible,
+              "nanobind::detail::inst_dealloc(\"%s\"): attempted to call "
+              "the destructor of a non-destructible type!",
+              t->name);
+    	void *p = inst_ptr(inst);
+        if (t->flags & (uint32_t)type_flags::has_destruct)
+            t->destruct(p);
+    }
+
+	if (inst->cpp_delete)
+	{
+		inst->cpp_delete = false;
+		auto tp_free = (freefunc)(PyType_GetSlot(tp, Py_tp_free));
+		(*tp_free)(self);
+	}
+	(*nb_tp_dealloc)(self);
+}
+
+struct _Dummy {};
+
+NB_MODULE({{module_name}}, {{module_name}}_mod)
+{
+	{
+		nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
+		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
+	}
+
 	{%- for line in body.lines() %}
     {{ line }}
 	{%- endfor %}

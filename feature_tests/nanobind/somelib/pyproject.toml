@@ -19,5 +19,7 @@ minimum-version = "0.4"
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
 
-# Build stable ABI wheels for CPython 3.12+
+# Build stable ABI wheels for CPython 3.9+
 wheel.py-api = "cp39"
+
+cmake.build-type = "Debug"

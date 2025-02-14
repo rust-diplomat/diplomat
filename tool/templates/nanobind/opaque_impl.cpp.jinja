@@ -4,9 +4,15 @@
 {% let mut_cptr = fmt.fmt_c_ptr(ctype, Mutability::Mutable) -%}
 {% let const_ref = fmt.fmt_borrowed(type_name, Mutability::Immutable) -%}
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
-
+{% let full_name = type_name.replace("::", "_") -%}
 {% include "module_impl.cpp.jinja" %}
-nb::class_<{{type_name}}>({{ module }}_mod, "{{type_name_unnamespaced}}")
+
+PyType_Slot {{full_name}}_slots[] = {
+    {Py_tp_free, (void *){{type_name}}::operator delete },
+    {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+    {0, nullptr}};
+
+nb::class_<{{type_name}}>({{ module }}_mod, "{{type_name_unnamespaced}}", nb::type_slots({{full_name}}_slots))
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
 {%- endfor %};

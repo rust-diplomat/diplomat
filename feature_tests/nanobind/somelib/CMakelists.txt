@@ -29,29 +29,46 @@ if (NOT SKBUILD)
 endif()
 
 # Try to import all Python components potentially needed by nanobind
-find_package(Python 3.8
+find_package(Python 3.9
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
 
+set(DIPLOMAT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 # Import nanobind through CMake's find_package mechanism
-set(nanobind_ROOT "../../vendor/nanobind")
-find_package(nanobind CONFIG REQUIRED HINTS "../../vendor/nanobind")
+set(nanobind_ROOT "${DIPLOMAT_ROOT}/vendor/nanobind")
+find_package(nanobind CONFIG REQUIRED HINTS "${DIPLOMAT_ROOT}/vendor/nanobind")
+
+# Add our rust library as a custom target
+set(FEATURE_TEST_LIB_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../../../target/debug/${CMAKE_STATIC_LIBRARY_PREFIX}diplomat_feature_tests${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_custom_command(OUTPUT ${FEATURE_TEST_LIB_FILE}
+    COMMAND cargo build
+)
+add_custom_target(diplomat_feature_tests_target DEPENDS ${FEATURE_TEST_LIB_FILE})
+add_library(diplomat_feature_tests STATIC IMPORTED GLOBAL)
+add_dependencies(diplomat_feature_tests diplomat_feature_tests_target)
+set_target_properties(diplomat_feature_tests PROPERTIES IMPORTED_LOCATION ${FEATURE_TEST_LIB_FILE})
+if(WIN32)
+  target_link_libraries(diplomat_feature_tests INTERFACE kernel32.lib advapi32.lib ntdll.lib userenv.lib ws2_32.lib dbghelp.lib)
+endif()
 
 # We are now ready to compile the actual extension module
 nanobind_add_module(
   # Name of the extension
-  _somelib_impl
+  somelib
 
   # Target the stable ABI for Python 3.12+, which reduces
   # the number of binary wheels that must be built. This
   # does nothing on older Python versions
   STABLE_ABI
 
+  NB_STATIC
+
   # Source code goes here
   src/somelib_ext.cpp
 )
-target_include_directories(_somelib_impl PUBLIC "../cpp/include")
-target_compile_features(_somelib_impl PUBLIC cxx_std_20)
+target_include_directories(somelib PUBLIC "../../cpp/include" "${nanobind_ROOT}/ext/robin_map/include")
+target_compile_features(somelib PUBLIC cxx_std_20)
+target_link_libraries(somelib PUBLIC diplomat_feature_tests)
 
 # Install directive for scikit-build-core
-install(TARGETS _somelib_impl LIBRARY DESTINATION somelib)
+install(TARGETS somelib LIBRARY DESTINATION somelib)

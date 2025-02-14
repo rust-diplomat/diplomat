@@ -21,7 +21,6 @@ mod ffi {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
 
-        #[diplomat::attr(cpp, disable)]
         pub fn new_from_first(v: &[DiplomatStrSlice]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0].into()).unwrap().into()))
         }

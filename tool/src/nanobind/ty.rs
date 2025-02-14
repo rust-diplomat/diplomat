@@ -8,7 +8,6 @@ use diplomat_core::hir::{
     self, EnumVariant, Mutability, OpaqueOwner, ReturnType, StructPathLike, SuccessType,
     TyPosition, Type, TypeId,
 };
-use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::collections::HashSet;
 
@@ -61,20 +60,25 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         let mut namespaces = self.formatter.fmt_namespaces(id);
         let mut modules: Vec<(Cow<'_, str>, Cow<'_, str>)> = Default::default();
 
-        let mut parent = "".into();
+        let mut parent = self.binding.module_name.clone();
         while let Some(module) = namespaces.next() {
-            if self.submodules.contains(&module) {
+            if self.submodules.contains(module) {
                 continue;
             }
             println!("Adding submodule entry for {module}");
-            self.submodules.insert(module.clone());
+            self.submodules.insert(module.into());
 
-            modules.push((module.clone(), parent));
-            parent = module;
+            modules.push((module.into(), parent));
+            parent = module.into();
         }
         modules
     }
 
+    pub fn get_module(&mut self, id: TypeId) -> String {
+        self.formatter
+            .fmt_module(id, &self.binding.module_name)
+            .into_owned()
+    }
     /// Adds an enum definition to the current implementation.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
@@ -85,7 +89,11 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
         let type_name = self.formatter.fmt_type_name(id);
         let ctype = self.formatter.fmt_c_type_name(id);
 
-        let values = ty.variants.iter().collect::<Vec<_>>();
+        let values = ty
+            .variants
+            .iter()
+            .map(|e| self.formatter.fmt_enum_variant(e))
+            .collect::<Vec<_>>();
 
         #[derive(Template)]
         #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
@@ -94,7 +102,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             _fmt: &'a PyFormatter<'a>,
             type_name: &'a str,
             _ctype: &'a str,
-            values: &'a [&'a EnumVariant],
+            values: Vec<Cow<'a, str>>,
             module: &'a str,
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
         }
@@ -104,8 +112,8 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             _fmt: self.formatter,
             type_name: &type_name,
             _ctype: &ctype,
-            values: values.as_slice(),
-            module: self.formatter.fmt_module(id).borrow(),
+            values: values,
+            module: &self.get_module(id),
             modules: self.get_module_defs(id, None),
         }
         .render_into(self.binding)
@@ -149,7 +157,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             ctype: &ctype,
             methods: methods.as_slice(),
             modules: self.get_module_defs(id, None),
-            module: self.formatter.fmt_module(id),
+            module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
             _c_header: c_header,
         }
@@ -198,7 +206,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
             modules: self.get_module_defs(id, None),
-            module: self.formatter.fmt_module(id),
+            module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
             _c_header: c_header,
         }
