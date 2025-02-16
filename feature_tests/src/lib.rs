@@ -9,7 +9,7 @@
     clippy::should_implement_trait
 )]
 
-#[diplomat::config(lib_name = this is also a test value, see below)]
+#[diplomat::config(lib_name = "this is also a test value, see below")]
 struct Config;
 
 extern crate alloc;
