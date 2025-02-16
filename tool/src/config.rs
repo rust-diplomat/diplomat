@@ -119,7 +119,7 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
         })
         .filter_map(|attrs| {
             let attrs = Attrs::from(attrs.as_slice());
-            if attrs.config_attrs.len() > 0 {
+            if !attrs.config_attrs.is_empty() {
                 return Some(attrs.config_attrs);
             }
             None
