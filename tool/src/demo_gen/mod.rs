@@ -33,7 +33,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 /// Configuration for demo_gen generation. Set from a `.toml` file, you can specify the path of the file with `--library-config` option flag.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
 pub struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
     pub explicit_generation: Option<bool>,

@@ -4,4 +4,4 @@ lib_name = "somelib"
 domain = "dev.diplomattest"
 
 [demo-gen]
-relative-js-path = "../../js/lib/api/"
+relative_js_path = "../../js/lib/api/"

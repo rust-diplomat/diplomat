@@ -15,7 +15,7 @@ pub struct Config {
     pub shared_config: SharedConfig,
     #[serde(rename = "kotlin")]
     pub kotlin_config: Option<KotlinConfig>,
-    #[serde(rename = "demo-gen")]
+    #[serde(rename = "demo_gen")]
     pub demo_gen_config: Option<DemoConfig>,
 }
 

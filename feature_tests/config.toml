@@ -4,4 +4,4 @@ lib_name = "This Will Be Ignored For Testing Purposes (Check src/lib.rs)"
 domain = "dev.diplomattest"
 
 [demo-gen]
-relative-js-path = "../../js/api/"
+relative_js_path = "../../js/api/"
