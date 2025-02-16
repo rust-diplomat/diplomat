@@ -382,7 +382,6 @@ impl AttributeInfo {
                         || seg == "attr"
                         || seg == "abi_rename"
                         || seg == "demo"
-                        || seg == "config"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
@@ -391,6 +390,8 @@ impl AttributeInfo {
                         // diplomat::bridge doesn't read this, but it's handled separately
                         // as an attribute
                         return true;
+                    } else if seg == "config" {
+                        panic!("#[diplomat::config] is restricted to top level types in lib.rs.");
                     } else {
                         panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {:?}", seg)
                     }

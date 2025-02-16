@@ -12,12 +12,10 @@ mod js;
 mod kotlin;
 
 use colored::*;
-use config::merge_config;
-use config::table_from_attrs;
+use config::{find_top_level_attr, table_from_attrs, merge_config};
 use config::Config;
 use core::mem;
 use core::panic;
-use diplomat_core::ast::Attrs;
 use diplomat_core::hir;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -72,16 +70,8 @@ pub fn gen(
     // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
 
     // FIXME: Currently just a proof of concept. If we continue with this current system, we'd definitely need to make use of TypeContext's parsing loop:
-    let cfg = module
-        .items
-        .iter()
-        .find_map(|i| match i {
-            syn::Item::Struct(s) => Some(s.attrs.clone()),
-            _ => None,
-        })
-        .unwrap_or_default();
-    let module_attrs = Attrs::from(cfg.as_slice());
-    let (attrs_config, errs) = table_from_attrs(module_attrs);
+    let cfg = find_top_level_attr(module.items.clone());
+    let (attrs_config, errs) = table_from_attrs(cfg);
 
     for e in errs {
         eprintln!("Could not read {} attribute: {e}", entry.display());

@@ -9,9 +9,6 @@
     clippy::should_implement_trait
 )]
 
-#[diplomat::config(lib_name = somelib)]
-struct Config;
-
 extern crate alloc;
 
 pub mod attrs;
@@ -24,3 +21,6 @@ pub mod selftype;
 pub mod slices;
 pub mod structs;
 pub mod traits;
+
+#[diplomat::config(lib_name = somelib)]
+struct Config;
