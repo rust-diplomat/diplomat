@@ -12,8 +12,7 @@ mod js;
 mod kotlin;
 
 use colored::*;
-use config::{find_top_level_attr, table_from_attrs, merge_config};
-use config::Config;
+use config::{find_top_level_attr, merge_config, table_from_attrs, Config};
 use core::mem;
 use core::panic;
 use diplomat_core::hir;

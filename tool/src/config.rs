@@ -93,7 +93,9 @@ pub fn table_from_values(values: Vec<(String, String)>) -> (Table, Vec<String>) 
     (out_table, errors)
 }
 
-pub(crate) fn table_from_attrs(config_attrs: Vec<DiplomatBackendConfigAttr>) -> (Table, Vec<String>) {
+pub(crate) fn table_from_attrs(
+    config_attrs: Vec<DiplomatBackendConfigAttr>,
+) -> (Table, Vec<String>) {
     let mut values = Vec::new();
 
     for config in config_attrs {
@@ -106,21 +108,22 @@ pub(crate) fn table_from_attrs(config_attrs: Vec<DiplomatBackendConfigAttr>) -> 
     table_from_values(values)
 }
 
-pub(crate) fn find_top_level_attr(module_items : Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
-    let attrs = module_items.iter().filter_map(|i| {
-        match i {
+pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
+    let attrs = module_items
+        .iter()
+        .filter_map(|i| match i {
             syn::Item::Struct(s) => Some(s.attrs.clone()),
             syn::Item::Impl(i) => Some(i.attrs.clone()),
             syn::Item::Mod(m) => Some(m.attrs.clone()),
-            _ => None
-        }
-    }).filter_map(|attrs| {
-        let attrs = Attrs::from(attrs.as_slice());
-        if attrs.config_attrs.len() > 0 {
-            return Some(attrs.config_attrs);
-        }
-        None
-    });
+            _ => None,
+        })
+        .filter_map(|attrs| {
+            let attrs = Attrs::from(attrs.as_slice());
+            if attrs.config_attrs.len() > 0 {
+                return Some(attrs.config_attrs);
+            }
+            None
+        });
 
     let mut out_config = Vec::new();
 
