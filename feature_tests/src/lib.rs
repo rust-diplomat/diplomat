@@ -25,5 +25,6 @@ pub mod slices;
 pub mod structs;
 pub mod traits;
 
+// Feel free to add overrides for other languages for the lib_name, this is meant to showcase overriding SharedConfig.
 #[diplomat::config(kotlin.lib_name = somelib)]
 struct KotlinConfig;
