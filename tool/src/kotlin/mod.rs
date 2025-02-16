@@ -66,7 +66,9 @@ pub(crate) fn run<'tcx>(
     } = conf
         .kotlin_config
         .expect("Failed to parse Kotlin config. Required fields are `domain`");
-    let lib_name = conf.shared_config.lib_name
+    let lib_name = conf
+        .shared_config
+        .lib_name
         .expect("Failed to parse Kotlin config. Missing required field `lib_name`.");
 
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
