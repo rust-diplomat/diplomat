@@ -52,7 +52,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct KotlinConfig {
     domain: String,
-    lib_name: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
 }
 
@@ -63,13 +62,11 @@ pub(crate) fn run<'tcx>(
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let KotlinConfig {
         domain,
-        lib_name,
         use_finalizers_not_cleaners,
     } = conf
         .kotlin_config
-        .expect("Failed to parse Kotlin config. Required fields are `domain` and `lib_name`");
-    let lib_name = lib_name
-        .or(conf.shared_config.lib_name)
+        .expect("Failed to parse Kotlin config. Required fields are `domain`");
+    let lib_name = conf.shared_config.lib_name
         .expect("Failed to parse Kotlin config. Missing required field `lib_name`.");
 
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);

@@ -12,7 +12,7 @@ mod js;
 mod kotlin;
 
 use colored::*;
-use config::{find_top_level_attr, merge_config, table_from_attrs, Config};
+use config::{find_top_level_attr, set_overrides, merge_config, table_from_attrs, Config};
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -81,8 +81,10 @@ pub fn gen(
 
     merge_config(&mut base, attrs_config.clone());
 
+    let cfg_table = set_overrides(&base, target_language);
+
     // Then some more gymnastics to go back:
-    let config = toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(base)).unwrap())?;
+    let config = toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(cfg_table)).unwrap())?;
 
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {

@@ -9,6 +9,16 @@ pub struct SharedConfig {
     pub lib_name: Option<String>,
 }
 
+impl SharedConfig {
+    /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
+    pub fn overrides_shared(name : &str) -> bool {
+        match name {
+            "lib_name" => true,
+            _ => false
+        }
+    }
+}
+
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Config {
     #[serde(flatten)]
@@ -53,7 +63,7 @@ pub fn merge_config(base: &mut Table, other: Table) {
                         .unwrap()
                         .as_table_mut()
                         .expect("Expected a table of values in base config."),
-                    t,
+                    t
                 );
             }
             // Otherwise just overwrite whatever's already there:
@@ -132,4 +142,21 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
     }
 
     out_config
+}
+
+/// Intended for use in [`crate::gen`]. Given a specific language's attributes, return a new table that overrides any base values from [`SharedConfig`].
+pub(crate) fn set_overrides(parent_table : &Table, language : &str) -> Table {
+    let mut overridden_table = parent_table.clone();
+
+    if let Some(v) = parent_table.get(language) {
+        let t = v.as_table().expect("Expected language config to be table.");
+        // Right now just I'm just assuming all of `SharedConfig` will always be top-level values (never nested in sub-tables). If that changes, feel free to change this.
+        for (key, val) in t {
+            if SharedConfig::overrides_shared(&key) {
+                overridden_table.insert(key.clone(), val.clone());
+            }
+        }
+    }
+
+    overridden_table
 }
