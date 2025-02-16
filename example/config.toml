@@ -3,5 +3,5 @@ lib_name = "somelib"
 [kotlin]
 domain = "dev.diplomattest"
 
-[demo-gen]
+[demo_gen]
 relative_js_path = "../../js/lib/api/"
