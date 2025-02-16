@@ -12,10 +12,7 @@ pub struct SharedConfig {
 impl SharedConfig {
     /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
     pub fn overrides_shared(name: &str) -> bool {
-        match name {
-            "lib_name" => true,
-            _ => false,
-        }
+        matches!(name, "lib_name")
     }
 }
 
@@ -152,7 +149,7 @@ pub(crate) fn set_overrides(parent_table: &Table, language: &str) -> Table {
         let t = v.as_table().expect("Expected language config to be table.");
         // Right now just I'm just assuming all of `SharedConfig` will always be top-level values (never nested in sub-tables). If that changes, feel free to change this.
         for (key, val) in t {
-            if SharedConfig::overrides_shared(&key) {
+            if SharedConfig::overrides_shared(key) {
                 overridden_table.insert(key.clone(), val.clone());
             }
         }
