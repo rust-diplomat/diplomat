@@ -1,6 +1,5 @@
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
-import dev.diplomattest.somelib.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
