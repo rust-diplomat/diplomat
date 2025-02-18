@@ -134,22 +134,22 @@ final class MyStruct {
       ]);
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyStruct_new')
 @ffi.Native<_MyStructFfi Function()>(isLeaf: true, symbol: 'MyStruct_new')
 // ignore: non_constant_identifier_names
 external _MyStructFfi _MyStruct_new();
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyStruct_into_a')
 @ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
 // ignore: non_constant_identifier_names
 external int _MyStruct_into_a(_MyStructFfi self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyStruct_returns_zst_result')
 @ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_returns_zst_result')
 // ignore: non_constant_identifier_names
 external _ResultVoidMyZstFfi _MyStruct_returns_zst_result();
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyStruct_fails_zst_result')
 @ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_fails_zst_result')
 // ignore: non_constant_identifier_names
 external _ResultVoidMyZstFfi _MyStruct_fails_zst_result();

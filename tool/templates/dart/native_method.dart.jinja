@@ -1,4 +1,4 @@
-@meta.RecordUse()
+@_DiplomatFfiUse('{{ m.abi_name }}')
 @ffi.Native<{{ m.return_type_ffi }} Function({%- for param in m.param_types_ffi %}
       {%- if !loop.first %}, {% endif -%}
       {{ param }}

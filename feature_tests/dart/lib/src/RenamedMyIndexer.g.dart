@@ -32,12 +32,12 @@ final class RenamedMyIndexer implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_MyIndexer_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIndexer_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_MyIndexer_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_MyIndexer_get')
 @ffi.Native<_ResultSliceUtf8Void Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_MyIndexer_get')
 // ignore: non_constant_identifier_names
 external _ResultSliceUtf8Void _namespace_MyIndexer_get(ffi.Pointer<ffi.Opaque> self, int i);

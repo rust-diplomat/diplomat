@@ -52,12 +52,12 @@ final class CyclicStructB {
       ]);
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructB_get_a')
 @ffi.Native<_CyclicStructAFfi Function()>(isLeaf: true, symbol: 'CyclicStructB_get_a')
 // ignore: non_constant_identifier_names
 external _CyclicStructAFfi _CyclicStructB_get_a();
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructB_get_a_option')
 @ffi.Native<_ResultCyclicStructAFfiVoid Function()>(isLeaf: true, symbol: 'CyclicStructB_get_a_option')
 // ignore: non_constant_identifier_names
 external _ResultCyclicStructAFfiVoid _CyclicStructB_get_a_option();

@@ -11,7 +11,7 @@ void main() {
     s.a!.assertInteger(101);
     s.b!.assertChar('餐'.runes.first);
     expect(s.c, 904);
-    s.d!.assertInteger(926535);
+    s.d.assertInteger(926535);
 
     final sn = OptionOpaque.newStructNones();
     expect(sn.a, null);

@@ -64,22 +64,22 @@ final class CyclicStructA {
       ]);
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructA_get_b')
 @ffi.Native<_CyclicStructBFfi Function()>(isLeaf: true, symbol: 'CyclicStructA_get_b')
 // ignore: non_constant_identifier_names
 external _CyclicStructBFfi _CyclicStructA_get_b();
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructA_cyclic_out')
 @ffi.Native<ffi.Void Function(_CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_cyclic_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructA_cyclic_out(_CyclicStructAFfi self, ffi.Pointer<ffi.Opaque> write);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructA_double_cyclic_out')
 @ffi.Native<ffi.Void Function(_CyclicStructAFfi, _CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_double_cyclic_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructA_double_cyclic_out(_CyclicStructAFfi self, _CyclicStructAFfi cyclicStructA, ffi.Pointer<ffi.Opaque> write);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('CyclicStructA_getter_out')
 @ffi.Native<ffi.Void Function(_CyclicStructAFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructA_getter_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructA_getter_out(_CyclicStructAFfi self, ffi.Pointer<ffi.Opaque> write);
