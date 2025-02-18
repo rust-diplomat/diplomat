@@ -404,6 +404,8 @@ impl AttributeInfo {
                         // diplomat::bridge doesn't read this, but it's handled separately
                         // as an attribute
                         return true;
+                    } else if seg == "config" {
+                        panic!("#[diplomat::config] is restricted to top level types in lib.rs.");
                     } else {
                         panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {:?}", seg)
                     }
@@ -606,6 +608,15 @@ pub fn bridge(
 ) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
     proc_macro::TokenStream::from(expanded.to_token_stream())
+}
+
+// Config is done in [`diplomat_tool::gen`], so we just set things to be ignored here.
+#[proc_macro_attribute]
+pub fn config(
+    _attr: proc_macro::TokenStream,
+    _input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    "".parse().unwrap()
 }
 
 /// Generate From and Into implementations for a Diplomat enum
