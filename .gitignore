@@ -17,3 +17,6 @@ Cargo.lock
 
 # VS Code configuration
 .vscode/
+
+# External libraries downloaded by make actions
+vendor
