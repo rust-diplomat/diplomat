@@ -27,6 +27,7 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
 
   int get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;

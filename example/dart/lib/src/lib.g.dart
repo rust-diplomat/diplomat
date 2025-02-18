@@ -47,6 +47,7 @@ final class _RustAlloc implements ffi.Allocator {
       return _diplomat_alloc(byteCount, alignment ?? 1).cast();
   }
 
+  @override
   void free(ffi.Pointer<ffi.NativeType> pointer) {
     throw 'Internal error: should not deallocate in Rust memory';
   }
@@ -93,13 +94,14 @@ final class _ResultOpaqueVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOpaqueVoid.ok(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOpaqueVoid.err() {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = false;
@@ -113,12 +115,13 @@ final class _ResultVoidVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultVoidVoid.ok() {
     final struct = ffi.Struct.create<_ResultVoidVoid>();
     struct.isOk = true;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultVoidVoid.err() {
     final struct = ffi.Struct.create<_ResultVoidVoid>();
     struct.isOk = false;

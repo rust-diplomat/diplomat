@@ -26,6 +26,7 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
     return RenamedComparable._fromFfi(result, []);
   }
 
+  @override
   int compareTo(RenamedComparable other) {
     final result = _namespace_Comparable_cmp(_ffi, other._ffi);
     return result;

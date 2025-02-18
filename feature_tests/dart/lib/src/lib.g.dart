@@ -87,6 +87,7 @@ final class _RustAlloc implements ffi.Allocator {
       return _diplomat_alloc(byteCount, alignment ?? 1).cast();
   }
 
+  @override
   void free(ffi.Pointer<ffi.NativeType> pointer) {
     throw 'Internal error: should not deallocate in Rust memory';
   }
@@ -133,13 +134,14 @@ final class _ResultCyclicStructAFfiVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultCyclicStructAFfiVoid.ok(_CyclicStructAFfi val) {
     final struct = ffi.Struct.create<_ResultCyclicStructAFfiVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultCyclicStructAFfiVoid.err() {
     final struct = ffi.Struct.create<_ResultCyclicStructAFfiVoid>();
     struct.isOk = false;
@@ -159,13 +161,14 @@ final class _ResultDoubleVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultDoubleVoid.ok(double val) {
     final struct = ffi.Struct.create<_ResultDoubleVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultDoubleVoid.err() {
     final struct = ffi.Struct.create<_ResultDoubleVoid>();
     struct.isOk = false;
@@ -186,13 +189,14 @@ final class _ResultInt32Opaque extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultInt32Opaque.ok(int val) {
     final struct = ffi.Struct.create<_ResultInt32Opaque>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultInt32Opaque.err(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultInt32Opaque>();
     struct.isOk = false;
@@ -213,13 +217,14 @@ final class _ResultInt32Void extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultInt32Void.ok(int val) {
     final struct = ffi.Struct.create<_ResultInt32Void>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultInt32Void.err() {
     final struct = ffi.Struct.create<_ResultInt32Void>();
     struct.isOk = false;
@@ -239,13 +244,14 @@ final class _ResultIntPtrVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultIntPtrVoid.ok(int val) {
     final struct = ffi.Struct.create<_ResultIntPtrVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultIntPtrVoid.err() {
     final struct = ffi.Struct.create<_ResultIntPtrVoid>();
     struct.isOk = false;
@@ -265,13 +271,14 @@ final class _ResultOpaqueErrorStructFfi extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOpaqueErrorStructFfi.ok(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultOpaqueErrorStructFfi>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOpaqueErrorStructFfi.err(_ErrorStructFfi val) {
     final struct = ffi.Struct.create<_ResultOpaqueErrorStructFfi>();
     struct.isOk = false;
@@ -293,13 +300,14 @@ final class _ResultOpaqueInt32 extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOpaqueInt32.ok(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultOpaqueInt32>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOpaqueInt32.err(int val) {
     final struct = ffi.Struct.create<_ResultOpaqueInt32>();
     struct.isOk = false;
@@ -319,13 +327,14 @@ final class _ResultOpaqueVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOpaqueVoid.ok(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOpaqueVoid.err() {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = false;
@@ -344,13 +353,14 @@ final class _ResultOptionInputStructFfiVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOptionInputStructFfiVoid.ok(_OptionInputStructFfi val) {
     final struct = ffi.Struct.create<_ResultOptionInputStructFfiVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOptionInputStructFfiVoid.err() {
     final struct = ffi.Struct.create<_ResultOptionInputStructFfiVoid>();
     struct.isOk = false;
@@ -369,13 +379,14 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOptionStructFfiVoid.ok(_OptionStructFfi val) {
     final struct = ffi.Struct.create<_ResultOptionStructFfiVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOptionStructFfiVoid.err() {
     final struct = ffi.Struct.create<_ResultOptionStructFfiVoid>();
     struct.isOk = false;
@@ -395,13 +406,14 @@ final class _ResultSizeVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultSizeVoid.ok(int val) {
     final struct = ffi.Struct.create<_ResultSizeVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultSizeVoid.err() {
     final struct = ffi.Struct.create<_ResultSizeVoid>();
     struct.isOk = false;
@@ -420,13 +432,14 @@ final class _ResultSliceUtf8Void extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultSliceUtf8Void.ok(_SliceUtf8 val) {
     final struct = ffi.Struct.create<_ResultSliceUtf8Void>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultSliceUtf8Void.err() {
     final struct = ffi.Struct.create<_ResultSliceUtf8Void>();
     struct.isOk = false;
@@ -446,13 +459,14 @@ final class _ResultUint32Void extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultUint32Void.ok(Rune val) {
     final struct = ffi.Struct.create<_ResultUint32Void>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultUint32Void.err() {
     final struct = ffi.Struct.create<_ResultUint32Void>();
     struct.isOk = false;
@@ -472,13 +486,14 @@ final class _ResultUint8Void extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultUint8Void.ok(int val) {
     final struct = ffi.Struct.create<_ResultUint8Void>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultUint8Void.err() {
     final struct = ffi.Struct.create<_ResultUint8Void>();
     struct.isOk = false;
@@ -492,12 +507,13 @@ final class _ResultVoidMyZstFfi extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultVoidMyZstFfi.ok() {
     final struct = ffi.Struct.create<_ResultVoidMyZstFfi>();
     struct.isOk = true;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultVoidMyZstFfi.err() {
     final struct = ffi.Struct.create<_ResultVoidMyZstFfi>();
     struct.isOk = false;
@@ -516,12 +532,13 @@ final class _ResultVoidOpaque extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultVoidOpaque.ok() {
     final struct = ffi.Struct.create<_ResultVoidOpaque>();
     struct.isOk = true;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultVoidOpaque.err(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultVoidOpaque>();
     struct.isOk = false;
@@ -767,7 +784,7 @@ extension on core.List<core.String> {
     final slice = ffi.Struct.create<_SliceSliceUtf8>();
     slice._data = alloc(length);
     for (var i = 0; i < length; i++) {
-      slice._data[i] = this[i]._utf8AllocIn(alloc);;
+      slice._data[i] = this[i]._utf8AllocIn(alloc);
     }
     slice._length = length;
     return slice;

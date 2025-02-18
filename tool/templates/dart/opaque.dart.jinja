@@ -36,6 +36,7 @@ final class {{type_name}}
     and is what the stdlib does, e.g. https://github.com/dart-lang/sdk/blob/main/tools/dom/src/_ListIterators.dart#L31 -#}
   {{it}} get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;

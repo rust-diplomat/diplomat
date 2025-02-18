@@ -27,6 +27,7 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
 
   AttrOpaque1Renamed get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;

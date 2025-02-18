@@ -79,7 +79,7 @@ final class Float64Vec implements ffi.Finalizable {
     _Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
   }
 
-  @core.override
+  @override
   String toString() {
     final write = _Write();
     _Float64Vec_to_string(_ffi, write._ffi);
