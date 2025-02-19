@@ -71,6 +71,7 @@ fn main() -> std::io::Result<()> {
         eprintln!("{e}");
     }
 
+    // CLI takes priority over `config.toml`.
     merge_config(&mut config_table, cli_config);
 
     // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
