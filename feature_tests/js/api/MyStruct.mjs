@@ -71,6 +71,15 @@ export class MyStruct {
         this.#g = value;
     }
     
+    #h;
+    
+    get h()  {
+        return this.#h;
+    } 
+    set h(value) {
+        this.#h = value;
+    }
+    
     /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -125,6 +134,12 @@ export class MyStruct {
             throw new Error("Missing required field g.");
         }
 
+        if ("h" in structObj) {
+            this.#h = MyZst._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.h);
+        } else {
+            throw new Error("Missing required field h.");
+        }
+
         return this;
     }
 
@@ -135,7 +150,7 @@ export class MyStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
+        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, ...MyZst._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#h)._intoFFI(functionCleanupArena, {})]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -163,6 +178,7 @@ export class MyStruct {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#e, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 20, this.#f, Uint32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 24, this.#g.ffiValue, Int32Array);
+        MyZst._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#h)._writeToArrayBuffer(arrayBuffer, offset + 28, functionCleanupArena, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -189,6 +205,8 @@ export class MyStruct {
         structObj.f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         structObj.g = new MyEnum(diplomatRuntime.internalConstructor, gDeref);
+        const hDeref = ptr + 28;
+        structObj.h = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }

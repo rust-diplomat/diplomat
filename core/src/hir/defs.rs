@@ -250,4 +250,12 @@ impl<'tcx> TypeDef<'tcx> {
             Self::Enum(ty) => &ty.special_method_presence,
         }
     }
+
+    pub fn is_zst(&self) -> bool {
+        match self {
+            TypeDef::Struct(st) => st.fields.is_empty(),
+            TypeDef::OutStruct(st) => st.fields.is_empty(),
+            _ => false,
+        }
+    }
 }

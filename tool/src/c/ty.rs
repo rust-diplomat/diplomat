@@ -112,7 +112,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
-            fields.push(self.gen_ty_decl(
+            fields.extend(self.gen_ty_decl(
                 &field.ty,
                 field.name.as_str(),
                 &mut decl_header,
@@ -228,7 +228,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let mut cb_structs_and_defs = vec![];
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
-            param_decls.push(self.gen_ty_decl(
+            param_decls.extend(self.gen_ty_decl(
                 &self_ty,
                 "self",
                 header,
@@ -238,7 +238,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
 
         for param in &method.params {
-            param_decls.push(self.gen_ty_decl(
+            param_decls.extend(self.gen_ty_decl(
                 &param.ty,
                 param.name.as_str(),
                 header,
@@ -364,9 +364,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         header: &mut Header,
         method_abi_name: Option<String>,
         cb_structs_and_defs: &mut Vec<CallbackAndStructDef>,
-    ) -> (Cow<'tcx, str>, Cow<'a, str>) {
+    ) -> Option<(Cow<'tcx, str>, Cow<'a, str>)> {
         let param_name = self.formatter.fmt_param_name(ident);
-        match ty {
+       Some(match ty {
             Type::Callback(some_cb) => {
                 let cb_wrapper_type = "DiplomatCallback_".to_owned()
                     + method_abi_name.unwrap().as_str()
@@ -386,6 +386,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     format!("{}_cb_wrap", param_name).into(),
                 )
             }
+            Type::Struct(s) if self.tcx.resolve_type(s.id()).is_zst() => return None,
             Type::ImplTrait(t) => {
                 let t_id = t.id();
                 let trt_name = self.gen_ty_name(ty, header);
@@ -402,7 +403,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let ty = self.gen_ty_name(ty, header);
                 (ty, param_name)
             }
-        }
+        })
     }
 
     fn gen_cb_param_wrapper_struct(

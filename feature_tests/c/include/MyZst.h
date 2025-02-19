@@ -15,6 +15,8 @@
 
 
 
+uint32_t MyZst_method(uint8_t foo);
+
 
 
 

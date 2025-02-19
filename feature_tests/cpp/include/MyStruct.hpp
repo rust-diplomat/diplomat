@@ -76,6 +76,7 @@ inline MyStruct MyStruct::FromFFI(diplomat::capi::MyStruct c_struct) {
     /* .e = */ c_struct.e,
     /* .f = */ c_struct.f,
     /* .g = */ MyEnum::FromFFI(c_struct.g),
+    /* .h = */ MyZst {},
   };
 }
 

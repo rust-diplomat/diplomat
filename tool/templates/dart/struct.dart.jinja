@@ -1,12 +1,16 @@
 {% if !fields.is_empty() -%}
 final class _{{type_name}}Ffi extends ffi.Struct {
   {%- for field in fields %}
+  {%- match field.ffi_cast_type_name %}
+  {%- when Some with (ffi_cast_type_name) %}
   {%- match field.annotation %}
   {%- when Some with (annotation) %}
   @{{annotation}}()
   {%- when None %}
   {%- endmatch %}
-  external {{field.ffi_cast_type_name}} {{field.name}};
+  external {{ffi_cast_type_name}} {{field.name}};
+  {%- when None %}
+  {%- endmatch %}
   {%- endfor %}
 }
 

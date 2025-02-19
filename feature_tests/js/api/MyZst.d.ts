@@ -14,5 +14,7 @@ export class MyZst {
     static fromFields(structObj : MyZst_obj) : MyZst;
 
 
+    method(foo: number): number;
+
     constructor(structObj : MyZst_obj);
 }

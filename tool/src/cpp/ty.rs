@@ -223,7 +223,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_cpp_to_c_for_field("", field))
+            .filter_map(|field| self.gen_cpp_to_c_for_field("", field))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
@@ -315,7 +315,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut cpp_to_c_params = Vec::new();
 
         if let Some(param_self) = method.param_self.as_ref() {
-            cpp_to_c_params.push(self.gen_cpp_to_c_self(&param_self.ty));
+            if !self.c.tcx.resolve_type(id).is_zst() {
+                cpp_to_c_params.push(self.gen_cpp_to_c_self(&param_self.ty));
+            }
         }
 
         let mut param_validations = Vec::new();
@@ -336,7 +338,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 returns_utf8_err = true;
             }
             let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
-            cpp_to_c_params.push(conversion);
+            cpp_to_c_params.extend(conversion);
         }
 
         if method.output.is_write() {
@@ -545,15 +547,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         &self,
         cpp_struct_access: &str,
         field: &'a hir::StructField<P>,
-    ) -> NamedExpression<'a> {
+    ) -> Option<NamedExpression<'a>> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into());
+        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into())?;
 
-        NamedExpression {
+        Some(NamedExpression {
             var_name,
             expression,
-        }
+        })
     }
 
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
@@ -564,14 +566,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         &self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
-    ) -> Cow<'a, str> {
-        match *ty {
+    ) -> Option<Cow<'a, str>> {
+        Some(match *ty {
             Type::Primitive(..) => cpp_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => {
                 format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
             }
             Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Struct(ref st) if self.c.tcx.resolve_type(st.id()).is_zst() => return None,
             Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
@@ -581,7 +584,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
-                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
+                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into()).unwrap_or_default();
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
@@ -589,7 +592,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 format!("{{new decltype({cpp_name})({cpp_name}), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
-        }
+        })
     }
 
     /// Generates the C++ type name of a return type.
