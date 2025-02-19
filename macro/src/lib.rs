@@ -1,4 +1,4 @@
-use proc_macro2::Span;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::*;
 
@@ -56,8 +56,22 @@ fn param_conversion(
         }),
         // Convert Option<struct/enum/primitive> and DiplomatOption<opaque>
         // simplify the check by just checking is_ffi_safe()
-        ast::TypeName::Option(..) if !param_type.is_ffi_safe() => {
-            Some(quote!(let #name = #name.into();))
+        ast::TypeName::Option(inner, _stdlib) => {
+            let mut tokens = TokenStream::new();
+
+            if !param_type.is_ffi_safe() {
+                let inner_ty = inner.ffi_safe_version().to_syn();
+                tokens.extend(quote!(let #name : Option<#inner_ty> = #name.into();));
+            }
+            if !inner.is_ffi_safe() {
+                tokens.extend(quote!(let #name = #name.map(|v| v.into());));
+            }
+
+            if !tokens.is_empty() {
+                Some(tokens)
+            } else {
+                None
+            }
         }
         ast::TypeName::Function(in_types, out_type) => {
             let cb_wrap_ident = &name;

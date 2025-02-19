@@ -40,7 +40,7 @@ export class BorrowedFieldsWithBounds {
     static fromFields(structObj) {
         return new BorrowedFieldsWithBounds(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsWithBounds's constructor takes an object of BorrowedFieldsWithBounds's fields.");

@@ -67,7 +67,7 @@ pub enum Slice {
     /// pass `&[bool]` anyway.
     Primitive(Option<Borrow>, PrimitiveType),
 
-    /// A `&[&DiplomatStr]]`. This type of slice always needs to be
+    /// A `&[DiplomatStrSlice]`. This type of slice always needs to be
     /// allocated before passing it into Rust, as it has to conform to the
     /// Rust ABI. In other languages this is the idiomatic list of string
     /// views, i.e. `std::span<std::string_view>` or `core.List<core.String>`.

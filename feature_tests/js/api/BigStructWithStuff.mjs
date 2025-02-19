@@ -61,7 +61,7 @@ export class BigStructWithStuff {
     static fromFields(structObj) {
         return new BigStructWithStuff(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BigStructWithStuff's constructor takes an object of BigStructWithStuff's fields.");

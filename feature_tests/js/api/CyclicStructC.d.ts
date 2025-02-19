@@ -18,7 +18,7 @@ export class CyclicStructC {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : CyclicStructC_obj) : CyclicStructC;
-    
+
 
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
 

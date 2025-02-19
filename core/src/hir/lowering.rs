@@ -849,6 +849,13 @@ impl<'ast> LoweringContext<'ast> {
                             PrimitiveType::from_ast(*prim),
                         ))))
                     }
+                    ast::TypeName::StrSlice(encoding, _stdlib) => Ok(Type::DiplomatOption(
+                        Box::new(Type::Slice(Slice::Strs(*encoding))),
+                    )),
+                    ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
+                        let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
+                        Ok(Type::DiplomatOption(Box::new(inner)))
+                    }
                     ast::TypeName::Box(box_ty) => {
                         // we could see whats in the box here too
                         self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));

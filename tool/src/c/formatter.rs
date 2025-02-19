@@ -72,6 +72,31 @@ impl<'tcx> CFormatter<'tcx> {
         match ty {
             hir::Type::Primitive(prim) => self.diplomat_namespace(format!("Option{}", self.fmt_primitive_name_for_derived_type(*prim)).into()).into(),
             hir::Type::Struct(..) | hir::Type::Enum(..) => format!("{ty_name}_option"),
+            hir::Type::Slice(hir::Slice::Strs(encoding)) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf8 => "OptionStringsView".into(),
+                    StringEncoding::UnvalidatedUtf16 => "OptionStrings16View".into(),
+                    _ => unimplemented!("Utf8 StringEncoding unsupported")
+                    }
+                ).to_string()
+            },
+            hir::Type::Slice(hir::Slice::Str(_lifetime, encoding )) => {
+                self.diplomat_namespace(
+                match encoding {
+                    StringEncoding::UnvalidatedUtf16 => "OptionString16View".into(),
+                    _ => "OptionStringView".into(),
+                    }
+                ).to_string()
+            }
+            hir::Type::Slice(hir::Slice::Primitive(borrow, prim)) => {
+                let prim = self.fmt_primitive_name_for_derived_type(*prim);
+                let mtb = match borrow {
+                    Some(borrow) if borrow.mutability.is_immutable() => "",
+                    _ => "Mut",
+                };
+                self.diplomat_namespace(format!("Option{prim}View{mtb}").into()).to_string()
+            }
             _ => unreachable!("Called fmt_optional_type_name with type {ty_name}, which is not allowed inside an Option")
         }
     }
@@ -239,6 +264,30 @@ impl<'tcx> CFormatter<'tcx> {
             }
             .into(),
         )
+    }
+
+    pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
+        // TODO: Replace with LazyLock when MSRV is bumped to >= 1.80.0
+        static C_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
+            once_cell::sync::Lazy::new(|| [].into());
+
+        static CPP_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
+            once_cell::sync::Lazy::new(|| ["new", "default", "delete"].into());
+
+        let lang_keywords = {
+            if self.is_for_cpp {
+                &CPP_KEYWORDS
+            } else {
+                &C_KEYWORDS
+            }
+        };
+
+        if lang_keywords.contains(name.as_ref()) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
     }
 
     fn diplomat_namespace(&self, ty: Cow<'tcx, str>) -> Cow<'tcx, str> {

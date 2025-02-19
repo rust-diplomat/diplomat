@@ -25,7 +25,7 @@ export class OptionInputStruct {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : OptionInputStruct_obj) : OptionInputStruct;
-    
+
 
     constructor(structObj : OptionInputStruct_obj);
 }

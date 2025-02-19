@@ -56,6 +56,12 @@ OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_inpu
 
 OptionInputStruct OptionOpaque_returns_option_input_struct(void);
 
+size_t OptionOpaque_accepts_option_str(OptionStringView arg);
+
+bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg);
+
+int64_t OptionOpaque_accepts_option_primitive(OptionU32View arg);
+
 
 void OptionOpaque_destroy(OptionOpaque* self);
 

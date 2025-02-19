@@ -40,7 +40,7 @@ export class OptionInputStruct {
     static fromFields(structObj) {
         return new OptionInputStruct(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("OptionInputStruct's constructor takes an object of OptionInputStruct's fields.");

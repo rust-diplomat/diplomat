@@ -323,6 +323,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
+            let param_name = decls.var_name.clone();
             param_decls.push(decls);
             if matches!(
                 param.ty,
@@ -330,11 +331,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ) {
                 param_validations.push(format!(
                     "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>();\n}}",
-                    param = param.name.as_str(),
+                    param = param_name,
                 ));
                 returns_utf8_err = true;
             }
-            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
+            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
             cpp_to_c_params.push(conversion);
         }
 
@@ -649,6 +650,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         ty: &Type<P>,
         var_name: Cow<'a, str>,
     ) -> Cow<'a, str> {
+        let var_name = self.formatter.fmt_identifier(var_name);
+
         match *ty {
             Type::Primitive(..) => var_name,
             Type::Opaque(ref op) if op.owner.is_owned() => {

@@ -25,7 +25,7 @@ export class BorrowedFieldsWithBounds {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
-    
+
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 

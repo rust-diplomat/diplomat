@@ -21,7 +21,7 @@ export class FixedDecimalFormatterOptions {
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
-    
+
 
     constructor();
 }

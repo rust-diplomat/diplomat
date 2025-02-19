@@ -21,7 +21,7 @@ export class BorrowedFieldsReturning {
     static fromFields(structObj) {
         return new BorrowedFieldsReturning(structObj);
     }
-    
+
     #internalConstructor(structObj) {
         if (typeof structObj !== "object") {
             throw new Error("BorrowedFieldsReturning's constructor takes an object of BorrowedFieldsReturning's fields.");
