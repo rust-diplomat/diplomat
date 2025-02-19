@@ -25,8 +25,10 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
 
   AttrOpaque1Renamed? _current;
 
+  @override
   AttrOpaque1Renamed get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;
@@ -38,12 +40,12 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_OpaqueIterator_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_OpaqueIterator_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_OpaqueIterator_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_OpaqueIterator_next')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_OpaqueIterator_next')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterator_next(ffi.Pointer<ffi.Opaque> self);

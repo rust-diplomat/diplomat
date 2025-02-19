@@ -88,7 +88,7 @@ final class BorrowedFieldsWithBounds {
   core.List<Object> get _fieldsForLifetimeC => [fieldC];
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('BorrowedFieldsWithBounds_from_foo_and_strings')
 @ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
 // ignore: non_constant_identifier_names
 external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf8 utf8StrZ);

@@ -17,6 +17,12 @@ part 'FixedDecimalFormatterOptions.g.dart';
 part 'FixedDecimalGroupingStrategy.g.dart';
 part 'Locale.g.dart';
 
+class _DiplomatFfiUse extends meta.RecordUse {
+  final String symbol;
+
+  const _DiplomatFfiUse(@meta.mustBeConst this.symbol);
+}
+
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
 /// The recommended way to obtain a [Rune] is to create it from a 
@@ -47,17 +53,18 @@ final class _RustAlloc implements ffi.Allocator {
       return _diplomat_alloc(byteCount, alignment ?? 1).cast();
   }
 
+  @override
   void free(ffi.Pointer<ffi.NativeType> pointer) {
     throw 'Internal error: should not deallocate in Rust memory';
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_alloc')
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Size, ffi.Size)>(symbol: 'diplomat_alloc', isLeaf: true)
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Void> _diplomat_alloc(int len, int align);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_free')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size, ffi.Size)>(symbol: 'diplomat_free', isLeaf: true)
 // ignore: non_constant_identifier_names
 external int _diplomat_free(ffi.Pointer<ffi.Void> ptr, int len, int align);
@@ -93,13 +100,14 @@ final class _ResultOpaqueVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultOpaqueVoid.ok(ffi.Pointer<ffi.Opaque> val) {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = true;
     struct.union.ok = val;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultOpaqueVoid.err() {
     final struct = ffi.Struct.create<_ResultOpaqueVoid>();
     struct.isOk = false;
@@ -113,12 +121,13 @@ final class _ResultVoidVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  
+  // ignore: unused_element
   factory _ResultVoidVoid.ok() {
     final struct = ffi.Struct.create<_ResultVoidVoid>();
     struct.isOk = true;
     return struct;
   }
+  // ignore: unused_element
   factory _ResultVoidVoid.err() {
     final struct = ffi.Struct.create<_ResultVoidVoid>();
     struct.isOk = false;
@@ -192,22 +201,22 @@ final class _Write {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_buffer_write_create')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(symbol: 'diplomat_buffer_write_create', isLeaf: true)
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _diplomat_buffer_write_create(int len);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_buffer_write_len')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(symbol: 'diplomat_buffer_write_len', isLeaf: true)
 // ignore: non_constant_identifier_names
 external int _diplomat_buffer_write_len(ffi.Pointer<ffi.Opaque> ptr);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_buffer_write_get_bytes')
 @ffi.Native<ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<ffi.Opaque>)>(symbol: 'diplomat_buffer_write_get_bytes', isLeaf: true)
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Uint8> _diplomat_buffer_write_get_bytes(ffi.Pointer<ffi.Opaque> ptr);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_buffer_write_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(symbol: 'diplomat_buffer_write_destroy', isLeaf: true)
 // ignore: non_constant_identifier_names
 external void _diplomat_buffer_write_destroy(ffi.Pointer<ffi.Opaque> ptr);

@@ -32,10 +32,10 @@ final class {{type_name}}
 
   {{it}}? _current;
 
-  {# This is allowed to throw when called before moveNext or after unsuccessful moveNext()
-    and is what the stdlib does, e.g. https://github.com/dart-lang/sdk/blob/main/tools/dom/src/_ListIterators.dart#L31 -#}
+  @override
   {{it}} get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;
@@ -55,7 +55,7 @@ final class {{type_name}}
   {%- endif %}
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('{{destructor}}')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: '{{destructor}}')
 // ignore: non_constant_identifier_names
 external void _{{destructor}}(ffi.Pointer<ffi.Void> self);

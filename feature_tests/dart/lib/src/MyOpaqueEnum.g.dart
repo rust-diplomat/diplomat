@@ -33,17 +33,17 @@ final class MyOpaqueEnum implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyOpaqueEnum_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyOpaqueEnum_destroy')
 // ignore: non_constant_identifier_names
 external void _MyOpaqueEnum_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyOpaqueEnum_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'MyOpaqueEnum_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyOpaqueEnum_new();
 
-@meta.RecordUse()
+@_DiplomatFfiUse('MyOpaqueEnum_to_string')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyOpaqueEnum_to_string')
 // ignore: non_constant_identifier_names
 external void _MyOpaqueEnum_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);

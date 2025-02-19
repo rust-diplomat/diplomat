@@ -211,7 +211,7 @@ jobs:
     - name: Install Dart
       uses: dart-lang/setup-dart@v1
       with:
-        sdk: 3.4.0-204.0.dev
+        sdk: 3.7.0
 
     - name: Test Dart
       run: cargo make test-dart

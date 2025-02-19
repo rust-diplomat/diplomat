@@ -1,3 +1,9 @@
+class _DiplomatFfiUse extends meta.RecordUse {
+  final String symbol;
+
+  const _DiplomatFfiUse(@meta.mustBeConst this.symbol);
+}
+
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
 /// The recommended way to obtain a [Rune] is to create it from a 
@@ -28,17 +34,18 @@ final class _RustAlloc implements ffi.Allocator {
       return _diplomat_alloc(byteCount, alignment ?? 1).cast();
   }
 
+  @override
   void free(ffi.Pointer<ffi.NativeType> pointer) {
     throw 'Internal error: should not deallocate in Rust memory';
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_alloc')
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Size, ffi.Size)>(symbol: 'diplomat_alloc', isLeaf: true)
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Void> _diplomat_alloc(int len, int align);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('diplomat_free')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size, ffi.Size)>(symbol: 'diplomat_free', isLeaf: true)
 // ignore: non_constant_identifier_names
 external int _diplomat_free(ffi.Pointer<ffi.Void> ptr, int len, int align);

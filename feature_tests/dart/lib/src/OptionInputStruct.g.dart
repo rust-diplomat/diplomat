@@ -66,7 +66,7 @@ final class OptionInputStruct {
       ]);
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OptionInputStruct_default_ctor')
 @ffi.Native<_OptionInputStructFfi Function()>(isLeaf: true, symbol: 'OptionInputStruct_default_ctor')
 // ignore: non_constant_identifier_names
 external _OptionInputStructFfi _OptionInputStruct_default_ctor();

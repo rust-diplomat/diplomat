@@ -22,7 +22,7 @@ final class RenamedNested2 implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Nested2_destroy));
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_Nested2_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_Nested2_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_Nested2_destroy(ffi.Pointer<ffi.Void> self);

@@ -24,7 +24,8 @@ final class {{name}} extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 
-  {% if let Some((_, ty)) = ok %}
+  // ignore: unused_element
+  {%- if let Some((_, ty)) = ok %}
   factory {{name}}.ok({{ty}} val) {
     final struct = ffi.Struct.create<{{name}}>();
     struct.isOk = true;
@@ -38,6 +39,7 @@ final class {{name}} extends ffi.Struct {
     return struct;
   }
   {%- endif %}
+  // ignore: unused_element
   {%- if let Some((_, ty)) = err %}
   factory {{name}}.err({{ty}} val) {
     final struct = ffi.Struct.create<{{name}}>();

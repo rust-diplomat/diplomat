@@ -597,8 +597,10 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 "set {}({params})",
                 self.formatter.fmt_accessor_name(name, method)
             ),
-            Some(SpecialMethod::Stringifier) => "@core.override\n  String toString()".into(),
-            Some(SpecialMethod::Comparison) => format!("int compareTo({type_name} other)"),
+            Some(SpecialMethod::Stringifier) => "@override\n  String toString()".into(),
+            Some(SpecialMethod::Comparison) => {
+                format!("@override\n  int compareTo({type_name} other)")
+            }
             Some(SpecialMethod::Iterator) => format!("{return_ty} _iteratorNext({params})"),
             Some(SpecialMethod::Iterable) => format!("{return_ty} get iterator"),
             Some(SpecialMethod::Indexer) => format!("{return_ty} operator []({params})"),
@@ -1200,7 +1202,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U64)) => format!("this[i].clamp(0, {})", u64::MAX).into(),
                         hir::Slice::Strs(e) => {
                             self.gen_slice(&hir::Slice::Str(None, *e));
-                            format!("this[i].{}(alloc);", self.formatter.fmt_str_alloc_in(*e)).into()
+                            format!("this[i].{}(alloc)", self.formatter.fmt_str_alloc_in(*e)).into()
                         },
                         _ => unreachable!("unknown AST/HIR variant"),
                     }).into(),

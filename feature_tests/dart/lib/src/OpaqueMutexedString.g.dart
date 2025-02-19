@@ -74,52 +74,52 @@ final class OpaqueMutexedString implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueMutexedString_destroy')
 // ignore: non_constant_identifier_names
 external void _OpaqueMutexedString_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_from_usize')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(isLeaf: true, symbol: 'OpaqueMutexedString_from_usize')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_from_usize(int number);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_change')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'OpaqueMutexedString_change')
 // ignore: non_constant_identifier_names
 external void _OpaqueMutexedString_change(ffi.Pointer<ffi.Opaque> self, int number);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_borrow')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_borrow')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_borrow(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_borrow_other')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_borrow_other')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_borrow_other(ffi.Pointer<ffi.Opaque> other);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_borrow_self_or_other')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_borrow_self_or_other')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_borrow_self_or_other(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> other);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_get_len_and_add')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'OpaqueMutexedString_get_len_and_add')
 // ignore: non_constant_identifier_names
 external int _OpaqueMutexedString_get_len_and_add(ffi.Pointer<ffi.Opaque> self, int other);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_dummy_str')
 @ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_dummy_str')
 // ignore: non_constant_identifier_names
 external _SliceUtf8 _OpaqueMutexedString_dummy_str(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_wrapper')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueMutexedString_wrapper')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMutexedString_wrapper(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('OpaqueMutexedString_to_unsigned_from_unsigned')
 @ffi.Native<ffi.Uint16 Function(ffi.Pointer<ffi.Opaque>, ffi.Uint16)>(isLeaf: true, symbol: 'OpaqueMutexedString_to_unsigned_from_unsigned')
 // ignore: non_constant_identifier_names
 external int _OpaqueMutexedString_to_unsigned_from_unsigned(ffi.Pointer<ffi.Opaque> self, int input);

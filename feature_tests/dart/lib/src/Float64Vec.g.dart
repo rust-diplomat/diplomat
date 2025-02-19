@@ -79,7 +79,7 @@ final class Float64Vec implements ffi.Finalizable {
     _Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
   }
 
-  @core.override
+  @override
   String toString() {
     final write = _Write();
     _Float64Vec_to_string(_ffi, write._ffi);
@@ -102,72 +102,72 @@ final class Float64Vec implements ffi.Finalizable {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Float64Vec_destroy')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_bool')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceBool)>(isLeaf: true, symbol: 'Float64Vec_new_bool')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_bool(_SliceBool v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_i16')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceInt16)>(isLeaf: true, symbol: 'Float64Vec_new_i16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_i16(_SliceInt16 v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_u16')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint16)>(isLeaf: true, symbol: 'Float64Vec_new_u16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_u16(_SliceUint16 v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_isize')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceIsize)>(isLeaf: true, symbol: 'Float64Vec_new_isize')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_isize(_SliceIsize v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_usize')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUsize)>(isLeaf: true, symbol: 'Float64Vec_new_usize')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_usize(_SliceUsize v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_f64_be_bytes')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint8)>(isLeaf: true, symbol: 'Float64Vec_new_f64_be_bytes')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_f64_be_bytes(_SliceUint8 v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_new_from_owned')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceDouble)>(isLeaf: true, symbol: 'Float64Vec_new_from_owned')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_from_owned(_SliceDouble v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_as_slice')
 @ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_as_slice')
 // ignore: non_constant_identifier_names
 external _SliceDouble _Float64Vec_as_slice(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_fill_slice')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceDouble)>(isLeaf: true, symbol: 'Float64Vec_fill_slice')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_fill_slice(ffi.Pointer<ffi.Opaque> self, _SliceDouble v);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_set_value')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceDouble)>(isLeaf: true, symbol: 'Float64Vec_set_value')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_set_value(ffi.Pointer<ffi.Opaque> self, _SliceDouble newSlice);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_to_string')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_to_string')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_borrow')
 @ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_borrow')
 // ignore: non_constant_identifier_names
 external _SliceDouble _Float64Vec_borrow(ffi.Pointer<ffi.Opaque> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('Float64Vec_get')
 @ffi.Native<_ResultDoubleVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_get')
 // ignore: non_constant_identifier_names
 external _ResultDoubleVoid _Float64Vec_get(ffi.Pointer<ffi.Opaque> self, int i);

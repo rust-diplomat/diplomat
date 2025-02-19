@@ -41,14 +41,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  cli_config:
-    dependency: transitive
-    description:
-      name: cli_config
-      sha256: "65c7830649e1f8247660f1b783effb460255d6e2c1ac94eb823cf1f84e59b288"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.2"
   collection:
     dependency: transitive
     description:
@@ -149,10 +141,10 @@ packages:
     dependency: "direct dev"
     description:
       name: lints
-      sha256: cbf8d4b858bb0134ef3ef87841abdf8d63bfc255c266b7bf6b39daa1085c4290
+      sha256: c35bb79562d980e9a453fc715854e1ed39e24e7d0297a880ef54e17f9874a9d7
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "5.1.1"
   logging:
     dependency: transitive
     description:
@@ -189,10 +181,10 @@ packages:
     dependency: "direct main"
     description:
       name: native_assets_cli
-      sha256: "3119600043214157fb54f4ef05717a82a7858f35625fe767799c60f3039361c8"
+      sha256: "537e258b4ee782d81344414c722822014c9e5429f2f98a84a0c2e796f71f4798"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.2"
+    version: "0.11.0"
   node_preamble:
     dependency: transitive
     description:
@@ -409,13 +401,5 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
-  yaml_edit:
-    dependency: transitive
-    description:
-      name: yaml_edit
-      sha256: e9c1a3543d2da0db3e90270dbb1e4eebc985ee5e3ffe468d83224472b2194a5f
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.1"
 sdks:
-  dart: ">=3.4.0-204.0.dev <4.0.0"
+  dart: ">=3.7.0 <3.8.0"

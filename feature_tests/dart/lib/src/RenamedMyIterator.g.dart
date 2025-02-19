@@ -25,8 +25,10 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
 
   int? _current;
 
+  @override
   int get current => _current!;
 
+  @override
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;
@@ -41,12 +43,12 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_MyIterator_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIterator_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_MyIterator_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.RecordUse()
+@_DiplomatFfiUse('namespace_MyIterator_next')
 @ffi.Native<_ResultUint8Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterator_next')
 // ignore: non_constant_identifier_names
 external _ResultUint8Void _namespace_MyIterator_next(ffi.Pointer<ffi.Opaque> self);

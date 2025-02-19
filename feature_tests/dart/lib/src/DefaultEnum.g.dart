@@ -13,7 +13,7 @@ enum DefaultEnum {
   }
 }
 
-@meta.RecordUse()
+@_DiplomatFfiUse('DefaultEnum_new')
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'DefaultEnum_new')
 // ignore: non_constant_identifier_names
 external int _DefaultEnum_new();
