@@ -17,6 +17,8 @@ export class MyString {
 
     get str(): string;
 
+    static getStaticStr(): string;
+
     static stringTransform(foo: string): string;
 
     borrow(): string;

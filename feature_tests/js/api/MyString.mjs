@@ -125,6 +125,20 @@ export class MyString {
         }
     }
 
+    static getStaticStr() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+        
+        const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
+    
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
+        }
+        
+        finally {
+            diplomatReceive.free();
+        }
+    }
+
     static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         

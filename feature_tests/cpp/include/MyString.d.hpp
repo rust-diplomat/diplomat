@@ -32,6 +32,8 @@ public:
 
   inline std::string get_str() const;
 
+  inline static std::string_view get_static_str();
+
   inline static diplomat::result<std::string, diplomat::Utf8Error> string_transform(std::string_view foo);
 
   inline std::string_view borrow() const;

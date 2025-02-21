@@ -55,6 +55,11 @@ final class MyString implements ffi.Finalizable {
     return write.finalize();
   }
 
+  static String getStaticStr() {
+    final result = _MyString_get_static_str();
+    return result._toDart([]);
+  }
+
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
     final write = _Write();
@@ -104,6 +109,11 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 newStr)
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+
+@_DiplomatFfiUse('MyString_get_static_str')
+@ffi.Native<_SliceUtf8 Function()>(isLeaf: true, symbol: 'MyString_get_static_str')
+// ignore: non_constant_identifier_names
+external _SliceUtf8 _MyString_get_static_str();
 
 @_DiplomatFfiUse('MyString_string_transform')
 @ffi.Native<ffi.Void Function(_SliceUtf8, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')

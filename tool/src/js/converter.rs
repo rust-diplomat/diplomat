@@ -227,11 +227,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             }
             Type::Slice(slice) => {
                 let edges = match slice.lifetime() {
-                    Some(lt) => {
-                        let hir::MaybeStatic::NonStatic(lifetime) = lt else {
-                            panic!("'static not supported for JS backend");
-                        };
-                        format!("{}Edges", lifetime_environment.fmt_lifetime(lifetime))
+                    Some(hir::MaybeStatic::NonStatic(lt)) => {
+                        format!("{}Edges", lifetime_environment.fmt_lifetime(lt))
                     }
                     _ => "[]".into(),
                 };

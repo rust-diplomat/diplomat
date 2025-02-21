@@ -14,6 +14,7 @@ internal interface MyStringLib: Library {
     fun MyString_new_from_first(v: Slice): Pointer
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
     fun MyString_get_str(handle: Pointer, write: Pointer): Unit
+    fun MyString_get_static_str(): Slice
     fun MyString_string_transform(foo: Slice, write: Pointer): Unit
     fun MyString_borrow(handle: Pointer): Slice
 }
@@ -80,6 +81,12 @@ class MyString internal constructor (
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             vMem.forEach {if (it != null) it.close()}
             return returnOpaque
+        }
+        
+        fun getStaticStr(): String {
+            
+            val returnVal = lib.MyString_get_static_str();
+                return PrimitiveArrayTools.getUtf8(returnVal)
         }
         
         fun stringTransform(foo: String): String {
