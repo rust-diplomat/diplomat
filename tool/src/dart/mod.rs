@@ -274,10 +274,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 /// Get the name/initializer of the allocator needed for a particular type
                 fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
                     if let &hir::Type::Slice(slice) = field_ty {
-                        if let Some(lt) = slice.lifetime() {
-                            let MaybeStatic::NonStatic(lt) = lt else {
-                                panic!("'static not supported in Dart");
-                            };
+                        if let Some(MaybeStatic::NonStatic(lt)) = slice.lifetime() {
                             Some(format!(
                                 "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
                                 lt_name = ty.lifetimes.fmt_lifetime(lt),
@@ -1015,10 +1012,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
             Type::Slice(slice) => {
-                if let Some(lt) = slice.lifetime() {
-                    let MaybeStatic::NonStatic(lifetime) = lt else {
-                        panic!("'static not supported in Dart");
-                    };
+                if let Some(MaybeStatic::NonStatic(lifetime)) = slice.lifetime() {
                     format!(
                         "{var_name}._toDart({}Edges)",
                         lifetime_env.fmt_lifetime(lifetime)

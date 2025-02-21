@@ -29,6 +29,8 @@ namespace capi {
     
     void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
     
+    diplomat::capi::DiplomatStringView MyString_get_static_str(void);
+    
     void MyString_string_transform(diplomat::capi::DiplomatStringView foo, diplomat::capi::DiplomatWrite* write);
     
     diplomat::capi::DiplomatStringView MyString_borrow(const diplomat::capi::MyString* self);
@@ -74,6 +76,11 @@ inline std::string MyString::get_str() const {
   diplomat::capi::MyString_get_str(this->AsFFI(),
     &write);
   return output;
+}
+
+inline std::string_view MyString::get_static_str() {
+  auto result = diplomat::capi::MyString_get_static_str();
+  return std::string_view(result.data, result.len);
 }
 
 inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_transform(std::string_view foo) {

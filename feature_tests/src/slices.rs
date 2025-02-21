@@ -35,6 +35,10 @@ mod ffi {
             let _infallible = write!(write, "{}", self.0);
         }
 
+        pub fn get_static_str() -> &'static str {
+            "hello"
+        }
+
         pub fn string_transform(foo: &str, write: &mut DiplomatWrite) {
             let _ = foo;
             let _ = write;
