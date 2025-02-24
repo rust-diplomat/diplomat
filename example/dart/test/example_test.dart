@@ -18,8 +18,12 @@ void main() {
 
     final dataProvider = DataProvider.static_();
 
-    final fdf = FixedDecimalFormatter.tryNew(
-        locale, dataProvider, FixedDecimalFormatterOptions())!;
+    final fdf =
+        FixedDecimalFormatter.tryNew(
+          locale,
+          dataProvider,
+          FixedDecimalFormatterOptions(),
+        )!;
 
     expect(fdf.formatWrite(myDecimal), "১২.৩");
   });

@@ -30,7 +30,9 @@ void main() {
 
     var maybeStruct = OptionOpaque.acceptsOptionInputStruct(null);
     expect(maybeStruct, null);
-    maybeStruct = OptionOpaque.acceptsOptionInputStruct(new OptionInputStruct(a: 7, b: null, c: OptionEnum.bar));
+    maybeStruct = OptionOpaque.acceptsOptionInputStruct(
+      new OptionInputStruct(a: 7, b: null, c: OptionEnum.bar),
+    );
     expect(maybeStruct?.a, 7);
     expect(maybeStruct?.b, null);
     expect(maybeStruct?.c, OptionEnum.bar);
