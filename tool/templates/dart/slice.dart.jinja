@@ -24,9 +24,9 @@ final class {{slice_ty}} extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  {{dart_ty}} _toDart(core.List<Object> lifetimeEdges) {
+  {{dart_ty}} _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = {{ to_dart }};
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       {{ owned_free }}
     } else {
       {{ borrowed_free }}
