@@ -90,6 +90,7 @@ class _FinalizedArena {
   }
 }
 
+
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 
@@ -162,9 +163,9 @@ final class _SliceUtf8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  String _toDart(core.List<Object> lifetimeEdges) {
+  String _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = Utf8Decoder().convert(_data.asTypedList(_length));
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _diplomat_free(_data.cast(), _length, 1);
     } else {
       // Lifetime edges will be cleaned up

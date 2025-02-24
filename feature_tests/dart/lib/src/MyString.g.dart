@@ -58,7 +58,7 @@ final class MyString implements ffi.Finalizable {
 
   static String getStaticStr() {
     final result = _MyString_get_static_str();
-    return result._toDart([]);
+    return result._toDart([], isStatic: true);
   }
 
   static String stringTransform(String foo) {

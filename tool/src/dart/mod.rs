@@ -274,13 +274,17 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 /// Get the name/initializer of the allocator needed for a particular type
                 fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
                     if let &hir::Type::Slice(slice) = field_ty {
-                        if let Some(MaybeStatic::NonStatic(lt)) = slice.lifetime() {
-                            Some(format!(
-                                "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
-                                lt_name = ty.lifetimes.fmt_lifetime(lt),
-                            ))
-                        } else {
-                            None
+                        match slice.lifetime() {
+                            Some(MaybeStatic::NonStatic(lt)) => {
+                                Some(format!(
+                                    "{lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp",
+                                    lt_name = ty.lifetimes.fmt_lifetime(lt),
+                                ))
+                            }
+                            Some(MaybeStatic::Static) => {
+                                panic!("Dart does not support 'static in input structs")
+                            }
+                            _ => None
                         }
                     } else if let &hir::Type::Struct(..) = field_ty {
                         Some("temp".into())
@@ -1011,17 +1015,17 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => {
-                if let Some(MaybeStatic::NonStatic(lifetime)) = slice.lifetime() {
-                    format!(
-                        "{var_name}._toDart({}Edges)",
-                        lifetime_env.fmt_lifetime(lifetime)
-                    )
-                    .into()
-                } else {
-                    format!("{var_name}._toDart([])").into()
+            Type::Slice(slice) => match slice.lifetime() {
+                Some(MaybeStatic::NonStatic(lifetime)) => format!(
+                    "{var_name}._toDart({}Edges)",
+                    lifetime_env.fmt_lifetime(lifetime)
+                )
+                .into(),
+                Some(MaybeStatic::Static) => {
+                    format!("{var_name}._toDart([], isStatic: true)").into()
                 }
-            }
+                _ => format!("{var_name}._toDart([])").into(),
+            },
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_c_to_dart_for_type(
                     inner,

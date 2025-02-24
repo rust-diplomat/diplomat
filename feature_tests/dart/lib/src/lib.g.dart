@@ -130,6 +130,7 @@ class _FinalizedArena {
   }
 }
 
+
 final class _ResultCyclicStructAFfiVoidUnion extends ffi.Union {
   external _CyclicStructAFfi ok;
 
@@ -580,9 +581,9 @@ final class _SliceBool extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<bool> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<bool> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
@@ -630,9 +631,9 @@ final class _SliceDouble extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<double> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<double> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = _data.asTypedList(_length);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
@@ -677,9 +678,9 @@ final class _SliceInt16 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = _data.asTypedList(_length);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
@@ -724,9 +725,9 @@ final class _SliceIsize extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());
     } else {
       // Lifetime edges will be cleaned up
@@ -774,9 +775,9 @@ final class _SliceSliceUtf8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<core.String> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<core.String> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       // unsupported
     } else {
       // Lifetime edges will be cleaned up
@@ -824,9 +825,9 @@ final class _SliceUint16 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = _data.asTypedList(_length);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
@@ -874,9 +875,9 @@ final class _SliceUint8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = _data.asTypedList(_length);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));
     } else {
       _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
@@ -924,9 +925,9 @@ final class _SliceUsize extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  core.List<int> _toDart(core.List<Object> lifetimeEdges) {
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());
     } else {
       // Lifetime edges will be cleaned up
@@ -974,9 +975,9 @@ final class _SliceUtf16 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  String _toDart(core.List<Object> lifetimeEdges) {
+  String _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = core.String.fromCharCodes(_data.asTypedList(_length));
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _diplomat_free(_data.cast(), _length * 2, 2);
     } else {
       // Lifetime edges will be cleaned up
@@ -1021,9 +1022,9 @@ final class _SliceUtf8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   // ignore: unused_element
-  String _toDart(core.List<Object> lifetimeEdges) {
+  String _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
     final r = Utf8Decoder().convert(_data.asTypedList(_length));
-    if (lifetimeEdges.isEmpty) {
+    if (lifetimeEdges.isEmpty && !isStatic) {
       _diplomat_free(_data.cast(), _length, 1);
     } else {
       // Lifetime edges will be cleaned up
