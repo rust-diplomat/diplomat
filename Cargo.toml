@@ -12,7 +12,7 @@ members = [
 [workspace.package]
 
 # Individual subcrates may choose to temporarily switch to a different version
-version = "0.9.0"
+version = "0.10.0"
 # Applies to diplomat-core, diplomat, and diplomat-runtime
 # Diplomat-tool has no MSRV for now
 rust-version = "1.71"
@@ -28,7 +28,7 @@ categories = ["development-tools", "compilers"]
 keywords = ["ffi", "codegen"]
 
 [workspace.dependencies]
-diplomat = { version = "0.9.0", path = "macro", default-features = false }
-diplomat_core = { version = "0.9.0", path = "core", default-features = false }
-diplomat-runtime = { version = "0.9.0", path = "runtime", default-features = false }
-diplomat-tool = { version = "0.9.0", path = "tool", default-features = false }
+diplomat = { version = "0.10.0", path = "macro", default-features = false }
+diplomat_core = { version = "0.10.0", path = "core", default-features = false }
+diplomat-runtime = { version = "0.10.0", path = "runtime", default-features = false }
+diplomat-tool = { version = "0.10.0", path = "tool", default-features = false }
