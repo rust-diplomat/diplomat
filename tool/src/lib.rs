@@ -1,6 +1,8 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
+pub mod config;
+
 // Backends
 pub mod c;
 mod cpp;
@@ -10,6 +12,7 @@ mod js;
 mod kotlin;
 
 use colored::*;
+use config::{find_top_level_attr, merge_config, set_overrides, table_from_attrs, Config};
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -26,7 +29,7 @@ pub fn gen(
     target_language: &str,
     out_folder: &Path,
     docs_url_gen: &DocsUrlGenerator,
-    library_config: Option<&Path>,
+    config: Config,
     silent: bool,
 ) -> std::io::Result<()> {
     if !entry.exists() {
@@ -61,6 +64,27 @@ pub fn gen(
     };
 
     let module = syn_inline_mod::parse_and_inline_modules(entry);
+
+    // Config:
+    // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
+    let cfg = find_top_level_attr(module.items.clone());
+    let (attrs_config, errs) = table_from_attrs(cfg);
+
+    for e in errs {
+        eprintln!("Could not read {} attribute: {e}", entry.display());
+    }
+
+    // Now we convert the passed in config to a table (through some light gymnastic):
+    let mut base = toml::from_slice::<toml::value::Table>(&toml::to_vec(&config).unwrap())?;
+
+    merge_config(&mut base, attrs_config.clone());
+
+    let cfg_table = set_overrides(&base, target_language);
+
+    // Then some more gymnastics to go back:
+    let config =
+        toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(cfg_table)).unwrap())?;
+
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {
             eprintln!("Lowering error in {ctx}: {err}");
@@ -74,16 +98,10 @@ pub fn gen(
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
-            let conf = library_config.map(|c| {
-                let str = std::fs::read_to_string(c)
-                    .unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
-                toml::from_str::<demo_gen::DemoConfig>(&str)
-                    .unwrap_or_else(|err| panic!("Parsing error in {c:?}: {err}"))
-            });
-
             // If we don't already have an import path set up, generate our own imports:
-            if !conf
-                .clone()
+            if !config
+                .demo_gen_config
+                .as_ref()
                 .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
                 .unwrap_or(false)
             {
@@ -92,13 +110,13 @@ pub fn gen(
                     "js",
                     &out_folder.join("js"),
                     docs_url_gen,
-                    library_config,
+                    config.clone(),
                     silent,
                 )?;
             }
-            demo_gen::run(entry, &tcx, docs_url_gen, conf)
+            demo_gen::run(entry, &tcx, docs_url_gen, config.clone())
         }
-        "kotlin" => kotlin::run(&tcx, library_config, docs_url_gen),
+        "kotlin" => kotlin::run(&tcx, config.clone(), docs_url_gen),
         o => panic!("Unknown target: {}", o),
     };
 
