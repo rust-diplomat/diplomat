@@ -490,9 +490,9 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests nanobind somelib/src/cpp "-l diplomat-py-conf.toml" 
-mv nanobind/somelib/src/cpp/somelib_ext.cpp nanobind/somelib/src/somelib_ext.cpp
-rm -rf nanobind/somelib/src/cpp
+generate_generic feature_tests nanobind src/cpp "-l diplomat-py-conf.toml" 
+mv nanobind/src/cpp/somelib_ext.cpp nanobind/src/somelib_ext.cpp
+rm -rf nanobind/src/cpp
 '''
 # Build deps
 

@@ -3,9 +3,9 @@ SHELL := /bin/bash
 .PHONY: build test
 
 test:
-	python3 -m venv .venv
+	cd somelib
+	uv venv
 	source .venv/bin/activate; \
-	uv pip install . --reinstall \
+	uv pip install . --reinstall; \
 	uv pip install pytest; \
 	python3 -m pytest
-	
