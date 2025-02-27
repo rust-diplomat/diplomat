@@ -64,29 +64,29 @@ namespace capi {
 } // namespace
 
 inline int32_t CallbackWrapper::test_multi_arg_callback(std::function<int32_t(int32_t)> f, int32_t x) {
-  auto result = diplomat::capi::CallbackWrapper_test_multi_arg_callback({new decltype(f)(f), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
+  auto result = diplomat::capi::CallbackWrapper_test_multi_arg_callback({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
     x);
   return result;
 }
 
 inline int32_t CallbackWrapper::test_no_args(std::function<void()> h) {
-  auto result = diplomat::capi::CallbackWrapper_test_no_args({new decltype(h)(h), diplomat::fn_traits(h).c_run_callback, diplomat::fn_traits(h).c_delete});
+  auto result = diplomat::capi::CallbackWrapper_test_no_args({new decltype(h)(std::move(h)), diplomat::fn_traits(h).c_run_callback, diplomat::fn_traits(h).c_delete});
   return result;
 }
 
 inline int32_t CallbackWrapper::test_cb_with_struct(std::function<int32_t(CallbackTestingStruct)> f) {
-  auto result = diplomat::capi::CallbackWrapper_test_cb_with_struct({new decltype(f)(f), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+  auto result = diplomat::capi::CallbackWrapper_test_cb_with_struct({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
   return result;
 }
 
 inline int32_t CallbackWrapper::test_multiple_cb_args(std::function<int32_t()> f, std::function<int32_t(int32_t)> g) {
-  auto result = diplomat::capi::CallbackWrapper_test_multiple_cb_args({new decltype(f)(f), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
-    {new decltype(g)(g), diplomat::fn_traits(g).c_run_callback, diplomat::fn_traits(g).c_delete});
+  auto result = diplomat::capi::CallbackWrapper_test_multiple_cb_args({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
+    {new decltype(g)(std::move(g)), diplomat::fn_traits(g).c_run_callback, diplomat::fn_traits(g).c_delete});
   return result;
 }
 
 inline int32_t CallbackWrapper::test_str_cb_arg(std::function<int32_t(std::string_view)> f) {
-  auto result = diplomat::capi::CallbackWrapper_test_str_cb_arg({new decltype(f)(f), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+  auto result = diplomat::capi::CallbackWrapper_test_str_cb_arg({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
   return result;
 }
 

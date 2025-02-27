@@ -2,6 +2,8 @@
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/function.h>
+
 #include <../src/nb_internals.h>  // Required for shimming
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
@@ -164,9 +166,11 @@ NB_MODULE(somelib, somelib_mod)
 	}
     
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
+        .def(nb::init<>())
         .def_rw("x", &CallbackTestingStruct::x)
         .def_rw("y", &CallbackTestingStruct::y);
     nb::class_<CallbackWrapper>(somelib_mod, "CallbackWrapper")
+        .def(nb::init<>())
         .def_rw("cant_be_empty", &CallbackWrapper::cant_be_empty)
     	.def_static("test_multi_arg_callback", &CallbackWrapper::test_multi_arg_callback, "f"_a, "x"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
@@ -174,47 +178,58 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
     nb::class_<ImportedStruct>(somelib_mod, "ImportedStruct")
+        .def(nb::init<>())
         .def_rw("foo", &ImportedStruct::foo)
         .def_rw("count", &ImportedStruct::count);
     nb::class_<BorrowedFields>(somelib_mod, "BorrowedFields")
+        .def(nb::init<>())
         .def_rw("a", &BorrowedFields::a)
         .def_rw("b", &BorrowedFields::b)
         .def_rw("c", &BorrowedFields::c)
     	.def_static("from_bar_and_strings", &BorrowedFields::from_bar_and_strings, "bar"_a, "dstr16"_a, "utf8_str"_a);
     nb::class_<BorrowedFieldsReturning>(somelib_mod, "BorrowedFieldsReturning")
+        .def(nb::init<>())
         .def_rw("bytes", &BorrowedFieldsReturning::bytes);
     nb::class_<BorrowedFieldsWithBounds>(somelib_mod, "BorrowedFieldsWithBounds")
+        .def(nb::init<>())
         .def_rw("field_a", &BorrowedFieldsWithBounds::field_a)
         .def_rw("field_b", &BorrowedFieldsWithBounds::field_b)
         .def_rw("field_c", &BorrowedFieldsWithBounds::field_c)
     	.def_static("from_foo_and_strings", &BorrowedFieldsWithBounds::from_foo_and_strings, "foo"_a, "dstr16_x"_a, "utf8_str_z"_a);
     nb::class_<NestedBorrowedFields>(somelib_mod, "NestedBorrowedFields")
+        .def(nb::init<>())
         .def_rw("fields", &NestedBorrowedFields::fields)
         .def_rw("bounds", &NestedBorrowedFields::bounds)
         .def_rw("bounds2", &NestedBorrowedFields::bounds2)
     	.def_static("from_bar_and_foo_and_strings", &NestedBorrowedFields::from_bar_and_foo_and_strings, "bar"_a, "foo"_a, "dstr16_x"_a, "dstr16_z"_a, "utf8_str_y"_a, "utf8_str_z"_a);
     nb::class_<OptionInputStruct>(somelib_mod, "OptionInputStruct")
+        .def(nb::init<>())
         .def_rw("a", &OptionInputStruct::a)
         .def_rw("b", &OptionInputStruct::b)
         .def_rw("c", &OptionInputStruct::c);
     nb::class_<ErrorStruct>(somelib_mod, "ErrorStruct")
+        .def(nb::init<>())
         .def_rw("i", &ErrorStruct::i)
         .def_rw("j", &ErrorStruct::j);
     nb::class_<CyclicStructA>(somelib_mod, "CyclicStructA")
+        .def(nb::init<>())
         .def_rw("a", &CyclicStructA::a)
     	.def_static("get_b", &CyclicStructA::get_b)
     	.def("cyclic_out", &CyclicStructA::cyclic_out)
     	.def("double_cyclic_out", &CyclicStructA::double_cyclic_out, "cyclic_struct_a"_a)
     	.def("getter_out", &CyclicStructA::getter_out);
     nb::class_<CyclicStructB>(somelib_mod, "CyclicStructB")
+        .def(nb::init<>())
         .def_rw("field", &CyclicStructB::field)
     	.def_static("get_a", &CyclicStructB::get_a)
     	.def_static("get_a_option", &CyclicStructB::get_a_option);
     nb::class_<CyclicStructC>(somelib_mod, "CyclicStructC")
+        .def(nb::init<>())
         .def_rw("a", &CyclicStructC::a)
     	.def_static("takes_nested_parameters", &CyclicStructC::takes_nested_parameters, "c"_a)
     	.def("cyclic_out", &CyclicStructC::cyclic_out);
     nb::class_<MyStruct>(somelib_mod, "MyStruct")
+        .def(nb::init<>())
         .def_rw("a", &MyStruct::a)
         .def_rw("b", &MyStruct::b)
         .def_rw("c", &MyStruct::c)
@@ -226,8 +241,10 @@ NB_MODULE(somelib, somelib_mod)
     	.def("into_a", &MyStruct::into_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result);
-    nb::class_<MyZst>(somelib_mod, "MyZst");
+    nb::class_<MyZst>(somelib_mod, "MyZst")
+        .def(nb::init<>());
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
+        .def(nb::init<>())
         .def_prop_rw("a", 
             [](const OptionStruct& self) { return self.a.get(); },
             [](OptionStruct& self, std::unique_ptr<OptionOpaque>&& v) { self.a = std::move(v); }
@@ -488,33 +505,95 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("from_utf16", &Utf16Wrap::from_utf16, "input"_a)
     	.def("get_debug_str", &Utf16Wrap::get_debug_str)
     	.def("borrow_cont", &Utf16Wrap::borrow_cont);
-    nb::enum_<ns::RenamedAttrEnum::Value>(ns_mod, "RenamedAttrEnum")
-    	.value("A", ns::RenamedAttrEnum::A)
-    	.value("B", ns::RenamedAttrEnum::B)
-    	.value("Renamed", ns::RenamedAttrEnum::Renamed);
-    nb::enum_<UnimportedEnum::Value>(somelib_mod, "UnimportedEnum")
-    	.value("A", UnimportedEnum::A)
-    	.value("B", UnimportedEnum::B)
-    	.value("C", UnimportedEnum::C);
-    nb::enum_<OptionEnum::Value>(somelib_mod, "OptionEnum")
-    	.value("Foo", OptionEnum::Foo)
-    	.value("Bar", OptionEnum::Bar);
-    nb::enum_<ErrorEnum::Value>(somelib_mod, "ErrorEnum")
-    	.value("Foo", ErrorEnum::Foo)
-    	.value("Bar", ErrorEnum::Bar);
-    nb::enum_<ContiguousEnum::Value>(somelib_mod, "ContiguousEnum")
-    	.value("C", ContiguousEnum::C)
-    	.value("D", ContiguousEnum::D)
-    	.value("E", ContiguousEnum::E)
-    	.value("F", ContiguousEnum::F);
-    nb::enum_<DefaultEnum::Value>(somelib_mod, "DefaultEnum")
-    	.value("A", DefaultEnum::A)
-    	.value("B", DefaultEnum::B);
-    nb::enum_<MyEnum::Value>(somelib_mod, "MyEnum")
-    	.value("A", MyEnum::A)
-    	.value("B", MyEnum::B)
-    	.value("C", MyEnum::C)
-    	.value("D", MyEnum::D)
-    	.value("E", MyEnum::E)
-    	.value("F", MyEnum::F);
+    {
+    	nb::class_<ns::RenamedAttrEnum> e_class(ns_mod, "RenamedAttrEnum");
+    
+    	nb::enum_<ns::RenamedAttrEnum::Value>(e_class, "Value")
+    		.value("A", ns::RenamedAttrEnum::A)
+    		.value("B", ns::RenamedAttrEnum::B)
+    		.value("Renamed", ns::RenamedAttrEnum::Renamed)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<ns::RenamedAttrEnum::Value>());
+    }
+    
+    {
+    	nb::class_<UnimportedEnum> e_class(somelib_mod, "UnimportedEnum");
+    
+    	nb::enum_<UnimportedEnum::Value>(e_class, "Value")
+    		.value("A", UnimportedEnum::A)
+    		.value("B", UnimportedEnum::B)
+    		.value("C", UnimportedEnum::C)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<UnimportedEnum::Value>());
+    }
+    
+    {
+    	nb::class_<OptionEnum> e_class(somelib_mod, "OptionEnum");
+    
+    	nb::enum_<OptionEnum::Value>(e_class, "Value")
+    		.value("Foo", OptionEnum::Foo)
+    		.value("Bar", OptionEnum::Bar)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<OptionEnum::Value>());
+    }
+    
+    {
+    	nb::class_<ErrorEnum> e_class(somelib_mod, "ErrorEnum");
+    
+    	nb::enum_<ErrorEnum::Value>(e_class, "Value")
+    		.value("Foo", ErrorEnum::Foo)
+    		.value("Bar", ErrorEnum::Bar)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<ErrorEnum::Value>());
+    }
+    
+    {
+    	nb::class_<ContiguousEnum> e_class(somelib_mod, "ContiguousEnum");
+    
+    	nb::enum_<ContiguousEnum::Value>(e_class, "Value")
+    		.value("C", ContiguousEnum::C)
+    		.value("D", ContiguousEnum::D)
+    		.value("E", ContiguousEnum::E)
+    		.value("F", ContiguousEnum::F)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<ContiguousEnum::Value>());
+    }
+    
+    {
+    	nb::class_<DefaultEnum> e_class(somelib_mod, "DefaultEnum");
+    
+    	nb::enum_<DefaultEnum::Value>(e_class, "Value")
+    		.value("A", DefaultEnum::A)
+    		.value("B", DefaultEnum::B)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<DefaultEnum::Value>());
+    }
+    
+    {
+    	nb::class_<MyEnum> e_class(somelib_mod, "MyEnum");
+    
+    	nb::enum_<MyEnum::Value>(e_class, "Value")
+    		.value("A", MyEnum::A)
+    		.value("B", MyEnum::B)
+    		.value("C", MyEnum::C)
+    		.value("D", MyEnum::D)
+    		.value("E", MyEnum::E)
+    		.value("F", MyEnum::F)
+    		.export_values();
+    
+    	e_class
+    		.def(nb::init_implicit<MyEnum::Value>());
+    }
 }
