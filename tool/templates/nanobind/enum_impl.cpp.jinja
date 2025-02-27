@@ -1,6 +1,14 @@
 {% include "module_impl.cpp.jinja" %}
-nb::enum_<{{type_name}}::Value>({{module}}_mod, "{{type_name}}")
-	{%- for value in values %}
-	.value("{{value}}", {{type_name}}::{{value}})
-	{%- endfor -%};
-	
+{
+	nb::class_<{{type_name}}> e_class({{module}}_mod, "{{type_name_unnamespaced}}");
+
+	nb::enum_<{{type_name}}::Value>(e_class, "Value")
+		{%- for value in values %}
+		.value("{{value}}", {{type_name}}::{{value}})
+		{%- endfor %}
+		.export_values();
+
+	e_class
+		.def(nb::init_implicit<{{type_name}}::Value>());
+}
+

@@ -14,7 +14,7 @@ use std::collections::HashSet;
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedType<'a> {
     var_name: Cow<'a, str>,
-    _type_name: Cow<'a, str>,
+    type_name: Cow<'a, str>,
 }
 
 /// Everything needed for rendering a method.
@@ -87,6 +87,8 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
     /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
+
         let ctype = self.formatter.fmt_c_type_name(id);
 
         let values = ty
@@ -105,6 +107,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             values: Vec<Cow<'a, str>>,
             module: &'a str,
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+            type_name_unnamespaced: &'a str,
         }
 
         ImplTemplate {
@@ -115,6 +118,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             values: values,
             module: &self.get_module(id),
             modules: self.get_module_defs(id, None),
+            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.binding)
         .unwrap();
@@ -285,7 +289,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
 
         NamedType {
             var_name,
-            _type_name: type_name,
+            type_name,
         }
     }
 

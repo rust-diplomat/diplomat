@@ -1,6 +1,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string_view.h>
+#include <nanobind/stl/optional.h>
 #include <../src/nb_internals.h>  // Required for shimming
 
 
@@ -49,6 +50,73 @@ void diplomat_tp_dealloc(PyObject *self)
 }
 
 struct _Dummy {};
+
+// Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
+// Remove this block when upstream support is added
+namespace nanobind::detail
+{
+    template <>
+    struct type_caster<char32_t>
+    {
+        using Value = char32_t;
+        Value value;
+        Py_ssize_t size;
+        static constexpr auto Name = const_name("str");
+        template <typename T>
+        using Cast = char32_t;
+
+        bool from_python(handle src, uint8_t, cleanup_list *) noexcept
+        {
+            value = PyUnicode_ReadChar(src.ptr(), 0);
+            if (!value)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            size = PyUnicode_GetLength(src.ptr());
+            return true;
+        }
+
+        static handle from_cpp(const char32_t *value, rv_policy,
+                               cleanup_list *) noexcept
+        {
+            if (value == nullptr)
+            {
+                PyObject *result = Py_None;
+                Py_INCREF(result);
+                return result;
+            }
+            size_t len = 0;
+            const char32_t *str = value;
+            while (*str != U'\0')
+            {
+                len++;
+                str++;
+            }
+            return PyUnicode_DecodeUTF32(reinterpret_cast<const char *>(value), len * 4, nullptr, nullptr);
+        }
+
+        static handle from_cpp(char32_t value, rv_policy, cleanup_list *) noexcept
+        {
+            return PyUnicode_DecodeUTF32(reinterpret_cast<const char *>(&value), 4, nullptr, nullptr);
+        }
+
+        template <typename T_>
+        NB_INLINE bool can_cast() const noexcept
+        {
+            return (value && size == 1);
+        }
+
+        explicit operator char32_t()
+        {
+            if (can_cast<char32_t>())
+                return value;
+            else
+                throw next_overload();
+        }
+    };
+}
+
 
 NB_MODULE({{module_name}}, {{module_name}}_mod)
 {

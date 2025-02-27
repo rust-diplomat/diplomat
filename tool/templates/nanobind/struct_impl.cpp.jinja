@@ -1,7 +1,15 @@
 {% include "module_impl.cpp.jinja" %}
 nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
+    .def(nb::init<>())
 {%- for f in fields %}
-    .def_ro("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
+    {%- if !f.type_name.starts_with("std::unique_ptr") %}
+    .def_rw("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
+    {%- else %}
+    .def_prop_rw("{{f.var_name}}", 
+        [](const {{type_name}}& self) { return self.{{f.var_name}}.get(); },
+        []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.var_name}} = std::move(v); }
+    )
+    {%- endif %}
 {%- endfor %}
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
