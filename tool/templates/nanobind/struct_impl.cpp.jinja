@@ -1,7 +1,21 @@
 {% include "module_impl.cpp.jinja" %}
 nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     .def(nb::init<>())
-{%- for f in fields %}
+    {%- if fields.len() > 0 -%}
+    .def(nb::init<
+    {%- for f in fields -%}
+    {% if !loop.first %}, {% endif %}{{f.type_name}}
+    {%- endfor -%}
+    >(), 
+    {%- for f in fields -%}
+    {%- if !loop.first %}, {% endif %} "{{f.var_name}}"_a
+    {%- if !f.type_name.starts_with("std::unique_ptr") -%}
+    .none()
+    {%- endif -%}
+    {%- endfor -%}
+    )
+    {%- endif -%}
+    {%- for f in fields %}
     {%- if !f.type_name.starts_with("std::unique_ptr") %}
     .def_rw("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
     {%- else %}
@@ -9,8 +23,8 @@ nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
         [](const {{type_name}}& self) { return self.{{f.var_name}}.get(); },
         []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.var_name}} = std::move(v); }
     )
-    {%- endif %}
-{%- endfor %}
+    {%- endif -%}
+    {%- endfor %}
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
-{%- endfor %};
+{%- endfor %};nano

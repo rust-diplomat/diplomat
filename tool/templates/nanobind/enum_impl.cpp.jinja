@@ -9,6 +9,10 @@
 		.export_values();
 
 	e_class
-		.def(nb::init_implicit<{{type_name}}::Value>());
+		.def(nb::init_implicit<{{type_name}}::Value>())
+		.def(nb::self == {{type_name}}::Value())
+		.def("__repr__", [](const {{type_name}}& self){
+			return nb::cast("{{type_name}}.") + nb::cast({{type_name}}::Value(self)).attr("__repr__")();
+		});
 }
 

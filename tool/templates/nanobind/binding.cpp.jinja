@@ -1,9 +1,9 @@
 #include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
-
 #include <../src/nb_internals.h>  // Required for shimming
 
 {%- for include in includes %}
@@ -24,30 +24,29 @@ static void (*nb_tp_dealloc)(void *) = nullptr;
 
 void diplomat_tp_dealloc(PyObject *self)
 {
-	using namespace nb::detail;
-	PyTypeObject *tp = Py_TYPE(self);
+    using namespace nb::detail;
+    PyTypeObject *tp = Py_TYPE(self);
     const type_data *t = nb_type_data(tp);
 
-	nb_inst *inst = (nb_inst *)self;
-	if (inst->destruct)
+    nb_inst *inst = (nb_inst *)self;
+    void *p = inst_ptr(inst);
+    if (inst->destruct)
     {
-		inst->destruct = false;
+        inst->destruct = false;
         check(t->flags & (uint32_t)type_flags::is_destructible,
               "nanobind::detail::inst_dealloc(\"%s\"): attempted to call "
               "the destructor of a non-destructible type!",
               t->name);
-    	void *p = inst_ptr(inst);
         if (t->flags & (uint32_t)type_flags::has_destruct)
             t->destruct(p);
     }
-
-	if (inst->cpp_delete)
-	{
-		inst->cpp_delete = false;
-		auto tp_free = (freefunc)(PyType_GetSlot(tp, Py_tp_free));
-		(*tp_free)(self);
-	}
-	(*nb_tp_dealloc)(self);
+    if (inst->cpp_delete)
+    {
+        inst->cpp_delete = false;
+        auto tp_free = (freefunc)(PyType_GetSlot(tp, Py_tp_free));
+        (*tp_free)(p);
+    }
+    (*nb_tp_dealloc)(self);
 }
 
 struct _Dummy {};
