@@ -115,6 +115,40 @@ namespace nanobind::detail
                 throw next_overload();
         }
     };
+
+    template <typename T, typename E>
+	struct type_caster<diplomat::result<T, E>>
+	{
+		using Value = diplomat::result<T, E>;
+		Value value;
+		Py_ssize_t size;
+		using Caster = make_caster<T>;
+		static constexpr auto Name = Caster::Name;
+
+
+		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+		{
+			if (value.is_ok()) {
+				return Caster::from_cpp(forward_like_<T>(std::move(value).ok().value()), p, cl);
+			}
+
+			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+			if (errorPyV.is_valid())
+			{
+				PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+			}
+			else
+			{
+				char error_msg[512];
+				snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+				PyErr_SetString(PyExc_Exception, error_msg);
+			}
+
+            return nullptr;
+		}
+
+		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+	};
 }
 
 
@@ -124,6 +158,12 @@ NB_MODULE({{module_name}}, {{module_name}}_mod)
 		nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
 		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
 	}
+
+    nb::class_<std::monostate>(somelib_mod, "monostate")
+		.def("__repr__", [](const std::monostate &)
+			 { return "()"; })
+		.def("__str__", [](const std::monostate &)
+			 { return "()"; });
 
 	{%- for line in body.lines() %}
     {{ line }}

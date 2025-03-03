@@ -25,6 +25,7 @@ nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     )
     {%- endif -%}
     {%- endfor %}
+    
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
-{%- endfor %};nano
+{%- endfor %};

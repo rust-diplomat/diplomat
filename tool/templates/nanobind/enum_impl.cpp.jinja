@@ -2,7 +2,7 @@
 {
 	nb::class_<{{type_name}}> e_class({{module}}_mod, "{{type_name_unnamespaced}}");
 
-	nb::enum_<{{type_name}}::Value>(e_class, "Value")
+	nb::enum_<{{type_name}}::Value>(e_class, "{{type_name_unnamespaced}}")
 		{%- for value in values %}
 		.value("{{value}}", {{type_name}}::{{value}})
 		{%- endfor %}
@@ -12,7 +12,7 @@
 		.def(nb::init_implicit<{{type_name}}::Value>())
 		.def(nb::self == {{type_name}}::Value())
 		.def("__repr__", [](const {{type_name}}& self){
-			return nb::cast("{{type_name}}.") + nb::cast({{type_name}}::Value(self)).attr("__repr__")();
+			return nb::str(nb::cast({{type_name}}::Value(self)));
 		});
 }
 

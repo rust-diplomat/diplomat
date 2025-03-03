@@ -154,6 +154,40 @@ namespace nanobind::detail
                 throw next_overload();
         }
     };
+
+    template <typename T, typename E>
+	struct type_caster<diplomat::result<T, E>>
+	{
+		using Value = diplomat::result<T, E>;
+		Value value;
+		Py_ssize_t size;
+		using Caster = make_caster<T>;
+		static constexpr auto Name = Caster::Name;
+
+
+		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+		{
+			if (value.is_ok()) {
+				return Caster::from_cpp(forward_like_<T>(std::move(value).ok().value()), p, cl);
+			}
+
+			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+			if (errorPyV.is_valid())
+			{
+				PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+			}
+			else
+			{
+				char error_msg[512];
+				snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+				PyErr_SetString(PyExc_Exception, error_msg);
+			}
+
+            return nullptr;
+		}
+
+		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+	};
 }
 
 
@@ -163,6 +197,12 @@ NB_MODULE(somelib, somelib_mod)
 		nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
 		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
 	}
+
+    nb::class_<std::monostate>(somelib_mod, "monostate")
+		.def("__repr__", [](const std::monostate &)
+			 { return "()"; })
+		.def("__str__", [](const std::monostate &)
+			 { return "()"; });
     
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
         .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
@@ -507,7 +547,7 @@ NB_MODULE(somelib, somelib_mod)
     {
     	nb::class_<ns::RenamedAttrEnum> e_class(ns_mod, "RenamedAttrEnum");
     
-    	nb::enum_<ns::RenamedAttrEnum::Value>(e_class, "Value")
+    	nb::enum_<ns::RenamedAttrEnum::Value>(e_class, "RenamedAttrEnum")
     		.value("A", ns::RenamedAttrEnum::A)
     		.value("B", ns::RenamedAttrEnum::B)
     		.value("Renamed", ns::RenamedAttrEnum::Renamed)
@@ -517,14 +557,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<ns::RenamedAttrEnum::Value>())
     		.def(nb::self == ns::RenamedAttrEnum::Value())
     		.def("__repr__", [](const ns::RenamedAttrEnum& self){
-    			return nb::cast("ns::RenamedAttrEnum.") + nb::cast(ns::RenamedAttrEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(ns::RenamedAttrEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<UnimportedEnum> e_class(somelib_mod, "UnimportedEnum");
     
-    	nb::enum_<UnimportedEnum::Value>(e_class, "Value")
+    	nb::enum_<UnimportedEnum::Value>(e_class, "UnimportedEnum")
     		.value("A", UnimportedEnum::A)
     		.value("B", UnimportedEnum::B)
     		.value("C", UnimportedEnum::C)
@@ -534,14 +574,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<UnimportedEnum::Value>())
     		.def(nb::self == UnimportedEnum::Value())
     		.def("__repr__", [](const UnimportedEnum& self){
-    			return nb::cast("UnimportedEnum.") + nb::cast(UnimportedEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(UnimportedEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<OptionEnum> e_class(somelib_mod, "OptionEnum");
     
-    	nb::enum_<OptionEnum::Value>(e_class, "Value")
+    	nb::enum_<OptionEnum::Value>(e_class, "OptionEnum")
     		.value("Foo", OptionEnum::Foo)
     		.value("Bar", OptionEnum::Bar)
     		.export_values();
@@ -550,14 +590,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<OptionEnum::Value>())
     		.def(nb::self == OptionEnum::Value())
     		.def("__repr__", [](const OptionEnum& self){
-    			return nb::cast("OptionEnum.") + nb::cast(OptionEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(OptionEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<ErrorEnum> e_class(somelib_mod, "ErrorEnum");
     
-    	nb::enum_<ErrorEnum::Value>(e_class, "Value")
+    	nb::enum_<ErrorEnum::Value>(e_class, "ErrorEnum")
     		.value("Foo", ErrorEnum::Foo)
     		.value("Bar", ErrorEnum::Bar)
     		.export_values();
@@ -566,14 +606,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<ErrorEnum::Value>())
     		.def(nb::self == ErrorEnum::Value())
     		.def("__repr__", [](const ErrorEnum& self){
-    			return nb::cast("ErrorEnum.") + nb::cast(ErrorEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(ErrorEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<ContiguousEnum> e_class(somelib_mod, "ContiguousEnum");
     
-    	nb::enum_<ContiguousEnum::Value>(e_class, "Value")
+    	nb::enum_<ContiguousEnum::Value>(e_class, "ContiguousEnum")
     		.value("C", ContiguousEnum::C)
     		.value("D", ContiguousEnum::D)
     		.value("E", ContiguousEnum::E)
@@ -584,14 +624,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<ContiguousEnum::Value>())
     		.def(nb::self == ContiguousEnum::Value())
     		.def("__repr__", [](const ContiguousEnum& self){
-    			return nb::cast("ContiguousEnum.") + nb::cast(ContiguousEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(ContiguousEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<DefaultEnum> e_class(somelib_mod, "DefaultEnum");
     
-    	nb::enum_<DefaultEnum::Value>(e_class, "Value")
+    	nb::enum_<DefaultEnum::Value>(e_class, "DefaultEnum")
     		.value("A", DefaultEnum::A)
     		.value("B", DefaultEnum::B)
     		.export_values();
@@ -600,14 +640,14 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<DefaultEnum::Value>())
     		.def(nb::self == DefaultEnum::Value())
     		.def("__repr__", [](const DefaultEnum& self){
-    			return nb::cast("DefaultEnum.") + nb::cast(DefaultEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(DefaultEnum::Value(self)));
     		});
     }
     
     {
     	nb::class_<MyEnum> e_class(somelib_mod, "MyEnum");
     
-    	nb::enum_<MyEnum::Value>(e_class, "Value")
+    	nb::enum_<MyEnum::Value>(e_class, "MyEnum")
     		.value("A", MyEnum::A)
     		.value("B", MyEnum::B)
     		.value("C", MyEnum::C)
@@ -620,7 +660,7 @@ NB_MODULE(somelib, somelib_mod)
     		.def(nb::init_implicit<MyEnum::Value>())
     		.def(nb::self == MyEnum::Value())
     		.def("__repr__", [](const MyEnum& self){
-    			return nb::cast("MyEnum.") + nb::cast(MyEnum::Value(self)).attr("__repr__")();
+    			return nb::str(nb::cast(MyEnum::Value(self)));
     		});
     }
 }
