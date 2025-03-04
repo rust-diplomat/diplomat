@@ -465,20 +465,7 @@ pub mod test {
     use std::borrow::Cow;
 
     pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
-
-        let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
-        attr_validator.support = super::super::attr_support();
-
-        match TypeContext::from_syn(&file, attr_validator) {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
-                }
-                panic!("Failed to create context")
-            }
-        }
+        crate::tests::new_tcx("kotlin_test", super::super::attr_support(), tk_stream)
     }
 
     #[test]
