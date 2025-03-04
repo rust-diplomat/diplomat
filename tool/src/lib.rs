@@ -9,6 +9,9 @@ mod demo_gen;
 mod js;
 mod kotlin;
 
+#[cfg(test)]
+mod tests;
+
 use colored::*;
 use core::mem;
 use core::panic;

@@ -225,3 +225,66 @@ pub(crate) fn run<'tcx>(
 
     (files, errors)
 }
+
+#[cfg(test)]
+mod test {
+    use diplomat_core::hir;
+    use quote::quote;
+
+    use proc_macro2::TokenStream;
+
+    pub fn new_tcx(tk_stream: TokenStream) -> hir::TypeContext {
+        crate::tests::new_tcx("js_test", super::attr_support(), tk_stream)
+    }
+
+    #[test]
+    fn test_options_in_struct() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatOption;
+
+                pub struct Foo {
+                    pub value: u32
+                }
+
+                pub struct Bar {
+                    pub value: DiplomatOption<Foo>,
+                }
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+        let (_type_id, typedef) = tcx
+            .all_types()
+            .find(|(_type_id, typedef)| typedef.name().as_str() == "Bar")
+            .expect("No struct `Bar` found while parsing the token stream");
+
+        let imports = std::cell::RefCell::new(super::gen::Imports {
+            js: std::collections::BTreeSet::new(),
+            ts: std::collections::BTreeSet::new(),
+        });
+        let error_store = crate::ErrorStore::default();
+        let type_name = typedef.name().as_str();
+        let docs_urls = std::collections::HashMap::new();
+        let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+        let formatter = super::formatter::JSFormatter::new(&tcx, &docs_generator);
+        let ty_gen_cx = super::TyGenContext {
+            tcx: &tcx,
+            type_name: type_name.into(),
+            formatter: &formatter,
+            errors: &error_store,
+            imports,
+        };
+
+        if let hir::TypeDef::Struct(struct_def) = typedef {
+            // test that we can generate the fields and not panic
+            let (_, _) = ty_gen_cx.generate_fields(struct_def);
+        } else {
+            panic!(
+                "Expected a Struct for Bar, got something else: {:?}",
+                typedef
+            );
+        }
+    }
+}
