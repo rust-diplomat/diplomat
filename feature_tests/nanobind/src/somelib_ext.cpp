@@ -443,6 +443,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_in_err", &ResultOpaque::new_in_err, "i"_a)
     	.def_static("new_int", &ResultOpaque::new_int, "i"_a)
     	.def_static("new_in_enum_err", &ResultOpaque::new_in_enum_err, "i"_a)
+    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a)
     	.def("assert_integer", &ResultOpaque::assert_integer, "i"_a);
     
     PyType_Slot RefList_slots[] = {
@@ -492,6 +493,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_from_first", &MyString::new_from_first, "v"_a)
     	.def("set_str", &MyString::set_str, "new_str"_a)
     	.def("get_str", &MyString::get_str)
+    	.def_static("get_static_str", &MyString::get_static_str)
     	.def_static("string_transform", &MyString::string_transform, "foo"_a)
     	.def("borrow", &MyString::borrow);
     

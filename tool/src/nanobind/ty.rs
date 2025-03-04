@@ -5,8 +5,8 @@ use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, EnumVariant, Mutability, OpaqueOwner, ReturnType, StructPathLike, SuccessType,
-    TyPosition, Type, TypeId,
+    self, Mutability, OpaqueOwner, ReturnType, StructPathLike, SuccessType, TyPosition, Type,
+    TypeId,
 };
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -50,18 +50,18 @@ pub(super) struct TyGenContext<'cx, 'tcx> {
     pub generating_struct_fields: bool,
 }
 
-impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
+impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     /// Checks for & outputs a list of modules with their parents that still need to be defined for this type
     pub fn get_module_defs(
         &mut self,
         id: TypeId,
         _docstring: Option<&str>,
     ) -> Vec<(Cow<'tcx, str>, Cow<'tcx, str>)> {
-        let mut namespaces = self.formatter.fmt_namespaces(id);
+        let namespaces = self.formatter.fmt_namespaces(id);
         let mut modules: Vec<(Cow<'_, str>, Cow<'_, str>)> = Default::default();
 
         let mut parent = self.binding.module_name.clone();
-        while let Some(module) = namespaces.next() {
+        for module in namespaces {
             if self.submodules.contains(module) {
                 continue;
             }
@@ -115,7 +115,7 @@ impl<'ccx, 'tcx: 'ccx, 'bind> TyGenContext<'ccx, 'tcx> {
             _fmt: self.formatter,
             type_name: &type_name,
             _ctype: &ctype,
-            values: values,
+            values,
             module: &self.get_module(id),
             modules: self.get_module_defs(id, None),
             type_name_unnamespaced: &type_name_unnamespaced,
