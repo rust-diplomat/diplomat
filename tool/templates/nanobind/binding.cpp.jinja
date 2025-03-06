@@ -1,0 +1,171 @@
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/string_view.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/function.h>
+#include <../src/nb_internals.h>  // Required for shimming
+
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+
+namespace nb = nanobind;
+using namespace nb::literals;
+
+// Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
+// On module init, the dummy type will have the normal nanobind inst_dealloc function in the tp_dealloc slot, so we
+// pull it out, store it here, and then call it in the tp_dealloc function we are shimming in to all our types.
+// Our custom tp_dealloc function will call the tp_free function instead of `delete`, allowing us effectively to override
+// the delete operator.
+// See https://nanobind.readthedocs.io/en/latest/lowlevel.html#customizing-type-creation and
+// https://github.com/wjakob/nanobind/discussions/932
+static void (*nb_tp_dealloc)(void *) = nullptr;
+
+void diplomat_tp_dealloc(PyObject *self)
+{
+    using namespace nb::detail;
+    PyTypeObject *tp = Py_TYPE(self);
+    const type_data *t = nb_type_data(tp);
+
+    nb_inst *inst = (nb_inst *)self;
+    void *p = inst_ptr(inst);
+    if (inst->destruct)
+    {
+        inst->destruct = false;
+        check(t->flags & (uint32_t)type_flags::is_destructible,
+              "nanobind::detail::inst_dealloc(\"%s\"): attempted to call "
+              "the destructor of a non-destructible type!",
+              t->name);
+        if (t->flags & (uint32_t)type_flags::has_destruct)
+            t->destruct(p);
+    }
+    if (inst->cpp_delete)
+    {
+        inst->cpp_delete = false;
+        auto tp_free = (freefunc)(PyType_GetSlot(tp, Py_tp_free));
+        (*tp_free)(p);
+    }
+    (*nb_tp_dealloc)(self);
+}
+
+struct _Dummy {};
+
+// Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
+// Remove this block when upstream support is added
+namespace nanobind::detail
+{
+    template <>
+    struct type_caster<char32_t>
+    {
+        using Value = char32_t;
+        Value value;
+        Py_ssize_t size;
+        static constexpr auto Name = const_name("str");
+        template <typename T>
+        using Cast = char32_t;
+
+        bool from_python(handle src, uint8_t, cleanup_list *) noexcept
+        {
+            value = PyUnicode_ReadChar(src.ptr(), 0);
+            if (!value)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            size = PyUnicode_GetLength(src.ptr());
+            return true;
+        }
+
+        static handle from_cpp(const char32_t *value, rv_policy,
+                               cleanup_list *) noexcept
+        {
+            if (value == nullptr)
+            {
+                PyObject *result = Py_None;
+                Py_INCREF(result);
+                return result;
+            }
+            size_t len = 0;
+            const char32_t *str = value;
+            while (*str != U'\0')
+            {
+                len++;
+                str++;
+            }
+            return PyUnicode_DecodeUTF32(reinterpret_cast<const char *>(value), len * 4, nullptr, nullptr);
+        }
+
+        static handle from_cpp(char32_t value, rv_policy, cleanup_list *) noexcept
+        {
+            return PyUnicode_DecodeUTF32(reinterpret_cast<const char *>(&value), 4, nullptr, nullptr);
+        }
+
+        template <typename T_>
+        NB_INLINE bool can_cast() const noexcept
+        {
+            return (value && size == 1);
+        }
+
+        explicit operator char32_t()
+        {
+            if (can_cast<char32_t>())
+                return value;
+            else
+                throw next_overload();
+        }
+    };
+
+    template <typename T, typename E>
+	struct type_caster<diplomat::result<T, E>>
+	{
+		using Value = diplomat::result<T, E>;
+		Value value;
+		Py_ssize_t size;
+		using Caster = make_caster<T>;
+		static constexpr auto Name = Caster::Name;
+
+
+		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+		{
+			if (value.is_ok()) {
+				return Caster::from_cpp(forward_like_<T>(std::move(value).ok().value()), p, cl);
+			}
+
+			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+			if (errorPyV.is_valid())
+			{
+				PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+			}
+			else
+			{
+				char error_msg[512];
+				snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+				PyErr_SetString(PyExc_Exception, error_msg);
+			}
+
+            return nullptr;
+		}
+
+		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+	};
+}
+
+
+NB_MODULE({{module_name}}, {{module_name}}_mod)
+{
+	{
+		nb::class_<_Dummy> dummy({{module_name}}_mod, "__dummy__");
+		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
+	}
+
+    nb::class_<std::monostate>({{module_name}}_mod, "monostate")
+		.def("__repr__", [](const std::monostate &)
+			 { return "()"; })
+		.def("__str__", [](const std::monostate &)
+			 { return "()"; });
+
+	{%- for line in body.lines() %}
+    {{ line }}
+	{%- endfor %}
+}
