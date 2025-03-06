@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, MyStructContainingAnOption, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = new MyStruct();
@@ -24,6 +24,28 @@ test("Test struct creation", t => {
         g: MyEnum.B
     });
     t.is(s.intoA(), 17);
+});
+
+test("Verify invariants of struct containing null options (struct & enum)", t => {
+    const s = new MyStructContainingAnOption();
+    t.is(s.a, null);
+    t.is(s.b, null);
+});
+
+test("Verify invariants of struct containing non-null options (struct & enum)", t => {
+    const s = MyStructContainingAnOption.filled();
+
+    t.not(s.a, null);
+    t.is(s.a.a, 17);
+    t.is(s.a.b, true);
+    t.is(s.a.c, 209);
+    t.is(s.a.d, 1234n);
+    t.is(s.a.e, 5991);
+    t.is(s.a.f, '餐'.codePointAt(0));
+    t.is(s.a.g, MyEnum.B);
+    t.is(s.a.intoA(), 17);
+
+    t.not(s.b, null);
 });
 
 test("Function Takes Nested Struct Parameters", t => {

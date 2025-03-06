@@ -58,6 +58,15 @@ pub mod ffi {
         g: MyEnum,
     }
 
+    // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
+    // `diplomat-tool js` was crashing when trying to process options-in-structs
+    // Not supported in kotlin
+    #[diplomat::attr(kotlin, disable)]
+    pub struct MyStructContainingAnOption {
+        a: DiplomatOption<MyStruct>,
+        b: DiplomatOption<DefaultEnum>,
+    }
+
     #[diplomat::attr(auto, error)]
     pub struct MyZst;
 
@@ -239,6 +248,23 @@ pub mod ffi {
 
         pub fn fails_zst_result() -> Result<(), MyZst> {
             Err(MyZst {})
+        }
+    }
+
+    impl MyStructContainingAnOption {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> Self {
+            MyStructContainingAnOption {
+                a: None.into(),
+                b: None.into(),
+            }
+        }
+
+        pub fn filled() -> Self {
+            MyStructContainingAnOption {
+                a: Some(MyStruct::new()).into(),
+                b: Some(DefaultEnum::new()).into(),
+            }
         }
     }
 

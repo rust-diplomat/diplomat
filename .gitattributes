@@ -1,22 +1,26 @@
-example/c/include/** linguist-generated=true
-example/c2/include/** linguist-generated=true
-example/cpp/include/** linguist-generated=true
-example/cpp/docs/source/** linguist-generated=true
-example/cpp2/include/** linguist-generated=true
-example/dart/lib/** linguist-generated=true
-example/js/lib/api/** linguist-generated=true
-example/js/lib/docs/source/**
-example/demo_gen/demo/** linguist-generated=true
+# text eol=lf forces the line endings to be LF
+# this is applied to the generated files so that they do not create diffs
+# when generated on windows.
 
-feature_tests/c/include/** linguist-generated=true
-feature_tests/c2/include/** linguist-generated=true
-feature_tests/cpp/include/** linguist-generated=true
-feature_tests/cpp/docs/source/** linguist-generated=true
-feature_tests/cpp2/include/** linguist-generated=true
-feature_tests/dart/lib/** linguist-generated=true
-feature_tests/dotnet/Lib/** linguist-generated=true
-feature_tests/js/api/** linguist-generated=true
-feature_tests/js/docs/source/** linguist-generated=true
-feature_tests/kotlin/somelib/** linguist-generated=true
-feature_tests/js/api/** linguist-generated=true
-feature_tests/demo_gen/demo/** linguist-generated=true
+example/c/include/** text eol=lf linguist-generated=true
+example/c2/include/** text eol=lf linguist-generated=true
+example/cpp/include/** text eol=lf linguist-generated=true
+example/cpp/docs/source/** text eol=lf linguist-generated=true
+example/cpp2/include/** text eol=lf linguist-generated=true
+example/dart/lib/** text eol=lf linguist-generated=true
+example/js/lib/api/** text eol=lf linguist-generated=true
+example/js/lib/docs/source/**
+example/demo_gen/demo/** text eol=lf linguist-generated=true
+
+feature_tests/c/include/** text eol=lf linguist-generated=true
+feature_tests/c2/include/** text eol=lf linguist-generated=true
+feature_tests/cpp/include/** text eol=lf linguist-generated=true
+feature_tests/cpp/docs/source/** text eol=lf linguist-generated=true
+feature_tests/cpp2/include/** text eol=lf linguist-generated=true
+feature_tests/dart/lib/** text eol=lf linguist-generated=true
+feature_tests/dotnet/Lib/** text eol=lf linguist-generated=true
+feature_tests/js/api/** text eol=lf linguist-generated=true
+feature_tests/js/docs/source/** text eol=lf linguist-generated=true
+feature_tests/kotlin/somelib/** text eol=lf linguist-generated=true
+feature_tests/js/api/** text eol=lf linguist-generated=true
+feature_tests/demo_gen/demo/** text eol=lf linguist-generated=true
