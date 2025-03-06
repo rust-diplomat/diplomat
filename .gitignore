@@ -17,3 +17,6 @@ Cargo.lock
 
 # VS Code configuration
 .vscode/
+
+# Snapshots generated during tests
+*.snap.new
