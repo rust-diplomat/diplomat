@@ -54,7 +54,7 @@ pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
     conf_path: Option<&Path>,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
-    let conf_path = conf_path.expect("Kotlin library needs to be called with config");
+    let conf_path = conf_path.expect("Nanobind library needs to be called with config");
 
     let conf_str = std::fs::read_to_string(conf_path)
         .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));

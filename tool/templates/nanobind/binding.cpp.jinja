@@ -155,11 +155,11 @@ namespace nanobind::detail
 NB_MODULE({{module_name}}, {{module_name}}_mod)
 {
 	{
-		nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
+		nb::class_<_Dummy> dummy({{module_name}}_mod, "__dummy__");
 		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
 	}
 
-    nb::class_<std::monostate>(somelib_mod, "monostate")
+    nb::class_<std::monostate>({{module_name}}_mod, "monostate")
 		.def("__repr__", [](const std::monostate &)
 			 { return "()"; })
 		.def("__str__", [](const std::monostate &)
