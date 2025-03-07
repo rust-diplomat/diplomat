@@ -142,4 +142,68 @@ pub mod ffi {
             self.0.next().map(Box::new)
         }
     }
+
+    #[diplomat::opaque]
+    struct OpaqueArithmatic {
+        x: i32,
+        y: i32,
+    }
+
+    impl OpaqueArithmatic {
+        #[diplomat::attr(auto, add)]
+        pub fn add(&self, o: &Self) -> Box<Self> {
+            Box::new(Self {
+                x: self.x + o.x,
+                y: self.y + o.y,
+            })
+        }
+
+        #[diplomat::attr(auto, sub)]
+        pub fn sub(&self, o: &Self) -> Box<Self> {
+            Box::new(Self {
+                x: self.x + o.x,
+                y: self.y + o.y,
+            })
+        }
+
+        #[diplomat::attr(auto, mul)]
+        pub fn mul(&self, o: &Self) -> Box<Self> {
+            Box::new(Self {
+                x: self.x + o.x,
+                y: self.y + o.y,
+            })
+        }
+
+        #[diplomat::attr(auto, div)]
+        pub fn div(&self, o: &Self) -> Box<Self> {
+            Box::new(Self {
+                x: self.x + o.x,
+                y: self.y + o.y,
+            })
+        }
+
+        #[diplomat::attr(auto, add_assign)]
+        pub fn addassign(&mut self, o: &Self) {
+            self.x += o.x;
+            self.y += o.y;
+        }
+
+        #[diplomat::attr(auto, sub_assign)]
+        pub fn subassign(&mut self, o: &Self) {
+            self.x -= o.x;
+            self.y -= o.y;
+        }
+
+        #[diplomat::attr(auto, mul_assign)]
+        pub fn mulassign(&mut self, o: &Self) {
+            self.x *= o.x;
+            self.y *= o.y;
+        }
+
+        #[diplomat::attr(auto, div_assign)]
+        pub fn divassign(&mut self, o: &Self) {
+            self.x /= o.x;
+            self.y /= o.y;
+        }
+    }
 }

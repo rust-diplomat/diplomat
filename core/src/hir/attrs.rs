@@ -133,6 +133,18 @@ pub enum SpecialMethod {
     Iterable,
     /// Indexes into the type using an integer
     Indexer,
+
+    /// Arithmatic operators. May not return references
+    Add,
+    Sub,
+    Mul,
+    Div,
+
+    /// In-place arithmatic operators. Must not return a value
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
 }
 
 impl SpecialMethod {
@@ -155,6 +167,14 @@ impl SpecialMethod {
             "iterator" => Ok(Some(Self::Iterator)),
             "iterable" => Ok(Some(Self::Iterable)),
             "indexer" => Ok(Some(Self::Indexer)),
+            "add" => Ok(Some(Self::Add)),
+            "sub" => Ok(Some(Self::Sub)),
+            "mul" => Ok(Some(Self::Mul)),
+            "div" => Ok(Some(Self::Div)),
+            "add_assign" => Ok(Some(Self::AddAssign)),
+            "sub_assign" => Ok(Some(Self::SubAssign)),
+            "mul_assign" => Ok(Some(Self::MulAssign)),
+            "div_assign" => Ok(Some(Self::DivAssign)),
             _ => Ok(None),
         }
     }
@@ -416,13 +436,25 @@ impl Attrs {
             if let AttributeContext::Method(method, self_id, ref mut special_method_presence) =
                 context
             {
+                let check_param_count = |name: &str, count: usize, errors: &mut ErrorStore| {
+                    if method.params.len() != count {
+                        errors.push(LoweringError::Other(format!(
+                            "{name} must have exactly {count} parameter{}",
+                            if count == 1 { "" } else { "s" }
+                        )))
+                    }
+                };
+                let check_self_param = |name: &str, need_self: bool, errors: &mut ErrorStore| {
+                    if method.param_self.is_some() != need_self {
+                        errors.push(LoweringError::Other(format!(
+                            "{name} must{} accept a self parameter",
+                            if need_self { "" } else { " not" }
+                        )));
+                    }
+                };
                 match special {
                     SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
-                        if method.param_self.is_some() {
-                            errors.push(LoweringError::Other(
-                                "Constructors must not accept a self parameter".to_string(),
-                            ))
-                        }
+                        check_self_param("Constructors", false, errors);
                         let output = method.output.success_type();
                         match method.output {
                             ReturnType::Infallible(_) => (),
@@ -464,12 +496,7 @@ impl Attrs {
                         if !matches!(method.output.success_type(), SuccessType::Unit) {
                             errors.push(LoweringError::Other("Setters must return unit".into()));
                         }
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Setter must have exactly one parameter".into(),
-                            ))
-                        }
-
+                        check_param_count("Setter", 1, errors);
                         // Currently does not forbid fallible setters, could if desired
                     }
                     SpecialMethod::Stringifier => {
@@ -484,11 +511,7 @@ impl Attrs {
                         }
                     }
                     SpecialMethod::Comparison => {
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Comparator must have single parameter".into(),
-                            ));
-                        }
+                        check_param_count("Comparator", 1, errors);
                         if special_method_presence.comparator {
                             errors.push(LoweringError::Other(
                                 "Cannot define two comparators on the same type".into(),
@@ -498,6 +521,8 @@ impl Attrs {
                         // In the long run we can actually support heterogeneous comparators. Not a priority right now.
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
+                        check_self_param("Comparators", true, errors);
+
                         if let Some(ref selfty) = method.param_self {
                             if let Some(param) = method.params.first() {
                                 match (&selfty.ty, &param.ty) {
@@ -543,9 +568,6 @@ impl Attrs {
                                     }
                                 }
                             }
-                        } else {
-                            errors
-                                .push(LoweringError::Other("Comparator must be non-static".into()));
                         }
                     }
                     SpecialMethod::Iterator => {
@@ -554,11 +576,7 @@ impl Attrs {
                                 "Cannot mark type as iterator twice".into(),
                             ));
                         }
-                        if !method.params.is_empty() {
-                            errors.push(LoweringError::Other(
-                                "Iterators cannot take parameters".into(),
-                            ))
-                        }
+                        check_param_count("Iterator", 0, errors);
                         // In theory we could support struct and enum iterators. The benefit is slight:
                         // it generates probably inefficient code whilst being rather weird when it comes to the
                         // "structs and enums convert across the boundary" norm for backends.
@@ -567,14 +585,13 @@ impl Attrs {
                         //
                         // Furthermore, in some backends (like Dart) defining an iterator may requiring adding fields,
                         // which may not be possible for enums, and would still be an odd-one-out field for structs.g s
+                        check_self_param("Iterator", true, errors);
                         if let Some(this) = &method.param_self {
                             if !matches!(this.ty, SelfType::Opaque(..)) {
                                 errors.push(LoweringError::Other(
                                     "Iterators only allowed on opaques".into(),
                                 ))
                             }
-                        } else {
-                            errors.push(LoweringError::Other("Iterators must take self".into()))
                         }
 
                         if let ReturnType::Nullable(ref o) = method.output {
@@ -610,14 +627,8 @@ impl Attrs {
                                 "Cannot mark type as iterable twice".into(),
                             ));
                         }
-                        if !method.params.is_empty() {
-                            errors.push(LoweringError::Other(
-                                "Iterables cannot take parameters".into(),
-                            ))
-                        }
-                        if method.param_self.is_none() {
-                            errors.push(LoweringError::Other("Iterables must take self".into()))
-                        }
+                        check_param_count("Iterator", 0, errors);
+                        check_self_param("Iterables", true, errors);
 
                         match method.output.success_type() {
                             SuccessType::OutType(ty) => {
@@ -635,15 +646,44 @@ impl Attrs {
                         }
                     }
                     SpecialMethod::Indexer => {
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Indexer must have exactly one parameter".into(),
-                            ));
-                        }
+                        check_param_count("Indexer", 1, errors);
+                        check_self_param("Indexer", true, errors);
 
                         if method.output.success_type().is_unit() {
                             errors.push(LoweringError::Other("Indexer must return a value".into()));
                         }
+                    }
+                    e @ (SpecialMethod::Add
+                    | SpecialMethod::Sub
+                    | SpecialMethod::Mul
+                    | SpecialMethod::Div) => {
+                        let name = match e {
+                            SpecialMethod::Add => "Add",
+                            SpecialMethod::Sub => "Sub",
+                            SpecialMethod::Mul => "Mul",
+                            SpecialMethod::Div => "Div",
+                            _ => unreachable!(),
+                        };
+
+                        check_param_count(name, 1, errors);
+                        check_self_param(name, true, errors);
+
+                        if method.output.success_type().is_unit() {
+                            errors
+                                .push(LoweringError::Other(format!("{name} must return a value")));
+                        }
+                    }
+                    SpecialMethod::AddAssign => {
+                        check_param_count("AddAssign", 1, errors);
+                    }
+                    SpecialMethod::SubAssign => {
+                        check_param_count("SubAssign", 1, errors);
+                    }
+                    SpecialMethod::MulAssign => {
+                        check_param_count("MulAssign", 1, errors);
+                    }
+                    SpecialMethod::DivAssign => {
+                        check_param_count("DivAssign", 1, errors);
                     }
                 }
             } else {
@@ -800,7 +840,8 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
-
+    /// Marking a method as an arithmatic operator (+-*/[=])
+    pub arithmatic: bool,
     /// Support for Option<Struct> and Option<Primitive>
     pub option: bool,
     /// Allowing callback arguments
@@ -863,6 +904,7 @@ impl BackendAttrSupport {
             "iterators" => Some(self.iterators),
             "iterables" => Some(self.iterables),
             "indexing" => Some(self.indexing),
+            "arithmatic" => Some(self.arithmatic),
             "option" => Some(self.option),
             "callbacks" => Some(self.callbacks),
             "traits" => Some(self.traits),
@@ -999,6 +1041,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
+                arithmatic,
                 option,
                 callbacks,
                 traits,
@@ -1024,6 +1067,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
+                "arithmatic" => arithmatic,
                 "option" => option,
                 "callbacks" => callbacks,
                 "traits" => traits,
