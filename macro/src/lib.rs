@@ -674,43 +674,28 @@ pub fn transparent_convert(
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
-    use std::io::{Read, Write};
-    use std::process::Command;
-
+    use prettyplease;
+    use proc_macro2::TokenStream;
     use quote::ToTokens;
     use syn::parse_quote;
-    use tempfile::tempdir;
 
     use super::gen_bridge;
 
-    fn rustfmt_code(code: &str) -> String {
-        let dir = tempdir().unwrap();
-        let file_path = dir.path().join("temp.rs");
-        let mut file = File::create(file_path.clone()).unwrap();
+    fn pretty_print_code(tokens: TokenStream) -> String {
+        let item = syn::parse2(tokens).unwrap();
+        let file = syn::File {
+            attrs: vec![],
+            items: vec![item],
+            shebang: None,
+        };
 
-        writeln!(file, "{code}").unwrap();
-        drop(file);
-
-        Command::new("rustfmt")
-            .arg(file_path.to_str().unwrap())
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap();
-
-        let mut file = File::open(file_path).unwrap();
-        let mut data = String::new();
-        file.read_to_string(&mut data).unwrap();
-        drop(file);
-        dir.close().unwrap();
-        data
+        prettyplease::unparse(&file)
     }
 
     #[test]
     fn method_taking_str() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -722,14 +707,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn slices() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatByte, DiplomatOwnedSlice,
                                            DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
@@ -787,14 +771,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn method_taking_slice() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -806,14 +789,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn method_taking_mutable_slice() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -825,14 +807,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn method_taking_owned_slice() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -844,14 +825,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn method_taking_owned_str() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -863,14 +843,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn mod_with_enum() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     enum Abc {
                         A,
@@ -885,14 +864,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn mod_with_write_result() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -904,14 +882,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn mod_with_rust_result() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -923,14 +900,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn multilevel_borrows() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
                     struct Foo<'a>(&'a str);
@@ -958,14 +934,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn self_params() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
                     struct RefList<'a> {
@@ -981,14 +956,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn cfged_method() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -1001,11 +975,10 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
 
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
@@ -1019,14 +992,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn cfgd_struct() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
                     #[cfg(feature = "foo")]
@@ -1040,14 +1012,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn callback_arguments() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     pub struct Wrapper {
                         cant_be_empty: bool,
@@ -1085,14 +1056,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn traits() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     pub struct TestingStruct {
                         x: i32,
@@ -1128,14 +1098,13 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 
     #[test]
     fn both_kinds_of_option() {
-        insta::assert_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
                 mod ffi {
                     use diplomat_runtime::DiplomatOption;
                     #[diplomat::opaque]
@@ -1174,7 +1143,6 @@ mod tests {
                 }
             })
             .to_token_stream()
-            .to_string()
         ));
     }
 }

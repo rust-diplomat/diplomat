@@ -1,7 +1,6 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 858
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct Wrapper { cant_be_empty: bool, } pub struct\n                                TestingStruct { x: i32, y: i32, } impl Wrapper\n                                {\n                                    pub fn\n                                    test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) ->\n                                    i32 { f(10 + x) } pub fn\n                                    test_multiarg_void_callback(f: impl Fn(i32, &str))\n                                    { f(-10, \"hello it's a string\\0\"); } pub fn\n                                    test_mod_array(g: impl Fn(&[u8]))\n                                    {\n                                        let bytes: Vec<u8> = vec![0x11, 0x22];\n                                        g(bytes.as_slice().into());\n                                    } pub fn test_no_args(h: impl Fn()) -> i32 { h(); -5 } pub\n                                    fn test_cb_with_struct(f: impl Fn(TestingStruct) -> i32) ->\n                                    i32 { let arg = TestingStruct { x: 1, y: 5, }; f(arg) } pub\n                                    fn\n                                    test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32)\n                                    -> i32) -> i32 { f() + g(5) }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
+expression: "pretty_print_code(gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        pub struct Wrapper { cant_be_empty: bool, } pub struct TestingStruct\n        { x: i32, y: i32, } impl Wrapper\n        {\n            pub fn test_multi_arg_callback(f: impl Fn(i32) -> i32, x: i32) ->\n            i32 { f(10 + x) } pub fn\n            test_multiarg_void_callback(f: impl Fn(i32, &str))\n            { f(-10, \"hello it's a string\\0\"); } pub fn\n            test_mod_array(g: impl Fn(&[u8]))\n            {\n                let bytes: Vec<u8> = vec![0x11, 0x22];\n                g(bytes.as_slice().into());\n            } pub fn test_no_args(h: impl Fn()) -> i32 { h(); -5 } pub fn\n            test_cb_with_struct(f: impl Fn(TestingStruct) -> i32) -> i32\n            { let arg = TestingStruct { x: 1, y: 5, }; f(arg) } pub fn\n            test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32)\n            -> i32 { f() + g(5) }\n        }\n    }\n}).to_token_stream())"
 ---
 mod ffi {
     #[repr(C)]
@@ -32,14 +31,20 @@ mod ffi {
             let arg = TestingStruct { x: 1, y: 5 };
             f(arg)
         }
-        pub fn test_multiple_cb_args(f: impl Fn() -> i32, g: impl Fn(i32) -> i32) -> i32 {
+        pub fn test_multiple_cb_args(
+            f: impl Fn() -> i32,
+            g: impl Fn(i32) -> i32,
+        ) -> i32 {
             f() + g(5)
         }
     }
-    use core::ffi::c_void;
     use diplomat_runtime::*;
+    use core::ffi::c_void;
     #[no_mangle]
-    extern "C" fn Wrapper_test_multi_arg_callback(f: DiplomatCallback<i32>, x: i32) -> i32 {
+    extern "C" fn Wrapper_test_multi_arg_callback(
+        f: DiplomatCallback<i32>,
+        x: i32,
+    ) -> i32 {
         let f = move |arg0: i32| unsafe {
             std::mem::transmute::<
                 unsafe extern "C" fn(*const c_void, ...) -> i32,
@@ -69,7 +74,10 @@ mod ffi {
             let arg0: diplomat_runtime::DiplomatSlice<u8> = arg0.into();
             std::mem::transmute::<
                 unsafe extern "C" fn(*const c_void, ...) -> (),
-                unsafe extern "C" fn(*const c_void, diplomat_runtime::DiplomatSlice<u8>) -> (),
+                unsafe extern "C" fn(
+                    *const c_void,
+                    diplomat_runtime::DiplomatSlice<u8>,
+                ) -> (),
             >(g.run_callback)(g.data, arg0)
         };
         Wrapper::test_mod_array(g)
