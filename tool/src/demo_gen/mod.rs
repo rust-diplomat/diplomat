@@ -52,12 +52,12 @@ pub struct DemoConfig {
 }
 
 impl DemoConfig {
-    pub fn set(&mut self, key : &str, value: toml::Value) {
+    pub fn set(&mut self, key: &str, value: toml::Value) {
         match key {
             "explicit_generation" => self.explicit_generation = value.as_bool(),
             "hide_default_renderer" => self.hide_default_renderer = value.as_bool(),
-            "module_name" => self.module_name = value.as_str().map(|v| { v.to_string() }),
-            "relative_js_path" => self.relative_js_path = value.as_str().map(|v| { v.to_string() }),
+            "module_name" => self.module_name = value.as_str().map(|v| v.to_string()),
+            "relative_js_path" => self.relative_js_path = value.as_str().map(|v| v.to_string()),
             _ => {}
         }
     }

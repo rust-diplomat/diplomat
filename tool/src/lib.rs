@@ -75,7 +75,7 @@ pub fn gen(
             config.set(&kvp.key, toml_value_from_str(&kvp.value));
         }
     }
-    
+
     let config = config.get_overridden(target_language);
 
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
@@ -92,9 +92,8 @@ pub fn gen(
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:
-            if !(config
-                .demo_gen_config
-                .module_name.is_some() || config.demo_gen_config.relative_js_path.is_some())
+            if !(config.demo_gen_config.module_name.is_some()
+                || config.demo_gen_config.relative_js_path.is_some())
             {
                 gen(
                     entry,

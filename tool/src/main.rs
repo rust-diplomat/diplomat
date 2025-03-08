@@ -53,10 +53,9 @@ fn main() -> std::io::Result<()> {
     } else {
         Table::default()
     };
-    
 
     let mut config = Config::default();
-    
+
     for (key, value) in config_table {
         if let toml::Value::Table(t) = value {
             for (subkey, subvalue) in t {

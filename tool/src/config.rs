@@ -15,19 +15,17 @@ impl SharedConfig {
     /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
-        let name : String = name.split(".").skip(1).collect();
+        let name: String = name.split(".").skip(1).collect();
         matches!(name.as_str(), "lib_name")
     }
 
-    pub fn set(&mut self, key : &str, value: Value) {
+    pub fn set(&mut self, key: &str, value: Value) {
         match key {
             "lib_name" => {
                 if value.is_str() {
-                    self.lib_name = value.as_str().map(|v| {
-                        v.to_string()
-                    });
+                    self.lib_name = value.as_str().map(|v| v.to_string());
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -43,13 +41,12 @@ pub struct Config {
     pub demo_gen_config: DemoConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
-    pub language_overrides : HashMap<String, Value>
+    pub language_overrides: HashMap<String, Value>,
 }
 
 impl Config {
-    pub fn set(&mut self, key : &str, value : Value) {
+    pub fn set(&mut self, key: &str, value: Value) {
         if key.starts_with("kotlin.") {
-
             if SharedConfig::overrides_shared(&key) {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
@@ -59,14 +56,15 @@ impl Config {
             if SharedConfig::overrides_shared(&key) {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
-                self.demo_gen_config.set(&key.replace("demo_gen.", ""), value);
+                self.demo_gen_config
+                    .set(&key.replace("demo_gen.", ""), value);
             }
         } else {
             self.shared_config.set(&key, value)
         }
     }
 
-    pub fn get_overridden(self, target_language : &str) -> Self {
+    pub fn get_overridden(self, target_language: &str) -> Self {
         let mut out = self.clone();
 
         // Look for a match of language_name.some_value in a potential key.
@@ -80,8 +78,7 @@ impl Config {
     }
 }
 
-
-pub fn toml_value_from_str(string : &str) -> toml::Value {
+pub fn toml_value_from_str(string: &str) -> toml::Value {
     let try_parse = toml::from_str::<toml::Value>(string);
 
     // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
@@ -90,7 +87,7 @@ pub fn toml_value_from_str(string : &str) -> toml::Value {
     } else {
         try_parse.unwrap()
     };
-    
+
     val_out
 }
 
