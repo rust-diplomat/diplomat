@@ -1,6 +1,6 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        use diplomat_runtime::DiplomatOption; #[diplomat::opaque] struct Foo\n        {} struct CustomStruct\n        { num: u8, b: bool, diplo_option: DiplomatOption<u8>, } impl Foo\n        {\n            pub fn diplo_option_u8(x: DiplomatOption<u8>) ->\n            DiplomatOption<u8> { x } pub fn\n            diplo_option_ref(x: DiplomatOption<&Foo>) -> DiplomatOption<&Foo>\n            { x } pub fn diplo_option_box() -> DiplomatOption<Box<Foo>> { x }\n            pub fn diplo_option_struct(x: DiplomatOption<CustomStruct>) ->\n            DiplomatOption<CustomStruct> { x } pub fn option_u8(x: Option<u8>)\n            -> Option<u8> { x } pub fn option_ref(x: Option<&Foo>) ->\n            Option<&Foo> { x } pub fn option_box() -> Option<Box<Foo>> { x }\n            pub fn option_struct(x: Option<CustomStruct>) ->\n            Option<CustomStruct> { x }\n        }\n    }\n}).to_token_stream().to_string())"
+expression: "pretty_print_code(gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        use diplomat_runtime::DiplomatOption; #[diplomat::opaque] struct Foo\n        {} struct CustomStruct\n        { num: u8, b: bool, diplo_option: DiplomatOption<u8>, } impl Foo\n        {\n            pub fn diplo_option_u8(x: DiplomatOption<u8>) ->\n            DiplomatOption<u8> { x } pub fn\n            diplo_option_ref(x: DiplomatOption<&Foo>) -> DiplomatOption<&Foo>\n            { x } pub fn diplo_option_box() -> DiplomatOption<Box<Foo>> { x }\n            pub fn diplo_option_struct(x: DiplomatOption<CustomStruct>) ->\n            DiplomatOption<CustomStruct> { x } pub fn option_u8(x: Option<u8>)\n            -> Option<u8> { x } pub fn option_ref(x: Option<&Foo>) ->\n            Option<&Foo> { x } pub fn option_box() -> Option<Box<Foo>> { x }\n            pub fn option_struct(x: Option<CustomStruct>) ->\n            Option<CustomStruct> { x }\n        }\n    }\n}).to_token_stream())"
 ---
 mod ffi {
     use diplomat_runtime::DiplomatOption;
@@ -39,8 +39,8 @@ mod ffi {
             x
         }
     }
-    use core::ffi::c_void;
     use diplomat_runtime::*;
+    use core::ffi::c_void;
     #[no_mangle]
     extern "C" fn Foo_diplo_option_u8(
         x: diplomat_runtime::DiplomatOption<u8>,
@@ -48,7 +48,9 @@ mod ffi {
         Foo::diplo_option_u8(x)
     }
     #[no_mangle]
-    extern "C" fn Foo_diplo_option_ref(x: Option<&Foo>) -> diplomat_runtime::DiplomatOption<&Foo> {
+    extern "C" fn Foo_diplo_option_ref(
+        x: Option<&Foo>,
+    ) -> diplomat_runtime::DiplomatOption<&Foo> {
         let x: Option<&Foo> = x.into();
         Foo::diplo_option_ref(x).into()
     }

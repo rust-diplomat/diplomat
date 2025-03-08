@@ -44,7 +44,7 @@ public:
 
   inline diplomat::span<const double> borrow() const;
 
-  inline std::optional<double> get(size_t i) const;
+  inline std::optional<double> operator[](size_t i) const;
 
   inline const diplomat::capi::Float64Vec* AsFFI() const;
   inline diplomat::capi::Float64Vec* AsFFI();
