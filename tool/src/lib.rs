@@ -1,6 +1,8 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
+pub mod config;
+
 // Backends
 pub mod c;
 mod cpp;
@@ -10,6 +12,8 @@ mod js;
 mod kotlin;
 
 use colored::*;
+use config::toml_value_from_str;
+use config::{find_top_level_attr, Config};
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -26,7 +30,7 @@ pub fn gen(
     target_language: &str,
     out_folder: &Path,
     docs_url_gen: &DocsUrlGenerator,
-    library_config: Option<&Path>,
+    mut config: Config,
     silent: bool,
 ) -> std::io::Result<()> {
     if !entry.exists() {
@@ -61,6 +65,18 @@ pub fn gen(
     };
 
     let module = syn_inline_mod::parse_and_inline_modules(entry);
+
+    // Config:
+    // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
+    let cfg = find_top_level_attr(module.items.clone());
+    for attr in cfg {
+        for kvp in attr.key_value_pairs {
+            config.set(&kvp.key, toml_value_from_str(&kvp.value));
+        }
+    }
+
+    let config = config.get_overridden(target_language);
+
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {
             eprintln!("Lowering error in {ctx}: {err}");
@@ -74,31 +90,22 @@ pub fn gen(
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
-            let conf = library_config.map(|c| {
-                let str = std::fs::read_to_string(c)
-                    .unwrap_or_else(|err| panic!("Could not open config toml file: {c:?} : {err}"));
-                toml::from_str::<demo_gen::DemoConfig>(&str)
-                    .unwrap_or_else(|err| panic!("Parsing error in {c:?}: {err}"))
-            });
-
             // If we don't already have an import path set up, generate our own imports:
-            if !conf
-                .clone()
-                .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
-                .unwrap_or(false)
+            if !(config.demo_gen_config.module_name.is_some()
+                || config.demo_gen_config.relative_js_path.is_some())
             {
                 gen(
                     entry,
                     "js",
                     &out_folder.join("js"),
                     docs_url_gen,
-                    library_config,
+                    config.clone(),
                     silent,
                 )?;
             }
-            demo_gen::run(entry, &tcx, docs_url_gen, conf)
+            demo_gen::run(entry, &tcx, docs_url_gen, config.clone())
         }
-        "kotlin" => kotlin::run(&tcx, library_config, docs_url_gen),
+        "kotlin" => kotlin::run(&tcx, config.clone(), docs_url_gen),
         o => panic!("Unknown target: {}", o),
     };
 

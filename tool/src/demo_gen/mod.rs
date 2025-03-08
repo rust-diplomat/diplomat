@@ -15,7 +15,7 @@ use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
     js::{self, formatter::JSFormatter, FileType},
-    ErrorStore, FileMap,
+    Config, ErrorStore, FileMap,
 };
 
 mod terminus;
@@ -33,8 +33,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 /// Configuration for demo_gen generation. Set from a `.toml` file, you can specify the path of the file with `--library-config` option flag.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub(crate) struct DemoConfig {
+pub struct DemoConfig {
     /// Require specific opt-in for the demo generator trying to work. If set to true, looks for #[diplomat::demo(generate)].
     pub explicit_generation: Option<bool>,
 
@@ -52,6 +51,18 @@ pub(crate) struct DemoConfig {
     pub relative_js_path: Option<String>,
 }
 
+impl DemoConfig {
+    pub fn set(&mut self, key: &str, value: toml::Value) {
+        match key {
+            "explicit_generation" => self.explicit_generation = value.as_bool(),
+            "hide_default_renderer" => self.hide_default_renderer = value.as_bool(),
+            "module_name" => self.module_name = value.as_str().map(|v| v.to_string()),
+            "relative_js_path" => self.relative_js_path = value.as_str().map(|v| v.to_string()),
+            _ => {}
+        }
+    }
+}
+
 /// Per docs/demo_gen.md
 /// Generate markup.
 ///
@@ -62,7 +73,7 @@ pub(crate) fn run<'tcx>(
     entry: &std::path::Path,
     tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
-    conf: Option<DemoConfig>,
+    conf: Config,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
@@ -70,7 +81,7 @@ pub(crate) fn run<'tcx>(
 
     let root = entry.parent().unwrap();
 
-    let unwrapped_conf = conf.unwrap_or_default();
+    let unwrapped_conf = conf.demo_gen_config;
 
     let import_path_exists =
         unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();

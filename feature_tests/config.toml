@@ -1,0 +1,7 @@
+lib-name = "This Will Be Ignored For Testing Purposes (Check src/lib.rs)"
+
+[kotlin]
+domain = "dev.diplomattest"
+
+[demo-gen]
+relative-js-path = "../../js/api/"

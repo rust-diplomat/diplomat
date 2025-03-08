@@ -13,12 +13,11 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter::once;
-use std::path::Path;
 
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::{ErrorStore, FileMap};
+use crate::{Config, ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
@@ -50,28 +49,45 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct KotlinConfig {
-    domain: String,
-    lib_name: String,
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct KotlinConfig {
+    domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
+}
+
+impl KotlinConfig {
+    pub fn set(&mut self, key: &str, value: toml::Value) {
+        match key {
+            "domain" => {
+                if value.is_str() {
+                    self.domain = value.as_str().map(|s| s.to_string());
+                }
+            }
+            "use_finalizers_not_cleaners" => {
+                self.use_finalizers_not_cleaners = value.as_bool();
+            }
+            _ => {}
+        }
+    }
 }
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
-    conf_path: Option<&Path>,
+    conf: Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
-    let conf_path = conf_path.expect("Kotlin library needs to be called with config");
-
-    let conf_str = std::fs::read_to_string(conf_path)
-        .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
     let KotlinConfig {
         domain,
-        lib_name,
         use_finalizers_not_cleaners,
-    } = toml::from_str::<KotlinConfig>(&conf_str)
-        .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
+    } = conf.kotlin_config;
+
+    let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
+
+    let lib_name = conf
+        .shared_config
+        .lib_name
+        .expect("Failed to parse Kotlin config. Missing required field `lib_name`.");
+
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
     let formatter = KotlinFormatter::new(tcx, None, docs_url_gen);
 

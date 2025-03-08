@@ -9,6 +9,9 @@
     clippy::should_implement_trait
 )]
 
+#[diplomat::config(lib_name = "this is also a test value, see below")]
+struct Config;
+
 extern crate alloc;
 
 pub mod attrs;
@@ -21,3 +24,7 @@ pub mod selftype;
 pub mod slices;
 pub mod structs;
 pub mod traits;
+
+// Feel free to add overrides for other languages for the lib_name, this is meant to showcase overriding SharedConfig.
+#[diplomat::config(kotlin.lib_name = somelib)]
+struct KotlinConfig;
