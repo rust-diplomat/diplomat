@@ -57,8 +57,13 @@ fn main() -> std::io::Result<()> {
     let mut config = Config::default();
 
     for (key, value) in config_table {
+        // Quick way to take config.toml from kebab to snake case.
+        // This technically means that someone could also just as easily do CamelCase and have it translated,
+        // but I'm not sure I want to bother writing validation code for such a scenario.
+        let key = heck::AsSnakeCase(key).to_string();
         if let toml::Value::Table(t) = value {
             for (subkey, subvalue) in t {
+                let subkey = heck::AsSnakeCase(subkey).to_string();
                 config.set(&format!("{}.{}", key, subkey), subvalue);
             }
         } else {

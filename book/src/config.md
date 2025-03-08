@@ -21,19 +21,19 @@ The structure of `config.toml` is as follows:
 
 ```toml
 # Top level table specifies Shared Config settings that apply to all backends:
-lib_name = "MyLibrary"
+lib-name = "MyLibrary"
 
 [kotlin]
 # Individual tables can override Shared Config settings:
-lib_name = "LibraryNameOverride"
+lib-name = "LibraryNameOverride"
 # Along with backend specific settings:
 domain = "org.myOrganization"
 
 [demo_gen]
-explicit_generation = true
+explicit-generation = true
 
-[other_library_name]
-some_value = 100
+[other-library-name]
+some-value = 100
 ```
 
 ### `diplomat-tool` CLI
