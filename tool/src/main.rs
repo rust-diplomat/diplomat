@@ -2,7 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 use toml::value::Table;
 
-use diplomat_tool::config::{merge_config, table_from_values, Config};
+use diplomat_tool::config::{toml_value_from_str, Config};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -47,43 +47,29 @@ fn main() -> std::io::Result<()> {
 
     // Read file:
     let path = opt.config_file;
-    let mut config_table: Table = if path.exists() {
+    let config_table: Table = if path.exists() {
         let file_buf = std::fs::read(path)?;
         toml::from_slice(&file_buf)?
     } else {
         Table::default()
     };
+    
+
+    let mut config = Config::default();
+    
+    for (key, value) in config_table {
+        config.set(&key, value);
+    }
 
     // Read CLI:
-    let mut key_values = Vec::new();
     for c in opt.config {
         let split = c.split_once("=");
         if let Some((key, value)) = split {
-            key_values.push((key.to_string(), value.to_string()));
+            config.set(key, toml_value_from_str(value));
         } else {
             eprintln!("Could not read {c}, expected =");
         }
     }
-
-    let (cli_config, errors) = table_from_values(key_values);
-
-    for e in errors {
-        eprintln!("{e}");
-    }
-
-    // CLI takes priority over `config.toml`.
-    merge_config(&mut config_table, cli_config);
-
-    // Convert into config (somewhat hacky, need to convert to a string then BACK to the required type):
-    let config_parse = toml::from_slice(&toml::to_vec(&toml::Value::Table(config_table)).unwrap());
-
-    if let Err(e) = config_parse {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            format!("Could not parse config: {} ", e),
-        ));
-    }
-    let config: Config = config_parse.unwrap();
 
     // -- Config Parsing --
 

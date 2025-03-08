@@ -12,7 +12,8 @@ mod js;
 mod kotlin;
 
 use colored::*;
-use config::{find_top_level_attr, merge_config, set_overrides, table_from_attrs, Config};
+use config::toml_value_from_str;
+use config::{find_top_level_attr, Config};
 use core::mem;
 use core::panic;
 use diplomat_core::hir;
@@ -29,7 +30,7 @@ pub fn gen(
     target_language: &str,
     out_folder: &Path,
     docs_url_gen: &DocsUrlGenerator,
-    config: Config,
+    mut config: Config,
     silent: bool,
 ) -> std::io::Result<()> {
     if !entry.exists() {
@@ -68,22 +69,14 @@ pub fn gen(
     // Config:
     // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
     let cfg = find_top_level_attr(module.items.clone());
-    let (attrs_config, errs) = table_from_attrs(cfg);
-
-    for e in errs {
-        eprintln!("Could not read {} attribute: {e}", entry.display());
+    for attr in cfg {
+        for kvp in attr.key_value_pairs {
+            // FIXME: Pretty sure doing conversions this way breaks something.
+            config.set(&kvp.key, toml_value_from_str(&kvp.value));
+        }
     }
-
-    // Now we convert the passed in config to a table (through some light gymnastic):
-    let mut base = toml::from_slice::<toml::value::Table>(&toml::to_vec(&config).unwrap())?;
-
-    merge_config(&mut base, attrs_config.clone());
-
-    let cfg_table = set_overrides(&base, target_language);
-
-    // Then some more gymnastics to go back:
-    let config =
-        toml::from_slice::<Config>(&toml::to_vec(&toml::Value::Table(cfg_table)).unwrap())?;
+    
+    let config = config.get_overridden(target_language);
 
     let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
         for (ctx, err) in e {
@@ -99,11 +92,9 @@ pub fn gen(
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:
-            if !config
+            if !(config
                 .demo_gen_config
-                .as_ref()
-                .map(|c| c.module_name.is_some() || c.relative_js_path.is_some())
-                .unwrap_or(false)
+                .module_name.is_some() || config.demo_gen_config.relative_js_path.is_some())
             {
                 gen(
                     entry,

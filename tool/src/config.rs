@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use diplomat_core::ast::{attrs::DiplomatBackendConfigAttr, Attrs};
 use serde::{Deserialize, Serialize};
-use toml::value::Table;
+use toml::Value;
 
 use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
 
@@ -12,7 +14,22 @@ pub struct SharedConfig {
 impl SharedConfig {
     /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
     pub fn overrides_shared(name: &str) -> bool {
-        matches!(name, "lib_name")
+        // Expect the first item in the iterator to be the name of the language, so we eliminate that:
+        let name : String = name.split(".").skip(1).collect();
+        matches!(name.as_str(), "lib_name")
+    }
+
+    pub fn set(&mut self, key : &str, value: Value) {
+        match key {
+            "lib_name" => {
+                if value.is_str() {
+                    self.lib_name = value.as_str().map(|v| {
+                        v.to_string()
+                    });
+                }
+            },
+            _ => {}
+        }
     }
 }
 
@@ -21,98 +38,63 @@ pub struct Config {
     #[serde(flatten)]
     pub shared_config: SharedConfig,
     #[serde(rename = "kotlin")]
-    pub kotlin_config: Option<KotlinConfig>,
+    pub kotlin_config: KotlinConfig,
     #[serde(rename = "demo_gen")]
-    pub demo_gen_config: Option<DemoConfig>,
+    pub demo_gen_config: DemoConfig,
+    /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
+    #[serde(skip)]
+    pub language_overrides : HashMap<String, Value>
 }
 
-fn merge_subconfig(base: &mut Table, other: Table) {
-    for (key, val) in other {
-        match val {
-            toml::Value::Table(t) => {
-                if let Some(b) = base.get_mut(&key) {
-                    if b.is_table() {
-                        merge_subconfig(b.as_table_mut().unwrap(), t);
-                        continue;
-                    }
+impl Config {
+    pub fn set(&mut self, key : &str, value : Value) {
+        match key {
+            "shared_config" => self.shared_config.set(&key.replace("shared_config.", ""), value),
+            "kotlin" => {
+                if SharedConfig::overrides_shared(&key) {
+                    self.language_overrides.insert(key.to_string(), value);
+                } else {
+                    self.kotlin_config.set(&key.replace("kotlin.", ""), value);
                 }
-                base.insert(key, toml::Value::Table(t));
+                // TODO: Add setting KotlinConfig.
+            },
+            "demo_gen" => {
+                if SharedConfig::overrides_shared(&key) {
+                    self.language_overrides.insert(key.to_string(), value);
+                } else {
+                    self.demo_gen_config.set(&key.replace("demo_gen.", ""), value);
+                }
+            },
+            _ => {}
+        }
+    }
+
+    pub fn get_overridden(self, target_language : &str) -> Self {
+        let mut out = self.clone();
+
+        // Look for a match of language_name.some_value in a potential key.
+        let m = format!("{}.", target_language);
+        for (k, v) in out.language_overrides.iter() {
+            if k.contains(&m) {
+                out.shared_config.set(k, v.clone());
             }
-            _ => {
-                base.insert(key, val);
-            }
-        };
+        }
+        out
     }
 }
 
-pub fn merge_config(base: &mut Table, other: Table) {
-    for (key, val) in other {
-        if !base.contains_key(&key) {
-            base.insert(key, val);
-            continue;
-        }
 
-        match val {
-            // If this is a table, go into the table for the base:
-            toml::Value::Table(t) => {
-                merge_subconfig(
-                    base.get_mut(&key)
-                        .unwrap()
-                        .as_table_mut()
-                        .expect("Expected a table of values in base config."),
-                    t,
-                );
-            }
-            // Otherwise just overwrite whatever's already there:
-            _ => {
-                base.insert(key, val);
-            }
-        }
-    }
-}
+pub fn toml_value_from_str(string : &str) -> toml::Value {
+    let try_parse = toml::from_str::<toml::Value>(string);
 
-/// Returns a constructed table from a list of `key=value` pairs. Assumes that whatever is passing us these pairs has already parsed for `key=value` and found no issue there.
-///
-/// Also returns a list of errors for outputting error information.
-pub fn table_from_values(values: Vec<(String, String)>) -> (Table, Vec<String>) {
-    let mut errors = Vec::new();
-
-    let mut out_table = Table::new();
-    for (key, value) in values {
-        // Check if this is a value that can be parsed correctly, otherwise we need to add string quotes:
-        let val_str = if toml::from_str::<toml::Value>(&value).is_err() {
-            format!(r#""{}""#, value)
-        } else {
-            value.clone()
-        };
-
-        let some_table = toml::from_str::<Table>(&format!("{key}={val_str}"));
-        if let Ok(t) = some_table {
-            merge_config(&mut out_table, t);
-        } else {
-            errors.push(format!(
-                "Could not read {key}={value}: {}",
-                some_table.unwrap_err()
-            ));
-        }
-    }
-
-    (out_table, errors)
-}
-
-pub(crate) fn table_from_attrs(
-    config_attrs: Vec<DiplomatBackendConfigAttr>,
-) -> (Table, Vec<String>) {
-    let mut values = Vec::new();
-
-    for config in config_attrs {
-        for key_value in config.key_value_pairs {
-            // Coerce the two into something table_from_values understands:
-            values.push((key_value.key, key_value.value));
-        }
-    }
-
-    table_from_values(values)
+    // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
+    let val_out = if try_parse.is_err() {
+        toml::Value::String(string.to_string())
+    } else {
+        try_parse.unwrap()
+    };
+    
+    val_out
 }
 
 pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
@@ -139,21 +121,4 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
     }
 
     out_config
-}
-
-/// Intended for use in [`crate::gen`]. Given a specific language's attributes, return a new table that overrides any base values from [`SharedConfig`].
-pub(crate) fn set_overrides(parent_table: &Table, language: &str) -> Table {
-    let mut overridden_table = parent_table.clone();
-
-    if let Some(v) = parent_table.get(language) {
-        let t = v.as_table().expect("Expected language config to be table.");
-        // Right now just I'm just assuming all of `SharedConfig` will always be top-level values (never nested in sub-tables). If that changes, feel free to change this.
-        for (key, val) in t {
-            if SharedConfig::overrides_shared(key) {
-                overridden_table.insert(key.clone(), val.clone());
-            }
-        }
-    }
-
-    overridden_table
 }

@@ -51,6 +51,18 @@ pub struct DemoConfig {
     pub relative_js_path: Option<String>,
 }
 
+impl DemoConfig {
+    pub fn set(&mut self, key : &str, value: toml::Value) {
+        match key {
+            "explicit_generation" => self.explicit_generation = value.as_bool(),
+            "hide_default_renderer" => self.hide_default_renderer = value.as_bool(),
+            "module_name" => self.module_name = value.as_str().map(|v| { v.to_string() }),
+            "relative_js_path" => self.relative_js_path = value.as_str().map(|v| { v.to_string() }),
+            _ => {}
+        }
+    }
+}
+
 /// Per docs/demo_gen.md
 /// Generate markup.
 ///
@@ -69,7 +81,7 @@ pub(crate) fn run<'tcx>(
 
     let root = entry.parent().unwrap();
 
-    let unwrapped_conf = conf.demo_gen_config.unwrap_or_default();
+    let unwrapped_conf = conf.demo_gen_config;
 
     let import_path_exists =
         unwrapped_conf.relative_js_path.is_some() || unwrapped_conf.module_name.is_some();

@@ -49,10 +49,26 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct KotlinConfig {
-    domain: String,
+    domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
+}
+
+impl KotlinConfig {
+    pub fn set(&mut self, key : &str, value : toml::Value) {
+        match key {
+            "domain" => {
+                if value.is_str() {
+                    self.domain = value.as_str().map(|s| { s.to_string() });
+                }
+            },
+            "use_finalizers_not_cleaners" => {
+                self.use_finalizers_not_cleaners = value.as_bool();
+            },
+            _ => {}
+        }
+    }
 }
 
 pub(crate) fn run<'tcx>(
@@ -63,9 +79,10 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         use_finalizers_not_cleaners,
-    } = conf
-        .kotlin_config
-        .expect("Failed to parse Kotlin config. Required fields are `domain`");
+    } = conf.kotlin_config;
+
+    let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
+    
     let lib_name = conf
         .shared_config
         .lib_name
