@@ -456,9 +456,7 @@ mod tests {
 
     use syn;
 
-    use super::{
-        DiplomatBackendAttr, DiplomatBackendAttrCfg, RenameAttr,
-    };
+    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, RenameAttr};
 
     #[test]
     fn test_cfgs() {

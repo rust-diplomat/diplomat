@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
-use syn::{parse::{Parse, ParseStream}, Expr, Ident, Token};
+use syn::{
+    parse::{Parse, ParseStream},
+    Expr, Ident, Token,
+};
 use toml::Value;
 
 use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
@@ -149,13 +152,19 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
             _ => None,
         })
         .filter_map(|attrs| {
-            let attributes_vec = attrs.iter().filter_map(|attribute| {
-                if attribute.path() == &path {
-                    Some(syn::parse2::<DiplomatBackendConfigAttr>(attribute.to_token_stream()).expect("Could not parse DiplomatBackendConfig attribute."))
-                } else {
-                    None
-                }
-            }).collect::<Vec<_>>();
+            let attributes_vec = attrs
+                .iter()
+                .filter_map(|attribute| {
+                    if attribute.path() == &path {
+                        Some(
+                            syn::parse2::<DiplomatBackendConfigAttr>(attribute.to_token_stream())
+                                .expect("Could not parse DiplomatBackendConfig attribute."),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
 
             if !attributes_vec.is_empty() {
                 Some(attributes_vec)
