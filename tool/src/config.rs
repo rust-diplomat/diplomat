@@ -65,8 +65,8 @@ impl Config {
         // Look for a match of language_name.some_value in a potential key.
         let m = format!("{}.", target_language);
         for (k, v) in out.language_overrides.iter() {
-            if k.contains(&m) {
-                out.shared_config.set(k, v.clone());
+            if k.starts_with(&m) {
+                out.shared_config.set(&k.replace(&m, ""), v.clone());
             }
         }
         out

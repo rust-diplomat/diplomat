@@ -71,7 +71,6 @@ pub fn gen(
     let cfg = find_top_level_attr(module.items.clone());
     for attr in cfg {
         for kvp in attr.key_value_pairs {
-            // FIXME: Pretty sure doing conversions this way breaks something.
             config.set(&kvp.key, toml_value_from_str(&kvp.value));
         }
     }
