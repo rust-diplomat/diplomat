@@ -877,6 +877,7 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
+            arithmatic: true,
             option: true,
             callbacks: true,
             traits: true,
