@@ -157,9 +157,12 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
                 .filter_map(|attribute| {
                     if attribute.path() == &path {
                         Some(
-                            syn::parse2::<DiplomatBackendConfigAttr>(attribute.parse_args()
-                            .expect("Failed to parse malformed diplomat::config"))
-                                .expect("Could not parse DiplomatBackendConfig attribute."),
+                            syn::parse2::<DiplomatBackendConfigAttr>(
+                                attribute
+                                    .parse_args()
+                                    .expect("Failed to parse malformed diplomat::config"),
+                            )
+                            .expect("Could not parse DiplomatBackendConfig attribute."),
                         )
                     } else {
                         None
