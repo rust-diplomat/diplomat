@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use diplomat_core::ast::{attrs::DiplomatBackendConfigAttr, Attrs};
+use quote::ToTokens;
 use serde::{Deserialize, Serialize};
+use syn::{parse::{Parse, ParseStream}, Expr, Ident, Token};
 use toml::Value;
 
 use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
@@ -84,7 +85,61 @@ pub fn toml_value_from_str(string: &str) -> toml::Value {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
+pub(crate) struct DiplomatBackendConfigAttr {
+    pub key_value_pairs: Vec<DiplomatBackendConfigKeyValue>,
+}
+
+impl Parse for DiplomatBackendConfigAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let list = input.parse_terminated(DiplomatBackendConfigKeyValue::parse, Token![,])?;
+        let vec = list.into_iter().collect();
+        Ok(Self {
+            key_value_pairs: vec,
+        })
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
+pub(crate) struct DiplomatBackendConfigKeyValue {
+    pub key: String,
+    pub value: String,
+}
+
+impl Parse for DiplomatBackendConfigKeyValue {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut key_str: Vec<String> = Vec::new();
+
+        loop {
+            let i: Ident = input.parse()?;
+
+            key_str.push(i.to_string());
+
+            if input.peek(Token![.]) {
+                let _period: Token![.] = input.parse()?;
+            } else {
+                break;
+            }
+        }
+
+        let _equals: Token![=] = input.parse()?;
+
+        let val_expr: Expr = input.parse()?;
+
+        let value = val_expr.to_token_stream().to_string();
+
+        Ok(Self {
+            key: key_str.join("."),
+            value,
+        })
+    }
+}
+
 pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
+    let path = syn::parse_str("diplomat::config").unwrap();
+
     let attrs = module_items
         .iter()
         .filter_map(|i| match i {
@@ -94,11 +149,19 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
             _ => None,
         })
         .filter_map(|attrs| {
-            let attrs = Attrs::from(attrs.as_slice());
-            if !attrs.config_attrs.is_empty() {
-                return Some(attrs.config_attrs);
+            let attributes_vec = attrs.iter().filter_map(|attribute| {
+                if attribute.path() == &path {
+                    Some(syn::parse2::<DiplomatBackendConfigAttr>(attribute.to_token_stream()).expect("Could not parse DiplomatBackendConfig attribute."))
+                } else {
+                    None
+                }
+            }).collect::<Vec<_>>();
+
+            if !attributes_vec.is_empty() {
+                Some(attributes_vec)
+            } else {
+                None
             }
-            None
         });
 
     let mut out_config = Vec::new();
