@@ -58,7 +58,13 @@ fn main() -> std::io::Result<()> {
     let mut config = Config::default();
     
     for (key, value) in config_table {
-        config.set(&key, value);
+        if let toml::Value::Table(t) = value {
+            for (subkey, subvalue) in t {
+                config.set(&format!("{}.{}", key, subkey), subvalue);
+            }
+        } else {
+            config.set(&key, value);
+        }
     }
 
     // Read CLI:

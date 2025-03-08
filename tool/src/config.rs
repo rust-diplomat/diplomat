@@ -48,24 +48,21 @@ pub struct Config {
 
 impl Config {
     pub fn set(&mut self, key : &str, value : Value) {
-        match key {
-            "shared_config" => self.shared_config.set(&key.replace("shared_config.", ""), value),
-            "kotlin" => {
-                if SharedConfig::overrides_shared(&key) {
-                    self.language_overrides.insert(key.to_string(), value);
-                } else {
-                    self.kotlin_config.set(&key.replace("kotlin.", ""), value);
-                }
-                // TODO: Add setting KotlinConfig.
-            },
-            "demo_gen" => {
-                if SharedConfig::overrides_shared(&key) {
-                    self.language_overrides.insert(key.to_string(), value);
-                } else {
-                    self.demo_gen_config.set(&key.replace("demo_gen.", ""), value);
-                }
-            },
-            _ => {}
+        if key.starts_with("kotlin.") {
+
+            if SharedConfig::overrides_shared(&key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.kotlin_config.set(&key.replace("kotlin.", ""), value);
+            }
+        } else if key.starts_with("demo_gen.") {
+            if SharedConfig::overrides_shared(&key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.demo_gen_config.set(&key.replace("demo_gen.", ""), value);
+            }
+        } else {
+            self.shared_config.set(&key, value)
         }
     }
 
