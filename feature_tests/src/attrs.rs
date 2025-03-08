@@ -144,12 +144,25 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(not(supports = arithmatic), disable)]
     struct OpaqueArithmatic {
         x: i32,
         y: i32,
     }
 
     impl OpaqueArithmatic {
+        pub fn make(x: i32, y: i32) -> Box<Self> {
+            Box::new(Self { x, y })
+        }
+
+        pub fn x(&self) -> i32 {
+            self.x
+        }
+
+        pub fn y(&self) -> i32 {
+            self.y
+        }
+
         #[diplomat::attr(auto, add)]
         pub fn add(&self, o: &Self) -> Box<Self> {
             Box::new(Self {

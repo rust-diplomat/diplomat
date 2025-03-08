@@ -674,7 +674,7 @@ pub fn transparent_convert(
 
 #[cfg(test)]
 mod tests {
-    use prettyplease;
+    
     use proc_macro2::TokenStream;
     use quote::ToTokens;
     use syn::parse_quote;
