@@ -20,13 +20,8 @@ impl SharedConfig {
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
-        match key {
-            "lib_name" => {
-                if value.is_str() {
-                    self.lib_name = value.as_str().map(|v| v.to_string());
-                }
-            }
-            _ => {}
+        if key == "lib_name" && value.is_str() {
+            self.lib_name = value.as_str().map(|v| v.to_string());
         }
     }
 }
@@ -47,20 +42,20 @@ pub struct Config {
 impl Config {
     pub fn set(&mut self, key: &str, value: Value) {
         if key.starts_with("kotlin.") {
-            if SharedConfig::overrides_shared(&key) {
+            if SharedConfig::overrides_shared(key) {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
                 self.kotlin_config.set(&key.replace("kotlin.", ""), value);
             }
         } else if key.starts_with("demo_gen.") {
-            if SharedConfig::overrides_shared(&key) {
+            if SharedConfig::overrides_shared(key) {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
                 self.demo_gen_config
                     .set(&key.replace("demo_gen.", ""), value);
             }
         } else {
-            self.shared_config.set(&key, value)
+            self.shared_config.set(key, value)
         }
     }
 
@@ -82,13 +77,11 @@ pub fn toml_value_from_str(string: &str) -> toml::Value {
     let try_parse = toml::from_str::<toml::Value>(string);
 
     // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
-    let val_out = if try_parse.is_err() {
-        toml::Value::String(string.to_string())
+    if let Ok(out) = try_parse {
+        out
     } else {
-        try_parse.unwrap()
-    };
-
-    val_out
+        toml::Value::String(string.to_string())
+    }
 }
 
 pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
