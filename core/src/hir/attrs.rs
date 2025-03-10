@@ -134,13 +134,13 @@ pub enum SpecialMethod {
     /// Indexes into the type using an integer
     Indexer,
 
-    /// Arithmatic operators. May not return references
+    /// Arithmetic operators. May not return references
     Add,
     Sub,
     Mul,
     Div,
 
-    /// In-place arithmatic operators. Must not return a value
+    /// In-place arithmetic operators. Must not return a value
     AddAssign,
     SubAssign,
     MulAssign,
@@ -840,8 +840,8 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
-    /// Marking a method as an arithmatic operator (+-*/[=])
-    pub arithmatic: bool,
+    /// Marking a method as an arithmetic operator (+-*/[=])
+    pub arithmetic: bool,
     /// Support for Option<Struct> and Option<Primitive>
     pub option: bool,
     /// Allowing callback arguments
@@ -877,7 +877,7 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
-            arithmatic: true,
+            arithmetic: true,
             option: true,
             callbacks: true,
             traits: true,
@@ -905,7 +905,7 @@ impl BackendAttrSupport {
             "iterators" => Some(self.iterators),
             "iterables" => Some(self.iterables),
             "indexing" => Some(self.indexing),
-            "arithmatic" => Some(self.arithmatic),
+            "arithmetic" => Some(self.arithmetic),
             "option" => Some(self.option),
             "callbacks" => Some(self.callbacks),
             "traits" => Some(self.traits),
@@ -1042,7 +1042,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
-                arithmatic,
+                arithmetic,
                 option,
                 callbacks,
                 traits,
@@ -1068,7 +1068,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
-                "arithmatic" => arithmatic,
+                "arithmetic" => arithmetic,
                 "option" => option,
                 "callbacks" => callbacks,
                 "traits" => traits,

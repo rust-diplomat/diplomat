@@ -1,7 +1,7 @@
-#ifndef ns_RenamedOpaqueArithmatic_HPP
-#define ns_RenamedOpaqueArithmatic_HPP
+#ifndef ns_RenamedOpaqueArithmetic_HPP
+#define ns_RenamedOpaqueArithmetic_HPP
 
-#include "RenamedOpaqueArithmatic.d.hpp"
+#include "RenamedOpaqueArithmetic.d.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,119 +12,135 @@
 #include <optional>
 #include "../diplomat_runtime.hpp"
 
+namespace ns
+{
+  namespace capi
+  {
+    extern "C"
+    {
 
-namespace ns {
-namespace capi {
-    extern "C" {
-    
-    ns::capi::RenamedOpaqueArithmatic* namespace_OpaqueArithmatic_make(int32_t x, int32_t y);
-    
-    int32_t namespace_OpaqueArithmatic_x(const ns::capi::RenamedOpaqueArithmatic* self);
-    
-    int32_t namespace_OpaqueArithmatic_y(const ns::capi::RenamedOpaqueArithmatic* self);
-    
-    ns::capi::RenamedOpaqueArithmatic* namespace_OpaqueArithmatic_add(const ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    ns::capi::RenamedOpaqueArithmatic* namespace_OpaqueArithmatic_sub(const ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    ns::capi::RenamedOpaqueArithmatic* namespace_OpaqueArithmatic_mul(const ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    ns::capi::RenamedOpaqueArithmatic* namespace_OpaqueArithmatic_div(const ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    void namespace_OpaqueArithmatic_addassign(ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    void namespace_OpaqueArithmatic_subassign(ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    void namespace_OpaqueArithmatic_mulassign(ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    void namespace_OpaqueArithmatic_divassign(ns::capi::RenamedOpaqueArithmatic* self, const ns::capi::RenamedOpaqueArithmatic* o);
-    
-    
-    void namespace_OpaqueArithmatic_destroy(RenamedOpaqueArithmatic* self);
-    
+      ns::capi::RenamedOpaqueArithmetic *namespace_OpaqueArithmetic_make(int32_t x, int32_t y);
+
+      int32_t namespace_OpaqueArithmetic_x(const ns::capi::RenamedOpaqueArithmetic *self);
+
+      int32_t namespace_OpaqueArithmetic_y(const ns::capi::RenamedOpaqueArithmetic *self);
+
+      ns::capi::RenamedOpaqueArithmetic *namespace_OpaqueArithmetic_add(const ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      ns::capi::RenamedOpaqueArithmetic *namespace_OpaqueArithmetic_sub(const ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      ns::capi::RenamedOpaqueArithmetic *namespace_OpaqueArithmetic_mul(const ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      ns::capi::RenamedOpaqueArithmetic *namespace_OpaqueArithmetic_div(const ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      void namespace_OpaqueArithmetic_addassign(ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      void namespace_OpaqueArithmetic_subassign(ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      void namespace_OpaqueArithmetic_mulassign(ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      void namespace_OpaqueArithmetic_divassign(ns::capi::RenamedOpaqueArithmetic *self, const ns::capi::RenamedOpaqueArithmetic *o);
+
+      void namespace_OpaqueArithmetic_destroy(RenamedOpaqueArithmetic *self);
+
     } // extern "C"
-} // namespace capi
+  } // namespace capi
 } // namespace
 
-inline std::unique_ptr<ns::RenamedOpaqueArithmatic> ns::RenamedOpaqueArithmatic::make(int32_t x, int32_t y) {
-  auto result = ns::capi::namespace_OpaqueArithmatic_make(x,
-    y);
-  return std::unique_ptr<ns::RenamedOpaqueArithmatic>(ns::RenamedOpaqueArithmatic::FromFFI(result));
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::make(int32_t x, int32_t y)
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_make(x,
+                                                          y);
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline int32_t ns::RenamedOpaqueArithmatic::x() const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_x(this->AsFFI());
+inline int32_t ns::RenamedOpaqueArithmetic::x() const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_x(this->AsFFI());
   return result;
 }
 
-inline int32_t ns::RenamedOpaqueArithmatic::y() const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_y(this->AsFFI());
+inline int32_t ns::RenamedOpaqueArithmetic::y() const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_y(this->AsFFI());
   return result;
 }
 
-inline std::unique_ptr<ns::RenamedOpaqueArithmatic> ns::RenamedOpaqueArithmatic::operator+(const ns::RenamedOpaqueArithmatic& o) const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_add(this->AsFFI(),
-    o.AsFFI());
-  return std::unique_ptr<ns::RenamedOpaqueArithmatic>(ns::RenamedOpaqueArithmatic::FromFFI(result));
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::operator+(const ns::RenamedOpaqueArithmetic &o) const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_add(this->AsFFI(),
+                                                         o.AsFFI());
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline std::unique_ptr<ns::RenamedOpaqueArithmatic> ns::RenamedOpaqueArithmatic::operator-(const ns::RenamedOpaqueArithmatic& o) const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_sub(this->AsFFI(),
-    o.AsFFI());
-  return std::unique_ptr<ns::RenamedOpaqueArithmatic>(ns::RenamedOpaqueArithmatic::FromFFI(result));
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::operator-(const ns::RenamedOpaqueArithmetic &o) const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_sub(this->AsFFI(),
+                                                         o.AsFFI());
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline std::unique_ptr<ns::RenamedOpaqueArithmatic> ns::RenamedOpaqueArithmatic::operator*(const ns::RenamedOpaqueArithmatic& o) const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_mul(this->AsFFI(),
-    o.AsFFI());
-  return std::unique_ptr<ns::RenamedOpaqueArithmatic>(ns::RenamedOpaqueArithmatic::FromFFI(result));
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::operator*(const ns::RenamedOpaqueArithmetic &o) const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_mul(this->AsFFI(),
+                                                         o.AsFFI());
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline std::unique_ptr<ns::RenamedOpaqueArithmatic> ns::RenamedOpaqueArithmatic::operator/(const ns::RenamedOpaqueArithmatic& o) const {
-  auto result = ns::capi::namespace_OpaqueArithmatic_div(this->AsFFI(),
-    o.AsFFI());
-  return std::unique_ptr<ns::RenamedOpaqueArithmatic>(ns::RenamedOpaqueArithmatic::FromFFI(result));
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::operator/(const ns::RenamedOpaqueArithmetic &o) const
+{
+  auto result = ns::capi::namespace_OpaqueArithmetic_div(this->AsFFI(),
+                                                         o.AsFFI());
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline void ns::RenamedOpaqueArithmatic::operator+=(const ns::RenamedOpaqueArithmatic& o) {
-  ns::capi::namespace_OpaqueArithmatic_addassign(this->AsFFI(),
-    o.AsFFI());
+inline void ns::RenamedOpaqueArithmetic::operator+=(const ns::RenamedOpaqueArithmetic &o)
+{
+  ns::capi::namespace_OpaqueArithmetic_addassign(this->AsFFI(),
+                                                 o.AsFFI());
 }
 
-inline void ns::RenamedOpaqueArithmatic::operator-=(const ns::RenamedOpaqueArithmatic& o) {
-  ns::capi::namespace_OpaqueArithmatic_subassign(this->AsFFI(),
-    o.AsFFI());
+inline void ns::RenamedOpaqueArithmetic::operator-=(const ns::RenamedOpaqueArithmetic &o)
+{
+  ns::capi::namespace_OpaqueArithmetic_subassign(this->AsFFI(),
+                                                 o.AsFFI());
 }
 
-inline void ns::RenamedOpaqueArithmatic::operator*=(const ns::RenamedOpaqueArithmatic& o) {
-  ns::capi::namespace_OpaqueArithmatic_mulassign(this->AsFFI(),
-    o.AsFFI());
+inline void ns::RenamedOpaqueArithmetic::operator*=(const ns::RenamedOpaqueArithmetic &o)
+{
+  ns::capi::namespace_OpaqueArithmetic_mulassign(this->AsFFI(),
+                                                 o.AsFFI());
 }
 
-inline void ns::RenamedOpaqueArithmatic::operator/=(const ns::RenamedOpaqueArithmatic& o) {
-  ns::capi::namespace_OpaqueArithmatic_divassign(this->AsFFI(),
-    o.AsFFI());
+inline void ns::RenamedOpaqueArithmetic::operator/=(const ns::RenamedOpaqueArithmetic &o)
+{
+  ns::capi::namespace_OpaqueArithmetic_divassign(this->AsFFI(),
+                                                 o.AsFFI());
 }
 
-inline const ns::capi::RenamedOpaqueArithmatic* ns::RenamedOpaqueArithmatic::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedOpaqueArithmatic*>(this);
+inline const ns::capi::RenamedOpaqueArithmetic *ns::RenamedOpaqueArithmetic::AsFFI() const
+{
+  return reinterpret_cast<const ns::capi::RenamedOpaqueArithmetic *>(this);
 }
 
-inline ns::capi::RenamedOpaqueArithmatic* ns::RenamedOpaqueArithmatic::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedOpaqueArithmatic*>(this);
+inline ns::capi::RenamedOpaqueArithmetic *ns::RenamedOpaqueArithmetic::AsFFI()
+{
+  return reinterpret_cast<ns::capi::RenamedOpaqueArithmetic *>(this);
 }
 
-inline const ns::RenamedOpaqueArithmatic* ns::RenamedOpaqueArithmatic::FromFFI(const ns::capi::RenamedOpaqueArithmatic* ptr) {
-  return reinterpret_cast<const ns::RenamedOpaqueArithmatic*>(ptr);
+inline const ns::RenamedOpaqueArithmetic *ns::RenamedOpaqueArithmetic::FromFFI(const ns::capi::RenamedOpaqueArithmetic *ptr)
+{
+  return reinterpret_cast<const ns::RenamedOpaqueArithmetic *>(ptr);
 }
 
-inline ns::RenamedOpaqueArithmatic* ns::RenamedOpaqueArithmatic::FromFFI(ns::capi::RenamedOpaqueArithmatic* ptr) {
-  return reinterpret_cast<ns::RenamedOpaqueArithmatic*>(ptr);
+inline ns::RenamedOpaqueArithmetic *ns::RenamedOpaqueArithmetic::FromFFI(ns::capi::RenamedOpaqueArithmetic *ptr)
+{
+  return reinterpret_cast<ns::RenamedOpaqueArithmetic *>(ptr);
 }
 
-inline void ns::RenamedOpaqueArithmatic::operator delete(void* ptr) {
-  ns::capi::namespace_OpaqueArithmatic_destroy(reinterpret_cast<ns::capi::RenamedOpaqueArithmatic*>(ptr));
+inline void ns::RenamedOpaqueArithmetic::operator delete(void *ptr)
+{
+  ns::capi::namespace_OpaqueArithmetic_destroy(reinterpret_cast<ns::capi::RenamedOpaqueArithmetic *>(ptr));
 }
 
-
-#endif // ns_RenamedOpaqueArithmatic_HPP
+#endif // ns_RenamedOpaqueArithmetic_HPP

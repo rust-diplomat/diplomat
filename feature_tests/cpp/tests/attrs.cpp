@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../include/ns/AttrOpaque1Renamed.hpp"
-#include "../include/ns/RenamedOpaqueArithmatic.hpp"
+#include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/ns/RenamedAttrEnum.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "../include/nested/ns/Nested.hpp"
@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
     r->use_unnamespaced(*un);
     r->use_namespaced(e);
 
-    auto a = ns::RenamedOpaqueArithmatic::make(1, 2);
-    auto b = ns::RenamedOpaqueArithmatic::make(2, 3);
+    auto a = ns::RenamedOpaqueArithmetic::make(1, 2);
+    auto b = ns::RenamedOpaqueArithmetic::make(2, 3);
     {
         auto r = (*a) + (*b);
 
