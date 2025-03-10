@@ -469,6 +469,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_in_err", &ResultOpaque::new_in_err, "i"_a)
     	.def_static("new_int", &ResultOpaque::new_int, "i"_a)
     	.def_static("new_in_enum_err", &ResultOpaque::new_in_enum_err, "i"_a)
+    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a)
     	.def("assert_integer", &ResultOpaque::assert_integer, "i"_a);
     
     PyType_Slot RefList_slots[] = {
