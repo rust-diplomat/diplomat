@@ -58,6 +58,10 @@ impl Config {
                 self.demo_gen_config
                     .set(&key.replace("demo_gen.", ""), value);
             }
+        } else if key.starts_with("nanobind.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } // nanobind doesn't have any other config setting
         } else {
             self.shared_config.set(key, value)
         }

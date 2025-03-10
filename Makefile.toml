@@ -14,7 +14,7 @@ default_to_workspace = false
 [env]
 # C++ flags to pass when running check-cpp with clang
 # Based on what our clients care about
-CXX_FLAGS_FOR_CHECK="-Wc++98-compat-extra-semi -Wextra-semi"
+CXX_FLAGS_FOR_CHECK = "-Wc++98-compat-extra-semi -Wextra-semi"
 
 # Metatasks invoked by CI
 [tasks.test-native]
@@ -490,7 +490,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests nanobind src/cpp "-l diplomat-py-conf.toml" 
+generate_generic feature_tests nanobind src/cpp
 mv nanobind/src/cpp/somelib_ext.cpp nanobind/src/somelib_ext.cpp
 rm -rf nanobind/src/cpp
 '''
