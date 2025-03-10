@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
-use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
+use diplomat_core::hir::{self, SpecialMethod, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -165,7 +165,20 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
-        self.fmt_identifier(method.attrs.rename.apply(method.name.as_str().into()))
+        match method.attrs.special_method {
+            Some(SpecialMethod::Indexer) => "operator[]".into(),
+            Some(SpecialMethod::Add) => "operator+".into(),
+            Some(SpecialMethod::Sub) => "operator-".into(),
+            Some(SpecialMethod::Mul) => "operator*".into(),
+            Some(SpecialMethod::Div) => "operator/".into(),
+            Some(SpecialMethod::AddAssign) => "operator+=".into(),
+            Some(SpecialMethod::SubAssign) => "operator-=".into(),
+            Some(SpecialMethod::MulAssign) => "operator*=".into(),
+            Some(SpecialMethod::DivAssign) => "operator/=".into(),
+            Some(_) | None => {
+                self.fmt_identifier(method.attrs.rename.apply(method.name.as_str().into()))
+            }
+        }
     }
 
     pub fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {

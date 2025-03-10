@@ -1,7 +1,6 @@
 ---
 source: macro/src/lib.rs
-assertion_line: 1069
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                pub struct TestingStruct { x: i32, y: i32, } pub trait\n                                TesterTrait: std::marker::Send\n                                {\n                                    fn test_trait_fn(&self, x: i32) -> i32; fn\n                                    test_void_trait_fn(&self); fn\n                                    test_struct_trait_fn(&self, s: TestingStruct) -> i32; fn\n                                    test_slice_trait_fn(&self, s: &[u8]) -> i32;\n                                } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n                                {\n                                    pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n                                    { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n                                    test_trait_with_struct(t: impl TesterTrait) -> i32\n                                    {\n                                        let arg = TestingStruct { x: 1, y: 5, };\n                                        t.test_struct_trait_fn(arg)\n                                    }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
+expression: "pretty_print_code(gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        pub struct TestingStruct { x: i32, y: i32, } pub trait TesterTrait:\n        std::marker::Send\n        {\n            fn test_trait_fn(&self, x: i32) -> i32; fn\n            test_void_trait_fn(&self); fn\n            test_struct_trait_fn(&self, s: TestingStruct) -> i32; fn\n            test_slice_trait_fn(&self, s: &[u8]) -> i32;\n        } pub struct Wrapper { cant_be_empty: bool, } impl Wrapper\n        {\n            pub fn test_with_trait(t: impl TesterTrait, x: i32) -> i32\n            { t.test_void_trait_fn(); t.test_trait_fn(x) } pub fn\n            test_trait_with_struct(t: impl TesterTrait) -> i32\n            {\n                let arg = TestingStruct { x: 1, y: 5, };\n                t.test_struct_trait_fn(arg)\n            }\n        }\n    }\n}).to_token_stream())"
 ---
 mod ffi {
     #[repr(C)]
@@ -29,14 +28,19 @@ mod ffi {
             t.test_struct_trait_fn(arg)
         }
     }
-    use core::ffi::c_void;
     use diplomat_runtime::*;
+    use core::ffi::c_void;
     #[no_mangle]
-    extern "C" fn Wrapper_test_with_trait(t: DiplomatTraitStruct_TesterTrait, x: i32) -> i32 {
+    extern "C" fn Wrapper_test_with_trait(
+        t: DiplomatTraitStruct_TesterTrait,
+        x: i32,
+    ) -> i32 {
         Wrapper::test_with_trait(t, x)
     }
     #[no_mangle]
-    extern "C" fn Wrapper_test_trait_with_struct(t: DiplomatTraitStruct_TesterTrait) -> i32 {
+    extern "C" fn Wrapper_test_trait_with_struct(
+        t: DiplomatTraitStruct_TesterTrait,
+    ) -> i32 {
         Wrapper::test_trait_with_struct(t)
     }
     #[repr(C)]
@@ -46,10 +50,14 @@ mod ffi {
         pub alignment: usize,
         pub run_test_trait_fn_callback: unsafe extern "C" fn(*const c_void, i32) -> i32,
         pub run_test_void_trait_fn_callback: unsafe extern "C" fn(*const c_void),
-        pub run_test_struct_trait_fn_callback:
-            unsafe extern "C" fn(*const c_void, TestingStruct) -> i32,
-        pub run_test_slice_trait_fn_callback:
-            unsafe extern "C" fn(*const c_void, diplomat_runtime::DiplomatSlice<u8>) -> i32,
+        pub run_test_struct_trait_fn_callback: unsafe extern "C" fn(
+            *const c_void,
+            TestingStruct,
+        ) -> i32,
+        pub run_test_slice_trait_fn_callback: unsafe extern "C" fn(
+            *const c_void,
+            diplomat_runtime::DiplomatSlice<u8>,
+        ) -> i32,
     }
     #[repr(C)]
     pub struct DiplomatTraitStruct_TesterTrait {

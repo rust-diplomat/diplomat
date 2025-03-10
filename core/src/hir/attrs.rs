@@ -133,6 +133,51 @@ pub enum SpecialMethod {
     Iterable,
     /// Indexes into the type using an integer
     Indexer,
+
+    /// Arithmetic operators. May not return references
+    Add,
+    Sub,
+    Mul,
+    Div,
+
+    /// In-place arithmetic operators. Must not return a value
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+}
+
+impl SpecialMethod {
+    fn from_path_and_meta(path: &str, meta: &Meta) -> Result<Option<Self>, LoweringError> {
+        let parse_meta = |meta| match StandardAttribute::from_meta(meta) {
+            Ok(StandardAttribute::String(s)) => Ok(Some(s)),
+            Ok(StandardAttribute::Empty) => Ok(None),
+            Ok(_) | Err(_) => Err(LoweringError::Other(format!(
+                "`{path}` must have a single string parameter or no parameter"
+            ))),
+        };
+
+        match path {
+            "constructor" => Ok(Some(Self::Constructor)),
+            "named_constructor" => Ok(Some(Self::NamedConstructor(parse_meta(meta)?))),
+            "getter" => Ok(Some(Self::Getter(parse_meta(meta)?))),
+            "setter" => Ok(Some(Self::Setter(parse_meta(meta)?))),
+            "stringifier" => Ok(Some(Self::Stringifier)),
+            "comparison" => Ok(Some(Self::Comparison)),
+            "iterator" => Ok(Some(Self::Iterator)),
+            "iterable" => Ok(Some(Self::Iterable)),
+            "indexer" => Ok(Some(Self::Indexer)),
+            "add" => Ok(Some(Self::Add)),
+            "sub" => Ok(Some(Self::Sub)),
+            "mul" => Ok(Some(Self::Mul)),
+            "div" => Ok(Some(Self::Div)),
+            "add_assign" => Ok(Some(Self::AddAssign)),
+            "sub_assign" => Ok(Some(Self::SubAssign)),
+            "mul_assign" => Ok(Some(Self::MulAssign)),
+            "div_assign" => Ok(Some(Self::DivAssign)),
+            _ => Ok(None),
+        }
+    }
 }
 
 /// For special methods that affect type semantics, whether this type has this method.
@@ -192,50 +237,77 @@ impl Attrs {
         let backend = validator.primary_name();
         for attr in &ast.attrs {
             let mut auto_found = false;
-            let mut auto_used = false;
-            let satisfies = match validator.satisfies_cfg(&attr.cfg, Some(&mut auto_found)) {
-                Ok(satisfies) => satisfies,
+            match validator.satisfies_cfg(&attr.cfg, Some(&mut auto_found)) {
+                Ok(satisfies) if !satisfies => continue,
                 Err(e) => {
                     errors.push(e);
                     continue;
                 }
+                Ok(_) => {}
             };
-            if satisfies {
-                let path = attr.meta.path();
-                if let Some(path) = path.get_ident() {
-                    if path == "disable" {
-                        if let Meta::Path(_) = attr.meta {
-                            if this.disable {
-                                errors.push(LoweringError::Other(
-                                    "Duplicate `disable` attribute".into(),
-                                ));
-                            } else {
-                                this.disable = true;
-                            }
+
+            let path = attr.meta.path();
+            if let Some(path) = path.get_ident() {
+                let path = path.to_string();
+
+                let warn_auto = |errors: &mut ErrorStore| {
+                    if auto_found {
+                        errors.push(LoweringError::Other(format!(
+                            "Diplomat attribute {path:?} gated on 'auto' but is not one that works with 'auto'"
+                        )));
+                    }
+                };
+
+                // Check against the set of attributes that can have platform support
+                if support.check_string(&path) == Some(false) {
+                    maybe_error_unsupported(auto_found, &path, backend, errors);
+                    continue;
+                }
+
+                match SpecialMethod::from_path_and_meta(&path, &attr.meta) {
+                    Ok(Some(kind)) => {
+                        if let Some(ref existing) = this.special_method {
+                            errors.push(LoweringError::Other(format!(
+                                    "Multiple special method markers found on the same method, found {path} and {existing:?}"
+                                )));
                         } else {
-                            errors.push(LoweringError::Other(
-                                "`disable` must be a simple path".into(),
-                            ))
+                            this.special_method = Some(kind);
                         }
-                    } else if path == "rename" {
-                        match RenameAttr::from_meta(&attr.meta) {
-                            Ok(rename) => {
-                                // We use the override extend mode: a single ast::Attrs
-                                // will have had these attributes inherited into the list by appending
-                                // to the end; so a later attribute in the list is more pertinent.
-                                this.rename.extend(&rename);
+                    }
+                    Err(error) => errors.push(error),
+                    Ok(None) => match path.as_str() {
+                        // No match found in the special methods, check the other keywords
+                        "disable" => {
+                            if let Meta::Path(_) = attr.meta {
+                                if this.disable {
+                                    errors.push(LoweringError::Other(
+                                        "Duplicate `disable` attribute".into(),
+                                    ));
+                                } else {
+                                    this.disable = true;
+                                }
+                            } else {
+                                errors.push(LoweringError::Other(
+                                    "`disable` must be a simple path".into(),
+                                ))
                             }
-                            Err(e) => errors.push(LoweringError::Other(format!(
-                                "`rename` attr failed to parse: {e:?}"
-                            ))),
+                            warn_auto(errors);
                         }
-                    } else if path == "namespace" {
-                        if !support.namespacing {
-                            maybe_error_unsupported(auto_found, "constructor", backend, errors);
-                            continue;
+                        "rename" => {
+                            match RenameAttr::from_meta(&attr.meta) {
+                                Ok(rename) => {
+                                    // We use the override extend mode: a single ast::Attrs
+                                    // will have had these attributes inherited into the list by appending
+                                    // to the end; so a later attribute in the list is more pertinent.
+                                    this.rename.extend(&rename);
+                                }
+                                Err(e) => errors.push(LoweringError::Other(format!(
+                                    "`rename` attr failed to parse: {e:?}"
+                                ))),
+                            }
+                            warn_auto(errors);
                         }
-                        auto_used = true;
-                        match StandardAttribute::from_meta(&attr.meta) {
+                        "namespace" => match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
                             }
@@ -244,134 +316,17 @@ impl Attrs {
                                 errors.push(LoweringError::Other(
                                     "`namespace` must have a single string parameter".to_string(),
                                 ));
-                                continue;
                             }
+                        },
+                        "error" => {
+                            this.custom_errors = true;
                         }
-                    } else if path == "constructor"
-                        || path == "stringifier"
-                        || path == "comparison"
-                        || path == "iterable"
-                        || path == "iterator"
-                        || path == "indexer"
-                    {
-                        if let Some(ref existing) = this.special_method {
+                        _ => {
                             errors.push(LoweringError::Other(format!(
-                            "Multiple special method markers found on the same method, found {path} and {existing:?}"
-                        )));
-                            continue;
+                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
+                            )));
                         }
-                        let kind = if path == "constructor" {
-                            if !support.constructors {
-                                maybe_error_unsupported(auto_found, "constructor", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Constructor
-                        } else if path == "stringifier" {
-                            if !support.stringifiers {
-                                maybe_error_unsupported(auto_found, "stringifier", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Stringifier
-                        } else if path == "iterable" {
-                            if !support.iterables {
-                                maybe_error_unsupported(auto_found, "iterable", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Iterable
-                        } else if path == "iterator" {
-                            if !support.iterators {
-                                maybe_error_unsupported(auto_found, "iterator", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Iterator
-                        } else if path == "indexer" {
-                            if !support.indexing {
-                                maybe_error_unsupported(auto_found, "indexer", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Indexer
-                        } else {
-                            if !support.comparators {
-                                maybe_error_unsupported(auto_found, "comparator", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Comparison
-                        };
-
-                        this.special_method = Some(kind);
-                    } else if path == "named_constructor" || path == "getter" || path == "setter" {
-                        if let Some(ref existing) = this.special_method {
-                            errors.push(LoweringError::Other(format!(
-                            "Multiple special method markers found on the same method, found {path} and {existing:?}"
-                        )));
-                            continue;
-                        }
-                        let kind = if path == "named_constructor" {
-                            if !support.named_constructors {
-                                maybe_error_unsupported(
-                                    auto_found,
-                                    "named_constructors",
-                                    backend,
-                                    errors,
-                                );
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::NamedConstructor
-                        } else if path == "getter" {
-                            if !support.accessors {
-                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Getter
-                        } else {
-                            if !support.accessors {
-                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
-                                continue;
-                            }
-                            auto_used = true;
-                            SpecialMethod::Setter
-                        };
-                        match StandardAttribute::from_meta(&attr.meta) {
-                            Ok(StandardAttribute::String(s)) => {
-                                this.special_method = Some(kind(Some(s)))
-                            }
-                            Ok(StandardAttribute::Empty) => this.special_method = Some(kind(None)),
-                            Ok(_) | Err(_) => {
-                                errors.push(LoweringError::Other(format!(
-                                    "`{path}` must have a single string parameter or no parameter",
-                                )));
-                                continue;
-                            }
-                        }
-                    } else if path == "error" {
-                        if !support.custom_errors {
-                            maybe_error_unsupported(auto_found, "error", backend, errors);
-                            continue;
-                        }
-                        auto_used = true;
-                        this.custom_errors = true;
-                    } else {
-                        errors.push(LoweringError::Other(format!(
-                            "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
-                        )));
-                    }
-                    if auto_found && !auto_used {
-                        errors.push(LoweringError::Other(format!(
-                            "Diplomat attribute {path} gated on 'auto' but is not one that works with 'auto'"
-                        )));
-                    }
-                } else {
-                    errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
-                    )));
+                    },
                 }
             }
         }
@@ -481,13 +436,25 @@ impl Attrs {
             if let AttributeContext::Method(method, self_id, ref mut special_method_presence) =
                 context
             {
+                let check_param_count = |name: &str, count: usize, errors: &mut ErrorStore| {
+                    if method.params.len() != count {
+                        errors.push(LoweringError::Other(format!(
+                            "{name} must have exactly {count} parameter{}",
+                            if count == 1 { "" } else { "s" }
+                        )))
+                    }
+                };
+                let check_self_param = |name: &str, need_self: bool, errors: &mut ErrorStore| {
+                    if method.param_self.is_some() != need_self {
+                        errors.push(LoweringError::Other(format!(
+                            "{name} must{} accept a self parameter",
+                            if need_self { "" } else { " not" }
+                        )));
+                    }
+                };
                 match special {
                     SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
-                        if method.param_self.is_some() {
-                            errors.push(LoweringError::Other(
-                                "Constructors must not accept a self parameter".to_string(),
-                            ))
-                        }
+                        check_self_param("Constructors", false, errors);
                         let output = method.output.success_type();
                         match method.output {
                             ReturnType::Infallible(_) => (),
@@ -529,12 +496,7 @@ impl Attrs {
                         if !matches!(method.output.success_type(), SuccessType::Unit) {
                             errors.push(LoweringError::Other("Setters must return unit".into()));
                         }
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Setter must have exactly one parameter".into(),
-                            ))
-                        }
-
+                        check_param_count("Setter", 1, errors);
                         // Currently does not forbid fallible setters, could if desired
                     }
                     SpecialMethod::Stringifier => {
@@ -549,11 +511,7 @@ impl Attrs {
                         }
                     }
                     SpecialMethod::Comparison => {
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Comparator must have single parameter".into(),
-                            ));
-                        }
+                        check_param_count("Comparator", 1, errors);
                         if special_method_presence.comparator {
                             errors.push(LoweringError::Other(
                                 "Cannot define two comparators on the same type".into(),
@@ -563,6 +521,8 @@ impl Attrs {
                         // In the long run we can actually support heterogeneous comparators. Not a priority right now.
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
+                        check_self_param("Comparators", true, errors);
+
                         if let Some(ref selfty) = method.param_self {
                             if let Some(param) = method.params.first() {
                                 match (&selfty.ty, &param.ty) {
@@ -608,9 +568,6 @@ impl Attrs {
                                     }
                                 }
                             }
-                        } else {
-                            errors
-                                .push(LoweringError::Other("Comparator must be non-static".into()));
                         }
                     }
                     SpecialMethod::Iterator => {
@@ -619,11 +576,7 @@ impl Attrs {
                                 "Cannot mark type as iterator twice".into(),
                             ));
                         }
-                        if !method.params.is_empty() {
-                            errors.push(LoweringError::Other(
-                                "Iterators cannot take parameters".into(),
-                            ))
-                        }
+                        check_param_count("Iterator", 0, errors);
                         // In theory we could support struct and enum iterators. The benefit is slight:
                         // it generates probably inefficient code whilst being rather weird when it comes to the
                         // "structs and enums convert across the boundary" norm for backends.
@@ -632,14 +585,13 @@ impl Attrs {
                         //
                         // Furthermore, in some backends (like Dart) defining an iterator may requiring adding fields,
                         // which may not be possible for enums, and would still be an odd-one-out field for structs.g s
+                        check_self_param("Iterator", true, errors);
                         if let Some(this) = &method.param_self {
                             if !matches!(this.ty, SelfType::Opaque(..)) {
                                 errors.push(LoweringError::Other(
                                     "Iterators only allowed on opaques".into(),
                                 ))
                             }
-                        } else {
-                            errors.push(LoweringError::Other("Iterators must take self".into()))
                         }
 
                         if let ReturnType::Nullable(ref o) = method.output {
@@ -675,14 +627,8 @@ impl Attrs {
                                 "Cannot mark type as iterable twice".into(),
                             ));
                         }
-                        if !method.params.is_empty() {
-                            errors.push(LoweringError::Other(
-                                "Iterables cannot take parameters".into(),
-                            ))
-                        }
-                        if method.param_self.is_none() {
-                            errors.push(LoweringError::Other("Iterables must take self".into()))
-                        }
+                        check_param_count("Iterator", 0, errors);
+                        check_self_param("Iterables", true, errors);
 
                         match method.output.success_type() {
                             SuccessType::OutType(ty) => {
@@ -700,15 +646,44 @@ impl Attrs {
                         }
                     }
                     SpecialMethod::Indexer => {
-                        if method.params.len() != 1 {
-                            errors.push(LoweringError::Other(
-                                "Indexer must have exactly one parameter".into(),
-                            ));
-                        }
+                        check_param_count("Indexer", 1, errors);
+                        check_self_param("Indexer", true, errors);
 
                         if method.output.success_type().is_unit() {
                             errors.push(LoweringError::Other("Indexer must return a value".into()));
                         }
+                    }
+                    e @ (SpecialMethod::Add
+                    | SpecialMethod::Sub
+                    | SpecialMethod::Mul
+                    | SpecialMethod::Div) => {
+                        let name = match e {
+                            SpecialMethod::Add => "Add",
+                            SpecialMethod::Sub => "Sub",
+                            SpecialMethod::Mul => "Mul",
+                            SpecialMethod::Div => "Div",
+                            _ => unreachable!(),
+                        };
+
+                        check_param_count(name, 1, errors);
+                        check_self_param(name, true, errors);
+
+                        if method.output.success_type().is_unit() {
+                            errors
+                                .push(LoweringError::Other(format!("{name} must return a value")));
+                        }
+                    }
+                    SpecialMethod::AddAssign => {
+                        check_param_count("AddAssign", 1, errors);
+                    }
+                    SpecialMethod::SubAssign => {
+                        check_param_count("SubAssign", 1, errors);
+                    }
+                    SpecialMethod::MulAssign => {
+                        check_param_count("MulAssign", 1, errors);
+                    }
+                    SpecialMethod::DivAssign => {
+                        check_param_count("DivAssign", 1, errors);
                     }
                 }
             } else {
@@ -865,7 +840,8 @@ pub struct BackendAttrSupport {
     pub iterables: bool,
     /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
-
+    /// Marking a method as an arithmetic operator (+-*/[=])
+    pub arithmetic: bool,
     /// Support for Option<Struct> and Option<Primitive>
     pub option: bool,
     /// Allowing callback arguments
@@ -901,12 +877,42 @@ impl BackendAttrSupport {
             iterators: true,
             iterables: true,
             indexing: true,
+            arithmetic: true,
             option: true,
             callbacks: true,
             traits: true,
             custom_errors: true,
             traits_are_send: true,
             traits_are_sync: true,
+        }
+    }
+
+    fn check_string(&self, v: &str) -> Option<bool> {
+        match v {
+            "namespacing" => Some(self.namespacing),
+            "memory_sharing" => Some(self.memory_sharing),
+            "non_exhaustive_structs" => Some(self.non_exhaustive_structs),
+            "method_overloading" => Some(self.method_overloading),
+            "utf8_strings" => Some(self.utf8_strings),
+            "utf16_strings" => Some(self.utf16_strings),
+            "static_slices" => Some(self.static_slices),
+            "constructors" => Some(self.constructors),
+            "named_constructors" => Some(self.named_constructors),
+            "fallible_constructors" => Some(self.fallible_constructors),
+            "accessors" => Some(self.accessors),
+            "stringifiers" => Some(self.stringifiers),
+            "comparators" => Some(self.comparators),
+            "iterators" => Some(self.iterators),
+            "iterables" => Some(self.iterables),
+            "indexing" => Some(self.indexing),
+            "arithmetic" => Some(self.arithmetic),
+            "option" => Some(self.option),
+            "callbacks" => Some(self.callbacks),
+            "traits" => Some(self.traits),
+            "custom_errors" => Some(self.custom_errors),
+            "traits_are_send" => Some(self.traits_are_send),
+            "traits_are_sync" => Some(self.traits_are_sync),
+            _ => None,
         }
     }
 }
@@ -1036,6 +1042,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 iterators,
                 iterables,
                 indexing,
+                arithmetic,
                 option,
                 callbacks,
                 traits,
@@ -1061,6 +1068,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
+                "arithmetic" => arithmetic,
                 "option" => option,
                 "callbacks" => callbacks,
                 "traits" => traits,

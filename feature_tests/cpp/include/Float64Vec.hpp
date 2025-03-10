@@ -114,7 +114,7 @@ inline diplomat::span<const double> Float64Vec::borrow() const {
   return diplomat::span<const double>(result.data, result.len);
 }
 
-inline std::optional<double> Float64Vec::get(size_t i) const {
+inline std::optional<double> Float64Vec::operator[](size_t i) const {
   auto result = diplomat::capi::Float64Vec_get(this->AsFFI(),
     i);
   return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
