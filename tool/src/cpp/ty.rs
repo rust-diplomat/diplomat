@@ -586,7 +586,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
             Type::Callback(..) => {
-                format!("{{new decltype({cpp_name})({cpp_name}), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+                format!("{{new decltype({cpp_name})(std::move({cpp_name})), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

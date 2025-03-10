@@ -4,7 +4,8 @@
 #include "../include/ErrorStruct.hpp"
 #include "assert.hpp"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     std::unique_ptr<ResultOpaque> r;
     std::unique_ptr<ResultOpaque> r2 = ResultOpaque::new_(5).ok().value();
     r2->assert_integer(5);
@@ -17,7 +18,7 @@ int main(int argc, char *argv[]) {
     auto unit_err = ResultOpaque::new_failing_unit();
     simple_assert("unit error", unit_err.is_err())
 
-    auto struc = ResultOpaque::new_failing_struct(109).err().value();
+        auto struc = ResultOpaque::new_failing_struct(109).err().value();
     simple_assert_eq("struct error", struc.i, 109);
 
     auto integer = ResultOpaque::new_int(109).ok().value();
@@ -28,4 +29,8 @@ int main(int argc, char *argv[]) {
 
     auto in_enum_err = ResultOpaque::new_in_enum_err(989).err().value();
     in_enum_err->assert_integer(989);
+
+    // Note: This fails to compile due to std::optional not allowing & types
+    // auto str_result = r2->takes_str("fish");
+    // simple_assert_eq("Did not return a chaining value correctly", &str_result.ok().value(), r2.get());
 }
