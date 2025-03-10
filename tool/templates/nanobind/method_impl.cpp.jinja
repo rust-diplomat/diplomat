@@ -1,9 +1,34 @@
-	.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
-	("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
-	{%- for param in m.method.params -%}
-	  , "{{param.name}}"_a 
-	  {%- if let Type::DiplomatOption(t) = param.ty -%}
-	  .none()
-	  {%- endif -%}
-    {%- endfor -%}
-	)
+	{% match m.method.attrs.special_method -%}
+	{%- when Some(crate::hir::SpecialMethod::Add) -%}
+		.def(nb::self + nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Sub) -%}
+		.def(nb::self - nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Mul) -%}
+		.def(nb::self * nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Div) -%}
+		.def(nb::self / nb::self)
+	{%- when Some(crate::hir::SpecialMethod::AddAssign) -%}
+		.def(nb::self += nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::SubAssign) -%}
+		.def(nb::self -= nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::MulAssign) -%}
+		.def(nb::self *= nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::DivAssign) -%}
+		.def(nb::self /= nb::self, nb::rv_policy::none)
+	{%- else -%}
+		.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
+		{%- match m.method.attrs.special_method -%}
+		{%- when Some(crate::hir::SpecialMethod::Indexer) -%}
+			("__getitem__", &{{- type_name }}::operator[] 
+		{%- else -%}
+			("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
+		{%- endmatch -%}
+		
+		{%- for param in m.method.params -%}
+		, "{{param.name}}"_a 
+		{%- if let Type::DiplomatOption(t) = param.ty -%}
+		.none()
+		{%- endif -%}
+		{%- endfor -%}
+		)
+	{%- endmatch -%}

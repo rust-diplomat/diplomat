@@ -6,7 +6,7 @@ use std::{borrow::Cow, collections::HashSet};
 
 use crate::{Config, ErrorStore, FileMap};
 use binding::Binding;
-use diplomat_core::hir::{self, BackendAttrSupport};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
 use serde::{Deserialize, Serialize};
 use ty::TyGenContext;
@@ -37,6 +37,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.stringifiers = false; // TODO
     a.iterators = false; // TODO
     a.iterables = false; // TODO
+    a.arithmetic = true;
     a.indexing = false; // TODO
     a.option = true;
     a.callbacks = true;
@@ -50,22 +51,23 @@ struct PythonConfig {
     lib_name: String,
 }
 
-pub(crate) fn run<'tcx>(
-    tcx: &'tcx hir::TypeContext,
+pub(crate) fn run<'cx>(
+    tcx: &'cx hir::TypeContext,
     conf: Config,
-) -> (FileMap, ErrorStore<'tcx, String>) {
+    docs: &'cx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
-    let formatter = PyFormatter::new(tcx);
+    let formatter = PyFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
         .shared_config
         .lib_name
-        .expect("Nanobind backend requires lib_name to be set");
+        .expect("Nanobind backend requires lib_name to be set in the config");
 
     let nanobind_filepath = format!("{lib_name}_ext.cpp");
     let mut binding = Binding::new();
-    binding.module_name = Cow::from(lib_name);
+    binding.module_name = lib_name.into();
 
     let mut submodules = HashSet::<Cow<str>>::new();
     for (id, ty) in tcx.all_types() {

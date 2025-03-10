@@ -25,6 +25,7 @@
 #include "MyOpaqueEnum.hpp"
 #include "MyString.hpp"
 #include "MyStruct.hpp"
+#include "MyStructContainingAnOption.hpp"
 #include "MyZst.hpp"
 #include "NestedBorrowedFields.hpp"
 #include "One.hpp"
@@ -48,6 +49,7 @@
 #include "ns/AttrOpaque1Renamed.hpp"
 #include "ns/RenamedAttrEnum.hpp"
 #include "ns/RenamedAttrOpaque2.hpp"
+#include "ns/RenamedOpaqueArithmetic.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -280,6 +282,12 @@ NB_MODULE(somelib, somelib_mod)
     	.def("into_a", &MyStruct::into_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result);
+    nb::class_<MyStructContainingAnOption>(somelib_mod, "MyStructContainingAnOption")
+        .def(nb::init<>()).def(nb::init<std::optional<MyStruct>, std::optional<DefaultEnum>>(), "a"_a.none(),  "b"_a.none())
+        .def_rw("a", &MyStructContainingAnOption::a)
+        .def_rw("b", &MyStructContainingAnOption::b)
+    	.def_static("new_", &MyStructContainingAnOption::new_)
+    	.def_static("filled", &MyStructContainingAnOption::filled);
     nb::class_<MyZst>(somelib_mod, "MyZst")
         .def(nb::init<>());
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
@@ -333,6 +341,24 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<nested::ns2::Nested>(ns2_mod, "Nested", nb::type_slots(nested_ns2_Nested_slots));
+    
+    PyType_Slot ns_RenamedOpaqueArithmetic_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedOpaqueArithmetic::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedOpaqueArithmetic>(ns_mod, "RenamedOpaqueArithmetic", nb::type_slots(ns_RenamedOpaqueArithmetic_slots))
+    	.def_static("make", &ns::RenamedOpaqueArithmetic::make, "x"_a, "y"_a)
+    	.def("x", &ns::RenamedOpaqueArithmetic::x)
+    	.def("y", &ns::RenamedOpaqueArithmetic::y)
+    	.def(nb::self + nb::self)
+    	.def(nb::self - nb::self)
+    	.def(nb::self * nb::self)
+    	.def(nb::self / nb::self)
+    	.def(nb::self += nb::self, nb::rv_policy::none)
+    	.def(nb::self -= nb::self, nb::rv_policy::none)
+    	.def(nb::self *= nb::self, nb::rv_policy::none)
+    	.def(nb::self /= nb::self, nb::rv_policy::none);
     
     PyType_Slot Unnamespaced_slots[] = {
         {Py_tp_free, (void *)Unnamespaced::operator delete },
@@ -406,9 +432,9 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_struct_nones", &OptionOpaque::new_struct_nones)
     	.def("assert_integer", &OptionOpaque::assert_integer, "i"_a)
     	.def_static("option_opaque_argument", &OptionOpaque::option_opaque_argument, "arg"_a)
-    	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a.none())
-    	.def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a.none())
-    	.def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a.none())
+    	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a.none(), "sentinel"_a)
+    	.def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a.none(), "sentinel"_a)
+    	.def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a.none(), "sentinel"_a)
     	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct);
     
     PyType_Slot OptionOpaqueChar_slots[] = {
@@ -443,7 +469,6 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_in_err", &ResultOpaque::new_in_err, "i"_a)
     	.def_static("new_int", &ResultOpaque::new_int, "i"_a)
     	.def_static("new_in_enum_err", &ResultOpaque::new_in_enum_err, "i"_a)
-    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a)
     	.def("assert_integer", &ResultOpaque::assert_integer, "i"_a);
     
     PyType_Slot RefList_slots[] = {
@@ -479,7 +504,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def("set_value", &Float64Vec::set_value, "new_slice"_a)
     	.def("to_string", &Float64Vec::to_string)
     	.def("borrow", &Float64Vec::borrow)
-    	.def("get", &Float64Vec::get, "i"_a);
+    	.def("__getitem__", &Float64Vec::operator[], "i"_a);
     
     PyType_Slot MyString_slots[] = {
         {Py_tp_free, (void *)MyString::operator delete },

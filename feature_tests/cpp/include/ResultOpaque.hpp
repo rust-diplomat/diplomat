@@ -43,8 +43,6 @@ namespace capi {
     typedef struct ResultOpaque_new_in_enum_err_result {union {diplomat::capi::ErrorEnum ok; diplomat::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_enum_err_result;
     ResultOpaque_new_in_enum_err_result ResultOpaque_new_in_enum_err(int32_t i);
     
-    diplomat::capi::ResultOpaque* ResultOpaque_takes_str(diplomat::capi::ResultOpaque* self, diplomat::capi::DiplomatStringView _v);
-    
     void ResultOpaque_assert_integer(const diplomat::capi::ResultOpaque* self, int32_t i);
     
     
@@ -92,15 +90,6 @@ inline diplomat::result<int32_t, std::monostate> ResultOpaque::new_int(int32_t i
 inline diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_enum_err(int32_t i) {
   auto result = diplomat::capi::ResultOpaque_new_in_enum_err(i);
   return result.is_ok ? diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Ok<ErrorEnum>(ErrorEnum::FromFFI(result.ok))) : diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
-}
-
-inline diplomat::result<ResultOpaque&, diplomat::Utf8Error> ResultOpaque::takes_str(std::string_view _v) {
-  if (!diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
-    return diplomat::Err<diplomat::Utf8Error>();
-  }
-  auto result = diplomat::capi::ResultOpaque_takes_str(this->AsFFI(),
-    {_v.data(), _v.size()});
-  return diplomat::Ok<ResultOpaque&>(*ResultOpaque::FromFFI(result));
 }
 
 inline void ResultOpaque::assert_integer(int32_t i) const {

@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
-use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsUrlGenerator, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -18,9 +18,9 @@ pub(crate) struct PyFormatter<'tcx> {
 }
 
 impl<'tcx> PyFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
         Self {
-            c: CFormatter::new(tcx, true),
+            c: CFormatter::new(tcx, true, docs_url_gen),
         }
     }
 

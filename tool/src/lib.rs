@@ -91,7 +91,7 @@ pub fn gen(
         "cpp" => cpp::run(&tcx, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
-        "nanobind" => nanobind::run(&tcx, config),
+        "nanobind" => nanobind::run(&tcx, config, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:
             if !(config.demo_gen_config.module_name.is_some()
