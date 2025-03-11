@@ -171,6 +171,15 @@ impl SelfType {
             _ => false,
         }
     }
+    /// Returns whether the self parameter is consuming.
+    ///
+    /// Currently this can only (and must) only happen for non-opaque types.
+    pub fn is_consuming(&self) -> bool {
+        match self {
+            SelfType::Enum(_) | SelfType::Struct(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Slice {
