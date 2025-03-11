@@ -91,25 +91,25 @@ final class OptionOpaque implements ffi.Finalizable {
     return result;
   }
 
-  static int? acceptsOptionU8([int? arg]) {
-    final result = _OptionOpaque_accepts_option_u8(arg != null ? _ResultUint8Void.ok(arg) : _ResultUint8Void.err());
+  static int? acceptsOptionU8(int sentinel, [int? arg]) {
+    final result = _OptionOpaque_accepts_option_u8(arg != null ? _ResultUint8Void.ok(arg) : _ResultUint8Void.err(), sentinel);
     if (!result.isOk) {
       return null;
     }
     return result.union.ok;
   }
 
-  static OptionEnum? acceptsOptionEnum([OptionEnum? arg]) {
-    final result = _OptionOpaque_accepts_option_enum(arg != null ? _ResultInt32Void.ok(arg.index) : _ResultInt32Void.err());
+  static OptionEnum? acceptsOptionEnum(int sentinel, [OptionEnum? arg]) {
+    final result = _OptionOpaque_accepts_option_enum(arg != null ? _ResultInt32Void.ok(arg.index) : _ResultInt32Void.err(), sentinel);
     if (!result.isOk) {
       return null;
     }
     return OptionEnum.values[result.union.ok];
   }
 
-  static OptionInputStruct? acceptsOptionInputStruct([OptionInputStruct? arg]) {
+  static OptionInputStruct? acceptsOptionInputStruct(int sentinel, [OptionInputStruct? arg]) {
     final temp = _FinalizedArena();
-    final result = _OptionOpaque_accepts_option_input_struct(arg != null ? _ResultOptionInputStructFfiVoid.ok(arg._toFfi(temp.arena)) : _ResultOptionInputStructFfiVoid.err());
+    final result = _OptionOpaque_accepts_option_input_struct(arg != null ? _ResultOptionInputStructFfiVoid.ok(arg._toFfi(temp.arena)) : _ResultOptionInputStructFfiVoid.err(), sentinel);
     if (!result.isOk) {
       return null;
     }
@@ -183,19 +183,19 @@ external void _OptionOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
 external bool _OptionOpaque_option_opaque_argument(ffi.Pointer<ffi.Opaque> arg);
 
 @_DiplomatFfiUse('OptionOpaque_accepts_option_u8')
-@ffi.Native<_ResultUint8Void Function(_ResultUint8Void)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_u8')
+@ffi.Native<_ResultUint8Void Function(_ResultUint8Void, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_u8')
 // ignore: non_constant_identifier_names
-external _ResultUint8Void _OptionOpaque_accepts_option_u8(_ResultUint8Void arg);
+external _ResultUint8Void _OptionOpaque_accepts_option_u8(_ResultUint8Void arg, int sentinel);
 
 @_DiplomatFfiUse('OptionOpaque_accepts_option_enum')
-@ffi.Native<_ResultInt32Void Function(_ResultInt32Void)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_enum')
+@ffi.Native<_ResultInt32Void Function(_ResultInt32Void, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_enum')
 // ignore: non_constant_identifier_names
-external _ResultInt32Void _OptionOpaque_accepts_option_enum(_ResultInt32Void arg);
+external _ResultInt32Void _OptionOpaque_accepts_option_enum(_ResultInt32Void arg, int sentinel);
 
 @_DiplomatFfiUse('OptionOpaque_accepts_option_input_struct')
-@ffi.Native<_ResultOptionInputStructFfiVoid Function(_ResultOptionInputStructFfiVoid)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_input_struct')
+@ffi.Native<_ResultOptionInputStructFfiVoid Function(_ResultOptionInputStructFfiVoid, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_input_struct')
 // ignore: non_constant_identifier_names
-external _ResultOptionInputStructFfiVoid _OptionOpaque_accepts_option_input_struct(_ResultOptionInputStructFfiVoid arg);
+external _ResultOptionInputStructFfiVoid _OptionOpaque_accepts_option_input_struct(_ResultOptionInputStructFfiVoid arg, int sentinel);
 
 @_DiplomatFfiUse('OptionOpaque_returns_option_input_struct')
 @ffi.Native<_OptionInputStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_returns_option_input_struct')

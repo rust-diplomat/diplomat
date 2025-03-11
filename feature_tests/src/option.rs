@@ -123,18 +123,22 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_u8(arg: Option<u8>) -> Option<u8> {
+        pub fn accepts_option_u8(arg: Option<u8>, sentinel: u8) -> Option<u8> {
+            assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
 
         #[diplomat::attr(not(supports = option), disable)]
-        pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum> {
+        pub fn accepts_option_enum(arg: Option<OptionEnum>, sentinel: u8) -> Option<OptionEnum> {
+            assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
         #[diplomat::attr(not(supports = option), disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,
+            sentinel: u8,
         ) -> Option<OptionInputStruct> {
+            assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
         #[diplomat::attr(not(supports = option), disable)]
@@ -147,17 +151,20 @@ pub mod ffi {
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
-        pub fn accepts_option_str(arg: Option<&str>) -> usize {
+        pub fn accepts_option_str(arg: Option<&str>, sentinel: u8) -> usize {
+            assert_eq!(sentinel, 123, "{arg:?}");
             arg.unwrap_or_default().len()
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
-        pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>) -> bool {
+        pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>, sentinel: u8) -> bool {
+            assert_eq!(sentinel, 123);
             arg.is_some()
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp))), disable)]
-        pub fn accepts_option_primitive(arg: Option<&[u32]>) -> i64 {
+        pub fn accepts_option_primitive(arg: Option<&[u32]>, sentinel: u8) -> i64 {
+            assert_eq!(sentinel, 123);
             arg.map(|v| v.iter().sum::<u32>().into()).unwrap_or(-1)
         }
     }
