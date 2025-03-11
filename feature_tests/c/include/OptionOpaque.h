@@ -46,21 +46,21 @@ void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
 
 typedef struct OptionOpaque_accepts_option_u8_result {union {uint8_t ok; }; bool is_ok;} OptionOpaque_accepts_option_u8_result;
-OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(OptionU8 arg);
+OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(OptionU8 arg, uint8_t sentinel);
 
 typedef struct OptionOpaque_accepts_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
-OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(OptionEnum_option arg);
+OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(OptionEnum_option arg, uint8_t sentinel);
 
 typedef struct OptionOpaque_accepts_option_input_struct_result {union {OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
-OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(OptionInputStruct_option arg);
+OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(OptionInputStruct_option arg, uint8_t sentinel);
 
 OptionInputStruct OptionOpaque_returns_option_input_struct(void);
 
-size_t OptionOpaque_accepts_option_str(OptionStringView arg);
+size_t OptionOpaque_accepts_option_str(OptionStringView arg, uint8_t sentinel);
 
-bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg);
+bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg, uint8_t sentinel);
 
-int64_t OptionOpaque_accepts_option_primitive(OptionU32View arg);
+int64_t OptionOpaque_accepts_option_primitive(OptionU32View arg, uint8_t sentinel);
 
 
 void OptionOpaque_destroy(OptionOpaque* self);
