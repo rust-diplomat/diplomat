@@ -41,4 +41,6 @@ test("DiplomatOption tests", t => {
     t.assert(struct.b === null);
     t.is(struct.c.value, OptionEnum.Bar.value);
 
+    let maybeEnum = OptionOpaque.acceptsTwoOptionEnums(OptionEnum.Bar, OptionEnum.Foo);
+    t.assert(maybeEnum === OptionEnum.Foo);
 });

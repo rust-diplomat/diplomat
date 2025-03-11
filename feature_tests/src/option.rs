@@ -131,6 +131,11 @@ pub mod ffi {
         pub fn accepts_option_enum(arg: Option<OptionEnum>) -> Option<OptionEnum> {
             arg
         }
+
+        pub fn accepts_two_option_enums(_arg : Option<OptionEnum>, arg1 : Option<OptionEnum>) -> Option<OptionEnum> {
+            arg1
+        }
+
         #[diplomat::attr(not(supports = option), disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,

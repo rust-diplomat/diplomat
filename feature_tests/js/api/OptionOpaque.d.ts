@@ -36,6 +36,8 @@ export class OptionOpaque {
 
     static acceptsOptionEnum(arg: OptionEnum | null): OptionEnum | null;
 
+    static acceptsTwoOptionEnums(arg: OptionEnum | null, arg1: OptionEnum | null): OptionEnum | null;
+
     static acceptsOptionInputStruct(arg: OptionInputStruct | null): OptionInputStruct | null;
 
     static returnsOptionInputStruct(): OptionInputStruct;

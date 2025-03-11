@@ -222,6 +222,23 @@ export class OptionOpaque {
         }
     }
 
+    static acceptsTwoOptionEnums(arg, arg1) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        
+        const result = wasm.OptionOpaque_accepts_two_option_enums(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 4, 4, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), ...diplomatRuntime.optionToArgsForCalling(arg1, 4, 4, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]));
+    
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
+        }
+        
+        finally {
+            diplomatReceive.free();
+        }
+    }
+
     static acceptsOptionInputStruct(arg) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
