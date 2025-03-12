@@ -504,7 +504,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def("as_slice", &Float64Vec::as_slice)
     	.def("fill_slice", &Float64Vec::fill_slice, "v"_a)
     	.def("set_value", &Float64Vec::set_value, "new_slice"_a)
-    	.def("to_string", &Float64Vec::to_string)
+    	.def("__str__", &Float64Vec::to_string)
     	.def("borrow", &Float64Vec::borrow)
     	.def("__getitem__", &Float64Vec::operator[], "i"_a);
     
