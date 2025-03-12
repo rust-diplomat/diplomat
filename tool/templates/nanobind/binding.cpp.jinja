@@ -126,7 +126,6 @@ namespace nanobind::detail
 		using Caster = make_caster<T>;
 		static constexpr auto Name = Caster::Name;
 
-
 		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
 		{
 			if (value.is_ok()) {
@@ -162,9 +161,9 @@ NB_MODULE({{module_name}}, {{module_name}}_mod)
 
     nb::class_<std::monostate>({{module_name}}_mod, "monostate")
 		.def("__repr__", [](const std::monostate &)
-			 { return "()"; })
+			 { return ""; })
 		.def("__str__", [](const std::monostate &)
-			 { return "()"; });
+			 { return ""; });
 
 	{%- for line in body.lines() %}
     {{ line }}

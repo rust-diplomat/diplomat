@@ -167,7 +167,6 @@ namespace nanobind::detail
 		using Caster = make_caster<T>;
 		static constexpr auto Name = Caster::Name;
 
-
 		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
 		{
 			if (value.is_ok()) {
@@ -203,9 +202,9 @@ NB_MODULE(somelib, somelib_mod)
 
     nb::class_<std::monostate>(somelib_mod, "monostate")
 		.def("__repr__", [](const std::monostate &)
-			 { return "()"; })
+			 { return ""; })
 		.def("__str__", [](const std::monostate &)
-			 { return "()"; });
+			 { return ""; });
     
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
         .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
