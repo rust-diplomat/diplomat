@@ -278,7 +278,7 @@ NB_MODULE(somelib, somelib_mod)
         .def_rw("e", &MyStruct::e)
         .def_rw("f", &MyStruct::f)
         .def_rw("g", &MyStruct::g)
-    	.def_static("new_", &MyStruct::new_)
+    	.def(nb::new_(&MyStruct::new_))
     	.def("into_a", &MyStruct::into_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result);
@@ -313,7 +313,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::AttrOpaque1Renamed>(ns_mod, "AttrOpaque1Renamed", nb::type_slots(ns_AttrOpaque1Renamed_slots))
-    	.def_static("totally_not_new", &ns::AttrOpaque1Renamed::totally_not_new)
+    	.def(nb::new_(&ns::AttrOpaque1Renamed::totally_not_new))
     	.def("method_renamed", &ns::AttrOpaque1Renamed::method_renamed)
     	.def("abirenamed", &ns::AttrOpaque1Renamed::abirenamed)
     	.def("use_unnamespaced", &ns::AttrOpaque1Renamed::use_unnamespaced, "_un"_a)
@@ -383,7 +383,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<Foo>(somelib_mod, "Foo", nb::type_slots(Foo_slots))
-    	.def_static("new_", &Foo::new_, "x"_a)
+    	.def(nb::new_(&Foo::new_), "x"_a)
     	.def("get_bar", &Foo::get_bar)
     	.def_static("new_static", &Foo::new_static, "x"_a)
     	.def("as_returning", &Foo::as_returning)
@@ -513,7 +513,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<MyString>(somelib_mod, "MyString", nb::type_slots(MyString_slots))
-    	.def_static("new_", &MyString::new_, "v"_a)
+    	.def(nb::new_(&MyString::new_), "v"_a)
     	.def_static("new_unsafe", &MyString::new_unsafe, "v"_a)
     	.def_static("new_owned", &MyString::new_owned, "v"_a)
     	.def_static("new_from_first", &MyString::new_from_first, "v"_a)
@@ -538,7 +538,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<Opaque>(somelib_mod, "Opaque", nb::type_slots(Opaque_slots))
-    	.def_static("new_", &Opaque::new_)
+    	.def(nb::new_(&Opaque::new_))
     	.def_static("try_from_utf8", &Opaque::try_from_utf8, "input"_a)
     	.def_static("from_str", &Opaque::from_str, "input"_a)
     	.def("get_debug_str", &Opaque::get_debug_str)
@@ -569,7 +569,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<Utf16Wrap>(somelib_mod, "Utf16Wrap", nb::type_slots(Utf16Wrap_slots))
-    	.def_static("from_utf16", &Utf16Wrap::from_utf16, "input"_a)
+    	.def(nb::new_(&Utf16Wrap::from_utf16), "input"_a)
     	.def("get_debug_str", &Utf16Wrap::get_debug_str)
     	.def("borrow_cont", &Utf16Wrap::borrow_cont);
     {
