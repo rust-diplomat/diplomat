@@ -160,7 +160,7 @@ pub fn type_size_alignment_and_scalar_count<P: hir::TyPosition>(
             debug_assert!(size % align == 0, "Found inner type {typ:?} with size {size} that is not a multiple of its alignment {align}");
             // A DiplomatOption will always add a new, aligned-to-T boolean field and requisite padding, which just increases the size by `align`
             let layout = Layout::from_size_align(size + align, align).unwrap();
-            (layout, inner_scalar + 1)
+            (layout, inner_scalar + 2)
         }
         _ => unreachable!("Unknown AST/HIR variant {:?}", typ),
     }

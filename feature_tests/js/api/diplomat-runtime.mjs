@@ -110,38 +110,23 @@ export function writeOptionToArrayBuffer(arrayBuffer, offset, jsValue, size, ali
 * Calls writeToArrayBufferCallback(arrayBuffer, offset, jsValue) for non-null jsValues
 * 
 * This array will have size<T>/align<T> elements for the actual T, then one element
-* for the is_ok bool, and then align<T> - 1 elements for padding if `needsPaddingFields` is set.
+* for the is_ok bool, and then align<T> - 1 elements for padding.
 * 
 * See wasm_abi_quirks.md's section on Unions for understanding this ABI.
 */
-export function optionToArgsForCalling(jsValue, size, align, needsPaddingFields, writeToArrayBufferCallback) {
-    let args;
+export function optionToArgsForCalling(jsValue, size, align, writeToArrayBufferCallback) {
     // perform a nullish check, not a null check,
     // we want identical behavior for undefined
     if (jsValue != null) {
-        let buffer;
         // We need our originator array to be properly aligned
-        if (align == 8) {
-            buffer = new BigUint64Array(size / align);
-        } else if (align == 4) {
-            buffer = new Uint32Array(size / align);
-        } else if (align == 2) {
-            buffer = new Uint16Array(size / align);
-        } else {
-            buffer = new Uint8Array(size / align);
-        }
-
+        let buffer = new ((align == 8) ? BigUint64Array : (align == 4) ? Uint32Array : (align == 2) ? Uint16Array : Uint8Array)(size / align);
 
         writeToArrayBufferCallback(buffer.buffer, 0, jsValue);
-        args = Array.from(buffer);
-        args.push(1);
-    } else {
-        args = Array(size / align).fill(0);
-        args.push(0);
-    }
 
-    args = args.concat(maybePaddingFields(needsPaddingFields, align - 1));
-    return args;
+        return [...Array.from(buffer), 1, ...Array(align - 1).fill(0)];
+    } else {
+        return Array(size / align + align).fill(0);
+    }
 }
 
 
