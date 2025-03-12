@@ -29,9 +29,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.utf16_strings = true;
     a.static_slices = true;
 
-    a.constructors = false; // TODO
+    a.constructors = true; // TODO
     a.named_constructors = false;
-    a.fallible_constructors = false;
+    a.fallible_constructors = true;
     a.accessors = false;
     a.comparators = false; // TODO
     a.stringifiers = false; // TODO

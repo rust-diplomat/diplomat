@@ -39,3 +39,8 @@ def test_option():
     assert opt_struct.a == 6, "returns_option_input_struct returns the right values"
     assert not opt_struct.b, "returns_option_input_struct returns the right values"
     assert opt_struct.c == somelib.OptionEnum.Bar, "returns_option_input_struct returns the right values"
+    
+    exists = somelib.OptionOpaque.option_opaque_argument(somelib.OptionOpaque.new_(1415))
+    assert exists, "option_opaque_argument did not return expected result"
+    exists = somelib.OptionOpaque.option_opaque_argument()
+    assert not exists, "option_opaque_argument did not return expected result with default argument"
