@@ -18,12 +18,17 @@
 	{%- when Some(crate::hir::SpecialMethod::Stringifier) -%}
 		.def("__str__", &{{- type_name }}::{{ m.method_name -}})
 	{%- else -%}
+		{%- match m.method.attrs.special_method -%}
+		{%- when Some(crate::hir::SpecialMethod::Constructor) -%}
+		.def(nb::new_(&{{- type_name}}::{{ m.method_name -}})
+		{%- else -%}
 		.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
 		{%- match m.method.attrs.special_method -%}
 		{%- when Some(crate::hir::SpecialMethod::Indexer) -%}
 			("__getitem__", &{{- type_name }}::operator[] 
 		{%- else -%}
 			("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
+		{%- endmatch -%}
 		{%- endmatch -%}
 		
 		{%- for param in m.method.params -%}
