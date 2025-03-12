@@ -26,6 +26,8 @@ export { CyclicStructC } from "./CyclicStructC"
 
 export { MyStruct } from "./MyStruct"
 
+export { MyStructContainingAnOption } from "./MyStructContainingAnOption"
+
 export { MyZst } from "./MyZst"
 
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding"

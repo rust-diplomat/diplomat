@@ -30,6 +30,7 @@ part 'MyEnum.g.dart';
 part 'MyOpaqueEnum.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
+part 'MyStructContainingAnOption.g.dart';
 part 'MyZst.g.dart';
 part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
@@ -262,6 +263,32 @@ final class _ResultIntPtrVoid extends ffi.Struct {
   // ignore: unused_element
   factory _ResultIntPtrVoid.err() {
     final struct = ffi.Struct.create<_ResultIntPtrVoid>();
+    struct.isOk = false;
+    return struct;
+  }
+}
+
+final class _ResultMyStructFfiVoidUnion extends ffi.Union {
+  external _MyStructFfi ok;
+
+}
+
+final class _ResultMyStructFfiVoid extends ffi.Struct {
+  external _ResultMyStructFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+
+  // ignore: unused_element
+  factory _ResultMyStructFfiVoid.ok(_MyStructFfi val) {
+    final struct = ffi.Struct.create<_ResultMyStructFfiVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  // ignore: unused_element
+  factory _ResultMyStructFfiVoid.err() {
+    final struct = ffi.Struct.create<_ResultMyStructFfiVoid>();
     struct.isOk = false;
     return struct;
   }
