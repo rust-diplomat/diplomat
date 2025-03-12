@@ -2,6 +2,7 @@
 #include <nanobind/operators.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string_view.h>
+#include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
 #include <../src/nb_internals.h>  // Required for shimming
