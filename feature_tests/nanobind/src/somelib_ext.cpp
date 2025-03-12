@@ -286,7 +286,7 @@ NB_MODULE(somelib, somelib_mod)
         .def(nb::init<>()).def(nb::init<std::optional<MyStruct>, std::optional<DefaultEnum>>(), "a"_a.none(),  "b"_a.none())
         .def_rw("a", &MyStructContainingAnOption::a)
         .def_rw("b", &MyStructContainingAnOption::b)
-    	.def_static("new_", &MyStructContainingAnOption::new_)
+    	.def(nb::new_(&MyStructContainingAnOption::new_))
     	.def_static("filled", &MyStructContainingAnOption::filled);
     nb::class_<MyZst>(somelib_mod, "MyZst")
         .def(nb::init<>());
@@ -431,10 +431,10 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_struct", &OptionOpaque::new_struct)
     	.def_static("new_struct_nones", &OptionOpaque::new_struct_nones)
     	.def("assert_integer", &OptionOpaque::assert_integer, "i"_a)
-    	.def_static("option_opaque_argument", &OptionOpaque::option_opaque_argument, "arg"_a)
-    	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a.none(), "sentinel"_a)
-    	.def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a.none(), "sentinel"_a)
-    	.def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a.none(), "sentinel"_a)
+    	.def_static("option_opaque_argument", &OptionOpaque::option_opaque_argument, "arg"_a= nb::none())
+    	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a= nb::none(), "sentinel"_a)
+    	.def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a= nb::none(), "sentinel"_a)
+    	.def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a= nb::none(), "sentinel"_a)
     	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct);
     
     PyType_Slot OptionOpaqueChar_slots[] = {
@@ -461,7 +461,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ResultOpaque>(somelib_mod, "ResultOpaque", nb::type_slots(ResultOpaque_slots))
-    	.def_static("new_", &ResultOpaque::new_, "i"_a)
+    	.def(nb::new_(&ResultOpaque::new_), "i"_a)
     	.def_static("new_failing_foo", &ResultOpaque::new_failing_foo)
     	.def_static("new_failing_bar", &ResultOpaque::new_failing_bar)
     	.def_static("new_failing_unit", &ResultOpaque::new_failing_unit)
