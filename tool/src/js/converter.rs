@@ -652,13 +652,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     JsToCConversionContext::SlicePrealloc => {
                         unreachable!("Used SlicePrealloc context for an Option type!");
                     }
-                    JsToCConversionContext::List(force_padding) => {
-                        let needs_padding = match force_padding {
-                            ForcePaddingStatus::NoForce => "false",
-                            ForcePaddingStatus::Force => "true",
-                            ForcePaddingStatus::PassThrough => "forcePadding",
-                        };
-                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, {needs_padding}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                    JsToCConversionContext::List(_force_padding) => {
+                        // This *always* forces padding, due to unions having quirky ABI in WASM (see wasm_abi_quirks.md section "unions")
+                        // The Option<ZST> exception is handled in type_size_alignment
+                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
 
                     }
                     JsToCConversionContext::WriteToBuffer(offset_var, offset) => {

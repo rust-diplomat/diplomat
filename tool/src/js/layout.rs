@@ -1,6 +1,7 @@
 //! The corpse of the old AST backend, wearing a fresh coat of paint. AST used to have this  `layout.rs` file for figuring out how types would look in memory.
 //!
 //! Every backend needed this. But now only Javascript does. And we pretty much only use it for structs; WASM sometimes requires us to create an appropriately sized buffer for a struct. It sometimes also requires us to pad method signatures when inserting a flattened structure (see [`super::type_generation::TyGenContext::gen_c_to_js_for_return_type`] or [`super::type_generation::TyGenContext::generate_fields`] for more).
+use std::ops::{Add, AddAssign};
 use std::{alloc::Layout, cmp::max};
 
 use diplomat_core::hir::{
@@ -22,7 +23,7 @@ pub struct StructFieldLayout {
     /// The width of an individual padding field
     pub padding_field_width: usize,
     /// The number of scalar (integer primitive) fields in this field, transitively. Does not count padding fields.
-    pub scalar_count: usize,
+    pub scalar_count: ScalarCount,
 }
 
 pub struct StructFieldsInfo {
@@ -31,7 +32,7 @@ pub struct StructFieldsInfo {
     /// The layout of the struct overall
     pub struct_layout: Layout,
     /// The number of scalar (integer primitive) fields in this struct, transitively. Does not count padding fields.
-    pub scalar_count: usize,
+    pub scalar_count: ScalarCount,
 }
 /// Given a struct, calculate where each of its fields is in memory.
 ///
@@ -44,14 +45,14 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
     let mut max_align = 0;
     let mut next_offset = 0;
     let mut fields: Vec<StructFieldLayout> = vec![];
-    let mut scalar_count = 0;
+    let mut scalar_count = ScalarCount::Zst;
 
     let types = types.collect::<Vec<_>>();
     if types.is_empty() {
         return StructFieldsInfo {
             fields: vec![],
             struct_layout: unit_size_alignment(),
-            scalar_count: 0,
+            scalar_count: ScalarCount::Zst,
         };
     }
 
@@ -133,13 +134,16 @@ pub fn type_size_alignment<P: hir::TyPosition>(typ: &Type<P>, tcx: &TypeContext)
 pub fn type_size_alignment_and_scalar_count<P: hir::TyPosition>(
     typ: &Type<P>,
     tcx: &TypeContext,
-) -> (Layout, usize) {
+) -> (Layout, ScalarCount) {
     match typ {
         // repr(C) fieldless enums use the default platform representation: isize
-        Type::Enum(..) => (Layout::new::<usize_target>(), 1),
-        Type::Opaque(..) => (opaque_size_alignment(), 1),
-        Type::Slice(..) => (Layout::new::<(usize_target, usize_target)>(), 2),
-        Type::Primitive(p) => (primitive_size_alignment(*p), 1),
+        Type::Enum(..) => (Layout::new::<usize_target>(), ScalarCount::Scalars(1)),
+        Type::Opaque(..) => (opaque_size_alignment(), ScalarCount::Scalars(1)),
+        Type::Slice(..) => (
+            Layout::new::<(usize_target, usize_target)>(),
+            ScalarCount::Scalars(2),
+        ),
+        Type::Primitive(p) => (primitive_size_alignment(*p), ScalarCount::Scalars(1)),
         Type::Struct(struct_path) => {
             let def = tcx.resolve_type(struct_path.id());
             let info = match def {
@@ -155,14 +159,48 @@ pub fn type_size_alignment_and_scalar_count<P: hir::TyPosition>(
         }
         Type::DiplomatOption(inner) => {
             let (layout, inner_scalar) = type_size_alignment_and_scalar_count(inner, tcx);
+
+            if inner_scalar == ScalarCount::Zst {
+                unimplemented!("Option<ZST> has quirky wasm ABI behavior that is not implemented")
+            }
             let size = layout.size();
             let align = layout.align();
             debug_assert!(size % align == 0, "Found inner type {typ:?} with size {size} that is not a multiple of its alignment {align}");
             // A DiplomatOption will always add a new, aligned-to-T boolean field and requisite padding, which just increases the size by `align`
             let layout = Layout::from_size_align(size + align, align).unwrap();
-            (layout, inner_scalar + 1)
+            // See wasm_abi_quirks.md section "unions", union types never partake in anything other than the "indirect" pass mode,
+            // which
+            (layout, ScalarCount::Memory)
         }
         _ => unreachable!("Unknown AST/HIR variant {:?}", typ),
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub(crate) enum ScalarCount {
+    /// This is a zero-sized type and has no scalars
+    Zst,
+    /// This contains n scalar fields
+    Scalars(usize),
+    /// This contains unions (and potentially other scalar fields)
+    /// (corresponds to Rust `BackendRepr::Memory`)
+    Memory,
+}
+
+impl Add<ScalarCount> for ScalarCount {
+    type Output = Self;
+    fn add(self, other: ScalarCount) -> Self {
+        match (self, other) {
+            (_, ScalarCount::Memory) | (ScalarCount::Memory, _) => ScalarCount::Memory,
+            (a, ScalarCount::Zst) | (ScalarCount::Zst, a) => a,
+            (ScalarCount::Scalars(a), ScalarCount::Scalars(b)) => ScalarCount::Scalars(a + b),
+        }
+    }
+}
+
+impl AddAssign<ScalarCount> for ScalarCount {
+    fn add_assign(&mut self, other: ScalarCount) {
+        *self = *self + other;
     }
 }
 
