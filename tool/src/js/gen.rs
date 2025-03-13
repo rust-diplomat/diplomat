@@ -263,23 +263,30 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 &struct_def.lifetimes
             );
 
-            let alloc = if let &hir::Type::Slice(slice) = &field.ty {
-                if let Some(lt) = slice.lifetime() {
-                    let hir::MaybeStatic::NonStatic(lt) = lt else {
-                        panic!("'static not supported in JS backend");
-                    };
-                    let lt_name = struct_def.lifetimes.fmt_lifetime(lt);
-                    Some(
-                        format!("diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['{lt_name}AppendArray'])")
-                    )
-                } else {
-                    None
-                }
-            } else if let &hir::Type::Struct(..) = &field.ty {
-                Some("functionCleanupArena".into())
+            // Decide on the alloc based on the inner type if we're seeing a `DiplomatOption`
+            let inner_type = if let &hir::Type::DiplomatOption(inner) = &&field.ty {
+                inner.as_ref()
             } else {
+                &field.ty
+            };
+
+            let alloc = match inner_type {
+                hir::Type::Slice(slice) => {
+                    if let Some(lt) = slice.lifetime() {
+                        let hir::MaybeStatic::NonStatic(lt) = lt else {
+                            panic!("'static not supported in JS backend");
+                        };
+                        let lt_name = struct_def.lifetimes.fmt_lifetime(lt);
+                        Some(
+                            format!("diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['{lt_name}AppendArray'])")
+                        )
+                    } else {
+                        None
+                    }
+                },
+                hir::Type::Struct(..) => Some("functionCleanupArena".into()),
                 // We take ownership
-                None
+                _ => None
             };
 
             let maybe_struct_borrow_info = if let hir::Type::Struct(ref path) = field.ty.unwrap_option() {

@@ -630,7 +630,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 self.formatter.fmt_type_name(s.id()),
                 js_name,
                 struct_borrow_info,
-                alloc.unwrap(),
+                alloc.unwrap_or_else(|| panic!(
+                    "Expected an allocator to be specified when generating the definition for a struct: {}",
+                    self.formatter.fmt_type_name(s.id())
+                )),
                 gen_context,
             ),
             Type::DiplomatOption(ref inner) => {
