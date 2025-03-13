@@ -25,17 +25,17 @@ int main(int argc, char *argv[])
     simple_assert("new_struct_nones() returns None", !s.b);
     simple_assert_eq("correct struct returned", s.c, 908);
 
-    auto opt_u8 = OptionOpaque::accepts_option_u8(std::nullopt);
+    auto opt_u8 = OptionOpaque::accepts_option_u8(std::nullopt, 123);
     simple_assert("accepts_option_u8 is idempotent", !opt_u8.has_value());
-    opt_u8 = OptionOpaque::accepts_option_u8(5);
+    opt_u8 = OptionOpaque::accepts_option_u8(5, 123);
     simple_assert("accepts_option_u8 is idempotent", opt_u8.value() == 5);
-    auto opt_enum = OptionOpaque::accepts_option_enum(std::nullopt);
+    auto opt_enum = OptionOpaque::accepts_option_enum(std::nullopt, 123);
     simple_assert("accepts_option_enum is idempotent", !opt_enum.has_value());
-    opt_enum = OptionOpaque::accepts_option_enum(OptionEnum::Foo);
+    opt_enum = OptionOpaque::accepts_option_enum(OptionEnum::Foo, 123);
     simple_assert("accepts_option_enum is idempotent", opt_enum.value() == OptionEnum::Foo);
-    auto opt_struct = OptionOpaque::accepts_option_input_struct(std::nullopt);
+    auto opt_struct = OptionOpaque::accepts_option_input_struct(std::nullopt, 123);
     simple_assert("accepts_option_input_struct is idempotent", !opt_struct.has_value());
-    opt_struct = OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct>({std::optional(1), std::nullopt, std::optional(OptionEnum::Foo)}));
+    opt_struct = OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct>({std::optional(1), std::nullopt, std::optional(OptionEnum::Foo)}), 123);
     simple_assert("accepts_option_input_struct is idempotent", opt_struct.value().a == 1);
     simple_assert("accepts_option_input_struct is idempotent", !opt_struct.value().b.has_value());
     simple_assert("accepts_option_input_struct is idempotent", opt_struct.value().c == OptionEnum::Foo);
@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
 
     std::array<std::string_view, 2> string_array{"string1"sv, "string2"sv};
     diplomat::span<const std::string_view> arg{string_array};
-    auto str_slice_result = OptionOpaque::accepts_option_str_slice(std::make_optional(std::move(arg)));
+    auto str_slice_result = OptionOpaque::accepts_option_str_slice(std::make_optional(std::move(arg)), 123);
     simple_assert("option_str_slice functions", str_slice_result);
 
-    simple_assert_eq("Optional string param (Some)", OptionOpaque::accepts_option_str(std::make_optional("accepts optional string!")), 24);
-    simple_assert_eq("Optional string param (None)", OptionOpaque::accepts_option_str(std::nullopt), 0);
+    simple_assert_eq("Optional string param (Some)", OptionOpaque::accepts_option_str(std::make_optional("accepts optional string!"), 123), 24);
+    simple_assert_eq("Optional string param (None)", OptionOpaque::accepts_option_str(std::nullopt, 123), 0);
 
     constexpr uint32_t array[]{1, 2, 3, 4};
-    simple_assert_eq("Optional primitive param (Some)", OptionOpaque::accepts_option_primitive(std::make_optional(diplomat::span{array, 4})), 10);
-    simple_assert_eq("Optional primitive param (None)", OptionOpaque::accepts_option_primitive(std::nullopt), -1);
+    simple_assert_eq("Optional primitive param (Some)", OptionOpaque::accepts_option_primitive(std::make_optional(diplomat::span{array, 4}), 123), 10);
+    simple_assert_eq("Optional primitive param (None)", OptionOpaque::accepts_option_primitive(std::nullopt, 123), -1);
 }

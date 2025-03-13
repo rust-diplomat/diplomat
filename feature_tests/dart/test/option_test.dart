@@ -18,19 +18,20 @@ void main() {
     expect(sn.b, null);
     expect(sn.c, 908);
 
-    var maybeU8 = OptionOpaque.acceptsOptionU8(null);
+    var maybeU8 = OptionOpaque.acceptsOptionU8(123);
     expect(maybeU8, null);
-    maybeU8 = OptionOpaque.acceptsOptionU8(5);
+    maybeU8 = OptionOpaque.acceptsOptionU8(123, 5);
     expect(maybeU8, 5);
 
-    var maybeEnum = OptionOpaque.acceptsOptionEnum(null);
+    var maybeEnum = OptionOpaque.acceptsOptionEnum(123);
     expect(maybeEnum, null);
-    maybeEnum = OptionOpaque.acceptsOptionEnum(OptionEnum.foo);
+    maybeEnum = OptionOpaque.acceptsOptionEnum(123, OptionEnum.foo);
     expect(maybeEnum, OptionEnum.foo);
 
-    var maybeStruct = OptionOpaque.acceptsOptionInputStruct(null);
+    var maybeStruct = OptionOpaque.acceptsOptionInputStruct(123);
     expect(maybeStruct, null);
     maybeStruct = OptionOpaque.acceptsOptionInputStruct(
+      123,
       new OptionInputStruct(a: 7, b: null, c: OptionEnum.bar),
     );
     expect(maybeStruct?.a, 7);

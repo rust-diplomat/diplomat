@@ -20,6 +20,7 @@ use super::formatter::JSFormatter;
 use crate::ErrorStore;
 
 use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
+use super::layout::ScalarCount;
 
 /// Represents list of imports that our Type is going to use.
 /// Resolved in [`TyGenContext::generate_base`]
@@ -306,17 +307,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // See docs/wasm_abi_quirks.md for when "padded direct" parameter passing kicks in
             let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
                 // There's no padding needed
-                (0 | 1, _) => ForcePaddingStatus::NoForce,
+                (ScalarCount::Zst | ScalarCount::Scalars(1), _) => ForcePaddingStatus::NoForce,
                 // Non-structs don't care
                 // This includes slices, which *are* aggregates but have no padding.
                 _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
                 // 2-field struct contained in 2-field struct, caller decides
-                (2, 2) => {
+                (ScalarCount::Scalars(2), ScalarCount::Scalars(2)) => {
                     needs_force_padding = true;
                     ForcePaddingStatus::PassThrough
                 }
                 // Outer struct has > 3 fields, always pad
-                (2, 3..) => ForcePaddingStatus::Force,
+                (ScalarCount::Scalars(2), ScalarCount::Scalars(3..)) => ForcePaddingStatus::Force,
                 // Larger fields will always have padding anyway
                 _ => ForcePaddingStatus::NoForce
 
@@ -331,7 +332,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     other => unreachable!("Found unknown padding size {other}")
                 };
 
-                if struct_field_info.scalar_count == 2 {
+                if struct_field_info.scalar_count == ScalarCount::Scalars(2) {
                     // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller. See docs/wasm_abi_quirks.md
                     needs_force_padding = true;
                     format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")

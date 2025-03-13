@@ -264,6 +264,7 @@ pub type DiplomatOption<T> = DiplomatResult<T, ()>;
 
 `DiplomatOption<MyStruct>` (size 8, alignment 4) will be passed as two `u32` parameters, followed by an `u8` parameter for the `bool`, and three more padding `u8` parameters.
 
+Unions force "padded direct" mode unless their variants have identical ABI, in rustc [they produce `BackendRepr::Memory`][union-repr], which ends up as [`PassMode::Indirect`][memory-passmode]. The "identical abi" case doesn't matter for Diplomat since the only unions where the `PassMode` matters are `Option`s, so one of the two types will be a ZST.
 
 Wasm is little-endian. For the following code:
 
@@ -317,6 +318,8 @@ And the Wasm would look like:
  [#661]: https://github.com/rust-diplomat/diplomat/issues/661
  [rust-plans]: https://github.com/rust-lang/rust/pull/117919
  [multivalue]: https://hacks.mozilla.org/2019/11/multi-value-all-the-wasm/
+ [union-repr]: https://github.com/rust-lang/rust/blob/52daa7d835e7ff51cb387340082bf9a59b949738/compiler/rustc_abi/src/layout.rs#L451-L472)
+ [memory-passmode]: https://github.com/rust-lang/rust/blob/52daa7d835e7ff51cb387340082bf9a59b949738/compiler/rustc_target/src/callconv/mod.rs#L348-L384
 
 
 [^1]: Potentially with the exception of u64 in some cases? I haven't investigated this. Wasm gets weird around BigInt stuff.

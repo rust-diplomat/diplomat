@@ -46,19 +46,19 @@ public:
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);
 
-  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg);
+  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel);
 
-  inline static std::optional<OptionEnum> accepts_option_enum(std::optional<OptionEnum> arg);
+  inline static std::optional<OptionEnum> accepts_option_enum(std::optional<OptionEnum> arg, uint8_t sentinel);
 
-  inline static std::optional<OptionInputStruct> accepts_option_input_struct(std::optional<OptionInputStruct> arg);
+  inline static std::optional<OptionInputStruct> accepts_option_input_struct(std::optional<OptionInputStruct> arg, uint8_t sentinel);
 
   inline static OptionInputStruct returns_option_input_struct();
 
-  inline static size_t accepts_option_str(std::optional<std::string_view> arg);
+  inline static size_t accepts_option_str(std::optional<std::string_view> arg, uint8_t sentinel);
 
-  inline static bool accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg);
+  inline static bool accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg, uint8_t sentinel);
 
-  inline static int64_t accepts_option_primitive(std::optional<diplomat::span<const uint32_t>> arg);
+  inline static int64_t accepts_option_primitive(std::optional<diplomat::span<const uint32_t>> arg, uint8_t sentinel);
 
   inline const diplomat::capi::OptionOpaque* AsFFI() const;
   inline diplomat::capi::OptionOpaque* AsFFI();

@@ -48,21 +48,21 @@ namespace capi {
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
     
     typedef struct OptionOpaque_accepts_option_u8_result {union {uint8_t ok; }; bool is_ok;} OptionOpaque_accepts_option_u8_result;
-    OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 arg);
+    OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 arg, uint8_t sentinel);
     
     typedef struct OptionOpaque_accepts_option_enum_result {union {diplomat::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
-    OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option arg);
+    OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option arg, uint8_t sentinel);
     
     typedef struct OptionOpaque_accepts_option_input_struct_result {union {diplomat::capi::OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
-    OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option arg);
+    OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option arg, uint8_t sentinel);
     
     diplomat::capi::OptionInputStruct OptionOpaque_returns_option_input_struct(void);
     
-    size_t OptionOpaque_accepts_option_str(diplomat::capi::OptionStringView arg);
+    size_t OptionOpaque_accepts_option_str(diplomat::capi::OptionStringView arg, uint8_t sentinel);
     
-    bool OptionOpaque_accepts_option_str_slice(diplomat::capi::OptionStringsView arg);
+    bool OptionOpaque_accepts_option_str_slice(diplomat::capi::OptionStringsView arg, uint8_t sentinel);
     
-    int64_t OptionOpaque_accepts_option_primitive(diplomat::capi::OptionU32View arg);
+    int64_t OptionOpaque_accepts_option_primitive(diplomat::capi::OptionU32View arg, uint8_t sentinel);
     
     
     void OptionOpaque_destroy(OptionOpaque* self);
@@ -126,18 +126,21 @@ inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
   return result;
 }
 
-inline std::optional<uint8_t> OptionOpaque::accepts_option_u8(std::optional<uint8_t> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (diplomat::capi::OptionU8{ { arg.value() }, true }) : (diplomat::capi::OptionU8{ {}, false }));
+inline std::optional<uint8_t> OptionOpaque::accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (diplomat::capi::OptionU8{ { arg.value() }, true }) : (diplomat::capi::OptionU8{ {}, false }),
+    sentinel);
   return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
 }
 
-inline std::optional<OptionEnum> OptionOpaque::accepts_option_enum(std::optional<OptionEnum> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }));
+inline std::optional<OptionEnum> OptionOpaque::accepts_option_enum(std::optional<OptionEnum> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
+    sentinel);
   return result.is_ok ? std::optional<OptionEnum>(OptionEnum::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline std::optional<OptionInputStruct> OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (diplomat::capi::OptionInputStruct_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionInputStruct_option{ {}, false }));
+inline std::optional<OptionInputStruct> OptionOpaque::accepts_option_input_struct(std::optional<OptionInputStruct> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (diplomat::capi::OptionInputStruct_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionInputStruct_option{ {}, false }),
+    sentinel);
   return result.is_ok ? std::optional<OptionInputStruct>(OptionInputStruct::FromFFI(result.ok)) : std::nullopt;
 }
 
@@ -146,18 +149,21 @@ inline OptionInputStruct OptionOpaque::returns_option_input_struct() {
   return OptionInputStruct::FromFFI(result);
 }
 
-inline size_t OptionOpaque::accepts_option_str(std::optional<std::string_view> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_str(arg.has_value() ? (diplomat::capi::OptionStringView{ { {arg.value().data(), arg.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
+inline size_t OptionOpaque::accepts_option_str(std::optional<std::string_view> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_str(arg.has_value() ? (diplomat::capi::OptionStringView{ { {arg.value().data(), arg.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+    sentinel);
   return result;
 }
 
-inline bool OptionOpaque::accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (diplomat::capi::OptionStringsView{ { {reinterpret_cast<const diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (diplomat::capi::OptionStringsView{ {}, false }));
+inline bool OptionOpaque::accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (diplomat::capi::OptionStringsView{ { {reinterpret_cast<const diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (diplomat::capi::OptionStringsView{ {}, false }),
+    sentinel);
   return result;
 }
 
-inline int64_t OptionOpaque::accepts_option_primitive(std::optional<diplomat::span<const uint32_t>> arg) {
-  auto result = diplomat::capi::OptionOpaque_accepts_option_primitive(arg.has_value() ? (diplomat::capi::OptionU32View{ { {arg.value().data(), arg.value().size()} }, true }) : (diplomat::capi::OptionU32View{ {}, false }));
+inline int64_t OptionOpaque::accepts_option_primitive(std::optional<diplomat::span<const uint32_t>> arg, uint8_t sentinel) {
+  auto result = diplomat::capi::OptionOpaque_accepts_option_primitive(arg.has_value() ? (diplomat::capi::OptionU32View{ { {arg.value().data(), arg.value().size()} }, true }) : (diplomat::capi::OptionU32View{ {}, false }),
+    sentinel);
   return result;
 }
 

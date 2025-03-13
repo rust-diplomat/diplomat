@@ -188,10 +188,10 @@ export class OptionOpaque {
         finally {}
     }
 
-    static acceptsOptionU8(arg) {
+    static acceptsOptionU8(arg, sentinel) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
         
-        const result = wasm.OptionOpaque_accepts_option_u8(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 1, 1, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]));
+        const result = wasm.OptionOpaque_accepts_option_u8(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 1, 1, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]), sentinel);
     
         try {
             if (!diplomatReceive.resultFlag) {
@@ -205,10 +205,10 @@ export class OptionOpaque {
         }
     }
 
-    static acceptsOptionEnum(arg) {
+    static acceptsOptionEnum(arg, sentinel) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
-        const result = wasm.OptionOpaque_accepts_option_enum(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 4, 4, false, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]));
+        const result = wasm.OptionOpaque_accepts_option_enum(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), sentinel);
     
         try {
             if (!diplomatReceive.resultFlag) {
@@ -222,12 +222,12 @@ export class OptionOpaque {
         }
     }
 
-    static acceptsOptionInputStruct(arg) {
+    static acceptsOptionInputStruct(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 21, 4, true);
         
-        const result = wasm.OptionOpaque_accepts_option_input_struct(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 20, 4, false, (arrayBuffer, offset, jsValue) => [OptionInputStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]));
+        const result = wasm.OptionOpaque_accepts_option_input_struct(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 20, 4, (arrayBuffer, offset, jsValue) => [OptionInputStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]), sentinel);
     
         try {
             if (!diplomatReceive.resultFlag) {

@@ -32,11 +32,11 @@ export class OptionOpaque {
 
     static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
 
-    static acceptsOptionU8(arg: number | null): number | null;
+    static acceptsOptionU8(arg: number | null, sentinel: number): number | null;
 
-    static acceptsOptionEnum(arg: OptionEnum | null): OptionEnum | null;
+    static acceptsOptionEnum(arg: OptionEnum | null, sentinel: number): OptionEnum | null;
 
-    static acceptsOptionInputStruct(arg: OptionInputStruct | null): OptionInputStruct | null;
+    static acceptsOptionInputStruct(arg: OptionInputStruct | null, sentinel: number): OptionInputStruct | null;
 
     static returnsOptionInputStruct(): OptionInputStruct;
 }

@@ -22,15 +22,24 @@ test("Verify option methods", t => {
     t.is(sn.c, 908);
 });
 
-test("DiplomatOption tests", t => {
-    let maybeU8 = OptionOpaque.acceptsOptionU8(null);
+test("DiplomatOption test u8", t => {
+    let maybeU8 = OptionOpaque.acceptsOptionU8(null, 123);
     t.assert(maybeU8 === null);
-    maybeU8 = OptionOpaque.acceptsOptionU8(47);
+    maybeU8 = OptionOpaque.acceptsOptionU8(47, 123);
     t.is(maybeU8, 47);
+});
 
-    let maybeStruct = OptionOpaque.acceptsOptionInputStruct(null);
+test("DiplomatOption test enum", t => {
+    let enm = OptionOpaque.acceptsOptionEnum(null, 123);
+    t.assert(enm === null);
+    enm = OptionOpaque.acceptsOptionEnum(OptionEnum.Bar, 123);
+    t.is(enm, OptionEnum.Bar);
+});
+
+test("DiplomatOption test struct", t => {
+    let maybeStruct = OptionOpaque.acceptsOptionInputStruct(null, 123);
     t.assert(maybeStruct === null);
-    maybeStruct = OptionOpaque.acceptsOptionInputStruct(new OptionInputStruct({a: 7, c: OptionEnum.Bar}));
+    maybeStruct = OptionOpaque.acceptsOptionInputStruct(new OptionInputStruct({a: 7, c: OptionEnum.Bar}), 123);
     t.is(maybeStruct.a, 7);
     t.assert(maybeStruct.b === null);
     t.is(maybeStruct.c.value, OptionEnum.Bar.value);
