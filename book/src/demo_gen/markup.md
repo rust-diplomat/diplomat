@@ -5,7 +5,7 @@ Through [Diplomat's configuration interfaces](../config.md), you can customize s
 [demo-gen]
 # If false, demo_gen will automatically search all methods for functions it can generate demonstration JS for.
 # If true, demo_gen will look for any methods explicitly flagged with #[diplomat::demo(generate)] to perform generation.
-explicit_generation=true # default = false (bool)
+explicit-generation=true # default = false (bool)
 
 # This removes the rendering/ folder.
 hide-default-renderer=true # default = false (bool)
