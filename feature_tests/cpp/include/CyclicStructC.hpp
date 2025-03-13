@@ -32,7 +32,7 @@ inline CyclicStructC CyclicStructC::takes_nested_parameters(CyclicStructC c) {
   return CyclicStructC::FromFFI(result);
 }
 
-inline std::string CyclicStructC::cyclic_out() {
+inline std::string CyclicStructC::cyclic_out() const {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),

@@ -30,7 +30,7 @@ struct CyclicStructC {
 
   inline static CyclicStructC takes_nested_parameters(CyclicStructC c);
 
-  inline std::string cyclic_out();
+  inline std::string cyclic_out() const;
 
   inline diplomat::capi::CyclicStructC AsFFI() const;
   inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);

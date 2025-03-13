@@ -39,7 +39,7 @@ inline MyStruct MyStruct::new_() {
   return MyStruct::FromFFI(result);
 }
 
-inline uint8_t MyStruct::into_a() {
+inline uint8_t MyStruct::into_a() const {
   auto result = diplomat::capi::MyStruct_into_a(this->AsFFI());
   return result;
 }

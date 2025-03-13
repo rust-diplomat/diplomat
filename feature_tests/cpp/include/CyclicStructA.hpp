@@ -36,7 +36,7 @@ inline CyclicStructB CyclicStructA::get_b() {
   return CyclicStructB::FromFFI(result);
 }
 
-inline std::string CyclicStructA::cyclic_out() {
+inline std::string CyclicStructA::cyclic_out() const {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   diplomat::capi::CyclicStructA_cyclic_out(this->AsFFI(),
@@ -44,7 +44,7 @@ inline std::string CyclicStructA::cyclic_out() {
   return output;
 }
 
-inline std::string CyclicStructA::double_cyclic_out(CyclicStructA cyclic_struct_a) {
+inline std::string CyclicStructA::double_cyclic_out(CyclicStructA cyclic_struct_a) const {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   diplomat::capi::CyclicStructA_double_cyclic_out(this->AsFFI(),
@@ -53,7 +53,7 @@ inline std::string CyclicStructA::double_cyclic_out(CyclicStructA cyclic_struct_
   return output;
 }
 
-inline std::string CyclicStructA::getter_out() {
+inline std::string CyclicStructA::getter_out() const {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   diplomat::capi::CyclicStructA_getter_out(this->AsFFI(),
