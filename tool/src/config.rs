@@ -77,7 +77,7 @@ impl Config {
     }
 
     /// Given a filepath, read TOML formatted config settings from it (and modify the current Config struct from the read)
-    pub fn read_file(&mut self, path : &Path) -> std::io::Result<()> {
+    pub fn read_file(&mut self, path: &Path) -> std::io::Result<()> {
         let config_table: Table = if path.exists() {
             let file_buf = std::fs::read(path)?;
             toml::from_slice(&file_buf)?
@@ -103,7 +103,7 @@ impl Config {
     }
 
     /// Given a vector of strings with the format `config.setting = value`, modify the `Config` struct appropriately.
-    pub fn read_cli_settings(&mut self, settings : Vec<String>) {
+    pub fn read_cli_settings(&mut self, settings: Vec<String>) {
         for c in settings {
             let split = c.split_once("=");
             if let Some((key, value)) = split {

@@ -45,7 +45,7 @@ fn main() -> std::io::Result<()> {
     // -- Config Parsing --
 
     // Read file:
-    
+
     let path = opt.config_file;
 
     let mut config = Config::default();
