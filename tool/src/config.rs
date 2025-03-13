@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -6,7 +6,7 @@ use syn::{
     parse::{Parse, ParseStream},
     Expr, Ident, Token,
 };
-use toml::Value;
+use toml::{value::Table, Value};
 
 use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
 
@@ -74,6 +74,44 @@ impl Config {
             }
         }
         out
+    }
+
+    /// Given a filepath, read TOML formatted config settings from it (and modify the current Config struct from the read)
+    pub fn read_file(&mut self, path : &Path) -> std::io::Result<()> {
+        let config_table: Table = if path.exists() {
+            let file_buf = std::fs::read(path)?;
+            toml::from_slice(&file_buf)?
+        } else {
+            Table::default()
+        };
+
+        for (key, value) in config_table {
+            // Quick way to take config.toml from kebab to snake case.
+            // This technically means that someone could also just as easily do CamelCase and have it translated,
+            // but I'm not sure I want to bother writing validation code for such a scenario.
+            let key = heck::AsSnakeCase(key).to_string();
+            if let toml::Value::Table(t) = value {
+                for (subkey, subvalue) in t {
+                    let subkey = heck::AsSnakeCase(subkey).to_string();
+                    self.set(&format!("{}.{}", key, subkey), subvalue);
+                }
+            } else {
+                self.set(&key, value);
+            }
+        }
+        Ok(())
+    }
+
+    /// Given a vector of strings with the format `config.setting = value`, modify the `Config` struct appropriately.
+    pub fn read_cli_settings(&mut self, settings : Vec<String>) {
+        for c in settings {
+            let split = c.split_once("=");
+            if let Some((key, value)) = split {
+                self.set(key, toml_value_from_str(value));
+            } else {
+                eprintln!("Could not read {c}, expected =");
+            }
+        }
     }
 }
 
