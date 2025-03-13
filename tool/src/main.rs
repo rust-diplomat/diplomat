@@ -1,8 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
-use toml::value::Table;
 
-use diplomat_tool::config::{toml_value_from_str, Config};
+use diplomat_tool::config::Config;
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -46,40 +45,14 @@ fn main() -> std::io::Result<()> {
     // -- Config Parsing --
 
     // Read file:
+
     let path = opt.config_file;
-    let config_table: Table = if path.exists() {
-        let file_buf = std::fs::read(path)?;
-        toml::from_slice(&file_buf)?
-    } else {
-        Table::default()
-    };
 
     let mut config = Config::default();
-
-    for (key, value) in config_table {
-        // Quick way to take config.toml from kebab to snake case.
-        // This technically means that someone could also just as easily do CamelCase and have it translated,
-        // but I'm not sure I want to bother writing validation code for such a scenario.
-        let key = heck::AsSnakeCase(key).to_string();
-        if let toml::Value::Table(t) = value {
-            for (subkey, subvalue) in t {
-                let subkey = heck::AsSnakeCase(subkey).to_string();
-                config.set(&format!("{}.{}", key, subkey), subvalue);
-            }
-        } else {
-            config.set(&key, value);
-        }
-    }
+    config.read_file(&path)?;
 
     // Read CLI:
-    for c in opt.config {
-        let split = c.split_once("=");
-        if let Some((key, value)) = split {
-            config.set(key, toml_value_from_str(value));
-        } else {
-            eprintln!("Could not read {c}, expected =");
-        }
-    }
+    config.read_cli_settings(opt.config);
 
     // -- Config Parsing --
 
