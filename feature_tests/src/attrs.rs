@@ -85,16 +85,12 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    pub struct MyIterable(Vec<u8>);
-
-    #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
-
-    #[diplomat::opaque]
     #[diplomat::attr(not(supports = indexing), disable)]
     pub struct MyIndexer(Vec<String>);
+
+    #[diplomat::opaque]
+    //#[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterable(Vec<u8>);
 
     impl MyIterable {
         #[diplomat::attr(auto, constructor)]
@@ -107,6 +103,9 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::opaque]
+    //#[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
     impl<'a> MyIterator<'a> {
         #[diplomat::attr(auto, iterator)]
         pub fn next(&mut self) -> Option<u8> {
@@ -122,12 +121,8 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    //#[diplomat::attr(not(supports = iterators), disable)]
     struct OpaqueIterable(Vec<AttrOpaque1>);
-
-    #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
 
     impl OpaqueIterable {
         #[diplomat::attr(auto, iterable)]
@@ -136,6 +131,9 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::opaque]
+    //#[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
     impl<'a> OpaqueIterator<'a> {
         #[diplomat::attr(auto, iterator)]
         pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {

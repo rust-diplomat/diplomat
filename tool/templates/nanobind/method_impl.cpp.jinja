@@ -17,6 +17,21 @@
 		.def(nb::self /= nb::self, nb::rv_policy::none)
 	{%- when Some(crate::hir::SpecialMethod::Stringifier) -%}
 		.def("__str__", &{{- type_name }}::{{ m.method_name -}})
+	{%- when Some(crate::hir::SpecialMethod::Iterable) -%}
+		.def("__iter__", &{{- type_name }}::{{ m.method_name -}})
+	{%- when Some(crate::hir::SpecialMethod::Iterator) -%}
+		.def("__next__", []({{- type_name }}& self){
+			auto next = self.next();
+			if (!next) {
+				throw nb::stop_iteration();
+			}
+			if constexpr(diplomat::is_optional_v<decltype(next)>) {
+				return std::move(next).value();
+			} else {
+				return next;
+			}
+		})
+        .def("__iter__", [](nb::handle self) { return self; })
 	{%- else -%}
 		{%- match m.method.attrs.special_method -%}
 		{%- when Some(crate::hir::SpecialMethod::Constructor) -%}

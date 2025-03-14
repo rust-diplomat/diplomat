@@ -35,10 +35,10 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.accessors = false;
     a.comparators = false; // TODO
     a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
+    a.iterators = true; // TODO
+    a.iterables = true; // TODO
     a.arithmetic = true;
-    a.indexing = false; // TODO
+    a.indexing = true; // TODO
     a.option = true;
     a.callbacks = true;
     a.traits = false;
