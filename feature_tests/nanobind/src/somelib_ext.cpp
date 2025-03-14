@@ -5,6 +5,9 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/detail/nb_list.h>
+#include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
@@ -50,7 +53,12 @@
 #include "ns/AttrOpaque1Renamed.hpp"
 #include "ns/RenamedAttrEnum.hpp"
 #include "ns/RenamedAttrOpaque2.hpp"
+#include "ns/RenamedMyIndexer.hpp"
+#include "ns/RenamedMyIterable.hpp"
+#include "ns/RenamedMyIterator.hpp"
 #include "ns/RenamedOpaqueArithmetic.hpp"
+#include "ns/RenamedOpaqueIterable.hpp"
+#include "ns/RenamedOpaqueIterator.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -93,10 +101,10 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-// Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
-// Remove this block when upstream support is added
 namespace nanobind::detail
 {
+    // Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
+    // Remove this block when upstream support is added
     template <>
     struct type_caster<char32_t>
     {
@@ -190,8 +198,82 @@ namespace nanobind::detail
 
 		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
 	};
-}
 
+    template <typename T>
+    class type_caster<diplomat::span<T>>
+    {
+        // The type referenced by the span, with const removed.
+        using value_type = std::remove_cv_t<T>;
+        // Avoid pitfalls with std::vector<bool>
+        using ListCaster = list_caster<std::vector<std::conditional_t<std::is_same_v<bool, value_type>, uint8_t, value_type>>, value_type>;
+        static_assert(sizeof(bool) == sizeof(uint8_t), "bool representation size is unexpected!");
+
+        std::optional<ListCaster> list_caster;
+
+    public:
+        using Value = diplomat::span<T>;
+        Value value = diplomat::span<T>(nullptr, 0);
+
+        static constexpr auto Name = ListCaster::Name;
+
+        // We do not allow moving because 1) spans are super lightweight, so there's
+        // no advantage to moving and 2) the span cannot exist without the caster,
+        // so moving leaves an implicit dependency (while a reference or pointer
+        // make that dependency explicit).
+        template <typename T_>
+        using Cast = movable_cast_t<T_>;
+        operator Value *() { return &value; }
+        operator Value &() { return value; }
+
+        // Cast Python -> C++ (nb::cast call)
+        bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
+        {
+            uint8_t local_flags = flags_for_local_caster<T>(flags);
+
+            // First try to convert from ndarray for efficiency
+            // Try to get a 1D contiguous array directly using type tags
+            if constexpr (is_ndarray_scalar_v<T>)
+            {
+                auto caster = make_caster<nb::ndarray<T, ndim<1>>>();
+                if (caster.from_python(src, local_flags, cleanup))
+                {
+                    // Create a span from the array data
+                    value = diplomat::span<T>(caster.value.data(), caster.value.shape(0));
+                    return true;
+                }
+            }
+
+            // Attempt to convert a native sequence. If the is_base_of_v check passes,
+            // the elements do not require converting and pointers do not reference a
+            // temporary object owned by the element caster. Pointers to converted
+            // types are not allowed because they would result a dangling reference
+            // when the element caster is destroyed.
+            if (std::is_const_v<T> &&
+                (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>))
+            {
+                list_caster.emplace();
+                if (list_caster->from_python(src, local_flags, cleanup))
+                {
+                    // Reinterpret cast here is required to handle vector<bool>
+                    value = diplomat::span<T>(reinterpret_cast<T *>(list_caster->value.data()), list_caster->value.size());
+                    return true;
+                }
+                else
+                {
+                    list_caster.reset();
+                }
+            }
+
+            return false; // Python type cannot be loaded into a span.
+        }
+
+        // Cast C++ -> Python (when returning a span from a C++ function)
+        static handle from_cpp(diplomat::span<T> src, rv_policy policy, cleanup_list *cleanup)
+        {
+            return ListCaster::from_cpp(src, policy, cleanup);
+        }
+    };
+}
 
 NB_MODULE(somelib, somelib_mod)
 {
@@ -325,6 +407,42 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::RenamedAttrOpaque2>(ns_mod, "RenamedAttrOpaque2", nb::type_slots(ns_RenamedAttrOpaque2_slots));
+    
+    PyType_Slot ns_RenamedMyIndexer_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedMyIndexer::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedMyIndexer>(ns_mod, "RenamedMyIndexer", nb::type_slots(ns_RenamedMyIndexer_slots))
+    	.def("__getitem__", &ns::RenamedMyIndexer::operator[], "i"_a);
+    
+    PyType_Slot ns_RenamedMyIterable_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedMyIterable::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedMyIterable>(ns_mod, "RenamedMyIterable", nb::type_slots(ns_RenamedMyIterable_slots))
+    	.def(nb::new_(&ns::RenamedMyIterable::new_), "x"_a)
+    	.def("__iter__", &ns::RenamedMyIterable::iter);
+    
+    PyType_Slot ns_RenamedMyIterator_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedMyIterator::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedMyIterator>(ns_mod, "RenamedMyIterator", nb::type_slots(ns_RenamedMyIterator_slots))
+    	.def("__next__", [](ns::RenamedMyIterator& self){
+    			auto next = self.next();
+    			if (!next) {
+    				throw nb::stop_iteration();
+    			}
+    			if constexpr(diplomat::is_optional_v<decltype(next)>) {
+    				return std::move(next).value();
+    			} else {
+    				return next;
+    			}
+    		})
+            .def("__iter__", [](nb::handle self) { return self; });
     nb::module_ nested_mod = somelib_mod.def_submodule("nested");
     
     PyType_Slot nested_ns_Nested_slots[] = {
@@ -359,6 +477,33 @@ NB_MODULE(somelib, somelib_mod)
     	.def(nb::self -= nb::self, nb::rv_policy::none)
     	.def(nb::self *= nb::self, nb::rv_policy::none)
     	.def(nb::self /= nb::self, nb::rv_policy::none);
+    
+    PyType_Slot ns_RenamedOpaqueIterable_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedOpaqueIterable::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedOpaqueIterable>(ns_mod, "RenamedOpaqueIterable", nb::type_slots(ns_RenamedOpaqueIterable_slots))
+    	.def("__iter__", &ns::RenamedOpaqueIterable::iter);
+    
+    PyType_Slot ns_RenamedOpaqueIterator_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedOpaqueIterator::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedOpaqueIterator>(ns_mod, "RenamedOpaqueIterator", nb::type_slots(ns_RenamedOpaqueIterator_slots))
+    	.def("__next__", [](ns::RenamedOpaqueIterator& self){
+    			auto next = self.next();
+    			if (!next) {
+    				throw nb::stop_iteration();
+    			}
+    			if constexpr(diplomat::is_optional_v<decltype(next)>) {
+    				return std::move(next).value();
+    			} else {
+    				return next;
+    			}
+    		})
+            .def("__iter__", [](nb::handle self) { return self; });
     
     PyType_Slot Unnamespaced_slots[] = {
         {Py_tp_free, (void *)Unnamespaced::operator delete },

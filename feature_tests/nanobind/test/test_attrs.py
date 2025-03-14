@@ -11,3 +11,8 @@ def test_attrs():
     un.use_namespaced(r)
     r.use_unnamespaced(un)
     r.use_namespaced(e)
+
+    lst = [1,2,3,4]
+    it = somelib.ns.RenamedMyIterable([1,2,3])
+    lst_copy = [x for x in it]
+    assert lst == lst_copy, "Iterable failed!"
