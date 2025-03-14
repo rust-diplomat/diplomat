@@ -26,6 +26,7 @@ Diplomat currently supports the following backends:
    - [demo_gen](./demo_gen/intro.md)
  - Dart
  - Kotlin (using JNA)
+ - Python via [Nanobind](https://github.com/wjakob/nanobind) (maintained by [Zeromatter](https://www.zeromatter.com/))
  
 There is work in progress for a [Java backend] (using Panama). We used to have a .NET backend but it was removed in a refactor, it may get added again.
 

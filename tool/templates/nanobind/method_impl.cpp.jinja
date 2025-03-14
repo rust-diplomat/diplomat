@@ -1,0 +1,62 @@
+	{% match m.method.attrs.special_method -%}
+	{%- when Some(crate::hir::SpecialMethod::Add) -%}
+		.def(nb::self + nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Sub) -%}
+		.def(nb::self - nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Mul) -%}
+		.def(nb::self * nb::self)
+	{%- when Some(crate::hir::SpecialMethod::Div) -%}
+		.def(nb::self / nb::self)
+	{%- when Some(crate::hir::SpecialMethod::AddAssign) -%}
+		.def(nb::self += nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::SubAssign) -%}
+		.def(nb::self -= nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::MulAssign) -%}
+		.def(nb::self *= nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::DivAssign) -%}
+		.def(nb::self /= nb::self, nb::rv_policy::none)
+	{%- when Some(crate::hir::SpecialMethod::Stringifier) -%}
+		.def("__str__", &{{- type_name }}::{{ m.method_name -}})
+	{%- when Some(crate::hir::SpecialMethod::Iterable) -%}
+		.def("__iter__", &{{- type_name }}::{{ m.method_name -}})
+	{%- when Some(crate::hir::SpecialMethod::Iterator) -%}
+		.def("__next__", []({{- type_name }}& self){
+			auto next = self.next();
+			if (!next) {
+				throw nb::stop_iteration();
+			}
+			if constexpr(diplomat::is_optional_v<decltype(next)>) {
+				return std::move(next).value();
+			} else {
+				return next;
+			}
+		})
+        .def("__iter__", [](nb::handle self) { return self; })
+	{%- else -%}
+		{%- match m.method.attrs.special_method -%}
+		{%- when Some(crate::hir::SpecialMethod::Constructor) -%}
+		.def(nb::new_(&{{- type_name}}::{{ m.method_name -}})
+		{%- else -%}
+		.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
+		{%- match m.method.attrs.special_method -%}
+		{%- when Some(crate::hir::SpecialMethod::Indexer) -%}
+			("__getitem__", &{{- type_name }}::operator[] 
+		{%- else -%}
+			("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
+		{%- endmatch -%}
+		{%- endmatch -%}
+		
+		{%- for param in m.method.params -%}
+			, "{{param.name}}"_a
+			{%- match param.ty -%}
+			{%- when Type::DiplomatOption(t) -%}
+				= nb::none()
+			{%- when Type::Opaque(t) -%}
+				{%- if t.is_optional() -%}
+					= nb::none()
+				{%- endif -%}
+			{%- else -%}
+			{%- endmatch -%}
+		{%- endfor -%}
+		)
+	{%- endmatch -%}

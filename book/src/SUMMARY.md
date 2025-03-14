@@ -21,6 +21,7 @@
     - [Iterators and iterables](attrs/iterators.md)
     - [Getters and setters](attrs/accessors.md)
     - [Indexing](attrs/indexing.md)
+    - [Arithmetic](attrs/arithmetic.md)
     - [Comparators](attrs/comparators.md)
     - [Stringifiers](attrs/stringifiers.md)
   - [Notes on Diplomat and safety](safety.md)
