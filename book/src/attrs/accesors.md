@@ -1,1 +1,0 @@
-# Getters and setters
