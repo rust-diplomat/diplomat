@@ -1,6 +1,6 @@
 # Indexing
 
-(Supported by `dart`, queried with `supports = indexing`. Intended to be supported in `cpp`)
+(Supported by `dart` and `cpp`, queried with `supports = indexing`)
 
 
 `[]` can be overloaded in languages that support it by applying an `indexer` attribute to a method that takes an integer argument and returns an `Option<u8>`.
