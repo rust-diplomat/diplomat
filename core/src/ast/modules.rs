@@ -248,7 +248,8 @@ impl Module {
 
                         let self_ident = self_path.path.elements.last().unwrap();
 
-                        match custom_types_by_name.get_mut(self_ident).unwrap() {
+                        match custom_types_by_name.get_mut(self_ident)
+                                                  .expect("Diplomat currently requires impls to be in the same module as their self type") {
                             CustomType::Struct(strct) => {
                                 strct.methods.append(&mut new_methods);
                             }
