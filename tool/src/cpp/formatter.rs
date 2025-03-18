@@ -1,7 +1,9 @@
 //! This module contains functions for formatting types
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
-use diplomat_core::hir::{self, SpecialMethod, StringEncoding, TypeContext, TypeId};
+use diplomat_core::hir::{
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, TypeContext, TypeId,
+};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -18,9 +20,9 @@ pub(crate) struct Cpp2Formatter<'tcx> {
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
         Self {
-            c: CFormatter::new(tcx, true),
+            c: CFormatter::new(tcx, true, docs_url_gen),
         }
     }
 
@@ -161,6 +163,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_owned_str(&self) -> Cow<'static, str> {
         "std::string".into()
+    }
+
+    pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
+        self.c.fmt_docs(docs)
     }
 
     /// Format a method

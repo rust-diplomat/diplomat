@@ -36,8 +36,7 @@ export class Unnamespaced {
     get ffiValue() {
         return this.#ptr;
     }
-
-    static make(e) {
+static make(e) {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
@@ -46,8 +45,7 @@ export class Unnamespaced {
         
         finally {}
     }
-
-    useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
+useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
         try {}
         

@@ -3,8 +3,9 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-/** Testing JS-specific layout/padding behavior
-*/
+/** 
+ * Testing JS-specific layout/padding behavior
+ */
 
 
 export class ScalarPairWithPadding {
@@ -108,8 +109,7 @@ export class ScalarPairWithPadding {
 
         return new ScalarPairWithPadding(structObj);
     }
-
-    assertValue() {
+assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         wasm.ScalarPairWithPadding_assert_value(...this._intoFFI());
     

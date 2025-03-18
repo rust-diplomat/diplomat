@@ -23,9 +23,17 @@ namespace capi {
 } // namespace
 
 namespace icu4x {
+/**
+ * An  Locale, capable of representing strings like `"en-US"`.
+ *
+ * See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
+ */
 class Locale {
 public:
 
+  /**
+   * Construct an [`Locale`] from a locale identifier represented as a string.
+   */
   inline static std::unique_ptr<icu4x::Locale> new_(std::string_view name);
 
   inline const icu4x::capi::Locale* AsFFI() const;

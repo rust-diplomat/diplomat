@@ -85,8 +85,8 @@ pub fn gen(
     });
 
     let (files, errors) = match target_language {
-        "c" => c::run(&tcx),
-        "cpp" => cpp::run(&tcx),
+        "c" => c::run(&tcx, docs_url_gen),
+        "cpp" => cpp::run(&tcx, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
         "demo_gen" => {

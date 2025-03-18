@@ -126,8 +126,7 @@ export class BorrowedFields {
     get _fieldsForLifetimeA() { 
         return [a, b, c];
     };
-
-    static fromBarAndStrings(bar, dstr16, utf8Str) {
+static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16Slice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16));
         

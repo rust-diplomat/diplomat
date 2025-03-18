@@ -3,6 +3,11 @@
 {% if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {% endif -%}
+{% if !docs.is_empty() -%}
+/**
+ * {{docs}}
+ */
+{% endif -%}
 class {{type_name_unnamespaced}} {
 public:
 	enum Value {
@@ -20,6 +25,11 @@ public:
 
 	{%- for m in methods %}
 
+	{% if !m.docs.is_empty() -%}
+	/**
+	 * {{m.docs|indent(2)}}
+	 */
+	{% endif -%}
 	{% include "method_decl.h.jinja" %}
 	{%- endfor %}
 

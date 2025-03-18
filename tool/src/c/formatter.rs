@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+    self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
 };
 use std::borrow::Cow;
 
@@ -17,13 +17,22 @@ use std::borrow::Cow;
 pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     is_for_cpp: bool,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 pub(crate) const CAPI_NAMESPACE: &str = "capi";
 
 impl<'tcx> CFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, is_for_cpp: bool) -> Self {
-        Self { tcx, is_for_cpp }
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        is_for_cpp: bool,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
+        Self {
+            tcx,
+            is_for_cpp,
+            docs_url_gen,
+        }
     }
     pub fn tcx(&self) -> &'tcx TypeContext {
         self.tcx
@@ -264,6 +273,13 @@ impl<'tcx> CFormatter<'tcx> {
             }
             .into(),
         )
+    }
+
+    pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
+        docs.to_markdown(self.docs_url_gen)
+            .trim()
+            .replace('\n', "\n * ")
+            .replace(" \n", "\n")
     }
 
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
