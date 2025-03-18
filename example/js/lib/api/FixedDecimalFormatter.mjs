@@ -7,10 +7,11 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-/** An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
-*
-*See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
-*/
+/** 
+ * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+ *
+ * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
+ */
 const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
 });
@@ -44,6 +45,11 @@ export class FixedDecimalFormatter {
         return this.#ptr;
     }
 
+    /** 
+     * Creates a new [`FixedDecimalFormatter`] from locale data.
+     *
+     * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
+     */
     static tryNew(locale, provider, options) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -65,6 +71,11 @@ export class FixedDecimalFormatter {
         }
     }
 
+    /** 
+     * Formats a [`FixedDecimal`] to a string.
+     *
+     * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
+     */
     formatWrite(value) {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);

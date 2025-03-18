@@ -50,6 +50,7 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
     c_to_cpp_return_expression: Option<Cow<'a, str>>,
+    docs: String,
 }
 
 /// Context for generating a particular type's header
@@ -94,6 +95,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -105,6 +107,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&ty.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -162,6 +165,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -173,6 +177,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&ty.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -250,6 +255,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -262,6 +268,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&def.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -391,6 +398,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             param_validations,
             cpp_to_c_params,
             c_to_cpp_return_expression,
+            docs: self.formatter.fmt_docs(&method.docs),
         })
     }
 

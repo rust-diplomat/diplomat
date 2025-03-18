@@ -30,11 +30,26 @@ namespace capi {
 } // namespace
 
 namespace icu4x {
+/**
+ * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+ *
+ * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
+ */
 class FixedDecimalFormatter {
 public:
 
+  /**
+   * Creates a new [`FixedDecimalFormatter`] from locale data.
+   *
+   * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
+   */
   inline static diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
 
+  /**
+   * Formats a [`FixedDecimal`] to a string.
+   *
+   * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
+   */
   inline std::string format_write(const icu4x::FixedDecimal& value) const;
 
   inline const icu4x::capi::FixedDecimalFormatter* AsFFI() const;

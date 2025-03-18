@@ -1,6 +1,7 @@
 {% if !doc_str.is_empty() %}
-/** {{doc_str}}
-*/
+/** 
+ * {{doc_str}}
+ */
 {% endif -%}
 {%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
 
@@ -13,7 +14,11 @@ export class {{type_name}} {
 
     {#- Do not include the method in typescript if it is meant to be private: -#}
     {%- if !method.method_decl.starts_with('#') || !typescript %}
-
+{% if !method.doc_str.is_empty() %}
+    /** 
+     * {{method.doc_str|indent(4)}}
+     */
+    {% endif -%}
     {{ method|indent(4) }}
     {%- endif -%}
 {%- endfor -%}

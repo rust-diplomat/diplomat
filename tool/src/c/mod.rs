@@ -8,8 +8,8 @@ pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
-use diplomat_core::hir;
 use diplomat_core::hir::BackendAttrSupport;
+use diplomat_core::hir::{self, DocsUrlGenerator};
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
@@ -46,9 +46,12 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[template(path = "c/runtime.h.jinja", escape = "none")]
 pub struct Runtime;
 
-pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+pub(crate) fn run<'tcx>(
+    tcx: &'tcx hir::TypeContext,
+    docs_url_gen: &'tcx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = CFormatter::new(tcx, false);
+    let formatter = CFormatter::new(tcx, false, docs_url_gen);
     let errors = ErrorStore::default();
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());

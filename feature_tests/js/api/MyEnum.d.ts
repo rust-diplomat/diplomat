@@ -18,10 +18,8 @@ export class MyEnum {
     static D : MyEnum;
     static E : MyEnum;
     static F : MyEnum;
-
-    intoValue(): number;
-
-    static getA(): MyEnum;
+intoValue(): number;
+static getA(): MyEnum;
 
     constructor(value: MyEnum | string );
 }

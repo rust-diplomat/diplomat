@@ -43,8 +43,7 @@ export class Bar {
     get ffiValue() {
         return this.#ptr;
     }
-
-    get foo() {
+get foo() {
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
         
