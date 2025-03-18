@@ -142,7 +142,8 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
-            let formatter = Cpp2Formatter::new(&tcx, &Default::default());
+            let docs_gen = Default::default();
+            let formatter = Cpp2Formatter::new(&tcx, &docs_gen);
             let mut decl_header = header::Header::new("decl_thing".into());
             let mut impl_header = header::Header::new("impl_thing".into());
 
