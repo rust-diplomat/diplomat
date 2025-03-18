@@ -32,7 +32,7 @@ inline {##}
 	{%- when None %}
 	{%- endmatch %}
 }
-{%- if auto_define_self_arithmatic -%}
+{%- if auto_define_self_arithmetic -%}
 {%- if let Some(op_str) = m.method_name.strip_prefix("operator") -%}
 {%- if ["+", "-", "*", "/"].contains(op_str) -%}
 {%- let param_var = m.param_decls[0] ~%}

@@ -6,7 +6,7 @@
 {% let mut_cptr = fmt.fmt_c_ptr(ctype, Mutability::Mutable) -%}
 {% let const_ref = fmt.fmt_borrowed(type_name, Mutability::Immutable) -%}
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
-{% let auto_define_self_arithmatic = false -%}
+{% let auto_define_self_arithmetic = false -%}
 
 {% for m in methods -%}
 {% include "method_impl.h.jinja" %}

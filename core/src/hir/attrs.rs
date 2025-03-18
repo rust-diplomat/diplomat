@@ -690,7 +690,10 @@ impl Attrs {
                         check_param_count(name, 1, errors);
                         check_self_param(name, true, errors);
                         if let Some(self_param) = &method.param_self {
-                            if self_param.ty.is_immutably_borrowed() {
+                            if matches!(self_param.ty, SelfType::Struct(_) | SelfType::Enum(_)) {
+                                errors.push(LoweringError::Other("*Assign arithmetic operations not allowed on non-opaque types. \
+                                     Use the non-mutating arithmetic operators instead".to_string()));
+                            } else if self_param.ty.is_immutably_borrowed() {
                                 errors.push(LoweringError::Other(format!(
                                     "{name} must take self by mutable reference"
                                 )));
