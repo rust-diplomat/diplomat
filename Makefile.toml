@@ -484,7 +484,6 @@ generate_generic example kotlin somelib "" /src/main/kotlin
 '''
 
 [tasks.gen-nanobind-feature]
-dependencies = ["gen-cpp-feature"]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -492,6 +491,8 @@ exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests nanobind src/cpp
 mv nanobind/src/cpp/somelib_ext.cpp nanobind/src/somelib_ext.cpp
+rm -rf nanobind/src/include
+mv nanobind/src/cpp/include nanobind/src/
 rm -rf nanobind/src/cpp
 '''
 # Build deps

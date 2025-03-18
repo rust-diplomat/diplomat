@@ -121,7 +121,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    //#[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::attr(not(supports = iterators), disable)]
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
     impl OpaqueIterable {

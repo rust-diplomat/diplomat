@@ -11,6 +11,8 @@ use formatter::PyFormatter;
 use serde::{Deserialize, Serialize};
 use ty::TyGenContext;
 
+use crate::cpp;
+
 // Python support using the nanobind c++ library to create a python binding.
 //
 // The generated nanobind.cpp files requires linking with nanobind
@@ -65,6 +67,19 @@ pub(crate) fn run<'cx>(
         .lib_name
         .expect("Nanobind backend requires lib_name to be set in the config");
 
+    // Output the C++ bindings we rely on
+
+    let (cpp_files, cpp_errors) = cpp::run(tcx);
+
+    files.files.borrow_mut().extend(
+        cpp_files
+            .files
+            .take()
+            .into_iter()
+            .map(|(k, v)| (format!("include/{k}"), v)),
+    );
+    errors.errors.borrow_mut().extend(cpp_errors.errors.take());
+
     let nanobind_filepath = format!("{lib_name}_ext.cpp");
     let mut binding = Binding::new();
     binding.module_name = lib_name.into();
@@ -85,7 +100,7 @@ pub(crate) fn run<'cx>(
             errors: &errors,
             c2: crate::c::TyGenContext {
                 tcx,
-                formatter: &formatter.c,
+                formatter: &formatter.cxx.c,
                 errors: &errors,
                 is_for_cpp: false,
                 id: id.into(),
