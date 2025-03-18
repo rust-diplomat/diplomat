@@ -17,3 +17,6 @@ Cargo.lock
 
 # VS Code configuration
 .vscode/
+
+# artifacts from running cpp-check
+*.pch

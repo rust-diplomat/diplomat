@@ -2,6 +2,7 @@
 #include "../include/ns/AttrOpaque1Renamed.hpp"
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/ns/RenamedAttrEnum.hpp"
+#include "../include/ns/RenamedMyIterable.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
@@ -9,16 +10,15 @@
 
 #include "assert.hpp"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     std::unique_ptr<ns::AttrOpaque1Renamed> r = ns::AttrOpaque1Renamed::totally_not_new();
     simple_assert_eq("method should call", r->method_renamed(), 77);
     simple_assert_eq("method should call", r->abirenamed(), 123);
 
     // These C names should also resolve
-    void *renamed = (void *)ns::capi::renamed_on_abi_only;
+    void* renamed = (void*)ns::capi::renamed_on_abi_only;
     std::cout << "Renamed function at " << renamed << std::endl;
-    renamed = (void *)ns::capi::namespace_AttrOpaque1_method;
+    renamed = (void*)ns::capi::namespace_AttrOpaque1_method;
     std::cout << "Renamed function at " << renamed << std::endl;
 
     ns::RenamedAttrEnum e = ns::RenamedAttrEnum::A;
@@ -37,9 +37,26 @@ int main(int argc, char *argv[])
         simple_assert_eq("adding y", r->y(), 5);
     }
 
-    auto array = std::array{1.5, 1.6};
+    auto array = std::array{ 1.5, 1.6 };
     auto vec = Float64Vec::new_(array);
     simple_assert_eq("vector indexer", (*vec)[0].value(), 1.5);
     simple_assert_eq("vector indexer", (*vec)[1].value(), 1.6);
     simple_assert_eq("vector indexer", (*vec)[2].has_value(), false);
+
+
+    auto uintVec = std::vector<uint8_t>{ 1, 2, 3, 4 };
+    auto myIterable = ns::RenamedMyIterable::new_(diplomat::span<const uint8_t>{uintVec.data(), uintVec.size()});
+    auto myIt = myIterable->begin();
+
+    simple_assert_eq("Iteration dereference", *myIt, 1);
+    myIt++;
+    simple_assert_eq("Iteration manual increment", *myIt, 2);
+
+    auto unitVecCopy = std::vector<uint8_t>();
+    for (auto element : *myIterable) {
+        unitVecCopy.push_back(element);
+    }
+    simple_assert("For loop iteration", uintVec == unitVecCopy);
+
+    simple_assert("stl-algorithm iteration failed", std::equal(uintVec.begin(), uintVec.end(), myIterable->begin()));
 }
