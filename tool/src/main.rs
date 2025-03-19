@@ -49,7 +49,7 @@ fn main() -> std::io::Result<()> {
     let path = opt.config_file;
 
     let mut config = Config::default();
-    config.read_file(&path)?;
+    config.read_file(&path).expect("Error loading config");
 
     // Read CLI:
     config.read_cli_settings(opt.config);
