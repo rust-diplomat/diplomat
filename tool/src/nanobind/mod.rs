@@ -69,7 +69,7 @@ pub(crate) fn run<'cx>(
 
     // Output the C++ bindings we rely on
 
-    let (cpp_files, cpp_errors) = cpp::run(tcx);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, docs);
 
     files.files.borrow_mut().extend(
         cpp_files

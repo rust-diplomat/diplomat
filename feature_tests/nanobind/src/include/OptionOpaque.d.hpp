@@ -46,11 +46,11 @@ public:
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);
 
-  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg);
+  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel);
 
-  inline static std::optional<OptionEnum> accepts_option_enum(std::optional<OptionEnum> arg);
+  inline static std::optional<OptionEnum> accepts_option_enum(std::optional<OptionEnum> arg, uint8_t sentinel);
 
-  inline static std::optional<OptionInputStruct> accepts_option_input_struct(std::optional<OptionInputStruct> arg);
+  inline static std::optional<OptionInputStruct> accepts_option_input_struct(std::optional<OptionInputStruct> arg, uint8_t sentinel);
 
   inline static OptionInputStruct returns_option_input_struct();
 
