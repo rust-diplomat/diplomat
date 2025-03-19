@@ -20,9 +20,9 @@ def test_option():
     assert not s.b, "new_struct_nones() returns None"
     assert s.c == 908, "correct struct returned"
 
-    opt_u8 = somelib.OptionOpaque.accepts_option_u8(None)
+    opt_u8 = somelib.OptionOpaque.accepts_option_u8(None, 5)
     assert not opt_u8, "accepts_option_u8 is idempotent"
-    opt_u8 = somelib.OptionOpaque.accepts_option_u8(5)
+    opt_u8 = somelib.OptionOpaque.accepts_option_u8(5, 5)
     assert opt_u8 == 5, "accepts_option_u8 is idempotent"
     opt_enum = somelib.OptionOpaque.accepts_option_enum(None)
     assert not opt_enum, "accepts_option_enum is idempotent"
@@ -44,3 +44,14 @@ def test_option():
     assert exists, "option_opaque_argument did not return expected result"
     exists = somelib.OptionOpaque.option_opaque_argument()
     assert not exists, "option_opaque_argument did not return expected result with default argument"
+
+    string_array = ["string1", "string2"]
+    str_slice_result = somelib.OptionOpaque.accepts_option_str_slice(string_array, 123)
+    assert str_slice_result, "option_str_slice functions"
+
+    assert somelib.OptionOpaque.accepts_option_str("accepts optional string!", 123) == 24, "Optional string param (Some)"
+    assert somelib.OptionOpaque.accepts_option_str(None, 123) == 0, "Optional string param (None)"
+
+    int_array = [1, 2, 3, 4]
+    assert somelib.OptionOpaque.accepts_option_primitive(int_array, 123) == 10, "Optional primitive param (Some)"
+    assert somelib.OptionOpaque.accepts_option_primitive(None, 123) == -1, "Optional primitive param (None)"
