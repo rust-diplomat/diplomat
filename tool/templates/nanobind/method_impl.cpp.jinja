@@ -25,11 +25,7 @@
 			if (!next) {
 				throw nb::stop_iteration();
 			}
-			if constexpr(diplomat::is_optional_v<decltype(next)>) {
-				return std::move(next).value();
-			} else {
-				return next;
-			}
+			return next_inner_extractor<decltype(next)>::get(std::move(next));
 		})
         .def("__iter__", [](nb::handle self) { return self; })
 	{%- else -%}

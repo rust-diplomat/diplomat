@@ -9,6 +9,9 @@ expression: generated
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/detail/nb_list.h>
+#include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
 #include "mylib/OpaqueStruct.hpp"
 
@@ -53,10 +56,10 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-// Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
-// Remove this block when upstream support is added
 namespace nanobind::detail
 {
+    // Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
+    // Remove this block when upstream support is added
     template <>
     struct type_caster<char32_t>
     {
@@ -150,8 +153,84 @@ namespace nanobind::detail
 
 		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
 	};
+
+    template <typename T, std::size_t E>
+    class type_caster<diplomat::span<T, E>> {
+        // The type referenced by the span, with const removed.
+        using value_type = std::remove_cv_t<T>;
+        // Avoid pitfalls with std::vector<bool>
+        using vector_value_type = std::conditional_t<std::is_same_v<bool, value_type>, uint8_t, value_type>;
+        using ListCaster = list_caster<std::vector<vector_value_type>, value_type>;
+        static_assert(sizeof(bool) == sizeof(uint8_t), "bool representation size is unexpected!");
+
+
+    public:
+        using Value = diplomat::span<T, E>;
+        Value value = diplomat::span<T, E>();
+
+        static constexpr auto Name = ListCaster::Name;
+
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { return value; }
+
+        template <typename T_> static constexpr bool can_cast() { return true; }
+
+        // Cast Python -> C++ (nb::cast call)
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
+            uint8_t local_flags = flags_for_local_caster<T>(flags);
+
+            // First try to convert from ndarray for efficiency
+            // Try to get a 1D contiguous array directly using type tags
+            if constexpr (is_ndarray_scalar_v<T>) {
+                auto caster = make_caster<nb::ndarray<T, ndim<1>>>();
+                if (caster.from_python(src, local_flags, cleanup)) {
+                    // Create a span from the array data
+                    value = diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
+                    return true;
+                }
+            }
+
+            // Attempt to convert a native sequence. We must convert all elements & store
+            // them in a temporary object which will be cleaned up 
+            if (std::is_const_v<T> &&
+                (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>)) {
+                ListCaster caster;
+                if (caster.from_python(src, local_flags, cleanup)) {
+                    value = diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                    // Move the owning std::vector into a capsule that will live for the duration of the function call.
+                    // The address of the vector will change, the address of the region it references won't.
+                    nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
+                        delete (std::vector<vector_value_type>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+
+                    return true;
+                }
+            }
+
+            return false; // Python type cannot be loaded into a span.
+        }
+
+        // Cast C++ -> Python (when returning a span from a C++ function)
+        static handle from_cpp(diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
+            return ListCaster::from_cpp(src, policy, cleanup);
+        }
+    };
 }
 
+// Return the inner type from next()
+// Next returns either a std::unique_ptr or std::optional.
+// When T is optional, return inner<T>&&. When T is unique_ptr, just return it.
+template<typename T>
+struct next_inner_extractor {
+    static T&& get(T&& v) { return std::move(v); }
+};
+
+template<typename T>
+struct next_inner_extractor<std::optional<T>> {
+    static T&& get(std::optional<T>&& v) { return std::move(v).value(); }
+};
 
 NB_MODULE(pymod, pymod_mod)
 {

@@ -30,11 +30,11 @@ struct CyclicStructA {
 
   inline static CyclicStructB get_b();
 
-  inline std::string cyclic_out();
+  inline std::string cyclic_out() const;
 
-  inline std::string double_cyclic_out(CyclicStructA cyclic_struct_a);
+  inline std::string double_cyclic_out(CyclicStructA cyclic_struct_a) const;
 
-  inline std::string getter_out();
+  inline std::string getter_out() const;
 
   inline diplomat::capi::CyclicStructA AsFFI() const;
   inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);

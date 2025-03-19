@@ -44,6 +44,7 @@
 #include "RefList.hpp"
 #include "RefListParameter.hpp"
 #include "ResultOpaque.hpp"
+#include "StructArithmetic.hpp"
 #include "Two.hpp"
 #include "UnimportedEnum.hpp"
 #include "Unnamespaced.hpp"
@@ -199,68 +200,58 @@ namespace nanobind::detail
 		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
 	};
 
-    template <typename T>
-    class type_caster<diplomat::span<T>>
-    {
+    template <typename T, std::size_t E>
+    class type_caster<diplomat::span<T, E>> {
         // The type referenced by the span, with const removed.
         using value_type = std::remove_cv_t<T>;
         // Avoid pitfalls with std::vector<bool>
-        using ListCaster = list_caster<std::vector<std::conditional_t<std::is_same_v<bool, value_type>, uint8_t, value_type>>, value_type>;
+        using vector_value_type = std::conditional_t<std::is_same_v<bool, value_type>, uint8_t, value_type>;
+        using ListCaster = list_caster<std::vector<vector_value_type>, value_type>;
         static_assert(sizeof(bool) == sizeof(uint8_t), "bool representation size is unexpected!");
 
-        std::optional<ListCaster> list_caster;
 
     public:
-        using Value = diplomat::span<T>;
-        Value value = diplomat::span<T>(nullptr, 0);
+        using Value = diplomat::span<T, E>;
+        Value value = diplomat::span<T, E>();
 
         static constexpr auto Name = ListCaster::Name;
 
-        // We do not allow moving because 1) spans are super lightweight, so there's
-        // no advantage to moving and 2) the span cannot exist without the caster,
-        // so moving leaves an implicit dependency (while a reference or pointer
-        // make that dependency explicit).
         template <typename T_>
-        using Cast = movable_cast_t<T_>;
-        operator Value *() { return &value; }
-        operator Value &() { return value; }
+        using Cast = Value;
+        operator Value() { return value; }
+
+        template <typename T_> static constexpr bool can_cast() { return true; }
 
         // Cast Python -> C++ (nb::cast call)
-        bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept
-        {
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
             uint8_t local_flags = flags_for_local_caster<T>(flags);
 
             // First try to convert from ndarray for efficiency
             // Try to get a 1D contiguous array directly using type tags
-            if constexpr (is_ndarray_scalar_v<T>)
-            {
+            if constexpr (is_ndarray_scalar_v<T>) {
                 auto caster = make_caster<nb::ndarray<T, ndim<1>>>();
-                if (caster.from_python(src, local_flags, cleanup))
-                {
+                if (caster.from_python(src, local_flags, cleanup)) {
                     // Create a span from the array data
-                    value = diplomat::span<T>(caster.value.data(), caster.value.shape(0));
+                    value = diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
                     return true;
                 }
             }
 
-            // Attempt to convert a native sequence. If the is_base_of_v check passes,
-            // the elements do not require converting and pointers do not reference a
-            // temporary object owned by the element caster. Pointers to converted
-            // types are not allowed because they would result a dangling reference
-            // when the element caster is destroyed.
+            // Attempt to convert a native sequence. We must convert all elements & store
+            // them in a temporary object which will be cleaned up 
             if (std::is_const_v<T> &&
-                (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>))
-            {
-                list_caster.emplace();
-                if (list_caster->from_python(src, local_flags, cleanup))
-                {
-                    // Reinterpret cast here is required to handle vector<bool>
-                    value = diplomat::span<T>(reinterpret_cast<T *>(list_caster->value.data()), list_caster->value.size());
+                (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>)) {
+                ListCaster caster;
+                if (caster.from_python(src, local_flags, cleanup)) {
+                    value = diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                    // Move the owning std::vector into a capsule that will live for the duration of the function call.
+                    // The address of the vector will change, the address of the region it references won't.
+                    nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
+                        delete (std::vector<vector_value_type>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+
                     return true;
-                }
-                else
-                {
-                    list_caster.reset();
                 }
             }
 
@@ -268,12 +259,24 @@ namespace nanobind::detail
         }
 
         // Cast C++ -> Python (when returning a span from a C++ function)
-        static handle from_cpp(diplomat::span<T> src, rv_policy policy, cleanup_list *cleanup)
-        {
+        static handle from_cpp(diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
             return ListCaster::from_cpp(src, policy, cleanup);
         }
     };
 }
+
+// Return the inner type from next()
+// Next returns either a std::unique_ptr or std::optional.
+// When T is optional, return inner<T>&&. When T is unique_ptr, just return it.
+template<typename T>
+struct next_inner_extractor {
+    static T&& get(T&& v) { return std::move(v); }
+};
+
+template<typename T>
+struct next_inner_extractor<std::optional<T>> {
+    static T&& get(std::optional<T>&& v) { return std::move(v).value(); }
+};
 
 NB_MODULE(somelib, somelib_mod)
 {
@@ -372,6 +375,15 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("filled", &MyStructContainingAnOption::filled);
     nb::class_<MyZst>(somelib_mod, "MyZst")
         .def(nb::init<>());
+    nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
+        .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
+        .def_rw("x", &StructArithmetic::x)
+        .def_rw("y", &StructArithmetic::y)
+    	.def(nb::new_(&StructArithmetic::new_), "x"_a, "y"_a)
+    	.def(nb::self + nb::self)
+    	.def(nb::self - nb::self)
+    	.def(nb::self * nb::self)
+    	.def(nb::self / nb::self);
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
         .def(nb::init<>()).def(nb::init<std::unique_ptr<OptionOpaque>, std::unique_ptr<OptionOpaqueChar>, uint32_t, std::unique_ptr<OptionOpaque>>(), "a"_a,  "b"_a,  "c"_a.none(),  "d"_a)
         .def_prop_rw("a", 
@@ -436,11 +448,7 @@ NB_MODULE(somelib, somelib_mod)
     			if (!next) {
     				throw nb::stop_iteration();
     			}
-    			if constexpr(diplomat::is_optional_v<decltype(next)>) {
-    				return std::move(next).value();
-    			} else {
-    				return next;
-    			}
+    			return next_inner_extractor<decltype(next)>::get(std::move(next));
     		})
             .def("__iter__", [](nb::handle self) { return self; });
     nb::module_ nested_mod = somelib_mod.def_submodule("nested");
@@ -497,11 +505,7 @@ NB_MODULE(somelib, somelib_mod)
     			if (!next) {
     				throw nb::stop_iteration();
     			}
-    			if constexpr(diplomat::is_optional_v<decltype(next)>) {
-    				return std::move(next).value();
-    			} else {
-    				return next;
-    			}
+    			return next_inner_extractor<decltype(next)>::get(std::move(next));
     		})
             .def("__iter__", [](nb::handle self) { return self; });
     
@@ -580,7 +584,10 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a= nb::none(), "sentinel"_a)
     	.def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a= nb::none(), "sentinel"_a)
     	.def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a= nb::none(), "sentinel"_a)
-    	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct);
+    	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct)
+    	.def_static("accepts_option_str", &OptionOpaque::accepts_option_str, "arg"_a= nb::none(), "sentinel"_a)
+    	.def_static("accepts_option_str_slice", &OptionOpaque::accepts_option_str_slice, "arg"_a= nb::none(), "sentinel"_a)
+    	.def_static("accepts_option_primitive", &OptionOpaque::accepts_option_primitive, "arg"_a= nb::none(), "sentinel"_a);
     
     PyType_Slot OptionOpaqueChar_slots[] = {
         {Py_tp_free, (void *)OptionOpaqueChar::operator delete },

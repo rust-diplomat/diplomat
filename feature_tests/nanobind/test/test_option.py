@@ -2,6 +2,7 @@ import somelib
 import typing
 
 def test_option():
+
     o = somelib.OptionOpaque.new_(1415)
     o.assert_integer(1415)
 
@@ -20,17 +21,17 @@ def test_option():
     assert not s.b, "new_struct_nones() returns None"
     assert s.c == 908, "correct struct returned"
 
-    opt_u8 = somelib.OptionOpaque.accepts_option_u8(None, 5)
+    opt_u8 = somelib.OptionOpaque.accepts_option_u8(None, 123)
     assert not opt_u8, "accepts_option_u8 is idempotent"
-    opt_u8 = somelib.OptionOpaque.accepts_option_u8(5, 5)
+    opt_u8 = somelib.OptionOpaque.accepts_option_u8(5, 123)
     assert opt_u8 == 5, "accepts_option_u8 is idempotent"
-    opt_enum = somelib.OptionOpaque.accepts_option_enum(None)
+    opt_enum = somelib.OptionOpaque.accepts_option_enum(None, 123)
     assert not opt_enum, "accepts_option_enum is idempotent"
-    opt_enum = somelib.OptionOpaque.accepts_option_enum(somelib.OptionEnum.Foo)
+    opt_enum = somelib.OptionOpaque.accepts_option_enum(somelib.OptionEnum.Foo, 123)
     assert opt_enum == somelib.OptionEnum.Foo, "accepts_option_enum is idempotent"
-    opt_struct = somelib.OptionOpaque.accepts_option_input_struct(None)
+    opt_struct = somelib.OptionOpaque.accepts_option_input_struct(None, 123)
     assert not opt_struct, "accepts_option_input_struct is idempotent"
-    opt_struct = somelib.OptionOpaque.accepts_option_input_struct(somelib.OptionInputStruct(1, None, somelib.OptionEnum.Foo))
+    opt_struct = somelib.OptionOpaque.accepts_option_input_struct(somelib.OptionInputStruct(1, None, somelib.OptionEnum.Foo), 123)
     assert opt_struct.a == 1, "accepts_option_input_struct is idempotent"
     assert not opt_struct.b, "accepts_option_input_struct is idempotent"
     assert opt_struct.c == somelib.OptionEnum.Foo, "accepts_option_input_struct is idempotent"

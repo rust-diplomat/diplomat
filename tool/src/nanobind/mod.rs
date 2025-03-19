@@ -184,7 +184,8 @@ mod test {
             _ => panic!("Failed to find opaque type from AST"),
         };
 
-        let formatter = crate::nanobind::PyFormatter::new(&tcx);
+        let docs_gen = Default::default();
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -198,7 +199,7 @@ mod test {
             errors: &errors,
             c2: crate::c::TyGenContext {
                 tcx: &tcx,
-                formatter: &formatter.c,
+                formatter: &formatter.cxx.c,
                 errors: &errors,
                 is_for_cpp: false,
                 id: type_id.into(),
@@ -252,7 +253,8 @@ mod test {
             _ => panic!("Failed to find opaque type from AST"),
         };
 
-        let formatter = crate::nanobind::PyFormatter::new(&tcx);
+        let docs_gen = Default::default();
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -266,7 +268,7 @@ mod test {
             errors: &errors,
             c2: crate::c::TyGenContext {
                 tcx: &tcx,
-                formatter: &formatter.c,
+                formatter: &formatter.cxx.c,
                 errors: &errors,
                 is_for_cpp: false,
                 id: type_id.into(),
@@ -320,7 +322,8 @@ mod test {
             _ => panic!("Failed to find opaque type from AST"),
         };
 
-        let formatter = crate::nanobind::PyFormatter::new(&tcx);
+        let docs_gen = Default::default();
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -334,7 +337,7 @@ mod test {
             errors: &errors,
             c2: crate::c::TyGenContext {
                 tcx: &tcx,
-                formatter: &formatter.c,
+                formatter: &formatter.cxx.c,
                 errors: &errors,
                 is_for_cpp: false,
                 id: type_id.into(),
