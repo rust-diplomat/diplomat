@@ -4,6 +4,7 @@ use diplomat_core::hir::{
     self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
 };
 use std::borrow::Cow;
+use std::sync::LazyLock;
 
 /// This type mediates all formatting
 ///
@@ -285,11 +286,10 @@ impl<'tcx> CFormatter<'tcx> {
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
         // TODO: Replace with LazyLock when MSRV is bumped to >= 1.80.0
-        static C_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
-            once_cell::sync::Lazy::new(|| [].into());
+        static C_KEYWORDS: LazyLock<std::collections::HashSet<&str>> = LazyLock::new(|| [].into());
 
-        static CPP_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
-            once_cell::sync::Lazy::new(|| ["new", "default", "delete"].into());
+        static CPP_KEYWORDS: LazyLock<std::collections::HashSet<&str>> =
+            LazyLock::new(|| ["new", "default", "delete"].into());
 
         let lang_keywords = {
             if self.is_for_cpp {
