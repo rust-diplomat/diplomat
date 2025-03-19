@@ -18,7 +18,7 @@ quote = "1.0"
 indenter = "0.3.3"
 pulldown-cmark = "0.13.0"
 clap = { features = ["color", "derive", "std", "suggestions"], version = "4.2" }
-colored = "2.0"
+colored = "3.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.8.0"
 heck = "0.5" # conversion between naming convention
