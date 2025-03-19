@@ -174,24 +174,24 @@ pub mod ffi {
         #[diplomat::attr(auto, sub)]
         pub fn sub(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x - o.x,
+                y: self.y - o.y,
             })
         }
 
         #[diplomat::attr(auto, mul)]
         pub fn mul(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x * o.x,
+                y: self.y * o.y,
             })
         }
 
         #[diplomat::attr(auto, div)]
         pub fn div(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x / o.x,
+                y: self.y / o.y,
             })
         }
 

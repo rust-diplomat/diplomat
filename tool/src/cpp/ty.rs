@@ -382,7 +382,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         };
 
         let post_qualifiers = match &method.param_self {
-            Some(param_self) if param_self.ty.is_immutably_borrowed() => vec!["const".into()],
+            Some(param_self)
+                if param_self.ty.is_immutably_borrowed() || param_self.ty.is_consuming() =>
+            {
+                vec!["const".into()]
+            }
             Some(_) => vec![],
             None => vec![],
         };

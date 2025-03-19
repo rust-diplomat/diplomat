@@ -9,3 +9,11 @@ inline {##}
 	{%- endfor -%}
 )
 {%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
+{%- if auto_define_self_arithmetic -%}
+{%- if let Some(op_str) = m.method_name.strip_prefix("operator") -%}
+{%- if ["+", "-", "*", "/"].contains(op_str) -%}
+{%- let param_var = m.param_decls[0] ~%}
+{##}  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}

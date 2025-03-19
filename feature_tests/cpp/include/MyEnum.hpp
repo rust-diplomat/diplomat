@@ -44,7 +44,7 @@ inline MyEnum MyEnum::FromFFI(diplomat::capi::MyEnum c_enum) {
   }
 }
 
-inline int8_t MyEnum::into_value() {
+inline int8_t MyEnum::into_value() const {
   auto result = diplomat::capi::MyEnum_into_value(this->AsFFI());
   return result;
 }

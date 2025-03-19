@@ -32,3 +32,14 @@ inline {##}
 	{%- when None %}
 	{%- endmatch %}
 }
+{%- if auto_define_self_arithmetic -%}
+{%- if let Some(op_str) = m.method_name.strip_prefix("operator") -%}
+{%- if ["+", "-", "*", "/"].contains(op_str) -%}
+{%- let param_var = m.param_decls[0] ~%}
+inline {{ m.return_ty }}& {{type_name}}::{{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }}) {
+  *this = *this {{op_str}} {{param_var.var_name}};
+  return *this;
+}
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}
