@@ -129,32 +129,6 @@ pub(crate) fn run<'cx>(
     }
     files.add_file(nanobind_filepath.to_owned(), binding.to_string());
 
-    // Write out wheel metadata files
-    {
-        // #[derive(Template)]
-        // #[template(path = "nanobind/pyproject.toml.jinja", escape = "none")]
-        // struct ImplTemplate<'a> {
-        //     _ty: &'a hir::EnumDef,
-        //     _fmt: &'a PyFormatter<'a>,
-        //     type_name: &'a str,
-        //     _ctype: &'a str,
-        //     values: &'a [&'a EnumVariant],
-        //     module: &'a str,
-        //     modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
-        // }
-
-        // ImplTemplate {
-        //     _ty: ty,
-        //     _fmt: self.formatter,
-        //     type_name: &type_name,
-        //     _ctype: &ctype,
-        //     values: values.as_slice(),
-        //     module: self.formatter.fmt_module(id).borrow(),
-        //     modules: self.get_module_defs(id, None),
-        // }
-        // .render_into(self.binding)
-        // .unwrap();
-    }
     (files, errors)
 }
 
