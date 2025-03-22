@@ -74,19 +74,11 @@ export class OptionStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 16, 4);
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 16, 4);
 
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-            this.#a.ffiValue ?? 0
-        
-            this.#b.ffiValue ?? 0
-        
-            this.#c
-        
-            this.#d.ffiValue
-        
-        
-        functionCleanupArena.alloc(ptr);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         

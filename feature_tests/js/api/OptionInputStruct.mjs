@@ -74,17 +74,11 @@ export class OptionInputStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 20, 4);
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 20, 4);
 
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-            ...diplomatRuntime.optionToArgsForCalling(this.#a, 1, 1, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]), /* [2 x i8] padding */ 0, 0 /* end padding */
-        
-            ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint32Array)])
-        
-            ...diplomatRuntime.optionToArgsForCalling(this.#c, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])
-        
-        
-        functionCleanupArena.alloc(ptr);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         

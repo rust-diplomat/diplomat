@@ -63,15 +63,11 @@ export class ImportedStruct {
         appendArrayMap,
         forcePadding
     ) {
-        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
 
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-            this.#foo.ffiValue
-        
-            this.#count, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)
-        
-        
-        functionCleanupArena.alloc(ptr);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         

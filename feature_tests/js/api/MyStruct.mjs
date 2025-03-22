@@ -135,25 +135,11 @@ export class MyStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 32, 8);
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 32, 8);
 
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-            this.#a
-        
-            this.#b
-        
-            this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */
-        
-            this.#d
-        
-            this.#e
-        
-            this.#f
-        
-            this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */
-        
-        
-        functionCleanupArena.alloc(ptr);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         
@@ -231,7 +217,7 @@ export class MyStruct {
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.MyStruct_into_a(...this._intoFFI());
+        const result = wasm.MyStruct_into_a(this._intoFFI());
     
         try {
             return result;

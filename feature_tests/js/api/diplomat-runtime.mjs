@@ -531,8 +531,6 @@ export class DiplomatSendBuf {
 
     #buffer;
 
-    #view;
-
     constructor(wasm, size, align) {
         this.#wasm = wasm;
 
@@ -540,26 +538,6 @@ export class DiplomatSendBuf {
         this.#align = align;
         
         this.#buffer = this.#wasm.diplomat_alloc(this.#size, this.#align);
-
-        switch (this.#align) {
-            case 8:
-                this.#view = new BigUint64Array(this.#buffer, 0, this.#size);
-                break;
-            case 4:
-                this.#view = new Uint32Array(this.#buffer, 0, this.#size);
-                break;
-            case 2:
-                this.#view = new Uint16Array(this.#buffer, 0, this.#size);
-                break;
-            default:
-                this.#view = new Uint8Array(this.#buffer, 0, this.#size);
-                break;
-        }
-    }
-
-    setItem(value, size) {
-        this.#view[0] = value;
-        this.#view.byteOffset += size;
     }
 
     get ptr() {

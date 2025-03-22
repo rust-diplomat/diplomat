@@ -65,15 +65,11 @@ export class ScalarPairWithPadding {
         appendArrayMap,
         forcePadding
     ) {
-        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
 
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-            this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)
-        
-            this.#second
-        
-        
-        functionCleanupArena.alloc(ptr);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         
@@ -122,7 +118,7 @@ export class ScalarPairWithPadding {
 
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.ScalarPairWithPadding_assert_value(...this._intoFFI());
+        wasm.ScalarPairWithPadding_assert_value(this._intoFFI());
     
         try {}
         
