@@ -103,7 +103,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        let ptr = new DiplomatSendBuf(wasm, {{size}}, {{align}});
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, {{size}}, {{align}});
 
         {% for field in fields %}
             {{field.js_to_c}}
