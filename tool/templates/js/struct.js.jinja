@@ -103,12 +103,21 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        return [
-            {%- for field in fields -%}
+        let ptr = new DiplomatSendBuf(wasm, {{size}}, {{align}});
+
+        {% for field in fields %}
             {{field.js_to_c}}
-            {%- if !loop.last -%}, {% endif %}
-            {%- endfor -%}
-        ]
+        {% endfor %}
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        # return [
+        #     {%- for field in fields -%}
+        #     {{field.js_to_c}}
+        #     {%- if !loop.last -%}, {% endif %}
+        #     {%- endfor -%}
+        # ]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

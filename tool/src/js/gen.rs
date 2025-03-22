@@ -1,6 +1,7 @@
 //! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
 //! See [`converter`] for more conversion specific functions.
 
+use std::alloc::Layout;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -229,7 +230,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> (Vec<FieldInfo<P>>, bool) {
+    ) -> (Vec<FieldInfo<P>>, bool, Layout) {
         let struct_field_info =
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
         let mut needs_force_padding = false;
@@ -370,7 +371,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             }
         }).collect::<Vec<_>>();
 
-        (fields, needs_force_padding)
+        (fields, needs_force_padding, struct_field_info.struct_layout)
     }
 
     pub(super) fn only_primitive<P: hir::TyPosition>(&self, st: &hir::StructDef<P>) -> bool {
@@ -414,6 +415,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         is_out: bool,
         needs_force_padding: bool,
+        layout : Layout
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -437,6 +439,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
             /// Useful for hiding the fact that an out_struct has a constructor in typescript headers, for instance.
             show_default_ctor: bool,
+
+            size : usize,
+            align : usize
         }
 
         ImplTemplate {
@@ -461,6 +466,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
 
             show_default_ctor: !is_out || !typescript,
+
+            size: layout.size(),
+            align: layout.align()
         }
         .render()
         .unwrap()

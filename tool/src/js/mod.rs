@@ -162,12 +162,12 @@ pub(crate) fn run<'tcx>(
                 TypeDef::Enum(e) => context.gen_enum(ts, e, &methods_info),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, o, &methods_info),
                 TypeDef::Struct(s) => {
-                    let (fields, needs_force_padding) = fields.clone().unwrap();
-                    context.gen_struct(ts, s, &fields, &methods_info, false, needs_force_padding)
+                    let (fields, needs_force_padding, layout) = fields.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, false, needs_force_padding, layout)
                 }
                 TypeDef::OutStruct(s) => {
-                    let (fields, needs_force_padding) = fields_out.clone().unwrap();
-                    context.gen_struct(ts, s, &fields, &methods_info, true, needs_force_padding)
+                    let (fields, needs_force_padding, layout) = fields_out.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, true, needs_force_padding, layout)
                 }
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };
