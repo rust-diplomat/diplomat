@@ -80,7 +80,7 @@ export class OptionInputStruct {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 

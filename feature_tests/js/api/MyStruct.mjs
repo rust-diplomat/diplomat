@@ -141,7 +141,7 @@ export class MyStruct {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 
@@ -217,7 +217,7 @@ export class MyStruct {
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.MyStruct_into_a(this._intoFFI());
+        const result = wasm.MyStruct_into_a(this._intoFFI(functionCleanupArena));
     
         try {
             return result;

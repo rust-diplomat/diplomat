@@ -83,7 +83,7 @@ export class BorrowedFields {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 

@@ -50,7 +50,7 @@ export class CyclicStructA {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 
@@ -105,7 +105,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_cyclic_out(this._intoFFI(), write.buffer);
+        wasm.CyclicStructA_cyclic_out(this._intoFFI(functionCleanupArena), write.buffer);
     
         try {
             return write.readString8();
@@ -122,7 +122,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(this._intoFFI(), CyclicStructA._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(this._intoFFI(functionCleanupArena), CyclicStructA._intoFFI(functionCleanupArena, [], false), write.buffer);
     
         try {
             return write.readString8();
@@ -139,7 +139,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_getter_out(this._intoFFI(), write.buffer);
+        wasm.CyclicStructA_getter_out(this._intoFFI(functionCleanupArena), write.buffer);
     
         try {
             return write.readString8();

@@ -69,7 +69,7 @@ export class ImportedStruct {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 

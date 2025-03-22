@@ -50,7 +50,7 @@ export class CyclicStructC {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 
@@ -109,7 +109,7 @@ export class CyclicStructC {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructC_cyclic_out(this._intoFFI(), write.buffer);
+        wasm.CyclicStructC_cyclic_out(this._intoFFI(functionCleanupArena), write.buffer);
     
         try {
             return write.readString8();

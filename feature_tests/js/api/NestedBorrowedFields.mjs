@@ -88,7 +88,7 @@ export class NestedBorrowedFields {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 

@@ -50,7 +50,7 @@ export class CyclicStructB {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 

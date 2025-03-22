@@ -113,7 +113,7 @@ export class BigStructWithStuff {
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         
     }
 
@@ -168,7 +168,7 @@ export class BigStructWithStuff {
 
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(this._intoFFI(), extraVal);
+        wasm.BigStructWithStuff_assert_value(this._intoFFI(functionCleanupArena), extraVal);
     
         try {}
         
