@@ -103,7 +103,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        let buffer = new diplomatRuntime.DiplomatSendBuf({{size}}, {{align}});
+        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, {{size}}, {{align}});
 
         this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
