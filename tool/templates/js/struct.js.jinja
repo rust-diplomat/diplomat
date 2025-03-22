@@ -112,12 +112,12 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         functionCleanupArena.alloc(ptr);
 
         return ptr;
-        # return [
-        #     {%- for field in fields -%}
-        #     {{field.js_to_c}}
-        #     {%- if !loop.last -%}, {% endif %}
-        #     {%- endfor -%}
-        # ]
+        {# return [
+            {%- for field in fields -%}
+            {{field.js_to_c}}
+            {%- if !loop.last -%}, {% endif %}
+            {%- endfor -%}
+         ] #}
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
