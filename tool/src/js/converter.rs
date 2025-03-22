@@ -725,51 +725,51 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         allocator: &str,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
-        format!("{js_type}._intoFFI({allocator}, [], false)").into()
-        // let mut params = String::new();
-        // if let Some(info) = struct_borrow_info {
-        //     for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
-        //         write!(
-        //             &mut params,
-        //             "{}AppendArray: [",
-        //             info.param_info.env.fmt_lifetime(def_lt)
-        //         )
-        //         .unwrap();
-        //         let mut maybe_comma = "";
-        //         for use_lt in use_lts.iter() {
-        //             // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
-        //             let lt = info.use_env.fmt_lifetime(use_lt);
-        //             if info.is_method {
-        //                 write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
-        //             } else {
-        //                 write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
-        //             }
-        //             maybe_comma = ", ";
-        //         }
-        //         write!(&mut params, "],").unwrap();
-        //     }
-        // }
+        let mut params = String::new();
+        if let Some(info) = struct_borrow_info {
+            for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
+                write!(
+                    &mut params,
+                    "{}AppendArray: [",
+                    info.param_info.env.fmt_lifetime(def_lt)
+                )
+                .unwrap();
+                let mut maybe_comma = "";
+                for use_lt in use_lts.iter() {
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
+                    let lt = info.use_env.fmt_lifetime(use_lt);
+                    if info.is_method {
+                        write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
+                    } else {
+                        write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
+                    }
+                    maybe_comma = ", ";
+                }
+                write!(&mut params, "],").unwrap();
+            }
+        }
 
-        // let js_call =
-        //     format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
+        let js_call =
+            format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
 
-        // match gen_context {
-        //     JsToCConversionContext::List(force_padding) => {
-        //         let force_padding = match force_padding {
-        //             ForcePaddingStatus::NoForce => "",
-        //             ForcePaddingStatus::Force => ", true",
-        //             ForcePaddingStatus::PassThrough => ", forcePadding",
-        //         };
-        //         format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
-        //     }
-        //     JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
-        //         "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
-        //     )
-        //     .into(),
-        //     JsToCConversionContext::SlicePrealloc => {
-        //         unreachable!("Structs should not be generated in SlicePrealloc mode")
-        //     }
-        // }
+        match gen_context {
+            JsToCConversionContext::List(force_padding) => {
+                // let force_padding = match force_padding {
+                //     ForcePaddingStatus::NoForce => "",
+                //     ForcePaddingStatus::Force => ", true",
+                //     ForcePaddingStatus::PassThrough => ", forcePadding",
+                // };
+                // format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+                format!("{js_type}._intoFFI({allocator}, [], false)").into()
+            }
+            JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
+                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
+            )
+            .into(),
+            JsToCConversionContext::SlicePrealloc => {
+                unreachable!("Structs should not be generated in SlicePrealloc mode")
+            }
+        }
     }
 
     /// For a *single-value* (numeric) js-to-c expression, wrap it in an expression to write it to arrayBuffer *if* the context
