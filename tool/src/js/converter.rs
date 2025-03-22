@@ -595,7 +595,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // The way Rust generates WebAssembly, each function that requires a self struct require us to pass in each parameter into the function.
             // So we call a function in JS that lets us do this.
             // We use spread syntax to avoid a complicated array setup.
-            SelfType::Struct(..) => "...this._intoFFI()".into(),
+            SelfType::Struct(..) => "this._intoFFI()".into(),
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }
