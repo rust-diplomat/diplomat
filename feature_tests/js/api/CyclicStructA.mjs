@@ -44,7 +44,16 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 1, 1);
+
+        
+            CyclicStructB._intoFFI(functionCleanupArena, [], false)
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -65,7 +74,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructB._intoFFI(functionCleanupArena, [], false);
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -115,7 +124,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(...this._intoFFI(), ...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(...this._intoFFI(), CyclicStructA._intoFFI(functionCleanupArena, [], false), write.buffer);
     
         try {
             return write.readString8();

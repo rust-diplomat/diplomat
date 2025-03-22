@@ -60,7 +60,18 @@ export class MyStructContainingAnOption {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.optionToArgsForCalling(this.#a, 32, 8, (arrayBuffer, offset, jsValue) => [MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]), ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 48, 8);
+
+        
+            ...diplomatRuntime.optionToArgsForCalling(this.#a, 32, 8, (arrayBuffer, offset, jsValue) => [MyStruct._intoFFI(functionCleanupArena, [], false)])
+        
+            ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -81,7 +92,7 @@ export class MyStructContainingAnOption {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {}));
+        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._intoFFI(functionCleanupArena, [], false));
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 40, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array));
     }
 

@@ -107,7 +107,24 @@ export class BigStructWithStuff {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#first, /* [1 x i8] padding */ 0 /* end padding */, this.#second, this.#third, /* [1 x i16] padding */ 0 /* end padding */, ...ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._intoFFI(functionCleanupArena, {}, true), this.#fifth, /* [3 x i8] padding */ 0, 0, 0 /* end padding */]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 20, 4);
+
+        
+            this.#first, /* [1 x i8] padding */ 0 /* end padding */
+        
+            this.#second
+        
+            this.#third, /* [1 x i16] padding */ 0 /* end padding */
+        
+            ScalarPairWithPadding._intoFFI(functionCleanupArena, [], false)
+        
+            this.#fifth, /* [3 x i8] padding */ 0, 0, 0 /* end padding */
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -131,7 +148,7 @@ export class BigStructWithStuff {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#second, Uint16Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#third, Uint16Array);
-        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
+        ScalarPairWithPadding._intoFFI(functionCleanupArena, [], false);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#fifth, Uint8Array);
     }
 

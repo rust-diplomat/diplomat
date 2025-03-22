@@ -58,7 +58,18 @@ export class ErrorStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#i, this.#j]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
+
+        
+            this.#i
+        
+            this.#j
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

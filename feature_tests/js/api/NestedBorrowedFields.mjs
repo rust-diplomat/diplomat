@@ -82,7 +82,20 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],}), ...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._intoFFI(functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._intoFFI(functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 72, 4);
+
+        
+            BorrowedFields._intoFFI(functionCleanupArena, [], false)
+        
+            BorrowedFieldsWithBounds._intoFFI(functionCleanupArena, [], false)
+        
+            BorrowedFieldsWithBounds._intoFFI(functionCleanupArena, [], false)
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -103,9 +116,9 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...xAppendArray],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],});
+        BorrowedFields._intoFFI(functionCleanupArena, [], false);
+        BorrowedFieldsWithBounds._intoFFI(functionCleanupArena, [], false);
+        BorrowedFieldsWithBounds._intoFFI(functionCleanupArena, [], false);
     }
 
     static _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {

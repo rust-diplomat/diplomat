@@ -44,7 +44,16 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 1, 1);
+
+        
+            CyclicStructA._intoFFI(functionCleanupArena, [], false)
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -65,7 +74,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructA._intoFFI(functionCleanupArena, [], false);
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -87,7 +96,7 @@ export class CyclicStructC {
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
+        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._intoFFI(functionCleanupArena, [], false));
     
         try {
             return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);

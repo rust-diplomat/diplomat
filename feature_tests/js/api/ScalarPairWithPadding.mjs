@@ -65,7 +65,18 @@ export class ScalarPairWithPadding {
         appendArrayMap,
         forcePadding
     ) {
-        return [this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#second]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 8, 4);
+
+        
+            this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)
+        
+            this.#second
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

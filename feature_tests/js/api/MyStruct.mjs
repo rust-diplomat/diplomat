@@ -135,7 +135,28 @@ export class MyStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 32, 8);
+
+        
+            this.#a
+        
+            this.#b
+        
+            this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */
+        
+            this.#d
+        
+            this.#e
+        
+            this.#f
+        
+            this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

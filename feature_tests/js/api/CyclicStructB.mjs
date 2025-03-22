@@ -44,7 +44,16 @@ export class CyclicStructB {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#field]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 1, 1);
+
+        
+            this.#field
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

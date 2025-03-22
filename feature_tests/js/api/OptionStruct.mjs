@@ -74,7 +74,22 @@ export class OptionStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a.ffiValue ?? 0, this.#b.ffiValue ?? 0, this.#c, this.#d.ffiValue]
+        let ptr = new diplomatRuntime.DiplomatSendBuf(wasm, 16, 4);
+
+        
+            this.#a.ffiValue ?? 0
+        
+            this.#b.ffiValue ?? 0
+        
+            this.#c
+        
+            this.#d.ffiValue
+        
+        
+        functionCleanupArena.alloc(ptr);
+
+        return ptr;
+        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
