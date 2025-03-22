@@ -103,21 +103,11 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        let arrayBuffer = new wasm.diplomat_alloc({{size}}, {{align}});
+        let buffer = new diplomatRuntime.DiplomatSendBuf({{size}}, {{align}});
 
-        // FIXME: Should probably be a more permanent solution:
-
-        let _toFree = {
-            free() {
-                wasm.diplomat_free(arrayBuffer, {{size}}, {{align}});
-            }
-        };
-
-        {% for field in fields %}
-        {{field.js_to_c}}
-        {% endfor %}
+        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(_toFree);
+        functionCleanupArena.alloc(buffer);
 
         return ptr;
         {# return [

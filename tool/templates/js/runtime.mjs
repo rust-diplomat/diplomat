@@ -523,6 +523,32 @@ export class DiplomatReceiveBuf {
     }
 }
 
+export class DiplomatSendBuf {
+    #wasm;
+
+    #size;
+    #align;
+
+    #buffer;
+
+    constructor(wasm, size, align) {
+        this.#wasm = wasm;
+
+        this.#size = size;
+        this.#align = align;
+        
+        this.#buffer = this.#wasm.diplomat_alloc(this.#size, this.#align);
+    }
+
+    get ptr() {
+        return this.#buffer;
+    }
+
+    free() {
+        this.#wasm.diplomat_free(this.#buffer, this.#size, this.#align);
+    }
+}
+
 /**
  * For cleaning up slices inside struct _intoFFI functions.
  * Based somewhat on how the Dart backend handles slice cleanup.
