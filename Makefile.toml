@@ -531,11 +531,13 @@ args = ["build", "-p", "diplomat-feature-tests"]
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
+condition.env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
 [tasks.build-feature-wasm]
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
+condition.env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
 
 
