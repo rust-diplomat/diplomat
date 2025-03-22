@@ -508,7 +508,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info
                 .param_conversions
-                .push(self.gen_js_to_c_self(&param_self.ty));
+                // FIXME: functionCleanupArena is not a fully workable solution here.
+                .push(self.gen_js_to_c_self("functionCleanupArena", &param_self.ty));
 
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;

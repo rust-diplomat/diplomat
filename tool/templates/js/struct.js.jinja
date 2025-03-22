@@ -109,7 +109,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         
         functionCleanupArena.alloc(buffer);
 
-        return ptr;
+        return buffer.ptr;
         {# return [
             {%- for field in fields -%}
             {{field.js_to_c}}
