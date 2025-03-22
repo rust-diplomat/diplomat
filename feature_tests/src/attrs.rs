@@ -101,6 +101,11 @@ pub mod ffi {
         pub fn iter<'a>(&'a self) -> Box<MyIterator<'a>> {
             Box::new(MyIterator(self.0.iter()))
         }
+        #[diplomat::attr(nanobind, rename = "__len__")]
+        #[diplomat::attr(not(nanobind), disable)]
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
     }
 
     #[diplomat::opaque]

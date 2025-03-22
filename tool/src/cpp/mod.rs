@@ -4,8 +4,9 @@ mod ty;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-use formatter::Cpp2Formatter;
 use ty::TyGenContext;
+
+pub(crate) use formatter::Cpp2Formatter;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
