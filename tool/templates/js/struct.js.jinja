@@ -103,9 +103,9 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, {{size}}, {{align}});
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
 
-        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
         functionCleanupArena.alloc(buffer);
 

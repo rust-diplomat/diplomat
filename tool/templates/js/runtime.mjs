@@ -261,6 +261,14 @@ export class DiplomatBuf {
         });
     }
 
+    static struct = (wasm, size, align) => {
+        const ptr = wasm.diplomat_alloc(size, align);
+
+        return new DiplomatBuf(ptr, size, () => {
+            wasm.diplomat_free(ptr, size, align);
+        });
+    }
+
     /**
      * Generated code calls one of methods these for each allocation, to either
      * free directly after the FFI call, to leak (to create a &'static), or to
@@ -520,32 +528,6 @@ export class DiplomatReceiveBuf {
         } else {
             return true;
         }
-    }
-}
-
-export class DiplomatSendBuf {
-    #wasm;
-
-    #size;
-    #align;
-
-    #buffer;
-
-    constructor(wasm, size, align) {
-        this.#wasm = wasm;
-
-        this.#size = size;
-        this.#align = align;
-        
-        this.#buffer = this.#wasm.diplomat_alloc(this.#size, this.#align);
-    }
-
-    get ptr() {
-        return this.#buffer;
-    }
-
-    free() {
-        this.#wasm.diplomat_free(this.#buffer, this.#size, this.#align);
     }
 }
 
