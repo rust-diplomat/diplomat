@@ -22,6 +22,8 @@ namespace capi {
     
     ns::capi::RenamedMyIterator* namespace_MyIterable_iter(const ns::capi::RenamedMyIterable* self);
     
+    size_t namespace_MyIterable_len(const ns::capi::RenamedMyIterable* self);
+    
     
     void namespace_MyIterable_destroy(RenamedMyIterable* self);
     
@@ -41,6 +43,11 @@ inline std::unique_ptr<ns::RenamedMyIterator> ns::RenamedMyIterable::iter() cons
 
 inline diplomat::next_to_iter_helper<ns::RenamedMyIterator>ns::RenamedMyIterable::begin() const {
   return iter();
+}
+
+inline size_t ns::RenamedMyIterable::__len__() const {
+  auto result = ns::capi::namespace_MyIterable_len(this->AsFFI());
+  return result;
 }
 
 inline const ns::capi::RenamedMyIterable* ns::RenamedMyIterable::AsFFI() const {

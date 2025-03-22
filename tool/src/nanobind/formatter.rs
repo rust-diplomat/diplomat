@@ -81,10 +81,6 @@ impl<'tcx> PyFormatter<'tcx> {
         self.cxx.fmt_c_ptr(ident, mutability)
     }
 
-    pub fn fmt_optional(&self, ident: &str) -> String {
-        self.cxx.fmt_optional(ident)
-    }
-
     pub fn fmt_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
         self.cxx.fmt_borrowed(ident, mutability)
     }
@@ -115,10 +111,6 @@ impl<'tcx> PyFormatter<'tcx> {
 
     pub fn fmt_borrowed_str(&self, encoding: StringEncoding) -> Cow<'static, str> {
         self.cxx.fmt_borrowed_str(encoding)
-    }
-
-    pub fn fmt_owned_str(&self) -> Cow<'static, str> {
-        self.cxx.fmt_owned_str()
     }
 
     /// Format a method

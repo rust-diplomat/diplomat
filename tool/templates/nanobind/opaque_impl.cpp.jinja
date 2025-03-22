@@ -15,4 +15,4 @@ PyType_Slot {{full_name}}_slots[] = {
 nb::class_<{{type_name}}>({{ module }}_mod, "{{type_name_unnamespaced}}", nb::type_slots({{full_name}}_slots))
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
-{%- endfor %};
+{%- endfor -%};

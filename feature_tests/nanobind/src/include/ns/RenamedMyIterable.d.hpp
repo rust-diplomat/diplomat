@@ -34,6 +34,8 @@ public:
   inline diplomat::next_to_iter_helper<ns::RenamedMyIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
+  inline size_t __len__() const;
+
   inline const ns::capi::RenamedMyIterable* AsFFI() const;
   inline ns::capi::RenamedMyIterable* AsFFI();
   inline static const ns::RenamedMyIterable* FromFFI(const ns::capi::RenamedMyIterable* ptr);

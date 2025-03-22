@@ -1,45 +1,50 @@
-	{% match m.method.attrs.special_method -%}
+	.{{m.def}}(
+	{%- match m.method.attrs.special_method -%}
 	{%- when Some(crate::hir::SpecialMethod::Add) -%}
-		.def(nb::self + nb::self)
+		nb::self + nb::self
 	{%- when Some(crate::hir::SpecialMethod::Sub) -%}
-		.def(nb::self - nb::self)
+		nb::self - nb::self
 	{%- when Some(crate::hir::SpecialMethod::Mul) -%}
-		.def(nb::self * nb::self)
+		nb::self * nb::self
 	{%- when Some(crate::hir::SpecialMethod::Div) -%}
-		.def(nb::self / nb::self)
+		nb::self / nb::self
 	{%- when Some(crate::hir::SpecialMethod::AddAssign) -%}
-		.def(nb::self += nb::self, nb::rv_policy::none)
+		nb::self += nb::self, nb::rv_policy::none
 	{%- when Some(crate::hir::SpecialMethod::SubAssign) -%}
-		.def(nb::self -= nb::self, nb::rv_policy::none)
+		nb::self -= nb::self, nb::rv_policy::none
 	{%- when Some(crate::hir::SpecialMethod::MulAssign) -%}
-		.def(nb::self *= nb::self, nb::rv_policy::none)
+		nb::self *= nb::self, nb::rv_policy::none
 	{%- when Some(crate::hir::SpecialMethod::DivAssign) -%}
-		.def(nb::self /= nb::self, nb::rv_policy::none)
+		nb::self /= nb::self, nb::rv_policy::none
 	{%- when Some(crate::hir::SpecialMethod::Stringifier) -%}
-		.def("__str__", &{{- type_name }}::{{ m.method_name -}})
+		"__str__", &{{- type_name }}::{{ m.method_name -}}
 	{%- when Some(crate::hir::SpecialMethod::Iterable) -%}
-		.def("__iter__", &{{- type_name }}::{{ m.method_name -}})
+		"__iter__", &{{- type_name }}::{{ m.method_name -}}
 	{%- when Some(crate::hir::SpecialMethod::Iterator) -%}
-		.def("__next__", []({{- type_name }}& self){
+		"__next__", []({{- type_name }}& self){
 			auto next = self.next();
 			if (!next) {
 				throw nb::stop_iteration();
 			}
 			return next_inner_extractor<decltype(next)>::get(std::move(next));
 		})
-        .def("__iter__", [](nb::handle self) { return self; })
+        .def("__iter__", [](nb::handle self) { return self; }
+	{%- when Some(crate::hir::SpecialMethod::Getter(_)) -%}
+	{#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
+		"{{m.prop_name.as_ref().unwrap()}}", &{{type_name}}::{{m.method_name}}
+		{%- if let Some(setter_name) = m.setter_name -%}	
+		, &{{type_name}}::{{setter_name}}
+		{%- endif -%}
 	{%- else -%}
+		{#- The set of method types with normal parameters -#}
+		
 		{%- match m.method.attrs.special_method -%}
 		{%- when Some(crate::hir::SpecialMethod::Constructor) -%}
-		.def(nb::new_(&{{- type_name}}::{{ m.method_name -}})
-		{%- else -%}
-		.def{%- for qualifier in m.pre_qualifiers -%}{%- if qualifier == "static" -%}_static{%- endif -%}{%- endfor -%}
-		{%- match m.method.attrs.special_method -%}
+			nb::new_(&{{- type_name}}::{{ m.method_name -}})
 		{%- when Some(crate::hir::SpecialMethod::Indexer) -%}
-			("__getitem__", &{{- type_name }}::operator[] 
+			"__getitem__", &{{- type_name }}::operator[] 
 		{%- else -%}
-			("{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
-		{%- endmatch -%}
+			"{{m.method_name}}", &{{- type_name }}::{{ m.method_name -}} 
 		{%- endmatch -%}
 		
 		{%- for param in m.method.params -%}
@@ -54,5 +59,5 @@
 			{%- else -%}
 			{%- endmatch -%}
 		{%- endfor -%}
-		)
 	{%- endmatch -%}
+)

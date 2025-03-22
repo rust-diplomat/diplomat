@@ -4,11 +4,9 @@ use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
-use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, StructPathLike, SuccessType, TyPosition, Type,
-    TypeId,
-};
+use diplomat_core::hir::{self, Mutability, OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
@@ -21,20 +19,14 @@ struct NamedType<'a> {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
-    /// The C++ return type
-    _return_ty: Cow<'a, str>,
     /// The C++ method name
     method_name: Cow<'a, str>,
-    /// The C method name
-    _abi_name: String,
-    /// Qualifiers for the function that come before the declaration (like "static")
-    pre_qualifiers: Vec<Cow<'a, str>>,
-    /// Qualifiers for the function that come after the declaration (like "const")
-    _post_qualifiers: Vec<Cow<'a, str>>,
-    /// Type declarations for the C++ parameters
-    _param_decls: Vec<NamedType<'a>>,
-    /// Parameter validations, such as string checks
-    _param_validations: Vec<String>,
+    // def statement to use - def, def_static, def_prop_ro, etc
+    def: String,
+    /// The property name, if any
+    prop_name: Option<Cow<'a, str>>,
+    // If this is a property, this is the associated setter's c++ method name
+    setter_name: Option<Cow<'a, str>>,
 }
 
 /// Context for generating a particular type's impl
@@ -134,11 +126,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let c_header = self.c2.gen_opaque_def(ty);
 
-        let methods = ty
-            .methods
-            .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
-            .collect::<Vec<_>>();
+        let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
         #[derive(Template)]
         #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
@@ -185,11 +173,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
-        let methods = def
-            .methods
-            .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
-            .collect::<Vec<_>>();
+        let methods = self.gen_all_method_infos(id, def.methods.iter());
 
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
@@ -218,6 +202,66 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         .unwrap();
     }
 
+    fn gen_all_method_infos(
+        &mut self,
+        id: TypeId,
+        methods: std::slice::Iter<'tcx, hir::Method>,
+    ) -> Vec<MethodInfo<'ccx>> {
+        let mut method_infos = HashMap::<String, MethodInfo>::new();
+
+        for method in methods {
+            if let Some(info) = self.gen_method_info(id, method) {
+                method_infos
+                    // Use the property name as the key if present so we can collapse getters & setters
+                    .entry(info.prop_name.clone().unwrap_or(info.method_name.clone()).to_string())
+                    .and_modify(|e| {
+                        // If the entry already exists...
+                        match method.attrs.special_method {
+                            Some(hir::SpecialMethod::Getter(_)) => {
+                                assert!(
+                                    matches!(e.method.attrs.special_method, Some(hir::SpecialMethod::Setter(_))),
+                                    "Method Info entry for {} already exists, but isn't a setter.",
+                                    e.method_name
+                                );
+                                // If the entry previously associated with this was the setter,
+                                // overwrite the method reference & method name with this getter
+                                e.method = method;
+                                e.method_name = info.method_name.clone();
+                            }
+                            Some(hir::SpecialMethod::Setter(_)) => {
+                                assert!(
+                                    matches!(
+                                        e.method.attrs.special_method,
+                                        Some(hir::SpecialMethod::Getter(_))
+                                    ),
+                                    "Method Info entry for {} already exists, but isn't a getter.",
+                                    e.method_name
+                                );
+                                e.setter_name = Some(info.method_name.clone());
+                                e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
+                            }
+                            _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
+                        };
+                    })
+                    .or_insert(info);
+            }
+        }
+
+        for info in method_infos.values() {
+            if matches!(
+                info.method.attrs.special_method,
+                Some(hir::SpecialMethod::Setter(_))
+            ) {
+                self.errors.push_error(format!(
+                    "Setter {} exists without a matching getter, which is not allowed by nanobind.",
+                    info.method_name
+                ));
+            }
+        }
+
+        method_infos.into_values().collect()
+    }
+
     fn gen_method_info(
         &mut self,
         id: TypeId,
@@ -231,51 +275,42 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             method.name.as_str().into(),
         );
         let method_name = self.formatter.fmt_method_name(method);
-        let abi_name = self
-            .formatter
-            .namespace_c_method_name(id, method.abi_name.as_str());
-        let mut param_decls = Vec::new();
+        let mut setter_name = None;
 
-        let mut returns_utf8_err = false;
-
-        for param in method.params.iter() {
-            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
-            param_decls.push(decls);
-            if matches!(
-                param.ty,
-                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
-            ) {
-                returns_utf8_err = true;
-            }
+        let mut def_qualifiers = vec!["def"];
+        if method.param_self.is_none()
+            && !matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
+            )
+        {
+            def_qualifiers.extend(["static"]);
         }
 
-        let mut return_ty = self.gen_cpp_return_type_name(&method.output);
-
-        if returns_utf8_err {
-            return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
-        };
-
-        let pre_qualifiers = if method.param_self.is_none() {
-            vec!["static".into()]
-        } else {
-            vec![]
-        };
-
-        let post_qualifiers = match &method.param_self {
-            Some(param_self) if param_self.ty.is_immutably_borrowed() => vec!["const".into()],
-            Some(_) => vec![],
-            None => vec![],
-        };
+        let mut prop_name = None;
+        if let Some(hir::SpecialMethod::Getter(name)) = &method.attrs.special_method {
+            def_qualifiers.extend(["prop_ro"]);
+            prop_name = Some(
+                name.as_ref()
+                    .map(|v| v.into())
+                    .unwrap_or(method_name.clone()),
+            );
+        } else if let Some(hir::SpecialMethod::Setter(name)) = &method.attrs.special_method {
+            def_qualifiers.extend(["prop_rw"]);
+            setter_name = Some(method_name.clone());
+            prop_name = Some(
+                name.as_ref()
+                    .map(|v| v.into())
+                    .unwrap_or(method_name.clone()),
+            );
+        }
 
         Some(MethodInfo {
             method,
-            _return_ty: return_ty,
             method_name,
-            _abi_name: abi_name,
-            pre_qualifiers,
-            _post_qualifiers: post_qualifiers,
-            _param_decls: param_decls,
-            _param_validations: Default::default(),
+            def: def_qualifiers.join("_"),
+            setter_name,
+            prop_name,
         })
     }
 
@@ -371,38 +406,6 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
             Type::Callback(..) => "".into(),
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
-    }
-
-    /// Generates the C++ type name of a return type.
-    fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'ccx, str> {
-        match *result_ty {
-            ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-            ReturnType::Infallible(SuccessType::Write) => self.formatter.fmt_owned_str(),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name(o),
-            ReturnType::Fallible(ref ok, ref err) => {
-                let ok_type_name = match ok {
-                    SuccessType::Write => self.formatter.fmt_owned_str(),
-                    SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
-                };
-                format!("diplomat::result<{ok_type_name}, {err_type_name}>").into()
-            }
-            ReturnType::Nullable(ref ty) => {
-                let type_name = match ty {
-                    SuccessType::Write => self.formatter.fmt_owned_str(),
-                    SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                self.formatter.fmt_optional(&type_name).into()
-            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }

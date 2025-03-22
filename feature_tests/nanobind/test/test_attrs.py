@@ -2,8 +2,8 @@ import somelib
 
 def test_attrs():
     r = somelib.ns.AttrOpaque1Renamed() # Contructor works!
-    assert r.method_renamed() == 77, "method should call"
-    assert r.abirenamed() == 123, "method should call"
+    assert r.method == 77, "property should call"
+    assert r.abirenamed == 123, "method should call"
 
     e = somelib.ns.RenamedAttrEnum.A
 
@@ -13,6 +13,7 @@ def test_attrs():
     r.use_namespaced(e)
 
     lst = [1,2,3,4]
-    it = somelib.ns.RenamedMyIterable([1,2,3])
+    it = somelib.ns.RenamedMyIterable(lst)
+    assert len(it) == 4, "Iterable rename failed!"
     lst_copy = [x for x in it]
     assert lst == lst_copy, "Iterable failed!"
