@@ -107,9 +107,9 @@ export class BigStructWithStuff {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 20, 4);
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
 
-        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
         functionCleanupArena.alloc(buffer);
 

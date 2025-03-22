@@ -135,9 +135,9 @@ export class MyStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 32, 8);
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 32, 8);
 
-        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
         functionCleanupArena.alloc(buffer);
 

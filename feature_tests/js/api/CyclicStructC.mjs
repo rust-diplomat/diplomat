@@ -44,9 +44,9 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = new diplomatRuntime.DiplomatSendBuf(wasm, 1, 1);
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 1, 1);
 
-        this._writeToArrayBuffer(buffer, 0, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
         functionCleanupArena.alloc(buffer);
 
