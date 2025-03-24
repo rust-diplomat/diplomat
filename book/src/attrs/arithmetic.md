@@ -1,6 +1,6 @@
 # Arithmetic operator overloads
 
-(Supported by and `cpp`, queried with `supports = arithmetic`)
+(Supported by and `cpp` and `nanobind`, queried with `supports = arithmetic`)
 
 `+-*/` and their in-place variants can be overloaded in languages that support it by applying an attribute to single-argument functions taking self. The Names are
 | Operator | Name       |
