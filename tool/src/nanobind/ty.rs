@@ -1,12 +1,9 @@
-use super::binding::Binding;
-use super::PyFormatter;
-use crate::c::Header as C2Header;
-use crate::c::TyGenContext as C2TyGenContext;
-use crate::ErrorStore;
+use super::{binding::Binding, PyFormatter};
+use crate::{c::TyGenContext as C2TyGenContext, hir, ErrorStore};
 use askama::Template;
-use diplomat_core::hir::{self, Mutability, OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
+use diplomat_core::hir::{OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::collections::HashSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
@@ -78,24 +75,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-
-        let ctype = self.formatter.fmt_c_type_name(id);
+        let type_name = self.formatter.cxx.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
         let values = ty
             .variants
             .iter()
-            .map(|e| self.formatter.fmt_enum_variant(e))
+            .map(|e| self.formatter.cxx.fmt_enum_variant(e))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
         #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
-            _ty: &'a hir::EnumDef,
-            _fmt: &'a PyFormatter<'a>,
             type_name: &'a str,
-            _ctype: &'a str,
             values: Vec<Cow<'a, str>>,
             module: &'a str,
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
@@ -103,10 +95,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         }
 
         ImplTemplate {
-            _ty: ty,
-            _fmt: self.formatter,
             type_name: &type_name,
-            _ctype: &ctype,
             values,
             module: &self.get_module(id),
             modules: self.get_module_defs(id, None),
@@ -117,53 +106,35 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
-        let _dtor_name = self
-            .formatter
-            .namespace_c_method_name(id, ty.dtor_abi_name.as_str());
-
-        let c_header = self.c2.gen_opaque_def(ty);
+        let type_name = self.formatter.cxx.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
         let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
         #[derive(Template)]
         #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
-            // ty: &'a hir::OpaqueDef,
-            fmt: &'a PyFormatter<'a>,
             type_name: &'a str,
-            ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
             module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
-            _c_header: C2Header,
         }
 
         ImplTemplate {
-            // ty,
-            fmt: self.formatter,
             type_name: &type_name,
-            ctype: &ctype,
             methods: methods.as_slice(),
             modules: self.get_module_defs(id, None),
             module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
-            _c_header: c_header,
         }
         .render_into(self.binding)
         .unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
-
-        let c_header = self.c2.gen_struct_def(def);
-        let _c_impl_header = self.c2.gen_impl(def.into());
+        let type_name = self.formatter.cxx.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -179,24 +150,20 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
-            _ctype: &'a str,
             fields: &'a [NamedType<'a>],
             methods: &'a [MethodInfo<'a>],
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
             module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
-            _c_header: C2Header,
         }
 
         ImplTemplate {
             type_name: &type_name,
-            _ctype: &ctype,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
             modules: self.get_module_defs(id, None),
             module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
-            _c_header: c_header,
         }
         .render_into(self.binding)
         .unwrap();
@@ -207,7 +174,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         id: TypeId,
         methods: std::slice::Iter<'tcx, hir::Method>,
     ) -> Vec<MethodInfo<'ccx>> {
-        let mut method_infos = HashMap::<String, MethodInfo>::new();
+        // BTree map ensures that the output will be sorted by method name for more consistent codegen output.
+        let mut method_infos = BTreeMap::<String, MethodInfo>::new();
 
         for method in methods {
             if let Some(info) = self.gen_method_info(id, method) {
@@ -274,7 +242,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             self.c2.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
-        let method_name = self.formatter.fmt_method_name(method);
+        let method_name = self.formatter.cxx.fmt_method_name(method);
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
@@ -319,7 +287,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     where
         'ccx: 'a,
     {
-        let var_name = self.formatter.fmt_param_name(var_name);
+        let var_name = self.formatter.cxx.fmt_param_name(var_name);
         let type_name = self.gen_type_name(ty);
 
         NamedType {
@@ -333,11 +301,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     /// This function adds the necessary type imports to the decl and impl files.
     fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
+            Type::Primitive(prim) => self.formatter.cxx.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
-                let _type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(op_id);
+                let type_name = self.formatter.cxx.fmt_type_name(op_id);
                 let def = self.c2.tcx.resolve_type(op_id);
 
                 if def.attrs().disable {
@@ -347,21 +314,23 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
                     // unique_ptr is nullable
-                    (true, _) => self.formatter.fmt_owned(&type_name),
-                    (false, true) => self.formatter.fmt_optional_borrowed(&type_name, mutability),
-                    (false, false) => self.formatter.fmt_borrowed(&type_name, mutability),
+                    (true, _) => self.formatter.cxx.fmt_owned(&type_name),
+                    (false, true) => self
+                        .formatter
+                        .cxx
+                        .fmt_optional_borrowed(&type_name, mutability),
+                    (false, false) => self.formatter.cxx.fmt_borrowed(&type_name, mutability),
                 };
                 let ret = ret.into_owned().into();
 
                 self.binding
                     .includes
-                    .insert(self.formatter.fmt_impl_file_path(op_id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id).into());
                 ret
             }
             Type::Struct(ref st) => {
                 let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
-                let _type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
+                let type_name = self.formatter.cxx.fmt_type_name(id);
                 let def = self.c2.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
@@ -370,13 +339,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
                 self.binding
                     .includes
-                    .insert(self.formatter.fmt_impl_file_path(id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
                 type_name
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                let _type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
+                let type_name = self.formatter.cxx.fmt_type_name(id);
                 let def = self.c2.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
@@ -385,13 +353,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
                 self.binding
                     .includes
-                    .insert(self.formatter.fmt_impl_file_path(id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
                 type_name
             }
-            Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
+            Type::Slice(hir::Slice::Str(_, encoding)) => {
+                self.formatter.cxx.fmt_borrowed_str(encoding)
+            }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
-                let ret = self.formatter.fmt_primitive_as_c(p);
-                let ret = self.formatter.fmt_borrowed_slice(
+                let ret = self.formatter.cxx.fmt_primitive_as_c(p);
+                let ret = self.formatter.cxx.fmt_borrowed_slice(
                     &ret,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
@@ -399,7 +369,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
                 "diplomat::span<const {}>",
-                self.formatter.fmt_borrowed_str(encoding)
+                self.formatter.cxx.fmt_borrowed_str(encoding)
             )
             .into(),
             Type::DiplomatOption(ref inner) => {

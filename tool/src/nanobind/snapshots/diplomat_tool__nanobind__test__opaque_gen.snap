@@ -13,7 +13,6 @@ expression: generated
 #include <nanobind/stl/detail/nb_list.h>
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
-#include "mylib/OpaqueStruct.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -253,6 +252,6 @@ NB_MODULE(pymod, pymod_mod)
         {0, nullptr}};
     
     nb::class_<mylib::OpaqueStruct>(mylib_mod, "OpaqueStruct", nb::type_slots(mylib_OpaqueStruct_slots))
-    	.def_static("new_", &mylib::OpaqueStruct::new_)
-    	.def_static("do_thing", &mylib::OpaqueStruct::do_thing);
+    	.def_static("do_thing", &mylib::OpaqueStruct::do_thing)
+    	.def_static("new_", &mylib::OpaqueStruct::new_);
 }

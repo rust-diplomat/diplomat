@@ -91,9 +91,8 @@ pub(crate) fn run<'cx>(
             continue;
         }
 
-        let _type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id);
-        let impl_file_path = formatter.fmt_impl_file_path(id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(id);
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(id);
 
         let mut context = TyGenContext {
             formatter: &formatter,
@@ -190,8 +189,8 @@ mod test {
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.fmt_impl_file_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = HashSet::<Cow<str>>::new();
         let mut context = crate::nanobind::TyGenContext {
@@ -259,8 +258,8 @@ mod test {
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.fmt_impl_file_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = HashSet::<Cow<str>>::new();
         let mut context = crate::nanobind::TyGenContext {
@@ -328,8 +327,8 @@ mod test {
         let mut binding = crate::nanobind::Binding::new();
         binding.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.fmt_impl_file_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = HashSet::<Cow<str>>::new();
         let mut context = crate::nanobind::TyGenContext {
