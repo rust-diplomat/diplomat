@@ -173,7 +173,7 @@ impl Method {
                             ControlFlow::Continue(())
                         })
                         .is_break()
-                        .then(|| (param, lt_kind))
+                        .then_some((param, lt_kind))
                 })
                 .collect();
 
