@@ -38,10 +38,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install MSRV Rust
-      run: rustup install 1.71 --profile minimal
+      run: rustup install 1.81 --profile minimal
 
     - name: Check
-      run: cargo +1.71 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
+      run: cargo +1.81 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
 
   gen:
     runs-on: ubuntu-latest
