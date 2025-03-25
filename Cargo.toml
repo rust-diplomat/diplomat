@@ -1,13 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-  "core",
-  "macro",
-  "runtime",
-  "tool",
-  "example",
-  "feature_tests",
-]
+members = ["core", "macro", "runtime", "tool", "example", "feature_tests"]
 
 [workspace.package]
 
@@ -15,11 +8,11 @@ members = [
 version = "0.10.0"
 # Applies to diplomat-core, diplomat, and diplomat-runtime
 # Diplomat-tool has no MSRV for now
-rust-version = "1.71"
+rust-version = "1.81"
 authors = [
-    "Shadaj Laddad <shadaj@users.noreply.github.com>",
-    "Manish Goregaokar <manishsmail@gmail.com>",
-    "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
+  "Shadaj Laddad <shadaj@users.noreply.github.com>",
+  "Manish Goregaokar <manishsmail@gmail.com>",
+  "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>",
 ]
 edition = "2021"
 repository = "https://github.com/rust-diplomat/diplomat"
