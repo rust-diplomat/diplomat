@@ -760,7 +760,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 //     ForcePaddingStatus::PassThrough => ", forcePadding",
                 // };
                 // format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
-                format!("{js_type}._intoFFI({allocator}, [], false)").into()
+                format!("{js_call}._intoFFI({allocator}, [], false)").into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
                 "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
