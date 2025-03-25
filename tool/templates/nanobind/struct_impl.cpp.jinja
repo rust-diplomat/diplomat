@@ -1,7 +1,9 @@
+{%- let is_self_opaque = false -%}
 {% include "module_impl.cpp.jinja" %}
+
 nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     .def(nb::init<>())
-    {%- if fields.len() > 0 -%}
+    {%- if fields.len() > 0 %}
     .def(nb::init<
     {%- for f in fields -%}
     {% if !loop.first %}, {% endif %}{{f.type_name}}

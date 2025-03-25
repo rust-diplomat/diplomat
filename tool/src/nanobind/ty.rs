@@ -16,8 +16,10 @@ struct NamedType<'a> {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
-    /// The C++ method name
+    /// The python method name
     method_name: Cow<'a, str>,
+    /// The C++ method name. May differ due to keyword renaming or other constraints.
+    cpp_method_name: Cow<'a, str>,
     // def statement to use - def, def_static, def_prop_ro, etc
     def: String,
     /// The property name, if any
@@ -242,7 +244,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             self.c2.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
-        let method_name = self.formatter.cxx.fmt_method_name(method);
+        let cpp_method_name = self.formatter.cxx.fmt_method_name(method);
+        let method_name = self.formatter.fmt_method_name(method);
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
@@ -276,6 +279,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         Some(MethodInfo {
             method,
             method_name,
+            cpp_method_name,
             def: def_qualifiers.join("_"),
             setter_name,
             prop_name,
