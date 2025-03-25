@@ -1,22 +1,12 @@
 	.{{m.def}}
 {%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
 	{%- match special_method -%}
-	{%- when crate::hir::SpecialMethod::Add -%}
-		(nb::self + nb::self)
-	{%- when crate::hir::SpecialMethod::Sub -%}
-		(nb::self - nb::self)
-	{%- when crate::hir::SpecialMethod::Mul -%}
-		(nb::self * nb::self)
-	{%- when crate::hir::SpecialMethod::Div -%}
-		(nb::self / nb::self)
-	{%- when crate::hir::SpecialMethod::AddAssign -%}
-		(nb::self += nb::self, nb::rv_policy::none)
-	{%- when crate::hir::SpecialMethod::SubAssign -%}
-		(nb::self -= nb::self, nb::rv_policy::none)
-	{%- when crate::hir::SpecialMethod::MulAssign -%}
-		(nb::self *= nb::self, nb::rv_policy::none)
-	{%- when crate::hir::SpecialMethod::DivAssign -%}
-		(nb::self /= nb::self, nb::rv_policy::none)
+	{%- when crate::hir::SpecialMethod::Add | crate::hir::SpecialMethod::Sub | 
+			crate::hir::SpecialMethod::Mul | crate::hir::SpecialMethod::Div -%}
+		(nb::self {{special_method.operator_str().unwrap()}} nb::self)
+	{%- when crate::hir::SpecialMethod::AddAssign | crate::hir::SpecialMethod::SubAssign |
+			crate::hir::SpecialMethod::MulAssign | crate::hir::SpecialMethod::DivAssign -%}
+		(nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none)
 	{%- when crate::hir::SpecialMethod::Stringifier -%}
 		("__str__", &{{- type_name }}::{{ m.cpp_method_name -}})
 	{%- when crate::hir::SpecialMethod::Iterable -%}

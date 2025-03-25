@@ -148,7 +148,7 @@ pub enum SpecialMethod {
 }
 
 impl SpecialMethod {
-    fn from_path_and_meta(path: &str, meta: &Meta) -> Result<Option<Self>, LoweringError> {
+    pub fn from_path_and_meta(path: &str, meta: &Meta) -> Result<Option<Self>, LoweringError> {
         let parse_meta = |meta| match StandardAttribute::from_meta(meta) {
             Ok(StandardAttribute::String(s)) => Ok(Some(s)),
             Ok(StandardAttribute::Empty) => Ok(None),
@@ -176,6 +176,21 @@ impl SpecialMethod {
             "mul_assign" => Ok(Some(Self::MulAssign)),
             "div_assign" => Ok(Some(Self::DivAssign)),
             _ => Ok(None),
+        }
+    }
+    // Returns the standard operator string (if any) associated with this special method
+    pub fn operator_str(&self) -> Option<&str> {
+        match self {
+            SpecialMethod::Add => Some("+"),
+            SpecialMethod::Sub => Some("-"),
+            SpecialMethod::Mul => Some("*"),
+            SpecialMethod::Div => Some("/"),
+            SpecialMethod::AddAssign => Some("+="),
+            SpecialMethod::SubAssign => Some("-="),
+            SpecialMethod::MulAssign => Some("*="),
+            SpecialMethod::DivAssign => Some("/="),
+            SpecialMethod::Indexer => Some("[]"),
+            _ => None,
         }
     }
 }
