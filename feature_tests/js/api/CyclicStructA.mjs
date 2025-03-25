@@ -122,7 +122,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(this._intoFFI(functionCleanupArena), CyclicStructA._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(this._intoFFI(functionCleanupArena), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, [], false), write.buffer);
     
         try {
             return write.readString8();

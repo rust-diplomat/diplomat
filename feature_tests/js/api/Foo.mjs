@@ -100,7 +100,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
         
-        const result = wasm.Foo_extract_from_fields(BorrowedFields._intoFFI(functionCleanupArena, [], false));
+        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, [], false));
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -120,7 +120,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
         
-        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._intoFFI(functionCleanupArena, [], false), ...anotherStringSlice.splat());
+        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, [], false), ...anotherStringSlice.splat());
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);

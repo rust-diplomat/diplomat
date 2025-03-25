@@ -94,7 +94,7 @@ export class CyclicStructC {
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._intoFFI(functionCleanupArena, [], false));
+        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, [], false));
     
         try {
             return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
