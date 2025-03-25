@@ -4,7 +4,7 @@ import unittest
 class TestResult(unittest.TestCase):
     
     def test_result(self):
-        r2 = somelib.ResultOpaque.new_(5)
+        r2 = somelib.ResultOpaque.new(5)
         r2.assert_integer(5)
 
         with self.assertRaises(Exception) as cm:

@@ -375,8 +375,8 @@ pub mod ffi {
 
     impl StructArithmetic {
         #[diplomat::attr(auto, constructor)]
-        pub fn new(x: i32, y: i32) -> Self {
-            Self { x, y }
+        pub fn new(x: i32) -> Self {
+            Self { x, y: x }
         }
 
         #[diplomat::attr(auto, add)]

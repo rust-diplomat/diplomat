@@ -1,7 +1,7 @@
 import somelib
 def test_structs():
-    o = somelib.Opaque.new_()
-    s = somelib.MyStruct.new_()
+    o = somelib.Opaque()
+    s = somelib.MyStruct()
 
     o.assert_struct(s)
 

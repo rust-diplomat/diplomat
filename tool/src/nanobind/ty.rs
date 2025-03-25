@@ -26,6 +26,8 @@ struct MethodInfo<'a> {
     prop_name: Option<Cow<'a, str>>,
     // If this is a property, this is the associated setter's c++ method name
     setter_name: Option<Cow<'a, str>>,
+    // In the *rare* event that they're required, the C++ names & types of the function params
+    param_decls: Option<Vec<NamedType<'a>>>,
 }
 
 /// Context for generating a particular type's impl
@@ -197,6 +199,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 // overwrite the method reference & method name with this getter
                                 e.method = method;
                                 e.method_name = info.method_name.clone();
+                                e.cpp_method_name = info.cpp_method_name.clone();
                             }
                             Some(hir::SpecialMethod::Setter(_)) => {
                                 assert!(
@@ -276,6 +279,30 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             );
         }
 
+        let param_decls = {
+            if matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Constructor) // We only need type info for constructors...
+            ) && !matches!(
+                // and even then, only when the type isn't opaque
+                id,
+                TypeId::Opaque(_)
+            ) {
+                Some(
+                    method
+                        .params
+                        .iter()
+                        .map(|p| NamedType {
+                            var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                            type_name: self.gen_type_name(&p.ty),
+                        })
+                        .collect(),
+                )
+            } else {
+                None
+            }
+        };
+
         Some(MethodInfo {
             method,
             method_name,
@@ -283,6 +310,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             def: def_qualifiers.join("_"),
             setter_name,
             prop_name,
+            param_decls,
         })
     }
 
