@@ -675,9 +675,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(ref op) if op.is_optional() => {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
-                    .into()
+                if op.is_owned() {
+                    // Note: The impl file is imported in gen_type_name().
+                    format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
+                        .into()
+                } else {
+                    format!("{type_name}::FromFFI({var_name})").into()
+                }
             }
             Type::Opaque(ref op) => {
                 let id = op.tcx_id.into();

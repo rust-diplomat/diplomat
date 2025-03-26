@@ -82,6 +82,20 @@ final class OptionOpaque implements ffi.Finalizable {
     return OptionStruct._fromFfi(result);
   }
 
+  OptionOpaque? returnsNoneSelf() {
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> aEdges = [this];
+    final result = _OptionOpaque_returns_none_self(_ffi);
+    return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+  }
+
+  OptionOpaque? returnsSomeSelf() {
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> aEdges = [this];
+    final result = _OptionOpaque_returns_some_self(_ffi);
+    return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+  }
+
   void assertInteger(int i) {
     _OptionOpaque_assert_integer(_ffi, i);
   }
@@ -171,6 +185,16 @@ external _OptionStructFfi _OptionOpaque_new_struct();
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct_nones')
 // ignore: non_constant_identifier_names
 external _OptionStructFfi _OptionOpaque_new_struct_nones();
+
+@_DiplomatFfiUse('OptionOpaque_returns_none_self')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_returns_none_self')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _OptionOpaque_returns_none_self(ffi.Pointer<ffi.Opaque> self);
+
+@_DiplomatFfiUse('OptionOpaque_returns_some_self')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_returns_some_self')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _OptionOpaque_returns_some_self(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('OptionOpaque_assert_integer')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'OptionOpaque_assert_integer')

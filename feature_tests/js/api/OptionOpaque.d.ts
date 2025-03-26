@@ -18,6 +18,8 @@ optionI32(): number | null;
 optionU32(): number | null;
 static newStruct(): OptionStruct;
 static newStructNones(): OptionStruct;
+returnsNoneSelf(): OptionOpaque | null;
+returnsSomeSelf(): OptionOpaque | null;
 assertInteger(i: number): void;
 static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
 static acceptsOptionU8(arg: number | null, sentinel: number): number | null;
