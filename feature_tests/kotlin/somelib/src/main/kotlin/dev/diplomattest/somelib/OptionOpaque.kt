@@ -17,6 +17,8 @@ internal interface OptionOpaqueLib: Library {
     fun OptionOpaque_option_u32(handle: Pointer): OptionFFIUint32
     fun OptionOpaque_new_struct(): OptionStructNative
     fun OptionOpaque_new_struct_nones(): OptionStructNative
+    fun OptionOpaque_returns_none_self(handle: Pointer): Pointer?
+    fun OptionOpaque_returns_some_self(handle: Pointer): Pointer?
     fun OptionOpaque_assert_integer(handle: Pointer, i: Int): Unit
     fun OptionOpaque_option_opaque_argument(arg: Pointer?): Byte
 }
@@ -114,6 +116,24 @@ class OptionOpaque internal constructor (
         
         val returnVal = lib.OptionOpaque_option_u32(handle);
         return returnVal.option()?.toUInt()
+    }
+    
+    fun returnsNoneSelf(): OptionOpaque? {
+        
+        val returnVal = lib.OptionOpaque_returns_none_self(handle);
+        val selfEdges: List<Any> = listOf(this)
+        val handle = returnVal ?: return null
+        val returnOpaque = OptionOpaque(handle, selfEdges)
+        return returnOpaque
+    }
+    
+    fun returnsSomeSelf(): OptionOpaque? {
+        
+        val returnVal = lib.OptionOpaque_returns_some_self(handle);
+        val selfEdges: List<Any> = listOf(this)
+        val handle = returnVal ?: return null
+        val returnOpaque = OptionOpaque(handle, selfEdges)
+        return returnOpaque
     }
     
     fun assertInteger(i: Int): Unit {

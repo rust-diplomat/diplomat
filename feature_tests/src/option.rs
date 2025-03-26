@@ -114,6 +114,14 @@ pub mod ffi {
             }
         }
 
+        pub fn returns_none_self<'a>(&'a self) -> Option<&'a OptionOpaque> {
+            None
+        }
+
+        pub fn returns_some_self<'a>(&'a self) -> Option<&'a OptionOpaque> {
+            Some(self)
+        }
+
         pub fn assert_integer(&self, i: i32) {
             assert_eq!(i, self.0);
         }

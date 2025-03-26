@@ -42,6 +42,10 @@ public:
 
   inline static OptionStruct new_struct_nones();
 
+  inline const OptionOpaque* returns_none_self() const;
+
+  inline const OptionOpaque* returns_some_self() const;
+
   inline void assert_integer(int32_t i) const;
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);

@@ -588,7 +588,9 @@ NB_MODULE(somelib, somelib_mod)
     	.def("option_u32", &OptionOpaque::option_u32)
     	.def("option_usize", &OptionOpaque::option_usize)
     	.def_static("returns", &OptionOpaque::returns)
-    	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct);
+    	.def("returns_none_self", &OptionOpaque::returns_none_self)
+    	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct)
+    	.def("returns_some_self", &OptionOpaque::returns_some_self);
     
     PyType_Slot OptionOpaqueChar_slots[] = {
         {Py_tp_free, (void *)OptionOpaqueChar::operator delete },
