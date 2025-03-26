@@ -43,6 +43,10 @@ namespace capi {
     
     diplomat::capi::OptionStruct OptionOpaque_new_struct_nones(void);
     
+    const diplomat::capi::OptionOpaque* OptionOpaque_returns_none_self(const diplomat::capi::OptionOpaque* self);
+    
+    const diplomat::capi::OptionOpaque* OptionOpaque_returns_some_self(const diplomat::capi::OptionOpaque* self);
+    
     void OptionOpaque_assert_integer(const diplomat::capi::OptionOpaque* self, int32_t i);
     
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
@@ -114,6 +118,16 @@ inline OptionStruct OptionOpaque::new_struct() {
 inline OptionStruct OptionOpaque::new_struct_nones() {
   auto result = diplomat::capi::OptionOpaque_new_struct_nones();
   return OptionStruct::FromFFI(result);
+}
+
+inline const OptionOpaque* OptionOpaque::returns_none_self() const {
+  auto result = diplomat::capi::OptionOpaque_returns_none_self(this->AsFFI());
+  return result ? { *OptionOpaque::FromFFI(result) } : std::nullopt;
+}
+
+inline const OptionOpaque* OptionOpaque::returns_some_self() const {
+  auto result = diplomat::capi::OptionOpaque_returns_some_self(this->AsFFI());
+  return result ? { *OptionOpaque::FromFFI(result) } : std::nullopt;
 }
 
 inline void OptionOpaque::assert_integer(int32_t i) const {

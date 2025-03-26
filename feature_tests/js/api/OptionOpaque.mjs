@@ -161,6 +161,30 @@ static newStructNones() {
             diplomatReceive.free();
         }
     }
+returnsNoneSelf() {
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+        
+        const result = wasm.OptionOpaque_returns_none_self(this.ffiValue);
+    
+        try {
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
+        }
+        
+        finally {}
+    }
+returnsSomeSelf() {
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+        
+        const result = wasm.OptionOpaque_returns_some_self(this.ffiValue);
+    
+        try {
+            return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
+        }
+        
+        finally {}
+    }
 assertInteger(i) {wasm.OptionOpaque_assert_integer(this.ffiValue, i);
     
         try {}
