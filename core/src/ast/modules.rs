@@ -132,7 +132,7 @@ impl Module {
                 .insert(k.clone(), ModSymbol::CustomType(v.clone()))
                 .is_some()
             {
-                panic!("Two types were declared with the same name, this needs to be implemented");
+                panic!("Two types were declared with the same name, this needs to be implemented (key: {k})");
             }
         });
 
@@ -141,7 +141,7 @@ impl Module {
                 .insert(k.clone(), ModSymbol::Trait(v.clone()))
                 .is_some()
             {
-                panic!("Two traits were declared with the same name, this needs to be implemented");
+                panic!("Two traits were declared with the same name, this needs to be implemented (key: {k})");
             }
         });
 
@@ -235,6 +235,7 @@ impl Module {
                         let mut impl_attrs = impl_parent_attrs.clone();
                         impl_attrs.add_attrs(&imp.attrs);
                         let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
+                        let self_ident = self_path.path.elements.last().unwrap();
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -242,11 +243,13 @@ impl Module {
                                 ImplItem::Fn(m) => Some(m),
                                 _ => None,
                             })
-                            .filter(|m| matches!(m.vis, Visibility::Public(_)))
+                            .filter(|m| {
+                                let is_public = matches!(m.vis, Visibility::Public(_));
+                                assert!(is_public || m.attrs.is_empty(), "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
+                                is_public
+                            })
                             .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
                             .collect();
-
-                        let self_ident = self_path.path.elements.last().unwrap();
 
                         match custom_types_by_name.get_mut(self_ident)
                                                   .expect("Diplomat currently requires impls to be in the same module as their self type") {
