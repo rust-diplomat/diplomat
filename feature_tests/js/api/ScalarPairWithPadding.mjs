@@ -117,7 +117,7 @@ export class ScalarPairWithPadding {
 
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.ScalarPairWithPadding_assert_value(this._intoFFI(functionCleanupArena));
+        wasm.ScalarPairWithPadding_assert_value(ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false));
     
         try {}
         
