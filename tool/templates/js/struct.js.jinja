@@ -107,7 +107,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         {%- if owns_wrapped_primitive %}
         return this.#{{fields.first().unwrap().field_name}};
         {%- else %}
-        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap, forcePadding);
+        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap{% if needs_force_padding %}, forcePadding{% endif %});
         {%- endif -%}
         {%- else %}
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
