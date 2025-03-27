@@ -23,7 +23,7 @@
 		("__iter__", &{{- type_name }}::{{ m.cpp_method_name -}})
 	{%- when crate::hir::SpecialMethod::Iterator -%}
 		("__next__", []({{- type_name }}& self){
-			auto next = self.next();
+			auto next = self.{{m.cpp_method_name}}();
 			if (!next) {
 				throw nb::stop_iteration();
 			}
