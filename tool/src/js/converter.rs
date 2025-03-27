@@ -590,7 +590,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
     /// 
-    /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see Struct generation for reasons why.
+    /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see SelfType::Struct generation for reasons why.
     pub(super) fn gen_js_to_c_self(&self, gen_context: JsToCConversionContext, ty: &SelfType) -> Cow<'tcx, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
