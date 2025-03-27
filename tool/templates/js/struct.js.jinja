@@ -103,6 +103,13 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
+        {%- if wraps_primitive -%}
+        {%- if owns_wrapped_primitive %}
+        return this.#{{fields.first().unwrap().field_name}};
+        {%- else %}
+        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap, forcePadding);
+        {%- endif -%}
+        {%- else %}
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
@@ -110,12 +117,13 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        {# return [
+        {#- return [
             {%- for field in fields -%}
             {{field.js_to_c}}
             {%- if !loop.last -%}, {% endif %}
             {%- endfor -%}
-         ] #}
+         ] -#}
+        {%- endif %}
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
