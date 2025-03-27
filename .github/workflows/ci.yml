@@ -236,20 +236,16 @@ jobs:
   test-nanobind:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@4
-
+      - uses: actions/checkout@v4
       - name: Install cargo-make
         uses: taiki-e/install-action@cargo-make
-
       - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.6.10"
-
       - name: Test Nanobind
         run: cargo make test-nanobind
