@@ -159,6 +159,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
             module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
+            has_constructor: bool,
         }
 
         ImplTemplate {
@@ -168,6 +169,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             modules: self.get_module_defs(id, None),
             module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            has_constructor: methods.iter().any(|v| {
+                matches!(
+                    v.method.attrs.special_method,
+                    Some(hir::SpecialMethod::Constructor)
+                )
+            }),
         }
         .render_into(self.binding)
         .unwrap();

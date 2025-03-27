@@ -2,7 +2,9 @@
 {% include "module_impl.cpp.jinja" %}
 
 nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
+    {%- if !has_constructor %}
     .def(nb::init<>())
+    
     {%- if fields.len() > 0 %}
     .def(nb::init<
     {%- for f in fields -%}
@@ -17,6 +19,9 @@ nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     {%- endfor -%}
     )
     {%- endif -%}
+
+    {%- endif -%}
+
     {%- for f in fields %}
     {%- if !f.type_name.starts_with("std::unique_ptr") %}
     .def_rw("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
