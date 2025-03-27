@@ -53,7 +53,6 @@ export class BorrowedFieldsReturning {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

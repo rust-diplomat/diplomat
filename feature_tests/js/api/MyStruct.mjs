@@ -142,7 +142,6 @@ export class MyStruct {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

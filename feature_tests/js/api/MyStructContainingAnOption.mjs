@@ -67,7 +67,6 @@ export class MyStructContainingAnOption {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

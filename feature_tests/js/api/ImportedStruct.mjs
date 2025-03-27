@@ -70,7 +70,6 @@ export class ImportedStruct {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

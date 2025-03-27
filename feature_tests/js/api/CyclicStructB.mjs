@@ -44,14 +44,7 @@ export class CyclicStructB {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 1, 1);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
-        
+        return this.#field;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

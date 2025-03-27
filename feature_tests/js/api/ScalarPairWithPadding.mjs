@@ -72,7 +72,6 @@ export class ScalarPairWithPadding {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

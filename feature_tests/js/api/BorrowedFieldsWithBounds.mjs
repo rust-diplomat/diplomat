@@ -86,7 +86,6 @@ export class BorrowedFieldsWithBounds {
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
-        
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
