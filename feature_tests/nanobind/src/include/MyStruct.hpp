@@ -21,6 +21,9 @@ namespace capi {
     
     diplomat::capi::MyStruct MyStruct_new(void);
     
+    typedef struct MyStruct_new_fallible_result {union {diplomat::capi::MyStruct ok; }; bool is_ok;} MyStruct_new_fallible_result;
+    MyStruct_new_fallible_result MyStruct_new_fallible(uint8_t a);
+    
     uint8_t MyStruct_into_a(diplomat::capi::MyStruct self);
     
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
@@ -37,6 +40,11 @@ namespace capi {
 inline MyStruct MyStruct::new_() {
   auto result = diplomat::capi::MyStruct_new();
   return MyStruct::FromFFI(result);
+}
+
+inline diplomat::result<MyStruct, std::monostate> MyStruct::new_fallible(uint8_t a) {
+  auto result = diplomat::capi::MyStruct_new_fallible(a);
+  return result.is_ok ? diplomat::result<MyStruct, std::monostate>(diplomat::Ok<MyStruct>(MyStruct::FromFFI(result.ok))) : diplomat::result<MyStruct, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline uint8_t MyStruct::into_a() const {

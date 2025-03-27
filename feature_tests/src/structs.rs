@@ -228,6 +228,11 @@ pub mod ffi {
             }
         }
 
+        #[diplomat::attr(supports = fallible_constructors, constructor)]
+        pub fn new_fallible(a: u8) -> Result<MyStruct, ()> {
+            Err(())
+        }
+
         pub fn into_a(self) -> u8 {
             self.a
         }

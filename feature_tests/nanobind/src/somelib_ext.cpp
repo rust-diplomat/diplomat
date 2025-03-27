@@ -392,6 +392,12 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result)
     	.def("into_a", &MyStruct::into_a)
     	.def("__init__", [](MyStruct* self){ *self = MyStruct::new_(); })
+    	.def("__init__", [](MyStruct* self, uint8_t a){ auto tmp = MyStruct::new_fallible(a);
+    				if(tmp.is_ok()) {
+    					*self = std::move(tmp).ok().value();
+    				} else {
+    					nb::cast(tmp); // This will raise a python error with the contents of the error type
+    				}}, "a"_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result);
     
     nb::class_<MyStructContainingAnOption>(somelib_mod, "MyStructContainingAnOption")

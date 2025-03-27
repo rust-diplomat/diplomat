@@ -44,10 +44,24 @@
 			{%- for p in m.param_decls.as_ref().unwrap() -%}
 			, {{p.type_name}} {{p.var_name}}
 			{%- endfor -%}
-			){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
+			{%- match m.method.output -%}
+			{%- when hir::ReturnType::Infallible(_) -%}
+				){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
 												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
 												{%- endfor -%}
 			); }
+			{%- when hir::ReturnType::Fallible(_, _) -%}
+				){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
+												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
+												{%- endfor -%} );
+				if(tmp.is_ok()) {
+					*self = std::move(tmp).ok().value();
+				} else {
+					nb::cast(tmp); // This will raise a python error with the contents of the error type
+				}}
+			{%- when hir::ReturnType::Nullable(_) -%}
+			static_assert(false, "This is unsupported by diplomat");
+			{%- endmatch -%}
 		{%- endif -%}
 		{%- include "method_params.cpp.jinja" %})
 	{%- when crate::hir::SpecialMethod::Indexer -%}
