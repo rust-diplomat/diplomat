@@ -210,7 +210,7 @@ dependencies = ["build-feature", "gen-nanobind-feature"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-exec uvx --with feature_tests/nanobind --refresh-package somelib pytest feature_tests/nanobind/test/
+exec --fail-on-error uvx --with feature_tests/nanobind --refresh-package somelib pytest feature_tests/nanobind/test/
 '''
 
 [tasks.check-c-example]
