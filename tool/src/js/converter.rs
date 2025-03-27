@@ -589,15 +589,28 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     // #region JS to C
 
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
-    pub(super) fn gen_js_to_c_self(&self, allocator: Option<&str>, ty: &SelfType) -> Cow<'static, str> {
+    /// 
+    /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see Struct generation for reasons why.
+    pub(super) fn gen_js_to_c_self(&self, gen_context: JsToCConversionContext, ty: &SelfType) -> Cow<'tcx, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
+
+            // OLD WASM ABI:
             // The way Rust generates WebAssembly, each function that requires a self struct require us to pass in each parameter into the function.
             // So we call a function in JS that lets us do this.
             // We use spread syntax to avoid a complicated array setup.
 
-            // If there's no allocator (assume we aren't generating this info for a function), then pass in nothing:
-            SelfType::Struct(..) => format!("this._intoFFI({})", allocator.unwrap_or_default()).into(),
+            // NEW WASM ABI:
+            // We just need access to the pointer, so we just make a regular _intoFFI call.
+            SelfType::Struct(ref s) =>  {
+                let type_name = self.formatter.fmt_type_name(s.id());
+
+                if matches!(gen_context, JsToCConversionContext::WriteToBuffer(..) | JsToCConversionContext::SlicePrealloc) {
+                    panic!("Trying to generate _intoFFI call for {type_name} in the wrong context. _intoFFI should only be called inside of a method.")
+                }
+                // Use functionCleanupArena ALWAYS because _intoFFI assumes that we are calling from a method that has access to the functionCleanupArena variable:
+                self.gen_js_to_c_for_struct_type(type_name, "this".into(), None, "functionCleanupArena", gen_context)
+            },
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }

@@ -503,20 +503,18 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
-
-            // We don't need to clean up structs for Rust because they're represented entirely in JS form.
-            method_info
-                .param_conversions
-                .push(self.gen_js_to_c_self(
-                    match param_self.ty {
-                        // Per the line below, we will always generate functionCleanupArena if we're a struct, so we make sure to use it:
-                        SelfType::Struct(..) => Some("functionCleanupArena"),
-                        _ => None
-                    }, &param_self.ty));
-
+            
+            // If we're the struct, we always expect to generate functionCleanupArena to generate slices.
+            // It's easier to do it this way, so we don't have to check if each individual `_intoFFI` call requires this parameter or not.
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;
             }
+
+            // We don't need to clean up structs for Rust because they're represented entirely in JS form.
+            method_info
+                .param_conversions // Pretty sure we don't need to force padding because we're just passing in a pointer:
+                // FIXME: This is definitely different for the old WASM ABI.
+                .push(self.gen_js_to_c_self(JsToCConversionContext::List(ForcePaddingStatus::NoForce), &param_self.ty));
         }
 
         for param in method.params.iter() {
