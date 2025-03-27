@@ -8,6 +8,7 @@ import com.sun.jna.Structure
 
 internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
+    fun MyStruct_new_fallible(a: FFIUint8): ResultMyStructNativeUnit
     fun MyStruct_into_a(nativeStruct: MyStructNative): FFIUint8
     fun MyStruct_returns_zst_result(): ResultUnitMyZstNative
     fun MyStruct_fails_zst_result(): ResultUnitMyZstNative
@@ -56,6 +57,18 @@ class MyStruct internal constructor (
             
             val returnStruct = MyStruct(returnVal)
             return returnStruct
+        }
+        
+        fun newFallible(a: UByte): Result<MyStruct> {
+            
+            val returnVal = lib.MyStruct_new_fallible(FFIUint8(a));
+            if (returnVal.isOk == 1.toByte()) {
+                
+                val returnStruct = MyStruct(returnVal.union.ok)
+                return returnStruct.ok()
+            } else {
+                return UnitError().err()
+            }
         }
         
         fun returnsZstResult(): Result<Unit> {

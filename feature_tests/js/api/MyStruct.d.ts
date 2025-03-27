@@ -47,5 +47,5 @@ intoA(): number;
 static returnsZstResult(): void;
 static failsZstResult(): void;
 
-    constructor();
+    constructor(a: number);
 }

@@ -84,6 +84,14 @@ final class MyStruct {
     return dart;
   }
 
+  factory MyStruct(int a) {
+    final result = _MyStruct_new_fallible(a);
+    if (!result.isOk) {
+      return null;
+    }
+    return MyStruct._fromFfi(result.union.ok);
+  }
+
   int intoA() {
     final temp = _FinalizedArena();
     final result = _MyStruct_into_a(_toFfi(temp.arena));
@@ -139,6 +147,11 @@ final class MyStruct {
 @ffi.Native<_MyStructFfi Function()>(isLeaf: true, symbol: 'MyStruct_new')
 // ignore: non_constant_identifier_names
 external _MyStructFfi _MyStruct_new();
+
+@_DiplomatFfiUse('MyStruct_new_fallible')
+@ffi.Native<_ResultMyStructFfiVoid Function(ffi.Uint8)>(isLeaf: true, symbol: 'MyStruct_new_fallible')
+// ignore: non_constant_identifier_names
+external _ResultMyStructFfiVoid _MyStruct_new_fallible(int a);
 
 @_DiplomatFfiUse('MyStruct_into_a')
 @ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
