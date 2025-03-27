@@ -589,13 +589,15 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     // #region JS to C
 
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
-    pub(super) fn gen_js_to_c_self(&self, allocator: &str, ty: &SelfType) -> Cow<'static, str> {
+    pub(super) fn gen_js_to_c_self(&self, allocator: Option<&str>, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
             // The way Rust generates WebAssembly, each function that requires a self struct require us to pass in each parameter into the function.
             // So we call a function in JS that lets us do this.
             // We use spread syntax to avoid a complicated array setup.
-            SelfType::Struct(..) => format!("this._intoFFI({allocator})").into(),
+
+            // If there's no allocator (assume we aren't generating this info for a function), then pass in nothing:
+            SelfType::Struct(..) => format!("this._intoFFI({})", allocator.unwrap_or_default()).into(),
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }

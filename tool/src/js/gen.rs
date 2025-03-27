@@ -11,8 +11,7 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
-    StructPathLike, Type, TypeContext, TypeId,
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, Type, TypeContext, TypeId
 };
 
 use askama::{self, Template};
@@ -508,8 +507,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info
                 .param_conversions
-                // FIXME: functionCleanupArena is not a fully workable solution here.
-                .push(self.gen_js_to_c_self("functionCleanupArena", &param_self.ty));
+                .push(self.gen_js_to_c_self(
+                    match param_self.ty {
+                        // Per the line below, we will always generate functionCleanupArena if we're a struct, so we make sure to use it:
+                        SelfType::Struct(..) => Some("functionCleanupArena"),
+                        _ => None
+                    }, &param_self.ty));
 
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;
