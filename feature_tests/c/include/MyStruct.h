@@ -17,9 +17,6 @@
 
 MyStruct MyStruct_new(void);
 
-typedef struct MyStruct_new_fallible_result {union {MyStruct ok; }; bool is_ok;} MyStruct_new_fallible_result;
-MyStruct_new_fallible_result MyStruct_new_fallible(uint8_t _a);
-
 uint8_t MyStruct_into_a(MyStruct self);
 
 typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;

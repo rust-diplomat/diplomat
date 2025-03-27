@@ -574,23 +574,6 @@ class ResultIntPointer: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
-internal class ResultMyStructNativeUnitUnion: Union() {
-    @JvmField
-    internal var ok: MyStructNative = MyStructNative()
-}
-
-class ResultMyStructNativeUnit: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var union: ResultMyStructNativeUnitUnion = ResultMyStructNativeUnitUnion()
-
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("union", "isOk")
-    }
-}
 internal class ResultPointerErrorStructNativeUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
@@ -637,6 +620,23 @@ internal class ResultPointerUnitUnion: Union() {
 class ResultPointerUnit: Structure(), Structure.ByValue  {
     @JvmField
     internal var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultStructWithAttrsNativeUnitUnion: Union() {
+    @JvmField
+    internal var ok: StructWithAttrsNative = StructWithAttrsNative()
+}
+
+class ResultStructWithAttrsNativeUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultStructWithAttrsNativeUnitUnion = ResultStructWithAttrsNativeUnitUnion()
 
     @JvmField
     internal var isOk: Byte = 0

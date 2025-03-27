@@ -2,6 +2,8 @@
 export { codepoint } from './diplomat-runtime';
 
 
+export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs"
+
 export { ImportedStruct } from "./ImportedStruct"
 
 export { BorrowedFields } from "./BorrowedFields"

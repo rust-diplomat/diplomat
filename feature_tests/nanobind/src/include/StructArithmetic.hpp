@@ -17,8 +17,6 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::StructArithmetic StructArithmetic_new(int32_t x);
-    
     diplomat::capi::StructArithmetic StructArithmetic_add(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
     
     diplomat::capi::StructArithmetic StructArithmetic_sub(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
@@ -31,11 +29,6 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
-
-inline StructArithmetic StructArithmetic::new_(int32_t x) {
-  auto result = diplomat::capi::StructArithmetic_new(x);
-  return StructArithmetic::FromFFI(result);
-}
 
 inline StructArithmetic StructArithmetic::operator+(StructArithmetic o) const {
   auto result = diplomat::capi::StructArithmetic_add(this->AsFFI(),

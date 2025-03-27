@@ -222,4 +222,26 @@ pub mod ffi {
             self.y /= o.y;
         }
     }
+
+    pub struct StructWithAttrs {
+        a: bool,
+        b: u32,
+    }
+
+    impl StructWithAttrs {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(a: bool, b: u32) -> Self {
+            Self { a, b }
+        }
+
+        #[diplomat::attr(supports = fallible_constructors, constructor)]
+        pub fn new_fallible(_a: u8) -> Result<StructWithAttrs, ()> {
+            Err(())
+        }
+
+        #[diplomat::attr(auto, getter)]
+        pub fn c(self) -> u32 {
+            5
+        }
+    }
 }

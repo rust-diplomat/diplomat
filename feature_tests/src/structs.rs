@@ -228,11 +228,6 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::attr(supports = fallible_constructors, constructor)]
-        pub fn new_fallible(_a: u8) -> Result<MyStruct, ()> {
-            Err(())
-        }
-
         pub fn into_a(self) -> u8 {
             self.a
         }
@@ -379,11 +374,6 @@ pub mod ffi {
     }
 
     impl StructArithmetic {
-        #[diplomat::attr(auto, constructor)]
-        pub fn new(x: i32) -> Self {
-            Self { x, y: x }
-        }
-
         #[diplomat::attr(auto, add)]
         pub fn add(self, o: Self) -> Self {
             Self {

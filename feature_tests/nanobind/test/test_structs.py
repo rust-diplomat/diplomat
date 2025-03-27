@@ -16,9 +16,3 @@ def test_structs():
     assert s.g == -1, "enum fn"
     assert s.into_a() == 17, "struct fn"
 
-    threw = False
-    try:
-        fs = somelib.MyStruct(2)
-    except Exception:
-        threw = True
-    assert threw, "Constructor should have thrown an error"

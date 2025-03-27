@@ -205,22 +205,6 @@ export class MyStruct {
             diplomatReceive.free();
         }
     }
-#defaultConstructor(a) {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 33, 8, true);
-        
-        const result = wasm.MyStruct_new_fallible(diplomatReceive.buffer, a);
-    
-        try {
-            if (!diplomatReceive.resultFlag) {
-                return null;
-            }
-            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-        }
-        
-        finally {
-            diplomatReceive.free();
-        }
-    }
 intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
@@ -261,7 +245,7 @@ static failsZstResult() {
         finally {}
     }
 
-    constructor(a) {
+    constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
         } else if (arguments[0] === diplomatRuntime.internalConstructor) {

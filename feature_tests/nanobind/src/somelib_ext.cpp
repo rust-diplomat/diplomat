@@ -60,6 +60,7 @@
 #include "ns/RenamedOpaqueArithmetic.hpp"
 #include "ns/RenamedOpaqueIterable.hpp"
 #include "ns/RenamedOpaqueIterator.hpp"
+#include "ns/RenamedStructWithAttrs.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -291,6 +292,19 @@ NB_MODULE(somelib, somelib_mod)
 		.def("__str__", [](const std::monostate &)
 			 { return ""; });
     
+    nb::module_ ns_mod = somelib_mod.def_submodule("ns");
+    
+    nb::class_<ns::RenamedStructWithAttrs>(ns_mod, "RenamedStructWithAttrs")
+        .def_rw("a", &ns::RenamedStructWithAttrs::a)
+        .def_rw("b", &ns::RenamedStructWithAttrs::b)
+    	.def_prop_ro("c", &ns::RenamedStructWithAttrs::c)
+    	.def("__init__", [](ns::RenamedStructWithAttrs* self, bool a, uint32_t b){ *self = ns::RenamedStructWithAttrs::new_(a, b); }, "a"_a, "b"_a)
+    	.def("__init__", [](ns::RenamedStructWithAttrs* self, uint8_t _a){ auto tmp = ns::RenamedStructWithAttrs::new_fallible(_a);
+    				if(tmp.is_ok()) {
+    					*self = std::move(tmp).ok().value();
+    				} else {
+    					nb::cast(tmp); // This will raise a python error with the contents of the error type
+    				}}, "_a"_a);
     
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
         .def(nb::init<>())
@@ -390,12 +404,6 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result)
     	.def("into_a", &MyStruct::into_a)
     	.def("__init__", [](MyStruct* self){ *self = MyStruct::new_(); })
-    	.def("__init__", [](MyStruct* self, uint8_t _a){ auto tmp = MyStruct::new_fallible(_a);
-    				if(tmp.is_ok()) {
-    					*self = std::move(tmp).ok().value();
-    				} else {
-    					nb::cast(tmp); // This will raise a python error with the contents of the error type
-    				}}, "_a"_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result);
     
     nb::class_<MyStructContainingAnOption>(somelib_mod, "MyStructContainingAnOption")
@@ -408,12 +416,13 @@ NB_MODULE(somelib, somelib_mod)
         .def(nb::init<>());
     
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
+        .def(nb::init<>())
+        .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
     	.def(nb::self + nb::self)
     	.def(nb::self / nb::self)
     	.def(nb::self * nb::self)
-    	.def("__init__", [](StructArithmetic* self, int32_t x){ *self = StructArithmetic::new_(x); }, "x"_a)
     	.def(nb::self - nb::self);
     
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
@@ -432,7 +441,6 @@ NB_MODULE(somelib, somelib_mod)
             [](const OptionStruct& self) { return self.d.get(); },
             [](OptionStruct& self, std::unique_ptr<OptionOpaque>&& v) { self.d = std::move(v); }
         );
-    nb::module_ ns_mod = somelib_mod.def_submodule("ns");
     
     PyType_Slot ns_AttrOpaque1Renamed_slots[] = {
         {Py_tp_free, (void *)ns::AttrOpaque1Renamed::operator delete },
