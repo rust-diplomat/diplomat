@@ -380,8 +380,6 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("takes_nested_parameters", &CyclicStructC::takes_nested_parameters, "c"_a);
     
     nb::class_<MyStruct>(somelib_mod, "MyStruct")
-        .def(nb::init<>())
-        .def(nb::init<uint8_t, bool, uint8_t, uint64_t, int32_t, char32_t, MyEnum>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none(),  "d"_a.none(),  "e"_a.none(),  "f"_a.none(),  "g"_a.none())
         .def_rw("a", &MyStruct::a)
         .def_rw("b", &MyStruct::b)
         .def_rw("c", &MyStruct::c)
@@ -392,17 +390,15 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result)
     	.def("into_a", &MyStruct::into_a)
     	.def("__init__", [](MyStruct* self){ *self = MyStruct::new_(); })
-    	.def("__init__", [](MyStruct* self, uint8_t a){ auto tmp = MyStruct::new_fallible(a);
+    	.def("__init__", [](MyStruct* self, uint8_t _a){ auto tmp = MyStruct::new_fallible(_a);
     				if(tmp.is_ok()) {
     					*self = std::move(tmp).ok().value();
     				} else {
     					nb::cast(tmp); // This will raise a python error with the contents of the error type
-    				}}, "a"_a)
+    				}}, "_a"_a)
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result);
     
     nb::class_<MyStructContainingAnOption>(somelib_mod, "MyStructContainingAnOption")
-        .def(nb::init<>())
-        .def(nb::init<std::optional<MyStruct>, std::optional<DefaultEnum>>(), "a"_a.none(),  "b"_a.none())
         .def_rw("a", &MyStructContainingAnOption::a)
         .def_rw("b", &MyStructContainingAnOption::b)
     	.def_static("filled", &MyStructContainingAnOption::filled)
@@ -412,8 +408,6 @@ NB_MODULE(somelib, somelib_mod)
         .def(nb::init<>());
     
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
-        .def(nb::init<>())
-        .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
     	.def(nb::self + nb::self)

@@ -43,7 +43,7 @@ struct MyStruct {
 
   inline static MyStruct new_();
 
-  inline static diplomat::result<MyStruct, std::monostate> new_fallible(uint8_t a);
+  inline static diplomat::result<MyStruct, std::monostate> new_fallible(uint8_t _a);
 
   inline uint8_t into_a() const;
 
