@@ -560,7 +560,7 @@ mkdir vendor
 cd vendor
 nanobind_present = is_path_exists nanobind
 if !nanobind_present
-    exec git clone https://github.com/wjakob/nanobind.git --depth=1 -b "v2.4.0" --recursive -q
+    exec git clone https://github.com/wjakob/nanobind.git --depth=1 -b "v2.4.0" --recurse-submodules -q
 end
 '''
 
