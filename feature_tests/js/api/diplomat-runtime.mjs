@@ -145,6 +145,31 @@ export function optionToArgsForCalling(jsValue, size, align, writeToArrayBufferC
     return args;
 }
 
+export function optionToBufferForCalling(jsValue, size, align, allocator, writeToArrayBufferCallback) {
+    let buf = DiplomatBuf.struct(wasm, size, align);
+
+    
+    let buffer;
+    if (align == 8) {
+        buffer = new BigUint64Array(wasm.memory.buffer, buf, size / align);
+    } else if (align == 4) {
+        buffer = new Uint32Array(wasm.memory.buffer, buf, size / align);
+    } else if (align == 2) {
+        buffer = new Uint16Array(wasm.memory.buffer, buf, size / align);
+    } else {
+        buffer = new Uint8Array(wasm.memory.buffer, buf, size / align);
+    }
+
+    buffer.fill(0);
+    
+    if (jsValue != null) {
+        writeToArrayBufferCallback(buffer.buffer, 0, jsValue);
+        buffer[buffer.length - 1] = 1;
+    }
+    
+    allocator.alloc(buf);
+}
+
 
 /**
 * Given `ptr` in Wasm memory, treat it as an Option<T> with size for type T,
