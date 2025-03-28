@@ -830,7 +830,11 @@ impl<'cx> TyGenContext<'_, 'cx> {
     fn gen_self_type_name_ffi(&self, ty: &SelfType, cast: bool) -> Cow<'cx, str> {
         match ty {
             SelfType::Opaque(_) => self.formatter.fmt_opaque_as_ffi().into(),
-            SelfType::Struct(s) => format!("_{}Ffi", s.resolve(self.tcx).name.as_str()).into(),
+            SelfType::Struct(s) => {
+                let id = s.id();
+                let type_name = self.formatter.fmt_type_name(id);
+                format!("_{type_name}Ffi").into()
+            },
             SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
