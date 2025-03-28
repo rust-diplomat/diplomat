@@ -57,7 +57,7 @@ dependencies = ["test-kotlin-example", "test-kotlin-feature"]
 
 [tasks.test-nanobind]
 category = "Tests"
-dependencies = ["test-nanobind-feature", "fetch-nanobind"]
+dependencies = ["test-nanobind-feature"]
 
 [tasks.test-example]
 category = "Tests"
@@ -206,7 +206,7 @@ exec --fail-on-error gradle test  --warning-mode all
 
 [tasks.test-nanobind-feature]
 category = "Tests"
-dependencies = ["build-feature"]
+dependencies = ["build-feature", "fetch-nanobind"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
