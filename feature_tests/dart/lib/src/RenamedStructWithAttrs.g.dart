@@ -34,14 +34,6 @@ final class RenamedStructWithAttrs {
     return struct;
   }
 
-  static RenamedStructWithAttrs? newFallible(bool a, int b) {
-    final result = _namespace_StructWithAttrs_new_fallible(a, b);
-    if (!result.isOk) {
-      return null;
-    }
-    return RenamedStructWithAttrs._fromFfi(result.union.ok);
-  }
-
   int get c {
     final temp = _FinalizedArena();
     final result = _namespace_StructWithAttrs_c(_toFfi(temp.arena));
@@ -60,11 +52,6 @@ final class RenamedStructWithAttrs {
         b,
       ]);
 }
-
-@_DiplomatFfiUse('namespace_StructWithAttrs_new_fallible')
-@ffi.Native<_ResultRenamedStructWithAttrsFfiVoid Function(ffi.Bool, ffi.Uint32)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_new_fallible')
-// ignore: non_constant_identifier_names
-external _ResultRenamedStructWithAttrsFfiVoid _namespace_StructWithAttrs_new_fallible(bool a, int b);
 
 @_DiplomatFfiUse('namespace_StructWithAttrs_c')
 @ffi.Native<ffi.Uint32 Function(_StructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')

@@ -430,32 +430,6 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
   }
 }
 
-final class _ResultRenamedStructWithAttrsFfiVoidUnion extends ffi.Union {
-  external _RenamedStructWithAttrsFfi ok;
-
-}
-
-final class _ResultRenamedStructWithAttrsFfiVoid extends ffi.Struct {
-  external _ResultRenamedStructWithAttrsFfiVoidUnion union;
-
-  @ffi.Bool()
-  external bool isOk;
-
-  // ignore: unused_element
-  factory _ResultRenamedStructWithAttrsFfiVoid.ok(_RenamedStructWithAttrsFfi val) {
-    final struct = ffi.Struct.create<_ResultRenamedStructWithAttrsFfiVoid>();
-    struct.isOk = true;
-    struct.union.ok = val;
-    return struct;
-  }
-  // ignore: unused_element
-  factory _ResultRenamedStructWithAttrsFfiVoid.err() {
-    final struct = ffi.Struct.create<_ResultRenamedStructWithAttrsFfiVoid>();
-    struct.isOk = false;
-    return struct;
-  }
-}
-
 final class _ResultSizeVoidUnion extends ffi.Union {
   @ffi.Size()
   external int ok;
