@@ -240,6 +240,8 @@ pub mod ffi {
             }
         }
 
+        // Dart backend does not support getters on structs
+        #[diplomat::attr(dart, disable)]
         #[diplomat::attr(auto, getter)]
         pub fn c(self) -> u32 {
             5
