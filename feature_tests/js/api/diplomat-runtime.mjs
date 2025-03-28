@@ -150,14 +150,15 @@ export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, 
 
     
     let buffer;
+    // Add 1 to the size since we're also accounting for the 0 or 1 is_ok field:
     if (align == 8) {
-        buffer = new BigUint64Array(wasm.memory.buffer, buf, size / align);
+        buffer = new BigUint64Array(wasm.memory.buffer, buf, size / align + 1);
     } else if (align == 4) {
-        buffer = new Uint32Array(wasm.memory.buffer, buf, size / align);
+        buffer = new Uint32Array(wasm.memory.buffer, buf, size / align + 1);
     } else if (align == 2) {
-        buffer = new Uint16Array(wasm.memory.buffer, buf, size / align);
+        buffer = new Uint16Array(wasm.memory.buffer, buf, size / align + 1);
     } else {
-        buffer = new Uint8Array(wasm.memory.buffer, buf, size / align);
+        buffer = new Uint8Array(wasm.memory.buffer, buf, size / align + 1);
     }
 
     buffer.fill(0);
