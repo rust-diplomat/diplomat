@@ -662,7 +662,7 @@ impl<'ast> LoweringContext<'ast> {
                             has_unnamed_constructor = true;
                         } else {
                             self.errors.push(LoweringError::Other(format!(
-                                "At most one unnamed constructor is allowed (extra abi_name: {})",
+                                "At most one unnamed constructor is allowed, see https://github.com/rust-diplomat/diplomat/issues/234 if you need overloading (extra abi_name: {})",
                                 method.abi_name.as_str()
                             )));
                         }
