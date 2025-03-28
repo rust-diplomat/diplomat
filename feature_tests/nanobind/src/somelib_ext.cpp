@@ -60,6 +60,7 @@
 #include "ns/RenamedOpaqueArithmetic.hpp"
 #include "ns/RenamedOpaqueIterable.hpp"
 #include "ns/RenamedOpaqueIterator.hpp"
+#include "ns/RenamedStructWithAttrs.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -291,71 +292,107 @@ NB_MODULE(somelib, somelib_mod)
 		.def("__str__", [](const std::monostate &)
 			 { return ""; });
     
+    nb::module_ ns_mod = somelib_mod.def_submodule("ns");
+    
+    nb::class_<ns::RenamedStructWithAttrs>(ns_mod, "RenamedStructWithAttrs")
+        .def_rw("a", &ns::RenamedStructWithAttrs::a)
+        .def_rw("b", &ns::RenamedStructWithAttrs::b)
+    	.def_prop_ro("c", &ns::RenamedStructWithAttrs::c)
+    	.def("__init__", [](ns::RenamedStructWithAttrs* self, bool a, uint32_t b){ auto tmp = ns::RenamedStructWithAttrs::new_fallible(a, b);
+    				if(tmp.is_ok()) {
+    					*self = std::move(tmp).ok().value();
+    				} else {
+    					nb::cast(tmp); // This will raise a python error with the contents of the error type
+    				}}, "a"_a, "b"_a);
+    
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
-        .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &CallbackTestingStruct::x)
         .def_rw("y", &CallbackTestingStruct::y);
+    
     nb::class_<CallbackWrapper>(somelib_mod, "CallbackWrapper")
-        .def(nb::init<>()).def(nb::init<bool>(), "cant_be_empty"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<bool>(), "cant_be_empty"_a.none())
         .def_rw("cant_be_empty", &CallbackWrapper::cant_be_empty)
     	.def_static("test_cb_with_struct", &CallbackWrapper::test_cb_with_struct, "f"_a)
     	.def_static("test_multi_arg_callback", &CallbackWrapper::test_multi_arg_callback, "f"_a, "x"_a)
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
     	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
+    
     nb::class_<ImportedStruct>(somelib_mod, "ImportedStruct")
-        .def(nb::init<>()).def(nb::init<UnimportedEnum, uint8_t>(), "foo"_a.none(),  "count"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<UnimportedEnum, uint8_t>(), "foo"_a.none(),  "count"_a.none())
         .def_rw("foo", &ImportedStruct::foo)
         .def_rw("count", &ImportedStruct::count);
+    
     nb::class_<BorrowedFields>(somelib_mod, "BorrowedFields")
-        .def(nb::init<>()).def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
         .def_rw("a", &BorrowedFields::a)
         .def_rw("b", &BorrowedFields::b)
         .def_rw("c", &BorrowedFields::c)
     	.def_static("from_bar_and_strings", &BorrowedFields::from_bar_and_strings, "bar"_a, "dstr16"_a, "utf8_str"_a);
+    
     nb::class_<BorrowedFieldsReturning>(somelib_mod, "BorrowedFieldsReturning")
-        .def(nb::init<>()).def(nb::init<std::string_view>(), "bytes"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<std::string_view>(), "bytes"_a.none())
         .def_rw("bytes", &BorrowedFieldsReturning::bytes);
+    
     nb::class_<BorrowedFieldsWithBounds>(somelib_mod, "BorrowedFieldsWithBounds")
-        .def(nb::init<>()).def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "field_a"_a.none(),  "field_b"_a.none(),  "field_c"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "field_a"_a.none(),  "field_b"_a.none(),  "field_c"_a.none())
         .def_rw("field_a", &BorrowedFieldsWithBounds::field_a)
         .def_rw("field_b", &BorrowedFieldsWithBounds::field_b)
         .def_rw("field_c", &BorrowedFieldsWithBounds::field_c)
     	.def_static("from_foo_and_strings", &BorrowedFieldsWithBounds::from_foo_and_strings, "foo"_a, "dstr16_x"_a, "utf8_str_z"_a);
+    
     nb::class_<NestedBorrowedFields>(somelib_mod, "NestedBorrowedFields")
-        .def(nb::init<>()).def(nb::init<BorrowedFields, BorrowedFieldsWithBounds, BorrowedFieldsWithBounds>(), "fields"_a.none(),  "bounds"_a.none(),  "bounds2"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<BorrowedFields, BorrowedFieldsWithBounds, BorrowedFieldsWithBounds>(), "fields"_a.none(),  "bounds"_a.none(),  "bounds2"_a.none())
         .def_rw("fields", &NestedBorrowedFields::fields)
         .def_rw("bounds", &NestedBorrowedFields::bounds)
         .def_rw("bounds2", &NestedBorrowedFields::bounds2)
     	.def_static("from_bar_and_foo_and_strings", &NestedBorrowedFields::from_bar_and_foo_and_strings, "bar"_a, "foo"_a, "dstr16_x"_a, "dstr16_z"_a, "utf8_str_y"_a, "utf8_str_z"_a);
+    
     nb::class_<OptionInputStruct>(somelib_mod, "OptionInputStruct")
-        .def(nb::init<>()).def(nb::init<std::optional<uint8_t>, std::optional<char32_t>, std::optional<OptionEnum>>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<std::optional<uint8_t>, std::optional<char32_t>, std::optional<OptionEnum>>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
         .def_rw("a", &OptionInputStruct::a)
         .def_rw("b", &OptionInputStruct::b)
         .def_rw("c", &OptionInputStruct::c);
+    
     nb::class_<ErrorStruct>(somelib_mod, "ErrorStruct")
-        .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "i"_a.none(),  "j"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<int32_t, int32_t>(), "i"_a.none(),  "j"_a.none())
         .def_rw("i", &ErrorStruct::i)
         .def_rw("j", &ErrorStruct::j);
+    
     nb::class_<CyclicStructA>(somelib_mod, "CyclicStructA")
-        .def(nb::init<>()).def(nb::init<CyclicStructB>(), "a"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<CyclicStructB>(), "a"_a.none())
         .def_rw("a", &CyclicStructA::a)
     	.def("cyclic_out", &CyclicStructA::cyclic_out)
     	.def("double_cyclic_out", &CyclicStructA::double_cyclic_out, "cyclic_struct_a"_a)
     	.def_static("get_b", &CyclicStructA::get_b)
     	.def_prop_ro("getter_out", &CyclicStructA::getter_out);
+    
     nb::class_<CyclicStructB>(somelib_mod, "CyclicStructB")
-        .def(nb::init<>()).def(nb::init<uint8_t>(), "field"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<uint8_t>(), "field"_a.none())
         .def_rw("field", &CyclicStructB::field)
     	.def_static("get_a", &CyclicStructB::get_a)
     	.def_static("get_a_option", &CyclicStructB::get_a_option);
+    
     nb::class_<CyclicStructC>(somelib_mod, "CyclicStructC")
-        .def(nb::init<>()).def(nb::init<CyclicStructA>(), "a"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<CyclicStructA>(), "a"_a.none())
         .def_rw("a", &CyclicStructC::a)
     	.def("cyclic_out", &CyclicStructC::cyclic_out)
     	.def_static("takes_nested_parameters", &CyclicStructC::takes_nested_parameters, "c"_a);
+    
     nb::class_<MyStruct>(somelib_mod, "MyStruct")
-        .def(nb::init<>()).def(nb::init<uint8_t, bool, uint8_t, uint64_t, int32_t, char32_t, MyEnum>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none(),  "d"_a.none(),  "e"_a.none(),  "f"_a.none(),  "g"_a.none())
         .def_rw("a", &MyStruct::a)
         .def_rw("b", &MyStruct::b)
         .def_rw("c", &MyStruct::c)
@@ -365,27 +402,30 @@ NB_MODULE(somelib, somelib_mod)
         .def_rw("g", &MyStruct::g)
     	.def_static("fails_zst_result", &MyStruct::fails_zst_result)
     	.def("into_a", &MyStruct::into_a)
-    	.def(nb::new_(&MyStruct::new_))
+    	.def("__init__", [](MyStruct* self){ *self = MyStruct::new_(); })
     	.def_static("returns_zst_result", &MyStruct::returns_zst_result);
+    
     nb::class_<MyStructContainingAnOption>(somelib_mod, "MyStructContainingAnOption")
-        .def(nb::init<>()).def(nb::init<std::optional<MyStruct>, std::optional<DefaultEnum>>(), "a"_a.none(),  "b"_a.none())
         .def_rw("a", &MyStructContainingAnOption::a)
         .def_rw("b", &MyStructContainingAnOption::b)
     	.def_static("filled", &MyStructContainingAnOption::filled)
-    	.def(nb::new_(&MyStructContainingAnOption::new_));
+    	.def("__init__", [](MyStructContainingAnOption* self){ *self = MyStructContainingAnOption::new_(); });
+    
     nb::class_<MyZst>(somelib_mod, "MyZst")
         .def(nb::init<>());
+    
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
-        .def(nb::init<>()).def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
-    	.def(nb::new_(&StructArithmetic::new_), "x"_a, "y"_a)
-    	.def(nb::self * nb::self)
     	.def(nb::self + nb::self)
-    	.def(nb::self - nb::self)
-    	.def(nb::self / nb::self);
+    	.def(nb::self / nb::self)
+    	.def(nb::self * nb::self)
+    	.def("__init__", [](StructArithmetic* self, int32_t x, int32_t y){ *self = StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
+    	.def(nb::self - nb::self);
+    
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
-        .def(nb::init<>()).def(nb::init<std::unique_ptr<OptionOpaque>, std::unique_ptr<OptionOpaqueChar>, uint32_t, std::unique_ptr<OptionOpaque>>(), "a"_a,  "b"_a,  "c"_a.none(),  "d"_a)
+        .def(nb::init<>())
+        .def(nb::init<std::unique_ptr<OptionOpaque>, std::unique_ptr<OptionOpaqueChar>, uint32_t, std::unique_ptr<OptionOpaque>>(), "a"_a,  "b"_a,  "c"_a.none(),  "d"_a)
         .def_prop_rw("a", 
             [](const OptionStruct& self) { return self.a.get(); },
             [](OptionStruct& self, std::unique_ptr<OptionOpaque>&& v) { self.a = std::move(v); }
@@ -399,7 +439,6 @@ NB_MODULE(somelib, somelib_mod)
             [](const OptionStruct& self) { return self.d.get(); },
             [](OptionStruct& self, std::unique_ptr<OptionOpaque>&& v) { self.d = std::move(v); }
         );
-    nb::module_ ns_mod = somelib_mod.def_submodule("ns");
     
     PyType_Slot ns_AttrOpaque1Renamed_slots[] = {
         {Py_tp_free, (void *)ns::AttrOpaque1Renamed::operator delete },
@@ -451,7 +490,7 @@ NB_MODULE(somelib, somelib_mod)
     			}
     			return next_inner_extractor<decltype(next)>::get(std::move(next));
     		})
-            .def("__iter__", [](nb::handle self) { return self; });
+    		.def("__iter__", [](nb::handle self) { return self; });
     nb::module_ nested_mod = somelib_mod.def_submodule("nested");
     
     PyType_Slot nested_ns_Nested_slots[] = {
@@ -475,15 +514,15 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::RenamedOpaqueArithmetic>(ns_mod, "RenamedOpaqueArithmetic", nb::type_slots(ns_RenamedOpaqueArithmetic_slots))
+    	.def(nb::self + nb::self)
+    	.def(nb::self += nb::self, nb::rv_policy::none)
+    	.def(nb::self / nb::self)
+    	.def(nb::self /= nb::self, nb::rv_policy::none)
     	.def_static("make", &ns::RenamedOpaqueArithmetic::make, "x"_a, "y"_a)
     	.def(nb::self * nb::self)
     	.def(nb::self *= nb::self, nb::rv_policy::none)
-    	.def(nb::self + nb::self)
-    	.def(nb::self += nb::self, nb::rv_policy::none)
     	.def(nb::self - nb::self)
     	.def(nb::self -= nb::self, nb::rv_policy::none)
-    	.def(nb::self / nb::self)
-    	.def(nb::self /= nb::self, nb::rv_policy::none)
     	.def("x", &ns::RenamedOpaqueArithmetic::x)
     	.def("y", &ns::RenamedOpaqueArithmetic::y);
     
@@ -508,7 +547,7 @@ NB_MODULE(somelib, somelib_mod)
     			}
     			return next_inner_extractor<decltype(next)>::get(std::move(next));
     		})
-            .def("__iter__", [](nb::handle self) { return self; });
+    		.def("__iter__", [](nb::handle self) { return self; });
     
     PyType_Slot Unnamespaced_slots[] = {
         {Py_tp_free, (void *)Unnamespaced::operator delete },
@@ -516,7 +555,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<Unnamespaced>(somelib_mod, "Unnamespaced", nb::type_slots(Unnamespaced_slots))
-    	.def_static("make", &Unnamespaced::make, "_e"_a)
+    	.def_static("make", &Unnamespaced::make, "_e"_a ) // unsupported special method NamedConstructor(None)
     	.def("use_namespaced", &Unnamespaced::use_namespaced, "_n"_a);
     
     PyType_Slot Bar_slots[] = {
@@ -535,10 +574,11 @@ NB_MODULE(somelib, somelib_mod)
     nb::class_<Foo>(somelib_mod, "Foo", nb::type_slots(Foo_slots))
     	.def("as_returning", &Foo::as_returning)
     	.def_prop_ro("bar", &Foo::get_bar)
-    	.def_static("extract_from_bounds", &Foo::extract_from_bounds, "bounds"_a, "another_string"_a)
-    	.def_static("extract_from_fields", &Foo::extract_from_fields, "fields"_a)
+    	.def_static("extract_from_bounds", &Foo::extract_from_bounds, "bounds"_a, "another_string"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("extract_from_fields", &Foo::extract_from_fields, "fields"_a ) // unsupported special method NamedConstructor(None)
     	.def(nb::new_(&Foo::new_), "x"_a)
-    	.def_static("new_static", &Foo::new_static, "x"_a);
+    	.def_static("new_static", &Foo::new_static, "x"_a ) // unsupported special method NamedConstructor(Some("static"))
+    ;
     
     PyType_Slot One_slots[] = {
         {Py_tp_free, (void *)One::operator delete },
@@ -546,17 +586,18 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<One>(somelib_mod, "One", nb::type_slots(One_slots))
-    	.def_static("cycle", &One::cycle, "hold"_a, "nohold"_a)
-    	.def_static("diamond_and_nested_types", &One::diamond_and_nested_types, "a"_a, "b"_a, "c"_a, "d"_a, "nohold"_a)
-    	.def_static("diamond_bottom", &One::diamond_bottom, "top"_a, "left"_a, "right"_a, "bottom"_a)
-    	.def_static("diamond_left", &One::diamond_left, "top"_a, "left"_a, "right"_a, "bottom"_a)
-    	.def_static("diamond_right", &One::diamond_right, "top"_a, "left"_a, "right"_a, "bottom"_a)
-    	.def_static("diamond_top", &One::diamond_top, "top"_a, "left"_a, "right"_a, "bottom"_a)
-    	.def_static("implicit_bounds", &One::implicit_bounds, "explicit_hold"_a, "implicit_hold"_a, "nohold"_a)
-    	.def_static("implicit_bounds_deep", &One::implicit_bounds_deep, "explicit_"_a, "implicit_1"_a, "implicit_2"_a, "nohold"_a)
-    	.def_static("many_dependents", &One::many_dependents, "a"_a, "b"_a, "c"_a, "d"_a, "nohold"_a)
-    	.def_static("return_outlives_param", &One::return_outlives_param, "hold"_a, "nohold"_a)
-    	.def_static("transitivity", &One::transitivity, "hold"_a, "nohold"_a);
+    	.def_static("cycle", &One::cycle, "hold"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("diamond_and_nested_types", &One::diamond_and_nested_types, "a"_a, "b"_a, "c"_a, "d"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("diamond_bottom", &One::diamond_bottom, "top"_a, "left"_a, "right"_a, "bottom"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("diamond_left", &One::diamond_left, "top"_a, "left"_a, "right"_a, "bottom"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("diamond_right", &One::diamond_right, "top"_a, "left"_a, "right"_a, "bottom"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("diamond_top", &One::diamond_top, "top"_a, "left"_a, "right"_a, "bottom"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("implicit_bounds", &One::implicit_bounds, "explicit_hold"_a, "implicit_hold"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("implicit_bounds_deep", &One::implicit_bounds_deep, "explicit_"_a, "implicit_1"_a, "implicit_2"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("many_dependents", &One::many_dependents, "a"_a, "b"_a, "c"_a, "d"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("return_outlives_param", &One::return_outlives_param, "hold"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    	.def_static("transitivity", &One::transitivity, "hold"_a, "nohold"_a ) // unsupported special method NamedConstructor(None)
+    ;
     
     PyType_Slot Two_slots[] = {
         {Py_tp_free, (void *)Two::operator delete },
@@ -578,7 +619,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("accepts_option_str_slice", &OptionOpaque::accepts_option_str_slice, "arg"_a= nb::none(), "sentinel"_a)
     	.def_static("accepts_option_u8", &OptionOpaque::accepts_option_u8, "arg"_a= nb::none(), "sentinel"_a)
     	.def("assert_integer", &OptionOpaque::assert_integer, "i"_a)
-    	.def_static("new_", &OptionOpaque::new_, "i"_a)
+    	.def_static("new", &OptionOpaque::new_, "i"_a)
     	.def_static("new_none", &OptionOpaque::new_none)
     	.def_static("new_struct", &OptionOpaque::new_struct)
     	.def_static("new_struct_nones", &OptionOpaque::new_struct_nones)
@@ -607,7 +648,7 @@ NB_MODULE(somelib, somelib_mod)
     
     nb::class_<OptionString>(somelib_mod, "OptionString", nb::type_slots(OptionString_slots))
     	.def("borrow", &OptionString::borrow)
-    	.def_static("new_", &OptionString::new_, "diplomat_str"_a)
+    	.def_static("new", &OptionString::new_, "diplomat_str"_a)
     	.def("write", &OptionString::write);
     
     PyType_Slot ResultOpaque_slots[] = {
@@ -633,7 +674,8 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<RefList>(somelib_mod, "RefList", nb::type_slots(RefList_slots))
-    	.def_static("node", &RefList::node, "data"_a);
+    	.def_static("node", &RefList::node, "data"_a ) // unsupported special method NamedConstructor(None)
+    ;
     
     PyType_Slot RefListParameter_slots[] = {
         {Py_tp_free, (void *)RefListParameter::operator delete },
@@ -651,14 +693,14 @@ NB_MODULE(somelib, somelib_mod)
     	.def_prop_ro("asSlice", &Float64Vec::as_slice)
     	.def("borrow", &Float64Vec::borrow)
     	.def("fill_slice", &Float64Vec::fill_slice, "v"_a)
-    	.def_static("new_", &Float64Vec::new_, "v"_a)
-    	.def_static("new_bool", &Float64Vec::new_bool, "v"_a)
-    	.def_static("new_f64_be_bytes", &Float64Vec::new_f64_be_bytes, "v"_a)
-    	.def_static("new_i16", &Float64Vec::new_i16, "v"_a)
-    	.def_static("new_isize", &Float64Vec::new_isize, "v"_a)
-    	.def_static("new_u16", &Float64Vec::new_u16, "v"_a)
-    	.def_static("new_usize", &Float64Vec::new_usize, "v"_a)
     	.def("__getitem__", &Float64Vec::operator[], "i"_a)
+    	.def_static("new", &Float64Vec::new_, "v"_a)
+    	.def_static("new_bool", &Float64Vec::new_bool, "v"_a ) // unsupported special method NamedConstructor(Some("bool"))
+    	.def_static("new_f64_be_bytes", &Float64Vec::new_f64_be_bytes, "v"_a ) // unsupported special method NamedConstructor(Some("f64BeBytes"))
+    	.def_static("new_i16", &Float64Vec::new_i16, "v"_a ) // unsupported special method NamedConstructor(Some("i16"))
+    	.def_static("new_isize", &Float64Vec::new_isize, "v"_a ) // unsupported special method NamedConstructor(Some("isize"))
+    	.def_static("new_u16", &Float64Vec::new_u16, "v"_a ) // unsupported special method NamedConstructor(Some("u16"))
+    	.def_static("new_usize", &Float64Vec::new_usize, "v"_a ) // unsupported special method NamedConstructor(Some("usize"))
     	.def("set_value", &Float64Vec::set_value, "new_slice"_a)
     	.def("__str__", &Float64Vec::to_string);
     
@@ -673,7 +715,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def(nb::new_(&MyString::new_), "v"_a)
     	.def_static("new_from_first", &MyString::new_from_first, "v"_a)
     	.def_static("new_owned", &MyString::new_owned, "v"_a)
-    	.def_static("new_unsafe", &MyString::new_unsafe, "v"_a)
+    	.def_static("new_unsafe", &MyString::new_unsafe, "v"_a ) // unsupported special method NamedConstructor(Some("unsafe"))
     	.def_prop_rw("str", &MyString::get_str, &MyString::set_str)
     	.def_static("string_transform", &MyString::string_transform, "foo"_a);
     
@@ -683,7 +725,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<MyOpaqueEnum>(somelib_mod, "MyOpaqueEnum", nb::type_slots(MyOpaqueEnum_slots))
-    	.def_static("new_", &MyOpaqueEnum::new_)
+    	.def_static("new", &MyOpaqueEnum::new_)
     	.def("to_string", &MyOpaqueEnum::to_string);
     
     PyType_Slot Opaque_slots[] = {

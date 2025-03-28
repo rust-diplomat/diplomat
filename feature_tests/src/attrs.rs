@@ -222,4 +222,29 @@ pub mod ffi {
             self.y /= o.y;
         }
     }
+
+    pub struct StructWithAttrs {
+        a: bool,
+        b: u32,
+    }
+
+    impl StructWithAttrs {
+        // Dart backend does not support failable constructors on struct types
+        #[diplomat::attr(dart, disable)]
+        #[diplomat::attr(supports = fallible_constructors, constructor)]
+        pub fn new_fallible(a: bool, b: u32) -> Result<StructWithAttrs, ()> {
+            if a {
+                Ok(Self { a, b })
+            } else {
+                Err(())
+            }
+        }
+
+        // Dart backend does not support getters on structs
+        #[diplomat::attr(dart, disable)]
+        #[diplomat::attr(auto, getter)]
+        pub fn c(self) -> u32 {
+            5
+        }
+    }
 }

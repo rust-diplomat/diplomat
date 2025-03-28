@@ -1,5 +1,7 @@
 
 
+export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
+
 export { ImportedStruct } from "./ImportedStruct.mjs"
 
 export { BorrowedFields } from "./BorrowedFields.mjs"

@@ -1,4 +1,5 @@
-{% let full_name = type_name.replace("::", "_") -%}
+{%- let is_self_opaque = true -%}
+{%- let full_name = type_name.replace("::", "_") -%}
 {% include "module_impl.cpp.jinja" %}
 
 PyType_Slot {{full_name}}_slots[] = {

@@ -638,6 +638,7 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Vec<Method>, ()> {
         let mut methods = Ok(Vec::with_capacity(ast_methods.len()));
 
+        let mut has_unnamed_constructor = false;
         for method in ast_methods {
             self.errors.set_subitem(method.name.as_str());
             let attrs = self.attr_validator.attr_from_ast(
@@ -652,7 +653,22 @@ impl<'ast> LoweringContext<'ast> {
                 self.lower_method(method, in_path, attrs, self_id, special_method_presence);
             match (method, &mut methods) {
                 (Ok(method), Ok(methods)) => {
-                    methods.push(method);
+                    if matches!(
+                        method.attrs.special_method,
+                        Some(SpecialMethod::Constructor)
+                    ) {
+                        if !has_unnamed_constructor {
+                            methods.push(method);
+                            has_unnamed_constructor = true;
+                        } else {
+                            self.errors.push(LoweringError::Other(format!(
+                                "At most one unnamed constructor is allowed (extra abi_name: {})",
+                                method.abi_name.as_str()
+                            )));
+                        }
+                    } else {
+                        methods.push(method);
+                    }
                 }
                 _ => methods = Err(()),
             }

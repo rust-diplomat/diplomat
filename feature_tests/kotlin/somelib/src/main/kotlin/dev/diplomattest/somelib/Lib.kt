@@ -629,6 +629,23 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
+internal class ResultStructWithAttrsNativeUnitUnion: Union() {
+    @JvmField
+    internal var ok: StructWithAttrsNative = StructWithAttrsNative()
+}
+
+class ResultStructWithAttrsNativeUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultStructWithAttrsNativeUnitUnion = ResultStructWithAttrsNativeUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
 internal class ResultUnitIntUnion: Union() {
     @JvmField
     internal var err: Int = 0

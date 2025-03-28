@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::cpp::Cpp2Formatter;
-use diplomat_core::hir::{DocsUrlGenerator, TypeContext, TypeId};
+use diplomat_core::hir::{DocsUrlGenerator, Method, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -40,5 +40,10 @@ impl<'tcx> PyFormatter<'tcx> {
     /// Resolve the name of the module to use
     pub fn fmt_module(&'tcx self, id: TypeId, default: &'tcx str) -> Cow<'tcx, str> {
         self.fmt_namespaces(id).last().unwrap_or(default).into()
+    }
+
+    pub fn fmt_method_name<'a>(&'tcx self, method: &'a Method) -> Cow<'a, str> {
+        // TODO: Avoid python keywords
+        method.attrs.rename.apply(method.name.as_str().into())
     }
 }

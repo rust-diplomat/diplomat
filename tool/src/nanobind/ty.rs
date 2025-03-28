@@ -16,14 +16,18 @@ struct NamedType<'a> {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
-    /// The C++ method name
+    /// The python method name
     method_name: Cow<'a, str>,
+    /// The C++ method name. May differ due to keyword renaming or other constraints.
+    cpp_method_name: Cow<'a, str>,
     // def statement to use - def, def_static, def_prop_ro, etc
     def: String,
     /// The property name, if any
     prop_name: Option<Cow<'a, str>>,
     // If this is a property, this is the associated setter's c++ method name
     setter_name: Option<Cow<'a, str>>,
+    // In the *rare* event that they're required, the C++ names & types of the function params
+    param_decls: Option<Vec<NamedType<'a>>>,
 }
 
 /// Context for generating a particular type's impl
@@ -155,6 +159,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
             module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
+            has_constructor: bool,
         }
 
         ImplTemplate {
@@ -164,6 +169,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             modules: self.get_module_defs(id, None),
             module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            has_constructor: methods.iter().any(|v| {
+                matches!(
+                    v.method.attrs.special_method,
+                    Some(hir::SpecialMethod::Constructor)
+                )
+            }),
         }
         .render_into(self.binding)
         .unwrap();
@@ -195,6 +206,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 // overwrite the method reference & method name with this getter
                                 e.method = method;
                                 e.method_name = info.method_name.clone();
+                                e.cpp_method_name = info.cpp_method_name.clone();
                             }
                             Some(hir::SpecialMethod::Setter(_)) => {
                                 assert!(
@@ -242,7 +254,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             self.c2.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
-        let method_name = self.formatter.cxx.fmt_method_name(method);
+        let cpp_method_name = self.formatter.cxx.fmt_method_name(method);
+        let method_name = self.formatter.fmt_method_name(method);
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
@@ -273,12 +286,38 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             );
         }
 
+        let param_decls = {
+            if matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Constructor) // We only need type info for constructors...
+            ) && !matches!(
+                // and even then, only when the type isn't opaque
+                id,
+                TypeId::Opaque(_)
+            ) {
+                Some(
+                    method
+                        .params
+                        .iter()
+                        .map(|p| NamedType {
+                            var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                            type_name: self.gen_type_name(&p.ty),
+                        })
+                        .collect(),
+                )
+            } else {
+                None
+            }
+        };
+
         Some(MethodInfo {
             method,
             method_name,
+            cpp_method_name,
             def: def_qualifiers.join("_"),
             setter_name,
             prop_name,
+            param_decls,
         })
     }
 

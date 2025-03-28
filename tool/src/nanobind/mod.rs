@@ -31,16 +31,16 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.utf16_strings = true;
     a.static_slices = true;
 
-    a.constructors = true; // TODO
+    a.constructors = true;
     a.named_constructors = false;
     a.fallible_constructors = true;
     a.accessors = false;
     a.comparators = false; // TODO
     a.stringifiers = false; // TODO
-    a.iterators = true; // TODO
-    a.iterables = true; // TODO
+    a.iterators = true;
+    a.iterables = true;
     a.arithmetic = true;
-    a.indexing = true; // TODO
+    a.indexing = true;
     a.option = true;
     a.callbacks = true;
     a.traits = false;

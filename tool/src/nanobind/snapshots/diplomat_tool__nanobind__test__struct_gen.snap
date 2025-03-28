@@ -245,8 +245,10 @@ NB_MODULE(pymod, pymod_mod)
 			 { return ""; });
     
     nb::module_ mylib_mod = pymod_mod.def_submodule("mylib");
+    
     nb::class_<mylib::Thingy>(mylib_mod, "Thingy")
-        .def(nb::init<>()).def(nb::init<bool, uint8_t, double>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
+        .def(nb::init<>())
+        .def(nb::init<bool, uint8_t, double>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
         .def_rw("a", &mylib::Thingy::a)
         .def_rw("b", &mylib::Thingy::b)
         .def_rw("c", &mylib::Thingy::c);

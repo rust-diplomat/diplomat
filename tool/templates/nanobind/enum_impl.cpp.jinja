@@ -1,3 +1,4 @@
+{%- let is_self_opaque = false -%}
 {% include "module_impl.cpp.jinja" %}
 {
 	nb::class_<{{type_name}}> e_class({{module}}_mod, "{{type_name_unnamespaced}}");

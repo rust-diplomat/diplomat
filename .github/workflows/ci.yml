@@ -233,3 +233,19 @@ jobs:
         gradle-version: "8.10"
     - name: Test Kotlin
       run: cargo make test-kotlin
+  test-nanobind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-make
+        uses: taiki-e/install-action@cargo-make
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.10"
+      - name: Test Nanobind
+        run: cargo make test-nanobind

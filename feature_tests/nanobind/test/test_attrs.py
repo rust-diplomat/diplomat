@@ -17,3 +17,15 @@ def test_attrs():
     assert len(it) == 4, "Iterable rename failed!"
     lst_copy = [x for x in it]
     assert lst == lst_copy, "Iterable failed!"
+
+
+    s = somelib.ns.RenamedStructWithAttrs(True, 32) # Just test this doesn't throw
+    assert s.b == 32, "Constructor failed!"
+    assert s.c == 5, "Getter failed!"
+
+    threw = False
+    try:
+        s = somelib.RenamedStructWithAttrs(False, 2)
+    except Exception:
+        threw = True
+    assert threw, "Failing constructor should have thrown an error"

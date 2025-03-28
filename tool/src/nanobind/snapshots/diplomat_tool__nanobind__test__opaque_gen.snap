@@ -253,5 +253,5 @@ NB_MODULE(pymod, pymod_mod)
     
     nb::class_<mylib::OpaqueStruct>(mylib_mod, "OpaqueStruct", nb::type_slots(mylib_OpaqueStruct_slots))
     	.def_static("do_thing", &mylib::OpaqueStruct::do_thing)
-    	.def_static("new_", &mylib::OpaqueStruct::new_);
+    	.def_static("new", &mylib::OpaqueStruct::new_);
 }
