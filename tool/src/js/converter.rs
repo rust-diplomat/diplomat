@@ -670,8 +670,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     JsToCConversionContext::List(_force_padding) => {
                         // This *always* forces padding, due to unions having quirky ABI in WASM (see wasm_abi_quirks.md section "unions")
                         // The Option<ZST> exception is handled in type_size_alignment
-                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        // format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        let a = alloc.unwrap_or_else(|| {
+                            let id = if let Some(id) = inner.id() {
+                                self.formatter.fmt_type_name(id)
+                            } else {
+                                "()".into()
+                            };
 
+                            panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
+                        });
+                        format!("diplomatRuntime.optionToBufferForCalling({js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}]))").into()
                     }
                     JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
                         format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()

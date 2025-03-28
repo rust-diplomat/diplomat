@@ -497,7 +497,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let mut method_info = MethodInfo {
             abi_name,
             method_output_is_ffi_unit: method.output.is_ffi_unit(),
-            needs_slice_cleanup: false,
+            needs_cleanup: false,
             ..Default::default()
         };
 
@@ -507,7 +507,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             // If we're the struct, we always expect to generate functionCleanupArena to generate slices.
             // It's easier to do it this way, so we don't have to check if each individual `_intoFFI` call requires this parameter or not.
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                method_info.needs_slice_cleanup = true;
+                method_info.needs_cleanup = true;
             }
 
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
@@ -554,7 +554,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             // Is Rust NOT taking ownership?
                             // Then that means we can free this after the function is done.
                             ParamBorrowInfo::TemporarySlice => {
-                                method_info.needs_slice_cleanup = true;
+                                method_info.needs_cleanup = true;
                                 "functionCleanupArena"
                             },
 
@@ -582,8 +582,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     slice_expr: slice_expr.to_string(),
                 });
             } else {
-                let alloc = if let hir::Type::Struct(..) = param.ty.unwrap_option() {
-                    method_info.needs_slice_cleanup = true;
+                // Set allocators for all the types we know require allocation (basically anything that's a struct in the underlying Rust):
+                let alloc = if matches!(param.ty, hir::Type::DiplomatOption(..) | hir::Type::Struct(..)) {
+                    method_info.needs_cleanup = true;
                     Some("functionCleanupArena")
                 } else {
                     None
@@ -703,7 +704,8 @@ pub(super) struct MethodInfo<'info> {
     pub abi_name: String,
 
     /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
-    pub needs_slice_cleanup: bool,
+    /// NEW VERSION: To clean up any structs present.
+    pub needs_cleanup: bool,
     /// For calling .releaseToGarbageCollector on slices.
     pub needs_slice_collection: bool,
 
