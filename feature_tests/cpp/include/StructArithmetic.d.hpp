@@ -27,6 +27,8 @@ struct StructArithmetic {
   int32_t x;
   int32_t y;
 
+  inline static StructArithmetic new_(int32_t x, int32_t y);
+
   inline StructArithmetic operator+(StructArithmetic o) const;
   inline StructArithmetic& operator+=(StructArithmetic o);
 

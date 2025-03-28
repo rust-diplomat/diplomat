@@ -415,13 +415,12 @@ NB_MODULE(somelib, somelib_mod)
         .def(nb::init<>());
     
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
-        .def(nb::init<>())
-        .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
     	.def(nb::self + nb::self)
     	.def(nb::self / nb::self)
     	.def(nb::self * nb::self)
+    	.def("__init__", [](StructArithmetic* self, int32_t x, int32_t y){ *self = StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
     	.def(nb::self - nb::self);
     
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
