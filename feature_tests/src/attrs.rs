@@ -229,14 +229,13 @@ pub mod ffi {
     }
 
     impl StructWithAttrs {
-        #[diplomat::attr(auto, constructor)]
-        pub fn new(a: bool, b: u32) -> Self {
-            Self { a, b }
-        }
-
         #[diplomat::attr(supports = fallible_constructors, constructor)]
-        pub fn new_fallible(_a: u8) -> Result<StructWithAttrs, ()> {
-            Err(())
+        pub fn new_fallible(a: bool, b: u32) -> Result<StructWithAttrs, ()> {
+            if a {
+                Ok(Self { a, b })
+            } else {
+                Err(())
+            }
         }
 
         #[diplomat::attr(auto, getter)]

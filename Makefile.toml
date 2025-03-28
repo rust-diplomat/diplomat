@@ -206,7 +206,7 @@ exec --fail-on-error gradle test  --warning-mode all
 
 [tasks.test-nanobind-feature]
 category = "Tests"
-dependencies = ["build-feature", "gen-nanobind-feature"]
+dependencies = ["build-feature"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true

@@ -106,22 +106,9 @@ export class RenamedStructWithAttrs {
         return new RenamedStructWithAttrs(diplomatRuntime.exposeConstructor, structObj);
     }
 #defaultConstructor(a, b) {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-        
-        const result = wasm.namespace_StructWithAttrs_new(diplomatReceive.buffer, a, b);
-    
-        try {
-            return RenamedStructWithAttrs._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-        }
-        
-        finally {
-            diplomatReceive.free();
-        }
-    }
-#defaultConstructor(a) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
-        const result = wasm.namespace_StructWithAttrs_new_fallible(diplomatReceive.buffer, a);
+        const result = wasm.namespace_StructWithAttrs_new_fallible(diplomatReceive.buffer, a, b);
     
         try {
             if (!diplomatReceive.resultFlag) {
@@ -148,7 +135,7 @@ get c() {
         }
     }
 
-    constructor(a) {
+    constructor(a, b) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
         } else if (arguments[0] === diplomatRuntime.internalConstructor) {

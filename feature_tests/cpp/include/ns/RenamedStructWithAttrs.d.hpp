@@ -32,9 +32,7 @@ struct RenamedStructWithAttrs {
   bool a;
   uint32_t b;
 
-  inline static ns::RenamedStructWithAttrs new_(bool a, uint32_t b);
-
-  inline static diplomat::result<ns::RenamedStructWithAttrs, std::monostate> new_fallible(uint8_t _a);
+  inline static diplomat::result<ns::RenamedStructWithAttrs, std::monostate> new_fallible(bool a, uint32_t b);
 
   inline uint32_t c() const;
 

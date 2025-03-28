@@ -35,12 +35,7 @@ final class RenamedStructWithAttrs {
   }
 
   factory RenamedStructWithAttrs(bool a, int b) {
-    final result = _namespace_StructWithAttrs_new(a, b);
-    return RenamedStructWithAttrs._fromFfi(result);
-  }
-
-  factory RenamedStructWithAttrs(int a) {
-    final result = _namespace_StructWithAttrs_new_fallible(a);
+    final result = _namespace_StructWithAttrs_new_fallible(a, b);
     if (!result.isOk) {
       return null;
     }
@@ -66,15 +61,10 @@ final class RenamedStructWithAttrs {
       ]);
 }
 
-@_DiplomatFfiUse('namespace_StructWithAttrs_new')
-@ffi.Native<_RenamedStructWithAttrsFfi Function(ffi.Bool, ffi.Uint32)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_new')
-// ignore: non_constant_identifier_names
-external _RenamedStructWithAttrsFfi _namespace_StructWithAttrs_new(bool a, int b);
-
 @_DiplomatFfiUse('namespace_StructWithAttrs_new_fallible')
-@ffi.Native<_ResultRenamedStructWithAttrsFfiVoid Function(ffi.Uint8)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_new_fallible')
+@ffi.Native<_ResultRenamedStructWithAttrsFfiVoid Function(ffi.Bool, ffi.Uint32)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_new_fallible')
 // ignore: non_constant_identifier_names
-external _ResultRenamedStructWithAttrsFfiVoid _namespace_StructWithAttrs_new_fallible(int a);
+external _ResultRenamedStructWithAttrsFfiVoid _namespace_StructWithAttrs_new_fallible(bool a, int b);
 
 @_DiplomatFfiUse('namespace_StructWithAttrs_c')
 @ffi.Native<ffi.Uint32 Function(_StructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')

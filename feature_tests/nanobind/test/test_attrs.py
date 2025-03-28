@@ -25,7 +25,7 @@ def test_attrs():
 
     threw = False
     try:
-        s = somelib.RenamedStructWithAttrs(2)
+        s = somelib.RenamedStructWithAttrs(False, 2)
     except Exception:
         threw = True
     assert threw, "Failing constructor should have thrown an error"

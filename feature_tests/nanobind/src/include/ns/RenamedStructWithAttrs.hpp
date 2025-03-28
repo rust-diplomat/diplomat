@@ -17,10 +17,8 @@ namespace ns {
 namespace capi {
     extern "C" {
     
-    ns::capi::RenamedStructWithAttrs namespace_StructWithAttrs_new(bool a, uint32_t b);
-    
     typedef struct namespace_StructWithAttrs_new_fallible_result {union {ns::capi::RenamedStructWithAttrs ok; }; bool is_ok;} namespace_StructWithAttrs_new_fallible_result;
-    namespace_StructWithAttrs_new_fallible_result namespace_StructWithAttrs_new_fallible(uint8_t _a);
+    namespace_StructWithAttrs_new_fallible_result namespace_StructWithAttrs_new_fallible(bool a, uint32_t b);
     
     uint32_t namespace_StructWithAttrs_c(ns::capi::RenamedStructWithAttrs self);
     
@@ -29,14 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline ns::RenamedStructWithAttrs ns::RenamedStructWithAttrs::new_(bool a, uint32_t b) {
-  auto result = ns::capi::namespace_StructWithAttrs_new(a,
+inline diplomat::result<ns::RenamedStructWithAttrs, std::monostate> ns::RenamedStructWithAttrs::new_fallible(bool a, uint32_t b) {
+  auto result = ns::capi::namespace_StructWithAttrs_new_fallible(a,
     b);
-  return ns::RenamedStructWithAttrs::FromFFI(result);
-}
-
-inline diplomat::result<ns::RenamedStructWithAttrs, std::monostate> ns::RenamedStructWithAttrs::new_fallible(uint8_t _a) {
-  auto result = ns::capi::namespace_StructWithAttrs_new_fallible(_a);
   return result.is_ok ? diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Ok<ns::RenamedStructWithAttrs>(ns::RenamedStructWithAttrs::FromFFI(result.ok))) : diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Err<std::monostate>());
 }
 

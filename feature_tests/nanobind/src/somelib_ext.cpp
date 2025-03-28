@@ -298,13 +298,12 @@ NB_MODULE(somelib, somelib_mod)
         .def_rw("a", &ns::RenamedStructWithAttrs::a)
         .def_rw("b", &ns::RenamedStructWithAttrs::b)
     	.def_prop_ro("c", &ns::RenamedStructWithAttrs::c)
-    	.def("__init__", [](ns::RenamedStructWithAttrs* self, bool a, uint32_t b){ *self = ns::RenamedStructWithAttrs::new_(a, b); }, "a"_a, "b"_a)
-    	.def("__init__", [](ns::RenamedStructWithAttrs* self, uint8_t _a){ auto tmp = ns::RenamedStructWithAttrs::new_fallible(_a);
+    	.def("__init__", [](ns::RenamedStructWithAttrs* self, bool a, uint32_t b){ auto tmp = ns::RenamedStructWithAttrs::new_fallible(a, b);
     				if(tmp.is_ok()) {
     					*self = std::move(tmp).ok().value();
     				} else {
     					nb::cast(tmp); // This will raise a python error with the contents of the error type
-    				}}, "_a"_a);
+    				}}, "a"_a, "b"_a);
     
     nb::class_<CallbackTestingStruct>(somelib_mod, "CallbackTestingStruct")
         .def(nb::init<>())

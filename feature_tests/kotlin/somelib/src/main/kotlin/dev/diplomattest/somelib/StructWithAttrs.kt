@@ -7,8 +7,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface StructWithAttrsLib: Library {
-    fun namespace_StructWithAttrs_new(a: Boolean, b: FFIUint32): StructWithAttrsNative
-    fun namespace_StructWithAttrs_new_fallible(a: FFIUint8): ResultStructWithAttrsNativeUnit
+    fun namespace_StructWithAttrs_new_fallible(a: Boolean, b: FFIUint32): ResultStructWithAttrsNativeUnit
     fun namespace_StructWithAttrs_c(nativeStruct: StructWithAttrsNative): FFIUint32
 }
 
@@ -34,17 +33,9 @@ class StructWithAttrs internal constructor (
         internal val lib: StructWithAttrsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithAttrsNative::class.java).toLong()
         
-        fun new_(a: Boolean, b: UInt): StructWithAttrs {
+        fun newFallible(a: Boolean, b: UInt): Result<StructWithAttrs> {
             
-            val returnVal = lib.namespace_StructWithAttrs_new(a, FFIUint32(b));
-            
-            val returnStruct = StructWithAttrs(returnVal)
-            return returnStruct
-        }
-        
-        fun newFallible(a: UByte): Result<StructWithAttrs> {
-            
-            val returnVal = lib.namespace_StructWithAttrs_new_fallible(FFIUint8(a));
+            val returnVal = lib.namespace_StructWithAttrs_new_fallible(a, FFIUint32(b));
             if (returnVal.isOk == 1.toByte()) {
                 
                 val returnStruct = StructWithAttrs(returnVal.union.ok)
