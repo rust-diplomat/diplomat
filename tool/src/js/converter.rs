@@ -680,7 +680,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                             panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
                         });
-                        format!("diplomatRuntime.optionToBufferForCalling({js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
                     }
                     JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
                         format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()

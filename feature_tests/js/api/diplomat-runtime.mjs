@@ -145,7 +145,7 @@ export function optionToArgsForCalling(jsValue, size, align, writeToArrayBufferC
     return args;
 }
 
-export function optionToBufferForCalling(jsValue, size, align, allocator, writeToArrayBufferCallback) {
+export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, writeToArrayBufferCallback) {
     let buf = DiplomatBuf.struct(wasm, size, align);
 
     
