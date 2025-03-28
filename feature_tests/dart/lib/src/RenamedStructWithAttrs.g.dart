@@ -34,7 +34,7 @@ final class RenamedStructWithAttrs {
     return struct;
   }
 
-  factory RenamedStructWithAttrs(bool a, int b) {
+  static RenamedStructWithAttrs? newFallible(bool a, int b) {
     final result = _namespace_StructWithAttrs_new_fallible(a, b);
     if (!result.isOk) {
       return null;
