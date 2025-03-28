@@ -34,12 +34,6 @@ final class RenamedStructWithAttrs {
     return struct;
   }
 
-  int get c {
-    final temp = _FinalizedArena();
-    final result = _namespace_StructWithAttrs_c(_toFfi(temp.arena));
-    return result;
-  }
-
   @override
   bool operator ==(Object other) =>
       other is RenamedStructWithAttrs &&
@@ -52,10 +46,5 @@ final class RenamedStructWithAttrs {
         b,
       ]);
 }
-
-@_DiplomatFfiUse('namespace_StructWithAttrs_c')
-@ffi.Native<ffi.Uint32 Function(_StructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')
-// ignore: non_constant_identifier_names
-external int _namespace_StructWithAttrs_c(_StructWithAttrsFfi self);
 
 // dart format on
