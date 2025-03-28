@@ -20,9 +20,10 @@ final class FixedDecimalFormatterOptions {
   // This method does not attempt to handle any dependencies between lifetimes, the caller
   // should handle this when constructing edge arrays.
   // ignore: unused_element
-  FixedDecimalFormatterOptions._fromFfi(_FixedDecimalFormatterOptionsFfi ffi) :
-    groupingStrategy = FixedDecimalGroupingStrategy.values[ffi.groupingStrategy],
-    someOtherConfig = ffi.someOtherConfig;
+  FixedDecimalFormatterOptions._fromFfi(_FixedDecimalFormatterOptionsFfi ffi)
+      : groupingStrategy =
+            FixedDecimalGroupingStrategy.values[ffi.groupingStrategy],
+        someOtherConfig = ffi.someOtherConfig;
 
   // ignore: unused_element
   _FixedDecimalFormatterOptionsFfi _toFfi(ffi.Allocator temp) {
@@ -32,7 +33,8 @@ final class FixedDecimalFormatterOptions {
     return struct;
   }
 
-  factory FixedDecimalFormatterOptions({FixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {
+  factory FixedDecimalFormatterOptions(
+      {FixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {
     final result = _icu4x_FixedDecimalFormatterOptions_default_mv1();
     final dart = FixedDecimalFormatterOptions._fromFfi(result);
     if (groupingStrategy != null) {
@@ -58,8 +60,10 @@ final class FixedDecimalFormatterOptions {
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatterOptions_default_mv1')
-@ffi.Native<_FixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatterOptions_default_mv1')
+@ffi.Native<_FixedDecimalFormatterOptionsFfi Function()>(
+    isLeaf: true, symbol: 'icu4x_FixedDecimalFormatterOptions_default_mv1')
 // ignore: non_constant_identifier_names
-external _FixedDecimalFormatterOptionsFfi _icu4x_FixedDecimalFormatterOptions_default_mv1();
+external _FixedDecimalFormatterOptionsFfi
+    _icu4x_FixedDecimalFormatterOptions_default_mv1();
 
 // dart format on
