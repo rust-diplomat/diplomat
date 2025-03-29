@@ -282,7 +282,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             format!("diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['{lt_name}AppendArray'])")
                         )
                     } else {
-                        None
+                        // If there is no lifetime, this is owned, so we can clean up this field as soon as we're done passing the struct into WASM.
+                        Some("functionCleanupArena".into())
                     }
                 },
                 hir::Type::Struct(..) => Some("functionCleanupArena".into()),
