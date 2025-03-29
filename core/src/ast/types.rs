@@ -898,11 +898,11 @@ impl TypeName {
                     || is_runtime_type(p, "DiplomatSliceMut")
                     || is_runtime_type(p, "DiplomatOwnedSlice")
                 {
-                    let ltmut = if is_runtime_type(p, "DiplomatOwnedSlice") {
-                        let mutability = if is_runtime_type(p, "DiplomatSlice") {
-                            Mutability::Immutable
-                        } else {
+                    let ltmut = if is_runtime_type(p, "DiplomatSlice") {
+                        let mutability = if is_runtime_type(p, "DiplomatOwnedSlice") {
                             Mutability::Mutable
+                        } else {
+                            Mutability::Immutable
                         };
                         let lt = get_lifetime_from_syn_path(p);
                         Some((lt, mutability))
