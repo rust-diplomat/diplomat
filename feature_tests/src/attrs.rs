@@ -85,16 +85,12 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    pub struct MyIterable(Vec<u8>);
-
-    #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
-
-    #[diplomat::opaque]
     #[diplomat::attr(not(supports = indexing), disable)]
     pub struct MyIndexer(Vec<String>);
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterable(Vec<u8>);
 
     impl MyIterable {
         #[diplomat::attr(auto, constructor)]
@@ -105,8 +101,16 @@ pub mod ffi {
         pub fn iter<'a>(&'a self) -> Box<MyIterator<'a>> {
             Box::new(MyIterator(self.0.iter()))
         }
+        #[diplomat::attr(nanobind, rename = "__len__")]
+        #[diplomat::attr(not(nanobind), disable)]
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
     }
 
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
     impl<'a> MyIterator<'a> {
         #[diplomat::attr(auto, iterator)]
         pub fn next(&mut self) -> Option<u8> {
@@ -125,10 +129,6 @@ pub mod ffi {
     #[diplomat::attr(not(supports = iterators), disable)]
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
-    #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
-    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
-
     impl OpaqueIterable {
         #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
@@ -136,6 +136,9 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
     impl<'a> OpaqueIterator<'a> {
         #[diplomat::attr(auto, iterator)]
         pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {
@@ -174,24 +177,24 @@ pub mod ffi {
         #[diplomat::attr(auto, sub)]
         pub fn sub(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x - o.x,
+                y: self.y - o.y,
             })
         }
 
         #[diplomat::attr(auto, mul)]
         pub fn mul(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x * o.x,
+                y: self.y * o.y,
             })
         }
 
         #[diplomat::attr(auto, div)]
         pub fn div(&self, o: &Self) -> Box<Self> {
             Box::new(Self {
-                x: self.x + o.x,
-                y: self.y + o.y,
+                x: self.x / o.x,
+                y: self.y / o.y,
             })
         }
 
@@ -217,6 +220,31 @@ pub mod ffi {
         pub fn divassign(&mut self, o: &Self) {
             self.x /= o.x;
             self.y /= o.y;
+        }
+    }
+
+    pub struct StructWithAttrs {
+        a: bool,
+        b: u32,
+    }
+
+    impl StructWithAttrs {
+        // Dart backend does not support failable constructors on struct types
+        #[diplomat::attr(dart, disable)]
+        #[diplomat::attr(supports = fallible_constructors, constructor)]
+        pub fn new_fallible(a: bool, b: u32) -> Result<StructWithAttrs, ()> {
+            if a {
+                Ok(Self { a, b })
+            } else {
+                Err(())
+            }
+        }
+
+        // Dart backend does not support getters on structs
+        #[diplomat::attr(dart, disable)]
+        #[diplomat::attr(auto, getter)]
+        pub fn c(self) -> u32 {
+            5
         }
     }
 }

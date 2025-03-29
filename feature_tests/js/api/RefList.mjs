@@ -39,8 +39,7 @@ export class RefList {
     get ffiValue() {
         return this.#ptr;
     }
-
-    static node(data) {
+static node(data) {
         // This lifetime edge depends on lifetimes 'b
         let bEdges = [data];
         

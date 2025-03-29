@@ -4,8 +4,9 @@ import type { ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
-/** Testing JS-specific layout/padding behavior
-*/
+/** 
+ * Testing JS-specific layout/padding behavior
+ */
 type BigStructWithStuff_obj = {
     first: number;
     second: number;
@@ -38,8 +39,7 @@ export class BigStructWithStuff {
     */
     static fromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
 
-
-    assertValue(extraVal: number): void;
+assertValue(extraVal: number): void;
 
     constructor(structObj : BigStructWithStuff_obj);
 }

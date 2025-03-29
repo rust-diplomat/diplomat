@@ -1,9 +1,9 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+    self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::LazyLock};
 
 /// This type mediates all formatting
 ///
@@ -17,13 +17,22 @@ use std::borrow::Cow;
 pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     is_for_cpp: bool,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 pub(crate) const CAPI_NAMESPACE: &str = "capi";
 
 impl<'tcx> CFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, is_for_cpp: bool) -> Self {
-        Self { tcx, is_for_cpp }
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        is_for_cpp: bool,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
+        Self {
+            tcx,
+            is_for_cpp,
+            docs_url_gen,
+        }
     }
     pub fn tcx(&self) -> &'tcx TypeContext {
         self.tcx
@@ -266,14 +275,23 @@ impl<'tcx> CFormatter<'tcx> {
         )
     }
 
+    pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
+        docs.to_markdown(self.docs_url_gen)
+            .trim()
+            .replace('\n', "\n * ")
+            .replace(" \n", "\n")
+    }
+
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
-        // TODO: Replace with LazyLock when MSRV is bumped to >= 1.80.0
-        static C_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
-            once_cell::sync::Lazy::new(|| [].into());
+        static C_KEYWORDS: LazyLock<std::collections::HashSet<&str>> =
+            LazyLock::new(|| ["const", "break", "switch"].into());
 
-        static CPP_KEYWORDS: once_cell::sync::Lazy<std::collections::HashSet<&str>> =
-            once_cell::sync::Lazy::new(|| ["new", "default", "delete"].into());
+        static CPP_KEYWORDS: LazyLock<std::collections::HashSet<&str>> = LazyLock::new(|| {
+            let mut v = C_KEYWORDS.clone();
+            v.extend(["new", "default", "delete"].iter());
+            v
+        });
 
         let lang_keywords = {
             if self.is_for_cpp {

@@ -3,9 +3,10 @@ mod header;
 mod ty;
 
 use crate::{ErrorStore, FileMap};
-use diplomat_core::hir::{self, BackendAttrSupport};
-use formatter::Cpp2Formatter;
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use ty::TyGenContext;
+
+pub(crate) use formatter::Cpp2Formatter;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
@@ -24,8 +25,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.accessors = false;
     a.comparators = false; // TODO
     a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
+    a.iterators = true;
+    a.iterables = true;
     a.indexing = true;
     a.arithmetic = true;
     a.option = true;
@@ -38,9 +39,12 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+pub(crate) fn run<'tcx>(
+    tcx: &'tcx hir::TypeContext,
+    docs_url_gen: &'tcx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = Cpp2Formatter::new(tcx);
+    let formatter = Cpp2Formatter::new(tcx, docs_url_gen);
     let errors = ErrorStore::default();
 
     #[derive(askama::Template)]
@@ -139,7 +143,8 @@ mod test {
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
-            let formatter = Cpp2Formatter::new(&tcx);
+            let docs_gen = Default::default();
+            let formatter = Cpp2Formatter::new(&tcx, &docs_gen);
             let mut decl_header = header::Header::new("decl_thing".into());
             let mut impl_header = header::Header::new("impl_thing".into());
 

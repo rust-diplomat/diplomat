@@ -459,7 +459,10 @@ impl Attrs {
                         match method.output {
                             ReturnType::Infallible(_) => (),
                             ReturnType::Fallible(..) => {
-                                if !validator.attrs_supported().fallible_constructors {
+                                // Only report an error if constructors *are* supported but failable constructors *arent*
+                                if validator.attrs_supported().constructors
+                                    && !validator.attrs_supported().fallible_constructors
+                                {
                                     errors.push(LoweringError::Other(
                                         "This backend doesn't support fallible constructors"
                                             .to_string(),
@@ -673,17 +676,34 @@ impl Attrs {
                                 .push(LoweringError::Other(format!("{name} must return a value")));
                         }
                     }
-                    SpecialMethod::AddAssign => {
-                        check_param_count("AddAssign", 1, errors);
-                    }
-                    SpecialMethod::SubAssign => {
-                        check_param_count("SubAssign", 1, errors);
-                    }
-                    SpecialMethod::MulAssign => {
-                        check_param_count("MulAssign", 1, errors);
-                    }
-                    SpecialMethod::DivAssign => {
-                        check_param_count("DivAssign", 1, errors);
+                    e @ (SpecialMethod::AddAssign
+                    | SpecialMethod::SubAssign
+                    | SpecialMethod::MulAssign
+                    | SpecialMethod::DivAssign) => {
+                        let name = match e {
+                            SpecialMethod::AddAssign => "AddAssign",
+                            SpecialMethod::SubAssign => "SubAssign",
+                            SpecialMethod::MulAssign => "MulAssign",
+                            SpecialMethod::DivAssign => "DivAssign",
+                            _ => unreachable!(),
+                        };
+                        check_param_count(name, 1, errors);
+                        check_self_param(name, true, errors);
+                        if let Some(self_param) = &method.param_self {
+                            if matches!(self_param.ty, SelfType::Struct(_) | SelfType::Enum(_)) {
+                                errors.push(LoweringError::Other("*Assign arithmetic operations not allowed on non-opaque types. \
+                                     Use the non-mutating arithmetic operators instead".to_string()));
+                            } else if self_param.ty.is_immutably_borrowed() {
+                                errors.push(LoweringError::Other(format!(
+                                    "{name} must take self by mutable reference"
+                                )));
+                            }
+                        }
+                        if !method.output.success_type().is_unit() {
+                            errors.push(LoweringError::Other(format!(
+                                "{name} must not return a value"
+                            )));
+                        }
                     }
                 }
             } else {

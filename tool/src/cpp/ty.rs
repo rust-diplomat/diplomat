@@ -50,6 +50,7 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
     c_to_cpp_return_expression: Option<Cow<'a, str>>,
+    docs: String,
 }
 
 /// Context for generating a particular type's header
@@ -94,6 +95,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -105,6 +107,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&ty.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -162,6 +165,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -173,6 +177,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&ty.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -250,6 +255,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            docs: &'a str,
         }
 
         DeclTemplate {
@@ -262,6 +268,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            docs: &self.formatter.fmt_docs(&def.docs),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -375,7 +382,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         };
 
         let post_qualifiers = match &method.param_self {
-            Some(param_self) if param_self.ty.is_immutably_borrowed() => vec!["const".into()],
+            Some(param_self)
+                if param_self.ty.is_immutably_borrowed() || param_self.ty.is_consuming() =>
+            {
+                vec!["const".into()]
+            }
             Some(_) => vec![],
             None => vec![],
         };
@@ -391,6 +402,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             param_validations,
             cpp_to_c_params,
             c_to_cpp_return_expression,
+            docs: self.formatter.fmt_docs(&method.docs),
         })
     }
 
@@ -586,7 +598,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
             Type::Callback(..) => {
-                format!("{{new decltype({cpp_name})({cpp_name}), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+                format!("{{new decltype({cpp_name})(std::move({cpp_name})), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -663,9 +675,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(ref op) if op.is_optional() => {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
-                    .into()
+                if op.is_owned() {
+                    // Note: The impl file is imported in gen_type_name().
+                    format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
+                        .into()
+                } else {
+                    format!("{type_name}::FromFFI({var_name})").into()
+                }
             }
             Type::Opaque(ref op) => {
                 let id = op.tcx_id.into();

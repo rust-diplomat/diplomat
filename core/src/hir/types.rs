@@ -166,10 +166,13 @@ impl SelfType {
     ///
     /// Curently this can only happen with opaque types.
     pub fn is_immutably_borrowed(&self) -> bool {
-        match self {
-            SelfType::Opaque(opaque_path) => opaque_path.owner.mutability == Mutability::Immutable,
-            _ => false,
-        }
+        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Immutable)
+    }
+    /// Returns whether the self parameter is consuming.
+    ///
+    /// Currently this can only (and must) only happen for non-opaque types.
+    pub fn is_consuming(&self) -> bool {
+        matches!(self, SelfType::Enum(_) | SelfType::Struct(_))
     }
 }
 

@@ -76,8 +76,7 @@ export class MyEnum {
     static D = MyEnum.#objectValues[1];
     static E = MyEnum.#objectValues[2];
     static F = MyEnum.#objectValues[3];
-
-    intoValue() {
+intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);
     
         try {
@@ -86,8 +85,7 @@ export class MyEnum {
         
         finally {}
     }
-
-    static getA() {
+static getA() {
         const result = wasm.MyEnum_get_a();
     
         try {

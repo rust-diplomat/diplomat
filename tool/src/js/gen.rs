@@ -498,6 +498,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             abi_name,
             method_output_is_ffi_unit: method.output.is_ffi_unit(),
             needs_cleanup: false,
+            doc_str: self.formatter.fmt_docs(&method.docs),
             ..Default::default()
         };
 
@@ -733,6 +734,8 @@ pub(super) struct MethodInfo<'info> {
     pub alloc_expressions: Vec<Cow<'info, str>>,
     /// Anything from [`MethodInfo::alloc_expressions`] we need to clean up afterwards.
     pub cleanup_expressions: Vec<Cow<'info, str>>,
+
+    doc_str: String,
 }
 
 /// See [`TyGenContext::generate_special_method`].

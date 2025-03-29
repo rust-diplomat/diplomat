@@ -377,6 +377,51 @@ pub mod ffi {
             w.write_char(*self.first.last().unwrap() as char).unwrap();
         }
     }
+    
+    #[diplomat::attr(not(supports = arithmetic), disable)]
+    struct StructArithmetic {
+        x: i32,
+        y: i32,
+    }
+
+    impl StructArithmetic {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(x: i32, y: i32) -> Self {
+            Self { x, y }
+        }
+
+        #[diplomat::attr(auto, add)]
+        pub fn add(self, o: Self) -> Self {
+            Self {
+                x: self.x + o.x,
+                y: self.y + o.y,
+            }
+        }
+
+        #[diplomat::attr(auto, sub)]
+        pub fn sub(self, o: Self) -> Self {
+            Self {
+                x: self.x - o.x,
+                y: self.y - o.y,
+            }
+        }
+
+        #[diplomat::attr(auto, mul)]
+        pub fn mul(self, o: Self) -> Self {
+            Self {
+                x: self.x * o.x,
+                y: self.y * o.y,
+            }
+        }
+
+        #[diplomat::attr(auto, div)]
+        pub fn div(self, o: Self) -> Self {
+            Self {
+                x: self.x / o.x,
+                y: self.y / o.y,
+            }
+        }
+    }
 }
 
 #[allow(unused)]

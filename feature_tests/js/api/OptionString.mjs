@@ -34,8 +34,7 @@ export class OptionString {
     get ffiValue() {
         return this.#ptr;
     }
-
-    static new_(diplomatStr) {
+static new_(diplomatStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const diplomatStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
@@ -50,8 +49,7 @@ export class OptionString {
             functionCleanupArena.free();
         }
     }
-
-    write() {
+write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
@@ -64,8 +62,7 @@ export class OptionString {
             write.free();
         }
     }
-
-    borrow() {
+borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         // This lifetime edge depends on lifetimes 'a

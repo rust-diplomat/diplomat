@@ -291,7 +291,7 @@ impl From<&syn::TypePath> for PathType {
                             .iter()
                             .map(|generic_arg| match generic_arg {
                                 syn::GenericArgument::Lifetime(lifetime) => lifetime.into(),
-                                _ => panic!("generic type arguments are unsupported {other:?}"),
+                                _ => panic!("generic type arguments are unsupported (type: {other:?}, arg: {generic_arg:?})"),
                             })
                             .collect(),
                     )

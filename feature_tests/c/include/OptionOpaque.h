@@ -41,6 +41,10 @@ OptionStruct OptionOpaque_new_struct(void);
 
 OptionStruct OptionOpaque_new_struct_nones(void);
 
+const OptionOpaque* OptionOpaque_returns_none_self(const OptionOpaque* self);
+
+const OptionOpaque* OptionOpaque_returns_some_self(const OptionOpaque* self);
+
 void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
