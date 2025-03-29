@@ -62,7 +62,13 @@ export class RenamedStructWithAttrs {
         appendArrayMap,
         forcePadding
     ) {
-        return [this.#a, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#b]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -124,7 +130,7 @@ export class RenamedStructWithAttrs {
 get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.namespace_StructWithAttrs_c(...this._intoFFI());
+        const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false));
     
         try {
             return result;

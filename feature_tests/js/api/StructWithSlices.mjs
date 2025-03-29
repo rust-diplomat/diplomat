@@ -61,7 +61,7 @@ export class StructWithSlices {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 12, 4);
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
@@ -89,7 +89,7 @@ export class StructWithSlices {
         appendArrayMap
     ) {
         diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#second, Int32Array);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {
@@ -99,8 +99,8 @@ export class StructWithSlices {
         let structObj = {};
         const firstDeref = ptr;
         structObj.first = new diplomatRuntime.DiplomatSliceStr(wasm, firstDeref,  "string8", aEdges).getValue();
-        const secondDeref = (new Int32Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        structObj.second = secondDeref;
+        const secondDeref = ptr + 8;
+        structObj.second = Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, secondDeref, "u16", aEdges).getValue());
 
         return new StructWithSlices(structObj);
     }
@@ -111,10 +111,9 @@ export class StructWithSlices {
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeA() { 
-        return [first];
+        return [first, second];
     };
-
-    returnLast() {
+returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
