@@ -899,7 +899,9 @@ impl TypeName {
                     || is_runtime_type(p, "DiplomatOwnedSlice")
                 {
                     let lt = get_lifetime_from_syn_path(p);
-                    let ltmut = if is_runtime_type(p, "DiplomatSliceMut") || is_runtime_type(p, "DiplomatOwnedSlice") {
+                    let ltmut = if is_runtime_type(p, "DiplomatSliceMut")
+                        || is_runtime_type(p, "DiplomatOwnedSlice")
+                    {
                         Some((lt, Mutability::Mutable))
                     } else {
                         Some((lt, Mutability::Immutable))
@@ -1678,7 +1680,7 @@ mod tests {
             },
             None
         ));
-        
+
         insta::assert_yaml_snapshot!(TypeName::from_syn(
             &syn::parse_quote! {
                 DiplomatSliceMut<'a, f32>
