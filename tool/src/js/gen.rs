@@ -575,7 +575,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 // We add the pointer and size for slices:
                 method_info
                     .param_conversions
-                    .push(format!("...{}Slice.splat()", param_info.name).into());
+                    .push(format!("{}Slice.ptr", param_info.name).into());
+                    // .push(format!("...{}Slice.splat()", param_info.name).into());
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
