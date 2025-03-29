@@ -695,14 +695,22 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         "Must provide some allocation anchor for slice conversion generation!",
                     );
 
+                    let mut alloc_stmnt = format!("{alloc}.alloc(");
+
+                    // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
+                    if matches!(gen_context, JsToCConversionContext::List(..) | JsToCConversionContext::SlicePrealloc) {
+                        alloc_stmnt = "".into();
+                    }
+
                     let (spread_pre, spread_post) = match gen_context {
                         // SlicePreAlloc just wants the DiplomatBufe
-                        JsToCConversionContext::SlicePrealloc => ("", Cow::Borrowed("")),
+                        JsToCConversionContext::SlicePrealloc => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")")),
                         // List mode wants a list of (ptr, len)
-                        JsToCConversionContext::List(_) => ("...", ".splat()".into()),
+                        // JsToCConversionContext::List(_) => ("...", ".splat()".into()),
+                        JsToCConversionContext::List(..) => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), ")".into()),
                         // WriteToBuffer needs to write to buffer arrayBuffer
                         JsToCConversionContext::WriteToBuffer(offset_var, offset) => (
-                            "",
+                            "".into(),
                             format!(
                                 ".writePtrLenToArrayBuffer(arrayBuffer, {offset_var} + {offset})"
                             )
@@ -714,21 +722,21 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         hir::Slice::Str(_, encoding) => match encoding {
                             hir::StringEncoding::UnvalidatedUtf8
                             | hir::StringEncoding::Utf8 => {
-                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
+                                format!("{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
                             }
                             _ => {
-                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
+                                format!("{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
                             }
                         },
                         hir::Slice::Strs(encoding) => format!(
-                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
+                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
                             match encoding {
                                 hir::StringEncoding::UnvalidatedUtf16 => "string16",
                                 _ => "string8",
                             }
                         ),
                         hir::Slice::Primitive(_, p) => format!(
-                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
+                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
                             self.formatter.fmt_primitive_list_view(p)
                         ),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),

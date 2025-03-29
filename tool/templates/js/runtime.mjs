@@ -232,6 +232,18 @@ export class DiplomatBuf {
     return new DiplomatBuf(ptr, string.length, () => wasm.diplomat_free(ptr, byteLength, 2));
     }
 
+    static sliceWrapper = (wasm, buf) => {
+        const ptr = wasm.diplomat_alloc(8, 4);
+        let dst = new Uint32Array(wasm.memory.buffer, ptr, 2);
+
+        dst[0] = buf.ptr;
+        dst[1] = buf.size;
+        return new DiplomatBuf(ptr, 8, () => {
+            wasm.diplomat_free(ptr, 8, 4);
+            buf.free();
+        });
+    }
+
     static slice = (wasm, list, rustType) => {
     const elementSize = rustType === "u8" || rustType === "i8" || rustType === "boolean" ? 1 :
         rustType === "u16" || rustType === "i16" ? 2 :
