@@ -63,7 +63,13 @@ export class FixedDecimalFormatterOptions {
         appendArrayMap,
         forcePadding
     ) {
-        return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
