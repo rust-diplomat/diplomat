@@ -30,6 +30,8 @@ export { MyZst } from "./MyZst.mjs"
 
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding.mjs"
 
+export { StructWithSlices } from "./StructWithSlices.mjs"
+
 export { OptionStruct } from "./OptionStruct.mjs"
 
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
