@@ -1662,5 +1662,25 @@ mod tests {
             },
             None
         ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSlice<'a, u16>
+            },
+            None
+        ));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatOwnedSlice<'a, i8>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSliceStr<'a>
+            },
+            None
+        ));
     }
 }
