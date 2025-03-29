@@ -706,8 +706,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         // SlicePreAlloc just wants the DiplomatBufe
                         JsToCConversionContext::SlicePrealloc => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")")),
                         // List mode wants a list of (ptr, len)
-                        // JsToCConversionContext::List(_) => ("...", ".splat()".into()),
-                        JsToCConversionContext::List(..) => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), ")".into()),
+                        // NOTE: This is only possible in the old WASM ABI, as _intoFFI requires this splatting:
+                        JsToCConversionContext::List(_) => ("...".into(), ".splat()".into()),
                         // WriteToBuffer needs to write to buffer arrayBuffer
                         JsToCConversionContext::WriteToBuffer(offset_var, offset) => (
                             "".into(),
