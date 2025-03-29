@@ -11,7 +11,8 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, Type, TypeContext, TypeId
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SelfType, SpecialMethod, SpecialMethodPresence,
+    StructPathLike, Type, TypeContext, TypeId,
 };
 
 use askama::{self, Template};
@@ -415,7 +416,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         is_out: bool,
         needs_force_padding: bool,
-        layout : Layout
+        layout: Layout,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -440,8 +441,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             /// Useful for hiding the fact that an out_struct has a constructor in typescript headers, for instance.
             show_default_ctor: bool,
 
-            size : usize,
-            align : usize
+            size: usize,
+            align: usize,
         }
 
         ImplTemplate {
@@ -468,7 +469,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             show_default_ctor: !is_out || !typescript,
 
             size: layout.size(),
-            align: layout.align()
+            align: layout.align(),
         }
         .render()
         .unwrap()
@@ -515,7 +516,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             } else {
                 None
             };
-            
+
             // If we're the struct, we always expect to generate functionCleanupArena to generate slices.
             // It's easier to do it this way, so we don't have to check if each individual `_intoFFI` call requires this parameter or not.
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
@@ -526,7 +527,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             method_info
                 .param_conversions // Pretty sure we don't need to force padding because we're just passing in a pointer:
                 // FIXME: This is definitely different for the old WASM ABI.
-                .push(self.gen_js_to_c_self(JsToCConversionContext::List(ForcePaddingStatus::NoForce), struct_borrow.as_ref(), &param_self.ty));
+                .push(self.gen_js_to_c_self(
+                    JsToCConversionContext::List(ForcePaddingStatus::NoForce),
+                    struct_borrow.as_ref(),
+                    &param_self.ty,
+                ));
         }
 
         for param in method.params.iter() {
@@ -588,7 +593,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 method_info
                     .param_conversions
                     .push(format!("{}Slice.ptr", param_info.name).into());
-                    // .push(format!("...{}Slice.splat()", param_info.name).into());
+                // .push(format!("...{}Slice.splat()", param_info.name).into());
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
@@ -596,7 +601,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 });
             } else {
                 // Set allocators for all the types we know require allocation (basically anything that's a struct in the underlying Rust):
-                let alloc = if matches!(param.ty, hir::Type::DiplomatOption(..) | hir::Type::Struct(..)) {
+                let alloc = if matches!(
+                    param.ty,
+                    hir::Type::DiplomatOption(..) | hir::Type::Struct(..)
+                ) {
                     method_info.needs_cleanup = true;
                     Some("functionCleanupArena")
                 } else {
