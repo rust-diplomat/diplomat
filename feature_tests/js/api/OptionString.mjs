@@ -38,9 +38,9 @@ export class OptionString {
     static new_(diplomatStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const diplomatStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr));
+        const diplomatStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
         
-        const result = wasm.OptionString_new(...diplomatStrSlice.splat());
+        const result = wasm.OptionString_new(diplomatStrSlice.ptr);
     
         try {
             return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);

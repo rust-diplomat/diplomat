@@ -158,13 +158,13 @@ export class NestedBorrowedFields {
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
+        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)));
         
-        const dstr16ZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z));
+        const dstr16ZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z)));
         
-        const utf8StrYSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY));
+        const utf8StrYSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY)));
         
-        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
+        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
         
@@ -177,7 +177,7 @@ export class NestedBorrowedFields {
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
         
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, ...dstr16XSlice.splat(), ...dstr16ZSlice.splat(), ...utf8StrYSlice.splat(), ...utf8StrZSlice.splat());
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16ZSlice.ptr, utf8StrYSlice.ptr, utf8StrZSlice.ptr);
     
         try {
             return NestedBorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);

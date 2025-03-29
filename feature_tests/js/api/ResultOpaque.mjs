@@ -182,12 +182,12 @@ export class ResultOpaque {
     takesStr(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
-        const result = wasm.ResultOpaque_takes_str(this.ffiValue, ...vSlice.splat());
+        const result = wasm.ResultOpaque_takes_str(this.ffiValue, vSlice.ptr);
     
         try {
             return new ResultOpaque(diplomatRuntime.internalConstructor, result, aEdges);

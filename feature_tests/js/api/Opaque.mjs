@@ -50,9 +50,9 @@ export class Opaque {
     static tryFromUtf8(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input));
+        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
         
-        const result = wasm.Opaque_try_from_utf8(...inputSlice.splat());
+        const result = wasm.Opaque_try_from_utf8(inputSlice.ptr);
     
         try {
             return result === 0 ? null : new Opaque(diplomatRuntime.internalConstructor, result, []);
@@ -66,9 +66,9 @@ export class Opaque {
     static fromStr(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, input));
+        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
         
-        const result = wasm.Opaque_from_str(...inputSlice.splat());
+        const result = wasm.Opaque_from_str(inputSlice.ptr);
     
         try {
             return new Opaque(diplomatRuntime.internalConstructor, result, []);
