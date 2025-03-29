@@ -106,12 +106,12 @@ mod ffi {
     }
     #[no_mangle]
     extern "C" fn Foo_make_runtime_types(
-        a: diplomat_runtime::DiplomatOwnedSlice<u8>,
-        b: diplomat_runtime::DiplomatOwnedSlice<u16>,
+        a: diplomat_runtime::DiplomatSlice<'a, u8>,
+        b: diplomat_runtime::DiplomatSlice<'a, u16>,
         c: diplomat_runtime::DiplomatUtf8StrSlice<'a>,
         d: diplomat_runtime::DiplomatStrSlice<'a>,
         e: diplomat_runtime::DiplomatStr16Slice<'a>,
-        f: diplomat_runtime::DiplomatOwnedSlice<DiplomatByte>,
+        f: diplomat_runtime::DiplomatSlice<'a, DiplomatByte>,
     ) -> Foo {
         Foo::make_runtime_types(a, b, c, d, e, f)
     }
@@ -134,12 +134,12 @@ mod ffi {
     }
     #[no_mangle]
     extern "C" fn Foo_boxes_runtime_types(
-        a: diplomat_runtime::DiplomatSliceMut<u8>,
-        b: diplomat_runtime::DiplomatSliceMut<u16>,
+        a: diplomat_runtime::DiplomatOwnedSlice<u8>,
+        b: diplomat_runtime::DiplomatOwnedSlice<u16>,
         c: diplomat_runtime::DiplomatOwnedUTF8StrSlice,
         d: diplomat_runtime::DiplomatOwnedStrSlice,
         e: diplomat_runtime::DiplomatOwnedStr16Slice,
-        f: diplomat_runtime::DiplomatSliceMut<DiplomatByte>,
+        f: diplomat_runtime::DiplomatOwnedSlice<DiplomatByte>,
     ) -> Foo {
         Foo::boxes_runtime_types(a, b, c, d, e, f)
     }

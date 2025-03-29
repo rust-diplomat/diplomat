@@ -899,15 +899,15 @@ impl TypeName {
                     || is_runtime_type(p, "DiplomatOwnedSlice")
                 {
                     let ltmut = if is_runtime_type(p, "DiplomatOwnedSlice") {
+                        None
+                    } else {
+                        let lt = get_lifetime_from_syn_path(p);
                         let mutability = if is_runtime_type(p, "DiplomatSlice") {
                             Mutability::Immutable
                         } else {
                             Mutability::Mutable
                         };
-                        let lt = get_lifetime_from_syn_path(p);
                         Some((lt, mutability))
-                    } else {
-                        None
                     };
 
                     let ty = get_ty_from_syn_path(p).expect("Expected type argument to DiplomatSlice/DiplomatSliceMut/DiplomatOwnedSlice");
@@ -1659,6 +1659,41 @@ mod tests {
         insta::assert_yaml_snapshot!(TypeName::from_syn(
             &syn::parse_quote! {
                 Result<OkRef<'a, 'b>, ErrRef<'c>>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSlice<'a, u16>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatOwnedSlice<i8>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSliceStr<'a>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSliceMut<'a, f32>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatSlice<i32>
             },
             None
         ));
