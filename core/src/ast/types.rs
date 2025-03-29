@@ -898,7 +898,7 @@ impl TypeName {
                     || is_runtime_type(p, "DiplomatSliceMut")
                     || is_runtime_type(p, "DiplomatOwnedSlice")
                 {
-                    let ltmut = if is_runtime_type(p, "DiplomatSlice") {
+                    let ltmut = if is_runtime_type(p, "DiplomatSlice") || is_runtime_type(p, "DiplomatOwnedSlice") {
                         let mutability = if is_runtime_type(p, "DiplomatOwnedSlice") {
                             Mutability::Mutable
                         } else {
