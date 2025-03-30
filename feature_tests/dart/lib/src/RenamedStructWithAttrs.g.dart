@@ -34,7 +34,7 @@ final class RenamedStructWithAttrs {
     return struct;
   }
 
-  int c() {
+  int get c {
     final temp = _FinalizedArena();
     final result = _namespace_StructWithAttrs_c(_toFfi(temp.arena));
     return result;
