@@ -834,7 +834,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 let id = s.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("_{type_name}Ffi").into()
-            },
+            }
             SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
