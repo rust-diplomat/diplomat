@@ -229,9 +229,8 @@ pub mod ffi {
     }
 
     impl StructWithAttrs {
-        // Dart backend does not support failable constructors on struct types
-        #[diplomat::attr(dart, disable)]
         #[diplomat::attr(supports = fallible_constructors, constructor)]
+        #[diplomat::attr(dart, disable)] // This has the same signature as the default dart ctor
         pub fn new_fallible(a: bool, b: u32) -> Result<StructWithAttrs, ()> {
             if a {
                 Ok(Self { a, b })
@@ -240,8 +239,6 @@ pub mod ffi {
             }
         }
 
-        // Dart backend does not support getters on structs
-        #[diplomat::attr(dart, disable)]
         #[diplomat::attr(auto, getter)]
         pub fn c(self) -> u32 {
             5
