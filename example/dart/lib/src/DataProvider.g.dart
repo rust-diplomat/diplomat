@@ -23,8 +23,7 @@ final class DataProvider implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(
-      ffi.Native.addressOf(_icu4x_DataProvider_destroy_mv1));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_DataProvider_destroy_mv1));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory DataProvider.static_() {
@@ -40,20 +39,17 @@ final class DataProvider implements ffi.Finalizable {
 }
 
 @_DiplomatFfiUse('icu4x_DataProvider_destroy_mv1')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    isLeaf: true, symbol: 'icu4x_DataProvider_destroy_mv1')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_DataProvider_destroy_mv1')
 // ignore: non_constant_identifier_names
 external void _icu4x_DataProvider_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @_DiplomatFfiUse('icu4x_DataProvider_new_static_mv1')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(
-    isLeaf: true, symbol: 'icu4x_DataProvider_new_static_mv1')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_new_static_mv1')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _icu4x_DataProvider_new_static_mv1();
 
 @_DiplomatFfiUse('icu4x_DataProvider_returns_result_mv1')
-@ffi.Native<_ResultVoidVoid Function()>(
-    isLeaf: true, symbol: 'icu4x_DataProvider_returns_result_mv1')
+@ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_returns_result_mv1')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _icu4x_DataProvider_returns_result_mv1();
 
