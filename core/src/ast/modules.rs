@@ -245,7 +245,8 @@ impl Module {
                             })
                             .filter(|m| {
                                 let is_public = matches!(m.vis, Visibility::Public(_));
-                                assert!(is_public || m.attrs.is_empty(), "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
+                                let has_diplomat_attrs = m.attrs.iter().any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
+                                assert!(is_public || !has_diplomat_attrs, "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
                                 is_public
                             })
                             .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
