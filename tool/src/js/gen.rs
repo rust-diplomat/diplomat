@@ -497,8 +497,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         };
 
         if let Some(param_self) = method.param_self.as_ref() {
-            visitor.visit_param(&param_self.ty.clone().into(), "this");
-            
             let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
 
             let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
