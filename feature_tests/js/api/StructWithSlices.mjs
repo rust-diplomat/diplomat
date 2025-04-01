@@ -111,7 +111,7 @@ returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.StructWithSlices_return_last(...this._intoFFI(), write.buffer);
+        wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
     
         try {
             return write.readString8();
