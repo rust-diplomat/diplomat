@@ -10,3 +10,6 @@
 	{%- else -%}
 	{%- endmatch -%}
 {%- endfor -%}
+{%- if let Some(lifetime_args) = m.lifetime_args -%} 
+	, {{lifetime_args}}
+{%- endif -%}

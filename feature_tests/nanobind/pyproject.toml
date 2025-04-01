@@ -23,3 +23,6 @@ build-dir = "build/{wheel_tag}"
 wheel.py-api = "cp312"
 
 cmake.build-type = "Debug"
+
+[tool.scikit-build.cmake.define]
+CMAKE_BUILD_PARALLEL_LEVEL = 4
