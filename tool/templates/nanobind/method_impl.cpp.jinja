@@ -20,7 +20,7 @@
 	{%- when crate::hir::SpecialMethod::Stringifier -%}
 		("__str__", &{{- type_name }}::{{ m.cpp_method_name -}})
 	{%- when crate::hir::SpecialMethod::Iterable -%}
-		("__iter__", &{{- type_name }}::{{ m.cpp_method_name -}})
+		("__iter__", &{{- type_name }}::{{ m.cpp_method_name -}}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
 	{%- when crate::hir::SpecialMethod::Iterator -%}
 		("__next__", []({{- type_name }}& self){
 			auto next = self.{{m.cpp_method_name}}();
@@ -28,13 +28,13 @@
 				throw nb::stop_iteration();
 			}
 			return next_inner_extractor<decltype(next)>::get(std::move(next));
-		})
+		}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
 		.def("__iter__", [](nb::handle self) { return self; })
 	{%- when crate::hir::SpecialMethod::Getter(_) -%}
 		("{{m.prop_name.as_ref().unwrap()}}", &{{type_name}}::{{m.cpp_method_name}}
 		{#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
 		{%- if let Some(setter_name) = m.setter_name -%}	
-		, &{{type_name}}::{{setter_name}}
+		, &{{type_name}}::{{setter_name}}{%- include "method_params.cpp.jinja" %}
 		{%- endif -%})
 	{%- when crate::hir::SpecialMethod::Constructor -%}
 		{%- if is_self_opaque -%}

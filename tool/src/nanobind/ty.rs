@@ -338,7 +338,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             0
         };
 
-        let lifetime_args = param_borrows
+        let mut lifetime_args = param_borrows
             .into_iter()
             .enumerate()
             .filter_map(|(i, p)| match p {
@@ -353,6 +353,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 _ => None,
             })
             .collect::<Vec<_>>();
+
+        if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
+        {
+            lifetime_args.push("nb::rv_policy::reference".to_owned());
+        }
 
         Some(MethodInfo {
             method,
