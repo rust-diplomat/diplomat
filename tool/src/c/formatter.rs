@@ -3,7 +3,8 @@
 use diplomat_core::hir::{
     self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
 };
-use std::{borrow::Cow, sync::LazyLock};
+use std::borrow::Cow;
+use std::sync::LazyLock;
 
 /// This type mediates all formatting
 ///
