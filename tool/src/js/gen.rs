@@ -479,7 +479,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             return None;
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, true);
 
         let _guard = self.errors.set_context_method(
             self.tcx.fmt_type_name_diagnostics(type_id),
