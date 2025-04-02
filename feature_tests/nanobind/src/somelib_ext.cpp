@@ -35,6 +35,9 @@
 #include "One.hpp"
 #include "Opaque.hpp"
 #include "OpaqueMutexedString.hpp"
+#include "OpaqueThin.hpp"
+#include "OpaqueThinIter.hpp"
+#include "OpaqueThinVec.hpp"
 #include "OptionEnum.hpp"
 #include "OptionInputStruct.hpp"
 #include "OptionOpaque.hpp"
@@ -474,7 +477,7 @@ NB_MODULE(somelib, somelib_mod)
     
     nb::class_<ns::RenamedMyIterable>(ns_mod, "RenamedMyIterable", nb::type_slots(ns_RenamedMyIterable_slots))
     	.def("__len__", &ns::RenamedMyIterable::__len__)
-    	.def("__iter__", &ns::RenamedMyIterable::iter)
+    	.def("__iter__", &ns::RenamedMyIterable::iter, nb::keep_alive<0, 1>())
     	.def(nb::new_(&ns::RenamedMyIterable::new_), "x"_a);
     
     PyType_Slot ns_RenamedMyIterator_slots[] = {
@@ -532,7 +535,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::RenamedOpaqueIterable>(ns_mod, "RenamedOpaqueIterable", nb::type_slots(ns_RenamedOpaqueIterable_slots))
-    	.def("__iter__", &ns::RenamedOpaqueIterable::iter);
+    	.def("__iter__", &ns::RenamedOpaqueIterable::iter, nb::keep_alive<0, 1>());
     
     PyType_Slot ns_RenamedOpaqueIterator_slots[] = {
         {Py_tp_free, (void *)ns::RenamedOpaqueIterator::operator delete },
@@ -599,6 +602,42 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("transitivity", &One::transitivity, "hold"_a, "nohold"_a, nb::keep_alive<0, 1>() ) // unsupported special method NamedConstructor(None)
     ;
     
+    PyType_Slot OpaqueThin_slots[] = {
+        {Py_tp_free, (void *)OpaqueThin::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<OpaqueThin>(somelib_mod, "OpaqueThin", nb::type_slots(OpaqueThin_slots))
+    	.def_prop_ro("a", &OpaqueThin::a)
+    	.def_prop_ro("b", &OpaqueThin::b);
+    
+    PyType_Slot OpaqueThinIter_slots[] = {
+        {Py_tp_free, (void *)OpaqueThinIter::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<OpaqueThinIter>(somelib_mod, "OpaqueThinIter", nb::type_slots(OpaqueThinIter_slots))
+    	.def("__next__", [](OpaqueThinIter& self){
+    			auto next = self.next();
+    			if (!next) {
+    				throw nb::stop_iteration();
+    			}
+    			return next_inner_extractor<decltype(next)>::get(std::move(next));
+    		}, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
+    		.def("__iter__", [](nb::handle self) { return self; });
+    
+    PyType_Slot OpaqueThinVec_slots[] = {
+        {Py_tp_free, (void *)OpaqueThinVec::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<OpaqueThinVec>(somelib_mod, "OpaqueThinVec", nb::type_slots(OpaqueThinVec_slots))
+    	.def("__len__", &OpaqueThinVec::__len__)
+    	.def(nb::new_(&OpaqueThinVec::create), "a"_a, "b"_a)
+    	.def_prop_ro("first", &OpaqueThinVec::first)
+    	.def("__getitem__", &OpaqueThinVec::operator[], "idx"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
+    	.def("__iter__", &OpaqueThinVec::iter, nb::keep_alive<0, 1>());
+    
     PyType_Slot Two_slots[] = {
         {Py_tp_free, (void *)Two::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
@@ -629,9 +668,9 @@ NB_MODULE(somelib, somelib_mod)
     	.def("option_u32", &OptionOpaque::option_u32)
     	.def("option_usize", &OptionOpaque::option_usize)
     	.def_static("returns", &OptionOpaque::returns)
-    	.def("returns_none_self", &OptionOpaque::returns_none_self, nb::keep_alive<0, 1>())
+    	.def("returns_none_self", &OptionOpaque::returns_none_self, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
     	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct)
-    	.def("returns_some_self", &OptionOpaque::returns_some_self, nb::keep_alive<0, 1>());
+    	.def("returns_some_self", &OptionOpaque::returns_some_self, nb::keep_alive<0, 1>(), nb::rv_policy::reference);
     
     PyType_Slot OptionOpaqueChar_slots[] = {
         {Py_tp_free, (void *)OptionOpaqueChar::operator delete },
@@ -666,7 +705,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("new_in_enum_err", &ResultOpaque::new_in_enum_err, "i"_a)
     	.def_static("new_in_err", &ResultOpaque::new_in_err, "i"_a)
     	.def_static("new_int", &ResultOpaque::new_int, "i"_a)
-    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a, nb::keep_alive<0, 1>());
+    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference);
     
     PyType_Slot RefList_slots[] = {
         {Py_tp_free, (void *)RefList::operator delete },
@@ -749,9 +788,9 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<OpaqueMutexedString>(somelib_mod, "OpaqueMutexedString", nb::type_slots(OpaqueMutexedString_slots))
-    	.def("borrow", &OpaqueMutexedString::borrow, nb::keep_alive<0, 1>())
-    	.def_static("borrow_other", &OpaqueMutexedString::borrow_other, "other"_a, nb::keep_alive<0, 1>())
-    	.def("borrow_self_or_other", &OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>())
+    	.def("borrow", &OpaqueMutexedString::borrow, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
+    	.def_static("borrow_other", &OpaqueMutexedString::borrow_other, "other"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
+    	.def("borrow_self_or_other", &OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::rv_policy::reference)
     	.def("change", &OpaqueMutexedString::change, "number"_a)
     	.def("dummy_str", &OpaqueMutexedString::dummy_str, nb::keep_alive<0, 1>())
     	.def_static("from_usize", &OpaqueMutexedString::from_usize, "number"_a)

@@ -10,3 +10,11 @@ def test_lifetimes():
     gc.collect()
 
     assert a.as_returning().bytes == "fananna"
+
+    it = somelib.OpaqueThinVec([1,2,3,4], [.1, .2, .3, .4])
+    for i, o in enumerate(it):
+        assert o.a == i+1, "Iteraton over thin vec didn't work"
+
+    a = it.first
+    it = None
+    assert a.a == 1 
