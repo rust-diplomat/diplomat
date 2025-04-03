@@ -39,11 +39,11 @@ export class OpaqueThinVec {
 #defaultConstructor(a, b) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const aSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32"));
+        const aSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32")));
         
-        const bSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32"));
+        const bSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32")));
         
-        const result = wasm.OpaqueThinVec_create(...aSlice.splat(), ...bSlice.splat());
+        const result = wasm.OpaqueThinVec_create(aSlice.ptr, bSlice.ptr);
     
         try {
             return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);

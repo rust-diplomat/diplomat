@@ -109,9 +109,9 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...xAppendArray],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],});
+        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],bAppendArray: [...appendArrayMap['yAppendArray']],cAppendArray: [...appendArrayMap['yAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...appendArrayMap['zAppendArray']],bAppendArray: [...appendArrayMap['zAppendArray']],cAppendArray: [...appendArrayMap['zAppendArray']],});
     }
 
     static _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
