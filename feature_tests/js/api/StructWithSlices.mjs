@@ -105,7 +105,7 @@ export class StructWithSlices {
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeA() { 
-        return [first, second];
+        return [this.#first, this.#second];
     };
 returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
