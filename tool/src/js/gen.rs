@@ -507,7 +507,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
 
-            // FIXME: Pretty sure no method that takes method(self) as a parameter counts this as "borrowing", but the way we use _writeToArrayBuffer requires some kind of appendArrayMap.
             let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
                 Some(super::converter::StructBorrowContext {
                     use_env: &method.lifetime_env,
