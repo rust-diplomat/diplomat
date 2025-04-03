@@ -3,6 +3,8 @@ import * as CyclicStructADemo from "./CyclicStructA.mjs";
 export * as CyclicStructADemo from "./CyclicStructA.mjs";
 import * as CyclicStructCDemo from "./CyclicStructC.mjs";
 export * as CyclicStructCDemo from "./CyclicStructC.mjs";
+import * as StructWithSlicesDemo from "./StructWithSlices.mjs";
+export * as StructWithSlicesDemo from "./StructWithSlices.mjs";
 import * as OptionStringDemo from "./OptionString.mjs";
 export * as OptionStringDemo from "./OptionString.mjs";
 import * as Float64VecDemo from "./Float64Vec.mjs";
@@ -80,6 +82,27 @@ let termini = Object.assign({
                 name: "CyclicStructC:A:A:Field",
                 type: "number",
                 typeUse: "number"
+            }
+            
+        ]
+    },
+
+    "StructWithSlices.returnLast": {
+        func: StructWithSlicesDemo.returnLast,
+        // For avoiding webpacking minifying issues:
+        funcName: "StructWithSlices.returnLast",
+        parameters: [
+            
+            {
+                name: "StructWithSlices:First",
+                type: "string",
+                typeUse: "string"
+            },
+            
+            {
+                name: "StructWithSlices:Second",
+                type: "Array<number>",
+                typeUse: "Array<number>"
             }
             
         ]
