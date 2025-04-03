@@ -787,7 +787,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     if info.is_method {
                         write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
                     } else {
-                        write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
+                        write!(
+                            &mut params,
+                            "{maybe_comma}...appendArrayMap['{lt}AppendArray']",
+                        )
+                        .unwrap();
                     }
                     maybe_comma = ", ";
                 }

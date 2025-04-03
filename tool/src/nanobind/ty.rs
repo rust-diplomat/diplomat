@@ -28,6 +28,9 @@ struct MethodInfo<'a> {
     setter_name: Option<Cow<'a, str>>,
     // In the *rare* event that they're required, the C++ names & types of the function params
     param_decls: Option<Vec<NamedType<'a>>>,
+    // The lifetime annotation required for the method, if any. May be keep_alive<...> or reference_internal
+    // Everything else is handled by the automatic behavior depending on return type.
+    lifetime_args: Option<Cow<'a, str>>,
 }
 
 /// Context for generating a particular type's impl
@@ -310,6 +313,52 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
         };
 
+        let mut visitor = method.borrowing_param_visitor(self.c2.tcx);
+
+        // Collect all the relevant borrowed params, with self in position 1 if present
+        let mut param_borrows = method
+            .param_self
+            .iter()
+            .map(|s| visitor.visit_param(&s.ty.clone().into(), "self"))
+            .collect::<Vec<_>>();
+        // Must be a separate call *after* collect to avoid double-borrowing visitor
+        param_borrows.extend(
+            method
+                .params
+                .iter()
+                .map(|p| visitor.visit_param(&p.ty, p.name.as_str())),
+        );
+
+        let self_number = if matches!(
+            method.attrs.special_method,
+            Some(hir::SpecialMethod::Constructor)
+        ) {
+            1 // per the docs, constructors don't have "returns", they act on "self"
+        } else {
+            0
+        };
+
+        let mut lifetime_args = param_borrows
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, p)| match p {
+                hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
+                | hir::borrowing_param::ParamBorrowInfo::Struct(_)
+                | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
+                    Some(format!(
+                        "nb::keep_alive<{self_number}, {}>()",
+                        i + 1 + self_number
+                    )) // Keep 0 (the return) alive until the element at P is returned
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
+        if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
+        {
+            lifetime_args.push("nb::rv_policy::reference".to_owned());
+        }
+
         Some(MethodInfo {
             method,
             method_name,
@@ -318,6 +367,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             setter_name,
             prop_name,
             param_decls,
+            lifetime_args: if lifetime_args.is_empty() {
+                None
+            } else {
+                Some(lifetime_args.join(", ").into())
+            },
         })
     }
 

@@ -36,6 +36,9 @@ part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
 part 'OpaqueMutexedString.g.dart';
+part 'OpaqueThin.g.dart';
+part 'OpaqueThinIter.g.dart';
+part 'OpaqueThinVec.g.dart';
 part 'OptionEnum.g.dart';
 part 'OptionInputStruct.g.dart';
 part 'OptionOpaque.g.dart';
@@ -680,6 +683,53 @@ extension on core.List<double> {
   }
 }
 
+final class _SliceFloat extends ffi.Struct {
+  external ffi.Pointer<ffi.Float> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceFloat || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  // ignore: unused_element
+  core.List<double> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
+    final r = _data.asTypedList(_length);
+    if (lifetimeEdges.isEmpty && !isStatic) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+extension on core.List<double> {
+  // ignore: unused_element
+  _SliceFloat _float32AllocIn(ffi.Allocator alloc) {
+    final slice = ffi.Struct.create<_SliceFloat>();
+    slice._data = alloc(length)..asTypedList(length).setRange(0, length, this);
+    slice._length = length;
+    return slice;
+  }
+}
+
 final class _SliceInt16 extends ffi.Struct {
   external ffi.Pointer<ffi.Int16> _data;
 
@@ -721,6 +771,53 @@ extension on core.List<int> {
   // ignore: unused_element
   _SliceInt16 _int16AllocIn(ffi.Allocator alloc) {
     final slice = ffi.Struct.create<_SliceInt16>();
+    slice._data = alloc(length)..asTypedList(length).setRange(0, length, this);
+    slice._length = length;
+    return slice;
+  }
+}
+
+final class _SliceInt32 extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceInt32 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  // ignore: unused_element
+  core.List<int> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
+    final r = _data.asTypedList(_length);
+    if (lifetimeEdges.isEmpty && !isStatic) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));
+    } else {
+      _nopFree.attach(r, lifetimeEdges); // Keep lifetime edges alive
+    }
+    return r;
+  }
+}
+
+extension on core.List<int> {
+  // ignore: unused_element
+  _SliceInt32 _int32AllocIn(ffi.Allocator alloc) {
+    final slice = ffi.Struct.create<_SliceInt32>();
     slice._data = alloc(length)..asTypedList(length).setRange(0, length, this);
     slice._length = length;
     return slice;

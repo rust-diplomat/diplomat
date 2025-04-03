@@ -291,6 +291,74 @@ pub mod ffi {
             })
         }
     }
+
+    // Test a common iterator pattern for exposing vectors of native elements
+    // The Vec type stores the underlying type, and when it returns accessors, it does so
+    // via transparent_convert and non-owning references. Iterators, iterables, and getters
+    // are all handled via attributes, which may have slightly different codepaths.
+    #[diplomat::opaque]
+    #[diplomat::transparent_convert]
+    pub struct OpaqueThin(pub crate::lifetimes::Internal);
+
+    impl OpaqueThin {
+        #[diplomat::attr(auto, getter)]
+        pub fn a(&self) -> i32 {
+            self.0.a
+        }
+        #[diplomat::attr(auto, getter)]
+        pub fn b(&self) -> f32 {
+            self.0.b
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct OpaqueThinIter<'a>(pub std::slice::Iter<'a, crate::lifetimes::Internal>);
+
+    impl<'a> OpaqueThinIter<'a> {
+        #[diplomat::attr(auto, iterator)]
+        pub fn next(&'a mut self) -> Option<&'a OpaqueThin> {
+            self.0.next().map(OpaqueThin::transparent_convert)
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
+
+    impl OpaqueThinVec {
+        #[diplomat::attr(auto, constructor)]
+        pub fn create(a: &[i32], b: &[f32]) -> Box<Self> {
+            assert!(a.len() == b.len(), "arrays must be of equal size");
+            Box::new(Self(
+                a.iter()
+                    .zip(b.iter())
+                    .map(|(a, b)| crate::lifetimes::Internal { a: *a, b: *b })
+                    .collect(),
+            ))
+        }
+
+        #[diplomat::attr(auto, iterable)]
+        #[allow(clippy::should_implement_trait)]
+        pub fn iter<'a>(&'a self) -> Box<OpaqueThinIter<'a>> {
+            Box::new(OpaqueThinIter(self.0.iter()))
+        }
+
+        #[diplomat::attr(nanobind, rename = "__len__")]
+        #[allow(clippy::len_without_is_empty)]
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
+        #[diplomat::attr(auto, indexer)]
+        pub fn get<'a>(&'a self, idx: usize) -> Option<&'a OpaqueThin> {
+            self.0.get(idx).map(OpaqueThin::transparent_convert)
+        }
+
+        #[diplomat::attr(auto, getter)]
+        #[diplomat::attr(dart, rename = "firstelement")]
+        pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
+            self.0.get(0).map(OpaqueThin::transparent_convert)
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -298,3 +366,8 @@ pub struct One<'a>(&'a ());
 
 #[derive(Copy, Clone)]
 pub struct Two<'a, 'b>(&'a (), &'b ());
+
+pub struct Internal {
+    a: i32,
+    b: f32,
+}
