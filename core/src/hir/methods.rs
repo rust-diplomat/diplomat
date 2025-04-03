@@ -275,7 +275,7 @@ impl Method {
     pub fn borrowing_param_visitor<'tcx>(
         &'tcx self,
         tcx: &'tcx TypeContext,
-        force_include_slices : bool
+        force_include_slices: bool,
     ) -> BorrowingParamVisitor<'tcx> {
         BorrowingParamVisitor::new(self, tcx, force_include_slices)
     }

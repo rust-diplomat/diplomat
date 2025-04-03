@@ -513,9 +513,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             method_info
                 .param_conversions
                 // Pretty sure we don't need to force padding because we're just passing in a pointer:
-                .push(self.gen_js_to_c_self(JsToCConversionContext::List(ForcePaddingStatus::NoForce),
-                struct_borrow.as_ref(),
-                &param_self.ty));
+                .push(self.gen_js_to_c_self(
+                    JsToCConversionContext::List(ForcePaddingStatus::NoForce),
+                    struct_borrow.as_ref(),
+                    &param_self.ty,
+                ));
 
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;

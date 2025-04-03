@@ -589,10 +589,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     // #region JS to C
 
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
-    /// 
+    ///
     /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see SelfType::Struct generation for reasons why.
     pub(super) fn gen_js_to_c_self(
-        &self, 
+        &self,
         gen_context: JsToCConversionContext,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
         ty: &SelfType,
@@ -620,7 +620,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     "functionCleanupArena",
                     gen_context,
                 )
-            },
+            }
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }
