@@ -44,7 +44,7 @@ export class CyclicStructB {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#field]
+        return this.#field;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

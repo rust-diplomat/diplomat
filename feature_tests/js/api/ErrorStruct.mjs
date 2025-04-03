@@ -58,7 +58,13 @@ export class ErrorStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#i, this.#j]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

@@ -589,13 +589,42 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     // #region JS to C
 
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
-    pub(super) fn gen_js_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
+    ///
+    /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see SelfType::Struct generation for reasons why.
+    pub(super) fn gen_js_to_c_self(
+        &self,
+        gen_context: JsToCConversionContext,
+        ty: &SelfType,
+    ) -> Cow<'tcx, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
+
+            // OLD WASM ABI:
             // The way Rust generates WebAssembly, each function that requires a self struct require us to pass in each parameter into the function.
             // So we call a function in JS that lets us do this.
             // We use spread syntax to avoid a complicated array setup.
-            SelfType::Struct(..) => "...this._intoFFI()".into(),
+
+            // NEW WASM ABI:
+            // We just need access to the pointer, so we just make a regular _intoFFI call.
+            SelfType::Struct(ref s) => {
+                let type_name = self.formatter.fmt_type_name(s.id());
+
+                if matches!(
+                    gen_context,
+                    JsToCConversionContext::WriteToBuffer(..)
+                        | JsToCConversionContext::SlicePrealloc
+                ) {
+                    panic!("Trying to generate _intoFFI call for {type_name} in the wrong context. _intoFFI should only be called inside of a method.")
+                }
+                // Use functionCleanupArena ALWAYS because _intoFFI assumes that we are calling from a method that has access to the functionCleanupArena variable:
+                self.gen_js_to_c_for_struct_type(
+                    type_name,
+                    "this".into(),
+                    None,
+                    "functionCleanupArena",
+                    gen_context,
+                )
+            }
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }
@@ -655,8 +684,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     JsToCConversionContext::List(_force_padding) => {
                         // This *always* forces padding, due to unions having quirky ABI in WASM (see wasm_abi_quirks.md section "unions")
                         // The Option<ZST> exception is handled in type_size_alignment
-                        format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        // format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        let a = alloc.unwrap_or_else(|| {
+                            let id = if let Some(id) = inner.id() {
+                                self.formatter.fmt_type_name(id)
+                            } else {
+                                "()".into()
+                            };
 
+                            panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
+                        });
+                        format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
                     }
                     JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
                         format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()
@@ -671,14 +709,22 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         "Must provide some allocation anchor for slice conversion generation!",
                     );
 
+                    let mut alloc_stmnt = format!("{alloc}.alloc(");
+
+                    // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
+                    if matches!(gen_context, JsToCConversionContext::List(..) | JsToCConversionContext::SlicePrealloc) {
+                        alloc_stmnt = "".into();
+                    }
+
                     let (spread_pre, spread_post) = match gen_context {
                         // SlicePreAlloc just wants the DiplomatBufe
-                        JsToCConversionContext::SlicePrealloc => ("", Cow::Borrowed("")),
+                        JsToCConversionContext::SlicePrealloc => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")")),
                         // List mode wants a list of (ptr, len)
-                        JsToCConversionContext::List(_) => ("...", ".splat()".into()),
+                        // NOTE: This is only possible in the old WASM ABI, as _intoFFI requires this splatting:
+                        JsToCConversionContext::List(_) => ("...".into(), ".splat()".into()),
                         // WriteToBuffer needs to write to buffer arrayBuffer
                         JsToCConversionContext::WriteToBuffer(offset_var, offset) => (
-                            "",
+                            "".into(),
                             format!(
                                 ".writePtrLenToArrayBuffer(arrayBuffer, {offset_var} + {offset})"
                             )
@@ -690,21 +736,21 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         hir::Slice::Str(_, encoding) => match encoding {
                             hir::StringEncoding::UnvalidatedUtf8
                             | hir::StringEncoding::Utf8 => {
-                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
+                                format!("{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})){spread_post}")
                             }
                             _ => {
-                                format!("{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
+                                format!("{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})){spread_post}")
                             }
                         },
                         hir::Slice::Strs(encoding) => format!(
-                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
+                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.strs(wasm, {js_name}, "{}")){spread_post}"#,
                             match encoding {
                                 hir::StringEncoding::UnvalidatedUtf16 => "string16",
                                 _ => "string8",
                             }
                         ),
                         hir::Slice::Primitive(_, p) => format!(
-                            r#"{spread_pre}{alloc}.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
+                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")){spread_post}"#,
                             self.formatter.fmt_primitive_list_view(p)
                         ),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
@@ -758,12 +804,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         match gen_context {
             JsToCConversionContext::List(force_padding) => {
-                let force_padding = match force_padding {
-                    ForcePaddingStatus::NoForce => "",
-                    ForcePaddingStatus::Force => ", true",
-                    ForcePaddingStatus::PassThrough => ", forcePadding",
-                };
-                format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+                // let force_padding = match force_padding {
+                //     ForcePaddingStatus::NoForce => "",
+                //     ForcePaddingStatus::Force => ", true",
+                //     ForcePaddingStatus::PassThrough => ", forcePadding",
+                // };
+                // format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
+                format!("{js_call}._intoFFI({allocator}, [], false)").into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
                 "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"

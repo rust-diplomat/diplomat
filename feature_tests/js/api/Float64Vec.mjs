@@ -37,9 +37,9 @@ export class Float64Vec {
 static newBool(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean")));
         
-        const result = wasm.Float64Vec_new_bool(...vSlice.splat());
+        const result = wasm.Float64Vec_new_bool(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -52,9 +52,9 @@ static newBool(v) {
 static newI16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16")));
         
-        const result = wasm.Float64Vec_new_i16(...vSlice.splat());
+        const result = wasm.Float64Vec_new_i16(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -67,9 +67,9 @@ static newI16(v) {
 static newU16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16")));
         
-        const result = wasm.Float64Vec_new_u16(...vSlice.splat());
+        const result = wasm.Float64Vec_new_u16(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -82,9 +82,9 @@ static newU16(v) {
 static newIsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32")));
         
-        const result = wasm.Float64Vec_new_isize(...vSlice.splat());
+        const result = wasm.Float64Vec_new_isize(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -97,9 +97,9 @@ static newIsize(v) {
 static newUsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32")));
         
-        const result = wasm.Float64Vec_new_usize(...vSlice.splat());
+        const result = wasm.Float64Vec_new_usize(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -112,9 +112,9 @@ static newUsize(v) {
 static newF64BeBytes(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8")));
         
-        const result = wasm.Float64Vec_new_f64_be_bytes(...vSlice.splat());
+        const result = wasm.Float64Vec_new_f64_be_bytes(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -127,9 +127,9 @@ static newF64BeBytes(v) {
 #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64"));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
         
-        const result = wasm.Float64Vec_new_from_owned(...vSlice.splat());
+        const result = wasm.Float64Vec_new_from_owned(vSlice.ptr);
     
         try {
             return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
@@ -158,8 +158,8 @@ get asSlice() {
 fillSlice(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64"));
-        wasm.Float64Vec_fill_slice(this.ffiValue, ...vSlice.splat());
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
+        wasm.Float64Vec_fill_slice(this.ffiValue, vSlice.ptr);
     
         try {}
         
@@ -170,8 +170,8 @@ fillSlice(v) {
 setValue(newSlice) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const newSliceSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64"));
-        wasm.Float64Vec_set_value(this.ffiValue, ...newSliceSlice.splat());
+        const newSliceSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64")));
+        wasm.Float64Vec_set_value(this.ffiValue, newSliceSlice.ptr);
     
         try {}
         
