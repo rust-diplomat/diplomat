@@ -511,16 +511,18 @@ category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests"]
 [tasks.build-example-wasm]
+toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-condition.env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
 [tasks.build-feature-wasm]
+toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-condition.env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = [
     "build",
     "-p",
