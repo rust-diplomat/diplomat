@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, str};
 
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -81,10 +81,11 @@ impl Config {
     }
 
     /// Given a filepath, read TOML formatted config settings from it (and modify the current Config struct from the read)
-    pub fn read_file(&mut self, path: &Path) -> std::io::Result<()> {
+    pub fn read_file(&mut self, path: &Path) -> Result<(), String> {
         let config_table: Table = if path.exists() {
-            let file_buf = std::fs::read(path)?;
-            toml::from_slice(&file_buf)?
+            let file_buf = std::fs::read(path).map_err(|e| e.to_string())?;
+            let s = str::from_utf8(&file_buf).map_err(|_| "Config file is not UTF8".to_string())?;
+            toml::from_str(s).map_err(|_| "Config file is not valid TOML".to_string())?
         } else {
             Table::default()
         };

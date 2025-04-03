@@ -62,6 +62,12 @@ export { Foo } from "./Foo"
 
 export { One } from "./One"
 
+export { OpaqueThin } from "./OpaqueThin"
+
+export { OpaqueThinIter } from "./OpaqueThinIter"
+
+export { OpaqueThinVec } from "./OpaqueThinVec"
+
 export { Two } from "./Two"
 
 export { OptionOpaque } from "./OptionOpaque"

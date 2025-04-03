@@ -1,5 +1,4 @@
-{% include "c_include.h.jinja" -%}
-{% let auto_define_self_arithmetic = true %}
+{% include "c_include.h.jinja" %}
 
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return static_cast<{{ctype}}>(value);

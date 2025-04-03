@@ -60,6 +60,12 @@ export { Foo } from "./Foo.mjs"
 
 export { One } from "./One.mjs"
 
+export { OpaqueThin } from "./OpaqueThin.mjs"
+
+export { OpaqueThinIter } from "./OpaqueThinIter.mjs"
+
+export { OpaqueThinVec } from "./OpaqueThinVec.mjs"
+
 export { Two } from "./Two.mjs"
 
 export { OptionOpaque } from "./OptionOpaque.mjs"

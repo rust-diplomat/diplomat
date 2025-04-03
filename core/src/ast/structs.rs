@@ -24,12 +24,14 @@ impl Struct {
             .fields
             .iter()
             .map(|field| {
+                use quote::ToTokens;
                 // Non-opaque tuple structs will never be allowed
-                let name = field
-                    .ident
-                    .as_ref()
-                    .map(Into::into)
-                    .expect("non-opaque tuples structs are disallowed");
+                let name = field.ident.as_ref().map(Into::into).unwrap_or_else(|| {
+                    panic!(
+                        "non-opaque tuples structs are disallowed ({:?})",
+                        field.ty.to_token_stream().to_string()
+                    )
+                });
                 let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
                 let docs = Docs::from_attrs(&field.attrs);
 
