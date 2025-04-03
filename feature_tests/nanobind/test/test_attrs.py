@@ -29,3 +29,17 @@ def test_attrs():
     except Exception:
         threw = True
     assert threw, "Failing constructor should have thrown an error"
+
+
+    a = somelib.ns.RenamedComparable.new(0)
+    b = somelib.ns.RenamedComparable.new(0)
+    c = somelib.ns.RenamedComparable.new(1)
+
+    assert a == b, "equality"
+    assert b != c, "nequality"
+    assert a <= b, "less or equal as equals"
+    assert a >= b, "greater or equal as equals"
+    assert a <= c, "less or equal"
+    assert c >= a, "greater or equal"
+    assert a < c, "less"
+    assert c > a, "greater"

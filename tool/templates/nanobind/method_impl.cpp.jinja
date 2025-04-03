@@ -7,6 +7,13 @@
 	{%- when crate::hir::SpecialMethod::AddAssign | crate::hir::SpecialMethod::SubAssign |
 			crate::hir::SpecialMethod::MulAssign | crate::hir::SpecialMethod::DivAssign -%}
 		(nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none)
+	{%- when crate::hir::SpecialMethod::Comparison -%}
+		(nb::self == nb::self)
+		.def(nb::self != nb::self)
+		.def(nb::self <= nb::self)
+		.def(nb::self >= nb::self)
+		.def(nb::self < nb::self)
+		.def(nb::self > nb::self)
 	{%- when crate::hir::SpecialMethod::Stringifier -%}
 		("__str__", &{{- type_name }}::{{ m.cpp_method_name -}})
 	{%- when crate::hir::SpecialMethod::Iterable -%}
