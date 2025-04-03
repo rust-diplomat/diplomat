@@ -505,18 +505,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         };
 
         if let Some(param_self) = method.param_self.as_ref() {
-            let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
-
-            let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
-                Some(super::converter::StructBorrowContext {
-                    use_env: &method.lifetime_env,
-                    param_info,
-                    is_method: true,
-                })
-            } else {
-                None
-            };
-
+            visitor.visit_param(&param_self.ty.clone().into(), "this");
+            
             // If we're the struct, we always expect to generate functionCleanupArena to generate slices.
             // It's easier to do it this way, so we don't have to check if each individual `_intoFFI` call requires this parameter or not.
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
@@ -527,11 +517,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             method_info
                 .param_conversions // Pretty sure we don't need to force padding because we're just passing in a pointer:
                 // FIXME: This is definitely different for the old WASM ABI.
-                .push(self.gen_js_to_c_self(
-                    JsToCConversionContext::List(ForcePaddingStatus::NoForce),
-                    struct_borrow.as_ref(),
-                    &param_self.ty,
-                ));
+                .push(self.gen_js_to_c_self(JsToCConversionContext::List(ForcePaddingStatus::NoForce), &param_self.ty));
         }
 
         for param in method.params.iter() {

@@ -591,12 +591,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     /// Given an [`hir::SelfType`] type, generate JS code that will turn this into something WASM can understand.
     ///
     /// Should ONLY be called for generation from within methods ([`TyGenContext::generate_method`]), see SelfType::Struct generation for reasons why.
-    pub(super) fn gen_js_to_c_self(
-        &self,
-        gen_context: JsToCConversionContext,
-        struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
-        ty: &SelfType,
-    ) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_to_c_self(&self, gen_context: JsToCConversionContext, ty: &SelfType) -> Cow<'tcx, str> {
         match *ty {
             SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
 
@@ -618,14 +613,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     panic!("Trying to generate _intoFFI call for {type_name} in the wrong context. _intoFFI should only be called inside of a method.")
                 }
                 // Use functionCleanupArena ALWAYS because _intoFFI assumes that we are calling from a method that has access to the functionCleanupArena variable:
-                self.gen_js_to_c_for_struct_type(
-                    type_name,
-                    "this".into(),
-                    struct_borrow_info,
-                    "functionCleanupArena",
-                    gen_context,
-                )
-            }
+                self.gen_js_to_c_for_struct_type(type_name, "this".into(), None, "functionCleanupArena", gen_context)
+            },
             _ => unreachable!("Unknown AST/HIR variant {:?}", ty),
         }
     }
