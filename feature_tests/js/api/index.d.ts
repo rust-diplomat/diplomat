@@ -34,8 +34,6 @@ export { MyZst } from "./MyZst"
 
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding"
 
-export { StructWithSlices } from "./StructWithSlices"
-
 export { OptionStruct } from "./OptionStruct"
 
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
