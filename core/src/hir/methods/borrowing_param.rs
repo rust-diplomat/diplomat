@@ -144,21 +144,20 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
         if force_include_slices {
             if let Some(s) = &method.param_self {
-                match &s.ty {
-                    hir::SelfType::Struct(s) => {
-                        let st = s.resolve(tcx);
-                        for f in &st.fields {
-                            BorrowingParamVisitor::add_slices_to_used_lifetimes(
-                                &mut used_method_lifetimes,
-                                tcx,
-                                &f.ty,
-                            );
-                        }
+                if let hir::SelfType::Struct(s) = &s.ty {
+                    let st = s.resolve(tcx);
+                    for f in &st.fields {
+                        BorrowingParamVisitor::add_slices_to_used_lifetimes(
+                            &mut used_method_lifetimes,
+                            method,
+                            tcx,
+                            &f.ty,
+                        );
                     }
-                    _ => {}
                 }
             }
 
+            // FIXME: This is a duplicate of the function below, need to find a way to consolidate these two.
             for p in &method.params {
                 match &p.ty {
                     hir::Type::Struct(s) => {
@@ -166,6 +165,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         for f in &st.fields {
                             BorrowingParamVisitor::add_slices_to_used_lifetimes(
                                 &mut used_method_lifetimes,
+                                method,
                                 tcx,
                                 &f.ty,
                             );
@@ -175,7 +175,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         // TODO: Not sure if this is right?
                         if let Some(MaybeStatic::NonStatic(lt)) = s.lifetime() {
                             if method.lifetime_env.get_bounds(*lt).is_some() {
-                                used_method_lifetimes.insert(lt.clone());
+                                used_method_lifetimes.insert(*lt);
                             }
                         }
                     }
@@ -208,6 +208,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
     fn add_slices_to_used_lifetimes(
         set: &mut BTreeSet<Lifetime>,
+        method: &'tcx Method,
         tcx: &'tcx TypeContext,
         ty: &hir::Type,
     ) {
@@ -215,12 +216,15 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             hir::Type::Struct(s) => {
                 let st = s.resolve(tcx);
                 for f in &st.fields {
-                    BorrowingParamVisitor::add_slices_to_used_lifetimes(set, tcx, &f.ty);
+                    BorrowingParamVisitor::add_slices_to_used_lifetimes(set, method, tcx, &f.ty);
                 }
             }
             hir::Type::Slice(s) => {
                 if let Some(MaybeStatic::NonStatic(lt)) = s.lifetime() {
-                    set.insert(lt.clone());
+                    set.insert(*lt);
+                    if method.lifetime_env.get_bounds(*lt).is_some() {
+                        set.insert(*lt);
+                    }
                 }
             }
             _ => {}
