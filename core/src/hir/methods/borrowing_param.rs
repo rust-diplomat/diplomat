@@ -160,8 +160,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                         }
                     },
                     hir::Type::Slice(s) => {
+                        // TODO: Not sure if this is right?
                         if let Some(MaybeStatic::NonStatic(lt)) = s.lifetime() {
-                            used_method_lifetimes.insert(lt.clone());
+                            if method.lifetime_env.get_bounds(*lt).is_some() {
+                                used_method_lifetimes.insert(lt.clone());
+                            }
                         }
                     },
                     _ => {}
