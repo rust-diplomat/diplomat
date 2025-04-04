@@ -208,7 +208,7 @@ export class MyStruct {
 intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.MyStruct_into_a(...this._intoFFI());
+        const result = wasm.MyStruct_into_a(...MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
     
         try {
             return result;

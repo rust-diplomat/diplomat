@@ -100,7 +100,7 @@ cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructC_cyclic_out(...this._intoFFI(), write.buffer);
+        wasm.CyclicStructC_cyclic_out(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
     
         try {
             return write.readString8();

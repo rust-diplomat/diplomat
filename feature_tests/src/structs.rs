@@ -411,6 +411,17 @@ pub mod ffi {
             }
         }
     }
+
+    pub struct StructWithSlices<'a> {
+        pub first: DiplomatStrSlice<'a>,
+        pub second: DiplomatSlice<'a, u16>,
+    }
+
+    impl<'a> StructWithSlices<'a> {
+        pub fn return_last(self, w: &mut DiplomatWrite) {
+            w.write_char(*self.first.last().unwrap() as char).unwrap();
+        }
+    }
 }
 
 #[allow(unused)]

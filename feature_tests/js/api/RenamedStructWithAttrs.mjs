@@ -124,7 +124,7 @@ export class RenamedStructWithAttrs {
 get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.namespace_StructWithAttrs_c(...this._intoFFI());
+        const result = wasm.namespace_StructWithAttrs_c(...RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
     
         try {
             return result;

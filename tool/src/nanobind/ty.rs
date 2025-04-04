@@ -313,7 +313,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
         };
 
-        let mut visitor = method.borrowing_param_visitor(self.c2.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
 
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = method

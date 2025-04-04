@@ -1023,7 +1023,7 @@ returnVal.option() ?: return null
             return "".into();
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
         let native_method_name = method.abi_name.as_str();
 
         let mut param_decls_kt = Vec::with_capacity(method.params.len());
@@ -1294,7 +1294,7 @@ returnVal.option() ?: return null
     ) -> NativeMethodInfo {
         let mut param_decls = Vec::with_capacity(method.params.len());
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
         let mut additional_name = None;
 
         if let Some(param_self) = method.param_self.as_ref() {
