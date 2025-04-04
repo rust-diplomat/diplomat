@@ -50,5 +50,31 @@ inline {{ m.return_ty }}& {{type_name}}::{{m.method_name -}}=({{ param_var.type_
 inline {{helper_type}} {{- type_name }}::begin() const {
 	return iter();
 }
-{%- else -%}
+
+{%- when Some(hir::SpecialMethod::Comparison) %}
+inline bool {{type_name}}::operator==(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) == 0;
+}
+
+inline bool {{type_name}}::operator!=(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) != 0;
+}
+
+inline bool {{type_name}}::operator<=(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) <= 0;
+}
+
+inline bool {{type_name}}::operator>=(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) >= 0;
+}
+
+inline bool {{type_name}}::operator<(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) < 0;
+}
+
+inline bool {{type_name}}::operator>(const {{type_name}}& other) const {
+	return this->{{m.method_name}}(other) > 0;
+}
+
+{%- when _ -%}
 {%- endmatch -%}

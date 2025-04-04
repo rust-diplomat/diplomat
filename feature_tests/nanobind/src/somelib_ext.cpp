@@ -57,6 +57,7 @@
 #include "ns/AttrOpaque1Renamed.hpp"
 #include "ns/RenamedAttrEnum.hpp"
 #include "ns/RenamedAttrOpaque2.hpp"
+#include "ns/RenamedComparable.hpp"
 #include "ns/RenamedMyIndexer.hpp"
 #include "ns/RenamedMyIterable.hpp"
 #include "ns/RenamedMyIterator.hpp"
@@ -461,6 +462,20 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::RenamedAttrOpaque2>(ns_mod, "RenamedAttrOpaque2", nb::type_slots(ns_RenamedAttrOpaque2_slots));
+    
+    PyType_Slot ns_RenamedComparable_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedComparable::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedComparable>(ns_mod, "RenamedComparable", nb::type_slots(ns_RenamedComparable_slots))
+    	.def(nb::self == nb::self)
+    		.def(nb::self != nb::self)
+    		.def(nb::self <= nb::self)
+    		.def(nb::self >= nb::self)
+    		.def(nb::self < nb::self)
+    		.def(nb::self > nb::self)
+    	.def_static("new", &ns::RenamedComparable::new_, "int"_a);
     
     PyType_Slot ns_RenamedMyIndexer_slots[] = {
         {Py_tp_free, (void *)ns::RenamedMyIndexer::operator delete },

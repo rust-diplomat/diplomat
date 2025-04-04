@@ -125,7 +125,7 @@ pub enum SpecialMethod {
     Setter(Option<String>),
     /// A stringifier. Must have no parameters and return a string (DiplomatWrite)
     Stringifier,
-    /// A comparison operator. Currently unsupported
+    /// A comparison operator. Currently not universally supported
     Comparison,
     /// An iterator (a type that is mutated to produce new values)
     Iterator,
