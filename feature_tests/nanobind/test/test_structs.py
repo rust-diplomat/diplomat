@@ -16,3 +16,4 @@ def test_structs():
     assert s.g == -1, "enum fn"
     assert s.into_a() == 17, "struct fn"
 
+    assert somelib.StructArithmetic.ORIGIN.x == 0

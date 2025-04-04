@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
+#[derive(Clone)]
 struct NamedType<'a> {
     var_name: Cow<'a, str>,
     type_name: Cow<'a, str>,
@@ -222,6 +223,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 );
                                 e.setter_name = Some(info.method_name.clone());
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
+                                e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
                         };
@@ -262,14 +264,6 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
-        if method.param_self.is_none()
-            && !matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
-            )
-        {
-            def_qualifiers.extend(["static"]);
-        }
 
         let mut prop_name = None;
         if let Some(hir::SpecialMethod::Getter(name)) = &method.attrs.special_method {
@@ -289,10 +283,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             );
         }
 
+        if method.param_self.is_none()
+            && !matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
+            )
+        {
+            def_qualifiers.extend(["static"]);
+        }
+
         let param_decls = {
             if matches!(
                 method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) // We only need type info for constructors...
+                Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
             ) && !matches!(
                 // and even then, only when the type isn't opaque
                 id,
