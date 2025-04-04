@@ -422,7 +422,7 @@ NB_MODULE(somelib, somelib_mod)
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
-    	.def_prop_rw_static("ORIGIN", [](nb::handle) { return StructArithmetic::ORIGIN(); },
+    	.def_prop_rw_static("ORIGIN", [](nb::handle) -> decltype(StructArithmetic::ORIGIN()) { return StructArithmetic::ORIGIN(); },
     				[](nb::handle, StructArithmetic _new_origin)
     				  { StructArithmetic::set_origin(_new_origin); })
     	.def(nb::self + nb::self)
