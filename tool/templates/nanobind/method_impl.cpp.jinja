@@ -28,10 +28,20 @@
 		}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
 		.def("__iter__", [](nb::handle self) { return self; })
 	{%- when crate::hir::SpecialMethod::Getter(_) -%}
-		("{{m.prop_name.as_ref().unwrap()}}", &{{type_name}}::{{m.cpp_method_name}}
+		("{{m.prop_name.as_ref().unwrap()}}", 
+		{%- if m.method.param_self.is_some() %} &{{type_name}}::{{m.cpp_method_name}}
+		{%- else %} [](nb::handle) { return {{type_name}}::{{m.cpp_method_name}}(); }
+		{%- endif -%}
 		{#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
-		{%- if let Some(setter_name) = m.setter_name -%}	
-		, &{{type_name}}::{{setter_name}}{%- include "method_params.cpp.jinja" %}
+		{%- if let Some(setter_name) = m.setter_name -%}
+			{%- if m.method.param_self.is_some() -%}
+				, &{{type_name}}::{{setter_name}}
+			{%- else -%},
+				[](nb::handle {%- for p in m.param_decls.as_ref().unwrap() -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
+				  { {{type_name}}::{{setter_name}}(
+					{%- for p in m.param_decls.as_ref().unwrap() -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
+			{%- endif -%}
+			{%- include "method_params.cpp.jinja" %}
 		{%- endif -%})
 	{%- when crate::hir::SpecialMethod::Constructor -%}
 		{%- if is_self_opaque -%}
