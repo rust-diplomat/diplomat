@@ -338,21 +338,31 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             0
         };
 
-        let mut lifetime_args = param_borrows
-            .into_iter()
-            .enumerate()
-            .filter_map(|(i, p)| match p {
-                hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
-                | hir::borrowing_param::ParamBorrowInfo::Struct(_)
-                | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
-                    Some(format!(
-                        "nb::keep_alive<{self_number}, {}>()",
-                        i + 1 + self_number
-                    )) // Keep 0 (the return) alive until the element at P is returned
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
+        let mut lifetime_args = vec![];
+
+        // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
+        if !matches!(
+            method.output.success_type(),
+            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
+        ) {
+            lifetime_args.extend(
+                param_borrows
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(i, p)| match p {
+                        hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
+                        | hir::borrowing_param::ParamBorrowInfo::Struct(_)
+                        | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
+                            Some(format!(
+                                "nb::keep_alive<{self_number}, {}>()",
+                                i + 1 + self_number
+                            )) // Keep 0 (the return) alive until the element at P is returned
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
+            );
+        }
 
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
         {
