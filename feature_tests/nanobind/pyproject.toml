@@ -8,6 +8,7 @@ version = "0.0.1"
 description = "A brief description of what this project does"
 requires-python = ">=3.8"
 classifiers = ["License :: Apache2.0"]
+dependencies = ["numpy"]
 
 [project.urls]
 Homepage = "https://github.com/rust-diplomat/diplomat"
