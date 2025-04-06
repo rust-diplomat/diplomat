@@ -11,13 +11,14 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SelfType, SpecialMethod, SpecialMethodPresence,
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
     StructPathLike, Type, TypeContext, TypeId,
 };
 
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
+use super::JsConfig;
 use crate::ErrorStore;
 
 use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
@@ -40,6 +41,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<Imports<'tcx>>,
+    pub config : JsConfig,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {

@@ -4,6 +4,7 @@
 use std::collections::BTreeSet;
 use std::{borrow::Cow, cell::RefCell};
 
+use crate::config::Config;
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, TypeDef};
 
@@ -14,6 +15,7 @@ use formatter::JSFormatter;
 
 mod gen;
 use gen::{MethodsInfo, TyGenContext};
+use serde::{Deserialize, Serialize};
 mod converter;
 
 mod layout;
@@ -31,6 +33,24 @@ impl FileType {
             FileType::Typescript => true,
         }
     }
+}
+
+/// The ABI to use.
+/// Should mirror the value you've set for the `-Zwasm-c-abi=VALUE`.
+/// Read https://blog.rust-lang.org/2025/04/04/c-abi-changes-for-wasm32-unknown-unknown.html for more details.
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub enum WasmABI {
+    /// The default value for Rust versions <= 1.87.0, or -Zwasm-c-abi=legacy
+    /// FIXME: Is this the right version?
+    #[default]
+    Legacy,
+    /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
+    CSpec
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct JsConfig {
+    abi : WasmABI
 }
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
@@ -65,7 +85,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
-    docs: &'tcx DocsUrlGenerator,
+    config : Config,
+    docs: &'tcx DocsUrlGenerator
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
@@ -108,6 +129,7 @@ pub(crate) fn run<'tcx>(
                 js: BTreeSet::new(),
                 ts: BTreeSet::new(),
             }),
+            config: config.js_config.clone()
         };
 
         let (m, special_method_presence, fields, fields_out) = match type_def {
