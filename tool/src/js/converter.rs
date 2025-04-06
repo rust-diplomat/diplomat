@@ -695,7 +695,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                                     } else {
                                         "()".into()
                                     };
-        
+
                                     panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
                                 });
                                 format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")

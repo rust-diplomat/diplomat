@@ -45,23 +45,21 @@ pub enum WasmABI {
     #[default]
     Legacy,
     /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
-    #[serde(rename="spec")]
-    CSpec
+    #[serde(rename = "spec")]
+    CSpec,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct JsConfig {
-    abi : WasmABI
+    abi: WasmABI,
 }
 
 impl JsConfig {
     pub fn set(&mut self, key: &str, value: toml::Value) {
         match key {
-            "abi" => {
-                match value.as_str().unwrap_or_default() {
-                    "spec" => self.abi = WasmABI::CSpec,
-                    _ => self.abi = WasmABI::Legacy
-                }
+            "abi" => match value.as_str().unwrap_or_default() {
+                "spec" => self.abi = WasmABI::CSpec,
+                _ => self.abi = WasmABI::Legacy,
             },
             _ => {}
         }
@@ -100,8 +98,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
-    config : Config,
-    docs: &'tcx DocsUrlGenerator
+    config: Config,
+    docs: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
     let errors = ErrorStore::default();
@@ -144,7 +142,7 @@ pub(crate) fn run<'tcx>(
                 js: BTreeSet::new(),
                 ts: BTreeSet::new(),
             }),
-            config: config.js_config.clone()
+            config: config.js_config.clone(),
         };
 
         let (m, special_method_presence, fields, fields_out) = match type_def {

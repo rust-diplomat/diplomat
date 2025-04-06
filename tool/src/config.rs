@@ -8,7 +8,7 @@ use syn::{
 };
 use toml::{value::Table, Value};
 
-use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig, js::JsConfig};
+use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
@@ -39,7 +39,7 @@ pub struct Config {
     #[serde(rename = "demo_gen")]
     pub demo_gen_config: DemoConfig,
     #[serde(rename = "js")]
-    pub js_config : JsConfig,
+    pub js_config: JsConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,

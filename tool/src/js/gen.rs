@@ -41,7 +41,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<Imports<'tcx>>,
-    pub config : JsConfig,
+    pub config: JsConfig,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {
@@ -450,7 +450,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             size: usize,
             align: usize,
-            abi : WasmABI
+            abi: WasmABI,
         }
 
         ImplTemplate {
@@ -479,7 +479,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             size: layout.size(),
             align: layout.align(),
 
-            abi : self.config.abi.clone()
+            abi: self.config.abi.clone(),
         }
         .render()
         .unwrap()
@@ -590,14 +590,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     );
 
                 // We add the pointer and size for slices:
-                method_info
-                    .param_conversions
-                    .push(
-                        match self.config.abi {
-                            WasmABI::Legacy => format!("...{}Slice.splat()", param_info.name),
-                            WasmABI::CSpec => format!("{}Slice.ptr", param_info.name)
-                        }.into()
-                    );
+                method_info.param_conversions.push(
+                    match self.config.abi {
+                        WasmABI::Legacy => format!("...{}Slice.splat()", param_info.name),
+                        WasmABI::CSpec => format!("{}Slice.ptr", param_info.name),
+                    }
+                    .into(),
+                );
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
