@@ -553,7 +553,7 @@ export class CleanupArena {
      */
     static createWith(...edgeArrays) {
         let self = new CleanupArena();
-        for (edgeArray of edgeArrays) {
+        for (let edgeArray of edgeArrays) {
             if (edgeArray != null) {
                 edgeArray.push(self);
             }
