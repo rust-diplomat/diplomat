@@ -103,15 +103,15 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         forcePadding
         {%- endif %}
     ) {
-        {% match abi %}
-        {% when WasmABI::Legacy %}
+        {%- match abi -%}
+        {%- when WasmABI::Legacy %}
         return [
             {%- for field in fields -%}
             {{field.js_to_c}}
             {%- if !loop.last -%}, {% endif %}
             {%- endfor -%}
         ]
-        {% when WasmABI::CSpec %}
+        {%- when WasmABI::CSpec -%}
         {%- if wraps_primitive -%}
         {%- if owns_wrapped_primitive %}
         return this.#{{fields.first().unwrap().field_name}};
@@ -124,9 +124,10 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
         functionCleanupArena.alloc(buffer);
+
         return buffer.ptr;
         {%- endif %}
-        {% endmatch %}
+        {%- endmatch %}
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
