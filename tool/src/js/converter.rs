@@ -10,7 +10,7 @@ use diplomat_core::hir::{
 };
 use std::fmt::Write;
 
-use super::gen::TyGenContext;
+use super::{gen::TyGenContext, WasmABI};
 
 /// The Rust-Wasm ABI currently treats structs with 1 or 2 scalar fields different from
 /// structs with more ("large" structs). Structs with 1 or 2 scalar fields are passed in as consecutive fields,
@@ -682,19 +682,25 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         unreachable!("Used SlicePrealloc context for an Option type!");
                     }
                     JsToCConversionContext::List(_force_padding) => {
-                        // This *always* forces padding, due to unions having quirky ABI in WASM (see wasm_abi_quirks.md section "unions")
-                        // The Option<ZST> exception is handled in type_size_alignment
-                        // format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
-                        let a = alloc.unwrap_or_else(|| {
-                            let id = if let Some(id) = inner.id() {
-                                self.formatter.fmt_type_name(id)
-                            } else {
-                                "()".into()
-                            };
-
-                            panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
-                        });
-                        format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])").into()
+                        match self.config.abi {
+                            WasmABI::Legacy => {
+                                // This *always* forces padding, due to unions having quirky ABI in WASM (see wasm_abi_quirks.md section "unions")
+                                // The Option<ZST> exception is handled in type_size_alignment
+                                format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")
+                            },
+                            WasmABI::CSpec => {
+                                let a = alloc.unwrap_or_else(|| {
+                                    let id = if let Some(id) = inner.id() {
+                                        self.formatter.fmt_type_name(id)
+                                    } else {
+                                        "()".into()
+                                    };
+        
+                                    panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
+                                });
+                                format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")
+                            }
+                        }.into()
                     }
                     JsToCConversionContext::WriteToBuffer(offset_var, offset) => {
                         format!("diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => {inner_conversion})").into()
@@ -804,13 +810,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         match gen_context {
             JsToCConversionContext::List(force_padding) => {
-                // let force_padding = match force_padding {
-                //     ForcePaddingStatus::NoForce => "",
-                //     ForcePaddingStatus::Force => ", true",
-                //     ForcePaddingStatus::PassThrough => ", forcePadding",
-                // };
-                // format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})").into()
-                format!("{js_call}._intoFFI({allocator}, [], false)").into()
+                match self.config.abi {
+                    WasmABI::Legacy => {
+                        let force_padding = match force_padding {
+                            ForcePaddingStatus::NoForce => "",
+                            ForcePaddingStatus::Force => ", true",
+                            ForcePaddingStatus::PassThrough => ", forcePadding",
+                        };
+                        format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})")
+                    },
+                    WasmABI::CSpec => format!("{js_call}._intoFFI({allocator}, [], false)")
+                }.into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
                 "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"

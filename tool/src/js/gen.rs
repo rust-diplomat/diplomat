@@ -18,7 +18,7 @@ use diplomat_core::hir::{
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
-use super::JsConfig;
+use super::{JsConfig, WasmABI};
 use crate::ErrorStore;
 
 use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
@@ -357,7 +357,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 "".into()
             };
             let js_name = format!("this.#{}", field_name);
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset));
+
+            let js_to_c = match self.config.abi {
+                WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding)),
+                WasmABI::CSpec => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset))
+            };
+
             let js_to_c = format!("{js_to_c}{maybe_padding_after}");
             let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 
@@ -445,6 +450,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             size: usize,
             align: usize,
+            abi : WasmABI
         }
 
         ImplTemplate {
@@ -472,6 +478,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             size: layout.size(),
             align: layout.align(),
+
+            abi : self.config.abi.clone()
         }
         .render()
         .unwrap()
@@ -580,11 +588,16 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     // We're specifically doing slice preallocation here
                     JsToCConversionContext::SlicePrealloc
                     );
+
                 // We add the pointer and size for slices:
                 method_info
                     .param_conversions
-                    .push(format!("{}Slice.ptr", param_info.name).into());
-                // .push(format!("...{}Slice.splat()", param_info.name).into());
+                    .push(
+                        match self.config.abi {
+                            WasmABI::Legacy => format!("...{}Slice.splat()", param_info.name),
+                            WasmABI::CSpec => format!("{}Slice.ptr", param_info.name)
+                        }.into()
+                    );
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
@@ -715,8 +728,7 @@ pub(super) struct MethodInfo<'info> {
     /// Native C method name
     pub abi_name: String,
 
-    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
-    /// NEW VERSION: To clean up any structs present.
+    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s or structs that are present.
     pub needs_cleanup: bool,
     /// For calling .releaseToGarbageCollector on slices.
     pub needs_slice_collection: bool,
