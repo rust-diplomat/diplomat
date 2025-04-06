@@ -38,7 +38,7 @@ pub struct Config {
     pub kotlin_config: KotlinConfig,
     #[serde(rename = "demo_gen")]
     pub demo_gen_config: DemoConfig,
-    #[serde(rename = "javascript")]
+    #[serde(rename = "js")]
     pub js_config : JsConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
