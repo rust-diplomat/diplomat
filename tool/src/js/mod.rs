@@ -56,12 +56,11 @@ pub struct JsConfig {
 
 impl JsConfig {
     pub fn set(&mut self, key: &str, value: toml::Value) {
-        match key {
-            "abi" => match value.as_str().unwrap_or_default() {
+        if key == "abi" {
+            match value.as_str().unwrap_or_default() {
                 "spec" => self.abi = WasmABI::CSpec,
                 _ => self.abi = WasmABI::Legacy,
-            },
-            _ => {}
+            }
         }
     }
 }

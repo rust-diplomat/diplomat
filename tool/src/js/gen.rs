@@ -410,6 +410,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
     }
 
+    // Going to have to be a lot of arguments for now (can remove `needs_force_padding` once Rust removes the `-Zwasm-c-abi=legacy` option).
+    #[allow(clippy::too_many_arguments)]
     /// Generate a struct type's body for a file from the given definition.
     ///
     /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
