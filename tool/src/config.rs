@@ -64,6 +64,12 @@ impl Config {
             if SharedConfig::overrides_shared(key) {
                 self.language_overrides.insert(key.to_string(), value);
             } // nanobind doesn't have any other config setting
+        } else if key.starts_with("js.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.js_config.set(&key.replace("js.", ""), value);
+            }
         } else {
             self.shared_config.set(key, value)
         }

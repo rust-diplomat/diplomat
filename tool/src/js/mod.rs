@@ -54,6 +54,20 @@ pub struct JsConfig {
     abi : WasmABI
 }
 
+impl JsConfig {
+    pub fn set(&mut self, key: &str, value: toml::Value) {
+        match key {
+            "abi" => {
+                match value.as_str().unwrap_or_default() {
+                    "spec" => self.abi = WasmABI::CSpec,
+                    _ => self.abi = WasmABI::Legacy
+                }
+            },
+            _ => {}
+        }
+    }
+}
+
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
