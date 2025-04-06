@@ -45,6 +45,7 @@ pub enum WasmABI {
     #[default]
     Legacy,
     /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
+    #[serde(rename="spec")]
     CSpec
 }
 
