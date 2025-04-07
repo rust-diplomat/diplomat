@@ -69,10 +69,11 @@ fn generate_js
     config = set ${1}
     path = set ${2}
 
+    api_path = set ${3}
     out = set "api"
     if eq ${config} "legacy"
         out = set "api_legacy"
     end
     
-    generate_generic ${path} js ${out} "--config js.abi=${config}"
+    generate_generic ${path} js ${api_path}/${out} "--config js.abi=${config}"
 end

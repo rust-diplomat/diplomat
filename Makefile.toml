@@ -416,7 +416,7 @@ script = '''
 exit_on_error true
 
 !include_files ./support/functions.ds
-generate_js spec feature_tests
+generate_js spec feature_tests .
 '''
 
 [tasks.gen-js-feature-legacy]
@@ -426,7 +426,7 @@ script = '''
 exit_on_error true
 
 !include_files ./support/functions.ds
-generate_js legacy feature_tests
+generate_js legacy feature_tests .
 '''
 
 [tasks.gen-js-example]
@@ -436,7 +436,7 @@ script = '''
 exit_on_error true
 
 !include_files ./support/functions.ds
-generate_js spec example
+generate_js spec example lib
 '''
 
 [tasks.gen-js-example-legacy]
@@ -446,7 +446,7 @@ script = '''
 exit_on_error true
 
 !include_files ./support/functions.ds
-generate_js legacy example
+generate_js legacy example lib
 '''
 
 [tasks.gen-demo-feature]
