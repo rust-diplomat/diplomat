@@ -62,3 +62,17 @@ fn generate_generic
         rm -r "tmp/${output_folder}"
     end
 end
+
+fn generate_js
+    # If someone else wants to set the C-ABI over CLI, this is what this is for:
+    # usage: cargo make gen-js-feature ABI
+    config = set ${1}
+    path = set ${2}
+
+    out = set "api"
+    if eq ${config} "legacy"
+        out = set "api_legacy"
+    end
+    
+    generate_generic ${path} js ${out} "--config js.abi=${config}"
+end

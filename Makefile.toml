@@ -337,6 +337,7 @@ dependencies = [
     "gen-cpp-feature",
     "gen-c-feature",
     "gen-js-feature",
+    "gen-js-feature-legacy",
     "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
@@ -349,6 +350,7 @@ dependencies = [
     "gen-cpp-example",
     "gen-c-example",
     "gen-js-example",
+    "gen-js-example-legacy",
     "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
@@ -413,15 +415,18 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 
-# If someone else wants to set the C-ABI over CLI, this is what this is for:
-# usage: cargo make gen-js-feature ABI
-config = set ${1}
-if is_empty ${config}
-    config = set "spec"
-end
+!include_files ./support/functions.ds
+generate_js spec feature_tests
+'''
+
+[tasks.gen-js-feature-legacy]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
 
 !include_files ./support/functions.ds
-generate_generic feature_tests js api "--config js.abi=${config}"
+generate_js legacy feature_tests
 '''
 
 [tasks.gen-js-example]
@@ -430,13 +435,18 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 
-config = set ${1}
-if is_empty ${config}
-    config = set "spec"
-end
+!include_files ./support/functions.ds
+generate_js spec example
+'''
+
+[tasks.gen-js-example-legacy]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
 
 !include_files ./support/functions.ds
-generate_generic example js lib/api "--config js.abi=${config}"
+generate_js legacy example
 '''
 
 [tasks.gen-demo-feature]
