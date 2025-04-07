@@ -165,7 +165,12 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             }
 
             for p in &method.params {
-                BorrowingParamVisitor::add_slices_to_used_lifetimes(&mut used_method_lifetimes, method, tcx, &p.ty);
+                BorrowingParamVisitor::add_slices_to_used_lifetimes(
+                    &mut used_method_lifetimes,
+                    method,
+                    tcx,
+                    &p.ty,
+                );
             }
         }
 
@@ -192,7 +197,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
     }
 
     /// Given a specific [hir::Type] `ty`, find the lifetimes of slices associated with `ty` and add them to `set`.
-    /// 
+    ///
     /// We're only interested in non-static, bounded lifetimes (since those are ones we can explicitly de-allocate).
     fn add_slices_to_used_lifetimes<P: TyPosition<StructPath = StructPath>>(
         set: &mut BTreeSet<Lifetime>,
