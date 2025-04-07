@@ -213,7 +213,22 @@ namespace nanobind::detail
 
         // Cast C++ -> Python (when returning a span from a C++ function)
         static handle from_cpp(diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
-            return ListCaster::from_cpp(src, policy, cleanup);
+            using Array = nb::ndarray<std::remove_cv_t<T>, nb::numpy, nb::ndim<1>, nb::f_contig>;
+            if constexpr(is_ndarray_scalar_v<T>) {
+                nb::object owner;
+                if (cleanup->self()) {
+                    owner = nb::borrow(cleanup->self());
+                    policy = rv_policy::reference;
+                }
+
+                 object o = steal(type_caster<Array>::from_cpp(
+                    Array((void* )src.data(), {src.size()}, owner),
+                    policy, cleanup));
+
+                return o.release();
+            } else {
+                return ListCaster::from_cpp(src, policy, cleanup);
+            }
         }
     };
 }
