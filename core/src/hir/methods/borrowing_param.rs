@@ -206,11 +206,11 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         }
     }
 
-    fn add_slices_to_used_lifetimes(
+    fn add_slices_to_used_lifetimes<P: TyPosition<StructPath = StructPath>>(
         set: &mut BTreeSet<Lifetime>,
         method: &'tcx Method,
         tcx: &'tcx TypeContext,
-        ty: &hir::Type,
+        ty: &hir::Type<P>,
     ) {
         match ty {
             hir::Type::Struct(s) => {
