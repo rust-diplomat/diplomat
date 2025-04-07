@@ -48,6 +48,7 @@
 #include "RefListParameter.hpp"
 #include "ResultOpaque.hpp"
 #include "StructArithmetic.hpp"
+#include "StructWithSlices.hpp"
 #include "Two.hpp"
 #include "UnimportedEnum.hpp"
 #include "Unnamespaced.hpp"
@@ -426,6 +427,13 @@ NB_MODULE(somelib, somelib_mod)
     	.def(nb::self * nb::self)
     	.def("__init__", [](StructArithmetic* self, int32_t x, int32_t y){ *self = StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
     	.def(nb::self - nb::self);
+    
+    nb::class_<StructWithSlices>(somelib_mod, "StructWithSlices")
+        .def(nb::init<>())
+        .def(nb::init<std::string_view, diplomat::span<const uint16_t>>(), "first"_a.none(),  "second"_a.none())
+        .def_rw("first", &StructWithSlices::first)
+        .def_rw("second", &StructWithSlices::second)
+    	.def("return_last", &StructWithSlices::return_last);
     
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
         .def(nb::init<>())

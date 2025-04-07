@@ -479,7 +479,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             return None;
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, true);
 
         let _guard = self.errors.set_context_method(
             self.tcx.fmt_type_name_diagnostics(type_id),
@@ -497,12 +497,27 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         };
 
         if let Some(param_self) = method.param_self.as_ref() {
-            visitor.visit_param(&param_self.ty.clone().into(), "this");
+            let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
+
+            let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
+                Some(super::converter::StructBorrowContext {
+                    use_env: &method.lifetime_env,
+                    param_info,
+                    is_method: true,
+                })
+            } else {
+                None
+            };
 
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info
                 .param_conversions
-                .push(self.gen_js_to_c_self(&param_self.ty));
+                // Pretty sure we don't need to force padding because we're just passing in a pointer:
+                .push(self.gen_js_to_c_self(
+                    JsToCConversionContext::List(ForcePaddingStatus::NoForce),
+                    struct_borrow.as_ref(),
+                    &param_self.ty,
+                ));
 
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;
