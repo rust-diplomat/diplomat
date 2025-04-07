@@ -214,7 +214,6 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             }
             hir::Type::Slice(s) => {
                 if let Some(MaybeStatic::NonStatic(lt)) = s.lifetime() {
-                    set.insert(*lt);
                     if method.lifetime_env.get_bounds(*lt).is_some() {
                         set.insert(*lt);
                     }
