@@ -412,8 +412,16 @@ category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+
+# If someone else wants to set the C-ABI over CLI, this is what this is for:
+# usage: cargo make gen-js-feature ABI
+config = set ${1}
+if is_empty ${config}
+    config = set "spec"
+end
+
 !include_files ./support/functions.ds
-generate_generic feature_tests js api "--config js.abi=spec"
+generate_generic feature_tests js api "--config js.abi=${config}"
 '''
 
 [tasks.gen-js-example]
@@ -421,8 +429,14 @@ category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+
+config = set ${1}
+if is_empty ${config}
+    config = set "spec"
+end
+
 !include_files ./support/functions.ds
-generate_generic example js lib/api "--config js.abi=spec"
+generate_generic example js lib/api "--config js.abi=${config}"
 '''
 
 [tasks.gen-demo-feature]
