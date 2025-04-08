@@ -272,6 +272,11 @@ impl Method {
     ///
     /// This is useful for backends which wish to have lifetime codegen for methods only handle the local
     /// method lifetime, and delegate to generated code on structs for handling the internals of struct lifetimes.
+    ///
+    /// `force_include_slices` is right now *just* for the JS backend.
+    /// Because the JS backend requires us to know information about the allocation of each slice,
+    /// then we need to grab that information in the [`BorrowingParamVisitor`].
+    /// See [`BorrowingParamVisitor::new`] for more.
     pub fn borrowing_param_visitor<'tcx>(
         &'tcx self,
         tcx: &'tcx TypeContext,
