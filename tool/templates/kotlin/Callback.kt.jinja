@@ -34,7 +34,7 @@ internal class {{name}} internal constructor (
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize({{name}}_Native::class.java).toLong()
-        
+
         fun fromCallback(cb: ({{input_types}})->{{output_type}}): {{name}} {
             val callback: Runner_{{name}} = object :  Runner_{{name}} {
                 override fun invoke(lang_specific_context: Pointer?{% if input_types != "" %}, {{native_input_params_and_types}} {% endif %}): {{native_output_type}} {

@@ -8,9 +8,9 @@ typedef struct {{ cb_and_struct_def.name }} {
     void (*destructor)(const void*);
 } {{ cb_and_struct_def.name }};
 {%- endfor %}
-{% for method in methods %}
+{%- for method in methods %}
 {{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
-{% endfor %}
+{%- endfor %}
 {%~ match dtor_name %}
 {% when Some with (dtor_name) ~%}
 void {{ dtor_name }}({{ ty_name }}* self);
