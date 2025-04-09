@@ -121,7 +121,7 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-npm install && npm run test
+npm ci && npm run test
 '''
 
 [tasks.test-demo-feature]
@@ -131,7 +131,7 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm ../js/api/diplomat_feature_tests.wasm
-npm install && npm run test
+npm ci && npm run test
 '''
 
 [tasks.test-demo-example]
@@ -141,7 +141,7 @@ script_runner = "@shell"
 script = '''
 cd example/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm ../js/lib/api/diplomat_example.wasm
-npm install && npm run test
+npm ci && npm run test
 '''
 
 [tasks.test-dart-example]
