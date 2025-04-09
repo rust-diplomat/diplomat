@@ -277,10 +277,7 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
-            .trim()
-            .replace('\n', "\n * ")
-            .replace(" \n", "\n")
+        docs.to_markdown(self.docs_url_gen).trim().to_string()
     }
 
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
