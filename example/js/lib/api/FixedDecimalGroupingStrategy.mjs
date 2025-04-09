@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class FixedDecimalGroupingStrategy {
-    
     #value = undefined;
 
     static #values = new Map([
@@ -18,7 +17,7 @@ export class FixedDecimalGroupingStrategy {
     static getAllEntries() {
         return FixedDecimalGroupingStrategy.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -48,11 +47,11 @@ export class FixedDecimalGroupingStrategy {
         return new FixedDecimalGroupingStrategy(value);
     }
 
-    get value() {
+    get value(){
         return [...FixedDecimalGroupingStrategy.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [

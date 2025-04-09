@@ -24,115 +24,130 @@ final class OptionOpaque implements ffi.Finalizable {
 
   static OptionOpaque? new_(int i) {
     final result = _OptionOpaque_new(i);
-    return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
+        return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
+
   }
 
   static OptionOpaque? newNone() {
     final result = _OptionOpaque_new_none();
-    return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
+        return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
+
   }
 
   static OptionStruct? returns() {
     final result = _OptionOpaque_returns();
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return OptionStruct._fromFfi(result.union.ok);
+
   }
 
   int? optionIsize() {
     final result = _OptionOpaque_option_isize(_ffi);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok;
+
   }
 
   int? optionUsize() {
     final result = _OptionOpaque_option_usize(_ffi);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok;
+
   }
 
   int? optionI32() {
     final result = _OptionOpaque_option_i32(_ffi);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok;
+
   }
 
   int? optionU32() {
     final result = _OptionOpaque_option_u32(_ffi);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok;
+
   }
 
   static OptionStruct newStruct() {
     final result = _OptionOpaque_new_struct();
-    return OptionStruct._fromFfi(result);
+        return OptionStruct._fromFfi(result);
+
   }
 
   static OptionStruct newStructNones() {
     final result = _OptionOpaque_new_struct_nones();
-    return OptionStruct._fromFfi(result);
+        return OptionStruct._fromFfi(result);
+
   }
 
   OptionOpaque? returnsNoneSelf() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OptionOpaque_returns_none_self(_ffi);
-    return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+        return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+
   }
 
   OptionOpaque? returnsSomeSelf() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OptionOpaque_returns_some_self(_ffi);
-    return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+        return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
+
   }
 
-  void assertInteger(int i) {
-    _OptionOpaque_assert_integer(_ffi, i);
+  void assertInteger(int i) {_OptionOpaque_assert_integer(_ffi, i);
   }
 
   static bool optionOpaqueArgument([OptionOpaque? arg]) {
     final result = _OptionOpaque_option_opaque_argument(arg?._ffi ?? ffi.Pointer.fromAddress(0));
-    return result;
+        return result;
+
   }
 
   static int? acceptsOptionU8(int sentinel, [int? arg]) {
     final result = _OptionOpaque_accepts_option_u8(arg != null ? _ResultUint8Void.ok(arg) : _ResultUint8Void.err(), sentinel);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok;
+
   }
 
   static OptionEnum? acceptsOptionEnum(int sentinel, [OptionEnum? arg]) {
     final result = _OptionOpaque_accepts_option_enum(arg != null ? _ResultInt32Void.ok(arg.index) : _ResultInt32Void.err(), sentinel);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return OptionEnum.values[result.union.ok];
+
   }
 
   static OptionInputStruct? acceptsOptionInputStruct(int sentinel, [OptionInputStruct? arg]) {
     final temp = _FinalizedArena();
     final result = _OptionOpaque_accepts_option_input_struct(arg != null ? _ResultOptionInputStructFfiVoid.ok(arg._toFfi(temp.arena)) : _ResultOptionInputStructFfiVoid.err(), sentinel);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return OptionInputStruct._fromFfi(result.union.ok);
+
   }
 
   static OptionInputStruct returnsOptionInputStruct() {
     final result = _OptionOpaque_returns_option_input_struct();
-    return OptionInputStruct._fromFfi(result);
+        return OptionInputStruct._fromFfi(result);
+
   }
 }
 

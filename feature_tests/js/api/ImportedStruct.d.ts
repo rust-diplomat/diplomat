@@ -10,13 +10,10 @@ type ImportedStruct_obj = {
 
 
 export class ImportedStruct {
-    
-    get foo() : UnimportedEnum; 
-    set foo(value: UnimportedEnum); 
-    
-    get count() : number; 
-    set count(value: number); 
-    
+    get foo(): UnimportedEnum;
+    set foo(value: UnimportedEnum);
+    get count(): number;
+    set count(value: number);
     /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */

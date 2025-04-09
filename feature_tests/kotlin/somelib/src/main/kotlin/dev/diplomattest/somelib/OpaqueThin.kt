@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueThinLib: Library {
     fun OpaqueThin_destroy(handle: Pointer)
     fun OpaqueThin_a(handle: Pointer): Int

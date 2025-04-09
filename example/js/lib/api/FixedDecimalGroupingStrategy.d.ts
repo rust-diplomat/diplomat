@@ -4,13 +4,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class FixedDecimalGroupingStrategy {
-    
 
-    static fromValue(value : FixedDecimalGroupingStrategy | string) : FixedDecimalGroupingStrategy; 
+    static fromValue(value : FixedDecimalGroupingStrategy | string) : FixedDecimalGroupingStrategy;
 
-    get value() : string;
+    get value(): string;
 
-    get ffiValue() : number;
+    get ffiValue(): number;
 
     static Auto : FixedDecimalGroupingStrategy;
     static Never : FixedDecimalGroupingStrategy;

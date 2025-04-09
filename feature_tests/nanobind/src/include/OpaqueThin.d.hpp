@@ -14,6 +14,7 @@
 namespace diplomat {
 namespace capi {
     struct OpaqueThin;
+
 } // namespace capi
 } // namespace
 

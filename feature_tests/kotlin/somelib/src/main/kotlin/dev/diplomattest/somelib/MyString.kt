@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface MyStringLib: Library {
     fun MyString_destroy(handle: Pointer)
     fun MyString_new(v: Slice): Pointer

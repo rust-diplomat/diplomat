@@ -35,12 +35,14 @@ enum MyEnum {
 
   int intoValue() {
     final result = _MyEnum_into_value(_ffi);
-    return result;
+        return result;
+
   }
 
   static MyEnum getA() {
     final result = _MyEnum_get_a();
-    return MyEnum.values.firstWhere((v) => v._ffi == result);
+        return MyEnum.values.firstWhere((v) => v._ffi == result);
+
   }
 }
 

@@ -14,6 +14,7 @@
 namespace diplomat {
 namespace capi {
     struct Utf16Wrap;
+
 } // namespace capi
 } // namespace
 

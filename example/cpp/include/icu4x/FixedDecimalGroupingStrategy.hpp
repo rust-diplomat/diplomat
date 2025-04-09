@@ -16,9 +16,9 @@
 namespace icu4x {
 namespace capi {
     extern "C" {
-    
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

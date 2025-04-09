@@ -25,14 +25,16 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
   factory RenamedMyIterable(core.List<int> x) {
     final temp = _FinalizedArena();
     final result = _namespace_MyIterable_new(x._uint8AllocIn(temp.arena));
-    return RenamedMyIterable._fromFfi(result, []);
+        return RenamedMyIterable._fromFfi(result, []);
+
   }
 
   RenamedMyIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_MyIterable_iter(_ffi);
-    return RenamedMyIterator._fromFfi(result, [], aEdges);
+        return RenamedMyIterator._fromFfi(result, [], aEdges);
+
   }
 }
 

@@ -20,17 +20,17 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
     {%- if !typescript %}
     #{{field.field_name}};
-    {% endif %}
-    get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
+    {%- endif %}
+    get {{field.field_name}}() {%- if typescript %}: {{field.js_type_name}};{% else %} {
         return this.#{{field.field_name}};
     }{% endif -%}
-    {%- if mutable %} 
-    set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {% if !typescript -%} {
+    {%- if mutable %}
+    set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {%- if !typescript -%} {
         this.#{{field.field_name}} = value;
     }
     {%- endif -%}
     {%- endif %}
-    {% endfor -%}
+    {%- endfor -%}
 
     {%~ if !is_out %}
     /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
@@ -82,7 +82,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     {%~ if !fields.is_empty() %}
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    {% if lifetimes.all_lifetimes().len() != 0 -%}
+    {%- if lifetimes.all_lifetimes().len() != 0 -%}
     // If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
@@ -151,7 +151,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
         {%- if wraps_primitive && owns_wrapped_primitive %}
         structObj.{{fields.first().unwrap().field_name}} = primitiveValue;
-        {% else %}
+        {%- else %}
         {%- for field in fields %}
         const {{field.field_name}}Deref = {%- if wraps_primitive && !owns_wrapped_primitive %} primitiveValue {%- else %} {{field.c_to_js_deref}} {%- endif %};
         structObj.{{field.field_name}} = {{field.c_to_js}};
@@ -160,16 +160,16 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
     }
-    
+
     {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
 
-    // Return all fields corresponding to lifetime `'{{ltname}}` 
+    // Return all fields corresponding to lifetime `'{{ltname}}`
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
     // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetime{{ltname.to_uppercase()}}() { 
+    get _fieldsForLifetime{{ltname.to_uppercase()}}() {
         return [
         {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
             {%- if !loop.first %}, {% endif -%}

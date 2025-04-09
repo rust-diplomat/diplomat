@@ -17,9 +17,9 @@
     {% endfor -%}
 
     {%- for alloc_stmt in alloc_expressions %}
-    {{alloc_stmt|indent(4)}}
+    {{- alloc_stmt|indent_trimmed(4)}}
     {% endfor -%}
-    
+
     {% let lifetimes = lifetimes.unwrap() -%}
     {% for lifetime in lifetimes.all_lifetimes() -%}
     {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) -%}
@@ -37,7 +37,6 @@
     {% endif -%}
     {%- endfor -%}
 
-
     {%~ if !method_output_is_ffi_unit %}
     const result = {% endif %}wasm.{{ abi_name }}(
         {%- for param in param_conversions -%}
@@ -49,11 +48,11 @@
     try {
     {%- match return_expression -%}
     {%- when Some with (statement) %}
-        {{ statement|indent(8) }}
+        {{- statement|indent_trimmed(8) }}
     {% when None -%}
     {%- endmatch -%}
     }
-    
+
     finally {
     {%- if needs_slice_cleanup %}
         functionCleanupArena.free();
@@ -62,7 +61,7 @@
         functionGarbageCollectorGrip.releaseToGarbageCollector();
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
-        {{cleanup|indent(8)}}
+        {{- cleanup|indent_trimmed(8)}}
     {% endfor -%}
     }
 }
