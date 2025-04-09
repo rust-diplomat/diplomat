@@ -101,35 +101,29 @@ export class RenamedStructWithAttrs {
     }
     #defaultConstructor(a, b) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
 
-
         const result = wasm.namespace_StructWithAttrs_new_fallible(diplomatReceive.buffer, a, b);
 
         try {        if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return RenamedStructWithAttrs._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const result = wasm.namespace_StructWithAttrs_c(...RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
 
         try {        return result;
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
 
     constructor(a, b) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

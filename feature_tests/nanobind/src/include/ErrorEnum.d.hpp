@@ -19,7 +19,6 @@ namespace capi {
     };
 
     typedef struct ErrorEnum_option {union { ErrorEnum ok; }; bool is_ok; } ErrorEnum_option;
-
 } // namespace capi
 } // namespace
 

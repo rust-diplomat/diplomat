@@ -25,7 +25,6 @@ namespace capi {
     void OptionString_destroy(OptionString* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

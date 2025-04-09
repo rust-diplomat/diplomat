@@ -108,18 +108,14 @@ export class FixedDecimalFormatterOptions {
     }
     #defaultConstructor() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 
-
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
 
         try {        return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

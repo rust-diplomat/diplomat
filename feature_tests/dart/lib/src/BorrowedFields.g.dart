@@ -41,8 +41,7 @@ final class BorrowedFields {
     // This lifetime edge depends on lifetimes: 'x
     core.List<Object> xEdges = [bar, dstr16Arena, utf8StrArena];
     final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16._utf16AllocIn(dstr16Arena.arena), utf8Str._utf8AllocIn(utf8StrArena.arena));
-        return BorrowedFields._fromFfi(result, xEdges);
-
+    return BorrowedFields._fromFfi(result, xEdges);
   }
 
   @override

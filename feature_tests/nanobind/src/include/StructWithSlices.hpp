@@ -19,7 +19,6 @@ namespace capi {
     void StructWithSlices_return_last(diplomat::capi::StructWithSlices self, diplomat::capi::DiplomatWrite* write);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

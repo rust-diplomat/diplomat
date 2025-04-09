@@ -79,22 +79,18 @@ export class MyEnum {
         const result = wasm.MyEnum_into_value(this.ffiValue);
 
         try {        return result;
-
         }
 
         finally {}
     }
-
     static getA() {
         const result = wasm.MyEnum_get_a();
 
         try {        return new MyEnum(diplomatRuntime.internalConstructor, result);
-
         }
 
         finally {}
     }
-
 
     constructor(value) {
         return this.#internalConstructor(...arguments)

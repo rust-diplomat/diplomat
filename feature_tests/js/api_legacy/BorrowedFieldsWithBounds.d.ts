@@ -24,6 +24,5 @@ export class BorrowedFieldsWithBounds {
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 
-
     constructor(structObj : BorrowedFieldsWithBounds_obj);
 }

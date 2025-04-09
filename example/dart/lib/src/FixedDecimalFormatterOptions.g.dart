@@ -34,7 +34,7 @@ final class FixedDecimalFormatterOptions {
 
   factory FixedDecimalFormatterOptions({FixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {
     final result = _icu4x_FixedDecimalFormatterOptions_default_mv1();
-        final dart = FixedDecimalFormatterOptions._fromFfi(result);
+    final dart = FixedDecimalFormatterOptions._fromFfi(result);
     if (groupingStrategy != null) {
       dart.groupingStrategy = groupingStrategy;
     }
@@ -42,7 +42,6 @@ final class FixedDecimalFormatterOptions {
       dart.someOtherConfig = someOtherConfig;
     }
     return dart;
-
   }
 
   @override

@@ -4,7 +4,6 @@
 part of 'lib.g.dart';
 
 /// See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
-
 final class FixedDecimal implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
@@ -24,30 +23,25 @@ final class FixedDecimal implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimal_destroy_mv1));
   /// Construct an [`FixedDecimal`] from an integer.
-
   factory FixedDecimal(int v) {
     final result = _icu4x_FixedDecimal_new_mv1(v);
-        return FixedDecimal._fromFfi(result, []);
-
+    return FixedDecimal._fromFfi(result, []);
   }
   /// Multiply the [`FixedDecimal`] by a given power of ten.
-///
+  ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-
   void multiplyPow10(int power) {_icu4x_FixedDecimal_multiply_pow10_mv1(_ffi, power);
   }
   /// Format the [`FixedDecimal`] as a string.
-///
+  ///
   /// See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-
   String? toStringFallible() {
     final write = _Write();
     final result = _icu4x_FixedDecimal_to_string_mv1(_ffi, write._ffi);
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return write.finalize();
-
   }
 }
 

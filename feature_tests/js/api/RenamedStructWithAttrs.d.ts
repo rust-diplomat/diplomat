@@ -20,6 +20,5 @@ export class RenamedStructWithAttrs {
 
     get c(): number;
 
-
     constructor(a: boolean, b: number);
 }

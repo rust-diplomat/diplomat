@@ -40,12 +40,10 @@ export class RenamedOpaqueIterable {
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
 
         try {        return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
-
         }
 
         finally {}
     }
-
 
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)

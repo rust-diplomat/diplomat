@@ -22,7 +22,6 @@ namespace capi {
     diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption_filled(void);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -5,7 +5,6 @@ expression: decl_header.body
 namespace diplomat {
 namespace capi {
     struct MyStruct;
-
 } // namespace capi
 } // namespace
 

@@ -48,14 +48,12 @@ export class Foo {
         const result = wasm.Foo_new(xSlice.ptr);
 
         try {        return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
-
         }
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
-
     get bar() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -66,14 +64,11 @@ export class Foo {
         const result = wasm.Foo_get_bar(this.ffiValue);
 
         try {        return new Bar(diplomatRuntime.internalConstructor, result, [], bEdges, aEdges);
-
         }
 
         finally {}
     }
-
     asReturning() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-
 
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -81,14 +76,11 @@ export class Foo {
         const result = wasm.Foo_as_returning(diplomatReceive.buffer, this.ffiValue);
 
         try {        return BorrowedFieldsReturning._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static extractFromFields(fields) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -98,7 +90,6 @@ export class Foo {
         const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false));
 
         try {        return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
-
         }
 
         finally {
@@ -106,10 +97,8 @@ export class Foo {
         }
     }
 
-
     /**
      * Test that the extraction logic correctly pins the right fields
-
      */
         static extractFromBounds(bounds, anotherString) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
@@ -129,7 +118,6 @@ export class Foo {
         const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
 
         try {        return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
-
         }
 
         finally {
@@ -138,7 +126,6 @@ export class Foo {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
-
 
     constructor(x) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

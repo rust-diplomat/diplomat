@@ -83,63 +83,49 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b();
 
         try {        return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
-
         }
 
         finally {}
     }
-
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
             const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {
             functionCleanupArena.free();
                 write.free();
-
         }
     }
-
     doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
             const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {
             functionCleanupArena.free();
                 write.free();
-
         }
     }
-
     get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
             const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {
             functionCleanupArena.free();
                 write.free();
-
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

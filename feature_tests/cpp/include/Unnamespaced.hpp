@@ -24,7 +24,6 @@ namespace capi {
     void namespace_Unnamespaced_destroy(Unnamespaced* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

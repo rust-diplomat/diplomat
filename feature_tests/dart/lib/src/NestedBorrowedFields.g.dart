@@ -49,8 +49,7 @@ final class NestedBorrowedFields {
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [foo, dstr16ZArena, utf8StrZArena];
     final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), dstr16Z._utf16AllocIn(dstr16ZArena.arena), utf8StrY._utf8AllocIn(utf8StrYArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
-        return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
-
+    return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }
 
   @override

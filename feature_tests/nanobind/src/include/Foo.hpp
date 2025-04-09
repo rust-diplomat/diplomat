@@ -30,7 +30,6 @@ namespace capi {
     void Foo_destroy(Foo* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

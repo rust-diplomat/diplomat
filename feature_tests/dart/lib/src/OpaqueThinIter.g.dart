@@ -39,8 +39,7 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinIter_next(_ffi);
-        return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
-
+    return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
 }
 

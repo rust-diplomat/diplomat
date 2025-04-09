@@ -28,8 +28,7 @@ final class RefList implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'b
     core.List<Object> bEdges = [data];
     final result = _RefList_node(data._ffi);
-        return RefList._fromFfi(result, [], bEdges);
-
+    return RefList._fromFfi(result, [], bEdges);
   }
 }
 

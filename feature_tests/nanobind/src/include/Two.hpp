@@ -20,7 +20,6 @@ namespace capi {
     void Two_destroy(Two* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -27,7 +27,6 @@ namespace capi {
     void namespace_AttrOpaque1_destroy(AttrOpaque1Renamed* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

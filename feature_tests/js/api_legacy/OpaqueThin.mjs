@@ -36,22 +36,18 @@ export class OpaqueThin {
         const result = wasm.OpaqueThin_a(this.ffiValue);
 
         try {        return result;
-
         }
 
         finally {}
     }
-
     get b() {
         const result = wasm.OpaqueThin_b(this.ffiValue);
 
         try {        return result;
-
         }
 
         finally {}
     }
-
 
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)

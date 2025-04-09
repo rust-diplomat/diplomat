@@ -27,7 +27,6 @@ namespace capi {
     void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

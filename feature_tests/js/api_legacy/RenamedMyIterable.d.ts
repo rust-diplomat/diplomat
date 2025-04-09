@@ -8,6 +8,5 @@ export class RenamedMyIterable {
     get ffiValue(): pointer;
     [Symbol.iterator](): RenamedMyIterator;
 
-
     constructor(x: Array<number>);
 }

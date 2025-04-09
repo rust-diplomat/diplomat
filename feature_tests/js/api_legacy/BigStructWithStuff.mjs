@@ -6,7 +6,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * Testing JS-specific layout/padding behavior
-
  */
 
 
@@ -158,7 +157,6 @@ export class BigStructWithStuff {
             functionCleanupArena.free();
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

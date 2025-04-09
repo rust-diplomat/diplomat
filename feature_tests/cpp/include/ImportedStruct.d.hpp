@@ -22,7 +22,6 @@ namespace capi {
     };
 
     typedef struct ImportedStruct_option {union { ImportedStruct ok; }; bool is_ok; } ImportedStruct_option;
-
 } // namespace capi
 } // namespace
 

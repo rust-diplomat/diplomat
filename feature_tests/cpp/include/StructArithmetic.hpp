@@ -25,7 +25,6 @@ namespace capi {
     diplomat::capi::StructArithmetic StructArithmetic_div(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

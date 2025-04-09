@@ -30,7 +30,6 @@ namespace capi {
     void Opaque_destroy(Opaque* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

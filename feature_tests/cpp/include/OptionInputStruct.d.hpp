@@ -23,7 +23,6 @@ namespace capi {
     };
 
     typedef struct OptionInputStruct_option {union { OptionInputStruct ok; }; bool is_ok; } OptionInputStruct_option;
-
 } // namespace capi
 } // namespace
 
