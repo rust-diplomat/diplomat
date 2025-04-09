@@ -25,7 +25,6 @@ namespace capi {
     void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

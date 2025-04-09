@@ -82,14 +82,11 @@ export class CyclicStructB {
         const result = wasm.CyclicStructB_get_a();
 
         try {        return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, result);
-
         }
 
         finally {}
     }
-
     static getAOption() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
-
 
         const result = wasm.CyclicStructB_get_a_option(diplomatReceive.buffer);
 
@@ -97,14 +94,11 @@ export class CyclicStructB {
                 return null;
             }
             return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

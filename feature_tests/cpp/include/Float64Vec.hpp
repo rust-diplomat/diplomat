@@ -35,7 +35,6 @@ namespace capi {
     void Float64Vec_destroy(Float64Vec* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

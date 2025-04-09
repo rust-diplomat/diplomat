@@ -62,7 +62,6 @@ namespace capi {
     void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb cb_cb_wrap, diplomat::capi::MyString* a);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -21,7 +21,6 @@ namespace capi {
     diplomat::capi::MyEnum MyEnum_get_a(void);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

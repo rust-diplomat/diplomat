@@ -32,7 +32,6 @@ namespace capi {
     void namespace_OpaqueArithmetic_destroy(RenamedOpaqueArithmetic* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

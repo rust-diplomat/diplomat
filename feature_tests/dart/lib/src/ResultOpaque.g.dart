@@ -21,105 +21,89 @@ final class ResultOpaque implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
-///
-///
+  ///
+  ///
   ///  Throws [ErrorEnum] on failure.
-
   factory ResultOpaque(int i) {
     final result = _ResultOpaque_new(i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-
   }
-///
-///
+  ///
+  ///
   ///  Throws [ErrorEnum] on failure.
-
   factory ResultOpaque.failingFoo() {
     final result = _ResultOpaque_new_failing_foo();
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-
   }
-///
-///
+  ///
+  ///
   ///  Throws [ErrorEnum] on failure.
-
   factory ResultOpaque.failingBar() {
     final result = _ResultOpaque_new_failing_bar();
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-
   }
 
   static ResultOpaque? failingUnit() {
     final result = _ResultOpaque_new_failing_unit();
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-
   }
-///
-///
+  ///
+  ///
   ///  Throws [ErrorStruct] on failure.
-
   factory ResultOpaque.failingStruct(int i) {
     final result = _ResultOpaque_new_failing_struct(i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ErrorStruct._fromFfi(result.union.err);
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-
   }
-///
-///
+  ///
+  ///
   ///  Throws [ResultOpaque] on failure.
-
   static void newInErr(int i) {
     final result = _ResultOpaque_new_in_err(i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ResultOpaque._fromFfi(result.union.err, []);
     }
-
   }
 
   static int? newInt(int i) {
     final result = _ResultOpaque_new_int(i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return result.union.ok;
-
   }
-///
-///
+  ///
+  ///
   ///  Throws [ResultOpaque] on failure.
-
   static ErrorEnum newInEnumErr(int i) {
     final result = _ResultOpaque_new_in_enum_err(i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       throw ResultOpaque._fromFfi(result.union.err, []);
     }
     return ErrorEnum.values[result.union.ok];
-
   }
   /// When we take &str, the return type becomes a Result
   /// Test that this interacts gracefully with returning a reference type
-
   ResultOpaque takesStr(String v) {
     final temp = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _ResultOpaque_takes_str(_ffi, v._utf8AllocIn(temp.arena));
-        return ResultOpaque._fromFfi(result, aEdges);
-
+    return ResultOpaque._fromFfi(result, aEdges);
   }
 
   void assertInteger(int i) {_ResultOpaque_assert_integer(_ffi, i);

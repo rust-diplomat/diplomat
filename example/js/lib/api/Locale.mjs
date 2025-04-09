@@ -5,9 +5,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * An  Locale, capable of representing strings like `"en-US"`.
-*
+ *
  * See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
-
  */
 const Locale_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_Locale_destroy_mv1(ptr);
@@ -42,7 +41,6 @@ export class Locale {
 
     /**
      * Construct an [`Locale`] from a locale identifier represented as a string.
-
      */
         #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
@@ -52,14 +50,12 @@ export class Locale {
         const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr);
 
         try {        return new Locale(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
 
     constructor(name) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

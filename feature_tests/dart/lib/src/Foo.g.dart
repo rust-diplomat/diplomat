@@ -29,8 +29,7 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [xArena];
     final result = _Foo_new(x._utf8AllocIn(xArena.arena));
-        return Foo._fromFfi(result, [], aEdges);
-
+    return Foo._fromFfi(result, [], aEdges);
   }
 
   Bar get bar {
@@ -39,16 +38,14 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a, 'b
     core.List<Object> bEdges = [this];
     final result = _Foo_get_bar(_ffi);
-        return Bar._fromFfi(result, [], bEdges, aEdges);
-
+    return Bar._fromFfi(result, [], bEdges, aEdges);
   }
 
   BorrowedFieldsReturning asReturning() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Foo_as_returning(_ffi);
-        return BorrowedFieldsReturning._fromFfi(result, aEdges);
-
+    return BorrowedFieldsReturning._fromFfi(result, aEdges);
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
@@ -56,19 +53,16 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [...fields._fieldsForLifetimeA];
     final result = _Foo_extract_from_fields(fields._toFfi(temp.arena, aAppendArray: [aEdges]));
-        return Foo._fromFfi(result, [], aEdges);
-
+    return Foo._fromFfi(result, [], aEdges);
   }
   /// Test that the extraction logic correctly pins the right fields
-
   factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
     final temp = _FinalizedArena();
     final anotherStringArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a, 'y, 'z
     core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
     final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString._utf8AllocIn(anotherStringArena.arena));
-        return Foo._fromFfi(result, [], aEdges);
-
+    return Foo._fromFfi(result, [], aEdges);
   }
 }
 

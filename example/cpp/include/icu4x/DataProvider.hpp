@@ -24,7 +24,6 @@ namespace capi {
     void icu4x_DataProvider_destroy_mv1(DataProvider* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

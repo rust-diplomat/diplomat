@@ -36,25 +36,19 @@ export class MyOpaqueEnum {
         const result = wasm.MyOpaqueEnum_new();
 
         try {        return new MyOpaqueEnum(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {}
     }
-
     toString() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.MyOpaqueEnum_to_string(this.ffiValue, write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {        write.free();
-
         }
     }
-
 
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)

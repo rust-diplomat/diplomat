@@ -18,7 +18,6 @@ class Two;
 namespace diplomat {
 namespace capi {
     struct One;
-
 } // namespace capi
 } // namespace
 

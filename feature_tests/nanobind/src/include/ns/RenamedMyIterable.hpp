@@ -25,7 +25,6 @@ namespace capi {
     void namespace_MyIterable_destroy(RenamedMyIterable* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -6,7 +6,6 @@ part of 'lib.g.dart';
 /// An  Locale, capable of representing strings like `"en-US"`.
 ///
 /// See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
-
 final class Locale implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
@@ -26,12 +25,10 @@ final class Locale implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_Locale_destroy_mv1));
   /// Construct an [`Locale`] from a locale identifier represented as a string.
-
   factory Locale(String name) {
     final temp = _FinalizedArena();
     final result = _icu4x_Locale_new_mv1(name._utf8AllocIn(temp.arena));
-        return Locale._fromFfi(result, []);
-
+    return Locale._fromFfi(result, []);
   }
 }
 

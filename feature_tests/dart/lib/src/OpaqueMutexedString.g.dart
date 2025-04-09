@@ -24,8 +24,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
 
   static OpaqueMutexedString fromUsize(int number) {
     final result = _OpaqueMutexedString_from_usize(number);
-        return OpaqueMutexedString._fromFfi(result, []);
-
+    return OpaqueMutexedString._fromFfi(result, []);
   }
 
   void change(int number) {_OpaqueMutexedString_change(_ffi, number);
@@ -35,50 +34,43 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueMutexedString_borrow(_ffi);
-        return OpaqueMutexedString._fromFfi(result, aEdges);
-
+    return OpaqueMutexedString._fromFfi(result, aEdges);
   }
 
   static OpaqueMutexedString borrowOther(OpaqueMutexedString other) {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [other];
     final result = _OpaqueMutexedString_borrow_other(other._ffi);
-        return OpaqueMutexedString._fromFfi(result, aEdges);
-
+    return OpaqueMutexedString._fromFfi(result, aEdges);
   }
 
   OpaqueMutexedString borrowSelfOrOther(OpaqueMutexedString other) {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this, other];
     final result = _OpaqueMutexedString_borrow_self_or_other(_ffi, other._ffi);
-        return OpaqueMutexedString._fromFfi(result, aEdges);
-
+    return OpaqueMutexedString._fromFfi(result, aEdges);
   }
 
   int getLenAndAdd(int other) {
     final result = _OpaqueMutexedString_get_len_and_add(_ffi, other);
-        return result;
-
+    return result;
   }
 
   String dummyStr() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueMutexedString_dummy_str(_ffi);
-        return result._toDart(aEdges);
-
+    return result._toDart(aEdges);
   }
 
   Utf16Wrap wrapper() {
     final result = _OpaqueMutexedString_wrapper(_ffi);
-        return Utf16Wrap._fromFfi(result, []);
-
+    return Utf16Wrap._fromFfi(result, []);
   }
 
   int toUnsignedFromUnsigned(int input) {
     final result = _OpaqueMutexedString_to_unsigned_from_unsigned(_ffi, input);
-        return result;
-
+    return result;
   }
 }
 

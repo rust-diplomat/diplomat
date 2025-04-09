@@ -22,7 +22,6 @@ namespace capi {
     void CyclicStructC_cyclic_out(diplomat::capi::CyclicStructC self, diplomat::capi::DiplomatWrite* write);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

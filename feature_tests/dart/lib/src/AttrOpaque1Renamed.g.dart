@@ -24,20 +24,17 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
 
   factory AttrOpaque1Renamed() {
     final result = _namespace_AttrOpaque1_new();
-        return AttrOpaque1Renamed._fromFfi(result, []);
-
+    return AttrOpaque1Renamed._fromFfi(result, []);
   }
 
   int get methodRenamed {
     final result = _namespace_AttrOpaque1_method(_ffi);
-        return result;
-
+    return result;
   }
 
   int get abirenamed {
     final result = _renamed_on_abi_only(_ffi);
-        return result;
-
+    return result;
   }
 
   void useUnnamespaced(Unnamespaced un) {_namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);

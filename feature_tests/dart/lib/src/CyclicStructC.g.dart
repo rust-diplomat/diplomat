@@ -31,15 +31,13 @@ final class CyclicStructC {
   static CyclicStructC takesNestedParameters(CyclicStructC c) {
     final temp = _FinalizedArena();
     final result = _CyclicStructC_takes_nested_parameters(c._toFfi(temp.arena));
-        return CyclicStructC._fromFfi(result);
-
+    return CyclicStructC._fromFfi(result);
   }
 
   String cyclicOut() {
     final temp = _FinalizedArena();
     final write = _Write();_CyclicStructC_cyclic_out(_toFfi(temp.arena), write._ffi);
-        return write.finalize();
-
+    return write.finalize();
   }
 
   @override

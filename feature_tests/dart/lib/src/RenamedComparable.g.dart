@@ -24,15 +24,13 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
 
   static RenamedComparable new_(int int) {
     final result = _namespace_Comparable_new(int);
-        return RenamedComparable._fromFfi(result, []);
-
+    return RenamedComparable._fromFfi(result, []);
   }
 
   @override
   int compareTo(RenamedComparable other) {
     final result = _namespace_Comparable_cmp(_ffi, other._ffi);
-        return result;
-
+    return result;
   }
 
   @override

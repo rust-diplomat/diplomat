@@ -23,7 +23,6 @@ namespace capi {
     CyclicStructB_get_a_option_result CyclicStructB_get_a_option(void);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

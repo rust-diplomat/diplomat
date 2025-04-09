@@ -15,7 +15,6 @@
 namespace ns {
 namespace capi {
     struct RenamedMyIterator;
-
 } // namespace capi
 } // namespace
 

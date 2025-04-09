@@ -47,8 +47,7 @@ final class BorrowedFieldsWithBounds {
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [utf8StrZArena];
     final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
-        return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
-
+    return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }
 
   @override

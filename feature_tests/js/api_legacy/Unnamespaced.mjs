@@ -38,19 +38,16 @@ export class Unnamespaced {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
 
         try {        return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {}
     }
-
     useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
 
         try {}
 
         finally {}
     }
-
 
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)

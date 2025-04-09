@@ -12,18 +12,13 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class Foo {
     get ffiValue(): pointer;
     get bar(): Bar;
-
     asReturning(): BorrowedFieldsReturning;
-
     static extractFromFields(fields: BorrowedFields_obj): Foo;
-
 
     /**
      * Test that the extraction logic correctly pins the right fields
-
      */
         static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;
-
 
     constructor(x: string);
 }

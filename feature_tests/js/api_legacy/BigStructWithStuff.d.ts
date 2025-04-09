@@ -6,7 +6,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 /**
  * Testing JS-specific layout/padding behavior
-
  */
 type BigStructWithStuff_obj = {
     first: number;
@@ -35,7 +34,6 @@ export class BigStructWithStuff {
     static fromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
 
     assertValue(extraVal: number): void;
-
 
     constructor(structObj : BigStructWithStuff_obj);
 }

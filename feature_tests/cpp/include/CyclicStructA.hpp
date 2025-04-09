@@ -24,7 +24,6 @@ namespace capi {
     void CyclicStructA_getter_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

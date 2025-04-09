@@ -28,7 +28,6 @@ namespace capi {
     void CallbackHolder_destroy(CallbackHolder* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

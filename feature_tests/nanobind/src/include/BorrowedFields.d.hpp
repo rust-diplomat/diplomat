@@ -24,7 +24,6 @@ namespace capi {
     };
 
     typedef struct BorrowedFields_option {union { BorrowedFields ok; }; bool is_ok; } BorrowedFields_option;
-
 } // namespace capi
 } // namespace
 

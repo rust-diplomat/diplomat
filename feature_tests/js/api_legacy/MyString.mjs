@@ -40,14 +40,12 @@ export class MyString {
         const result = wasm.MyString_new(...vSlice.splat());
 
         try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     static newUnsafe(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -56,14 +54,12 @@ export class MyString {
         const result = wasm.MyString_new_unsafe(...vSlice.splat());
 
         try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -72,14 +68,12 @@ export class MyString {
         const result = wasm.MyString_new_owned(...vSlice.splat());
 
         try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     static newFromFirst(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -88,14 +82,12 @@ export class MyString {
         const result = wasm.MyString_new_from_first(...vSlice.splat());
 
         try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -108,55 +100,41 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
-
     get str() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.MyString_get_str(this.ffiValue, write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {        write.free();
-
         }
     }
-
     static getStaticStr() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-
 
         const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
 
         try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
             const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.MyString_string_transform(...fooSlice.splat(), write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {
             functionCleanupArena.free();
                 write.free();
-
         }
     }
-
     borrow() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-
 
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -164,14 +142,11 @@ export class MyString {
         const result = wasm.MyString_borrow(diplomatReceive.buffer, this.ffiValue);
 
         try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

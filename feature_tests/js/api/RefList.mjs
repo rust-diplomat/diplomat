@@ -42,12 +42,10 @@ export class RefList {
         const result = wasm.RefList_node(data.ffiValue);
 
         try {        return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);
-
         }
 
         finally {}
     }
-
 
     constructor(symbol, ptr, selfEdge, aEdge) {
         return this.#internalConstructor(...arguments)

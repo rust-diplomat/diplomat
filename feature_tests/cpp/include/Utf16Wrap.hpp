@@ -24,7 +24,6 @@ namespace capi {
     void Utf16Wrap_destroy(Utf16Wrap* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

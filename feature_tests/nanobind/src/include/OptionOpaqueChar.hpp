@@ -22,7 +22,6 @@ namespace capi {
     void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

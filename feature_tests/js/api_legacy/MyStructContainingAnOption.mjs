@@ -98,32 +98,24 @@ export class MyStructContainingAnOption {
     }
     #defaultConstructor() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
 
-
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
 
         try {        return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static filled() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
-
 
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);
 
         try {        return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

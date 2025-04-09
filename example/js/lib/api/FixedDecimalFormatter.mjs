@@ -9,9 +9,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
-*
+ *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
-
  */
 const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
@@ -46,14 +45,12 @@ export class FixedDecimalFormatter {
 
     /**
      * Creates a new [`FixedDecimalFormatter`] from locale data.
-*
+     *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
-
      */
         static tryNew(locale, provider, options) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
             const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
 
@@ -61,36 +58,28 @@ export class FixedDecimalFormatter {
                 return null;
             }
             return new FixedDecimalFormatter(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {
             functionCleanupArena.free();
                 diplomatReceive.free();
-
         }
     }
-
 
     /**
      * Formats a [`FixedDecimal`] to a string.
-*
+     *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
-
      */
         formatWrite(value) {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
 
         try {        return write.readString8();
-
         }
 
         finally {        write.free();
-
         }
     }
-
 
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)

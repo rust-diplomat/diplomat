@@ -20,7 +20,6 @@ namespace capi {
     diplomat::capi::DefaultEnum DefaultEnum_new(void);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

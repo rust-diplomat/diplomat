@@ -21,7 +21,6 @@ struct BorrowedFieldsWithBounds;
 namespace diplomat {
 namespace capi {
     struct Foo;
-
 } // namespace capi
 } // namespace
 
@@ -39,8 +38,7 @@ public:
   inline static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
 
   /**
-   *   Test that the extraction logic correctly pins the right fields
-
+   * Test that the extraction logic correctly pins the right fields
    */
   inline static std::unique_ptr<Foo> extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string);
 

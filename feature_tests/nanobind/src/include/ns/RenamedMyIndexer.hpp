@@ -23,7 +23,6 @@ namespace capi {
     void namespace_MyIndexer_destroy(RenamedMyIndexer* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

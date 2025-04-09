@@ -25,22 +25,19 @@ final class Utf16Wrap implements ffi.Finalizable {
   factory Utf16Wrap(String input) {
     final temp = _FinalizedArena();
     final result = _Utf16Wrap_from_utf16(input._utf16AllocIn(temp.arena));
-        return Utf16Wrap._fromFfi(result, []);
-
+    return Utf16Wrap._fromFfi(result, []);
   }
 
   String getDebugStr() {
     final write = _Write();_Utf16Wrap_get_debug_str(_ffi, write._ffi);
-        return write.finalize();
-
+    return write.finalize();
   }
 
   String borrowCont() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Utf16Wrap_borrow_cont(_ffi);
-        return result._toDart(aEdges);
-
+    return result._toDart(aEdges);
   }
 }
 

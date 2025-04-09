@@ -15,7 +15,6 @@
 namespace diplomat {
 namespace capi {
     struct MutableCallbackHolder;
-
 } // namespace capi
 } // namespace
 

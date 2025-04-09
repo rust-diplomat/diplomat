@@ -125,23 +125,19 @@ export class BorrowedFields {
         const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
             const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
 
-
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
 
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, ...dstr16Slice.splat(), ...utf8StrSlice.splat());
 
         try {        return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
-
         }
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
                 diplomatReceive.free();
-
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

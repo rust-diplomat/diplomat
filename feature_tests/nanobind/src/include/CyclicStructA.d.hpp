@@ -22,7 +22,6 @@ namespace capi {
     };
 
     typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
-
 } // namespace capi
 } // namespace
 

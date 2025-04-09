@@ -23,7 +23,6 @@ namespace capi {
     void namespace_OpaqueIterator_destroy(RenamedOpaqueIterator* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

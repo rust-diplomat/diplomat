@@ -34,8 +34,7 @@ final class StructWithSlices {
   String returnLast() {
     final temp = _FinalizedArena();
     final write = _Write();_StructWithSlices_return_last(_toFfi(temp.arena), write._ffi);
-        return write.finalize();
-
+    return write.finalize();
   }
 
   @override

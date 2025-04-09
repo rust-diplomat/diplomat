@@ -20,7 +20,6 @@ class RenamedOpaqueIterator;
 namespace ns {
 namespace capi {
     struct RenamedOpaqueIterable;
-
 } // namespace capi
 } // namespace
 

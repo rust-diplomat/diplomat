@@ -33,7 +33,6 @@ namespace capi {
     void One_destroy(One* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

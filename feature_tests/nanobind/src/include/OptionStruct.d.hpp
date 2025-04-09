@@ -27,7 +27,6 @@ namespace capi {
     };
 
     typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
-
 } // namespace capi
 } // namespace
 

@@ -20,7 +20,6 @@ namespace capi {
     };
 
     typedef struct StructWithSlices_option {union { StructWithSlices ok; }; bool is_ok; } StructWithSlices_option;
-
 } // namespace capi
 } // namespace
 

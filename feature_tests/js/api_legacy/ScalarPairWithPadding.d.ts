@@ -4,7 +4,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 /**
  * Testing JS-specific layout/padding behavior
-
  */
 type ScalarPairWithPadding_obj = {
     first: number;
@@ -24,7 +23,6 @@ export class ScalarPairWithPadding {
     static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
 
     assertValue(): void;
-
 
     constructor(structObj : ScalarPairWithPadding_obj);
 }

@@ -22,7 +22,6 @@ namespace capi {
     };
 
     typedef struct FixedDecimalGroupingStrategy_option {union { FixedDecimalGroupingStrategy ok; }; bool is_ok; } FixedDecimalGroupingStrategy_option;
-
 } // namespace capi
 } // namespace
 

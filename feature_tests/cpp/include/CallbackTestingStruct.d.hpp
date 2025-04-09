@@ -20,7 +20,6 @@ namespace capi {
     };
 
     typedef struct CallbackTestingStruct_option {union { CallbackTestingStruct ok; }; bool is_ok; } CallbackTestingStruct_option;
-
 } // namespace capi
 } // namespace
 

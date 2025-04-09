@@ -158,7 +158,6 @@ export class NestedBorrowedFields {
         const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)));
             const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
 
-
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
 
@@ -171,16 +170,13 @@ export class NestedBorrowedFields {
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16ZSlice.ptr, utf8StrYSlice.ptr, utf8StrZSlice.ptr);
 
         try {        return NestedBorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
-
         }
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
                 diplomatReceive.free();
-
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

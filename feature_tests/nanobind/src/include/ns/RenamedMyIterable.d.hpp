@@ -22,7 +22,6 @@ class RenamedMyIterator;
 namespace ns {
 namespace capi {
     struct RenamedMyIterable;
-
 } // namespace capi
 } // namespace
 

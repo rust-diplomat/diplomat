@@ -31,7 +31,6 @@ namespace capi {
     void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

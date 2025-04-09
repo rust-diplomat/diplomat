@@ -41,7 +41,6 @@ namespace capi {
     void ResultOpaque_destroy(ResultOpaque* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -25,38 +25,33 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
   factory OpaqueThinVec(core.List<int> a, core.List<double> b) {
     final temp = _FinalizedArena();
     final result = _OpaqueThinVec_create(a._int32AllocIn(temp.arena), b._float32AllocIn(temp.arena));
-        return OpaqueThinVec._fromFfi(result, []);
-
+    return OpaqueThinVec._fromFfi(result, []);
   }
 
   OpaqueThinIter get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_iter(_ffi);
-        return OpaqueThinIter._fromFfi(result, [], aEdges);
-
+    return OpaqueThinIter._fromFfi(result, [], aEdges);
   }
 
   int len() {
     final result = _OpaqueThinVec_len(_ffi);
-        return result;
-
+    return result;
   }
 
   OpaqueThin? operator [](int idx) {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_get(_ffi, idx);
-        return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
-
+    return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
 
   OpaqueThin? get firstelement {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_first(_ffi);
-        return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
-
+    return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
 }
 

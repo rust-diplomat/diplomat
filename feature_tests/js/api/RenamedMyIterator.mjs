@@ -36,21 +36,17 @@ export class RenamedMyIterator {
     }
     #iteratorNext() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
 
-
         const result = wasm.namespace_MyIterator_next(diplomatReceive.buffer, this.ffiValue);
 
         try {        if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     next() {
         const out = this.#iteratorNext();

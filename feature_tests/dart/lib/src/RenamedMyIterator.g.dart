@@ -37,11 +37,10 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
 
   int? _iteratorNext() {
     final result = _namespace_MyIterator_next(_ffi);
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return result.union.ok;
-
   }
 }
 

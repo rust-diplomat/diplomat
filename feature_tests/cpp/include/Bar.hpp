@@ -23,7 +23,6 @@ namespace capi {
     void Bar_destroy(Bar* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

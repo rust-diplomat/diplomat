@@ -22,7 +22,6 @@ namespace capi {
     uint32_t namespace_StructWithAttrs_c(ns::capi::RenamedStructWithAttrs self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

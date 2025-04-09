@@ -36,7 +36,6 @@ export class ResultOpaque {
     }
     #defaultConstructor(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
-
         const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
 
         try {        if (!diplomatReceive.resultFlag) {
@@ -44,16 +43,12 @@ export class ResultOpaque {
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newFailingFoo() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_failing_foo(diplomatReceive.buffer);
 
@@ -62,16 +57,12 @@ export class ResultOpaque {
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newFailingBar() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_failing_bar(diplomatReceive.buffer);
 
@@ -80,16 +71,12 @@ export class ResultOpaque {
                 throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newFailingUnit() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
 
@@ -97,16 +84,12 @@ export class ResultOpaque {
                 return null;
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newFailingStruct(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
-
 
         const result = wasm.ResultOpaque_new_failing_struct(diplomatReceive.buffer, i);
 
@@ -115,16 +98,12 @@ export class ResultOpaque {
                 throw new globalThis.Error('ErrorStruct: ' + cause.toString(), { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newInErr(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_in_err(diplomatReceive.buffer, i);
 
@@ -132,16 +111,12 @@ export class ResultOpaque {
                 const cause = new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newInt(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
 
@@ -149,16 +124,12 @@ export class ResultOpaque {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
     static newInEnumErr(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
 
         const result = wasm.ResultOpaque_new_in_enum_err(diplomatReceive.buffer, i);
 
@@ -167,19 +138,15 @@ export class ResultOpaque {
                 throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
             }
             return new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-
         }
 
         finally {        diplomatReceive.free();
-
         }
     }
-
 
     /**
      * When we take &str, the return type becomes a Result
      * Test that this interacts gracefully with returning a reference type
-
      */
         takesStr(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
@@ -192,21 +159,18 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_takes_str(this.ffiValue, vSlice.ptr);
 
         try {        return new ResultOpaque(diplomatRuntime.internalConstructor, result, aEdges);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
 
         try {}
 
         finally {}
     }
-
 
     constructor(i) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

@@ -63,12 +63,10 @@ export class DefaultEnum {
         const result = wasm.DefaultEnum_new();
 
         try {        return new DefaultEnum(diplomatRuntime.internalConstructor, result);
-
         }
 
         finally {}
     }
-
 
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

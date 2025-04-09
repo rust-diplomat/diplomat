@@ -15,7 +15,6 @@
 namespace diplomat {
 namespace capi {
     struct Float64Vec;
-
 } // namespace capi
 } // namespace
 

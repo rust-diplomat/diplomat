@@ -18,7 +18,6 @@ class Foo;
 namespace diplomat {
 namespace capi {
     struct Bar;
-
 } // namespace capi
 } // namespace
 

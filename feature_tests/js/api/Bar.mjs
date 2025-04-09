@@ -47,12 +47,10 @@ export class Bar {
         const result = wasm.Bar_foo(this.ffiValue);
 
         try {        return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);
-
         }
 
         finally {}
     }
-
 
     constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
         return this.#internalConstructor(...arguments)

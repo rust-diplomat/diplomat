@@ -6,7 +6,6 @@ part of 'lib.g.dart';
 /// An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
 ///
 /// See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
-
 final class FixedDecimalFormatter implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
@@ -26,26 +25,22 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimalFormatter_destroy_mv1));
   /// Creates a new [`FixedDecimalFormatter`] from locale data.
-///
+  ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
-
   static FixedDecimalFormatter? tryNew(Locale locale, DataProvider provider, FixedDecimalFormatterOptions options) {
     final temp = _FinalizedArena();
     final result = _icu4x_FixedDecimalFormatter_try_new_mv1(locale._ffi, provider._ffi, options._toFfi(temp.arena));
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return FixedDecimalFormatter._fromFfi(result.union.ok, []);
-
   }
   /// Formats a [`FixedDecimal`] to a string.
-///
+  ///
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
-
   String formatWrite(FixedDecimal value) {
     final write = _Write();_icu4x_FixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
-        return write.finalize();
-
+    return write.finalize();
   }
 }
 

@@ -41,14 +41,12 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_new(xSlice.ptr);
 
         try {        return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
-
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -56,12 +54,10 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
 
         try {        return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
-
         }
 
         finally {}
     }
-
 
     constructor(x) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

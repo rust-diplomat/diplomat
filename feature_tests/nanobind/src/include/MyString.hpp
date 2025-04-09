@@ -30,7 +30,6 @@ namespace capi {
     void MyString_destroy(MyString* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

@@ -25,7 +25,6 @@ namespace capi {
     };
 
     typedef struct MyStructContainingAnOption_option {union { MyStructContainingAnOption ok; }; bool is_ok; } MyStructContainingAnOption_option;
-
 } // namespace capi
 } // namespace
 

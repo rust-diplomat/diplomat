@@ -23,7 +23,6 @@ class RenamedAttrEnum;
 namespace ns {
 namespace capi {
     struct AttrOpaque1Renamed;
-
 } // namespace capi
 } // namespace
 
