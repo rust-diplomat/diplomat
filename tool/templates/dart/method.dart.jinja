@@ -34,7 +34,7 @@
     );
     {%- match m.return_expression %}
     {%- when Some with (statement) %}
-    {{statement|indent_trimmed(4)}}
+    {{~statement|indent_trimmed(4)}}
     {%- when None %}
     {%- endmatch %}
   }

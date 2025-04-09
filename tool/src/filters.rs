@@ -15,7 +15,7 @@ pub(crate) fn indent_trimmed(s: impl fmt::Display, width: usize) -> Result<Strin
 pub(crate) fn prefix_trimmed(s: impl fmt::Display, prefix: &str) -> Result<String, fmt::Error> {
     let s = s.to_string();
     let mut result = String::new();
-    let prefix_trimmed = prefix.trim();
+    let prefix_trimmed = prefix.trim_end();
 
     for line in s.lines() {
         let trimmed = line.trim_end();
@@ -23,6 +23,12 @@ pub(crate) fn prefix_trimmed(s: impl fmt::Display, prefix: &str) -> Result<Strin
             writeln!(&mut result, "{prefix_trimmed}")?;
         } else {
             writeln!(&mut result, "{prefix}{trimmed}")?;
+        }
+    }
+    // The writelns will end up with a trailing \n
+    if let Some(c) = result.chars().next_back() {
+        if c == '\n' {
+            result.pop();
         }
     }
 
