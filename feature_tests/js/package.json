@@ -4,19 +4,15 @@
 	"description": "Diplomat WASM with JS HIR Backend Feature Tests",
 	"exports": {
 		".": {
-			"default": "./api/index.mjs",
-			"types": "./api/index.d.ts"
+			"types": "./api/index.d.ts",
+			"stable": "./api/index.mjs",
+			"legacy": "./api_legacy/index.mjs"
 		}
 	},
 	"type": "module",
 	"directories": {
 		"doc": "docs",
 		"test": "test"
-	},
-	"ava": {
-		"files": [
-			"test/*.mjs"
-		]
 	},
 	"scripts": {
 		"pretest": "tsc",
