@@ -22,7 +22,6 @@ namespace capi {
     void MyOpaqueEnum_destroy(MyOpaqueEnum* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

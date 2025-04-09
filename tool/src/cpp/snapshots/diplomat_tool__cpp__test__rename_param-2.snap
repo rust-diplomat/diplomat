@@ -10,7 +10,6 @@ namespace capi {
     void MyStruct_destroy(MyStruct* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

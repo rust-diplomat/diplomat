@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
-
  */
 const FixedDecimal_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimal_destroy_mv1(ptr);
@@ -40,24 +39,20 @@ export class FixedDecimal {
 
     /**
      * Construct an [`FixedDecimal`] from an integer.
-
      */
         #defaultConstructor(v) {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
 
         try {        return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
-
         }
 
         finally {}
     }
 
-
     /**
      * Multiply the [`FixedDecimal`] by a given power of ten.
-*
+     *
      * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-
      */
         multiplyPow10(power) {wasm.icu4x_FixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
 
@@ -66,27 +61,21 @@ export class FixedDecimal {
         finally {}
     }
 
-
     /**
      * Format the [`FixedDecimal`] as a string.
-*
+     *
      * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-
      */
         toString() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
 
         const result = wasm.icu4x_FixedDecimal_to_string_mv1(this.ffiValue, write.buffer);
 
         try {        return result === 0 ? null : write.readString8();
-
         }
 
         finally {        write.free();
-
         }
     }
-
 
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

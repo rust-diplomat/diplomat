@@ -21,7 +21,6 @@ namespace capi {
     void icu4x_Locale_destroy_mv1(Locale* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

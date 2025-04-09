@@ -14,7 +14,6 @@
 namespace nested::ns2 {
 namespace capi {
     struct Nested;
-
 } // namespace capi
 } // namespace
 

@@ -26,7 +26,6 @@ namespace capi {
     MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

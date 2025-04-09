@@ -20,7 +20,6 @@ namespace capi {
     void namespace_Nested_destroy(Nested* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

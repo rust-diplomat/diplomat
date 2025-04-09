@@ -51,7 +51,6 @@ namespace capi {
     void OptionOpaque_destroy(OptionOpaque* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

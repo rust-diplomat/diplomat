@@ -22,7 +22,6 @@ namespace capi {
     void RefList_destroy(RefList* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

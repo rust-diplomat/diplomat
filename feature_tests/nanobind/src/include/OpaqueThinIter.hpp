@@ -22,7 +22,6 @@ namespace capi {
     void OpaqueThinIter_destroy(OpaqueThinIter* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

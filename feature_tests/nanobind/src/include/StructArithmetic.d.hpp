@@ -19,7 +19,6 @@ namespace capi {
     };
 
     typedef struct StructArithmetic_option {union { StructArithmetic ok; }; bool is_ok; } StructArithmetic_option;
-
 } // namespace capi
 } // namespace
 

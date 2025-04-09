@@ -28,7 +28,6 @@ namespace capi {
     };
 
     typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
-
 } // namespace capi
 } // namespace
 

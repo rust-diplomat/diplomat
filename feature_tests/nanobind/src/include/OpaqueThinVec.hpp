@@ -27,7 +27,6 @@ namespace capi {
     void OpaqueThinVec_destroy(OpaqueThinVec* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

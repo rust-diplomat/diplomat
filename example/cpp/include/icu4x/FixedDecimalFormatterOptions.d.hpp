@@ -25,7 +25,6 @@ namespace capi {
     };
 
     typedef struct FixedDecimalFormatterOptions_option {union { FixedDecimalFormatterOptions ok; }; bool is_ok; } FixedDecimalFormatterOptions_option;
-
 } // namespace capi
 } // namespace
 

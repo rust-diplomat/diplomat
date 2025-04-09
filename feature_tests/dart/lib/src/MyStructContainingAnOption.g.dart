@@ -34,7 +34,7 @@ final class MyStructContainingAnOption {
 
   factory MyStructContainingAnOption({MyStruct? a, DefaultEnum? b}) {
     final result = _MyStructContainingAnOption_new();
-        final dart = MyStructContainingAnOption._fromFfi(result);
+    final dart = MyStructContainingAnOption._fromFfi(result);
     if (a != null) {
       dart.a = a;
     }
@@ -42,13 +42,11 @@ final class MyStructContainingAnOption {
       dart.b = b;
     }
     return dart;
-
   }
 
   static MyStructContainingAnOption filled() {
     final result = _MyStructContainingAnOption_filled();
-        return MyStructContainingAnOption._fromFfi(result);
-
+    return MyStructContainingAnOption._fromFfi(result);
   }
 
   @override

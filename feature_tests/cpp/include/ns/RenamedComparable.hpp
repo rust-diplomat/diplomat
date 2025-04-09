@@ -22,7 +22,6 @@ namespace capi {
     void namespace_Comparable_destroy(RenamedComparable* self);
 
     } // extern "C"
-
 } // namespace capi
 } // namespace
 
