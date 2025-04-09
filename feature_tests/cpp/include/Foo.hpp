@@ -20,23 +20,17 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
     diplomat::capi::Foo* Foo_new(diplomat::capi::DiplomatStringView x);
-    
     diplomat::capi::Bar* Foo_get_bar(const diplomat::capi::Foo* self);
-    
     diplomat::capi::Foo* Foo_new_static(diplomat::capi::DiplomatStringView x);
-    
     diplomat::capi::BorrowedFieldsReturning Foo_as_returning(const diplomat::capi::Foo* self);
-    
     diplomat::capi::Foo* Foo_extract_from_fields(diplomat::capi::BorrowedFields fields);
-    
     diplomat::capi::Foo* Foo_extract_from_bounds(diplomat::capi::BorrowedFieldsWithBounds bounds, diplomat::capi::DiplomatStringView another_string);
-    
-    
+
     void Foo_destroy(Foo* self);
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

@@ -14,9 +14,7 @@
 
 
 
-
 FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1(void);
-
 
 
 

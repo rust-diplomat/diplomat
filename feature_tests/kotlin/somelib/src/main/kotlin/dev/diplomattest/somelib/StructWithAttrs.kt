@@ -16,7 +16,7 @@ internal class StructWithAttrsNative: Structure(), Structure.ByValue {
     internal var a: Byte = 0;
     @JvmField
     internal var b: FFIUint32 = FFIUint32();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b")

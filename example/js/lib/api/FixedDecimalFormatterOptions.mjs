@@ -6,25 +6,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class FixedDecimalFormatterOptions {
-    
     #groupingStrategy;
-    
-    get groupingStrategy()  {
+    get groupingStrategy() {
         return this.#groupingStrategy;
-    } 
-    set groupingStrategy(value) {
+    }
+    set groupingStrategy(value){
         this.#groupingStrategy = value;
     }
-    
     #someOtherConfig;
-    
-    get someOtherConfig()  {
+    get someOtherConfig() {
         return this.#someOtherConfig;
-    } 
-    set someOtherConfig(value) {
+    }
+    set someOtherConfig(value){
         this.#someOtherConfig = value;
     }
-    
     /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -54,7 +49,6 @@ export class FixedDecimalFormatterOptions {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
     // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
     // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
@@ -106,19 +100,20 @@ export class FixedDecimalFormatterOptions {
 
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
-#defaultConstructor() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-        
+    #defaultConstructor() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+
+
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
-    
-        try {
-            return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+
+        try {        return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+
         }
-        
-        finally {
-            diplomatReceive.free();
+
+        finally {        diplomatReceive.free();
+
         }
     }
+
 
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

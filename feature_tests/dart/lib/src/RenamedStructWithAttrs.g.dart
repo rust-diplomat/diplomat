@@ -37,7 +37,8 @@ final class RenamedStructWithAttrs {
   int get c {
     final temp = _FinalizedArena();
     final result = _namespace_StructWithAttrs_c(_toFfi(temp.arena));
-    return result;
+        return result;
+
   }
 
   @override

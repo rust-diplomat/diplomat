@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface BarLib: Library {
     fun Bar_destroy(handle: Pointer)
     fun Bar_foo(handle: Pointer): Pointer

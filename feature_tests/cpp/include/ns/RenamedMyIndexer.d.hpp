@@ -14,6 +14,7 @@
 namespace ns {
 namespace capi {
     struct RenamedMyIndexer;
+
 } // namespace capi
 } // namespace
 

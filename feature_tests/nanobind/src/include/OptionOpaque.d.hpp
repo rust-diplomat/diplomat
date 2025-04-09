@@ -18,6 +18,7 @@ class OptionEnum;
 namespace diplomat {
 namespace capi {
     struct OptionOpaque;
+
 } // namespace capi
 } // namespace
 
