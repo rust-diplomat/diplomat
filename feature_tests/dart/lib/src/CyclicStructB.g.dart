@@ -31,15 +31,17 @@ final class CyclicStructB {
 
   static CyclicStructA getA() {
     final result = _CyclicStructB_get_a();
-    return CyclicStructA._fromFfi(result);
+        return CyclicStructA._fromFfi(result);
+
   }
 
   static CyclicStructA? getAOption() {
     final result = _CyclicStructB_get_a_option();
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return CyclicStructA._fromFfi(result.union.ok);
+
   }
 
   @override

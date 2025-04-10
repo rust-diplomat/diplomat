@@ -24,13 +24,14 @@ final class MyOpaqueEnum implements ffi.Finalizable {
 
   static MyOpaqueEnum new_() {
     final result = _MyOpaqueEnum_new();
-    return MyOpaqueEnum._fromFfi(result, []);
+        return MyOpaqueEnum._fromFfi(result, []);
+
   }
 
   String toString() {
-    final write = _Write();
-    _MyOpaqueEnum_to_string(_ffi, write._ffi);
-    return write.finalize();
+    final write = _Write();_MyOpaqueEnum_to_string(_ffi, write._ffi);
+        return write.finalize();
+
   }
 }
 

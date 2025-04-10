@@ -7,70 +7,55 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyStruct {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     #c;
-    
-    get c()  {
+    get c() {
         return this.#c;
-    } 
-    set c(value) {
+    }
+    set c(value){
         this.#c = value;
     }
-    
     #d;
-    
-    get d()  {
+    get d() {
         return this.#d;
-    } 
-    set d(value) {
+    }
+    set d(value){
         this.#d = value;
     }
-    
     #e;
-    
-    get e()  {
+    get e() {
         return this.#e;
-    } 
-    set e(value) {
+    }
+    set e(value){
         this.#e = value;
     }
-    
     #f;
-    
-    get f()  {
+    get f() {
         return this.#f;
-    } 
-    set f(value) {
+    }
+    set f(value){
         this.#f = value;
     }
-    
     #g;
-    
-    get g()  {
+    get g() {
         return this.#g;
-    } 
-    set g(value) {
+    }
+    set g(value){
         this.#g = value;
     }
-    
     /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -130,7 +115,6 @@ export class MyStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
@@ -198,30 +182,29 @@ export class MyStruct {
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
+    #defaultConstructor() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
 
-    #defaultConstructor() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
-        
+
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
-    
-        try {
-            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+
+        try {        return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+
         }
-        
-        finally {
-            diplomatReceive.free();
+
+        finally {        diplomatReceive.free();
+
         }
     }
 
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const result = wasm.MyStruct_into_a(MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
-    
-        try {
-            return result;
+
+        try {        return result;
+
         }
-        
+
         finally {
             functionCleanupArena.free();
         }
@@ -229,31 +212,30 @@ export class MyStruct {
 
     static returnsZstResult() {
         const result = wasm.MyStruct_returns_zst_result();
-    
-        try {
-            if (result !== 1) {
+
+        try {        if (result !== 1) {
                 const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
-    
+
         }
-        
+
         finally {}
     }
 
     static failsZstResult() {
         const result = wasm.MyStruct_fails_zst_result();
-    
-        try {
-            if (result !== 1) {
+
+        try {        if (result !== 1) {
                 const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
-    
+
         }
-        
+
         finally {}
     }
+
 
     constructor() {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface NestedLib: Library {
     fun namespace_Nested_destroy(handle: Pointer)
 }

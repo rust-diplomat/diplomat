@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueThinVecLib: Library {
     fun OpaqueThinVec_destroy(handle: Pointer)
     fun OpaqueThinVec_create(a: Slice, b: Slice): Pointer

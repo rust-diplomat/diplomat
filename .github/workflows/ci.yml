@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
+  fmt:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -18,8 +18,21 @@ jobs:
     - name: Check rustfmt
       run: cargo +stable fmt --all -- --check
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
     - name: Check clippy
       run: cargo +stable clippy --all-targets --all-features -- -D warnings
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
+
+    - name: Check trailing whitespace
+      run: cargo make check-whitespace
 
   build-test:
     runs-on: ubuntu-latest

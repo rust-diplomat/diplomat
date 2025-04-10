@@ -14,9 +14,7 @@
 
 
 
-
 DefaultEnum DefaultEnum_new(void);
-
 
 
 

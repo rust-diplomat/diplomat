@@ -4,16 +4,20 @@
 part of 'lib.g.dart';
 
 enum FixedDecimalGroupingStrategy {
-  /// Auto grouping
+    /// Auto grouping
+
   auto,
 
-  /// No grouping
+    /// No grouping
+
   never,
 
-  /// Always group
+    /// Always group
+
   always,
 
-  /// At least 2 groups
+    /// At least 2 groups
+
   min2;
 }
 

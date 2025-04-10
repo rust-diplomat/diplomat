@@ -20,6 +20,7 @@ class RenamedAttrEnum;
 namespace diplomat {
 namespace capi {
     struct Unnamespaced;
+
 } // namespace capi
 } // namespace
 

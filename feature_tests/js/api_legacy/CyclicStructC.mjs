@@ -6,16 +6,13 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class CyclicStructC {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -39,7 +36,6 @@ export class CyclicStructC {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
@@ -83,16 +79,15 @@ export class CyclicStructC {
 
         return new CyclicStructC(structObj);
     }
-
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
-    
-        try {
-            return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
+
+        try {        return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
+
         }
-        
+
         finally {
             functionCleanupArena.free();
         }
@@ -100,20 +95,21 @@ export class CyclicStructC {
 
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
-        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+            const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
         wasm.CyclicStructC_cyclic_out(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
-    
-        try {
-            return write.readString8();
+
+        try {        return write.readString8();
+
         }
-        
+
         finally {
             functionCleanupArena.free();
-        
-            write.free();
+                write.free();
+
         }
     }
+
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

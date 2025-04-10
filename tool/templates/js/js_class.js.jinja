@@ -1,6 +1,6 @@
 {% if !doc_str.is_empty() %}
-/** 
- * {{doc_str}}
+/**
+{{doc_str|prefix_trimmed(" * ")}}
  */
 {% endif -%}
 {%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
@@ -8,20 +8,20 @@
 {% block header_info %}{% endblock %}
 
 export class {{type_name}} {
-    {% block class_body %}{% endblock %}
+    {%- block class_body %}{% endblock %}
 
     {%- for method in methods.methods -%}
 
     {#- Do not include the method in typescript if it is meant to be private: -#}
     {%- if !method.method_decl.starts_with('#') || !typescript %}
 {% if !method.doc_str.is_empty() %}
-    /** 
-     * {{method.doc_str|indent(4)}}
+    /**
+{{method.doc_str|prefix_trimmed("     * ")}}
      */
-    {%- endif %}
-    {{ method|indent(4) }}
+    {% endif -%}
+    {{- method|indent_trimmed(4) }}
     {%- endif -%}
-{%- endfor -%}
+    {%- endfor -%}
     {%- if let Some(it) = methods.special_methods.iterator %}
 
     next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{

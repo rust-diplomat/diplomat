@@ -16,13 +16,12 @@
 namespace icu4x {
 namespace capi {
     extern "C" {
-    
     icu4x::capi::Locale* icu4x_Locale_new_mv1(diplomat::capi::DiplomatStringView name);
-    
-    
+
     void icu4x_Locale_destroy_mv1(Locale* self);
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

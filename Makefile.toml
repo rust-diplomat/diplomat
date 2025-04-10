@@ -342,6 +342,26 @@ category = "Tests"
 dependencies = ["check-cpp-feature", "check-cpp-example"]
 
 
+[tasks.check-whitespace]
+category = "Tests"
+script_runner = "@duckscript"
+script = '''
+# Only these backends have clean output
+backends = array "c" "cpp" "js" "dart"
+tests = array "feature_tests" "example"
+for test in ${tests}
+ for backend in ${backends}
+    echo "Looking for trailing whitespace in generated code in ${test}/${backend}"
+    exit_code = exec --get-exit-code grep -Hrn \\s\\+$ "${test}/${backend}"
+    if eq ${exit_code} 0
+        echo "Found trailing whitespace in ${test}/${backend}"
+        exit 1
+    end
+ end
+end
+
+'''
+
 # Generation
 [tasks.gen-feature]
 category = "Code generation"

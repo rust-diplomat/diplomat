@@ -26,7 +26,8 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_OpaqueIterable_iter(_ffi);
-    return RenamedOpaqueIterator._fromFfi(result, [], aEdges);
+        return RenamedOpaqueIterator._fromFfi(result, [], aEdges);
+
   }
 }
 

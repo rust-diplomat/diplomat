@@ -4,9 +4,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class MyString {
-    
     get ffiValue(): pointer;
-
     static newUnsafe(v: string): MyString;
 
     static newOwned(v: string): MyString;
@@ -22,6 +20,7 @@ export class MyString {
     static stringTransform(foo: string): string;
 
     borrow(): string;
+
 
     constructor(v: string);
 }

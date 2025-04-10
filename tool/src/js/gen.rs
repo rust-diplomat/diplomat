@@ -18,6 +18,7 @@ use diplomat_core::hir::{
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
+use crate::filters;
 use super::{JsConfig, WasmABI};
 use crate::ErrorStore;
 
