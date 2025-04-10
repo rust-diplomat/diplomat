@@ -1,0 +1,7 @@
+{
+	"type": "module",
+	"scripts": {
+		"pretest": "tsc",
+		"test": "ava"
+	}
+}
