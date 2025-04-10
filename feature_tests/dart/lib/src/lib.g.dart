@@ -142,7 +142,8 @@ final class _ResultCyclicStructAFfiVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultCyclicStructAFfiVoid extends ffi.Struct {external _ResultCyclicStructAFfiVoidUnion union;
+final class _ResultCyclicStructAFfiVoid extends ffi.Struct {
+  external _ResultCyclicStructAFfiVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -168,7 +169,8 @@ final class _ResultDoubleVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultDoubleVoid extends ffi.Struct {external _ResultDoubleVoidUnion union;
+final class _ResultDoubleVoid extends ffi.Struct {
+  external _ResultDoubleVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -195,7 +197,8 @@ final class _ResultInt32OpaqueUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> err;
 }
 
-final class _ResultInt32Opaque extends ffi.Struct {external _ResultInt32OpaqueUnion union;
+final class _ResultInt32Opaque extends ffi.Struct {
+  external _ResultInt32OpaqueUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -222,7 +225,8 @@ final class _ResultInt32VoidUnion extends ffi.Union {
 
 }
 
-final class _ResultInt32Void extends ffi.Struct {external _ResultInt32VoidUnion union;
+final class _ResultInt32Void extends ffi.Struct {
+  external _ResultInt32VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -248,7 +252,8 @@ final class _ResultIntPtrVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultIntPtrVoid extends ffi.Struct {external _ResultIntPtrVoidUnion union;
+final class _ResultIntPtrVoid extends ffi.Struct {
+  external _ResultIntPtrVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -273,7 +278,8 @@ final class _ResultMyStructFfiVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultMyStructFfiVoid extends ffi.Struct {external _ResultMyStructFfiVoidUnion union;
+final class _ResultMyStructFfiVoid extends ffi.Struct {
+  external _ResultMyStructFfiVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -299,7 +305,8 @@ final class _ResultOpaqueErrorStructFfiUnion extends ffi.Union {
   external _ErrorStructFfi err;
 }
 
-final class _ResultOpaqueErrorStructFfi extends ffi.Struct {external _ResultOpaqueErrorStructFfiUnion union;
+final class _ResultOpaqueErrorStructFfi extends ffi.Struct {
+  external _ResultOpaqueErrorStructFfiUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -327,7 +334,8 @@ final class _ResultOpaqueInt32Union extends ffi.Union {
   external int err;
 }
 
-final class _ResultOpaqueInt32 extends ffi.Struct {external _ResultOpaqueInt32Union union;
+final class _ResultOpaqueInt32 extends ffi.Struct {
+  external _ResultOpaqueInt32Union union;
 
   @ffi.Bool()
   external bool isOk;
@@ -353,7 +361,8 @@ final class _ResultOpaqueVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultOpaqueVoid extends ffi.Struct {external _ResultOpaqueVoidUnion union;
+final class _ResultOpaqueVoid extends ffi.Struct {
+  external _ResultOpaqueVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -378,7 +387,8 @@ final class _ResultOptionInputStructFfiVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultOptionInputStructFfiVoid extends ffi.Struct {external _ResultOptionInputStructFfiVoidUnion union;
+final class _ResultOptionInputStructFfiVoid extends ffi.Struct {
+  external _ResultOptionInputStructFfiVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -403,7 +413,8 @@ final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultOptionStructFfiVoid extends ffi.Struct {external _ResultOptionStructFfiVoidUnion union;
+final class _ResultOptionStructFfiVoid extends ffi.Struct {
+  external _ResultOptionStructFfiVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -429,7 +440,8 @@ final class _ResultSizeVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultSizeVoid extends ffi.Struct {external _ResultSizeVoidUnion union;
+final class _ResultSizeVoid extends ffi.Struct {
+  external _ResultSizeVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -454,7 +466,8 @@ final class _ResultSliceUtf8VoidUnion extends ffi.Union {
 
 }
 
-final class _ResultSliceUtf8Void extends ffi.Struct {external _ResultSliceUtf8VoidUnion union;
+final class _ResultSliceUtf8Void extends ffi.Struct {
+  external _ResultSliceUtf8VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -480,7 +493,8 @@ final class _ResultUint32VoidUnion extends ffi.Union {
 
 }
 
-final class _ResultUint32Void extends ffi.Struct {external _ResultUint32VoidUnion union;
+final class _ResultUint32Void extends ffi.Struct {
+  external _ResultUint32VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -506,7 +520,8 @@ final class _ResultUint8VoidUnion extends ffi.Union {
 
 }
 
-final class _ResultUint8Void extends ffi.Struct {external _ResultUint8VoidUnion union;
+final class _ResultUint8Void extends ffi.Struct {
+  external _ResultUint8VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -550,7 +565,8 @@ final class _ResultVoidOpaqueUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> err;
 }
 
-final class _ResultVoidOpaque extends ffi.Struct {external _ResultVoidOpaqueUnion union;
+final class _ResultVoidOpaque extends ffi.Struct {
+  external _ResultVoidOpaqueUnion union;
 
   @ffi.Bool()
   external bool isOk;

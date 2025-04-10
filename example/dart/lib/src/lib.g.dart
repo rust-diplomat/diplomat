@@ -96,7 +96,8 @@ final class _ResultOpaqueVoidUnion extends ffi.Union {
 
 }
 
-final class _ResultOpaqueVoid extends ffi.Struct {external _ResultOpaqueVoidUnion union;
+final class _ResultOpaqueVoid extends ffi.Struct {
+  external _ResultOpaqueVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;

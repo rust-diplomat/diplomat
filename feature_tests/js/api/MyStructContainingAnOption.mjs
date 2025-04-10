@@ -102,7 +102,9 @@ export class MyStructContainingAnOption {
 
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
-    #defaultConstructor() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
+    #defaultConstructor() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
+
 
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
 
@@ -112,7 +114,9 @@ export class MyStructContainingAnOption {
         finally {        diplomatReceive.free();
         }
     }
-    static filled() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
+    static filled() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
+
 
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);
 

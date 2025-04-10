@@ -34,6 +34,7 @@ final class Bar implements ffi.Finalizable {
     final result = _Bar_foo(_ffi);
     return Foo._fromFfi(result, bEdges, aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('Bar_destroy')

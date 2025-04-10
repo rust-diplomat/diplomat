@@ -23,10 +23,7 @@
     {%- if m.method.output.is_write() %}
     final write = _Write();
     {%- endif %}
-    {%- if !m.method.output.is_ffi_unit() %}
-    final result = {% else %}
-    {%- endif -%}
-    _{{ m.abi_name -}}(
+    {% if !m.method.output.is_ffi_unit() -%} final result = {% endif -%} _{{ m.abi_name }}(
         {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
         {{ param }}
@@ -38,3 +35,4 @@
     {%- when None %}
     {%- endmatch %}
   }
+

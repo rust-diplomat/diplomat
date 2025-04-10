@@ -39,6 +39,7 @@ export class RefList {
         // This lifetime edge depends on lifetimes 'b
         let bEdges = [data];
 
+
         const result = wasm.RefList_node(data.ffiValue);
 
         try {        return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);

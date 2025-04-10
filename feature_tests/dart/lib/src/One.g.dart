@@ -100,6 +100,7 @@ final class One implements ffi.Finalizable {
     final result = _One_implicit_bounds_deep(explicit._ffi, implicit1._ffi, implicit2._ffi, nohold._ffi);
     return One._fromFfi(result, [], aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('One_destroy')

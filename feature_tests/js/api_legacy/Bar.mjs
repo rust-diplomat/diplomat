@@ -44,6 +44,7 @@ export class Bar {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.Bar_foo(this.ffiValue);
 
         try {        return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);

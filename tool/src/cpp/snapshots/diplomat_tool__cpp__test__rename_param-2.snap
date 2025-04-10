@@ -5,6 +5,7 @@ expression: impl_header.body
 namespace diplomat {
 namespace capi {
     extern "C" {
+
     void MyStruct_new(const diplomat::capi::MyStruct* self, uint8_t default_);
 
     void MyStruct_destroy(MyStruct* self);

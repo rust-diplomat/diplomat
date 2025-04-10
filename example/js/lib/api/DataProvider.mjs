@@ -43,6 +43,7 @@ export class DataProvider {
      * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
      */
         static newStatic() {
+
         const result = wasm.icu4x_DataProvider_new_static_mv1();
 
         try {        return new DataProvider(diplomatRuntime.internalConstructor, result, []);
@@ -55,6 +56,7 @@ export class DataProvider {
      * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
      */
         static returnsResult() {
+
         const result = wasm.icu4x_DataProvider_returns_result_mv1();
 
         try {        return result === 1;

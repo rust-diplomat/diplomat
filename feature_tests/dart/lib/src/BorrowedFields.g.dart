@@ -44,6 +44,7 @@ final class BorrowedFields {
     return BorrowedFields._fromFfi(result, xEdges);
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is BorrowedFields &&

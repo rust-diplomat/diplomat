@@ -39,6 +39,7 @@ export class OpaqueThinIter {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.OpaqueThinIter_next(this.ffiValue);
 
         try {        return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);

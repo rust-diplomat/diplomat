@@ -46,11 +46,13 @@ final class MyString implements ffi.Finalizable {
   }
 
   set str(String newStr) {
-    final temp = _FinalizedArena();_MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
   }
 
   String get str {
-    final write = _Write();_MyString_get_str(_ffi, write._ffi);
+    final write = _Write();
+    _MyString_get_str(_ffi, write._ffi);
     return write.finalize();
   }
 
@@ -61,7 +63,8 @@ final class MyString implements ffi.Finalizable {
 
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
-    final write = _Write();_MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
+    final write = _Write();
+    _MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
     return write.finalize();
   }
 
@@ -71,6 +74,7 @@ final class MyString implements ffi.Finalizable {
     final result = _MyString_borrow(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('MyString_destroy')

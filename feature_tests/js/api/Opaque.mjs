@@ -35,6 +35,7 @@ export class Opaque {
         return this.#ptr;
     }
     #defaultConstructor() {
+
         const result = wasm.Opaque_new();
 
         try {        return new Opaque(diplomatRuntime.internalConstructor, result, []);
@@ -70,8 +71,10 @@ export class Opaque {
             functionCleanupArena.free();
         }
     }
-    getDebugStr() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
+    getDebugStr() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
 
         try {        return write.readString8();
         }
@@ -89,7 +92,8 @@ export class Opaque {
      */
         assertStruct(s) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(functionCleanupArena, {}, false));
+
+    wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(functionCleanupArena, {}, false));
 
         try {}
 
@@ -98,6 +102,7 @@ export class Opaque {
         }
     }
     static returnsUsize() {
+
         const result = wasm.Opaque_returns_usize();
 
         try {        return result;
@@ -105,7 +110,9 @@ export class Opaque {
 
         finally {}
     }
-    static returnsImported() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+    static returnsImported() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+
 
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
 
@@ -116,6 +123,7 @@ export class Opaque {
         }
     }
     static cmp() {
+
         const result = wasm.Opaque_cmp();
 
         try {        return result;

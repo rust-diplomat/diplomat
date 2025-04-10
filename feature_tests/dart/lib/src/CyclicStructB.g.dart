@@ -42,6 +42,7 @@ final class CyclicStructB {
     return CyclicStructA._fromFfi(result.union.ok);
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is CyclicStructB &&

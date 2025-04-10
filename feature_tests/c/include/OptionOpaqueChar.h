@@ -14,6 +14,7 @@
 
 
 
+
 void OptionOpaqueChar_assert_char(const OptionOpaqueChar* self, char32_t ch);
 
 void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
