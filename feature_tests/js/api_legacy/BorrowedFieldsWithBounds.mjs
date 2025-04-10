@@ -79,7 +79,7 @@ export class BorrowedFieldsWithBounds {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).splat()]
+        return [...diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC).splat()]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -148,9 +148,9 @@ export class BorrowedFieldsWithBounds {
     };
 static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)));
+        const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
         
-        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)));
+        const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         

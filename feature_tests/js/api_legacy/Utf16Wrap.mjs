@@ -37,7 +37,7 @@ export class Utf16Wrap {
 #defaultConstructor(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, input)));
+        const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
         
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
     

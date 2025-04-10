@@ -37,7 +37,7 @@ export class Float64Vec {
 static newBool(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean");
         
         const result = wasm.Float64Vec_new_bool(...vSlice.splat());
     
@@ -52,7 +52,7 @@ static newBool(v) {
 static newI16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16");
         
         const result = wasm.Float64Vec_new_i16(...vSlice.splat());
     
@@ -67,7 +67,7 @@ static newI16(v) {
 static newU16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16");
         
         const result = wasm.Float64Vec_new_u16(...vSlice.splat());
     
@@ -82,7 +82,7 @@ static newU16(v) {
 static newIsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32");
         
         const result = wasm.Float64Vec_new_isize(...vSlice.splat());
     
@@ -97,7 +97,7 @@ static newIsize(v) {
 static newUsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32");
         
         const result = wasm.Float64Vec_new_usize(...vSlice.splat());
     
@@ -112,7 +112,7 @@ static newUsize(v) {
 static newF64BeBytes(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8");
         
         const result = wasm.Float64Vec_new_f64_be_bytes(...vSlice.splat());
     
@@ -127,7 +127,7 @@ static newF64BeBytes(v) {
 #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         
         const result = wasm.Float64Vec_new_from_owned(...vSlice.splat());
     
@@ -158,7 +158,7 @@ get asSlice() {
 fillSlice(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         wasm.Float64Vec_fill_slice(this.ffiValue, ...vSlice.splat());
     
         try {}
@@ -170,7 +170,7 @@ fillSlice(v) {
 setValue(newSlice) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const newSliceSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64")));
+        const newSliceSlice = diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64");
         wasm.Float64Vec_set_value(this.ffiValue, ...newSliceSlice.splat());
     
         try {}

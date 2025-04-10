@@ -46,7 +46,7 @@ export class BorrowedFieldsReturning {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).splat()]
+        return [...diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes).splat()]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

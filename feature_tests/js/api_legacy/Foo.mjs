@@ -44,7 +44,7 @@ export class Foo {
     }
 #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
+        const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
@@ -114,7 +114,7 @@ static extractFromFields(fields) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const anotherStringSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
+        const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
