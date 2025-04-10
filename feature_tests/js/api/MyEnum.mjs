@@ -75,11 +75,13 @@ export class MyEnum {
     static D = MyEnum.#objectValues[1];
     static E = MyEnum.#objectValues[2];
     static F = MyEnum.#objectValues[3];
+
     intoValue() {
 
         const result = wasm.MyEnum_into_value(this.ffiValue);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}
@@ -88,7 +90,8 @@ export class MyEnum {
 
         const result = wasm.MyEnum_get_a();
 
-        try {        return new MyEnum(diplomatRuntime.internalConstructor, result);
+        try {
+            return new MyEnum(diplomatRuntime.internalConstructor, result);
         }
 
         finally {}

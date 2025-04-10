@@ -8,6 +8,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class OptionOpaque {
     get ffiValue(): pointer;
+
     static new_(i: number): OptionOpaque | null;
     static newNone(): OptionOpaque | null;
     static returns(): OptionStruct | null;

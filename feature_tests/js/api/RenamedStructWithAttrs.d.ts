@@ -18,6 +18,7 @@ export class RenamedStructWithAttrs {
     */
     static fromFields(structObj : RenamedStructWithAttrs_obj) : RenamedStructWithAttrs;
 
+
     get c(): number;
 
     constructor(a: boolean, b: number);

@@ -63,6 +63,7 @@ export class UnimportedEnum {
     static B = UnimportedEnum.#objectValues[1];
     static C = UnimportedEnum.#objectValues[2];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

@@ -1,5 +1,5 @@
   {%- if !m.docs.is_empty() %}
-  {{- m.docs|prefix_trimmed("  /// ")}}
+  {{~ m.docs|prefix_trimmed("  /// ")}}
   {%- endif %}
   {{ m.declaration }} {
     {%- for arena in m.arenas %}

@@ -33,11 +33,13 @@ export class OpaqueMutexedString {
     get ffiValue() {
         return this.#ptr;
     }
+
     static fromUsize(number) {
 
         const result = wasm.OpaqueMutexedString_from_usize(number);
 
-        try {        return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
@@ -56,7 +58,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
 
-        try {        return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
+        try {
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
         finally {}
@@ -68,7 +71,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
 
-        try {        return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
+        try {
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
         finally {}
@@ -80,7 +84,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
 
-        try {        return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
+        try {
+            return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
         finally {}
@@ -89,7 +94,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}
@@ -103,7 +109,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
 
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
 
         finally {        diplomatReceive.free();
@@ -113,7 +120,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
 
-        try {        return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
@@ -122,7 +130,8 @@ export class OpaqueMutexedString {
 
         const result = wasm.OpaqueMutexedString_to_unsigned_from_unsigned(this.ffiValue, input);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}

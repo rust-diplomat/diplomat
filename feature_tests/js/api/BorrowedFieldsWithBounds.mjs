@@ -144,6 +144,7 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() {
         return [this.#fieldC];
     };
+
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)));
@@ -162,7 +163,8 @@ export class BorrowedFieldsWithBounds {
 
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, dstr16XSlice.ptr, utf8StrZSlice.ptr);
 
-        try {        return BorrowedFieldsWithBounds._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
+        try {
+            return BorrowedFieldsWithBounds._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
 
         finally {

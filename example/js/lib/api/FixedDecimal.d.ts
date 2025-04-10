@@ -10,6 +10,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class FixedDecimal {
     get ffiValue(): pointer;
 
+
     /**
      * Multiply the [`FixedDecimal`] by a given power of ten.
      *

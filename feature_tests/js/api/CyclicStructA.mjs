@@ -79,11 +79,13 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj);
     }
+
     static getB() {
 
         const result = wasm.CyclicStructA_get_b();
 
-        try {        return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
+        try {
+            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
         }
 
         finally {}
@@ -95,7 +97,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
@@ -110,7 +113,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
@@ -125,7 +129,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {

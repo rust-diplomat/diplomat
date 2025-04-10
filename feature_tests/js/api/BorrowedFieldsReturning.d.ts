@@ -16,5 +16,6 @@ export class BorrowedFieldsReturning {
     static fromFields(structObj : BorrowedFieldsReturning_obj) : BorrowedFieldsReturning;
 
 
-    constructor(structObj : BorrowedFieldsReturning_obj);
+
+    constructor(structObj: BorrowedFieldsReturning_obj);
 }

@@ -33,6 +33,7 @@ export class RenamedMyIterable {
     get ffiValue() {
         return this.#ptr;
     }
+
     #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -40,7 +41,8 @@ export class RenamedMyIterable {
 
         const result = wasm.namespace_MyIterable_new(xSlice.ptr);
 
-        try {        return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -54,7 +56,8 @@ export class RenamedMyIterable {
 
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
 
-        try {        return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
+        try {
+            return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
         finally {}

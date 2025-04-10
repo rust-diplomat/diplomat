@@ -32,11 +32,13 @@ export class OpaqueThin {
     get ffiValue() {
         return this.#ptr;
     }
+
     get a() {
 
         const result = wasm.OpaqueThin_a(this.ffiValue);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}
@@ -45,7 +47,8 @@ export class OpaqueThin {
 
         const result = wasm.OpaqueThin_b(this.ffiValue);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}

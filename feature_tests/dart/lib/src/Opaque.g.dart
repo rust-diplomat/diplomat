@@ -44,6 +44,7 @@ final class Opaque implements ffi.Finalizable {
     _Opaque_get_debug_str(_ffi, write._ffi);
     return write.finalize();
   }
+
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
   ///
   /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.

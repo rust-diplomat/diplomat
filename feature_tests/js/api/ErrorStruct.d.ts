@@ -19,5 +19,6 @@ export class ErrorStruct {
     static fromFields(structObj : ErrorStruct_obj) : ErrorStruct;
 
 
-    constructor(structObj : ErrorStruct_obj);
+
+    constructor(structObj: ErrorStruct_obj);
 }

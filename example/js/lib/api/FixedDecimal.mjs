@@ -37,6 +37,7 @@ export class FixedDecimal {
         return this.#ptr;
     }
 
+
     /**
      * Construct an [`FixedDecimal`] from an integer.
      */
@@ -44,7 +45,8 @@ export class FixedDecimal {
 
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
 
-        try {        return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
@@ -74,7 +76,8 @@ export class FixedDecimal {
 
         const result = wasm.icu4x_FixedDecimal_to_string_mv1(this.ffiValue, write.buffer);
 
-        try {        return result === 0 ? null : write.readString8();
+        try {
+            return result === 0 ? null : write.readString8();
         }
 
         finally {        write.free();

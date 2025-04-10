@@ -7,6 +7,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class ResultOpaque {
     get ffiValue(): pointer;
+
     static newFailingFoo(): ResultOpaque;
     static newFailingBar(): ResultOpaque;
     static newFailingUnit(): ResultOpaque | null;

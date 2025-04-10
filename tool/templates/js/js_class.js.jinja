@@ -10,7 +10,7 @@
 export class {{type_name}} {
     {%- block class_body %}{% endblock %}
 
-    {%- for method in methods.methods -%}
+    {%~ for method in methods.methods -%}
 
     {#- Do not include the method in typescript if it is meant to be private: -#}
     {%- if !method.method_decl.starts_with('#') || !typescript %}
@@ -24,7 +24,7 @@ export class {{type_name}} {
     {%- endfor -%}
     {%- if let Some(it) = methods.special_methods.iterator %}
 
-    next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
+    next() {%- if typescript %}: IteratorResult<{{it}}>;{% else %}{
         const out = this.#iteratorNext();
 
         return {

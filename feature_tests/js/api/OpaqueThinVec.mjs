@@ -34,6 +34,7 @@ export class OpaqueThinVec {
     get ffiValue() {
         return this.#ptr;
     }
+
     #defaultConstructor(a, b) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -42,7 +43,8 @@ export class OpaqueThinVec {
 
         const result = wasm.OpaqueThinVec_create(aSlice.ptr, bSlice.ptr);
 
-        try {        return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -56,7 +58,8 @@ export class OpaqueThinVec {
 
         const result = wasm.OpaqueThinVec_iter(this.ffiValue);
 
-        try {        return new OpaqueThinIter(diplomatRuntime.internalConstructor, result, [], aEdges);
+        try {
+            return new OpaqueThinIter(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
         finally {}
@@ -65,7 +68,8 @@ export class OpaqueThinVec {
 
         const result = wasm.OpaqueThinVec_len(this.ffiValue);
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}
@@ -77,7 +81,8 @@ export class OpaqueThinVec {
 
         const result = wasm.OpaqueThinVec_get(this.ffiValue, idx);
 
-        try {        return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+        try {
+            return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
         finally {}
@@ -89,7 +94,8 @@ export class OpaqueThinVec {
 
         const result = wasm.OpaqueThinVec_first(this.ffiValue);
 
-        try {        return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+        try {
+            return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
         finally {}

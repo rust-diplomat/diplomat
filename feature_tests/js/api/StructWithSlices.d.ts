@@ -18,7 +18,8 @@ export class StructWithSlices {
     */
     static fromFields(structObj : StructWithSlices_obj) : StructWithSlices;
 
+
     returnLast(): string;
 
-    constructor(structObj : StructWithSlices_obj);
+    constructor(structObj: StructWithSlices_obj);
 }

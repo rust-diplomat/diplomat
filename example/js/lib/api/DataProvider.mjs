@@ -39,6 +39,7 @@ export class DataProvider {
         return this.#ptr;
     }
 
+
     /**
      * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
      */
@@ -46,7 +47,8 @@ export class DataProvider {
 
         const result = wasm.icu4x_DataProvider_new_static_mv1();
 
-        try {        return new DataProvider(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new DataProvider(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
@@ -59,7 +61,8 @@ export class DataProvider {
 
         const result = wasm.icu4x_DataProvider_returns_result_mv1();
 
-        try {        return result === 1;
+        try {
+            return result === 1;
         }
 
         finally {}

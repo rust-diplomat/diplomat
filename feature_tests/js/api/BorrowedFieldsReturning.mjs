@@ -92,6 +92,7 @@ export class BorrowedFieldsReturning {
         return [this.#bytes];
     };
 
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

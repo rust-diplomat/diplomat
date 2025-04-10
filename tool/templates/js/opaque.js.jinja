@@ -47,7 +47,7 @@ symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifeti
     }
 
     {%- endif %}
-    get ffiValue(){% if typescript %}: pointer;{% else %} {
+    get ffiValue() {%- if typescript %}: pointer;{% else %} {
         return this.#ptr;
     }
     {%- endif -%}

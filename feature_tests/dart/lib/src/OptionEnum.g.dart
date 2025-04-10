@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 enum OptionEnum {
+
   foo,
 
   bar;

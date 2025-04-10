@@ -55,6 +55,7 @@ final class Foo implements ffi.Finalizable {
     final result = _Foo_extract_from_fields(fields._toFfi(temp.arena, aAppendArray: [aEdges]));
     return Foo._fromFfi(result, [], aEdges);
   }
+
   /// Test that the extraction logic correctly pins the right fields
   factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
     final temp = _FinalizedArena();

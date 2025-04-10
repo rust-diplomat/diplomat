@@ -37,6 +37,7 @@ export class Two {
         return this.#ptr;
     }
 
+
     constructor(symbol, ptr, selfEdge, aEdge, bEdge) {
         return this.#internalConstructor(...arguments)
     }

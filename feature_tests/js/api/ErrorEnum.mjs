@@ -60,6 +60,7 @@ export class ErrorEnum {
     static Foo = ErrorEnum.#objectValues[0];
     static Bar = ErrorEnum.#objectValues[1];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

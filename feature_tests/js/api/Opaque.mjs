@@ -34,11 +34,13 @@ export class Opaque {
     get ffiValue() {
         return this.#ptr;
     }
+
     #defaultConstructor() {
 
         const result = wasm.Opaque_new();
 
-        try {        return new Opaque(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
@@ -50,7 +52,8 @@ export class Opaque {
 
         const result = wasm.Opaque_try_from_utf8(inputSlice.ptr);
 
-        try {        return result === 0 ? null : new Opaque(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return result === 0 ? null : new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -64,7 +67,8 @@ export class Opaque {
 
         const result = wasm.Opaque_from_str(inputSlice.ptr);
 
-        try {        return new Opaque(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -76,7 +80,8 @@ export class Opaque {
 
     wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {        write.free();
@@ -105,7 +110,8 @@ export class Opaque {
 
         const result = wasm.Opaque_returns_usize();
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}
@@ -116,7 +122,8 @@ export class Opaque {
 
         const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
 
-        try {        return ImportedStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+        try {
+            return ImportedStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
         finally {        diplomatReceive.free();
@@ -126,7 +133,8 @@ export class Opaque {
 
         const result = wasm.Opaque_cmp();
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {}

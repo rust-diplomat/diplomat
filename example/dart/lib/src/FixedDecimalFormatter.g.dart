@@ -24,6 +24,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimalFormatter_destroy_mv1));
+
   /// Creates a new [`FixedDecimalFormatter`] from locale data.
   ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
@@ -35,6 +36,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
     }
     return FixedDecimalFormatter._fromFfi(result.union.ok, []);
   }
+
   /// Formats a [`FixedDecimal`] to a string.
   ///
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.

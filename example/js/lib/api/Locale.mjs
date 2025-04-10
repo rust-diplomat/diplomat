@@ -39,6 +39,7 @@ export class Locale {
         return this.#ptr;
     }
 
+
     /**
      * Construct an [`Locale`] from a locale identifier represented as a string.
      */
@@ -49,7 +50,8 @@ export class Locale {
 
         const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr);
 
-        try {        return new Locale(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Locale(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
