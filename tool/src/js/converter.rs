@@ -721,7 +721,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
                     if matches!(gen_context, JsToCConversionContext::List(..) | JsToCConversionContext::SlicePrealloc) {
                         alloc_stmnt = "".into();
-                        alloc_end = "";
+
+                        if matches!(self.config.abi, WasmABI::Legacy) {
+                            alloc_end = "";
+                        }
                     }
 
                     let (spread_pre, spread_post) = match gen_context {
