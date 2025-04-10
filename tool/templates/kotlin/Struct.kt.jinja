@@ -23,7 +23,7 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
     @JvmField
     internal var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
     {%- endfor %}
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf({% for field in fields %}{% if loop.first %}{% else %}, {% endif %}"{{field.name}}"{% endfor %})

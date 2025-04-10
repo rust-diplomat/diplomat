@@ -22,8 +22,9 @@ namespace capi {
       diplomat::capi::DiplomatStringView field_b;
       diplomat::capi::DiplomatStringView field_c;
     };
-    
+
     typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds ok; }; bool is_ok; } BorrowedFieldsWithBounds_option;
+
 } // namespace capi
 } // namespace
 

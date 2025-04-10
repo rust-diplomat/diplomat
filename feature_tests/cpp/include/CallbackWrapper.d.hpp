@@ -21,8 +21,9 @@ namespace capi {
     struct CallbackWrapper {
       bool cant_be_empty;
     };
-    
+
     typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok; } CallbackWrapper_option;
+
 } // namespace capi
 } // namespace
 

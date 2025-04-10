@@ -98,10 +98,7 @@ impl<'tcx> JSFormatter<'tcx> {
 
     /// Just creates `/** */` doc strings.
     pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
-            .trim()
-            .replace('\n', "\n * ")
-            .replace(" \n", "\n")
+        docs.to_markdown(self.docs_url_gen).trim().to_string()
     }
 
     /// Creates the body of an `import` or `export` statement.

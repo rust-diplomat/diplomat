@@ -17,15 +17,13 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
     diplomat::capi::MyOpaqueEnum* MyOpaqueEnum_new(void);
-    
     void MyOpaqueEnum_to_string(const diplomat::capi::MyOpaqueEnum* self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
     void MyOpaqueEnum_destroy(MyOpaqueEnum* self);
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

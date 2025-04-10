@@ -18,13 +18,12 @@
 namespace ns {
 namespace capi {
     extern "C" {
-    
     ns::capi::AttrOpaque1Renamed* namespace_OpaqueIterator_next(ns::capi::RenamedOpaqueIterator* self);
-    
-    
+
     void namespace_OpaqueIterator_destroy(RenamedOpaqueIterator* self);
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

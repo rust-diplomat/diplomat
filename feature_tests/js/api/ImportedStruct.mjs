@@ -6,25 +6,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ImportedStruct {
-    
     #foo;
-    
-    get foo()  {
+    get foo() {
         return this.#foo;
-    } 
-    set foo(value) {
+    }
+    set foo(value){
         this.#foo = value;
     }
-    
     #count;
-    
-    get count()  {
+    get count() {
         return this.#count;
-    } 
-    set count(value) {
+    }
+    set count(value){
         this.#count = value;
     }
-    
     /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -54,7 +49,6 @@ export class ImportedStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
     // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
     // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.

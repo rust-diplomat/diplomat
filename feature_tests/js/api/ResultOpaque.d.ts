@@ -6,9 +6,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class ResultOpaque {
-    
     get ffiValue(): pointer;
-
     static newFailingFoo(): ResultOpaque;
 
     static newFailingBar(): ResultOpaque;
@@ -23,13 +21,16 @@ export class ResultOpaque {
 
     static newInEnumErr(i: number): ErrorEnum;
 
-    /** 
+
+    /**
      * When we take &str, the return type becomes a Result
      * Test that this interacts gracefully with returning a reference type
+
      */
-    takesStr(v: string): ResultOpaque;
+        takesStr(v: string): ResultOpaque;
 
     assertInteger(i: number): void;
+
 
     constructor(i: number);
 }

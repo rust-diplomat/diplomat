@@ -9,47 +9,44 @@ const OpaqueThinVec_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class OpaqueThinVec {
-    
     // Internal ptr reference:
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("OpaqueThinVec is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             OpaqueThinVec_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
     get ffiValue() {
         return this.#ptr;
     }
-
     #defaultConstructor(a, b) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const aSlice = diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32");
-        
+
         const bSlice = diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32");
-        
+
         const result = wasm.OpaqueThinVec_create(...aSlice.splat(), ...bSlice.splat());
-    
-        try {
-            return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
+
+        try {        return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
+
         }
-        
+
         finally {
             functionCleanupArena.free();
         }
@@ -58,51 +55,52 @@ export class OpaqueThinVec {
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
         const result = wasm.OpaqueThinVec_iter(this.ffiValue);
-    
-        try {
-            return new OpaqueThinIter(diplomatRuntime.internalConstructor, result, [], aEdges);
+
+        try {        return new OpaqueThinIter(diplomatRuntime.internalConstructor, result, [], aEdges);
+
         }
-        
+
         finally {}
     }
 
     len() {
         const result = wasm.OpaqueThinVec_len(this.ffiValue);
-    
-        try {
-            return result;
+
+        try {        return result;
+
         }
-        
+
         finally {}
     }
 
     get(idx) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
         const result = wasm.OpaqueThinVec_get(this.ffiValue, idx);
-    
-        try {
-            return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+
+        try {        return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+
         }
-        
+
         finally {}
     }
 
     get first() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
         const result = wasm.OpaqueThinVec_first(this.ffiValue);
-    
-        try {
-            return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+
+        try {        return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
+
         }
-        
+
         finally {}
     }
+
 
     constructor(a, b) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

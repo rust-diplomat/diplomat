@@ -4,13 +4,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class MyEnum {
-    
 
-    static fromValue(value : MyEnum | string) : MyEnum; 
+    static fromValue(value : MyEnum | string) : MyEnum;
 
-    get value() : string;
+    get value(): string;
 
-    get ffiValue() : number;
+    get ffiValue(): number;
 
     static A : MyEnum;
     static B : MyEnum;
@@ -18,10 +17,10 @@ export class MyEnum {
     static D : MyEnum;
     static E : MyEnum;
     static F : MyEnum;
-
     intoValue(): number;
 
     static getA(): MyEnum;
+
 
     constructor(value: MyEnum | string );
 }

@@ -18,6 +18,7 @@ class ErrorEnum;
 namespace diplomat {
 namespace capi {
     struct ResultOpaque;
+
 } // namespace capi
 } // namespace
 
@@ -41,8 +42,9 @@ public:
   inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
   /**
-   * When we take &str, the return type becomes a Result
+   *   When we take &str, the return type becomes a Result
    * Test that this interacts gracefully with returning a reference type
+
    */
   inline diplomat::result<ResultOpaque&, diplomat::Utf8Error> takes_str(std::string_view _v);
 

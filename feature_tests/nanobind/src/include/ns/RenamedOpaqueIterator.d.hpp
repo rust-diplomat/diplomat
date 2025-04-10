@@ -20,6 +20,7 @@ class AttrOpaque1Renamed;
 namespace ns {
 namespace capi {
     struct RenamedOpaqueIterator;
+
 } // namespace capi
 } // namespace
 

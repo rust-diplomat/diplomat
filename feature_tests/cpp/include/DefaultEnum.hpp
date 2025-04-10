@@ -17,11 +17,10 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
     diplomat::capi::DefaultEnum DefaultEnum_new(void);
-    
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

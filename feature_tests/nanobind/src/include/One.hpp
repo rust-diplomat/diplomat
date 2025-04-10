@@ -18,33 +18,22 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
     diplomat::capi::One* One_transitivity(const diplomat::capi::One* hold, const diplomat::capi::One* nohold);
-    
     diplomat::capi::One* One_cycle(const diplomat::capi::Two* hold, const diplomat::capi::One* nohold);
-    
     diplomat::capi::One* One_many_dependents(const diplomat::capi::One* a, const diplomat::capi::One* b, const diplomat::capi::Two* c, const diplomat::capi::Two* d, const diplomat::capi::Two* nohold);
-    
     diplomat::capi::One* One_return_outlives_param(const diplomat::capi::Two* hold, const diplomat::capi::One* nohold);
-    
     diplomat::capi::One* One_diamond_top(const diplomat::capi::One* top, const diplomat::capi::One* left, const diplomat::capi::One* right, const diplomat::capi::One* bottom);
-    
     diplomat::capi::One* One_diamond_left(const diplomat::capi::One* top, const diplomat::capi::One* left, const diplomat::capi::One* right, const diplomat::capi::One* bottom);
-    
     diplomat::capi::One* One_diamond_right(const diplomat::capi::One* top, const diplomat::capi::One* left, const diplomat::capi::One* right, const diplomat::capi::One* bottom);
-    
     diplomat::capi::One* One_diamond_bottom(const diplomat::capi::One* top, const diplomat::capi::One* left, const diplomat::capi::One* right, const diplomat::capi::One* bottom);
-    
     diplomat::capi::One* One_diamond_and_nested_types(const diplomat::capi::One* a, const diplomat::capi::One* b, const diplomat::capi::One* c, const diplomat::capi::One* d, const diplomat::capi::One* nohold);
-    
     diplomat::capi::One* One_implicit_bounds(const diplomat::capi::One* explicit_hold, const diplomat::capi::One* implicit_hold, const diplomat::capi::One* nohold);
-    
     diplomat::capi::One* One_implicit_bounds_deep(const diplomat::capi::One* explicit_, const diplomat::capi::One* implicit_1, const diplomat::capi::One* implicit_2, const diplomat::capi::One* nohold);
-    
-    
+
     void One_destroy(One* self);
-    
+
     } // extern "C"
+
 } // namespace capi
 } // namespace
 

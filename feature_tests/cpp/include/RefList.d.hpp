@@ -18,6 +18,7 @@ class RefListParameter;
 namespace diplomat {
 namespace capi {
     struct RefList;
+
 } // namespace capi
 } // namespace
 

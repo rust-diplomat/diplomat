@@ -18,6 +18,7 @@ class Utf16Wrap;
 namespace diplomat {
 namespace capi {
     struct OpaqueMutexedString;
+
 } // namespace capi
 } // namespace
 

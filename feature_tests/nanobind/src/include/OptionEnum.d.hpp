@@ -18,8 +18,9 @@ namespace capi {
       OptionEnum_Foo = 0,
       OptionEnum_Bar = 1,
     };
-    
+
     typedef struct OptionEnum_option {union { OptionEnum ok; }; bool is_ok; } OptionEnum_option;
+
 } // namespace capi
 } // namespace
 

@@ -37,7 +37,8 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
 
   AttrOpaque1Renamed? _iteratorNext() {
     final result = _namespace_OpaqueIterator_next(_ffi);
-    return result.address == 0 ? null : AttrOpaque1Renamed._fromFfi(result, []);
+        return result.address == 0 ? null : AttrOpaque1Renamed._fromFfi(result, []);
+
   }
 }
 

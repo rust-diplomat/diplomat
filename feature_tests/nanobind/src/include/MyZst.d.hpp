@@ -14,7 +14,7 @@
 
 namespace diplomat {
 namespace capi {
-    
+
 } // namespace capi
 } // namespace
 

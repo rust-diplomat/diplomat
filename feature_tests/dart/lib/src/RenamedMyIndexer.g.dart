@@ -26,10 +26,11 @@ final class RenamedMyIndexer implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_MyIndexer_get(_ffi, i);
-    if (!result.isOk) {
+        if (!result.isOk) {
       return null;
     }
     return result.union.ok._toDart(aEdges);
+
   }
 }
 

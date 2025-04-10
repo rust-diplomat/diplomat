@@ -19,8 +19,9 @@ namespace capi {
       UnimportedEnum_B = 1,
       UnimportedEnum_C = 2,
     };
-    
+
     typedef struct UnimportedEnum_option {union { UnimportedEnum ok; }; bool is_ok; } UnimportedEnum_option;
+
 } // namespace capi
 } // namespace
 

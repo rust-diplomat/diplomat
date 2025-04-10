@@ -8,10 +8,8 @@ type BorrowedFieldsReturning_obj = {
 
 
 export class BorrowedFieldsReturning {
-    
-    get bytes() : string; 
-    set bytes(value: string); 
-    
+    get bytes(): string;
+    set bytes(value: string);
     /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
     * Optional fields do not need to be included in the provided object.
     */

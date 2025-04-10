@@ -15,6 +15,7 @@
 namespace diplomat {
 namespace capi {
     struct Two;
+
 } // namespace capi
 } // namespace
 

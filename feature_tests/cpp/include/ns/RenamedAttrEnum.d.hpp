@@ -19,8 +19,9 @@ namespace capi {
       RenamedAttrEnum_B = 1,
       RenamedAttrEnum_C = 2,
     };
-    
+
     typedef struct RenamedAttrEnum_option {union { RenamedAttrEnum ok; }; bool is_ok; } RenamedAttrEnum_option;
+
 } // namespace capi
 } // namespace
 

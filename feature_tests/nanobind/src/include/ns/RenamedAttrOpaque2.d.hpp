@@ -15,6 +15,7 @@
 namespace ns {
 namespace capi {
     struct RenamedAttrOpaque2;
+
 } // namespace capi
 } // namespace
 
