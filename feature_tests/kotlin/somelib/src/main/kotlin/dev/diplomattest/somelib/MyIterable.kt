@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface MyIterableLib: Library {
     fun namespace_MyIterable_destroy(handle: Pointer)
     fun namespace_MyIterable_new(x: Slice): Pointer

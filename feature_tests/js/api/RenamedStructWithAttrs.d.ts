@@ -9,19 +9,17 @@ type RenamedStructWithAttrs_obj = {
 
 
 export class RenamedStructWithAttrs {
-    
-    get a() : boolean; 
-    set a(value: boolean); 
-    
-    get b() : number; 
-    set b(value: number); 
-    
+    get a(): boolean;
+    set a(value: boolean);
+    get b(): number;
+    set b(value: number);
     /** Create `RenamedStructWithAttrs` from an object that contains all of `RenamedStructWithAttrs`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : RenamedStructWithAttrs_obj) : RenamedStructWithAttrs;
 
-get c(): number;
+    get c(): number;
+
 
     constructor(a: boolean, b: number);
 }

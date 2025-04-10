@@ -45,17 +45,11 @@ typedef struct DiplomatCallback_CallbackWrapper_test_str_cb_arg_f {
     int32_t (*run_callback)(const void*, DiplomatStringView );
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_str_cb_arg_f;
-
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
-
 int32_t CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_h h_cb_wrap);
-
 int32_t CallbackWrapper_test_cb_with_struct(DiplomatCallback_CallbackWrapper_test_cb_with_struct_f f_cb_wrap);
-
 int32_t CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_f f_cb_wrap, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_g g_cb_wrap);
-
 int32_t CallbackWrapper_test_str_cb_arg(DiplomatCallback_CallbackWrapper_test_str_cb_arg_f f_cb_wrap);
-
 
 
 

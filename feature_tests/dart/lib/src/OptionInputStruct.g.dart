@@ -39,7 +39,7 @@ final class OptionInputStruct {
 
   factory OptionInputStruct({int? a, Rune? b, OptionEnum? c}) {
     final result = _OptionInputStruct_default_ctor();
-    final dart = OptionInputStruct._fromFfi(result);
+        final dart = OptionInputStruct._fromFfi(result);
     if (a != null) {
       dart.a = a;
     }
@@ -50,6 +50,7 @@ final class OptionInputStruct {
       dart.c = c;
     }
     return dart;
+
   }
 
   @override

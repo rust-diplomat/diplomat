@@ -47,7 +47,8 @@ final class BorrowedFieldsWithBounds {
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [utf8StrZArena];
     final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
-    return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
+        return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
+
   }
 
   @override
@@ -64,7 +65,7 @@ final class BorrowedFieldsWithBounds {
         fieldC,
       ]);
 
-  // Return all fields corresponding to lifetime `'a` 
+  // Return all fields corresponding to lifetime `'a`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'a`,
   // assuming that there are no `'other: a`. bounds. In case of such bounds,
@@ -72,7 +73,7 @@ final class BorrowedFieldsWithBounds {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeA => [fieldA];
 
-  // Return all fields corresponding to lifetime `'b` 
+  // Return all fields corresponding to lifetime `'b`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'b`,
   // assuming that there are no `'other: b`. bounds. In case of such bounds,
@@ -80,7 +81,7 @@ final class BorrowedFieldsWithBounds {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeB => [fieldB];
 
-  // Return all fields corresponding to lifetime `'c` 
+  // Return all fields corresponding to lifetime `'c`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'c`,
   // assuming that there are no `'other: c`. bounds. In case of such bounds,

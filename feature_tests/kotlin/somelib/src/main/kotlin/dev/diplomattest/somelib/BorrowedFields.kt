@@ -17,7 +17,7 @@ internal class BorrowedFieldsNative: Structure(), Structure.ByValue {
     internal var b: Slice = Slice();
     @JvmField
     internal var c: Slice = Slice();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c")

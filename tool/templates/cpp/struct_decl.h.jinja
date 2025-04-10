@@ -16,7 +16,7 @@ struct {{type_name_unnamespaced}} {
 {% for m in methods %}
 	{% if !m.docs.is_empty() -%}
 	/**
-	 * {{m.docs|indent(2)}}
+	 * {{m.docs|indent_trimmed(2)}}
 	 */
 	{% endif -%}
 	{% include "method_decl.h.jinja" %}

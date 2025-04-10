@@ -59,7 +59,7 @@ final class MyStruct {
 
   factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g}) {
     final result = _MyStruct_new();
-    final dart = MyStruct._fromFfi(result);
+        final dart = MyStruct._fromFfi(result);
     if (a != null) {
       dart.a = a;
     }
@@ -82,34 +82,36 @@ final class MyStruct {
       dart.g = g;
     }
     return dart;
+
   }
 
   int intoA() {
     final temp = _FinalizedArena();
     final result = _MyStruct_into_a(_toFfi(temp.arena));
-    return result;
-  }
+        return result;
 
-  /// 
-  ///
-  /// Throws [MyZst] on failure.
+  }
+///
+///
+  ///  Throws [MyZst] on failure.
+
   static void returnsZstResult() {
     final result = _MyStruct_returns_zst_result();
-    if (!result.isOk) {
+        if (!result.isOk) {
       throw MyZst();
     }
-    
-  }
 
-  /// 
-  ///
-  /// Throws [MyZst] on failure.
+  }
+///
+///
+  ///  Throws [MyZst] on failure.
+
   static void failsZstResult() {
     final result = _MyStruct_fails_zst_result();
-    if (!result.isOk) {
+        if (!result.isOk) {
       throw MyZst();
     }
-    
+
   }
 
   @override

@@ -87,7 +87,7 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
 
         fun fromTraitObj(trt_obj: TesterTrait): DiplomatTrait_TesterTrait_Wrapper {
             val vtable = DiplomatTrait_TesterTrait_VTable_Native()
-            
+
             
             val testTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testTraitFn {
                 override fun invoke(ignored: Pointer?, x: UInt ): FFIUint32 {

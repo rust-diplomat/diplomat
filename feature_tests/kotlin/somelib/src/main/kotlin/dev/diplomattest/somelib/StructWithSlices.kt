@@ -15,7 +15,7 @@ internal class StructWithSlicesNative: Structure(), Structure.ByValue {
     internal var first: Slice = Slice();
     @JvmField
     internal var second: Slice = Slice();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("first", "second")

@@ -24,12 +24,14 @@ final class OpaqueThin implements ffi.Finalizable {
 
   int get a {
     final result = _OpaqueThin_a(_ffi);
-    return result;
+        return result;
+
   }
 
   double get b {
     final result = _OpaqueThin_b(_ffi);
-    return result;
+        return result;
+
   }
 }
 
