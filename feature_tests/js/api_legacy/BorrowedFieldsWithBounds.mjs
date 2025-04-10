@@ -126,7 +126,7 @@ export class BorrowedFieldsWithBounds {
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeA() { 
-        return [fieldA];
+        return [this.#fieldA];
     };
 
     // Return all fields corresponding to lifetime `'b` 
@@ -135,7 +135,7 @@ export class BorrowedFieldsWithBounds {
     // assuming that there are no `'other: b`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeB() { 
-        return [fieldB];
+        return [this.#fieldB];
     };
 
     // Return all fields corresponding to lifetime `'c` 
@@ -144,7 +144,7 @@ export class BorrowedFieldsWithBounds {
     // assuming that there are no `'other: c`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeC() { 
-        return [fieldC];
+        return [this.#fieldC];
     };
 static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

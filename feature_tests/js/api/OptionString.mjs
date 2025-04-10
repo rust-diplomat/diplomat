@@ -36,12 +36,12 @@ export class OptionString {
     }
 static new_(diplomatStr) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const diplomatStrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr));
+        const diplomatStrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [diplomatStrSlice];
         
-        const result = wasm.OptionString_new(...diplomatStrSlice.splat());
+        const result = wasm.OptionString_new(diplomatStrSlice.ptr);
     
         try {
             return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);

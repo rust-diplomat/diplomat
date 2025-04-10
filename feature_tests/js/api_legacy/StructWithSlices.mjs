@@ -61,13 +61,7 @@ export class StructWithSlices {
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
-
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return [...diplomatRuntime.DiplomatBuf.str8(wasm, this.#first).splat(), ...diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16").splat()]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -120,7 +114,7 @@ returnLast() {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...this._fieldsForLifetimeA];
-        wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}), write.buffer);
     
         try {
             return write.readString8();

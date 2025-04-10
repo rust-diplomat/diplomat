@@ -35,9 +35,11 @@ export class OptionString {
         return this.#ptr;
     }
 static new_(diplomatStr) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [diplomatStrSlice];
         
         const result = wasm.OptionString_new(...diplomatStrSlice.splat());
     
@@ -46,7 +48,7 @@ static new_(diplomatStr) {
         }
         
         finally {
-            functionCleanupArena.free();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
 write() {
