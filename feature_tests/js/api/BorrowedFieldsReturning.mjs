@@ -93,7 +93,7 @@ export class BorrowedFieldsReturning {
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeA() { 
-        return [bytes];
+        return [this.#bytes];
     };
 
     constructor(structObj) {

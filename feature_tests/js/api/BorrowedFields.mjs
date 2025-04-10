@@ -130,7 +130,7 @@ export class BorrowedFields {
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
     get _fieldsForLifetimeA() { 
-        return [a, b, c];
+        return [this.#a, this.#b, this.#c];
     };
 static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();

@@ -35,18 +35,20 @@ export class OptionString {
         return this.#ptr;
     }
 static new_(diplomatStr) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+        let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
+        const diplomatStrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr));
         
-        const diplomatStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [diplomatStrSlice];
         
-        const result = wasm.OptionString_new(diplomatStrSlice.ptr);
+        const result = wasm.OptionString_new(...diplomatStrSlice.splat());
     
         try {
             return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
         }
         
         finally {
-            functionCleanupArena.free();
+            functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
 write() {

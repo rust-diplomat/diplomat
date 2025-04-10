@@ -3,6 +3,7 @@
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/ns/RenamedAttrEnum.hpp"
 #include "../include/ns/RenamedMyIterable.hpp"
+#include "../include/ns/RenamedComparable.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
@@ -59,4 +60,16 @@ int main(int argc, char* argv[]) {
     simple_assert("For loop iteration", uintVec == unitVecCopy);
 
     simple_assert("stl-algorithm iteration failed", std::equal(uintVec.begin(), uintVec.end(), myIterable->begin()));
+
+    auto cmpA = ns::RenamedComparable::new_(0);
+    auto cmpB = ns::RenamedComparable::new_(0);
+    auto cmpC = ns::RenamedComparable::new_(1);
+    simple_assert("equality", *cmpA == *cmpB);
+    simple_assert("nequality", *cmpB != *cmpC);
+    simple_assert("less or equal as equals", *cmpA <= *cmpB);
+    simple_assert("greater or equal as equals", *cmpA >= *cmpB);
+    simple_assert("less or equal", *cmpA <= *cmpC);
+    simple_assert("greater or equal", *cmpC >= *cmpA);
+    simple_assert("less", *cmpA < *cmpC);
+    simple_assert("greater", *cmpC > *cmpA);
 }

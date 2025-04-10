@@ -58,6 +58,7 @@ part 'RenamedOpaqueIterable.g.dart';
 part 'RenamedOpaqueIterator.g.dart';
 part 'RenamedStructWithAttrs.g.dart';
 part 'ResultOpaque.g.dart';
+part 'StructWithSlices.g.dart';
 part 'Two.g.dart';
 part 'UnimportedEnum.g.dart';
 part 'Unnamespaced.g.dart';

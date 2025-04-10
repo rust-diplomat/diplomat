@@ -2,7 +2,7 @@
 
 use crate::cpp::Cpp2Formatter;
 use diplomat_core::hir::{DocsUrlGenerator, Method, TypeContext, TypeId};
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::LazyLock};
 
 /// This type mediates all formatting
 ///
@@ -43,7 +43,29 @@ impl<'tcx> PyFormatter<'tcx> {
     }
 
     pub fn fmt_method_name<'a>(&'tcx self, method: &'a Method) -> Cow<'a, str> {
-        // TODO: Avoid python keywords
-        method.attrs.rename.apply(method.name.as_str().into())
+        self.fmt_identifier(method.attrs.rename.apply(method.name.as_str().into()))
+    }
+
+    pub fn fmt_identifier<'a>(&'tcx self, name: Cow<'a, str>) -> Cow<'a, str> {
+        // Source https://docs.python.org/3/reference/lexical_analysis.html#keywords
+        #[rustfmt::skip]
+        static PY_KEYWORDS: LazyLock<std::collections::HashSet<&str>> = LazyLock::new(|| {
+            [
+                "False", "await", "else", "import", "pass",
+                "None", "break", "except", "in", "raise",
+                "True", "class", "finally", "is", "return",
+                "and", "continue", "for", "lambda", "try",
+                "as", "def", "from", "nonlocal", "while",
+                "assert", "del", "global", "not", "with",
+                "async", "elif", "if", "or", "yield",
+            ]
+            .into()
+        });
+
+        if PY_KEYWORDS.contains(name.as_ref()) {
+            format!("{name}_").into()
+        } else {
+            name
+        }
     }
 }

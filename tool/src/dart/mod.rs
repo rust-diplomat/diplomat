@@ -34,6 +34,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.named_constructors = true;
     a.fallible_constructors = true;
     a.accessors = true;
+    a.static_accessors = false;
     a.stringifiers = true;
     a.comparators = true;
     a.iterators = true;
@@ -428,7 +429,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             return None;
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
         let _guard = self.errors.set_context_method(
             self.tcx.fmt_type_name_diagnostics(id),

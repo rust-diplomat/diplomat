@@ -135,8 +135,45 @@ pub struct BorrowedLifetimeInfo<'tcx> {
 }
 
 impl<'tcx> BorrowingParamVisitor<'tcx> {
-    pub(crate) fn new(method: &'tcx Method, tcx: &'tcx TypeContext) -> Self {
-        let used_method_lifetimes = method.output.used_method_lifetimes();
+    pub(crate) fn new(
+        method: &'tcx Method,
+        tcx: &'tcx TypeContext,
+        force_include_slices: bool,
+    ) -> Self {
+        let mut used_method_lifetimes = method.output.used_method_lifetimes();
+
+        // If we need to track the lifetime of slices, we just need to make sure to add a slice's
+        // lifetime to the used_method_lifetimes set.
+        //
+        // Currently this is done recursively, but as mentioned in
+        // https://github.com/rust-diplomat/diplomat/pull/839#discussion_r2031764206,
+        // a long term solution would involve re-designing the lifetimes map to track lifetimes
+        // that involve slices.
+        if force_include_slices {
+            if let Some(s) = &method.param_self {
+                if let hir::SelfType::Struct(s) = &s.ty {
+                    let st = s.resolve(tcx);
+                    for f in &st.fields {
+                        BorrowingParamVisitor::add_slices_to_used_lifetimes(
+                            &mut used_method_lifetimes,
+                            method,
+                            tcx,
+                            &f.ty,
+                        );
+                    }
+                }
+            }
+
+            for p in &method.params {
+                BorrowingParamVisitor::add_slices_to_used_lifetimes(
+                    &mut used_method_lifetimes,
+                    method,
+                    tcx,
+                    &p.ty,
+                );
+            }
+        }
+
         let borrow_map = used_method_lifetimes
             .iter()
             .map(|lt| {
@@ -156,6 +193,33 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             tcx,
             used_method_lifetimes,
             borrow_map,
+        }
+    }
+
+    /// Given a specific [hir::Type] `ty`, find the lifetimes of slices associated with `ty` and add them to `set`.
+    ///
+    /// We're only interested in non-static, bounded lifetimes (since those are ones we can explicitly de-allocate).
+    fn add_slices_to_used_lifetimes<P: TyPosition<StructPath = StructPath>>(
+        set: &mut BTreeSet<Lifetime>,
+        method: &'tcx Method,
+        tcx: &'tcx TypeContext,
+        ty: &hir::Type<P>,
+    ) {
+        match ty {
+            hir::Type::Struct(s) => {
+                let st = s.resolve(tcx);
+                for f in &st.fields {
+                    BorrowingParamVisitor::add_slices_to_used_lifetimes(set, method, tcx, &f.ty);
+                }
+            }
+            hir::Type::Slice(s) => {
+                if let Some(MaybeStatic::NonStatic(lt)) = s.lifetime() {
+                    if method.lifetime_env.get_bounds(*lt).is_some() {
+                        set.insert(*lt);
+                    }
+                }
+            }
+            _ => {}
         }
     }
 

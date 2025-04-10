@@ -597,9 +597,9 @@ export class CleanupArena {
      * @param {Array} edgeArrays
      * @returns {CleanupArena}
      */
-    createWith(...edgeArrays) {
+    static createWith(...edgeArrays) {
         let self = new CleanupArena();
-        for (edgeArray of edgeArrays) {
+        for (let edgeArray of edgeArrays) {
             if (edgeArray != null) {
                 edgeArray.push(self);
             }
@@ -615,7 +615,7 @@ export class CleanupArena {
      * @param {Array} edgeArrays
      * @returns {DiplomatBuf}
      */
-    maybeCreateWith(functionCleanupArena, ...edgeArrays) {
+    static maybeCreateWith(functionCleanupArena, ...edgeArrays) {
         if (edgeArrays.length > 0) {
             return CleanupArena.createWith(...edgeArrays);
         } else {

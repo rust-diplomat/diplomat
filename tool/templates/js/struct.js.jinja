@@ -198,7 +198,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
             ...{{field.field_name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
             {%- endfor -%}
             {%- else -%}
-            {{field.field_name}}
+            this.#{{field.field_name}}
             {%- endif -%}
         {%- endfor -%}
         ];

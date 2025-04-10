@@ -125,7 +125,7 @@ pub enum SpecialMethod {
     Setter(Option<String>),
     /// A stringifier. Must have no parameters and return a string (DiplomatWrite)
     Stringifier,
-    /// A comparison operator. Currently unsupported
+    /// A comparison operator. Currently not universally supported
     Comparison,
     /// An iterator (a type that is mutated to produce new values)
     Iterator,
@@ -506,6 +506,11 @@ impl Attrs {
                             errors
                                 .push(LoweringError::Other("Getter cannot have parameters".into()));
                         }
+                        if method.param_self.is_none()
+                            && !validator.attrs_supported().static_accessors
+                        {
+                            errors.push(LoweringError::Other(format!("No self parameter on Getter {} but static_acessors are not supported",method.name.as_str())));
+                        }
 
                         // Currently does not forbid nullable getters, could if desired
                     }
@@ -513,6 +518,11 @@ impl Attrs {
                     SpecialMethod::Setter(_) => {
                         if !matches!(method.output.success_type(), SuccessType::Unit) {
                             errors.push(LoweringError::Other("Setters must return unit".into()));
+                        }
+                        if method.param_self.is_none()
+                            && !validator.attrs_supported().static_accessors
+                        {
+                            errors.push(LoweringError::Other(format!("No self parameter on Setter {} but static_acessors are not supported",method.name.as_str())));
                         }
                         check_param_count("Setter", 1, errors);
                         // Currently does not forbid fallible setters, could if desired
@@ -865,6 +875,8 @@ pub struct BackendAttrSupport {
     pub fallible_constructors: bool,
     /// Marking methods as field getters and setters, see [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
     pub accessors: bool,
+    /// Marking *static* methods as field getters and setters, see [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
+    pub static_accessors: bool,
     /// Marking a method as the `to_string` method, which is special in this language.
     pub stringifiers: bool,
     /// Marking a method as the `compare_to` method, which is special in this language.
@@ -906,6 +918,7 @@ impl BackendAttrSupport {
             constructors: true,
             named_constructors: true,
             fallible_constructors: true,
+            static_accessors: true,
             accessors: true,
             stringifiers: true,
             comparators: true,
@@ -1072,6 +1085,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 named_constructors,
                 fallible_constructors,
                 accessors,
+                static_accessors,
                 stringifiers,
                 comparators,
                 iterators,
@@ -1098,6 +1112,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "named_constructors" => named_constructors,
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
+                "static_accessors" => static_accessors,
                 "stringifiers" => stringifiers,
                 "comparators" => comparators,
                 "iterators" => iterators,
