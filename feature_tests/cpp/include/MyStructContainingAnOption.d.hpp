@@ -22,9 +22,8 @@ namespace capi {
       diplomat::capi::MyStruct_option a;
       diplomat::capi::DefaultEnum_option b;
     };
-
+    
     typedef struct MyStructContainingAnOption_option {union { MyStructContainingAnOption ok; }; bool is_ok; } MyStructContainingAnOption_option;
-
 } // namespace capi
 } // namespace
 

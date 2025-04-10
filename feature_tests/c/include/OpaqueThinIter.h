@@ -15,7 +15,9 @@
 
 
 
+
 const OpaqueThin* OpaqueThinIter_next(OpaqueThinIter* self);
+
 
 void OpaqueThinIter_destroy(OpaqueThinIter* self);
 

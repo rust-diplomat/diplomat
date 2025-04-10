@@ -10,8 +10,7 @@ enum DefaultEnum {
 
   static DefaultEnum new_() {
     final result = _DefaultEnum_new();
-        return DefaultEnum.values[result];
-
+    return DefaultEnum.values[result];
   }
 }
 

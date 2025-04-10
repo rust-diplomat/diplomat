@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface OpaqueIterableLib: Library {
     fun namespace_OpaqueIterable_destroy(handle: Pointer)
     fun namespace_OpaqueIterable_iter(handle: Pointer): Pointer

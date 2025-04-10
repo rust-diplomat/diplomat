@@ -25,59 +25,54 @@ final class MyString implements ffi.Finalizable {
   factory MyString(String v) {
     final temp = _FinalizedArena();
     final result = _MyString_new(v._utf8AllocIn(temp.arena));
-        return MyString._fromFfi(result, []);
-
+    return MyString._fromFfi(result, []);
   }
 
   factory MyString.unsafe(String v) {
     final temp = _FinalizedArena();
     final result = _MyString_new_unsafe(v._utf8AllocIn(temp.arena));
-        return MyString._fromFfi(result, []);
-
+    return MyString._fromFfi(result, []);
   }
 
   static MyString newOwned(String v) {
     final result = _MyString_new_owned(v._utf8AllocIn(_RustAlloc()));
-        return MyString._fromFfi(result, []);
-
+    return MyString._fromFfi(result, []);
   }
 
   static MyString newFromFirst(core.List<core.String> v) {
     final temp = _FinalizedArena();
     final result = _MyString_new_from_first(v._utf8SliceAllocIn(temp.arena));
-        return MyString._fromFfi(result, []);
-
+    return MyString._fromFfi(result, []);
   }
 
   set str(String newStr) {
-    final temp = _FinalizedArena();_MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
   }
 
   String get str {
-    final write = _Write();_MyString_get_str(_ffi, write._ffi);
-        return write.finalize();
-
+    final write = _Write();
+    _MyString_get_str(_ffi, write._ffi);
+    return write.finalize();
   }
 
   static String getStaticStr() {
     final result = _MyString_get_static_str();
-        return result._toDart([], isStatic: true);
-
+    return result._toDart([], isStatic: true);
   }
 
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
-    final write = _Write();_MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
-        return write.finalize();
-
+    final write = _Write();
+    _MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
+    return write.finalize();
   }
 
   String borrow() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _MyString_borrow(_ffi);
-        return result._toDart(aEdges);
-
+    return result._toDart(aEdges);
   }
 }
 

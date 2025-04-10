@@ -21,9 +21,8 @@ namespace capi {
       bool a;
       uint32_t b;
     };
-
+    
     typedef struct RenamedStructWithAttrs_option {union { RenamedStructWithAttrs ok; }; bool is_ok; } RenamedStructWithAttrs_option;
-
 } // namespace capi
 } // namespace
 

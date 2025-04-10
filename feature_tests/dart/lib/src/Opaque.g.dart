@@ -24,55 +24,50 @@ final class Opaque implements ffi.Finalizable {
 
   factory Opaque() {
     final result = _Opaque_new();
-        return Opaque._fromFfi(result, []);
-
+    return Opaque._fromFfi(result, []);
   }
 
   static Opaque? tryFromUtf8(String input) {
     final temp = _FinalizedArena();
     final result = _Opaque_try_from_utf8(input._utf8AllocIn(temp.arena));
-        return result.address == 0 ? null : Opaque._fromFfi(result, []);
-
+    return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
 
   static Opaque fromStr(String input) {
     final temp = _FinalizedArena();
     final result = _Opaque_from_str(input._utf8AllocIn(temp.arena));
-        return Opaque._fromFfi(result, []);
-
+    return Opaque._fromFfi(result, []);
   }
 
   String getDebugStr() {
-    final write = _Write();_Opaque_get_debug_str(_ffi, write._ffi);
-        return write.finalize();
-
+    final write = _Write();
+    _Opaque_get_debug_str(_ffi, write._ffi);
+    return write.finalize();
   }
-  /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
-///
-  /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
-///
-  /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
 
+  /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+  ///
+  /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+  ///
+  /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    final temp = _FinalizedArena();_Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
+    final temp = _FinalizedArena();
+    _Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
   }
 
   static int returnsUsize() {
     final result = _Opaque_returns_usize();
-        return result;
-
+    return result;
   }
 
   static ImportedStruct returnsImported() {
     final result = _Opaque_returns_imported();
-        return ImportedStruct._fromFfi(result);
-
+    return ImportedStruct._fromFfi(result);
   }
 
   static int cmp() {
     final result = _Opaque_cmp();
-        return result;
-
+    return result;
   }
 }
 

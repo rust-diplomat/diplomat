@@ -2,8 +2,6 @@
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
 pub mod config;
-// Custom askama filters
-pub(crate) mod filters;
 
 // Backends
 pub mod c;

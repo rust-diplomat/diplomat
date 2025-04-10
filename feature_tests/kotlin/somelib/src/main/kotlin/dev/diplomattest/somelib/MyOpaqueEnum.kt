@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface MyOpaqueEnumLib: Library {
     fun MyOpaqueEnum_destroy(handle: Pointer)
     fun MyOpaqueEnum_new(): Pointer

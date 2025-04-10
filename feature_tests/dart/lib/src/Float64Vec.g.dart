@@ -25,89 +25,81 @@ final class Float64Vec implements ffi.Finalizable {
   factory Float64Vec.bool(core.List<bool> v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_bool(v._boolAllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.i16(core.List<int> v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_i16(v._int16AllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.u16(core.List<int> v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_u16(v._uint16AllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.isize(core.List<int> v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_isize(v._isizeAllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.usize(core.List<int> v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_usize(v._usizeAllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
     final temp = _FinalizedArena();
     final result = _Float64Vec_new_f64_be_bytes(v.asUint8List()._uint8AllocIn(temp.arena));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec(core.List<double> v) {
     final result = _Float64Vec_new_from_owned(v._float64AllocIn(_RustAlloc()));
-        return Float64Vec._fromFfi(result, []);
-
+    return Float64Vec._fromFfi(result, []);
   }
 
   core.List<double> get asSlice {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Float64Vec_as_slice(_ffi);
-        return result._toDart(aEdges);
-
+    return result._toDart(aEdges);
   }
 
   void fillSlice(core.List<double> v) {
-    final temp = _FinalizedArena();_Float64Vec_fill_slice(_ffi, v._float64AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _Float64Vec_fill_slice(_ffi, v._float64AllocIn(temp.arena));
   }
 
   void setValue(core.List<double> newSlice) {
-    final temp = _FinalizedArena();_Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
   }
 
   @override
   String toString() {
-    final write = _Write();_Float64Vec_to_string(_ffi, write._ffi);
-        return write.finalize();
-
+    final write = _Write();
+    _Float64Vec_to_string(_ffi, write._ffi);
+    return write.finalize();
   }
 
   core.List<double> borrow() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Float64Vec_borrow(_ffi);
-        return result._toDart(aEdges);
-
+    return result._toDart(aEdges);
   }
 
   double? operator [](int i) {
     final result = _Float64Vec_get(_ffi, i);
-        if (!result.isOk) {
+    if (!result.isOk) {
       return null;
     }
     return result.union.ok;
-
   }
 }
 

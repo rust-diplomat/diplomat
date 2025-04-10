@@ -17,13 +17,15 @@
 namespace ns {
 namespace capi {
     extern "C" {
+    
     ns::capi::RenamedMyIterable* namespace_MyIterable_new(diplomat::capi::DiplomatU8View x);
+    
     ns::capi::RenamedMyIterator* namespace_MyIterable_iter(const ns::capi::RenamedMyIterable* self);
-
+    
+    
     void namespace_MyIterable_destroy(RenamedMyIterable* self);
-
+    
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

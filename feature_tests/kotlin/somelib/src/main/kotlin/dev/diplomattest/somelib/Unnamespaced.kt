@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface UnnamespacedLib: Library {
     fun namespace_Unnamespaced_destroy(handle: Pointer)
     fun namespace_Unnamespaced_make(e: Int): Pointer

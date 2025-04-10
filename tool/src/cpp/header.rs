@@ -139,7 +139,7 @@ impl fmt::Display for Header {
                 .decl_include
                 .as_ref()
                 // The decl is always in the same namespace/directory
-                .map(|s| Cow::Borrowed(s.as_str().split('/').next_back().unwrap())),
+                .map(|s| Cow::Borrowed(s.as_str().split('/').last().unwrap())),
             includes: self
                 .includes
                 .iter()

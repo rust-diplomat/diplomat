@@ -4,7 +4,7 @@
 nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     {%- if !has_constructor %}
     .def(nb::init<>())
-
+    
     {%- if fields.len() > 0 %}
     .def(nb::init<
     {%- for f in fields -%}
@@ -32,7 +32,7 @@ nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     )
     {%- endif -%}
     {%- endfor %}
-
+    
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
 {%- endfor %};

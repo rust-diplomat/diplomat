@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface OptionOpaqueLib: Library {
     fun OptionOpaque_destroy(handle: Pointer)
     fun OptionOpaque_new(i: Int): Pointer?

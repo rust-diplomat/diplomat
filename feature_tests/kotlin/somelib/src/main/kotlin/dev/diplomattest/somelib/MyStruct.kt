@@ -28,7 +28,7 @@ internal class MyStructNative: Structure(), Structure.ByValue {
     internal var f: Int = 0;
     @JvmField
     internal var g: Int = MyEnum.default().toNative();
-
+  
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c", "d", "e", "f", "g")

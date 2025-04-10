@@ -33,9 +33,9 @@ final class StructWithSlices {
 
   String returnLast() {
     final temp = _FinalizedArena();
-    final write = _Write();_StructWithSlices_return_last(_toFfi(temp.arena), write._ffi);
-        return write.finalize();
-
+    final write = _Write();
+    _StructWithSlices_return_last(_toFfi(temp.arena), write._ffi);
+    return write.finalize();
   }
 
   @override
@@ -50,7 +50,7 @@ final class StructWithSlices {
         second,
       ]);
 
-  // Return all fields corresponding to lifetime `'a`
+  // Return all fields corresponding to lifetime `'a` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'a`,
   // assuming that there are no `'other: a`. bounds. In case of such bounds,

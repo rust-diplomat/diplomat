@@ -7,171 +7,164 @@ const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class MyString {
+    
     // Internal ptr reference:
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-
+    
     #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("MyString is an Opaque type. You cannot call its constructor.");
             return;
         }
+        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-
+        
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             MyString_box_destroy_registry.register(this, this.#ptr);
         }
-
+        
         return this;
     }
     get ffiValue() {
         return this.#ptr;
     }
-    #defaultConstructor(v) {
+#defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
-
+        
         const result = wasm.MyString_new(...vSlice.splat());
-
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
-    static newUnsafe(v) {
+static newUnsafe(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
-
+        
         const result = wasm.MyString_new_unsafe(...vSlice.splat());
-
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
-    static newOwned(v) {
+static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
-
+        
         const result = wasm.MyString_new_owned(...vSlice.splat());
-
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
-    static newFromFirst(v) {
+static newFromFirst(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8"));
-
+        
         const result = wasm.MyString_new_from_first(...vSlice.splat());
-
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
-
+    
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
-    set str(newStr) {
+set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const newStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, newStr));
         wasm.MyString_set_str(this.ffiValue, ...newStrSlice.splat());
-
+    
         try {}
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
-    get str() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
+get str() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyString_get_str(this.ffiValue, write.buffer);
-
-        try {        return write.readString8();
-
+    
+        try {
+            return write.readString8();
         }
-
-        finally {        write.free();
-
+        
+        finally {
+            write.free();
         }
     }
-
-    static getStaticStr() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-
-
+static getStaticStr() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+        
         const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
-
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
-
+    
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
         }
-
-        finally {        diplomatReceive.free();
-
+        
+        finally {
+            diplomatReceive.free();
         }
     }
-
-    static stringTransform(foo) {
+static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
+        
         const fooSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, foo));
-            const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-
+        
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyString_string_transform(...fooSlice.splat(), write.buffer);
-
-        try {        return write.readString8();
-
+    
+        try {
+            return write.readString8();
         }
-
+        
         finally {
             functionCleanupArena.free();
-                write.free();
-
+        
+            write.free();
         }
     }
-
-    borrow() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-
-
+borrow() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-
+        
         const result = wasm.MyString_borrow(diplomatReceive.buffer, this.ffiValue);
-
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
-
+    
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
-
-        finally {        diplomatReceive.free();
-
+        
+        finally {
+            diplomatReceive.free();
         }
     }
-
 
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

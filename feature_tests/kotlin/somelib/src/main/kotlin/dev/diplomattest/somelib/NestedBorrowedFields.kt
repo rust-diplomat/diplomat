@@ -17,7 +17,7 @@ internal class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
     internal var bounds: BorrowedFieldsWithBoundsNative = BorrowedFieldsWithBoundsNative();
     @JvmField
     internal var bounds2: BorrowedFieldsWithBoundsNative = BorrowedFieldsWithBoundsNative();
-
+  
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("fields", "bounds", "bounds2")

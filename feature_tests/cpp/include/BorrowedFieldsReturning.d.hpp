@@ -16,9 +16,8 @@ namespace capi {
     struct BorrowedFieldsReturning {
       diplomat::capi::DiplomatStringView bytes;
     };
-
+    
     typedef struct BorrowedFieldsReturning_option {union { BorrowedFieldsReturning ok; }; bool is_ok; } BorrowedFieldsReturning_option;
-
 } // namespace capi
 } // namespace
 

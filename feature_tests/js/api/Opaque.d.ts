@@ -7,30 +7,23 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Opaque {
+    
     get ffiValue(): pointer;
-    static tryFromUtf8(input: string): Opaque | null;
+static tryFromUtf8(input: string): Opaque | null;
+static fromStr(input: string): Opaque;
+getDebugStr(): string;
 
-    static fromStr(input: string): Opaque;
-
-    getDebugStr(): string;
-
-
-    /**
+    /** 
      * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
-*
+     *
      * See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
-*
+     *
      * Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
-
      */
-        assertStruct(s: MyStruct_obj): void;
-
-    static returnsUsize(): number;
-
-    static returnsImported(): ImportedStruct;
-
-    static cmp(): number;
-
+    assertStruct(s: MyStruct_obj): void;
+static returnsUsize(): number;
+static returnsImported(): ImportedStruct;
+static cmp(): number;
 
     constructor();
 }

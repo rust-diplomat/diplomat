@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface OptionStringLib: Library {
     fun OptionString_destroy(handle: Pointer)
     fun OptionString_new(diplomatStr: Slice): Pointer?

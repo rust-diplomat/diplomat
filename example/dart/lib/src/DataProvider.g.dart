@@ -6,7 +6,6 @@ part of 'lib.g.dart';
 /// An  data provider, capable of loading  data keys from some source.
 ///
 /// See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
-
 final class DataProvider implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
@@ -25,19 +24,17 @@ final class DataProvider implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_DataProvider_destroy_mv1));
-  /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
 
+  /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory DataProvider.static_() {
     final result = _icu4x_DataProvider_new_static_mv1();
-        return DataProvider._fromFfi(result, []);
-
+    return DataProvider._fromFfi(result, []);
   }
-  /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
 
+  /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
   static bool returnsResult() {
     final result = _icu4x_DataProvider_returns_result_mv1();
-        return result.isOk;
-
+    return result.isOk;
   }
 }
 

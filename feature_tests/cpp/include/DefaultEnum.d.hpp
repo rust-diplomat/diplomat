@@ -17,9 +17,8 @@ namespace capi {
       DefaultEnum_A = 0,
       DefaultEnum_B = 1,
     };
-
+    
     typedef struct DefaultEnum_option {union { DefaultEnum ok; }; bool is_ok; } DefaultEnum_option;
-
 } // namespace capi
 } // namespace
 

@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface ResultOpaqueLib: Library {
     fun ResultOpaque_destroy(handle: Pointer)
     fun ResultOpaque_new(i: Int): ResultPointerInt

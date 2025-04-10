@@ -9,27 +9,34 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class NestedBorrowedFields {
+    
     #fields;
-    get fields() {
+    
+    get fields()  {
         return this.#fields;
-    }
-    set fields(value){
+    } 
+    set fields(value) {
         this.#fields = value;
     }
+    
     #bounds;
-    get bounds() {
+    
+    get bounds()  {
         return this.#bounds;
-    }
-    set bounds(value){
+    } 
+    set bounds(value) {
         this.#bounds = value;
     }
+    
     #bounds2;
-    get bounds2() {
+    
+    get bounds2()  {
         return this.#bounds2;
-    }
-    set bounds2(value){
+    } 
+    set bounds2(value) {
         this.#bounds2 = value;
     }
+    
     /** Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -64,7 +71,8 @@ export class NestedBorrowedFields {
     }
 
     // Return this struct in FFI function friendly format.
-    // Returns an array that can be expanded with spread syntax (...)// If this struct contains any slices, their lifetime-edge-relevant information will be
+    // Returns an array that can be expanded with spread syntax (...)
+    // If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
@@ -115,66 +123,65 @@ export class NestedBorrowedFields {
         return new NestedBorrowedFields(structObj);
     }
 
-    // Return all fields corresponding to lifetime `'x`
+    // Return all fields corresponding to lifetime `'x` 
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'x`,
     // assuming that there are no `'other: x`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeX() {
+    get _fieldsForLifetimeX() { 
         return [...fields._fieldsForLifetimeA, ...bounds._fieldsForLifetimeA];
     };
 
-    // Return all fields corresponding to lifetime `'y`
+    // Return all fields corresponding to lifetime `'y` 
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'y`,
     // assuming that there are no `'other: y`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeY() {
+    get _fieldsForLifetimeY() { 
         return [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
     };
 
-    // Return all fields corresponding to lifetime `'z`
+    // Return all fields corresponding to lifetime `'z` 
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'z`,
     // assuming that there are no `'other: z`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeZ() {
+    get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };
-    static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
+static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X));
-
+        
         const dstr16ZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z));
-
+        
         const utf8StrYSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY));
-
+        
         const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ));
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
-
-
+        
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
+        
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
-
+        
         // This lifetime edge depends on lifetimes 'y
         let yEdges = [bar, utf8StrYSlice];
-
+        
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-
+        
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, ...dstr16XSlice.splat(), ...dstr16ZSlice.splat(), ...utf8StrYSlice.splat(), ...utf8StrZSlice.splat());
-
-        try {        return NestedBorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
-
+    
+        try {
+            return NestedBorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);
         }
-
+        
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
-                diplomatReceive.free();
-
+        
+            diplomatReceive.free();
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_destroy(handle: Pointer)
     fun Utf16Wrap_from_utf16(input: Slice): Pointer

@@ -15,6 +15,7 @@
 
 
 
+
 void namespace_Nested2_destroy(Nested2* self);
 
 

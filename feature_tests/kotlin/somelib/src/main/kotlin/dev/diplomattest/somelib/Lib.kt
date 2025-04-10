@@ -9,8 +9,10 @@ import com.sun.jna.Structure
 import com.sun.jna.Union
 import java.util.Collections
 
+
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
 val CLEANER = java.lang.ref.Cleaner.create()
+
 
 interface DiplomatWriteLib: Library {
     fun diplomat_buffer_write_create(size: Long): Pointer 
@@ -58,6 +60,7 @@ internal class DiplomatJVMRuntime {
         }
     }
 }
+
 
 internal object PrimitiveArrayTools {
 
@@ -174,6 +177,7 @@ internal object PrimitiveArrayTools {
         slice.len = FFISizet(uIntArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
+
 
     fun native(longArray: LongArray): Pair<Memory?, Slice> {
         val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
@@ -423,6 +427,7 @@ class Slice: Structure(), Structure.ByValue {
     }
 }
 
+
 internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
@@ -532,7 +537,7 @@ class UnitError internal constructor(): Exception("Rust error result for Unit") 
         return "Unit error"
     }
 }
-
+           
 internal class ResultIntUnitUnion: Union() {
     @JvmField
     internal var ok: Int = 0
@@ -710,7 +715,7 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: CyclicStructANative = CyclicStructANative()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -730,7 +735,7 @@ internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
 internal class OptionDouble: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Double = 0.0
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -750,7 +755,7 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
 internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIIsizet = FFIIsizet()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -770,7 +775,7 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
 internal class OptionFFISizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFISizet = FFISizet()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -790,7 +795,7 @@ internal class OptionFFISizet: Structure(), Structure.ByValue  {
 internal class OptionFFIUint32: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint32 = FFIUint32()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -810,7 +815,7 @@ internal class OptionFFIUint32: Structure(), Structure.ByValue  {
 internal class OptionFFIUint8: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint8 = FFIUint8()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -830,7 +835,7 @@ internal class OptionFFIUint8: Structure(), Structure.ByValue  {
 internal class OptionInt: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Int = 0
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -850,7 +855,7 @@ internal class OptionInt: Structure(), Structure.ByValue  {
 internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: OptionStructNative = OptionStructNative()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -870,7 +875,7 @@ internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
 internal class OptionSlice: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Slice = Slice()
-
+    
     @JvmField
     internal var isOk: Byte = 0
 
@@ -887,3 +892,4 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
         }
     }
 }
+

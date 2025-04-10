@@ -14,7 +14,7 @@ internal interface TraitWrapperLib: Library {
 internal class TraitWrapperNative: Structure(), Structure.ByValue {
     @JvmField
     internal var cantBeEmpty: Byte = 0;
-
+  
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("cantBeEmpty")

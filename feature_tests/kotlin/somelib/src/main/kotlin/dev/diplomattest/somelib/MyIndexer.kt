@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface MyIndexerLib: Library {
     fun namespace_MyIndexer_destroy(handle: Pointer)
     fun namespace_MyIndexer_get(handle: Pointer, i: FFISizet): OptionSlice

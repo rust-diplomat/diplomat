@@ -14,8 +14,11 @@
 
 
 
+
 MyStructContainingAnOption MyStructContainingAnOption_new(void);
+
 MyStructContainingAnOption MyStructContainingAnOption_filled(void);
+
 
 
 

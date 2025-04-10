@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
-use crate::{filters, ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::OutputOnly;
 use diplomat_core::hir::{
     self,
@@ -622,7 +622,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         if let hir::ReturnType::Fallible(_, Some(e)) = &method.output {
             write!(
                 &mut docs,
-                "\n\n Throws [{}] on failure.",
+                "\n///\n/// Throws [{}] on failure.",
                 self.gen_type_name(e)
             )
             .unwrap();

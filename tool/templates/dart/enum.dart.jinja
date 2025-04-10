@@ -1,12 +1,12 @@
 {% if !docs.is_empty() -%}
-{{ docs|prefix_trimmed("/// ")}}
+/// {{docs}}
 {% endif -%}
 enum {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
    {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
 {%- for enum_variant in ty.variants %}
   {% if !enum_variant.docs.is_empty() -%}
-  {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
+  /// {{fmt.fmt_docs(enum_variant.docs).replace('\n', "\n  ") }}
   {% endif -%}
   {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
 {% endif %}

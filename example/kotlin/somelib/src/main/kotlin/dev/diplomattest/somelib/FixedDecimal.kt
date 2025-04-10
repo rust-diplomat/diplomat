@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface FixedDecimalLib: Library {
     fun icu4x_FixedDecimal_destroy_mv1(handle: Pointer)
     fun icu4x_FixedDecimal_new_mv1(v: Int): Pointer

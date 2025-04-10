@@ -16,7 +16,7 @@ internal interface CyclicStructALib: Library {
 internal class CyclicStructANative: Structure(), Structure.ByValue {
     @JvmField
     internal var a: CyclicStructBNative = CyclicStructBNative();
-
+  
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a")

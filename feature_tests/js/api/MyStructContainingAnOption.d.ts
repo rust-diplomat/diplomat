@@ -11,17 +11,19 @@ type MyStructContainingAnOption_obj = {
 
 
 export class MyStructContainingAnOption {
-    get a(): MyStruct | null;
-    set a(value: MyStruct | null);
-    get b(): DefaultEnum | null;
-    set b(value: DefaultEnum | null);
+    
+    get a() : MyStruct | null; 
+    set a(value: MyStruct | null); 
+    
+    get b() : DefaultEnum | null; 
+    set b(value: DefaultEnum | null); 
+    
     /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : MyStructContainingAnOption_obj) : MyStructContainingAnOption;
 
-    static filled(): MyStructContainingAnOption;
-
+static filled(): MyStructContainingAnOption;
 
     constructor();
 }

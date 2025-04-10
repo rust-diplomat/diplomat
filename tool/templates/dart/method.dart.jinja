@@ -1,5 +1,5 @@
   {%- if !m.docs.is_empty() %}
-  {{- m.docs|prefix_trimmed("  /// ")}}
+  /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
   {{ m.declaration }} {
     {%- for arena in m.arenas %}
@@ -25,7 +25,7 @@
     {%- endif %}
     {%- if !m.method.output.is_ffi_unit() %}
     final result = {% else %}
-    {%- endif -%}
+    {% endif -%}
     _{{ m.abi_name -}}(
         {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
@@ -34,7 +34,7 @@
     );
     {%- match m.return_expression %}
     {%- when Some with (statement) %}
-    {{statement|indent_trimmed(4)}}
+    {{statement.replace('\n', "\n    ")}}
     {%- when None %}
     {%- endmatch %}
   }

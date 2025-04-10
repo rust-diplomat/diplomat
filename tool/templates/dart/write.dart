@@ -2,7 +2,7 @@ final class _Write {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   _Write() : _ffi = _diplomat_buffer_write_create(0);
-
+  
   String finalize() {
     try {
       final buf = _diplomat_buffer_write_get_bytes(_ffi);

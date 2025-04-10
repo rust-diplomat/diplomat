@@ -19,4 +19,5 @@
 
 
 
+
 #endif // TraitTestingStruct_H

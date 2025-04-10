@@ -18,11 +18,13 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
+    
     diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption_new(void);
+    
     diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption_filled(void);
-
+    
+    
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

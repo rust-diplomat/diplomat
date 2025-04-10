@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface RefListLib: Library {
     fun RefList_destroy(handle: Pointer)
     fun RefList_node(data: Pointer): Pointer

@@ -15,7 +15,9 @@
 
 
 
+
 RefList* RefList_node(const RefListParameter* data);
+
 
 void RefList_destroy(RefList* self);
 

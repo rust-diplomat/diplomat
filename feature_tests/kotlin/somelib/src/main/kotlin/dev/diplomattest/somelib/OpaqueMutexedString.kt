@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface OpaqueMutexedStringLib: Library {
     fun OpaqueMutexedString_destroy(handle: Pointer)
     fun OpaqueMutexedString_from_usize(number: FFISizet): Pointer

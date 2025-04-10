@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface TwoLib: Library {
     fun Two_destroy(handle: Pointer)
 }

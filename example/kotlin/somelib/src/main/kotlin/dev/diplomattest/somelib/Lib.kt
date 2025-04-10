@@ -9,8 +9,10 @@ import com.sun.jna.Structure
 import com.sun.jna.Union
 import java.util.Collections
 
+
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
 val CLEANER = java.lang.ref.Cleaner.create()
+
 
 interface DiplomatWriteLib: Library {
     fun diplomat_buffer_write_create(size: Long): Pointer 
@@ -58,6 +60,7 @@ internal class DiplomatJVMRuntime {
         }
     }
 }
+
 
 internal object PrimitiveArrayTools {
 
@@ -174,6 +177,7 @@ internal object PrimitiveArrayTools {
         slice.len = FFISizet(uIntArray.size.toLong().toULong())
         return Pair(mem, slice)
     }
+
 
     fun native(longArray: LongArray): Pair<Memory?, Slice> {
         val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
@@ -423,6 +427,7 @@ class Slice: Structure(), Structure.ByValue {
     }
 }
 
+
 internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
 }
@@ -532,7 +537,7 @@ class UnitError internal constructor(): Exception("Rust error result for Unit") 
         return "Unit error"
     }
 }
-
+           
 internal class ResultPointerUnitUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
@@ -565,5 +570,6 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
+
 
 

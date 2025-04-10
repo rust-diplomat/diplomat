@@ -7,39 +7,23 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionOpaque {
+    
     get ffiValue(): pointer;
-    static new_(i: number): OptionOpaque | null;
-
-    static newNone(): OptionOpaque | null;
-
-    static returns(): OptionStruct | null;
-
-    optionIsize(): number | null;
-
-    optionUsize(): number | null;
-
-    optionI32(): number | null;
-
-    optionU32(): number | null;
-
-    static newStruct(): OptionStruct;
-
-    static newStructNones(): OptionStruct;
-
-    returnsNoneSelf(): OptionOpaque | null;
-
-    returnsSomeSelf(): OptionOpaque | null;
-
-    assertInteger(i: number): void;
-
-    static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
-
-    static acceptsOptionU8(arg: number | null, sentinel: number): number | null;
-
-    static acceptsOptionEnum(arg: OptionEnum | null, sentinel: number): OptionEnum | null;
-
-    static acceptsOptionInputStruct(arg: OptionInputStruct | null, sentinel: number): OptionInputStruct | null;
-
-    static returnsOptionInputStruct(): OptionInputStruct;
-
+static new_(i: number): OptionOpaque | null;
+static newNone(): OptionOpaque | null;
+static returns(): OptionStruct | null;
+optionIsize(): number | null;
+optionUsize(): number | null;
+optionI32(): number | null;
+optionU32(): number | null;
+static newStruct(): OptionStruct;
+static newStructNones(): OptionStruct;
+returnsNoneSelf(): OptionOpaque | null;
+returnsSomeSelf(): OptionOpaque | null;
+assertInteger(i: number): void;
+static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
+static acceptsOptionU8(arg: number | null, sentinel: number): number | null;
+static acceptsOptionEnum(arg: OptionEnum | null, sentinel: number): OptionEnum | null;
+static acceptsOptionInputStruct(arg: OptionInputStruct | null, sentinel: number): OptionInputStruct | null;
+static returnsOptionInputStruct(): OptionInputStruct;
 }

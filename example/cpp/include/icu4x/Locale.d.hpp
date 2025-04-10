@@ -19,7 +19,6 @@ class Locale;
 namespace icu4x {
 namespace capi {
     struct Locale;
-
 } // namespace capi
 } // namespace
 
@@ -33,8 +32,7 @@ class Locale {
 public:
 
   /**
-   *   Construct an [`Locale`] from a locale identifier represented as a string.
-
+   * Construct an [`Locale`] from a locale identifier represented as a string.
    */
   inline static std::unique_ptr<icu4x::Locale> new_(std::string_view name);
 

@@ -1,7 +1,7 @@
 {% if !docs.is_empty() -%}
-{{docs|prefix_trimmed("/// ")}}
+/// {{docs}}
 {% endif -%}
-final class {{type_name}}
+final class {{type_name}} 
   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %} implements ffi.Finalizable
   {%- if special.comparator -%}, core.Comparable<{{type_name}}> {%- endif %}
   {%- if let Some(it) = special.iterator %}, core.Iterator<{{it}}> {%- endif %} {

@@ -20,14 +20,16 @@
 namespace icu4x {
 namespace capi {
     extern "C" {
+    
     typedef struct icu4x_FixedDecimalFormatter_try_new_mv1_result {union {icu4x::capi::FixedDecimalFormatter* ok; }; bool is_ok;} icu4x_FixedDecimalFormatter_try_new_mv1_result;
     icu4x_FixedDecimalFormatter_try_new_mv1_result icu4x_FixedDecimalFormatter_try_new_mv1(const icu4x::capi::Locale* locale, const icu4x::capi::DataProvider* provider, icu4x::capi::FixedDecimalFormatterOptions options);
+    
     void icu4x_FixedDecimalFormatter_format_write_mv1(const icu4x::capi::FixedDecimalFormatter* self, const icu4x::capi::FixedDecimal* value, diplomat::capi::DiplomatWrite* write);
-
+    
+    
     void icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter* self);
-
+    
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

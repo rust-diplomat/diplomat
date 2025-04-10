@@ -4,48 +4,58 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-/**
+/** 
  * Testing JS-specific layout/padding behavior
-
  */
 
 
 export class BigStructWithStuff {
+    
     #first;
-    get first() {
+    
+    get first()  {
         return this.#first;
-    }
-    set first(value){
+    } 
+    set first(value) {
         this.#first = value;
     }
+    
     #second;
-    get second() {
+    
+    get second()  {
         return this.#second;
-    }
-    set second(value){
+    } 
+    set second(value) {
         this.#second = value;
     }
+    
     #third;
-    get third() {
+    
+    get third()  {
         return this.#third;
-    }
-    set third(value){
+    } 
+    set third(value) {
         this.#third = value;
     }
+    
     #fourth;
-    get fourth() {
+    
+    get fourth()  {
         return this.#fourth;
-    }
-    set fourth(value){
+    } 
+    set fourth(value) {
         this.#fourth = value;
     }
+    
     #fifth;
-    get fifth() {
+    
+    get fifth()  {
         return this.#fifth;
-    }
-    set fifth(value){
+    } 
+    set fifth(value) {
         this.#fifth = value;
     }
+    
     /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -93,6 +103,7 @@ export class BigStructWithStuff {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
+    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
@@ -148,17 +159,16 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj);
     }
-    assertValue(extraVal) {
+assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         wasm.BigStructWithStuff_assert_value(...BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), extraVal);
-
+    
         try {}
-
+        
         finally {
             functionCleanupArena.free();
         }
     }
-
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

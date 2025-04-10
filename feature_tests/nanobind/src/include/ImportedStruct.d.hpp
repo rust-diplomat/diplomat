@@ -20,9 +20,8 @@ namespace capi {
       diplomat::capi::UnimportedEnum foo;
       uint8_t count;
     };
-
+    
     typedef struct ImportedStruct_option {union { ImportedStruct ok; }; bool is_ok; } ImportedStruct_option;
-
 } // namespace capi
 } // namespace
 

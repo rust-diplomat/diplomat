@@ -18,19 +18,27 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
+    
     diplomat::capi::Opaque* Opaque_new(void);
+    
     diplomat::capi::Opaque* Opaque_try_from_utf8(diplomat::capi::DiplomatStringView input);
+    
     diplomat::capi::Opaque* Opaque_from_str(diplomat::capi::DiplomatStringView input);
+    
     void Opaque_get_debug_str(const diplomat::capi::Opaque* self, diplomat::capi::DiplomatWrite* write);
+    
     void Opaque_assert_struct(const diplomat::capi::Opaque* self, diplomat::capi::MyStruct s);
+    
     size_t Opaque_returns_usize(void);
+    
     diplomat::capi::ImportedStruct Opaque_returns_imported(void);
+    
     int8_t Opaque_cmp(void);
-
+    
+    
     void Opaque_destroy(Opaque* self);
-
+    
     } // extern "C"
-
 } // namespace capi
 } // namespace
 

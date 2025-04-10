@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface DataProviderLib: Library {
     fun icu4x_DataProvider_destroy_mv1(handle: Pointer)
     fun icu4x_DataProvider_new_static_mv1(): Pointer

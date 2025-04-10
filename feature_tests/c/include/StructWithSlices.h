@@ -14,7 +14,9 @@
 
 
 
+
 void StructWithSlices_return_last(StructWithSlices self, DiplomatWrite* write);
+
 
 
 

@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+
 internal interface LocaleLib: Library {
     fun icu4x_Locale_destroy_mv1(handle: Pointer)
     fun icu4x_Locale_new_mv1(name: Slice): Pointer

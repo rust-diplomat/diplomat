@@ -24,9 +24,8 @@ namespace capi {
       uint32_t c;
       diplomat::capi::OptionOpaque* d;
     };
-
+    
     typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
-
 } // namespace capi
 } // namespace
 

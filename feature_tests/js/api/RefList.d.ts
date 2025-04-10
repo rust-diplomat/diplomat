@@ -5,7 +5,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RefList {
+    
     get ffiValue(): pointer;
-    static node(data: RefListParameter): RefList;
-
+static node(data: RefListParameter): RefList;
 }

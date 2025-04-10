@@ -14,7 +14,6 @@
 namespace diplomat {
 namespace capi {
     struct MyOpaqueEnum;
-
 } // namespace capi
 } // namespace
 

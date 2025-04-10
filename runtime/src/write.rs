@@ -27,7 +27,7 @@ use core::{fmt, ptr};
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
-///    `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
+///     `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
 ///  - `buf` must be `cap` bytes long
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size

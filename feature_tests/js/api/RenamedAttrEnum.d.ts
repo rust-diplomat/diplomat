@@ -4,12 +4,13 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RenamedAttrEnum {
+    
 
-    static fromValue(value : RenamedAttrEnum | string) : RenamedAttrEnum;
+    static fromValue(value : RenamedAttrEnum | string) : RenamedAttrEnum; 
 
-    get value(): string;
+    get value() : string;
 
-    get ffiValue(): number;
+    get ffiValue() : number;
 
     static A : RenamedAttrEnum;
     static B : RenamedAttrEnum;
