@@ -194,8 +194,12 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
     
-    - name: Load Rust toolchain for WASM.
-      run: rustup target add wasm32-unknown-unknown
+    # - name: Load Rust toolchain for WASM.
+    #   run: rustup target add wasm32-unknown-unknown
+      
+      # Can be removed when `-Zwasm-c-abi=spec` is no longer an experimental option:
+    - name: Load Rust Nightly toolchain for WASM
+      run: rustup target add wasm32-unknown-unknown --toolchain nightly
 
     - name: Install Node.js
       uses: actions/setup-node@v4
