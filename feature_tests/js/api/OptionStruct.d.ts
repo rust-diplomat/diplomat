@@ -10,4 +10,5 @@ export class OptionStruct {
     get b(): OptionOpaqueChar | null;
     get c(): number;
     get d(): OptionOpaque;
+
 }

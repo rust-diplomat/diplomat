@@ -66,6 +66,7 @@ export class ContiguousEnum {
     static E = ContiguousEnum.#objectValues[2];
     static F = ContiguousEnum.#objectValues[3];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

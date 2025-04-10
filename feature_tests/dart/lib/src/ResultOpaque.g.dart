@@ -21,6 +21,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
+
   ///
   ///
   /// Throws [ErrorEnum] on failure.
@@ -31,6 +32,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
+
   ///
   ///
   /// Throws [ErrorEnum] on failure.
@@ -41,6 +43,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
+
   ///
   ///
   /// Throws [ErrorEnum] on failure.
@@ -59,6 +62,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
+
   ///
   ///
   /// Throws [ErrorStruct] on failure.
@@ -69,6 +73,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
+
   ///
   ///
   /// Throws [ResultOpaque] on failure.
@@ -86,6 +91,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return result.union.ok;
   }
+
   ///
   ///
   /// Throws [ResultOpaque] on failure.
@@ -96,6 +102,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ErrorEnum.values[result.union.ok];
   }
+
   /// When we take &str, the return type becomes a Result
   /// Test that this interacts gracefully with returning a reference type
   ResultOpaque takesStr(String v) {

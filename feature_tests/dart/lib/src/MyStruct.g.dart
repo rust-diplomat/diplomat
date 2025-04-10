@@ -89,6 +89,7 @@ final class MyStruct {
     final result = _MyStruct_into_a(_toFfi(temp.arena));
     return result;
   }
+
   ///
   ///
   /// Throws [MyZst] on failure.
@@ -98,6 +99,7 @@ final class MyStruct {
       throw MyZst();
     }
   }
+
   ///
   ///
   /// Throws [MyZst] on failure.

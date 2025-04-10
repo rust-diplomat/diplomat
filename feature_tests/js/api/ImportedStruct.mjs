@@ -107,6 +107,7 @@ export class ImportedStruct {
         return new ImportedStruct(structObj);
     }
 
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

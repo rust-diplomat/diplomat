@@ -118,6 +118,7 @@ export class OptionInputStruct {
         return new OptionInputStruct(structObj);
     }
 
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

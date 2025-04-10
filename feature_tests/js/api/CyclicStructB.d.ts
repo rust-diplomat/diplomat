@@ -16,8 +16,9 @@ export class CyclicStructB {
     */
     static fromFields(structObj : CyclicStructB_obj) : CyclicStructB;
 
+
     static getA(): CyclicStructA;
     static getAOption(): CyclicStructA | null;
 
-    constructor(structObj : CyclicStructB_obj);
+    constructor(structObj: CyclicStructB_obj);
 }

@@ -32,6 +32,7 @@ export class MyString {
     get ffiValue() {
         return this.#ptr;
     }
+
     #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -39,7 +40,8 @@ export class MyString {
 
         const result = wasm.MyString_new(vSlice.ptr);
 
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -53,7 +55,8 @@ export class MyString {
 
         const result = wasm.MyString_new_unsafe(vSlice.ptr);
 
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -67,7 +70,8 @@ export class MyString {
 
         const result = wasm.MyString_new_owned(vSlice.ptr);
 
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -81,7 +85,8 @@ export class MyString {
 
         const result = wasm.MyString_new_from_first(vSlice.ptr);
 
-        try {        return new MyString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -105,7 +110,8 @@ export class MyString {
 
     wasm.MyString_get_str(this.ffiValue, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {        write.free();
@@ -117,7 +123,8 @@ export class MyString {
 
         const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
 
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
         }
 
         finally {        diplomatReceive.free();
@@ -131,7 +138,8 @@ export class MyString {
 
     wasm.MyString_string_transform(fooSlice.ptr, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
@@ -148,7 +156,8 @@ export class MyString {
 
         const result = wasm.MyString_borrow(diplomatReceive.buffer, this.ffiValue);
 
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
 
         finally {        diplomatReceive.free();

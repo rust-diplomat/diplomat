@@ -24,6 +24,7 @@ final class Locale implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_Locale_destroy_mv1));
+
   /// Construct an [`Locale`] from a locale identifier represented as a string.
   factory Locale(String name) {
     final temp = _FinalizedArena();

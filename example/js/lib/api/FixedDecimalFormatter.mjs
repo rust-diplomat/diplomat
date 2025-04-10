@@ -43,6 +43,7 @@ export class FixedDecimalFormatter {
         return this.#ptr;
     }
 
+
     /**
      * Creates a new [`FixedDecimalFormatter`] from locale data.
      *
@@ -56,7 +57,8 @@ export class FixedDecimalFormatter {
 
         const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
 
-        try {        if (!diplomatReceive.resultFlag) {
+        try {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return new FixedDecimalFormatter(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
@@ -78,7 +80,8 @@ export class FixedDecimalFormatter {
 
     wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {        write.free();

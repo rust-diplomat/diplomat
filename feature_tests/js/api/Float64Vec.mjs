@@ -32,6 +32,7 @@ export class Float64Vec {
     get ffiValue() {
         return this.#ptr;
     }
+
     static newBool(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -39,7 +40,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_bool(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -53,7 +55,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_i16(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -67,7 +70,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_u16(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -81,7 +85,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_isize(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -95,7 +100,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_usize(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -109,7 +115,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_f64_be_bytes(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -123,7 +130,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr);
 
-        try {        return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Float64Vec(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
@@ -139,7 +147,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_as_slice(diplomatReceive.buffer, this.ffiValue);
 
-        try {        return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
+        try {
+            return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
         }
 
         finally {        diplomatReceive.free();
@@ -174,7 +183,8 @@ export class Float64Vec {
 
     wasm.Float64Vec_to_string(this.ffiValue, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {        write.free();
@@ -189,7 +199,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_borrow(diplomatReceive.buffer, this.ffiValue);
 
-        try {        return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
+        try {
+            return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
         }
 
         finally {        diplomatReceive.free();
@@ -201,7 +212,8 @@ export class Float64Vec {
 
         const result = wasm.Float64Vec_get(diplomatReceive.buffer, this.ffiValue, i);
 
-        try {        if (!diplomatReceive.resultFlag) {
+        try {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
