@@ -36,6 +36,7 @@ export class OptionOpaque {
         return this.#ptr;
     }
     static new_(i) {
+
         const result = wasm.OptionOpaque_new(i);
 
         try {        return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
@@ -44,6 +45,7 @@ export class OptionOpaque {
         finally {}
     }
     static newNone() {
+
         const result = wasm.OptionOpaque_new_none();
 
         try {        return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
@@ -51,7 +53,9 @@ export class OptionOpaque {
 
         finally {}
     }
-    static returns() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 17, 4, true);
+    static returns() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 17, 4, true);
+
 
         const result = wasm.OptionOpaque_returns(diplomatReceive.buffer);
 
@@ -64,7 +68,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    optionIsize() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    optionIsize() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.OptionOpaque_option_isize(diplomatReceive.buffer, this.ffiValue);
 
@@ -77,7 +83,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    optionUsize() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    optionUsize() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.OptionOpaque_option_usize(diplomatReceive.buffer, this.ffiValue);
 
@@ -90,7 +98,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    optionI32() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    optionI32() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.OptionOpaque_option_i32(diplomatReceive.buffer, this.ffiValue);
 
@@ -103,7 +113,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    optionU32() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    optionU32() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.OptionOpaque_option_u32(diplomatReceive.buffer, this.ffiValue);
 
@@ -116,7 +128,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newStruct() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+    static newStruct() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+
 
         const result = wasm.OptionOpaque_new_struct(diplomatReceive.buffer);
 
@@ -126,7 +140,9 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newStructNones() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+    static newStructNones() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
+
 
         const result = wasm.OptionOpaque_new_struct_nones(diplomatReceive.buffer);
 
@@ -140,6 +156,7 @@ export class OptionOpaque {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.OptionOpaque_returns_none_self(this.ffiValue);
 
         try {        return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
@@ -151,6 +168,7 @@ export class OptionOpaque {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.OptionOpaque_returns_some_self(this.ffiValue);
 
         try {        return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
@@ -158,13 +176,15 @@ export class OptionOpaque {
 
         finally {}
     }
-    assertInteger(i) {wasm.OptionOpaque_assert_integer(this.ffiValue, i);
+    assertInteger(i) {
+    wasm.OptionOpaque_assert_integer(this.ffiValue, i);
 
         try {}
 
         finally {}
     }
     static optionOpaqueArgument(arg) {
+
         const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
 
         try {        return result;
@@ -174,7 +194,9 @@ export class OptionOpaque {
     }
     static acceptsOptionU8(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
+
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
+
 
         const result = wasm.OptionOpaque_accepts_option_u8(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 1, 1, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]), sentinel);
 
@@ -191,7 +213,9 @@ export class OptionOpaque {
     }
     static acceptsOptionEnum(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.OptionOpaque_accepts_option_enum(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), sentinel);
 
@@ -208,7 +232,9 @@ export class OptionOpaque {
     }
     static acceptsOptionInputStruct(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 21, 4, true);
+
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 21, 4, true);
+
 
         const result = wasm.OptionOpaque_accepts_option_input_struct(diplomatReceive.buffer, ...diplomatRuntime.optionToArgsForCalling(arg, 20, 4, (arrayBuffer, offset, jsValue) => [OptionInputStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]), sentinel);
 
@@ -223,7 +249,9 @@ export class OptionOpaque {
                 diplomatReceive.free();
         }
     }
-    static returnsOptionInputStruct() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 20, 4, false);
+    static returnsOptionInputStruct() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 20, 4, false);
+
 
         const result = wasm.OptionOpaque_returns_option_input_struct(diplomatReceive.buffer);
 

@@ -17,6 +17,7 @@
 namespace ns {
 namespace capi {
     extern "C" {
+
     typedef struct namespace_MyIndexer_get_result {union {diplomat::capi::DiplomatStringView ok; }; bool is_ok;} namespace_MyIndexer_get_result;
     namespace_MyIndexer_get_result namespace_MyIndexer_get(const ns::capi::RenamedMyIndexer* self, size_t i);
 

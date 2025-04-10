@@ -18,6 +18,7 @@
 namespace ns {
 namespace capi {
     extern "C" {
+
     ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const ns::capi::RenamedOpaqueIterable* self);
 
     void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);

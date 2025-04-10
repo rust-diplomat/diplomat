@@ -30,7 +30,8 @@ final class FixedDecimal implements ffi.Finalizable {
   /// Multiply the [`FixedDecimal`] by a given power of ten.
   ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-  void multiplyPow10(int power) {_icu4x_FixedDecimal_multiply_pow10_mv1(_ffi, power);
+  void multiplyPow10(int power) {
+    _icu4x_FixedDecimal_multiply_pow10_mv1(_ffi, power);
   }
   /// Format the [`FixedDecimal`] as a string.
   ///
@@ -43,6 +44,7 @@ final class FixedDecimal implements ffi.Finalizable {
     }
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimal_destroy_mv1')

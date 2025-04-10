@@ -14,10 +14,14 @@
 
 
 
+
 MyStruct MyStruct_new(void);
+
 uint8_t MyStruct_into_a(MyStruct self);
+
 typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
 MyStruct_returns_zst_result_result MyStruct_returns_zst_result(void);
+
 typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
 MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
 

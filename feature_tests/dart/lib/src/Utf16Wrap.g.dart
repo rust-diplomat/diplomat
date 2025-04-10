@@ -29,7 +29,8 @@ final class Utf16Wrap implements ffi.Finalizable {
   }
 
   String getDebugStr() {
-    final write = _Write();_Utf16Wrap_get_debug_str(_ffi, write._ffi);
+    final write = _Write();
+    _Utf16Wrap_get_debug_str(_ffi, write._ffi);
     return write.finalize();
   }
 
@@ -39,6 +40,7 @@ final class Utf16Wrap implements ffi.Finalizable {
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('Utf16Wrap_destroy')

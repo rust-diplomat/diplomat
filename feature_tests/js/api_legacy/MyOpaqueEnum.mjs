@@ -33,6 +33,7 @@ export class MyOpaqueEnum {
         return this.#ptr;
     }
     static new_() {
+
         const result = wasm.MyOpaqueEnum_new();
 
         try {        return new MyOpaqueEnum(diplomatRuntime.internalConstructor, result, []);
@@ -40,8 +41,10 @@ export class MyOpaqueEnum {
 
         finally {}
     }
-    toString() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyOpaqueEnum_to_string(this.ffiValue, write.buffer);
+    toString() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.MyOpaqueEnum_to_string(this.ffiValue, write.buffer);
 
         try {        return write.readString8();
         }

@@ -92,7 +92,7 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
-        wasm.MyString_set_str(this.ffiValue, ...newStrSlice.splat());
+    wasm.MyString_set_str(this.ffiValue, ...newStrSlice.splat());
 
         try {}
 
@@ -100,8 +100,10 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
-    get str() {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_get_str(this.ffiValue, write.buffer);
+    get str() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.MyString_get_str(this.ffiValue, write.buffer);
 
         try {        return write.readString8();
         }
@@ -109,7 +111,9 @@ export class MyString {
         finally {        write.free();
         }
     }
-    static getStaticStr() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+    static getStaticStr() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+
 
         const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
 
@@ -123,8 +127,9 @@ export class MyString {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
-            const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_string_transform(...fooSlice.splat(), write.buffer);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.MyString_string_transform(...fooSlice.splat(), write.buffer);
 
         try {        return write.readString8();
         }
@@ -134,10 +139,12 @@ export class MyString {
                 write.free();
         }
     }
-    borrow() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
+    borrow() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+
 
         const result = wasm.MyString_borrow(diplomatReceive.buffer, this.ffiValue);
 

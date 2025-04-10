@@ -105,7 +105,9 @@ export class RenamedStructWithAttrs {
 
         return new RenamedStructWithAttrs(diplomatRuntime.exposeConstructor, structObj);
     }
-    #defaultConstructor(a, b) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
+    #defaultConstructor(a, b) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
+
 
         const result = wasm.namespace_StructWithAttrs_new_fallible(diplomatReceive.buffer, a, b);
 
@@ -120,6 +122,7 @@ export class RenamedStructWithAttrs {
     }
     get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
 
         const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
 

@@ -37,11 +37,14 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     return result;
   }
 
-  void useUnnamespaced(Unnamespaced un) {_namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);
+  void useUnnamespaced(Unnamespaced un) {
+    _namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);
   }
 
-  void useNamespaced(RenamedAttrEnum n) {_namespace_AttrOpaque1_use_namespaced(_ffi, n.index);
+  void useNamespaced(RenamedAttrEnum n) {
+    _namespace_AttrOpaque1_use_namespaced(_ffi, n.index);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_destroy')

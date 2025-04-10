@@ -34,7 +34,9 @@ export class ResultOpaque {
     get ffiValue() {
         return this.#ptr;
     }
-    #defaultConstructor(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    #defaultConstructor(i) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
 
@@ -48,7 +50,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newFailingFoo() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newFailingFoo() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_failing_foo(diplomatReceive.buffer);
 
@@ -62,7 +66,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newFailingBar() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newFailingBar() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_failing_bar(diplomatReceive.buffer);
 
@@ -76,7 +82,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newFailingUnit() {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newFailingUnit() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
 
@@ -89,7 +97,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newFailingStruct(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
+    static newFailingStruct(i) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
+
 
         const result = wasm.ResultOpaque_new_failing_struct(diplomatReceive.buffer, i);
 
@@ -103,7 +113,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newInErr(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newInErr(i) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_in_err(diplomatReceive.buffer, i);
 
@@ -116,7 +128,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newInt(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newInt(i) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
 
@@ -129,7 +143,9 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
-    static newInEnumErr(i) {    const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    static newInEnumErr(i) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.ResultOpaque_new_in_enum_err(diplomatReceive.buffer, i);
 
@@ -152,9 +168,9 @@ export class ResultOpaque {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+
 
         const result = wasm.ResultOpaque_takes_str(this.ffiValue, ...vSlice.splat());
 
@@ -165,7 +181,8 @@ export class ResultOpaque {
             functionCleanupArena.free();
         }
     }
-    assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
+    assertInteger(i) {
+    wasm.ResultOpaque_assert_integer(this.ffiValue, i);
 
         try {}
 

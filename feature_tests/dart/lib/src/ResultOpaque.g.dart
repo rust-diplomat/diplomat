@@ -23,7 +23,7 @@ final class ResultOpaque implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
   ///
   ///
-  ///  Throws [ErrorEnum] on failure.
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque(int i) {
     final result = _ResultOpaque_new(i);
     if (!result.isOk) {
@@ -33,7 +33,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
   ///
   ///
-  ///  Throws [ErrorEnum] on failure.
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingFoo() {
     final result = _ResultOpaque_new_failing_foo();
     if (!result.isOk) {
@@ -43,7 +43,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
   ///
   ///
-  ///  Throws [ErrorEnum] on failure.
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingBar() {
     final result = _ResultOpaque_new_failing_bar();
     if (!result.isOk) {
@@ -61,7 +61,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
   ///
   ///
-  ///  Throws [ErrorStruct] on failure.
+  /// Throws [ErrorStruct] on failure.
   factory ResultOpaque.failingStruct(int i) {
     final result = _ResultOpaque_new_failing_struct(i);
     if (!result.isOk) {
@@ -71,7 +71,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
   ///
   ///
-  ///  Throws [ResultOpaque] on failure.
+  /// Throws [ResultOpaque] on failure.
   static void newInErr(int i) {
     final result = _ResultOpaque_new_in_err(i);
     if (!result.isOk) {
@@ -88,7 +88,7 @@ final class ResultOpaque implements ffi.Finalizable {
   }
   ///
   ///
-  ///  Throws [ResultOpaque] on failure.
+  /// Throws [ResultOpaque] on failure.
   static ErrorEnum newInEnumErr(int i) {
     final result = _ResultOpaque_new_in_enum_err(i);
     if (!result.isOk) {
@@ -106,8 +106,10 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result, aEdges);
   }
 
-  void assertInteger(int i) {_ResultOpaque_assert_integer(_ffi, i);
+  void assertInteger(int i) {
+    _ResultOpaque_assert_integer(_ffi, i);
   }
+
 }
 
 @_DiplomatFfiUse('ResultOpaque_destroy')

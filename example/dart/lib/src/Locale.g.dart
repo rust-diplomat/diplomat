@@ -30,6 +30,7 @@ final class Locale implements ffi.Finalizable {
     final result = _icu4x_Locale_new_mv1(name._utf8AllocIn(temp.arena));
     return Locale._fromFfi(result, []);
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_Locale_destroy_mv1')

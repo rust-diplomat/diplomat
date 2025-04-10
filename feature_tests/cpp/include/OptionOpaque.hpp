@@ -20,33 +20,53 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
+
     diplomat::capi::OptionOpaque* OptionOpaque_new(int32_t i);
+
     diplomat::capi::OptionOpaque* OptionOpaque_new_none(void);
+
     typedef struct OptionOpaque_returns_result {union {diplomat::capi::OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
     OptionOpaque_returns_result OptionOpaque_returns(void);
+
     typedef struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;} OptionOpaque_option_isize_result;
     OptionOpaque_option_isize_result OptionOpaque_option_isize(const diplomat::capi::OptionOpaque* self);
+
     typedef struct OptionOpaque_option_usize_result {union {size_t ok; }; bool is_ok;} OptionOpaque_option_usize_result;
     OptionOpaque_option_usize_result OptionOpaque_option_usize(const diplomat::capi::OptionOpaque* self);
+
     typedef struct OptionOpaque_option_i32_result {union {int32_t ok; }; bool is_ok;} OptionOpaque_option_i32_result;
     OptionOpaque_option_i32_result OptionOpaque_option_i32(const diplomat::capi::OptionOpaque* self);
+
     typedef struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;} OptionOpaque_option_u32_result;
     OptionOpaque_option_u32_result OptionOpaque_option_u32(const diplomat::capi::OptionOpaque* self);
+
     diplomat::capi::OptionStruct OptionOpaque_new_struct(void);
+
     diplomat::capi::OptionStruct OptionOpaque_new_struct_nones(void);
+
     const diplomat::capi::OptionOpaque* OptionOpaque_returns_none_self(const diplomat::capi::OptionOpaque* self);
+
     const diplomat::capi::OptionOpaque* OptionOpaque_returns_some_self(const diplomat::capi::OptionOpaque* self);
+
     void OptionOpaque_assert_integer(const diplomat::capi::OptionOpaque* self, int32_t i);
+
     bool OptionOpaque_option_opaque_argument(const diplomat::capi::OptionOpaque* arg);
+
     typedef struct OptionOpaque_accepts_option_u8_result {union {uint8_t ok; }; bool is_ok;} OptionOpaque_accepts_option_u8_result;
     OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(diplomat::capi::OptionU8 arg, uint8_t sentinel);
+
     typedef struct OptionOpaque_accepts_option_enum_result {union {diplomat::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
     OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option arg, uint8_t sentinel);
+
     typedef struct OptionOpaque_accepts_option_input_struct_result {union {diplomat::capi::OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
     OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option arg, uint8_t sentinel);
+
     diplomat::capi::OptionInputStruct OptionOpaque_returns_option_input_struct(void);
+
     size_t OptionOpaque_accepts_option_str(diplomat::capi::OptionStringView arg, uint8_t sentinel);
+
     bool OptionOpaque_accepts_option_str_slice(diplomat::capi::OptionStringsView arg, uint8_t sentinel);
+
     int64_t OptionOpaque_accepts_option_primitive(diplomat::capi::OptionU32View arg, uint8_t sentinel);
 
     void OptionOpaque_destroy(OptionOpaque* self);

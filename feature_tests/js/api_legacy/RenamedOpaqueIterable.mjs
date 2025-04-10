@@ -37,6 +37,7 @@ export class RenamedOpaqueIterable {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
 
         try {        return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);

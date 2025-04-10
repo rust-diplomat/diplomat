@@ -12,6 +12,7 @@ enum DefaultEnum {
     final result = _DefaultEnum_new();
     return DefaultEnum.values[result];
   }
+
 }
 
 @_DiplomatFfiUse('DefaultEnum_new')

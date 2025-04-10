@@ -18,6 +18,7 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
+
     const diplomat::capi::Foo* Bar_foo(const diplomat::capi::Bar* self);
 
     void Bar_destroy(Bar* self);

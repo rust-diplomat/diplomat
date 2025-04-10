@@ -109,11 +109,13 @@ export class StructWithSlices {
     };
     returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-            const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...this._fieldsForLifetimeA];
-        wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false), write.buffer);
+
+    wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false), write.buffer);
 
         try {        return write.readString8();
         }

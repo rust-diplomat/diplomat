@@ -141,9 +141,8 @@ export class BorrowedFieldsWithBounds {
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
-
         const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
 
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
@@ -153,6 +152,7 @@ export class BorrowedFieldsWithBounds {
 
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
+
 
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, ...dstr16XSlice.splat(), ...utf8StrZSlice.splat());
 

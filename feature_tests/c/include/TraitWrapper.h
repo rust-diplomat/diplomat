@@ -15,7 +15,9 @@
 
 
 
+
 int32_t TraitWrapper_test_with_trait(DiplomatTraitStruct_TesterTrait t_trait_wrap, int32_t x);
+
 int32_t TraitWrapper_test_trait_with_struct(DiplomatTraitStruct_TesterTrait t_trait_wrap);
 
 

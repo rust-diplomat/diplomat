@@ -51,6 +51,7 @@ export class RenamedMyIterable {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
 
+
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
 
         try {        return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);

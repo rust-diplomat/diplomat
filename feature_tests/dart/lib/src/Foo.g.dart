@@ -64,6 +64,7 @@ final class Foo implements ffi.Finalizable {
     final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString._utf8AllocIn(anotherStringArena.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('Foo_destroy')

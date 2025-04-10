@@ -50,7 +50,9 @@ export class FixedDecimalFormatter {
      */
         static tryNew(locale, provider, options) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-            const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
 
         const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
 
@@ -71,8 +73,10 @@ export class FixedDecimalFormatter {
      *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
-        formatWrite(value) {    const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
+        formatWrite(value) {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
 
         try {        return write.readString8();
         }

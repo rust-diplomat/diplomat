@@ -9,6 +9,7 @@ enum RenamedAttrEnum {
   b,
 
   Renamed;
+
 }
 
 // dart format on

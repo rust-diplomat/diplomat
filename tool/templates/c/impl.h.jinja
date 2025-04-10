@@ -9,6 +9,7 @@ typedef struct {{ cb_and_struct_def.name }} {
 } {{ cb_and_struct_def.name }};
 {%- endfor %}
 {%- for method in methods %}
+
 {{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
 {%- endfor %}
 {%~ match dtor_name %}

@@ -11,6 +11,7 @@ enum ContiguousEnum {
   e,
 
   f;
+
 }
 
 // dart format on

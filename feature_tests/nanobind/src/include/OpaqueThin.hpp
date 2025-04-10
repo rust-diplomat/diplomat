@@ -17,7 +17,9 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
+
     int32_t OpaqueThin_a(const diplomat::capi::OpaqueThin* self);
+
     float OpaqueThin_b(const diplomat::capi::OpaqueThin* self);
 
     void OpaqueThin_destroy(OpaqueThin* self);

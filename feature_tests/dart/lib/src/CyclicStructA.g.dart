@@ -35,21 +35,25 @@ final class CyclicStructA {
 
   String cyclicOut() {
     final temp = _FinalizedArena();
-    final write = _Write();_CyclicStructA_cyclic_out(_toFfi(temp.arena), write._ffi);
+    final write = _Write();
+    _CyclicStructA_cyclic_out(_toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
 
   String doubleCyclicOut(CyclicStructA cyclicStructA) {
     final temp = _FinalizedArena();
-    final write = _Write();_CyclicStructA_double_cyclic_out(_toFfi(temp.arena), cyclicStructA._toFfi(temp.arena), write._ffi);
+    final write = _Write();
+    _CyclicStructA_double_cyclic_out(_toFfi(temp.arena), cyclicStructA._toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
 
   String get getterOut {
     final temp = _FinalizedArena();
-    final write = _Write();_CyclicStructA_getter_out(_toFfi(temp.arena), write._ffi);
+    final write = _Write();
+    _CyclicStructA_getter_out(_toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
+
 
   @override
   bool operator ==(Object other) =>

@@ -9,6 +9,7 @@ enum UnimportedEnum {
   b,
 
   c;
+
 }
 
 // dart format on

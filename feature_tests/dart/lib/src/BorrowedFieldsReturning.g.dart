@@ -27,6 +27,7 @@ final class BorrowedFieldsReturning {
     return struct;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is BorrowedFieldsReturning &&

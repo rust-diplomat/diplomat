@@ -34,6 +34,7 @@ final class DataProvider implements ffi.Finalizable {
     final result = _icu4x_DataProvider_returns_result_mv1();
     return result.isOk;
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_DataProvider_destroy_mv1')
