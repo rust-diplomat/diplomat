@@ -41,7 +41,7 @@ dependencies = ["test-c-example"]
 
 [tasks.test-js]
 category = "Tests"
-dependencies = ["test-js-feature"]
+dependencies = ["test-js-feature", "test-js-feature-legacy"]
 
 [tasks.test-demo]
 category = "Tests"
@@ -75,6 +75,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-js-feature",
+    "test-js-feature-legacy",
     "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
@@ -122,6 +123,16 @@ script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 npm ci && npm run test
+'''
+
+[tasks.test-js-feature-legacy]
+category = "Tests"
+dependencies = ["build-feature-wasm-legacy"]
+script_runner = "@shell"
+script = '''
+cd feature_tests/js
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api_legacy/diplomat_feature_tests.wasm
+npm ci && npm run test -- --config ava.legacy.config.js
 '''
 
 [tasks.test-demo-feature]
@@ -539,9 +550,12 @@ toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
 env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
+
 [tasks.build-feature-wasm]
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
 toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
@@ -555,6 +569,20 @@ args = [
     "wasm32-unknown-unknown",
 ]
 
+[tasks.build-feature-wasm-legacy]
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
+toolchain = "nightly"
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=legacy" }
+args = [
+    "build",
+    "-p",
+    "diplomat-feature-tests",
+    "--target",
+    "wasm32-unknown-unknown",
+]
 
 [tasks.build-example-jvm]
 description = "Build feature_tests for wasm"
