@@ -9,14 +9,11 @@
 			"legacy": "./api_legacy/index.mjs"
 		}
 	},
+	"workspaces": ["./workspaces/*"],
 	"type": "module",
 	"directories": {
 		"doc": "docs",
 		"test": "test"
-	},
-	"scripts": {
-		"pretest": "tsc",
-		"test": "ava"
 	},
 	"repository": {
 		"type": "git",

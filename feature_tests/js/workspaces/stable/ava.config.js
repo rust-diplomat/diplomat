@@ -1,5 +1,4 @@
-
 export default {
-	files: ["test/*.mjs"],
+	files: ["../../test/*.mjs"],
 	nodeArguments: ["--conditions=stable"]
 };

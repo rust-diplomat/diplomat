@@ -122,7 +122,7 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-npm ci && npm run test
+npm ci && npm run test -w stable
 '''
 
 [tasks.test-js-feature-legacy]
@@ -132,7 +132,7 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/js
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api_legacy/diplomat_feature_tests.wasm
-npm ci && npm run test -- --config ava.legacy.config.js
+npm ci && npm run test -w legacy
 '''
 
 [tasks.test-demo-feature]
