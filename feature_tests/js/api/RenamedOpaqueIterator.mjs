@@ -35,17 +35,19 @@ export class RenamedOpaqueIterator {
     get ffiValue() {
         return this.#ptr;
     }
+
     #iteratorNext() {
 
         const result = wasm.namespace_OpaqueIterator_next(this.ffiValue);
 
-        try {        return result === 0 ? null : new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return result === 0 ? null : new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
     }
 
-    next() {
+    next(){
         const out = this.#iteratorNext();
 
         return {

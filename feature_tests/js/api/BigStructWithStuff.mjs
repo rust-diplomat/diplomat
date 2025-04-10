@@ -147,6 +147,7 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj);
     }
+
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

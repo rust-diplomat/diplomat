@@ -66,6 +66,7 @@ export class FixedDecimalGroupingStrategy {
     static Always = FixedDecimalGroupingStrategy.#objectValues[2];
     static Min2 = FixedDecimalGroupingStrategy.#objectValues[3];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

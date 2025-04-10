@@ -12,7 +12,7 @@ type {{type_name}}_obj = {
 {% endblock %}
 
 {% block internal_ctor_params -%}
-structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
 {%- endblock %}
 
 {% block class_body -%}

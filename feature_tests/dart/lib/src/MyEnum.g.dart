@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 enum MyEnum {
+
   a,
 
   b,

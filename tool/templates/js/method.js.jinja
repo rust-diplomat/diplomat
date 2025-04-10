@@ -48,7 +48,7 @@
     try {
     {%- match return_expression -%}
     {%- when Some with (statement) %}
-        {{- statement|indent_trimmed(8) }}
+        {{~ statement|indent_trimmed(8) }}
     {% when None -%}
     {%- endmatch -%}
     }

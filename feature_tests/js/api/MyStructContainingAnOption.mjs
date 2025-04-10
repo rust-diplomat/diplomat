@@ -96,13 +96,15 @@ export class MyStructContainingAnOption {
 
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
 
 
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
 
-        try {        return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+        try {
+            return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
         finally {        diplomatReceive.free();
@@ -114,7 +116,8 @@ export class MyStructContainingAnOption {
 
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);
 
-        try {        return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+        try {
+            return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
         finally {        diplomatReceive.free();

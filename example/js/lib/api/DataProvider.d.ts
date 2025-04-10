@@ -12,6 +12,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class DataProvider {
     get ffiValue(): pointer;
 
+
     /**
      * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
      */

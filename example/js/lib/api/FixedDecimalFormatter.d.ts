@@ -17,6 +17,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class FixedDecimalFormatter {
     get ffiValue(): pointer;
 
+
     /**
      * Creates a new [`FixedDecimalFormatter`] from locale data.
      *

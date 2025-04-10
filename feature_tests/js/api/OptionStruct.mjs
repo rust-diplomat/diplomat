@@ -113,6 +113,7 @@ export class OptionStruct {
         return new OptionStruct(structObj, internalConstructor);
     }
 
+
     constructor(structObj, internalConstructor) {
         return this.#internalConstructor(...arguments)
     }

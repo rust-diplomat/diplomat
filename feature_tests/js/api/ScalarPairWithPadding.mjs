@@ -103,6 +103,7 @@ export class ScalarPairWithPadding {
 
         return new ScalarPairWithPadding(structObj);
     }
+
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

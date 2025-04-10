@@ -34,11 +34,13 @@ export class Unnamespaced {
     get ffiValue() {
         return this.#ptr;
     }
+
     static make(e) {
 
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
 
-        try {        return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {}
