@@ -27,8 +27,10 @@ final class Unnamespaced implements ffi.Finalizable {
     return Unnamespaced._fromFfi(result, []);
   }
 
-  void useNamespaced(AttrOpaque1Renamed n) {_namespace_Unnamespaced_use_namespaced(_ffi, n._ffi);
+  void useNamespaced(AttrOpaque1Renamed n) {
+    _namespace_Unnamespaced_use_namespaced(_ffi, n._ffi);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_Unnamespaced_destroy')

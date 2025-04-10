@@ -96,7 +96,8 @@ final class OptionOpaque implements ffi.Finalizable {
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
   }
 
-  void assertInteger(int i) {_OptionOpaque_assert_integer(_ffi, i);
+  void assertInteger(int i) {
+    _OptionOpaque_assert_integer(_ffi, i);
   }
 
   static bool optionOpaqueArgument([OptionOpaque? arg]) {
@@ -133,6 +134,7 @@ final class OptionOpaque implements ffi.Finalizable {
     final result = _OptionOpaque_returns_option_input_struct();
     return OptionInputStruct._fromFfi(result);
   }
+
 }
 
 @_DiplomatFfiUse('OptionOpaque_destroy')

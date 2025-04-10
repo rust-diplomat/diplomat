@@ -52,6 +52,7 @@ final class NestedBorrowedFields {
     return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is NestedBorrowedFields &&

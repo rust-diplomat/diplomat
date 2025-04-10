@@ -149,7 +149,8 @@ export class BigStructWithStuff {
     }
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(...BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), extraVal);
+
+    wasm.BigStructWithStuff_assert_value(...BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), extraVal);
 
         try {}
 

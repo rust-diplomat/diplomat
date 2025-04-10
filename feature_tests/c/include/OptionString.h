@@ -14,9 +14,12 @@
 
 
 
+
 OptionString* OptionString_new(DiplomatStringView diplomat_str);
+
 typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;
 OptionString_write_result OptionString_write(const OptionString* self, DiplomatWrite* write);
+
 typedef struct OptionString_borrow_result {union {DiplomatStringView ok; }; bool is_ok;} OptionString_borrow_result;
 OptionString_borrow_result OptionString_borrow(const OptionString* self);
 

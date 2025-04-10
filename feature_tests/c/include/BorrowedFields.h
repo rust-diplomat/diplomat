@@ -15,6 +15,7 @@
 
 
 
+
 BorrowedFields BorrowedFields_from_bar_and_strings(const Bar* bar, DiplomatString16View dstr16, DiplomatStringView utf8_str);
 
 

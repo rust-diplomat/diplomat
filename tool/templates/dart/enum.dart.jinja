@@ -23,9 +23,9 @@ enum {{type_name}}
   }
   {%- endif %}
 
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
-  {%-endfor %}
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
+  {%- endfor %}
 
   {%- if special.comparator %}
 

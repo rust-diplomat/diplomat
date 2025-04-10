@@ -40,7 +40,8 @@ final class Opaque implements ffi.Finalizable {
   }
 
   String getDebugStr() {
-    final write = _Write();_Opaque_get_debug_str(_ffi, write._ffi);
+    final write = _Write();
+    _Opaque_get_debug_str(_ffi, write._ffi);
     return write.finalize();
   }
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
@@ -49,7 +50,8 @@ final class Opaque implements ffi.Finalizable {
   ///
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    final temp = _FinalizedArena();_Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
+    final temp = _FinalizedArena();
+    _Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
   }
 
   static int returnsUsize() {
@@ -66,6 +68,7 @@ final class Opaque implements ffi.Finalizable {
     final result = _Opaque_cmp();
     return result;
   }
+
 }
 
 @_DiplomatFfiUse('Opaque_destroy')

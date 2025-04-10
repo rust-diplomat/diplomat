@@ -36,9 +36,11 @@ final class CyclicStructC {
 
   String cyclicOut() {
     final temp = _FinalizedArena();
-    final write = _Write();_CyclicStructC_cyclic_out(_toFfi(temp.arena), write._ffi);
+    final write = _Write();
+    _CyclicStructC_cyclic_out(_toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
+
 
   @override
   bool operator ==(Object other) =>

@@ -71,16 +71,19 @@ final class Float64Vec implements ffi.Finalizable {
   }
 
   void fillSlice(core.List<double> v) {
-    final temp = _FinalizedArena();_Float64Vec_fill_slice(_ffi, v._float64AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _Float64Vec_fill_slice(_ffi, v._float64AllocIn(temp.arena));
   }
 
   void setValue(core.List<double> newSlice) {
-    final temp = _FinalizedArena();_Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
+    final temp = _FinalizedArena();
+    _Float64Vec_set_value(_ffi, newSlice._float64AllocIn(temp.arena));
   }
 
   @override
   String toString() {
-    final write = _Write();_Float64Vec_to_string(_ffi, write._ffi);
+    final write = _Write();
+    _Float64Vec_to_string(_ffi, write._ffi);
     return write.finalize();
   }
 
@@ -98,6 +101,7 @@ final class Float64Vec implements ffi.Finalizable {
     }
     return result.union.ok;
   }
+
 }
 
 @_DiplomatFfiUse('Float64Vec_destroy')

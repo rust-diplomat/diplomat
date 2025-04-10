@@ -27,7 +27,8 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     return OpaqueMutexedString._fromFfi(result, []);
   }
 
-  void change(int number) {_OpaqueMutexedString_change(_ffi, number);
+  void change(int number) {
+    _OpaqueMutexedString_change(_ffi, number);
   }
 
   OpaqueMutexedString borrow() {
@@ -72,6 +73,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     final result = _OpaqueMutexedString_to_unsigned_from_unsigned(_ffi, input);
     return result;
   }
+
 }
 
 @_DiplomatFfiUse('OpaqueMutexedString_destroy')

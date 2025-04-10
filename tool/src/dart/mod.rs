@@ -622,7 +622,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         if let hir::ReturnType::Fallible(_, Some(e)) = &method.output {
             write!(
                 &mut docs,
-                "\n\n Throws [{}] on failure.",
+                "\n\nThrows [{}] on failure.",
                 self.gen_type_name(e)
             )
             .unwrap();

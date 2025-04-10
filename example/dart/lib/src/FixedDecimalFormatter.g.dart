@@ -39,9 +39,11 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(FixedDecimal value) {
-    final write = _Write();_icu4x_FixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
+    final write = _Write();
+    _icu4x_FixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_destroy_mv1')

@@ -7,6 +7,7 @@ enum OptionEnum {
   foo,
 
   bar;
+
 }
 
 // dart format on

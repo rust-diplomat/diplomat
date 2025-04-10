@@ -49,6 +49,7 @@ final class MyStructContainingAnOption {
     return MyStructContainingAnOption._fromFfi(result);
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is MyStructContainingAnOption &&

@@ -28,9 +28,11 @@ final class MyOpaqueEnum implements ffi.Finalizable {
   }
 
   String toString() {
-    final write = _Write();_MyOpaqueEnum_to_string(_ffi, write._ffi);
+    final write = _Write();
+    _MyOpaqueEnum_to_string(_ffi, write._ffi);
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('MyOpaqueEnum_destroy')

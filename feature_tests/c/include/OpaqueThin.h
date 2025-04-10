@@ -14,7 +14,9 @@
 
 
 
+
 int32_t OpaqueThin_a(const OpaqueThin* self);
+
 float OpaqueThin_b(const OpaqueThin* self);
 
 void OpaqueThin_destroy(OpaqueThin* self);

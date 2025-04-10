@@ -74,11 +74,10 @@ final class {{type_name}}
     {%- endfor %}
     return struct;
   }
-  {%- endif -%}
+  {%- endif %}
 
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
-
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
   {%- endfor %}
 
   @override

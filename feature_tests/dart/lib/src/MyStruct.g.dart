@@ -91,7 +91,7 @@ final class MyStruct {
   }
   ///
   ///
-  ///  Throws [MyZst] on failure.
+  /// Throws [MyZst] on failure.
   static void returnsZstResult() {
     final result = _MyStruct_returns_zst_result();
     if (!result.isOk) {
@@ -100,13 +100,14 @@ final class MyStruct {
   }
   ///
   ///
-  ///  Throws [MyZst] on failure.
+  /// Throws [MyZst] on failure.
   static void failsZstResult() {
     final result = _MyStruct_fails_zst_result();
     if (!result.isOk) {
       throw MyZst();
     }
   }
+
 
   @override
   bool operator ==(Object other) =>
