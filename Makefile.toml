@@ -135,6 +135,7 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api_leg
 npm ci && npm run test -w legacy
 '''
 
+# We don't need to test legacy JS for demo_gen, as the call sites should be identical.
 [tasks.test-demo-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
