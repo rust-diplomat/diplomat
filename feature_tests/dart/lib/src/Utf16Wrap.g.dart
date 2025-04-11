@@ -40,6 +40,7 @@ final class Utf16Wrap implements ffi.Finalizable {
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('Utf16Wrap_destroy')

@@ -40,6 +40,7 @@ final class RenamedStructWithAttrs {
     return result;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is RenamedStructWithAttrs &&

@@ -19,7 +19,6 @@ MyOpaqueEnum* MyOpaqueEnum_new(void);
 
 void MyOpaqueEnum_to_string(const MyOpaqueEnum* self, DiplomatWrite* write);
 
-
 void MyOpaqueEnum_destroy(MyOpaqueEnum* self);
 
 

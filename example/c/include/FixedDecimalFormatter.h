@@ -24,7 +24,6 @@ icu4x_FixedDecimalFormatter_try_new_mv1_result icu4x_FixedDecimalFormatter_try_n
 
 void icu4x_FixedDecimalFormatter_format_write_mv1(const FixedDecimalFormatter* self, const FixedDecimal* value, DiplomatWrite* write);
 
-
 void icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter* self);
 
 

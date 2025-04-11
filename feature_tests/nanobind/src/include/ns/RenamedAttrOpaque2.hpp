@@ -16,10 +16,9 @@
 namespace ns {
 namespace capi {
     extern "C" {
-    
-    
+
     void namespace_AttrOpaque2_destroy(RenamedAttrOpaque2* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

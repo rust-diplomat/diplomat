@@ -68,10 +68,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
-            .trim()
-            .replace('\n', "\n/// ")
-            .replace(" \n", "\n")
+        docs.to_markdown(self.docs_url_gen).trim().to_string()
     }
 
     /// Resolve and format a named type for use in code

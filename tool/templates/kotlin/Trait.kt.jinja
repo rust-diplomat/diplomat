@@ -87,7 +87,7 @@ internal class DiplomatTrait_{{trait_name}}_Wrapper internal constructor (
 
         fun fromTraitObj(trt_obj: {{trait_name}}): DiplomatTrait_{{trait_name}}_Wrapper {
             val vtable = DiplomatTrait_{{trait_name}}_VTable_Native()
-            
+
             {% if !trait_methods.is_empty() -%}
                 {%- for trait_method in trait_methods %}
             val {{trait_method.name}}: Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} = object :  Runner_DiplomatTraitMethod_{{trait_name}}_{{trait_method.name}} {

@@ -16,10 +16,9 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     void Two_destroy(Two* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

@@ -6,34 +6,27 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionInputStruct {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     #c;
-    
-    get c()  {
+    get c() {
         return this.#c;
-    } 
-    set c(value) {
+    }
+    set c(value){
         this.#c = value;
     }
-    
     /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -69,7 +62,6 @@ export class OptionInputStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
@@ -119,6 +111,7 @@ export class OptionInputStruct {
 
         return new OptionInputStruct(structObj);
     }
+
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

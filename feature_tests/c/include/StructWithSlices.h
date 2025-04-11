@@ -21,5 +21,4 @@ void StructWithSlices_return_last(StructWithSlices self, DiplomatWrite* write);
 
 
 
-
 #endif // StructWithSlices_H

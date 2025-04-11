@@ -69,6 +69,7 @@ final class Opaque implements ffi.Finalizable {
     final result = _Opaque_cmp();
     return result;
   }
+
 }
 
 @_DiplomatFfiUse('Opaque_destroy')

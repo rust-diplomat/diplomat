@@ -14,7 +14,7 @@ internal class ImportedStructNative: Structure(), Structure.ByValue {
     internal var foo: Int = UnimportedEnum.default().toNative();
     @JvmField
     internal var count: FFIUint8 = FFIUint8();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("foo", "count")

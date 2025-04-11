@@ -16,10 +16,9 @@
 namespace nested::ns {
 namespace capi {
     extern "C" {
-    
-    
+
     void namespace_Nested_destroy(Nested* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

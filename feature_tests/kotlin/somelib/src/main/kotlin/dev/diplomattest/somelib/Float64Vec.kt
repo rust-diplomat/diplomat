@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface Float64VecLib: Library {
     fun Float64Vec_destroy(handle: Pointer)
     fun Float64Vec_new_bool(v: Slice): Pointer

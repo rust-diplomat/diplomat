@@ -16,10 +16,9 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     void RefListParameter_destroy(RefListParameter* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
