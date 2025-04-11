@@ -1941,13 +1941,7 @@ returnVal.option() ?: return null
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
             }
-            Type::Callback(_) => {
-                println!(
-                    "Generating type name for {}",
-                    additional_name.as_ref().unwrap()
-                );
-                format!("DiplomatCallback_{}", additional_name.unwrap()).into()
-            }
+            Type::Callback(_) => format!("DiplomatCallback_{}", additional_name.unwrap()).into(),
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
