@@ -30,4 +30,42 @@ mod ffi {
             f("bananna")
         }
     }
+
+    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::opaque]
+    pub struct CallbackHolder {
+        held: Box<dyn Fn(i32) -> i32>,
+    }
+
+    impl CallbackHolder {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(func: impl Fn(i32) -> i32 + 'static) -> Box<Self> {
+            Box::new(Self {
+                held: Box::new(func),
+            })
+        }
+
+        pub fn call(&self, a: i32) -> i32 {
+            (self.held)(a)
+        }
+    }
+
+    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::opaque]
+    pub struct MutableCallbackHolder {
+        held: Box<dyn FnMut(i32) -> i32>,
+    }
+
+    impl MutableCallbackHolder {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(func: impl FnMut(i32) -> i32 + 'static) -> Box<Self> {
+            Box::new(Self {
+                held: Box::new(func),
+            })
+        }
+
+        pub fn call(&mut self, a: i32) -> i32 {
+            (self.held)(a)
+        }
+    }
 }

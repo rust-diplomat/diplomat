@@ -13,6 +13,7 @@
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsReturning.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
+#include "CallbackHolder.hpp"
 #include "CallbackTestingStruct.hpp"
 #include "CallbackWrapper.hpp"
 #include "ContiguousEnum.hpp"
@@ -25,6 +26,7 @@
 #include "Float64Vec.hpp"
 #include "Foo.hpp"
 #include "ImportedStruct.hpp"
+#include "MutableCallbackHolder.hpp"
 #include "MyEnum.hpp"
 #include "MyOpaqueEnum.hpp"
 #include "MyString.hpp"
@@ -601,6 +603,24 @@ NB_MODULE(somelib, somelib_mod)
     nb::class_<Unnamespaced>(somelib_mod, "Unnamespaced", nb::type_slots(Unnamespaced_slots))
     	.def_static("make", &Unnamespaced::make, "_e"_a ) // unsupported special method NamedConstructor(None)
     	.def("use_namespaced", &Unnamespaced::use_namespaced, "_n"_a);
+    
+    PyType_Slot CallbackHolder_slots[] = {
+        {Py_tp_free, (void *)CallbackHolder::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<CallbackHolder>(somelib_mod, "CallbackHolder", nb::type_slots(CallbackHolder_slots))
+    	.def("call", &CallbackHolder::call, "a"_a)
+    	.def(nb::new_(&CallbackHolder::new_), "func"_a);
+    
+    PyType_Slot MutableCallbackHolder_slots[] = {
+        {Py_tp_free, (void *)MutableCallbackHolder::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<MutableCallbackHolder>(somelib_mod, "MutableCallbackHolder", nb::type_slots(MutableCallbackHolder_slots))
+    	.def("call", &MutableCallbackHolder::call, "a"_a)
+    	.def(nb::new_(&MutableCallbackHolder::new_), "func"_a);
     
     PyType_Slot Bar_slots[] = {
         {Py_tp_free, (void *)Bar::operator delete },

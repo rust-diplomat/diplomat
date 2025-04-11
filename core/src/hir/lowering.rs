@@ -927,7 +927,7 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::Function(input_types, out_type) => {
+            ast::TypeName::Function(input_types, out_type, _mutability) => {
                 if !self.attr_validator.attrs_supported().callbacks {
                     self.errors.push(LoweringError::Other(
                         "Callback arguments are not supported by this backend".into(),
@@ -1255,7 +1255,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
-            ast::TypeName::Function(_, _) => {
+            ast::TypeName::Function(..) => {
                 self.errors.push(LoweringError::Other(
                     "Function types can only be an input type".into(),
                 ));

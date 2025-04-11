@@ -46,8 +46,9 @@ mod ffi {
         x: i32,
     ) -> i32 {
         let f = move |arg0: i32| unsafe {
+            let _ = &f;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> i32,
+                unsafe extern "C" fn(*mut c_void, ...) -> i32,
                 unsafe extern "C" fn(*const c_void, i32) -> i32,
             >(f.run_callback)(f.data, arg0)
         };
@@ -57,8 +58,9 @@ mod ffi {
     extern "C" fn Wrapper_test_multiarg_void_callback(f: DiplomatCallback<()>) {
         let f = move |arg0: i32, arg1: &str| unsafe {
             let arg1: diplomat_runtime::DiplomatUtf8StrSlice = arg1.into();
+            let _ = &f;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> (),
+                unsafe extern "C" fn(*mut c_void, ...) -> (),
                 unsafe extern "C" fn(
                     *const c_void,
                     i32,
@@ -72,8 +74,9 @@ mod ffi {
     extern "C" fn Wrapper_test_mod_array(g: DiplomatCallback<()>) {
         let g = move |arg0: &[u8]| unsafe {
             let arg0: diplomat_runtime::DiplomatSlice<u8> = arg0.into();
+            let _ = &g;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> (),
+                unsafe extern "C" fn(*mut c_void, ...) -> (),
                 unsafe extern "C" fn(
                     *const c_void,
                     diplomat_runtime::DiplomatSlice<u8>,
@@ -85,8 +88,9 @@ mod ffi {
     #[no_mangle]
     extern "C" fn Wrapper_test_no_args(h: DiplomatCallback<()>) -> i32 {
         let h = move || unsafe {
+            let _ = &h;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> (),
+                unsafe extern "C" fn(*mut c_void, ...) -> (),
                 unsafe extern "C" fn(*const c_void) -> (),
             >(h.run_callback)(h.data)
         };
@@ -95,8 +99,9 @@ mod ffi {
     #[no_mangle]
     extern "C" fn Wrapper_test_cb_with_struct(f: DiplomatCallback<i32>) -> i32 {
         let f = move |arg0: TestingStruct| unsafe {
+            let _ = &f;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> i32,
+                unsafe extern "C" fn(*mut c_void, ...) -> i32,
                 unsafe extern "C" fn(*const c_void, TestingStruct) -> i32,
             >(f.run_callback)(f.data, arg0)
         };
@@ -108,14 +113,16 @@ mod ffi {
         g: DiplomatCallback<i32>,
     ) -> i32 {
         let f = move || unsafe {
+            let _ = &f;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> i32,
+                unsafe extern "C" fn(*mut c_void, ...) -> i32,
                 unsafe extern "C" fn(*const c_void) -> i32,
             >(f.run_callback)(f.data)
         };
         let g = move |arg0: i32| unsafe {
+            let _ = &g;
             std::mem::transmute::<
-                unsafe extern "C" fn(*const c_void, ...) -> i32,
+                unsafe extern "C" fn(*mut c_void, ...) -> i32,
                 unsafe extern "C" fn(*const c_void, i32) -> i32,
             >(g.run_callback)(g.data, arg0)
         };

@@ -1,5 +1,7 @@
 #include <iostream>
 #include "../include/CallbackWrapper.hpp"
+#include "../include/CallbackHolder.hpp"
+#include "../include/MutableCallbackHolder.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -40,5 +42,20 @@ int main(int argc, char *argv[])
         auto out = o.test_str_cb_arg([](std::string_view a)
                                      { return a.length(); });
         simple_assert_eq("test_str_cb_arg output", out, 7);
+    }
+    {
+        int copied = 0;
+        // TODO: Make C++ reject this by using move_only_function in c++23.
+        // We cannot reject this in earlier standards due to a defect in std::function.
+        // See: https://lesleylai.info/en/const-correcness-std-function/
+        auto cb = CallbackHolder::new_([copied](int32_t a) mutable { copied += a; return copied;});
+        simple_assert_eq("mutable cb object", cb->call(5), 5);
+        simple_assert_eq("mutable cb object", cb->call(5), 10);
+    }
+    {
+        int copied = 0;
+        auto cb = MutableCallbackHolder::new_([copied](int32_t a) mutable { copied += a; return copied;});
+        simple_assert_eq("mutable cb object", cb->call(5), 5);
+        simple_assert_eq("mutable cb object", cb->call(5), 10);
     }
 }
