@@ -34,7 +34,8 @@ export class OptionString {
     get ffiValue() {
         return this.#ptr;
     }
-static new_(diplomatStr) {
+
+    static new_(diplomatStr) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);
         
@@ -51,7 +52,8 @@ static new_(diplomatStr) {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
-write() {
+
+    write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
@@ -64,7 +66,8 @@ write() {
             write.free();
         }
     }
-borrow() {
+
+    borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         // This lifetime edge depends on lifetimes 'a

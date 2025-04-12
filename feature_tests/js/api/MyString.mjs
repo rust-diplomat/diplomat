@@ -34,7 +34,8 @@ export class MyString {
     get ffiValue() {
         return this.#ptr;
     }
-#defaultConstructor(v) {
+
+    #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
@@ -49,7 +50,8 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
-static newUnsafe(v) {
+
+    static newUnsafe(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
@@ -64,7 +66,8 @@ static newUnsafe(v) {
             functionCleanupArena.free();
         }
     }
-static newOwned(v) {
+
+    static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
@@ -79,7 +82,8 @@ static newOwned(v) {
             functionCleanupArena.free();
         }
     }
-static newFromFirst(v) {
+
+    static newFromFirst(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.strs(wasm, v, "string8")));
@@ -94,7 +98,8 @@ static newFromFirst(v) {
             functionCleanupArena.free();
         }
     }
-set str(newStr) {
+
+    set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const newStrSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, newStr)));
@@ -106,7 +111,8 @@ set str(newStr) {
             functionCleanupArena.free();
         }
     }
-get str() {
+
+    get str() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.MyString_get_str(this.ffiValue, write.buffer);
     
@@ -118,7 +124,8 @@ get str() {
             write.free();
         }
     }
-static getStaticStr() {
+
+    static getStaticStr() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.MyString_get_static_str(diplomatReceive.buffer);
@@ -131,7 +138,8 @@ static getStaticStr() {
             diplomatReceive.free();
         }
     }
-static stringTransform(foo) {
+
+    static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const fooSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, foo)));
@@ -149,7 +157,8 @@ static stringTransform(foo) {
             write.free();
         }
     }
-borrow() {
+
+    borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a

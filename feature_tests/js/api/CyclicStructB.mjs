@@ -83,7 +83,8 @@ export class CyclicStructB {
 
         return new CyclicStructB(structObj);
     }
-static getA() {
+
+    static getA() {
         const result = wasm.CyclicStructB_get_a();
     
         try {
@@ -92,7 +93,8 @@ static getA() {
         
         finally {}
     }
-static getAOption() {
+
+    static getAOption() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
         
         const result = wasm.CyclicStructB_get_a_option(diplomatReceive.buffer);

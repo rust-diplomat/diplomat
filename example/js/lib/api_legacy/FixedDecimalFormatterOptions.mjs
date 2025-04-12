@@ -106,7 +106,8 @@ export class FixedDecimalFormatterOptions {
 
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
-#defaultConstructor() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);

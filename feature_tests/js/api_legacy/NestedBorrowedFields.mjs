@@ -149,7 +149,8 @@ export class NestedBorrowedFields {
     get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };
-static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
+
+    static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
         

@@ -146,7 +146,8 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() { 
         return [this.#fieldC];
     };
-static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
+
+    static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
         

@@ -113,7 +113,8 @@ export class StructWithSlices {
     get _fieldsForLifetimeA() { 
         return [this.#first, this.#second];
     };
-returnLast() {
+
+    returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);

@@ -35,7 +35,8 @@ export class RenamedMyIterable {
     get ffiValue() {
         return this.#ptr;
     }
-#defaultConstructor(x) {
+
+    #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
@@ -50,7 +51,8 @@ export class RenamedMyIterable {
             functionCleanupArena.free();
         }
     }
-[Symbol.iterator]() {
+
+    [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         

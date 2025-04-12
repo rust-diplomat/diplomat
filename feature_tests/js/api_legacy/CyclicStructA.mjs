@@ -83,7 +83,8 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj);
     }
-static getB() {
+
+    static getB() {
         const result = wasm.CyclicStructA_get_b();
     
         try {
@@ -92,7 +93,8 @@ static getB() {
         
         finally {}
     }
-cyclicOut() {
+
+    cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
@@ -108,7 +110,8 @@ cyclicOut() {
             write.free();
         }
     }
-doubleCyclicOut(cyclicStructA) {
+
+    doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
@@ -124,7 +127,8 @@ doubleCyclicOut(cyclicStructA) {
             write.free();
         }
     }
-get getterOut() {
+
+    get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);

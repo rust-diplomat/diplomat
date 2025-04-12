@@ -9,9 +9,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class Opaque {
     
     get ffiValue(): pointer;
-static tryFromUtf8(input: string): Opaque | null;
-static fromStr(input: string): Opaque;
-getDebugStr(): string;
+
+    static tryFromUtf8(input: string): Opaque | null;
+
+    static fromStr(input: string): Opaque;
+
+    getDebugStr(): string;
 
     /** 
      * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
@@ -21,9 +24,12 @@ getDebugStr(): string;
      * Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
      */
     assertStruct(s: MyStruct_obj): void;
-static returnsUsize(): number;
-static returnsImported(): ImportedStruct;
-static cmp(): number;
+
+    static returnsUsize(): number;
+
+    static returnsImported(): ImportedStruct;
+
+    static cmp(): number;
 
     constructor();
 }

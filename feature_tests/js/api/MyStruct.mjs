@@ -198,7 +198,8 @@ export class MyStruct {
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
-#defaultConstructor() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
         
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
@@ -211,7 +212,8 @@ export class MyStruct {
             diplomatReceive.free();
         }
     }
-intoA() {
+
+    intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const result = wasm.MyStruct_into_a(MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
@@ -224,7 +226,8 @@ intoA() {
             functionCleanupArena.free();
         }
     }
-static returnsZstResult() {
+
+    static returnsZstResult() {
         const result = wasm.MyStruct_returns_zst_result();
     
         try {
@@ -237,7 +240,8 @@ static returnsZstResult() {
         
         finally {}
     }
-static failsZstResult() {
+
+    static failsZstResult() {
         const result = wasm.MyStruct_fails_zst_result();
     
         try {

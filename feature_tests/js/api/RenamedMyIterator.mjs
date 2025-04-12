@@ -38,7 +38,8 @@ export class RenamedMyIterator {
     get ffiValue() {
         return this.#ptr;
     }
-#iteratorNext() {
+
+    #iteratorNext() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
         
         const result = wasm.namespace_MyIterator_next(diplomatReceive.buffer, this.ffiValue);

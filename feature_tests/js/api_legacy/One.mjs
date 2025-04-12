@@ -39,7 +39,8 @@ export class One {
     get ffiValue() {
         return this.#ptr;
     }
-static transitivity(hold, nohold) {
+
+    static transitivity(hold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd, 'e
         let aEdges = [hold];
         
@@ -51,7 +52,8 @@ static transitivity(hold, nohold) {
         
         finally {}
     }
-static cycle(hold, nohold) {
+
+    static cycle(hold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c
         let aEdges = [hold];
         
@@ -63,7 +65,8 @@ static cycle(hold, nohold) {
         
         finally {}
     }
-static manyDependents(a, b, c, d, nohold) {
+
+    static manyDependents(a, b, c, d, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [a, b, c, d];
         
@@ -75,7 +78,8 @@ static manyDependents(a, b, c, d, nohold) {
         
         finally {}
     }
-static returnOutlivesParam(hold, nohold) {
+
+    static returnOutlivesParam(hold, nohold) {
         // This lifetime edge depends on lifetimes 'long
         let longEdges = [hold];
         
@@ -87,7 +91,8 @@ static returnOutlivesParam(hold, nohold) {
         
         finally {}
     }
-static diamondTop(top, left, right, bottom) {
+
+    static diamondTop(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'top, 'left, 'right, 'bottom
         let topEdges = [top, left, right, bottom];
         
@@ -99,7 +104,8 @@ static diamondTop(top, left, right, bottom) {
         
         finally {}
     }
-static diamondLeft(top, left, right, bottom) {
+
+    static diamondLeft(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'left, 'bottom
         let leftEdges = [left, bottom];
         
@@ -111,7 +117,8 @@ static diamondLeft(top, left, right, bottom) {
         
         finally {}
     }
-static diamondRight(top, left, right, bottom) {
+
+    static diamondRight(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'right, 'bottom
         let rightEdges = [right, bottom];
         
@@ -123,7 +130,8 @@ static diamondRight(top, left, right, bottom) {
         
         finally {}
     }
-static diamondBottom(top, left, right, bottom) {
+
+    static diamondBottom(top, left, right, bottom) {
         // This lifetime edge depends on lifetimes 'bottom
         let bottomEdges = [bottom];
         
@@ -135,7 +143,8 @@ static diamondBottom(top, left, right, bottom) {
         
         finally {}
     }
-static diamondAndNestedTypes(a, b, c, d, nohold) {
+
+    static diamondAndNestedTypes(a, b, c, d, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [a, b, c, d];
         
@@ -147,7 +156,8 @@ static diamondAndNestedTypes(a, b, c, d, nohold) {
         
         finally {}
     }
-static implicitBounds(explicitHold, implicitHold, nohold) {
+
+    static implicitBounds(explicitHold, implicitHold, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd, 'x
         let aEdges = [explicitHold, implicitHold];
         
@@ -159,7 +169,8 @@ static implicitBounds(explicitHold, implicitHold, nohold) {
         
         finally {}
     }
-static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
+
+    static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd
         let aEdges = [explicit, implicit1, implicit2];
         

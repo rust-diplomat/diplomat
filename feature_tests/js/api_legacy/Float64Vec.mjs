@@ -34,7 +34,8 @@ export class Float64Vec {
     get ffiValue() {
         return this.#ptr;
     }
-static newBool(v) {
+
+    static newBool(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean");
@@ -49,7 +50,8 @@ static newBool(v) {
             functionCleanupArena.free();
         }
     }
-static newI16(v) {
+
+    static newI16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16");
@@ -64,7 +66,8 @@ static newI16(v) {
             functionCleanupArena.free();
         }
     }
-static newU16(v) {
+
+    static newU16(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16");
@@ -79,7 +82,8 @@ static newU16(v) {
             functionCleanupArena.free();
         }
     }
-static newIsize(v) {
+
+    static newIsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i32");
@@ -94,7 +98,8 @@ static newIsize(v) {
             functionCleanupArena.free();
         }
     }
-static newUsize(v) {
+
+    static newUsize(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u32");
@@ -109,7 +114,8 @@ static newUsize(v) {
             functionCleanupArena.free();
         }
     }
-static newF64BeBytes(v) {
+
+    static newF64BeBytes(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8");
@@ -124,7 +130,8 @@ static newF64BeBytes(v) {
             functionCleanupArena.free();
         }
     }
-#defaultConstructor(v) {
+
+    #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
@@ -139,7 +146,8 @@ static newF64BeBytes(v) {
             functionCleanupArena.free();
         }
     }
-get asSlice() {
+
+    get asSlice() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
@@ -155,7 +163,8 @@ get asSlice() {
             diplomatReceive.free();
         }
     }
-fillSlice(v) {
+
+    fillSlice(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
@@ -167,7 +176,8 @@ fillSlice(v) {
             functionCleanupArena.free();
         }
     }
-setValue(newSlice) {
+
+    setValue(newSlice) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const newSliceSlice = diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64");
@@ -179,7 +189,8 @@ setValue(newSlice) {
             functionCleanupArena.free();
         }
     }
-toString() {
+
+    toString() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
         wasm.Float64Vec_to_string(this.ffiValue, write.buffer);
     
@@ -191,7 +202,8 @@ toString() {
             write.free();
         }
     }
-borrow() {
+
+    borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
@@ -207,7 +219,8 @@ borrow() {
             diplomatReceive.free();
         }
     }
-get(i) {
+
+    get(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
         
         const result = wasm.Float64Vec_get(diplomatReceive.buffer, this.ffiValue, i);

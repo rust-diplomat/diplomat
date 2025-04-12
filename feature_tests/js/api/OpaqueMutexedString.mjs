@@ -35,7 +35,8 @@ export class OpaqueMutexedString {
     get ffiValue() {
         return this.#ptr;
     }
-static fromUsize(number) {
+
+    static fromUsize(number) {
         const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
@@ -44,13 +45,15 @@ static fromUsize(number) {
         
         finally {}
     }
-change(number) {wasm.OpaqueMutexedString_change(this.ffiValue, number);
+
+    change(number) {wasm.OpaqueMutexedString_change(this.ffiValue, number);
     
         try {}
         
         finally {}
     }
-borrow() {
+
+    borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
@@ -62,7 +65,8 @@ borrow() {
         
         finally {}
     }
-static borrowOther(other) {
+
+    static borrowOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
         
@@ -74,7 +78,8 @@ static borrowOther(other) {
         
         finally {}
     }
-borrowSelfOrOther(other) {
+
+    borrowSelfOrOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
         
@@ -86,7 +91,8 @@ borrowSelfOrOther(other) {
         
         finally {}
     }
-getLenAndAdd(other) {
+
+    getLenAndAdd(other) {
         const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
     
         try {
@@ -95,7 +101,8 @@ getLenAndAdd(other) {
         
         finally {}
     }
-dummyStr() {
+
+    dummyStr() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
@@ -111,7 +118,8 @@ dummyStr() {
             diplomatReceive.free();
         }
     }
-wrapper() {
+
+    wrapper() {
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
@@ -120,7 +128,8 @@ wrapper() {
         
         finally {}
     }
-toUnsignedFromUnsigned(input) {
+
+    toUnsignedFromUnsigned(input) {
         const result = wasm.OpaqueMutexedString_to_unsigned_from_unsigned(this.ffiValue, input);
     
         try {
