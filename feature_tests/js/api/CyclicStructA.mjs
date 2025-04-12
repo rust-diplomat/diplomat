@@ -96,7 +96,7 @@ cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -112,7 +112,7 @@ doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -128,7 +128,7 @@ get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, [], false), write.buffer);
+        wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();
