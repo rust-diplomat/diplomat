@@ -824,7 +824,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         };
                         format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})")
                     },
-                    WasmABI::CSpec => format!("{js_call}._intoFFI({allocator}, [], false)")
+                    WasmABI::CSpec => format!("{js_call}._intoFFI({allocator}, {{{params}}}, false)")
                 }.into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
