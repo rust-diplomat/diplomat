@@ -1002,8 +1002,9 @@ impl TypeName {
                             }
                             let rel_segs = &p.segments;
                             let path_seg = &rel_segs[0];
-                            // From the FFI side there's no real way to enforce the distinction between these two
 
+                            // From the FFI side there's no real way to enforce the distinction between these two,
+                            // but we can at least make the void* on the C-API side const or not.
                             let fn_mutability = match path_seg.ident.to_string().as_str() {
                                 "Fn" => Some(Mutability::Immutable),
                                 "FnMut" => Some(Mutability::Mutable),
@@ -1021,6 +1022,17 @@ impl TypeName {
                                     },
                                 ) = &path_seg.arguments
                                 {
+                                    // Validate none of the callback lifetimes are named - we only allow default behavior or 'static
+                                    for input_type in input_types {
+                                        if let syn::Type::Reference(syn::TypeReference {
+                                            lifetime: Some(in_lifetime),
+                                            ..
+                                        }) = input_type
+                                        {
+                                            panic!("Lifetimes are not allowed on callback parameters: lifetime '{} on trait {} ", in_lifetime.ident, path_seg.ident);
+                                        }
+                                    }
+
                                     let in_types = input_types
                                         .iter()
                                         .map(|in_ty| {
@@ -1030,12 +1042,16 @@ impl TypeName {
                                             ))
                                         })
                                         .collect::<Vec<Box<TypeName>>>();
+
                                     let out_type = match output_type {
                                         syn::ReturnType::Type(_, output_type) => {
                                             TypeName::from_syn(output_type, self_path_type.clone())
                                         }
                                         syn::ReturnType::Default => TypeName::Unit,
                                     };
+
+                                    // Validate lifetimes
+
                                     ret_type = Some(TypeName::Function(
                                         in_types,
                                         Box::new(out_type),

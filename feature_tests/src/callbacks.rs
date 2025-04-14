@@ -32,7 +32,7 @@ mod ffi {
             f("bananna")
         }
 
-        pub fn test_opaque_cb_arg(cb: impl Fn(&mut MyString), a: &mut MyString) {
+        pub fn test_opaque_cb_arg<'a>(cb: impl Fn(&mut MyString), a: &'a mut MyString) {
             cb(a);
         }
     }

@@ -941,9 +941,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
                 let mut params: Vec<CallbackParam> = Vec::new();
                 for in_ty in input_types.iter() {
-                    let hir_in_ty = self
-                        .lower_out_type(in_ty, ltl, in_path, false, false)
-                        .unwrap();
+                    let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false)?;
 
                     params.push(CallbackParam {
                         ty: hir_in_ty,
@@ -1060,7 +1058,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {:?}", in_path)));
                     Err(())
                 }
             },
