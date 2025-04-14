@@ -160,10 +160,10 @@
 <p>To install the <code>diplomat</code> CLI tool, run</p>
 <pre><code class="language-shell">$ cargo install diplomat-tool
 </code></pre>
-<p>Let's say this installs <code>diplomat-tool 0.8.0</code></p>
+<p>Let's say this installs <code>diplomat-tool 0.10.0</code></p>
 <p>You can then add <code>diplomat</code> as a dependency to your project like so:</p>
-<pre><code class="language-toml">diplomat = "0.8.0"
-diplomat-runtime = "0.8.0"
+<pre><code class="language-toml">diplomat = "0.10.0"
+diplomat-runtime = "0.10.0"
 </code></pre>
 <p>It is recommended to create a separate crate for the FFI interface. Diplomat will only read the contents of specially tagged modules so it is possible to mix Diplomat code with normal Rust code, but it is prefereable to minimize this since proc macros can make debugging hard.</p>
 
