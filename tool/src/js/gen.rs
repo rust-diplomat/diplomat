@@ -359,8 +359,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             let js_name = format!("this.#{}", field_name);
 
             let js_to_c = match self.config.abi {
+                // For the legacy ABI, we expect to return a splatted list of the
+                // fields converted into WASM friendly types and buffers for us. 
+                // So we use the List context here.
                 WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding)),
-                WasmABI::CSpec => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset))
+                // For the C spec ABI, we use the _writeToArrayBuffer function (generated using js_to_c_write) info,
+                // so we don't need to provide any information here:
+                WasmABI::CSpec => "".into()
             };
 
             let js_to_c = format!("{js_to_c}{maybe_padding_after}");
