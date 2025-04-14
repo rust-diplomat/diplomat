@@ -75,4 +75,4 @@ mod ffi {
 
 And our exported object is then added to `RenderInfo`s list of render termini, and is evaluated by the renderer accordingly!
 
-If you [regenerate the bindings and start the web server](https://rust-diplomat.github.io/book/demo_gen/quickstart.html#getting-started), you should see `Add a + b, b + c` in the list of functions.
+If you [regenerate the bindings and start the web server](https://rust-diplomat.github.io/diplomat/demo_gen/quickstart.html#getting-started), you should see `Add a + b, b + c` in the list of functions.
