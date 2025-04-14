@@ -63,7 +63,13 @@ export class FixedDecimalFormatterOptions {
         appendArrayMap,
         forcePadding
     ) {
-        return [this.#groupingStrategy.ffiValue, this.#someOtherConfig, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */)]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -106,7 +112,8 @@ export class FixedDecimalFormatterOptions {
 
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
-#defaultConstructor() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);

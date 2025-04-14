@@ -36,7 +36,8 @@ export class ResultOpaque {
     get ffiValue() {
         return this.#ptr;
     }
-#defaultConstructor(i) {
+
+    #defaultConstructor(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
@@ -53,7 +54,8 @@ export class ResultOpaque {
             diplomatReceive.free();
         }
     }
-static newFailingFoo() {
+
+    static newFailingFoo() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_failing_foo(diplomatReceive.buffer);
@@ -70,7 +72,8 @@ static newFailingFoo() {
             diplomatReceive.free();
         }
     }
-static newFailingBar() {
+
+    static newFailingBar() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_failing_bar(diplomatReceive.buffer);
@@ -87,7 +90,8 @@ static newFailingBar() {
             diplomatReceive.free();
         }
     }
-static newFailingUnit() {
+
+    static newFailingUnit() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
@@ -103,7 +107,8 @@ static newFailingUnit() {
             diplomatReceive.free();
         }
     }
-static newFailingStruct(i) {
+
+    static newFailingStruct(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         const result = wasm.ResultOpaque_new_failing_struct(diplomatReceive.buffer, i);
@@ -120,7 +125,8 @@ static newFailingStruct(i) {
             diplomatReceive.free();
         }
     }
-static newInErr(i) {
+
+    static newInErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_in_err(diplomatReceive.buffer, i);
@@ -137,7 +143,8 @@ static newInErr(i) {
             diplomatReceive.free();
         }
     }
-static newInt(i) {
+
+    static newInt(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
@@ -153,7 +160,8 @@ static newInt(i) {
             diplomatReceive.free();
         }
     }
-static newInEnumErr(i) {
+
+    static newInEnumErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
         const result = wasm.ResultOpaque_new_in_enum_err(diplomatReceive.buffer, i);
@@ -178,12 +186,12 @@ static newInEnumErr(i) {
     takesStr(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, v));
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
-        const result = wasm.ResultOpaque_takes_str(this.ffiValue, ...vSlice.splat());
+        const result = wasm.ResultOpaque_takes_str(this.ffiValue, vSlice.ptr);
     
         try {
             return new ResultOpaque(diplomatRuntime.internalConstructor, result, aEdges);
@@ -193,7 +201,8 @@ static newInEnumErr(i) {
             functionCleanupArena.free();
         }
     }
-assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
+
+    assertInteger(i) {wasm.ResultOpaque_assert_integer(this.ffiValue, i);
     
         try {}
         

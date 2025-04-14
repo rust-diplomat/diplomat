@@ -4,6 +4,7 @@
 use std::collections::BTreeSet;
 use std::{borrow::Cow, cell::RefCell};
 
+use crate::config::Config;
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, TypeDef};
 
@@ -14,6 +15,7 @@ use formatter::JSFormatter;
 
 mod gen;
 use gen::{MethodsInfo, TyGenContext};
+use serde::{Deserialize, Serialize};
 mod converter;
 
 mod layout;
@@ -29,6 +31,36 @@ impl FileType {
         match self {
             FileType::Module => false,
             FileType::Typescript => true,
+        }
+    }
+}
+
+/// The ABI to use.
+/// Should mirror the value you've set for the `-Zwasm-c-abi=VALUE`.
+/// Read https://blog.rust-lang.org/2025/04/04/c-abi-changes-for-wasm32-unknown-unknown.html for more details.
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub enum WasmABI {
+    /// The default value for Rust versions <= 1.87.0, or -Zwasm-c-abi=legacy
+    /// FIXME: Is this the right version?
+    #[default]
+    Legacy,
+    /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
+    #[serde(rename = "spec")]
+    CSpec,
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct JsConfig {
+    abi: WasmABI,
+}
+
+impl JsConfig {
+    pub fn set(&mut self, key: &str, value: toml::Value) {
+        if key == "abi" {
+            match value.as_str().unwrap_or_default() {
+                "spec" => self.abi = WasmABI::CSpec,
+                _ => self.abi = WasmABI::Legacy,
+            }
         }
     }
 }
@@ -66,6 +98,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
+    config: Config,
     docs: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
@@ -109,6 +142,7 @@ pub(crate) fn run<'tcx>(
                 js: BTreeSet::new(),
                 ts: BTreeSet::new(),
             }),
+            config: config.js_config.clone(),
         };
 
         let (m, special_method_presence, fields, fields_out) = match type_def {
@@ -163,12 +197,28 @@ pub(crate) fn run<'tcx>(
                 TypeDef::Enum(e) => context.gen_enum(ts, e, &methods_info),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, o, &methods_info),
                 TypeDef::Struct(s) => {
-                    let (fields, needs_force_padding) = fields.clone().unwrap();
-                    context.gen_struct(ts, s, &fields, &methods_info, false, needs_force_padding)
+                    let (fields, needs_force_padding, layout) = fields.clone().unwrap();
+                    context.gen_struct(
+                        ts,
+                        s,
+                        &fields,
+                        &methods_info,
+                        false,
+                        needs_force_padding,
+                        layout,
+                    )
                 }
                 TypeDef::OutStruct(s) => {
-                    let (fields, needs_force_padding) = fields_out.clone().unwrap();
-                    context.gen_struct(ts, s, &fields, &methods_info, true, needs_force_padding)
+                    let (fields, needs_force_padding, layout) = fields_out.clone().unwrap();
+                    context.gen_struct(
+                        ts,
+                        s,
+                        &fields,
+                        &methods_info,
+                        true,
+                        needs_force_padding,
+                        layout,
+                    )
                 }
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };

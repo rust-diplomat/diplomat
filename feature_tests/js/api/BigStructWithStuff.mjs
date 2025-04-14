@@ -108,7 +108,13 @@ export class BigStructWithStuff {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#first, /* [1 x i8] padding */ 0 /* end padding */, this.#second, this.#third, /* [1 x i16] padding */ 0 /* end padding */, ...ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._intoFFI(functionCleanupArena, {}, true), this.#fifth, /* [3 x i8] padding */ 0, 0, 0 /* end padding */]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -159,9 +165,10 @@ export class BigStructWithStuff {
 
         return new BigStructWithStuff(structObj);
     }
-assertValue(extraVal) {
+
+    assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(...BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), extraVal);
+        wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), extraVal);
     
         try {}
         

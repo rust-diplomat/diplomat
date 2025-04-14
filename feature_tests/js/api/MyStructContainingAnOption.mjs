@@ -60,7 +60,13 @@ export class MyStructContainingAnOption {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.optionToArgsForCalling(this.#a, 32, 8, (arrayBuffer, offset, jsValue) => [MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]), ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 48, 8);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -102,7 +108,8 @@ export class MyStructContainingAnOption {
 
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
-#defaultConstructor() {
+
+    #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
         
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
@@ -115,7 +122,8 @@ export class MyStructContainingAnOption {
             diplomatReceive.free();
         }
     }
-static filled() {
+
+    static filled() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
         
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);

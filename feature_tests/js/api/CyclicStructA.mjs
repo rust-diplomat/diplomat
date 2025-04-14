@@ -44,7 +44,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -83,7 +83,8 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj);
     }
-static getB() {
+
+    static getB() {
         const result = wasm.CyclicStructA_get_b();
     
         try {
@@ -92,11 +93,12 @@ static getB() {
         
         finally {}
     }
-cyclicOut() {
+
+    cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_cyclic_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
+        wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -108,11 +110,12 @@ cyclicOut() {
             write.free();
         }
     }
-doubleCyclicOut(cyclicStructA) {
+
+    doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), ...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -124,11 +127,12 @@ doubleCyclicOut(cyclicStructA) {
             write.free();
         }
     }
-get getterOut() {
+
+    get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_getter_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
+        wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();

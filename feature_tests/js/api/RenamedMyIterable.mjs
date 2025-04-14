@@ -35,12 +35,13 @@ export class RenamedMyIterable {
     get ffiValue() {
         return this.#ptr;
     }
-#defaultConstructor(x) {
+
+    #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8"));
+        const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8")));
         
-        const result = wasm.namespace_MyIterable_new(...xSlice.splat());
+        const result = wasm.namespace_MyIterable_new(xSlice.ptr);
     
         try {
             return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
@@ -50,7 +51,8 @@ export class RenamedMyIterable {
             functionCleanupArena.free();
         }
     }
-[Symbol.iterator]() {
+
+    [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         

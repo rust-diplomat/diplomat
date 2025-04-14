@@ -36,14 +36,15 @@ export class OpaqueThinVec {
     get ffiValue() {
         return this.#ptr;
     }
-#defaultConstructor(a, b) {
+
+    #defaultConstructor(a, b) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const aSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32"));
+        const aSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32")));
         
-        const bSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32"));
+        const bSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32")));
         
-        const result = wasm.OpaqueThinVec_create(...aSlice.splat(), ...bSlice.splat());
+        const result = wasm.OpaqueThinVec_create(aSlice.ptr, bSlice.ptr);
     
         try {
             return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
@@ -53,7 +54,8 @@ export class OpaqueThinVec {
             functionCleanupArena.free();
         }
     }
-[Symbol.iterator]() {
+
+    [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
@@ -65,7 +67,8 @@ export class OpaqueThinVec {
         
         finally {}
     }
-len() {
+
+    len() {
         const result = wasm.OpaqueThinVec_len(this.ffiValue);
     
         try {
@@ -74,7 +77,8 @@ len() {
         
         finally {}
     }
-get(idx) {
+
+    get(idx) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
@@ -86,7 +90,8 @@ get(idx) {
         
         finally {}
     }
-get first() {
+
+    get first() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         

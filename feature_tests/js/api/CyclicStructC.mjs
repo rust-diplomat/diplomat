@@ -44,7 +44,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._intoFFI(functionCleanupArena, {})]
+        return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -83,10 +83,11 @@ export class CyclicStructC {
 
         return new CyclicStructC(structObj);
     }
-static takesNestedParameters(c) {
+
+    static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.CyclicStructC_takes_nested_parameters(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}));
+        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}, false));
     
         try {
             return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
@@ -96,11 +97,12 @@ static takesNestedParameters(c) {
             functionCleanupArena.free();
         }
     }
-cyclicOut() {
+
+    cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructC_cyclic_out(...CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
+        wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
     
         try {
             return write.readString8();

@@ -66,7 +66,13 @@ export class ScalarPairWithPadding {
         appendArrayMap,
         forcePadding
     ) {
-        return [this.#first, ...diplomatRuntime.maybePaddingFields(forcePadding, 3 /* x i8 */), this.#second]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -109,9 +115,10 @@ export class ScalarPairWithPadding {
 
         return new ScalarPairWithPadding(structObj);
     }
-assertValue() {
+
+    assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.ScalarPairWithPadding_assert_value(...ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
+        wasm.ScalarPairWithPadding_assert_value(ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
     
         try {}
         

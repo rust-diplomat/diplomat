@@ -8,7 +8,7 @@ use syn::{
 };
 use toml::{value::Table, Value};
 
-use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
+use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
@@ -38,6 +38,8 @@ pub struct Config {
     pub kotlin_config: KotlinConfig,
     #[serde(rename = "demo_gen")]
     pub demo_gen_config: DemoConfig,
+    #[serde(rename = "js")]
+    pub js_config: JsConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,
@@ -62,6 +64,12 @@ impl Config {
             if SharedConfig::overrides_shared(key) {
                 self.language_overrides.insert(key.to_string(), value);
             } // nanobind doesn't have any other config setting
+        } else if key.starts_with("js.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.js_config.set(&key.replace("js.", ""), value);
+            }
         } else {
             self.shared_config.set(key, value)
         }
