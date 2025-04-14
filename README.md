@@ -9,7 +9,7 @@ Diplomat supports generating bindings from Rust to:
 - Kotlin (using JNA)
 - Python (using [nanobind](https://nanobind.readthedocs.io/en/latest/index.html))
 
-Diplomat supports languages through a plugin interface that makes it easy to add support for your favourite language. See [the book to get started](https://rust-diplomat.github.io/book/developer.html), and `tool/src/{c, cpp, js}` for examples of existing language plugins.
+Diplomat supports languages through a plugin interface that makes it easy to add support for your favourite language. See [the book to get started](https://rust-diplomat.github.io/diplomat/developer.html), and `tool/src/{c, cpp, js}` for examples of existing language plugins.
 
 ## Installation
 First, install the CLI tool for generating bindings:
@@ -25,7 +25,7 @@ diplomat-runtime = "0.10.0"
 
 ## Getting Started
 
-Documentation on how to use Diplomat can be found [in the book](https://rust-diplomat.github.io/book/).
+Documentation on how to use Diplomat can be found [in the book](https://rust-diplomat.github.io/diplomat/).
 
 ### Architecture
 See the [design doc](docs/design_doc.md) for more details.

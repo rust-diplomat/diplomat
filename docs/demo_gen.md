@@ -3,7 +3,7 @@ demo_gen is a Diplomat Backend that relies on Diplomat's JS backend to create ex
 
 demo_gen is designed to work with minimal configuration, as well as support a high amount of customization so that you can adjust its appearance and functionality to your liking.
 
-This design doc covers nearly everything about the inner workings of demo_gen. If you're curious as to how you can use demo_gen, you'll want to check the [Diplomat docs](https://rust-diplomat.github.io/book/demo_gen/intro.html).
+This design doc covers nearly everything about the inner workings of demo_gen. If you're curious as to how you can use demo_gen, you'll want to check the [Diplomat docs](https://rust-diplomat.github.io/diplomat/demo_gen/intro.html).
 
 ## Design Goals
 - demo_gen should show how functions in your library work.
@@ -11,7 +11,7 @@ This design doc covers nearly everything about the inner workings of demo_gen. I
   - We do not aim for completeness of demonstration, but a sample platter or charcuterie board of your library. 
 - demo_gen should have a short setup time.
   - It should take minimal effort to get an example up and running.
-  - We want to minimize time to setup, but we can't eliminate it entirely. See the [docs](https://rust-diplomat.github.io/book/demo_gen/renderer.html) for more on why setup time is not instantaneous.
+  - We want to minimize time to setup, but we can't eliminate it entirely. See the [docs](https://rust-diplomat.github.io/diplomat/demo_gen/renderer.html) for more on why setup time is not instantaneous.
 - demo_gen should be maximally customizable.
   - Not everyone uses the same front-end, not everyone has the same idea of what a demo should look like.
   - Nearly every aspect of what demo_gen outputs and how it looks should be configurable.
@@ -42,7 +42,7 @@ demo_gen uses the `#[diplomat::demo]` attribute for special configuration.
 
 Right now, this attribute is unique to the demo_gen backend. But in case anyone else decides to create their own non-JS demo generation backends, `#[diplomat::demo]` is backend agnostic. We look for them in the AST, and evaluate them in the HIR.
 
-Full documentation of available attributes is available at the [docs](https://rust-diplomat.github.io/book/demo_gen/intro.html).
+Full documentation of available attributes is available at the [docs](https://rust-diplomat.github.io/diplomat/demo_gen/intro.html).
 
 #### Example Part 1
 
@@ -324,7 +324,7 @@ This is where demo_gen has the most amount of freedom in how you approach things
 
 #### Default Renderer
 
-For ease of use, demo_gen has a built-in renderer to handle everything for developers (but it is also configurable). For more on configuration, you'll have to check the [docs](https://rust-diplomat.github.io/book/demo_gen/intro.html).
+For ease of use, demo_gen has a built-in renderer to handle everything for developers (but it is also configurable). For more on configuration, you'll have to check the [docs](https://rust-diplomat.github.io/diplomat/demo_gen/intro.html).
 
 The way the default renderer works is through the [Web Components API](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). That is, every Render Terminus has an associated `<render-terminus>` element that we register through Javascript, and the content of that element is determined by the `<template id="terminus">` element.
 
