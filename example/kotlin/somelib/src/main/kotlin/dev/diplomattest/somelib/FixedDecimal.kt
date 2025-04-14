@@ -12,6 +12,11 @@ internal interface FixedDecimalLib: Library {
     fun icu4x_FixedDecimal_multiply_pow10_mv1(handle: Pointer, power: Short): Unit
     fun icu4x_FixedDecimal_to_string_mv1(handle: Pointer, write: Pointer): ResultUnitUnit
 }
+internal interface FixedDecimalInterface {
+    fun multiplyPow10(power: Short): Unit
+    fun toString_(): Result<String>
+}
+
 /** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
 */
 class FixedDecimal internal constructor (
@@ -19,7 +24,7 @@ class FixedDecimal internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): FixedDecimalInterface  {
 
     internal class FixedDecimalCleaner(val handle: Pointer, val lib: FixedDecimalLib) : Runnable {
         override fun run() {
