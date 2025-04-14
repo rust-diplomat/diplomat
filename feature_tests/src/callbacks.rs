@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 mod ffi {
+    use crate::slices::ffi::MyString;
+
     #[diplomat::attr(not(supports = "callbacks"), disable)]
     pub struct CallbackWrapper {
         cant_be_empty: bool,
@@ -28,6 +30,10 @@ mod ffi {
         #[diplomat::attr(kotlin, disable)]
         pub fn test_str_cb_arg(f: impl Fn(&str) -> i32) -> i32 {
             f("bananna")
+        }
+
+        pub fn test_opaque_cb_arg(cb: impl Fn(&mut MyString), a: &mut MyString) {
+            cb(a);
         }
     }
 

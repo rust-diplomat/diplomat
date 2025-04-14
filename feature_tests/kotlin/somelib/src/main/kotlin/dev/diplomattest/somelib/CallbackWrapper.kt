@@ -11,6 +11,7 @@ internal interface CallbackWrapperLib: Library {
     fun CallbackWrapper_test_no_args(h: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native): Int
     fun CallbackWrapper_test_cb_with_struct(f: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native): Int
     fun CallbackWrapper_test_multiple_cb_args(f: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native, g: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native): Int
+    fun CallbackWrapper_test_opaque_cb_arg(cb: DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb_Native, a: Pointer): Unit
 }
 
 internal class CallbackWrapperNative: Structure(), Structure.ByValue {
@@ -269,6 +270,55 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
         }
     }
 }
+internal interface Runner_DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb: Callback {
+    fun invoke(lang_specific_context: Pointer?, arg0: Pointer ): Unit
+}
+
+internal class DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb_Native: Structure(), Structure.ByValue {
+    @JvmField
+    internal var data_: Pointer = Pointer(0L);
+    @JvmField
+    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb
+        = object :  Runner_DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Pointer ): Unit {
+                    throw Exception("Default callback runner -- should be replaced.")
+                }
+            }
+    @JvmField
+    internal var destructor: Callback = object : Callback {
+        fun invoke(obj_pointer: Pointer) {
+            DiplomatJVMRuntime.dropRustCookie(obj_pointer);
+        }
+    };
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("data_", "run_callback", "destructor")
+    }
+}
+
+internal class DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb internal constructor (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb_Native) {
+    val data_: Pointer = nativeStruct.data_
+    val run_callback: Callback = nativeStruct.run_callback
+    val destructor: Callback = nativeStruct.destructor
+
+    companion object {
+        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb_Native::class.java).toLong()
+        
+        fun fromCallback(cb: (MyString)->Unit): DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb {
+            val callback: Runner_DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb = object :  Runner_DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb {
+                override fun invoke(lang_specific_context: Pointer?, arg0: Pointer ): Unit {
+                    return cb(MyString(arg0, listOf()));
+                }
+            }
+            val cb_wrap = DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb_Native()
+            cb_wrap.run_callback = callback;
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            return DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb(cb_wrap)
+        }
+    }
+}
 class CallbackWrapper internal constructor (
     internal val nativeStruct: CallbackWrapperNative) {
     val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
@@ -300,6 +350,12 @@ class CallbackWrapper internal constructor (
             
             val returnVal = lib.CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f.fromCallback(f).nativeStruct, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g.fromCallback(g).nativeStruct);
             return (returnVal)
+        }
+        
+        fun testOpaqueCbArg(cb: (MyString)->Unit, a: MyString): Unit {
+            
+            val returnVal = lib.CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_diplomatCallback_cb.fromCallback(cb).nativeStruct, a.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */);
+            
         }
     }
 

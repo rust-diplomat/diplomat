@@ -148,7 +148,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(not(supports = arithmetic), disable)]
-    struct OpaqueArithmetic {
+    pub(crate) struct OpaqueArithmetic {
         x: i32,
         y: i32,
     }
