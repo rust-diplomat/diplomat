@@ -43,7 +43,7 @@ export class Locale {
     /**
      * Construct an [`Locale`] from a locale identifier represented as a string.
      */
-        #defaultConstructor(name) {
+    #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const nameSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, name)));

@@ -33,6 +33,7 @@ export class OptionString {
         return this.#ptr;
     }
 
+
     static new_(diplomatStr) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const diplomatStrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
@@ -50,6 +51,7 @@ export class OptionString {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
+
     write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
@@ -63,6 +65,7 @@ export class OptionString {
         finally {        write.free();
         }
     }
+
     borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
 

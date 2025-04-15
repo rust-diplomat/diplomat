@@ -33,6 +33,7 @@ export class RefListParameter {
         return this.#ptr;
     }
 
+
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }

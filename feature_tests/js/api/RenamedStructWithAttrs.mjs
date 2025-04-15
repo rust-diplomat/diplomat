@@ -106,6 +106,7 @@ export class RenamedStructWithAttrs {
         return new RenamedStructWithAttrs(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor(a, b) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
 
@@ -122,6 +123,7 @@ export class RenamedStructWithAttrs {
         finally {        diplomatReceive.free();
         }
     }
+
     get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

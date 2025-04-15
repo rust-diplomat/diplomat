@@ -7,9 +7,14 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class AttrOpaque1Renamed {
     get ffiValue(): pointer;
+
+
     get methodRenamed(): number;
+
     get abirenamed(): number;
+
     useUnnamespaced(un: Unnamespaced): void;
+
     useNamespaced(n: RenamedAttrEnum): void;
 
     constructor();

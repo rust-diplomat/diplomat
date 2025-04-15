@@ -32,6 +32,8 @@ export class OptionOpaqueChar {
     get ffiValue() {
         return this.#ptr;
     }
+
+
     assertChar(ch) {
     wasm.OptionOpaqueChar_assert_char(this.ffiValue, ch);
 

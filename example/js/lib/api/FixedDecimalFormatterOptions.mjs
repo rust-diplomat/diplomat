@@ -107,6 +107,7 @@ export class FixedDecimalFormatterOptions {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 

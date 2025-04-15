@@ -108,6 +108,7 @@ export class StructWithSlices {
         return [this.#first, this.#second];
     };
 
+
     returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

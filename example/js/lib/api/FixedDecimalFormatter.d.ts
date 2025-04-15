@@ -23,12 +23,12 @@ export class FixedDecimalFormatter {
      *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
      */
-        static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions_obj): FixedDecimalFormatter | null;
+    static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions_obj): FixedDecimalFormatter | null;
 
     /**
      * Formats a [`FixedDecimal`] to a string.
      *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
-        formatWrite(value: FixedDecimal): string;
+    formatWrite(value: FixedDecimal): string;
 }

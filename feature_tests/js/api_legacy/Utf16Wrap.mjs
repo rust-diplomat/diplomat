@@ -32,6 +32,8 @@ export class Utf16Wrap {
     get ffiValue() {
         return this.#ptr;
     }
+
+
     #defaultConstructor(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -39,24 +41,28 @@ export class Utf16Wrap {
 
         const result = wasm.Utf16Wrap_from_utf16(...inputSlice.splat());
 
-        try {        return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
+
     getDebugStr() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
     wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {        write.free();
         }
     }
+
     borrowCont() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 
@@ -66,7 +72,8 @@ export class Utf16Wrap {
 
         const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
 
-        try {        return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string16", aEdges).getValue();
+        try {
+            return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string16", aEdges).getValue();
         }
 
         finally {        diplomatReceive.free();

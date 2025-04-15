@@ -7,5 +7,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class OpaqueThinIter {
     get ffiValue(): pointer;
 
-    next() : IteratorResult<OpaqueThin>;
+
+    next(): IteratorResult<OpaqueThin>;
 }

@@ -80,6 +80,7 @@ export class CyclicStructA {
         return new CyclicStructA(structObj);
     }
 
+
     static getB() {
 
         const result = wasm.CyclicStructA_get_b();
@@ -90,6 +91,7 @@ export class CyclicStructA {
 
         finally {}
     }
+
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -106,6 +108,7 @@ export class CyclicStructA {
                 write.free();
         }
     }
+
     doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -122,6 +125,7 @@ export class CyclicStructA {
                 write.free();
         }
     }
+
     get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

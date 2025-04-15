@@ -60,6 +60,7 @@ export class OptionEnum {
     static Foo = OptionEnum.#objectValues[0];
     static Bar = OptionEnum.#objectValues[1];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

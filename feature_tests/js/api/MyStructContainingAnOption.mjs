@@ -103,6 +103,7 @@ export class MyStructContainingAnOption {
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
 
@@ -116,6 +117,7 @@ export class MyStructContainingAnOption {
         finally {        diplomatReceive.free();
         }
     }
+
     static filled() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
 

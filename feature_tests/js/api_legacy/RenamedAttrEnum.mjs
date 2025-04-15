@@ -63,6 +63,7 @@ export class RenamedAttrEnum {
     static B = RenamedAttrEnum.#objectValues[1];
     static Renamed = RenamedAttrEnum.#objectValues[2];
 
+
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

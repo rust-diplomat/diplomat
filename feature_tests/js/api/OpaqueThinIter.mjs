@@ -36,6 +36,7 @@ export class OpaqueThinIter {
         return this.#ptr;
     }
 
+
     #iteratorNext() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];

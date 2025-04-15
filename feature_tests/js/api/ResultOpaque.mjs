@@ -35,6 +35,7 @@ export class ResultOpaque {
         return this.#ptr;
     }
 
+
     #defaultConstructor(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -52,6 +53,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newFailingFoo() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -69,6 +71,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newFailingBar() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -86,6 +89,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newFailingUnit() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -102,6 +106,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newFailingStruct(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
 
@@ -119,6 +124,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newInErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -135,6 +141,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newInt(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -151,6 +158,7 @@ export class ResultOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newInEnumErr(i) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -173,7 +181,7 @@ export class ResultOpaque {
      * When we take &str, the return type becomes a Result
      * Test that this interacts gracefully with returning a reference type
      */
-        takesStr(v) {
+    takesStr(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
@@ -191,6 +199,7 @@ export class ResultOpaque {
             functionCleanupArena.free();
         }
     }
+
     assertInteger(i) {
     wasm.ResultOpaque_assert_integer(this.ffiValue, i);
 

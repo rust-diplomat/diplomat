@@ -36,6 +36,7 @@ export class OptionOpaque {
         return this.#ptr;
     }
 
+
     static new_(i) {
 
         const result = wasm.OptionOpaque_new(i);
@@ -46,6 +47,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     static newNone() {
 
         const result = wasm.OptionOpaque_new_none();
@@ -56,6 +58,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     static returns() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 17, 4, true);
 
@@ -72,6 +75,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     optionIsize() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -88,6 +92,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     optionUsize() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -104,6 +109,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     optionI32() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -120,6 +126,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     optionU32() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -136,6 +143,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newStruct() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
 
@@ -149,6 +157,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     static newStructNones() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 16, 4, false);
 
@@ -162,6 +171,7 @@ export class OptionOpaque {
         finally {        diplomatReceive.free();
         }
     }
+
     returnsNoneSelf() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -175,6 +185,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     returnsSomeSelf() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -188,6 +199,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     assertInteger(i) {
     wasm.OptionOpaque_assert_integer(this.ffiValue, i);
 
@@ -195,6 +207,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     static optionOpaqueArgument(arg) {
 
         const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
@@ -205,6 +218,7 @@ export class OptionOpaque {
 
         finally {}
     }
+
     static acceptsOptionU8(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -225,6 +239,7 @@ export class OptionOpaque {
                 diplomatReceive.free();
         }
     }
+
     static acceptsOptionEnum(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -245,6 +260,7 @@ export class OptionOpaque {
                 diplomatReceive.free();
         }
     }
+
     static acceptsOptionInputStruct(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -265,6 +281,7 @@ export class OptionOpaque {
                 diplomatReceive.free();
         }
     }
+
     static returnsOptionInputStruct() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 20, 4, false);
 

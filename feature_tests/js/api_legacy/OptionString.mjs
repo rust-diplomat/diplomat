@@ -32,6 +32,8 @@ export class OptionString {
     get ffiValue() {
         return this.#ptr;
     }
+
+
     static new_(diplomatStr) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);
@@ -41,25 +43,29 @@ export class OptionString {
 
         const result = wasm.OptionString_new(...diplomatStrSlice.splat());
 
-        try {        return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
+        try {
+            return result === 0 ? null : new OptionString(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
         }
     }
+
     write() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
         const result = wasm.OptionString_write(this.ffiValue, write.buffer);
 
-        try {        return result === 0 ? null : write.readString8();
+        try {
+            return result === 0 ? null : write.readString8();
         }
 
         finally {        write.free();
         }
     }
+
     borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
 
@@ -69,7 +75,8 @@ export class OptionString {
 
         const result = wasm.OptionString_borrow(diplomatReceive.buffer, this.ffiValue);
 
-        try {        if (!diplomatReceive.resultFlag) {
+        try {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();

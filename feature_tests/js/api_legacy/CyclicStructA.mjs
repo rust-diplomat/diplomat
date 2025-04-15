@@ -79,15 +79,19 @@ export class CyclicStructA {
 
         return new CyclicStructA(structObj);
     }
+
+
     static getB() {
 
         const result = wasm.CyclicStructA_get_b();
 
-        try {        return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
+        try {
+            return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
         }
 
         finally {}
     }
+
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -95,7 +99,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_cyclic_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
@@ -103,6 +108,7 @@ export class CyclicStructA {
                 write.free();
         }
     }
+
     doubleCyclicOut(cyclicStructA) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -110,7 +116,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_double_cyclic_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), ...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
@@ -118,6 +125,7 @@ export class CyclicStructA {
                 write.free();
         }
     }
+
     get getterOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -125,7 +133,8 @@ export class CyclicStructA {
 
     wasm.CyclicStructA_getter_out(...CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {
