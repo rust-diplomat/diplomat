@@ -354,7 +354,7 @@ for test in ${tests}
     echo "Looking for trailing whitespace in generated code in ${test}/${backend}"
     exit_code = exec --get-exit-code grep -Hrn \\s\\+$ "${test}/${backend}"
     if eq ${exit_code} 0
-        echo "Found trailing whitespace in ${test}/${backend}"
+        echo "Found trailing whitespace (or Windows line endings) in ${test}/${backend}"
         exit 1
     end
  end
