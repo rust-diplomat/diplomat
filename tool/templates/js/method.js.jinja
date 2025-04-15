@@ -56,13 +56,13 @@
     finally {
     {%- if needs_cleanup %}
         functionCleanupArena.free();
-    {% endif -%}
+    {%~ endif %}
     {%- if needs_slice_collection %}
         functionGarbageCollectorGrip.releaseToGarbageCollector();
-    {% endif -%}
-    {% for cleanup in cleanup_expressions %}
-        {{- cleanup|indent_trimmed(8)}}
-    {% endfor -%}
+    {%~ endif %}
+    {%- for cleanup in cleanup_expressions %}
+        {{~ cleanup|indent_trimmed(8)}}
+    {%- endfor %}
     }
 }
 {%- endif -%}

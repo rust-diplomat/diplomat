@@ -48,7 +48,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static cycle(hold, nohold) {
@@ -62,7 +63,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static manyDependents(a, b, c, d, nohold) {
@@ -76,7 +78,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static returnOutlivesParam(hold, nohold) {
@@ -90,7 +93,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], longEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static diamondTop(top, left, right, bottom) {
@@ -104,7 +108,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], topEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static diamondLeft(top, left, right, bottom) {
@@ -118,7 +123,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], leftEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static diamondRight(top, left, right, bottom) {
@@ -132,7 +138,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], rightEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static diamondBottom(top, left, right, bottom) {
@@ -146,7 +153,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], bottomEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static diamondAndNestedTypes(a, b, c, d, nohold) {
@@ -160,7 +168,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static implicitBounds(explicitHold, implicitHold, nohold) {
@@ -174,7 +183,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
@@ -188,7 +198,8 @@ export class One {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge, aEdge) {

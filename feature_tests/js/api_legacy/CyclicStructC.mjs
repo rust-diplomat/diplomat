@@ -93,6 +93,7 @@ export class CyclicStructC {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -109,7 +110,8 @@ export class CyclicStructC {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 

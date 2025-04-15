@@ -39,7 +39,8 @@ export class OptionOpaqueChar {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

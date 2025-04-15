@@ -114,7 +114,8 @@ export class MyStructContainingAnOption {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -128,7 +129,8 @@ export class MyStructContainingAnOption {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

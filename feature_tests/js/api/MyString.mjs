@@ -47,6 +47,7 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -63,6 +64,7 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -79,6 +81,7 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -95,6 +98,7 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -108,6 +112,7 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -120,7 +125,8 @@ export class MyString {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 
@@ -134,7 +140,8 @@ export class MyString {
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", []).getValue();
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -152,7 +159,8 @@ export class MyString {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 
@@ -169,7 +177,8 @@ export class MyString {
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

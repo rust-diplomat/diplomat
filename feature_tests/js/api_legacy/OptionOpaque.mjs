@@ -45,7 +45,8 @@ export class OptionOpaque {
             return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static newNone() {
@@ -56,7 +57,8 @@ export class OptionOpaque {
             return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static returns() {
@@ -72,7 +74,8 @@ export class OptionOpaque {
             return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -89,7 +92,8 @@ export class OptionOpaque {
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -106,7 +110,8 @@ export class OptionOpaque {
             return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -123,7 +128,8 @@ export class OptionOpaque {
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -140,7 +146,8 @@ export class OptionOpaque {
             return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -154,7 +161,8 @@ export class OptionOpaque {
             return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -168,7 +176,8 @@ export class OptionOpaque {
             return OptionStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -183,7 +192,8 @@ export class OptionOpaque {
             return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     returnsSomeSelf() {
@@ -197,7 +207,8 @@ export class OptionOpaque {
             return result === 0 ? null : new OptionOpaque(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     assertInteger(i) {
@@ -205,7 +216,8 @@ export class OptionOpaque {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     static optionOpaqueArgument(arg) {
@@ -216,7 +228,8 @@ export class OptionOpaque {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static acceptsOptionU8(arg, sentinel) {
@@ -236,7 +249,8 @@ export class OptionOpaque {
 
         finally {
             functionCleanupArena.free();
-                diplomatReceive.free();
+
+            diplomatReceive.free();
         }
     }
 
@@ -257,7 +271,8 @@ export class OptionOpaque {
 
         finally {
             functionCleanupArena.free();
-                diplomatReceive.free();
+
+            diplomatReceive.free();
         }
     }
 
@@ -278,7 +293,8 @@ export class OptionOpaque {
 
         finally {
             functionCleanupArena.free();
-                diplomatReceive.free();
+
+            diplomatReceive.free();
         }
     }
 
@@ -292,7 +308,8 @@ export class OptionOpaque {
             return OptionInputStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

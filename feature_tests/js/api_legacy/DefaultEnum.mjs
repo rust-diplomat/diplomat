@@ -69,7 +69,8 @@ export class DefaultEnum {
             return new DefaultEnum(diplomatRuntime.internalConstructor, result);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor() {

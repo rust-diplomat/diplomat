@@ -49,6 +49,7 @@ export class OptionString {
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+
         }
     }
 
@@ -62,7 +63,8 @@ export class OptionString {
             return result === 0 ? null : write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 
@@ -82,7 +84,8 @@ export class OptionString {
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

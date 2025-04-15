@@ -89,7 +89,8 @@ export class CyclicStructA {
             return CyclicStructB._fromFFI(diplomatRuntime.internalConstructor, result);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     cyclicOut() {
@@ -105,7 +106,8 @@ export class CyclicStructA {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 
@@ -122,7 +124,8 @@ export class CyclicStructA {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 
@@ -139,7 +142,8 @@ export class CyclicStructA {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 

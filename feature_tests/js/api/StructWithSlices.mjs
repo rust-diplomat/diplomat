@@ -125,7 +125,8 @@ export class StructWithSlices {
 
         finally {
             functionCleanupArena.free();
-                write.free();
+
+            write.free();
         }
     }
 

@@ -85,7 +85,8 @@ export class MyEnum {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static getA() {
@@ -96,7 +97,8 @@ export class MyEnum {
             return new MyEnum(diplomatRuntime.internalConstructor, result);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(value) {

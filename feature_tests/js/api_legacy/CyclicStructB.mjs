@@ -88,7 +88,8 @@ export class CyclicStructB {
             return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, result);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static getAOption() {
@@ -104,7 +105,8 @@ export class CyclicStructB {
             return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

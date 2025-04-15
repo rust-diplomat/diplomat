@@ -50,6 +50,7 @@ export class OpaqueThinVec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -64,7 +65,8 @@ export class OpaqueThinVec {
             return new OpaqueThinIter(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     len() {
@@ -75,7 +77,8 @@ export class OpaqueThinVec {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     get(idx) {
@@ -89,7 +92,8 @@ export class OpaqueThinVec {
             return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     get first() {
@@ -103,7 +107,8 @@ export class OpaqueThinVec {
             return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(a, b) {

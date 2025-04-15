@@ -51,7 +51,8 @@ export class DataProvider {
             return new DataProvider(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     /**
@@ -65,7 +66,8 @@ export class DataProvider {
             return result === 1;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

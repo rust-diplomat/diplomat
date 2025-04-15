@@ -42,7 +42,8 @@ export class MyOpaqueEnum {
             return new MyOpaqueEnum(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     toString() {
@@ -54,7 +55,8 @@ export class MyOpaqueEnum {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 

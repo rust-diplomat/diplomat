@@ -44,7 +44,8 @@ export class Unnamespaced {
             return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     useNamespaced(n) {
@@ -52,7 +53,8 @@ export class Unnamespaced {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {
