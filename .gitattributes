@@ -5,7 +5,6 @@ example/cpp/docs/source/** linguist-generated=true
 example/cpp2/include/** linguist-generated=true
 example/dart/lib/** linguist-generated=true
 example/js/lib/api/** linguist-generated=true
-example/js/lib/api_legacy/** linguist-generated=true
 example/js/lib/docs/source/**
 example/demo_gen/demo/** linguist-generated=true
 
