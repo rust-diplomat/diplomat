@@ -136,6 +136,7 @@ impl Parse for RustLink {
             "EnumVariantField" => DocType::EnumVariantField,
             "Trait" => DocType::Trait,
             "FnInStruct" => DocType::FnInStruct,
+            "FnInTypedef" => DocType::FnInTypedef,
             "FnInEnum" => DocType::FnInEnum,
             "FnInTrait" => DocType::FnInTrait,
             "DefaultFnInTrait" => DocType::DefaultFnInTrait,
@@ -150,10 +151,10 @@ impl Parse for RustLink {
             "AssociatedTypeInTrait" => DocType::AssociatedTypeInTrait,
             "AssociatedTypeInStruct" => DocType::AssociatedTypeInStruct,
             "Typedef" => DocType::Typedef,
-            _ => {
+            t => {
                 return Err(parse::Error::new(
                     ty_ident.span(),
-                    "Unknown rust_link doc type",
+                    format!("Unknown rust_link doc type {t:?}"),
                 ))
             }
         };
@@ -189,6 +190,7 @@ pub enum DocType {
     EnumVariantField,
     Trait,
     FnInStruct,
+    FnInTypedef,
     FnInEnum,
     FnInTrait,
     DefaultFnInTrait,
@@ -248,6 +250,7 @@ impl DocsUrlGenerator {
                 Struct | Enum | Trait | Fn | Macro | Constant | Typedef => 1,
                 FnInEnum
                 | FnInStruct
+                | FnInTypedef
                 | FnInTrait
                 | DefaultFnInTrait
                 | EnumVariant
@@ -272,7 +275,7 @@ impl DocsUrlGenerator {
         }
 
         r.push_str(match rust_link.typ {
-            Typedef => "type.",
+            Typedef | FnInTypedef => "type.",
             Struct
             | StructField
             | FnInStruct
@@ -300,7 +303,7 @@ impl DocsUrlGenerator {
         r.push_str(".html");
 
         match rust_link.typ {
-            FnInStruct | FnInEnum | DefaultFnInTrait => {
+            FnInStruct | FnInEnum | DefaultFnInTrait | FnInTypedef => {
                 r.push_str("#method.");
                 r.push_str(elements.next().unwrap().as_str());
             }
@@ -330,7 +333,7 @@ impl DocsUrlGenerator {
                 r.push_str(".field.");
                 r.push_str(elements.next().unwrap().as_str());
             }
-            _ => {}
+            Struct | Enum | Trait | Fn | Mod | Constant | Macro | Typedef => {}
         }
         r
     }
