@@ -49,7 +49,8 @@ export class FixedDecimal {
             return new FixedDecimal(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     /**
@@ -62,7 +63,8 @@ export class FixedDecimal {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     /**
@@ -80,7 +82,8 @@ export class FixedDecimal {
             return result === 0 ? null : write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 

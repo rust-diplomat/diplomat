@@ -45,7 +45,8 @@ export class RenamedOpaqueIterator {
             return result === 0 ? null : new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     next(){

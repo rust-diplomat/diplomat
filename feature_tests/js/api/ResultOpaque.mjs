@@ -50,7 +50,8 @@ export class ResultOpaque {
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -68,7 +69,8 @@ export class ResultOpaque {
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -86,7 +88,8 @@ export class ResultOpaque {
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -103,7 +106,8 @@ export class ResultOpaque {
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -121,7 +125,8 @@ export class ResultOpaque {
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -138,7 +143,8 @@ export class ResultOpaque {
             }
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -155,7 +161,8 @@ export class ResultOpaque {
             return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -173,7 +180,8 @@ export class ResultOpaque {
             return new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -197,6 +205,7 @@ export class ResultOpaque {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -205,7 +214,8 @@ export class ResultOpaque {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(i) {

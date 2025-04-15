@@ -188,7 +188,8 @@ export class MyStruct {
             return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -204,6 +205,7 @@ export class MyStruct {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -218,7 +220,8 @@ export class MyStruct {
             }
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static failsZstResult() {
@@ -232,7 +235,8 @@ export class MyStruct {
             }
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor() {

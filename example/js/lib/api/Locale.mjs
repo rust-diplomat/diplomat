@@ -56,6 +56,7 @@ export class Locale {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 

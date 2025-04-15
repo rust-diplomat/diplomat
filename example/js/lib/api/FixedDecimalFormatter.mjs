@@ -66,7 +66,8 @@ export class FixedDecimalFormatter {
 
         finally {
             functionCleanupArena.free();
-                diplomatReceive.free();
+
+            diplomatReceive.free();
         }
     }
 
@@ -84,7 +85,8 @@ export class FixedDecimalFormatter {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 

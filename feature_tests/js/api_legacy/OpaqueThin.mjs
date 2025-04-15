@@ -42,7 +42,8 @@ export class OpaqueThin {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     get b() {
@@ -53,7 +54,8 @@ export class OpaqueThin {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

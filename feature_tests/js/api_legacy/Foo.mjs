@@ -55,6 +55,7 @@ export class Foo {
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+
         }
     }
 
@@ -72,7 +73,8 @@ export class Foo {
             return new Bar(diplomatRuntime.internalConstructor, result, [], bEdges, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     asReturning() {
@@ -88,7 +90,8 @@ export class Foo {
             return BorrowedFieldsReturning._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -107,6 +110,7 @@ export class Foo {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -138,6 +142,7 @@ export class Foo {
             functionCleanupArena.free();
 
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+
         }
     }
 

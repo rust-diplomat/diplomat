@@ -114,6 +114,7 @@ export class ScalarPairWithPadding {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 

@@ -44,7 +44,8 @@ export class Opaque {
             return new Opaque(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static tryFromUtf8(input) {
@@ -60,6 +61,7 @@ export class Opaque {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -76,6 +78,7 @@ export class Opaque {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -88,7 +91,8 @@ export class Opaque {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 
@@ -108,6 +112,7 @@ export class Opaque {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -119,7 +124,8 @@ export class Opaque {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static returnsImported() {
@@ -132,7 +138,8 @@ export class Opaque {
             return ImportedStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -144,7 +151,8 @@ export class Opaque {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor() {

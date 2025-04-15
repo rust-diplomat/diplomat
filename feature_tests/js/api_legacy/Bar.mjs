@@ -53,7 +53,8 @@ export class Bar {
             return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge, bEdge, aEdge) {

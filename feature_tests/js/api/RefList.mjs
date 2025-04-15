@@ -48,7 +48,8 @@ export class RefList {
             return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge, aEdge) {

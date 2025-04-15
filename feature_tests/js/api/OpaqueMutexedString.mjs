@@ -43,7 +43,8 @@ export class OpaqueMutexedString {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     change(number) {
@@ -51,7 +52,8 @@ export class OpaqueMutexedString {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     borrow() {
@@ -65,7 +67,8 @@ export class OpaqueMutexedString {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     static borrowOther(other) {
@@ -79,7 +82,8 @@ export class OpaqueMutexedString {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     borrowSelfOrOther(other) {
@@ -93,7 +97,8 @@ export class OpaqueMutexedString {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     getLenAndAdd(other) {
@@ -104,7 +109,8 @@ export class OpaqueMutexedString {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     dummyStr() {
@@ -120,7 +126,8 @@ export class OpaqueMutexedString {
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string8", aEdges).getValue();
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -132,7 +139,8 @@ export class OpaqueMutexedString {
             return new Utf16Wrap(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     toUnsignedFromUnsigned(input) {
@@ -143,7 +151,8 @@ export class OpaqueMutexedString {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

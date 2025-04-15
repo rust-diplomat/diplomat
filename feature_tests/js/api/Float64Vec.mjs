@@ -47,6 +47,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -63,6 +64,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -79,6 +81,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -95,6 +98,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -111,6 +115,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -127,6 +132,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -143,6 +149,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -159,7 +166,8 @@ export class Float64Vec {
             return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -173,6 +181,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -186,6 +195,7 @@ export class Float64Vec {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -198,7 +208,8 @@ export class Float64Vec {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 
@@ -215,7 +226,8 @@ export class Float64Vec {
             return Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, diplomatReceive.buffer, "f64", aEdges).getValue());
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -232,7 +244,8 @@ export class Float64Vec {
             return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

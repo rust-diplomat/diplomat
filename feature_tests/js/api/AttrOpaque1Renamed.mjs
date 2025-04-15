@@ -44,7 +44,8 @@ export class AttrOpaque1Renamed {
             return new AttrOpaque1Renamed(diplomatRuntime.internalConstructor, result, []);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     get methodRenamed() {
@@ -55,7 +56,8 @@ export class AttrOpaque1Renamed {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     get abirenamed() {
@@ -66,7 +68,8 @@ export class AttrOpaque1Renamed {
             return result;
         }
 
-        finally {}
+        finally {
+        }
     }
 
     useUnnamespaced(un) {
@@ -74,7 +77,8 @@ export class AttrOpaque1Renamed {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     useNamespaced(n) {
@@ -82,7 +86,8 @@ export class AttrOpaque1Renamed {
 
         try {}
 
-        finally {}
+        finally {
+        }
     }
 
     constructor() {

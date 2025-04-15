@@ -170,7 +170,8 @@ export class BorrowedFieldsWithBounds {
 
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
-                diplomatReceive.free();
+
+            diplomatReceive.free();
         }
     }
 

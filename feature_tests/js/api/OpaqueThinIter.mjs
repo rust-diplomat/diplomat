@@ -48,7 +48,8 @@ export class OpaqueThinIter {
             return result === 0 ? null : new OpaqueThin(diplomatRuntime.internalConstructor, result, aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     next(){

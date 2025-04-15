@@ -164,6 +164,7 @@ export class BigStructWithStuff {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 

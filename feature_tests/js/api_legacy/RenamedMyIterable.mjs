@@ -48,6 +48,7 @@ export class RenamedMyIterable {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -62,7 +63,8 @@ export class RenamedMyIterable {
             return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(x) {

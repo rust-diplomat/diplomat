@@ -46,7 +46,8 @@ export class RenamedOpaqueIterable {
             return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
-        finally {}
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

@@ -47,6 +47,7 @@ export class Utf16Wrap {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
@@ -59,7 +60,8 @@ export class Utf16Wrap {
             return write.readString8();
         }
 
-        finally {        write.free();
+        finally {
+            write.free();
         }
     }
 
@@ -76,7 +78,8 @@ export class Utf16Wrap {
             return new diplomatRuntime.DiplomatSliceStr(wasm, diplomatReceive.buffer,  "string16", aEdges).getValue();
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 

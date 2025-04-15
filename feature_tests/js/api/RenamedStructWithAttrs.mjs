@@ -120,7 +120,8 @@ export class RenamedStructWithAttrs {
             return RenamedStructWithAttrs._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
-        finally {        diplomatReceive.free();
+        finally {
+            diplomatReceive.free();
         }
     }
 
@@ -136,6 +137,7 @@ export class RenamedStructWithAttrs {
 
         finally {
             functionCleanupArena.free();
+
         }
     }
 
