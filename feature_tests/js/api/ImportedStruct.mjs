@@ -60,7 +60,7 @@ export class ImportedStruct {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
+
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;

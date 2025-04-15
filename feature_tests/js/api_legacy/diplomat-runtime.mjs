@@ -148,7 +148,6 @@ export function optionToArgsForCalling(jsValue, size, align, writeToArrayBufferC
 export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, writeToArrayBufferCallback) {
     let buf = DiplomatBuf.struct(wasm, size, align);
 
-    
     let buffer;
     // Add 1 to the size since we're also accounting for the 0 or 1 is_ok field:
     if (align == 8) {
@@ -162,12 +161,12 @@ export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, 
     }
 
     buffer.fill(0);
-    
+
     if (jsValue != null) {
         writeToArrayBufferCallback(buffer.buffer, 0, jsValue);
         buffer[buffer.length - 1] = 1;
     }
-    
+
     allocator.alloc(buf);
 }
 

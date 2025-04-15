@@ -122,7 +122,7 @@ export class MyStruct {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 32, 8);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
+
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;

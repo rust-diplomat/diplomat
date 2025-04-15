@@ -122,7 +122,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
+
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
