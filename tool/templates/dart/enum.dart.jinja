@@ -7,7 +7,7 @@ enum {{type_name}}
 {%~ for enum_variant in ty.variants %}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
-  {% endif %}
+  {%- endif %}
   {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
 {% endif %}
 {%- endfor %}
