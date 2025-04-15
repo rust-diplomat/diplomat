@@ -35,6 +35,7 @@ export class OpaqueThinVec {
         return this.#ptr;
     }
 
+
     #defaultConstructor(a, b) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -51,6 +52,7 @@ export class OpaqueThinVec {
             functionCleanupArena.free();
         }
     }
+
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -64,6 +66,7 @@ export class OpaqueThinVec {
 
         finally {}
     }
+
     len() {
 
         const result = wasm.OpaqueThinVec_len(this.ffiValue);
@@ -74,6 +77,7 @@ export class OpaqueThinVec {
 
         finally {}
     }
+
     get(idx) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -87,6 +91,7 @@ export class OpaqueThinVec {
 
         finally {}
     }
+
     get first() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];

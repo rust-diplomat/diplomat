@@ -33,6 +33,7 @@ export class MyString {
         return this.#ptr;
     }
 
+
     #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -48,6 +49,7 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
+
     static newUnsafe(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -63,6 +65,7 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
+
     static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -78,6 +81,7 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
+
     static newFromFirst(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -93,6 +97,7 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
+
     set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -105,6 +110,7 @@ export class MyString {
             functionCleanupArena.free();
         }
     }
+
     get str() {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
@@ -117,6 +123,7 @@ export class MyString {
         finally {        write.free();
         }
     }
+
     static getStaticStr() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 
@@ -130,6 +137,7 @@ export class MyString {
         finally {        diplomatReceive.free();
         }
     }
+
     static stringTransform(foo) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -147,6 +155,7 @@ export class MyString {
                 write.free();
         }
     }
+
     borrow() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 

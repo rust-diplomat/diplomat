@@ -23,6 +23,7 @@ export class ScalarPairWithPadding {
     static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
 
 
+
     assertValue(): void;
 
     constructor(structObj: ScalarPairWithPadding_obj);

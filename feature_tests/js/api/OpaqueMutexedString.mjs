@@ -34,6 +34,7 @@ export class OpaqueMutexedString {
         return this.#ptr;
     }
 
+
     static fromUsize(number) {
 
         const result = wasm.OpaqueMutexedString_from_usize(number);
@@ -44,6 +45,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     change(number) {
     wasm.OpaqueMutexedString_change(this.ffiValue, number);
 
@@ -51,6 +53,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -64,6 +67,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     static borrowOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
@@ -77,6 +81,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     borrowSelfOrOther(other) {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
@@ -90,6 +95,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     getLenAndAdd(other) {
 
         const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
@@ -100,6 +106,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     dummyStr() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
 
@@ -116,6 +123,7 @@ export class OpaqueMutexedString {
         finally {        diplomatReceive.free();
         }
     }
+
     wrapper() {
 
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
@@ -126,6 +134,7 @@ export class OpaqueMutexedString {
 
         finally {}
     }
+
     toUnsignedFromUnsigned(input) {
 
         const result = wasm.OpaqueMutexedString_to_unsigned_from_unsigned(this.ffiValue, input);

@@ -20,5 +20,6 @@ export class ImportedStruct {
     static fromFields(structObj : ImportedStruct_obj) : ImportedStruct;
 
 
-    constructor(structObj : ImportedStruct_obj);
+
+    constructor(structObj: ImportedStruct_obj);
 }

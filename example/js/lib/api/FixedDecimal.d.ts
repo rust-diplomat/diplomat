@@ -16,14 +16,14 @@ export class FixedDecimal {
      *
      * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
      */
-        multiplyPow10(power: number): void;
+    multiplyPow10(power: number): void;
 
     /**
      * Format the [`FixedDecimal`] as a string.
      *
      * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
      */
-        toString(): string | null;
+    toString(): string | null;
 
     constructor(v: number);
 }

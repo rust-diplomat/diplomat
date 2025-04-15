@@ -176,36 +176,43 @@ export class MyStruct {
 
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }
+
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 32, 8, false);
 
 
         const result = wasm.MyStruct_new(diplomatReceive.buffer);
 
-        try {        return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
+        try {
+            return MyStruct._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
 
         finally {        diplomatReceive.free();
         }
     }
+
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
 
         const result = wasm.MyStruct_into_a(...MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
 
-        try {        return result;
+        try {
+            return result;
         }
 
         finally {
             functionCleanupArena.free();
         }
     }
+
     static returnsZstResult() {
 
         const result = wasm.MyStruct_returns_zst_result();
 
-        try {        if (result !== 1) {
+        try {
+            if (result !== 1) {
                 const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }
@@ -213,11 +220,13 @@ export class MyStruct {
 
         finally {}
     }
+
     static failsZstResult() {
 
         const result = wasm.MyStruct_fails_zst_result();
 
-        try {        if (result !== 1) {
+        try {
+            if (result !== 1) {
                 const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
                 throw new globalThis.Error('MyZst', { cause });
             }

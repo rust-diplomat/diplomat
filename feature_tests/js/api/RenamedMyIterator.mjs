@@ -35,6 +35,7 @@ export class RenamedMyIterator {
         return this.#ptr;
     }
 
+
     #iteratorNext() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
 

@@ -33,6 +33,8 @@ export class RenamedOpaqueIterable {
     get ffiValue() {
         return this.#ptr;
     }
+
+
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
@@ -40,7 +42,8 @@ export class RenamedOpaqueIterable {
 
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
 
-        try {        return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
+        try {
+            return new RenamedOpaqueIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
         finally {}

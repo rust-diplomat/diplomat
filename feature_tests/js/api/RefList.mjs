@@ -36,6 +36,7 @@ export class RefList {
         return this.#ptr;
     }
 
+
     static node(data) {
         // This lifetime edge depends on lifetimes 'b
         let bEdges = [data];

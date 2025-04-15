@@ -101,6 +101,8 @@ export class StructWithSlices {
     get _fieldsForLifetimeA() {
         return [this.#first, this.#second];
     };
+
+
     returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -111,7 +113,8 @@ export class StructWithSlices {
 
     wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}), write.buffer);
 
-        try {        return write.readString8();
+        try {
+            return write.readString8();
         }
 
         finally {

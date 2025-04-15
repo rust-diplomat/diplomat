@@ -16,10 +16,10 @@ export class DataProvider {
     /**
      * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
      */
-        static newStatic(): DataProvider;
+    static newStatic(): DataProvider;
 
     /**
      * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
      */
-        static returnsResult(): boolean;
+    static returnsResult(): boolean;
 }

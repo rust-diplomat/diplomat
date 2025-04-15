@@ -125,6 +125,7 @@ export class BorrowedFields {
         return [this.#a, this.#b, this.#c];
     };
 
+
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16Slice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)));

@@ -21,6 +21,7 @@ export class MyStructContainingAnOption {
     static fromFields(structObj : MyStructContainingAnOption_obj) : MyStructContainingAnOption;
 
 
+
     static filled(): MyStructContainingAnOption;
 
     constructor();

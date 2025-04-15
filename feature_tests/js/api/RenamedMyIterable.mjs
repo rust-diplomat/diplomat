@@ -34,6 +34,7 @@ export class RenamedMyIterable {
         return this.#ptr;
     }
 
+
     #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
@@ -49,6 +50,7 @@ export class RenamedMyIterable {
             functionCleanupArena.free();
         }
     }
+
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];

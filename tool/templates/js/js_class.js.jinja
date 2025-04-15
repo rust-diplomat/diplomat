@@ -18,8 +18,8 @@ export class {{type_name}} {
     /**
 {{method.doc_str|prefix_trimmed("     * ")}}
      */
-    {% endif -%}
-    {{- method|indent_trimmed(4) }}
+    {%- endif %}
+    {{~ method|indent_trimmed(4) }}
     {%- endif -%}
     {%- endfor -%}
     {%- if let Some(it) = methods.special_methods.iterator %}
