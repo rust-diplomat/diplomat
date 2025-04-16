@@ -9,13 +9,14 @@ use syn::{
 use toml::{value::Table, Value};
 
 use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
+use diplomat_core::hir::LoweringConfig;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
     pub lib_name: Option<String>,
     /// Whether or not callbacks support references in parameters. This is unsafe: you need to be careful to not
     /// retain these references on the foreign side.
-    pub unsafe_references_in_callbacks: Option<String>,
+    pub unsafe_references_in_callbacks: Option<bool>,
 }
 
 impl SharedConfig {
@@ -28,12 +29,30 @@ impl SharedConfig {
 
     pub fn set(&mut self, key: &str, value: Value) {
         match key {
-            "lib_name" if value.is_str() => self.lib_name = value.as_str().map(|v| v.to_string()),
-            "unsafe_references_in_callbacks" if value.is_str() => {
-                self.unsafe_references_in_callbacks = value.as_str().map(|v| v.to_string())
+            "lib_name" => {
+                if value.is_str() {
+                    self.lib_name = value.as_str().map(|v| v.to_string())
+                } else {
+                    panic!("Config key `lib_name` must be a string");
+                }
+            }
+            "unsafe_references_in_callbacks" => {
+                if value.is_bool() {
+                    self.unsafe_references_in_callbacks = value.as_bool()
+                } else {
+                    panic!("Config key `unsafe_references_in_callbacks` must be a boolean");
+                }
             }
             _ => (),
         }
+    }
+
+    pub fn lowering_config(&self) -> LoweringConfig {
+        let mut cfg = LoweringConfig::default();
+        if let Some(refs) = self.unsafe_references_in_callbacks {
+            cfg.unsafe_references_in_callbacks = refs;
+        }
+        cfg
     }
 }
 
