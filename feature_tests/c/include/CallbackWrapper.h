@@ -60,5 +60,4 @@ int32_t CallbackWrapper_test_str_cb_arg(DiplomatCallback_CallbackWrapper_test_st
 
 
 
-
 #endif // CallbackWrapper_H

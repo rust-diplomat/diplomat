@@ -22,7 +22,7 @@ final class ResultOpaque implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
 
-  /// 
+  ///
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque(int i) {
@@ -33,7 +33,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  /// 
+  ///
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingFoo() {
@@ -44,7 +44,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  /// 
+  ///
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingBar() {
@@ -63,7 +63,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  /// 
+  ///
   ///
   /// Throws [ErrorStruct] on failure.
   factory ResultOpaque.failingStruct(int i) {
@@ -74,7 +74,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  /// 
+  ///
   ///
   /// Throws [ResultOpaque] on failure.
   static void newInErr(int i) {
@@ -82,7 +82,6 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ResultOpaque._fromFfi(result.union.err, []);
     }
-    
   }
 
   static int? newInt(int i) {
@@ -93,7 +92,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return result.union.ok;
   }
 
-  /// 
+  ///
   ///
   /// Throws [ResultOpaque] on failure.
   static ErrorEnum newInEnumErr(int i) {
@@ -117,6 +116,7 @@ final class ResultOpaque implements ffi.Finalizable {
   void assertInteger(int i) {
     _ResultOpaque_assert_integer(_ffi, i);
   }
+
 }
 
 @_DiplomatFfiUse('ResultOpaque_destroy')

@@ -9,19 +9,18 @@ type CyclicStructB_obj = {
 
 
 export class CyclicStructB {
-    
-    get field() : number; 
-    set field(value: number); 
-    
+    get field(): number;
+    set field(value: number);
     /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : CyclicStructB_obj) : CyclicStructB;
 
 
+
     static getA(): CyclicStructA;
 
     static getAOption(): CyclicStructA | null;
 
-    constructor(structObj : CyclicStructB_obj);
+    constructor(structObj: CyclicStructB_obj);
 }

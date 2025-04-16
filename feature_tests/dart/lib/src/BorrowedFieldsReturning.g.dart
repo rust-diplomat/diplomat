@@ -27,6 +27,7 @@ final class BorrowedFieldsReturning {
     return struct;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is BorrowedFieldsReturning &&
@@ -37,7 +38,7 @@ final class BorrowedFieldsReturning {
         bytes,
       ]);
 
-  // Return all fields corresponding to lifetime `'a` 
+  // Return all fields corresponding to lifetime `'a`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'a`,
   // assuming that there are no `'other: a`. bounds. In case of such bounds,

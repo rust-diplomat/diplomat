@@ -34,6 +34,7 @@ final class ErrorStruct {
     return struct;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is ErrorStruct &&

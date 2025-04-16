@@ -19,5 +19,4 @@
 
 
 
-
 #endif // CallbackTestingStruct_H

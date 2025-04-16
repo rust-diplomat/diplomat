@@ -19,5 +19,4 @@
 
 
 
-
 #endif // ErrorEnum_H

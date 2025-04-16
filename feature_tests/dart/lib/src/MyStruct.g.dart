@@ -90,7 +90,7 @@ final class MyStruct {
     return result;
   }
 
-  /// 
+  ///
   ///
   /// Throws [MyZst] on failure.
   static void returnsZstResult() {
@@ -98,10 +98,9 @@ final class MyStruct {
     if (!result.isOk) {
       throw MyZst();
     }
-    
   }
 
-  /// 
+  ///
   ///
   /// Throws [MyZst] on failure.
   static void failsZstResult() {
@@ -109,8 +108,8 @@ final class MyStruct {
     if (!result.isOk) {
       throw MyZst();
     }
-    
   }
+
 
   @override
   bool operator ==(Object other) =>

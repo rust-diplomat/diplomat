@@ -9,20 +9,18 @@ type StructWithSlices_obj = {
 
 
 export class StructWithSlices {
-    
-    get first() : string; 
-    set first(value: string); 
-    
-    get second() : Array<number>; 
-    set second(value: Array<number>); 
-    
+    get first(): string;
+    set first(value: string);
+    get second(): Array<number>;
+    set second(value: Array<number>);
     /** Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     static fromFields(structObj : StructWithSlices_obj) : StructWithSlices;
 
 
+
     returnLast(): string;
 
-    constructor(structObj : StructWithSlices_obj);
+    constructor(structObj: StructWithSlices_obj);
 }

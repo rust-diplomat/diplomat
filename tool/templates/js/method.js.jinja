@@ -12,16 +12,16 @@
     let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
     {%- endif -%}
 
-    {% for slice in slice_params %}
+    {%- for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
-    {% endfor -%}
+    {%- endfor %}
 
     {%- for alloc_stmt in alloc_expressions %}
-    {{alloc_stmt|indent(4)}}
+    {{~ alloc_stmt|indent_trimmed(4)}}
     {% endfor -%}
-    
-    {% let lifetimes = lifetimes.unwrap() -%}
-    {% for lifetime in lifetimes.all_lifetimes() -%}
+
+    {%- let lifetimes = lifetimes.unwrap() -%}
+    {%- for lifetime in lifetimes.all_lifetimes() -%}
     {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) -%}
     {%- if maybe_lifetime_info.is_some() -%}
     {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
@@ -34,9 +34,8 @@
         {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
         {%- endfor -%}
     ];
-    {% endif -%}
-    {%- endfor -%}
-
+    {%~ endif %}
+    {%- endfor %}
 
     {%~ if !method_output_is_ffi_unit %}
     const result = {% endif %}wasm.{{ abi_name }}(
@@ -49,21 +48,21 @@
     try {
     {%- match return_expression -%}
     {%- when Some with (statement) %}
-        {{ statement|indent(8) }}
+        {{~ statement|indent_trimmed(8) }}
     {% when None -%}
     {%- endmatch -%}
     }
-    
+
     finally {
     {%- if needs_cleanup %}
         functionCleanupArena.free();
-    {% endif -%}
+    {%~ endif %}
     {%- if needs_slice_collection %}
         functionGarbageCollectorGrip.releaseToGarbageCollector();
-    {% endif -%}
-    {% for cleanup in cleanup_expressions %}
-        {{cleanup|indent(8)}}
-    {% endfor -%}
+    {%~ endif %}
+    {%- for cleanup in cleanup_expressions %}
+        {{~ cleanup|indent_trimmed(8)}}
+    {%- endfor %}
     }
 }
 {%- endif -%}

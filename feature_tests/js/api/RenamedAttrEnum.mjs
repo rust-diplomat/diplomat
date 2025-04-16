@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class RenamedAttrEnum {
-    
     #value = undefined;
 
     static #values = new Map([
@@ -17,7 +16,7 @@ export class RenamedAttrEnum {
     static getAllEntries() {
         return RenamedAttrEnum.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -47,11 +46,11 @@ export class RenamedAttrEnum {
         return new RenamedAttrEnum(value);
     }
 
-    get value() {
+    get value(){
         return [...RenamedAttrEnum.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [
@@ -63,6 +62,7 @@ export class RenamedAttrEnum {
     static A = RenamedAttrEnum.#objectValues[0];
     static B = RenamedAttrEnum.#objectValues[1];
     static Renamed = RenamedAttrEnum.#objectValues[2];
+
 
     constructor(value) {
         return this.#internalConstructor(...arguments)

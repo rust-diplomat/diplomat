@@ -34,6 +34,7 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
     final result = _namespace_MyIterable_iter(_ffi);
     return RenamedMyIterator._fromFfi(result, [], aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_MyIterable_destroy')

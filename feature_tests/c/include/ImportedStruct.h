@@ -19,5 +19,4 @@
 
 
 
-
 #endif // ImportedStruct_H

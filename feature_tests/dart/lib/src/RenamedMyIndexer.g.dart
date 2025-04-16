@@ -31,6 +31,7 @@ final class RenamedMyIndexer implements ffi.Finalizable {
     }
     return result.union.ok._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_MyIndexer_destroy')

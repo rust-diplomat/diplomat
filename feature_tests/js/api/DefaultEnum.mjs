@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class DefaultEnum {
-    
     #value = undefined;
 
     static #values = new Map([
@@ -16,7 +15,7 @@ export class DefaultEnum {
     static getAllEntries() {
         return DefaultEnum.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -46,11 +45,11 @@ export class DefaultEnum {
         return new DefaultEnum(diplomatRuntime.exposeConstructor, value);
     }
 
-    get value() {
+    get value(){
         return [...DefaultEnum.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [
@@ -61,14 +60,17 @@ export class DefaultEnum {
     static A = DefaultEnum.#objectValues[0];
     static B = DefaultEnum.#objectValues[1];
 
+
     #defaultConstructor() {
+
         const result = wasm.DefaultEnum_new();
-    
+
         try {
             return new DefaultEnum(diplomatRuntime.internalConstructor, result);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     constructor() {

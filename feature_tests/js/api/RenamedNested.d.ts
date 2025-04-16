@@ -4,6 +4,6 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RenamedNested {
-    
     get ffiValue(): pointer;
+
 }

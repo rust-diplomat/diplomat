@@ -4,11 +4,13 @@
 part of 'lib.g.dart';
 
 enum UnimportedEnum {
+
   a,
 
   b,
 
   c;
+
 }
 
 // dart format on

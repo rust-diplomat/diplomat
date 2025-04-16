@@ -70,8 +70,8 @@ test("Test struct layout: scalar pair layout", t => {
 
 test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
     const s = new BigStructWithStuff({
-        first: 101, 
-        second: 505, 
+        first: 101,
+        second: 505,
         third: 9345,
         fourth: new ScalarPairWithPadding({first: 122, second: 414}),
         fifth: 99

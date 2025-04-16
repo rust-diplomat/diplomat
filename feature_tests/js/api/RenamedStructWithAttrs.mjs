@@ -5,25 +5,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class RenamedStructWithAttrs {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     /** Create `RenamedStructWithAttrs` from an object that contains all of `RenamedStructWithAttrs`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -53,7 +48,6 @@ export class RenamedStructWithAttrs {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
     // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
     // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
@@ -65,7 +59,7 @@ export class RenamedStructWithAttrs {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
+
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
@@ -112,18 +106,20 @@ export class RenamedStructWithAttrs {
         return new RenamedStructWithAttrs(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor(a, b) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
-        
+
+
         const result = wasm.namespace_StructWithAttrs_new_fallible(diplomatReceive.buffer, a, b);
-    
+
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return RenamedStructWithAttrs._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }
@@ -131,15 +127,17 @@ export class RenamedStructWithAttrs {
 
     get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
+
         const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
-    
+
         try {
             return result;
         }
-        
+
         finally {
             functionCleanupArena.free();
+
         }
     }
 

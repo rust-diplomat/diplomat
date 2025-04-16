@@ -25,6 +25,7 @@ final class Two implements ffi.Finalizable {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Two_destroy));
+
 }
 
 @_DiplomatFfiUse('Two_destroy')

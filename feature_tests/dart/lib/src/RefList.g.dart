@@ -30,6 +30,7 @@ final class RefList implements ffi.Finalizable {
     final result = _RefList_node(data._ffi);
     return RefList._fromFfi(result, [], bEdges);
   }
+
 }
 
 @_DiplomatFfiUse('RefList_destroy')

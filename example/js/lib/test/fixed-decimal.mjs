@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { FixedDecimalDemo, FixedDecimalFormatterDemo } from "demo/demo"; 
+import { FixedDecimalDemo, FixedDecimalFormatterDemo } from "demo/demo";
 import { FixedDecimalGroupingStrategy } from "demo";
 
 test("Format write returns a formatted decimal.", t => {
