@@ -10,6 +10,8 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace diplomat::capi { struct MyString; }
+class MyString;
 struct CallbackTestingStruct;
 
 
@@ -36,6 +38,8 @@ struct CallbackWrapper {
   inline static int32_t test_multiple_cb_args(std::function<int32_t()> f, std::function<int32_t(int32_t)> g);
 
   inline static int32_t test_str_cb_arg(std::function<int32_t(std::string_view)> f);
+
+  inline static void test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a);
 
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);

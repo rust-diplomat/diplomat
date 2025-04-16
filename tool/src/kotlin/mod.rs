@@ -1156,6 +1156,7 @@ returnVal.option() ?: return null
                         ),
                         None => ("Unit".into(), "".into()),
                     };
+
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
