@@ -25,5 +25,8 @@
     "bugs": {
         "url": "https://github.com/rust-diplomat/diplomat/issues"
     },
-    "homepage": "https://github.com/rust-diplomat/diplomat#readme"
+    "homepage": "https://github.com/rust-diplomat/diplomat#readme",
+    "engines": {
+        "node": ">=18.0.0"
+    }
 }

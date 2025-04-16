@@ -362,7 +362,6 @@ dependencies = [
     "gen-cpp-example",
     "gen-c-example",
     "gen-js-example",
-    "gen-js-example-legacy",
     "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
@@ -385,7 +384,7 @@ dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 
 [tasks.gen-js]
 category = "Code generation"
-dependencies = ["gen-js-feature", "gen-js-feature-legacy", "gen-js-example", "gen-js-example-legacy"]
+dependencies = ["gen-js-feature", "gen-js-feature-legacy", "gen-js-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -452,16 +451,6 @@ exit_on_error true
 
 !include_files ./support/functions.ds
 generate_js spec example lib
-'''
-
-[tasks.gen-js-example-legacy]
-category = "Code generation"
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-
-!include_files ./support/functions.ds
-generate_js legacy example lib
 '''
 
 [tasks.gen-demo-feature]
