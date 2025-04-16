@@ -54,7 +54,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub struct KotlinConfig {
     domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
-    allow_callback_ref_args: Option<bool>,
 }
 
 impl KotlinConfig {
@@ -81,7 +80,6 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         use_finalizers_not_cleaners,
-        allow_callback_ref_args,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -105,7 +103,6 @@ pub(crate) fn run<'tcx>(
         option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
         callback_params: &mut callback_params,
-        allow_callback_ref_args,
     };
 
     for (_id, ty) in tcx.all_types() {
@@ -283,7 +280,6 @@ struct TyGenContext<'a, 'cx> {
     option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
     callback_params: &'a mut Vec<CallbackParamInfo>,
-    allow_callback_ref_args: Option<bool>,
 }
 
 impl<'cx> TyGenContext<'_, 'cx> {
@@ -1097,8 +1093,6 @@ returnVal.option() ?: return null
                     output,
                     ..
                 }) => {
-                    assert!(!params.iter().any(|p| p.ty.lifetimes().next().is_some()), "Callback reference inputs are not allowed unless allow_callback_ref_args is set");
-
                     let param_name = "diplomatCallback_".to_owned() + &param_name;
                     additional_name = Some(
                         struct_name.unwrap().to_owned()
