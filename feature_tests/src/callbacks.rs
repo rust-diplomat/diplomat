@@ -32,6 +32,7 @@ mod ffi {
             f("bananna")
         }
 
+        #[diplomat::attr(kotlin, disable)]
         pub fn test_opaque_cb_arg<'a>(cb: impl Fn(&mut MyString), a: &'a mut MyString) {
             cb(a);
         }
