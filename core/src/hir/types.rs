@@ -128,6 +128,7 @@ impl<P: TyPosition> Type<P> {
                     .map(|lt| std::slice::from_ref(lt).iter().copied())
                     .unwrap_or([].iter().copied()),
             ),
+            Type::DiplomatOption(ty) => ty.lifetimes(),
             // TODO the Callback case
             _ => Either::Left([].iter().copied()),
         }
