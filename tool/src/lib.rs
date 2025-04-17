@@ -79,12 +79,15 @@ pub fn gen(
 
     let config = config.get_overridden(target_language);
 
-    let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
-        for (ctx, err) in e {
-            eprintln!("Lowering error in {ctx}: {err}");
-        }
-        std::process::exit(1);
-    });
+    let lowering_config = config.shared_config.lowering_config();
+
+    let tcx =
+        hir::TypeContext::from_syn(&module, lowering_config, attr_validator).unwrap_or_else(|e| {
+            for (ctx, err) in e {
+                eprintln!("Lowering error in {ctx}: {err}");
+            }
+            std::process::exit(1);
+        });
 
     let (files, errors) = match target_language {
         "c" => c::run(&tcx, docs_url_gen),
