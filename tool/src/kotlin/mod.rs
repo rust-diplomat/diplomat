@@ -2160,7 +2160,7 @@ mod test {
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, enum_code) =
-                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.gigapixel", "somelib", false);
+                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.diplomattest", "somelib", false);
             insta::assert_snapshot!(enum_code)
         }
     }
@@ -2248,7 +2248,7 @@ mod test {
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, struct_code) =
-                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.gigapixel", "somelib", false);
+                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.diplomattest", "somelib", false);
             insta::assert_snapshot!(struct_code)
         }
     }
@@ -2299,8 +2299,13 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", false);
+            let (_, result) = ty_gen_cx.gen_opaque_def(
+                opaque_def,
+                &type_name,
+                "dev.diplomattest",
+                "somelib",
+                false,
+            );
             insta::assert_snapshot!(result)
         }
     }
@@ -2408,8 +2413,13 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", false);
+            let (_, result) = ty_gen_cx.gen_opaque_def(
+                opaque_def,
+                &type_name,
+                "dev.diplomattest",
+                "somelib",
+                false,
+            );
             insta::assert_snapshot!(result)
         }
     }
@@ -2459,8 +2469,13 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", true);
+            let (_, result) = ty_gen_cx.gen_opaque_def(
+                opaque_def,
+                &type_name,
+                "dev.diplomattest",
+                "somelib",
+                true,
+            );
             insta::assert_snapshot!(result)
         }
     }
@@ -2524,7 +2539,7 @@ mod test {
         let trait_name = trait_def.name.to_string();
         // test that we can render and that it doesn't panic
         let (_, result) =
-            ty_gen_cx.gen_trait_def(trait_def, &trait_name, "dev.gigapixel", "somelib");
+            ty_gen_cx.gen_trait_def(trait_def, &trait_name, "dev.diplomattest", "somelib");
         insta::assert_snapshot!(result)
     }
 
@@ -2574,8 +2589,13 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) =
-                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib", true);
+            let (_, result) = ty_gen_cx.gen_opaque_def(
+                opaque_def,
+                &type_name,
+                "dev.diplomattest",
+                "somelib",
+                true,
+            );
             insta::assert_snapshot!(result)
         }
     }
