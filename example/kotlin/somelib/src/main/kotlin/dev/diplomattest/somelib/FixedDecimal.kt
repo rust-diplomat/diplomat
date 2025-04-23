@@ -16,7 +16,6 @@ internal interface FixedDecimalInterface {
     fun multiplyPow10(power: Short): Unit
     fun toString_(): Result<String>
 }
-
 /** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
 */
 class FixedDecimal internal constructor (

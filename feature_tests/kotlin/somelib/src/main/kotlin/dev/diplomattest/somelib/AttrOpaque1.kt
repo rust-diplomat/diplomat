@@ -14,13 +14,19 @@ internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
     fun namespace_AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
 }
+internal interface AttrOpaque1Interface {
+    fun method(): UByte
+    fun abirenamed(): UByte
+    fun useUnnamespaced(un: Unnamespaced): Unit
+    fun useNamespaced(n: AttrEnum): Unit
+}
 
 class AttrOpaque1 internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-)  {
+): AttrOpaque1Interface  {
 
     internal class AttrOpaque1Cleaner(val handle: Pointer, val lib: AttrOpaque1Lib) : Runnable {
         override fun run() {
