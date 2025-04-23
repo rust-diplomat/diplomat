@@ -1,9 +1,8 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2217
 expression: struct_code
 ---
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Callback
 import com.sun.jna.Library

@@ -1,9 +1,8 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2479
 expression: result
 ---
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Callback
 import com.sun.jna.Library
