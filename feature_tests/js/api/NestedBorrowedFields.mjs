@@ -79,14 +79,13 @@ export class NestedBorrowedFields {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 72, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(buffer);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -109,9 +108,9 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],bAppendArray: [...appendArrayMap['yAppendArray']],cAppendArray: [...appendArrayMap['yAppendArray']],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...appendArrayMap['zAppendArray']],bAppendArray: [...appendArrayMap['zAppendArray']],cAppendArray: [...appendArrayMap['zAppendArray']],});
+        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, {aAppendArray: [...appendArrayMap['xAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, {aAppendArray: [...appendArrayMap['xAppendArray']],bAppendArray: [...appendArrayMap['yAppendArray']],cAppendArray: [...appendArrayMap['yAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, {aAppendArray: [...appendArrayMap['zAppendArray']],bAppendArray: [...appendArrayMap['zAppendArray']],cAppendArray: [...appendArrayMap['zAppendArray']],});
     }
 
     static _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
@@ -158,13 +157,13 @@ export class NestedBorrowedFields {
 
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const dstr16XSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)));
+        const dstr16XSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X)));
         
-        const dstr16ZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z)));
+        const dstr16ZSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z)));
         
-        const utf8StrYSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY)));
+        const utf8StrYSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY)));
         
-        const utf8StrZSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)));
+        const utf8StrZSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ)));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 72, 4, false);
         

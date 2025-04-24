@@ -59,7 +59,6 @@ export class FixedDecimalFormatterOptions {
     // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
     // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap,
         forcePadding
     ) {
@@ -67,7 +66,7 @@ export class FixedDecimalFormatterOptions {
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(buffer);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
 
         return buffer.ptr;
     }

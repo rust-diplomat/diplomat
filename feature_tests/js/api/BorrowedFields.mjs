@@ -74,14 +74,13 @@ export class BorrowedFields {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 24, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(buffer);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -104,9 +103,9 @@ export class BorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {
@@ -135,9 +134,9 @@ export class BorrowedFields {
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const dstr16Slice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)));
+        const dstr16Slice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)));
         
-        const utf8StrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)));
+        const utf8StrSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)));
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
         

@@ -58,7 +58,6 @@ export class RenamedStructWithAttrs {
     // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
     // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap,
         forcePadding
     ) {
@@ -126,7 +125,7 @@ export class RenamedStructWithAttrs {
     get c() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.namespace_StructWithAttrs_c(...RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
+        const result = wasm.namespace_StructWithAttrs_c(...RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}));
     
         try {
             return result;

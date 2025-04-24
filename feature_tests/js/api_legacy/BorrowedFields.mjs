@@ -74,7 +74,6 @@ export class BorrowedFields {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return [...diplomatRuntime.DiplomatBuf.str16(wasm, this.#a).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#b).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#c).splat()]
@@ -98,9 +97,9 @@ export class BorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

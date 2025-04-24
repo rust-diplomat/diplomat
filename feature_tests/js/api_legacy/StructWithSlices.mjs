@@ -58,7 +58,6 @@ export class StructWithSlices {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return [...diplomatRuntime.DiplomatBuf.str8(wasm, this.#first).splat(), ...diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16").splat()]
@@ -82,8 +81,8 @@ export class StructWithSlices {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {
@@ -115,7 +114,7 @@ export class StructWithSlices {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...this._fieldsForLifetimeA];
-        wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}), write.buffer);
+        wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({aAppendArray: [aEdges],}), write.buffer);
     
         try {
             return write.readString8();

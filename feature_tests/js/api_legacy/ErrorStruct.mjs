@@ -55,7 +55,6 @@ export class ErrorStruct {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return [this.#i, this.#j]

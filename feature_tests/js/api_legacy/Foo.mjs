@@ -100,7 +100,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
         
-        const result = wasm.Foo_extract_from_fields(...BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}));
+        const result = wasm.Foo_extract_from_fields(...BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI({aAppendArray: [aEdges],}));
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -129,7 +129,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'y, 'z
         let yEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
         
-        const result = wasm.Foo_extract_from_bounds(...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}), ...anotherStringSlice.splat());
+        const result = wasm.Foo_extract_from_bounds(...BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI({aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}), ...anotherStringSlice.splat());
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);

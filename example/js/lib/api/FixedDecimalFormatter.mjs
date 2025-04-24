@@ -55,7 +55,7 @@ export class FixedDecimalFormatter {
         
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
         
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI({}, false));
     
         try {
             if (!diplomatReceive.resultFlag) {

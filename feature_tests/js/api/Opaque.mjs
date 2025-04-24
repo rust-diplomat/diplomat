@@ -50,7 +50,7 @@ export class Opaque {
     static tryFromUtf8(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
+        const inputSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
         
         const result = wasm.Opaque_try_from_utf8(inputSlice.ptr);
     
@@ -66,7 +66,7 @@ export class Opaque {
     static fromStr(input) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const inputSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
+        const inputSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, input)));
         
         const result = wasm.Opaque_from_str(inputSlice.ptr);
     
@@ -101,7 +101,7 @@ export class Opaque {
      */
     assertStruct(s) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(functionCleanupArena, {}, false));
+        wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI({}, false));
     
         try {}
         

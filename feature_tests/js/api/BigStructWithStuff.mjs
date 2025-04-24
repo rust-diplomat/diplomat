@@ -105,14 +105,13 @@ export class BigStructWithStuff {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(buffer);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -138,7 +137,7 @@ export class BigStructWithStuff {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#second, Uint16Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#third, Uint16Array);
-        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
+        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, {});
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#fifth, Uint8Array);
     }
 
@@ -168,7 +167,7 @@ export class BigStructWithStuff {
 
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), extraVal);
+        wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), extraVal);
     
         try {}
         

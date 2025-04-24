@@ -41,7 +41,6 @@ export class CyclicStructA {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
@@ -65,7 +64,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -98,7 +97,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+        wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -115,7 +114,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+        wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI({}, false), write.buffer);
     
         try {
             return write.readString8();
@@ -132,7 +131,7 @@ export class CyclicStructA {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+        wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), write.buffer);
     
         try {
             return write.readString8();

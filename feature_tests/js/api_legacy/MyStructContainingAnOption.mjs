@@ -57,10 +57,9 @@ export class MyStructContainingAnOption {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.optionToArgsForCalling(this.#a, 32, 8, (arrayBuffer, offset, jsValue) => [MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {})]), ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
+        return [...diplomatRuntime.optionToArgsForCalling(this.#a, 32, 8, (arrayBuffer, offset, jsValue) => [MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, {})]), ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -81,7 +80,7 @@ export class MyStructContainingAnOption {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {}));
+        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, {}));
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 40, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array));
     }
 

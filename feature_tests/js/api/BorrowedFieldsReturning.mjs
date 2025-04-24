@@ -43,14 +43,13 @@ export class BorrowedFieldsReturning {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
         
-        functionCleanupArena.alloc(buffer);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -73,7 +72,7 @@ export class BorrowedFieldsReturning {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

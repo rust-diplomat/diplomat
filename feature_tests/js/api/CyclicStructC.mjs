@@ -41,7 +41,6 @@ export class CyclicStructC {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
@@ -65,7 +64,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -87,7 +86,7 @@ export class CyclicStructC {
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}, false));
+        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI({}, false));
     
         try {
             return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
@@ -102,7 +101,7 @@ export class CyclicStructC {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+        wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), write.buffer);
     
         try {
             return write.readString8();

@@ -45,7 +45,7 @@ export class Foo {
 
     #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
+        const xSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
@@ -100,7 +100,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
         
-        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false));
+        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI({aAppendArray: [aEdges],}, false));
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -118,7 +118,7 @@ export class Foo {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const anotherStringSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
+        const anotherStringSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
@@ -129,7 +129,7 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'y, 'z
         let yEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
         
-        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
+        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI({aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
     
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);

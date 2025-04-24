@@ -145,7 +145,7 @@ export function optionToArgsForCalling(jsValue, size, align, writeToArrayBufferC
     return args;
 }
 
-export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, writeToArrayBufferCallback) {
+export function optionToBufferForCalling(wasm, jsValue, size, align, writeToArrayBufferCallback) {
     let buf = DiplomatBuf.struct(wasm, size, align);
 
     
@@ -168,7 +168,7 @@ export function optionToBufferForCalling(wasm, jsValue, size, align, allocator, 
         buffer[buffer.length - 1] = 1;
     }
     
-    allocator.alloc(buf);
+    FUNCTION_PARAM_ALLOC.alloc(buf);
 }
 
 

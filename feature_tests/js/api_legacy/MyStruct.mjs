@@ -132,7 +132,6 @@ export class MyStruct {
     // Returns an array that can be expanded with spread syntax (...)
     
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return [this.#a, this.#b, this.#c, /* [5 x i8] padding */ 0, 0, 0, 0, 0 /* end padding */, this.#d, this.#e, this.#f, this.#g.ffiValue, /* [1 x i32] padding */ 0 /* end padding */]
@@ -210,7 +209,7 @@ export class MyStruct {
     intoA() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const result = wasm.MyStruct_into_a(...MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}));
+        const result = wasm.MyStruct_into_a(...MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}));
     
         try {
             return result;

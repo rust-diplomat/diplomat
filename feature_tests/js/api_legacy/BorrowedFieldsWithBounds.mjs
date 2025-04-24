@@ -76,7 +76,6 @@ export class BorrowedFieldsWithBounds {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
-        functionCleanupArena,
         appendArrayMap
     ) {
         return [...diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB).splat(), ...diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC).splat()]
@@ -100,9 +99,9 @@ export class BorrowedFieldsWithBounds {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['bAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
-        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {

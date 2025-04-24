@@ -37,7 +37,7 @@ export class OptionString {
 
     static new_(diplomatStr) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const diplomatStrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
+        const diplomatStrSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [diplomatStrSlice];
