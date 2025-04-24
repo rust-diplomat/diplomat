@@ -26,6 +26,14 @@ pub struct TypeContext {
     traits: Vec<TraitDef>,
 }
 
+/// Additional features/config to support while lowering
+#[non_exhaustive]
+#[derive(Default, Debug, Copy, Clone)]
+pub struct LoweringConfig {
+    /// Support references in callback params (unsafe)
+    pub unsafe_references_in_callbacks: bool,
+}
+
 /// Key used to index into a [`TypeContext`] representing a struct.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructId(usize);
@@ -187,10 +195,11 @@ impl TypeContext {
     /// Lower the AST to the HIR while simultaneously performing validation.
     pub fn from_syn<'ast>(
         s: &'ast syn::File,
+        cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
     ) -> Result<Self, Vec<ErrorAndContext>> {
         let types = ast::File::from(s).all_types();
-        let (mut ctx, hir) = Self::from_ast_without_validation(&types, attr_validator)?;
+        let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
         ctx.errors.set_item("(validation)");
         hir.validate(&mut ctx.errors);
         if !ctx.errors.is_empty() {
@@ -202,6 +211,7 @@ impl TypeContext {
     /// Lower the AST to the HIR, without validation. For testing
     pub(super) fn from_ast_without_validation<'ast>(
         env: &'ast Env,
+        cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
     ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
@@ -301,6 +311,7 @@ impl TypeContext {
             env,
             errors,
             attr_validator,
+            cfg,
         };
 
         let out_structs = ctx.lower_all_out_structs(ast_out_structs.into_iter());
@@ -592,7 +603,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
-            match hir::TypeContext::from_syn(&parsed, attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {

@@ -10,7 +10,9 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "CallbackTestingStruct.hpp"
+#include "MyString.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -47,6 +49,11 @@ namespace capi {
         int32_t (*run_callback)(const void*, diplomat::capi::DiplomatStringView );
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_str_cb_arg_f;
+    typedef struct DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb {
+        const void* data;
+        void (*run_callback)(const void*, diplomat::capi::MyString* );
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb;
     
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
     
@@ -57,6 +64,8 @@ namespace capi {
     int32_t CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_f f_cb_wrap, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_g g_cb_wrap);
     
     int32_t CallbackWrapper_test_str_cb_arg(DiplomatCallback_CallbackWrapper_test_str_cb_arg_f f_cb_wrap);
+    
+    void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb cb_cb_wrap, diplomat::capi::MyString* a);
     
     
     } // extern "C"
@@ -88,6 +97,11 @@ inline int32_t CallbackWrapper::test_multiple_cb_args(std::function<int32_t()> f
 inline int32_t CallbackWrapper::test_str_cb_arg(std::function<int32_t(std::string_view)> f) {
   auto result = diplomat::capi::CallbackWrapper_test_str_cb_arg({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
   return result;
+}
+
+inline void CallbackWrapper::test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a) {
+  diplomat::capi::CallbackWrapper_test_opaque_cb_arg({new decltype(cb)(std::move(cb)), diplomat::fn_traits(cb).c_run_callback, diplomat::fn_traits(cb).c_delete},
+    a.AsFFI());
 }
 
 

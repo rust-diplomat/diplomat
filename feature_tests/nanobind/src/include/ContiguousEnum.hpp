@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -34,7 +35,7 @@ inline ContiguousEnum ContiguousEnum::FromFFI(diplomat::capi::ContiguousEnum c_e
     case diplomat::capi::ContiguousEnum_F:
       return static_cast<ContiguousEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // ContiguousEnum_HPP

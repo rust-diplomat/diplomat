@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -32,7 +33,7 @@ inline OptionEnum OptionEnum::FromFFI(diplomat::capi::OptionEnum c_enum) {
     case diplomat::capi::OptionEnum_Bar:
       return static_cast<OptionEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // OptionEnum_HPP

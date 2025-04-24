@@ -105,6 +105,7 @@ pub(super) struct LoweringContext<'ast> {
     pub errors: ErrorStore<'ast>,
     pub env: &'ast Env,
     pub attr_validator: Box<dyn AttributeValidator>,
+    pub cfg: super::LoweringConfig,
 }
 
 /// An item and the info needed to
@@ -941,22 +942,10 @@ impl<'ast> LoweringContext<'ast> {
                 }
                 let mut params: Vec<CallbackParam> = Vec::new();
                 for in_ty in input_types.iter() {
-                    let hir_in_ty = self
-                        .lower_out_type(in_ty, ltl, in_path, false, false)
-                        .unwrap();
+                    let param =
+                        self.lower_callback_param(/* anonymous */ None, in_ty, ltl, in_path)?;
 
-                    if !matches!(hir_in_ty, super::Type::Slice(super::Slice::Str(_, _)))
-                        && hir_in_ty.lifetimes().next().is_some()
-                    {
-                        self.errors.push(LoweringError::Other(
-                            "Callback parameters can't be borrowed, and therefore can't have lifetimes".into(),
-                        ));
-                        return Err(());
-                    }
-                    params.push(CallbackParam {
-                        ty: hir_in_ty,
-                        name: None,
-                    })
+                    params.push(param)
                 }
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,
@@ -1068,7 +1057,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {:?}", in_path)));
                     Err(())
                 }
             },
@@ -1497,20 +1486,28 @@ impl<'ast> LoweringContext<'ast> {
 
     fn lower_callback_param(
         &mut self,
-        param: &ast::Param,
+        name: Option<IdentBuf>,
+        ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<CallbackParam, ()> {
-        let name = self.lower_ident(&param.name, "param name")?;
         let ty = self.lower_out_type(
-            &param.ty, ltl, in_path, false, /* in_struct */
+            ty, ltl, in_path, false, /* in_struct */
             false, /* in_result_option */
         )?;
 
-        Ok(CallbackParam {
-            name: Some(name),
-            ty,
-        })
+        if !self.cfg.unsafe_references_in_callbacks
+            && ty
+                .lifetimes()
+                .any(|lt| matches!(lt, super::MaybeStatic::NonStatic(..)))
+        {
+            // Slices are copied in non-memory sharing backends
+            if !matches!(ty, Type::Slice(_)) {
+                self.errors.push(LoweringError::Other("Callbacks cannot take references since they can be unsafely persisted, set `unsafe_references_in_callbacks` config to override.".into() ));
+            }
+        }
+
+        Ok(CallbackParam { name, ty })
     }
 
     fn lower_many_callback_params(
@@ -1522,7 +1519,8 @@ impl<'ast> LoweringContext<'ast> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
         for param in ast_params {
-            let param = self.lower_callback_param(param, param_ltl, in_path);
+            let name = self.lower_ident(&param.name, "param name")?;
+            let param = self.lower_callback_param(Some(name), &param.ty, param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {

@@ -9,24 +9,50 @@ use syn::{
 use toml::{value::Table, Value};
 
 use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
+use diplomat_core::hir::LoweringConfig;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
     pub lib_name: Option<String>,
+    /// Whether or not callbacks support references in parameters. This is unsafe: you need to be careful to not
+    /// retain these references on the foreign side.
+    pub unsafe_references_in_callbacks: Option<bool>,
 }
 
 impl SharedConfig {
-    /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
+    // / Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name")
+        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks")
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
-        if key == "lib_name" && value.is_str() {
-            self.lib_name = value.as_str().map(|v| v.to_string());
+        match key {
+            "lib_name" => {
+                if value.is_str() {
+                    self.lib_name = value.as_str().map(|v| v.to_string())
+                } else {
+                    panic!("Config key `lib_name` must be a string");
+                }
+            }
+            "unsafe_references_in_callbacks" => {
+                if value.is_bool() {
+                    self.unsafe_references_in_callbacks = value.as_bool()
+                } else {
+                    panic!("Config key `unsafe_references_in_callbacks` must be a boolean");
+                }
+            }
+            _ => (),
         }
+    }
+
+    pub fn lowering_config(&self) -> LoweringConfig {
+        let mut cfg = LoweringConfig::default();
+        if let Some(refs) = self.unsafe_references_in_callbacks {
+            cfg.unsafe_references_in_callbacks = refs;
+        }
+        cfg
     }
 }
 

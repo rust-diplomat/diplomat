@@ -449,7 +449,7 @@ mod tests {
             // Don't run validation: it will error on elision. We want this code to support
             // elision even if we don't actually allow it, since good diagnostics involve understanding
             // broken code.
-            let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, backend).unwrap();
+            let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend).unwrap();
 
             tcx
         }}

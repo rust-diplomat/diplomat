@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "OptionEnum.d.hpp"
 #include "diplomat_runtime.hpp"
 

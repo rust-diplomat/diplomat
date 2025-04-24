@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "OptionEnum.hpp"
 #include "OptionInputStruct.hpp"
 #include "OptionStruct.hpp"
