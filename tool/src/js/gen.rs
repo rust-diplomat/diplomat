@@ -524,6 +524,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
 
+            let layout = crate::js::layout::type_size_alignment(&param_self.ty.clone().into(), self.tcx);
+            // We add because all parameters will have to be allocated at once:
+            method_info.max_alloc += layout.size();
+
             let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
                 Some(super::converter::StructBorrowContext {
                     use_env: &method.lifetime_env,
@@ -556,6 +560,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
 
         for param in method.params.iter() {
+            
+            let layout = crate::js::layout::type_size_alignment(&param.ty, self.tcx);
+            // We add because all parameters will have to be allocated at once:
+            method_info.max_alloc += layout.size();
+
             let base_type = self.gen_js_type_str(&param.ty);
             let param_type_str = format!(
                 "{}",
@@ -781,7 +790,7 @@ pub(super) struct MethodInfo<'info> {
     doc_str: String,
 
     /// The most amount of bytes we will ever have to allocate when calling this function:
-    pub max_alloc : u32,
+    pub max_alloc : usize,
 }
 
 /// See [`TyGenContext::generate_special_method`].

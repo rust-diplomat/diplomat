@@ -703,11 +703,17 @@ export class FunctionParamAllocator {
     }
     
     clean() {
-        this.#wasm.diplomat_free(this.#ptr, this.#capacity, 1);
         this.#currentPtr = 0;
 
         this.#allocated = [];
     }
+
+    free() {
+        this.#wasm.diplomat_free(this.#ptr, this.#capacity, 1);
+    }
 }
 
 export const FUNCTION_PARAM_ALLOC = new FunctionParamAllocator();
+
+const FunctionParamAllocatorFinalizer = new FinalizationRegistry((free) => { free(); });
+FunctionParamAllocatorFinalizer.register(FUNCTION_PARAM_ALLOC, FUNCTION_PARAM_ALLOC.free);
