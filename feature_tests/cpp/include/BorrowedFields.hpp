@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "Bar.hpp"
 #include "diplomat_runtime.hpp"
 

@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 
@@ -34,7 +35,7 @@ inline icu4x::FixedDecimalGroupingStrategy icu4x::FixedDecimalGroupingStrategy::
     case icu4x::capi::FixedDecimalGroupingStrategy_Min2:
       return static_cast<icu4x::FixedDecimalGroupingStrategy::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // icu4x_FixedDecimalGroupingStrategy_HPP

@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 
@@ -33,7 +34,7 @@ inline ns::RenamedAttrEnum ns::RenamedAttrEnum::FromFFI(ns::capi::RenamedAttrEnu
     case ns::capi::RenamedAttrEnum_C:
       return static_cast<ns::RenamedAttrEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // ns_RenamedAttrEnum_HPP

@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "DefaultEnum.d.hpp"
 #include "MyStruct.d.hpp"
 #include "diplomat_runtime.hpp"
