@@ -660,3 +660,38 @@ export class GarbageCollectorGrip {
 }
 
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());
+
+/**
+ * For allocating and cleaning up structs to be passed into the C Spec WASM ABI.
+ * 
+ * Created when we load in the WebAssembly.
+ */
+export class FunctionParamAllocator {
+    #allocated = [];
+    #ptr = 0;
+    #capacity;
+    #wasm = null;
+
+    init(symbol, wasm) {
+        if (symbol === internalConstructor) {
+            this.#wasm = wasm;
+        }
+    }
+
+    // TODO:
+    reserve(capacity) {
+    }
+
+    alloc(size) {
+        this.#allocated.push(this.#wasm.diplomat_alloc(size, 1));
+    }
+    
+    clean() {
+        for (let a of this.#allocated) {
+            this.#wasm.diplomat_free(a, size, 1);
+        }
+        this.#allocated = [];
+    }
+}
+
+export const FUNCTION_PARAM_ALLOC = new FunctionParamAllocator();
