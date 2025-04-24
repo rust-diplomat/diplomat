@@ -107,18 +107,8 @@ pub(crate) fn run<'tcx>(
     let mut exports = Vec::new();
     let mut ts_exports = Vec::new();
 
-    files.add_file(
-        "diplomat-runtime.mjs".into(),
-        include_str!("../../templates/js/runtime.mjs").into(),
-    );
-    files.add_file(
-        "diplomat-runtime.d.ts".into(),
-        include_str!("../../templates/js/runtime.d.ts").into(),
-    );
-    files.add_file(
-        "diplomat-wasm.mjs".into(),
-        include_str!("../../templates/js/wasm.mjs").into(),
-    );
+    // The size of the largest struct we have to pass into a function, ever.
+    let mut function_alloc_max : u32 = 0;
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
@@ -273,6 +263,20 @@ pub(crate) fn run<'tcx>(
     out_index.exports = &ts_exports;
 
     files.add_file("index.d.ts".into(), out_index.render().unwrap());
+
+    // Quick hack to make sure our singleton reserves the correct info:
+    files.add_file(
+        "diplomat-runtime.mjs".into(),
+        format!("{}\n//Size of the largest struct we will ever have to pass in to a function:\nFUNCTION_PARAM_ALLOC.reserve({});", include_str!("../../templates/js/runtime.mjs"), function_alloc_max).into(),
+    );
+    files.add_file(
+        "diplomat-runtime.d.ts".into(),
+        include_str!("../../templates/js/runtime.d.ts").into(),
+    );
+    files.add_file(
+        "diplomat-wasm.mjs".into(),
+        include_str!("../../templates/js/wasm.mjs").into(),
+    );
 
     (files, errors)
 }
