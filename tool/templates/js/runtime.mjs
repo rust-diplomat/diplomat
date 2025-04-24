@@ -667,10 +667,13 @@ const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());
  * Created when we load in the WebAssembly.
  */
 export class FunctionParamAllocator {
-    #allocated = [];
-    #ptr = 0;
-    #capacity;
     #wasm = null;
+    
+    #ptr = 0;
+    #capacity = 0;
+    
+    #allocated = [];
+    #currentPtr = 0;
 
     init(symbol, wasm) {
         if (symbol === internalConstructor) {
@@ -678,18 +681,31 @@ export class FunctionParamAllocator {
         }
     }
 
-    // TODO:
     reserve(capacity) {
+        if (this.#ptr !== 0) {
+            throw new Error("FunctionParamAllocator already reserved.");
+        }
+
+        this.#ptr = this.#wasm.diplomat_alloc(capacity, 1);
+        this.#capacity = capacity;
     }
 
     alloc(size) {
-        this.#allocated.push(this.#wasm.diplomat_alloc(size, 1));
+        if (this.#currentPtr + size > this.#capacity) {
+            throw new Error(`Could not allocate size ${this.#currentPtr} + ${size} > ${this.#capacity}. Please consider adjusting reserve()`);
+        }
+        this.#allocated.push(this.#ptr + this.#currentPtr);
+        this.#currentPtr += size;
+    }
+
+    get() {
+        return this.#allocated.pop();
     }
     
     clean() {
-        for (let a of this.#allocated) {
-            this.#wasm.diplomat_free(a, size, 1);
-        }
+        this.#wasm.diplomat_free(this.#ptr, this.#capacity, 1);
+        this.#currentPtr = 0;
+
         this.#allocated = [];
     }
 }
