@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -40,7 +41,7 @@ inline MyEnum MyEnum::FromFFI(diplomat::capi::MyEnum c_enum) {
     case diplomat::capi::MyEnum_F:
       return static_cast<MyEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 

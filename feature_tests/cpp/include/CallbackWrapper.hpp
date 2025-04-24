@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "CallbackTestingStruct.hpp"
 #include "MyString.hpp"
 #include "diplomat_runtime.hpp"

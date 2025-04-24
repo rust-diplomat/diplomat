@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
 #include "diplomat_runtime.hpp"
