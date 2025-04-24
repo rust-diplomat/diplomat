@@ -779,6 +779,9 @@ pub(super) struct MethodInfo<'info> {
     pub cleanup_expressions: Vec<Cow<'info, str>>,
 
     doc_str: String,
+
+    /// The most amount of bytes we will ever have to allocate when calling this function:
+    pub max_alloc : u32,
 }
 
 /// See [`TyGenContext::generate_special_method`].

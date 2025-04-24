@@ -159,11 +159,12 @@ pub(crate) fn run<'tcx>(
             .iter()
             .flat_map(|method| {
                 let inf = context.generate_method(id, method);
-                if inf.is_some() {
+                if let Some(inf) = inf.clone() {
+                    function_alloc_max = std::cmp::max(function_alloc_max, inf.max_alloc);
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
                         method.attrs.special_method
                     {
-                        special_methods.constructor.replace(inf.clone().unwrap());
+                        special_methods.constructor.replace(inf);
                     }
                 }
                 inf
