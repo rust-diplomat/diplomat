@@ -616,7 +616,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     type_name,
                     "this".into(),
                     struct_borrow_info,
-                    "functionCleanupArena",
                     gen_context,
                 )
             }
@@ -630,7 +629,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
-        alloc: Option<&str>,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
@@ -654,10 +652,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 self.formatter.fmt_type_name(s.id()),
                 js_name,
                 struct_borrow_info,
-                alloc.unwrap_or_else(|| panic!(
-                    "Expected an allocator to be specified when generating the definition for a struct: {}",
-                    self.formatter.fmt_type_name(s.id())
-                )),
                 gen_context,
             ),
             Type::DiplomatOption(ref inner) => {
@@ -668,7 +662,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     inner,
                     "jsValue".into(),
                     struct_borrow_info,
-                    alloc,
                     // Option conversion helpers *always* need WriteToBuffer
                     JsToCConversionContext::WriteToBuffer("offset", 0),
                 );
@@ -684,16 +677,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                                 format!("...diplomatRuntime.optionToArgsForCalling({js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")
                             },
                             WasmABI::CSpec => {
-                                let a = alloc.unwrap_or_else(|| {
-                                    let id = if let Some(id) = inner.id() {
-                                        self.formatter.fmt_type_name(id)
-                                    } else {
-                                        "()".into()
-                                    };
-
-                                    panic!("Expected an allocator to be specified when generating the definition for an Option<{id}>")
-                                });
-                                format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, {a}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")
+                                format!("diplomatRuntime.optionToBufferForCalling(wasm, {js_name}, {size}, {align}, (arrayBuffer, offset, jsValue) => [{inner_conversion}])")
                             }
                         }.into()
                     }
@@ -706,11 +690,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-                    let alloc = alloc.expect(
-                        "Must provide some allocation anchor for slice conversion generation!",
-                    );
 
-                    let mut alloc_stmnt = format!("{alloc}.alloc(");
+                    let mut alloc_stmnt = format!("diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(");
                     let mut alloc_end = ")";
 
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
@@ -727,7 +708,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         JsToCConversionContext::SlicePrealloc => {
                             match self.config.abi {
                                 WasmABI::Legacy => ("".into(), Cow::Borrowed("")),
-                                WasmABI::CSpec => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")"))
+                                WasmABI::CSpec => (format!("diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")"))
                             }
                         },
                         // List mode wants a list of (ptr, len)
@@ -779,7 +760,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         js_type: Cow<'tcx, str>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
-        allocator: &str,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
@@ -822,13 +802,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             ForcePaddingStatus::Force => ", true",
                             ForcePaddingStatus::PassThrough => ", forcePadding",
                         };
-                        format!("...{js_call}._intoFFI({allocator}, {{{params}}}{force_padding})")
+                        format!("...{js_call}._intoFFI({{{params}}}{force_padding})")
                     },
-                    WasmABI::CSpec => format!("{js_call}._intoFFI({allocator}, {{{params}}}, false)")
+                    WasmABI::CSpec => format!("{js_call}._intoFFI({{{params}}}, false)")
                 }.into()
             }
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
-                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
+                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {{{params}}})"
             )
             .into(),
             JsToCConversionContext::SlicePrealloc => {
