@@ -1,25 +1,36 @@
 package dev.diplomattest.somelib
 
+import io.mockk.* // For mockk, spyk, every, verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-// Mockito imports for mocking and verification
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
-
 class AttrOpaque1Test() {
-    @Mock
-    private var mockAttrOpaque1: AttrOpaque1;
+
+    @Test
+    fun testMethod() {
+        var mockAttrOpaque1Interface: AttrOpaque1Interface = mockk()
+        var attrOpaque1 = AttrOpaque1.new_()
+
+        var expectedUByte = 77.toUByte()
+        every {mockAttrOpaque1Interface.method() } returns expectedUByte
+        
+        var resultWithMock = mockAttrOpaque1Interface.method()
+        var resultWithoutMock = attrOpaque1.method()
+
+        assertEquals(resultWithoutMock, resultWithMock)
+    }
 
     @Test
     fun testAbirenamed() {
-        var resultWithoutMock = AttrOpaque1.abirenamed();
+        var mockAttrOpaque1Interface: AttrOpaque1Interface = mockk()
+        var attrOpaque1 = AttrOpaque1.new_()
 
-        when(mockAttrOpqaue1.abirenamed()).thenReturn(123);
-        var resultWithMock = mockOpauqe1.abirenamed();
+        var expectedUByte = 123.toUByte()
+        every {mockAttrOpaque1Interface.abirenamed() } returns expectedUByte
+        
+        var resultWithMock = mockAttrOpaque1Interface.abirenamed()
+        var resultWithoutMock = attrOpaque1.abirenamed()
 
-        assertEquals(resultWithoutMock, resultWithMock);
-        verify(mockOpaque1, times(1)).abirenamed();
+        assertEquals(resultWithoutMock, resultWithMock)
     }
 }
