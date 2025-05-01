@@ -46,22 +46,12 @@ typedef struct DiplomatCallback_CallbackWrapper_test_str_cb_arg_f {
     int32_t (*run_callback)(const void*, DiplomatStringView );
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_str_cb_arg_f;
-<<<<<<< HEAD
-<<<<<<< HEAD
 typedef struct DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb {
     const void* data;
     void (*run_callback)(const void*, MyString* );
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb;
 
-||||||| parent of 801614af (Reapply "Generate code without trailing whitespace in c, cpp, dart, js (#848)")
-
-=======
->>>>>>> 801614af (Reapply "Generate code without trailing whitespace in c, cpp, dart, js (#848)")
-||||||| parent of 01af4135 (more fixes)
-=======
-
->>>>>>> 01af4135 (more fixes)
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
 int32_t CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_h h_cb_wrap);
