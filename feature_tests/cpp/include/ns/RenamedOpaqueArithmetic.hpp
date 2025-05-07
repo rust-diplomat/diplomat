@@ -17,32 +17,31 @@
 namespace ns {
 namespace capi {
     extern "C" {
-    
+
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make(int32_t x, int32_t y);
-    
+
     int32_t namespace_OpaqueArithmetic_x(const ns::capi::RenamedOpaqueArithmetic* self);
-    
+
     int32_t namespace_OpaqueArithmetic_y(const ns::capi::RenamedOpaqueArithmetic* self);
-    
+
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_add(const ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_sub(const ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_mul(const ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_div(const ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     void namespace_OpaqueArithmetic_addassign(ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     void namespace_OpaqueArithmetic_subassign(ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     void namespace_OpaqueArithmetic_mulassign(ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
+
     void namespace_OpaqueArithmetic_divassign(ns::capi::RenamedOpaqueArithmetic* self, const ns::capi::RenamedOpaqueArithmetic* o);
-    
-    
+
     void namespace_OpaqueArithmetic_destroy(RenamedOpaqueArithmetic* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

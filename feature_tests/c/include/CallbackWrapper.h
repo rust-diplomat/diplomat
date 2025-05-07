@@ -68,5 +68,4 @@ void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_op
 
 
 
-
 #endif // CallbackWrapper_H

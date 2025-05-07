@@ -66,7 +66,6 @@ bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg, uint8_t sentin
 
 int64_t OptionOpaque_accepts_option_primitive(OptionU32View arg, uint8_t sentinel);
 
-
 void OptionOpaque_destroy(OptionOpaque* self);
 
 

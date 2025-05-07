@@ -22,7 +22,7 @@ namespace capi {
       diplomat::capi::DiplomatStringView b;
       diplomat::capi::DiplomatStringView c;
     };
-    
+
     typedef struct BorrowedFields_option {union { BorrowedFields ok; }; bool is_ok; } BorrowedFields_option;
 } // namespace capi
 } // namespace

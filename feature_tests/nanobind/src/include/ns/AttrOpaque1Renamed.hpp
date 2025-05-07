@@ -19,20 +19,19 @@
 namespace ns {
 namespace capi {
     extern "C" {
-    
+
     ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
-    
+
     uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);
-    
+
     uint8_t renamed_on_abi_only(const ns::capi::AttrOpaque1Renamed* self);
-    
+
     void namespace_AttrOpaque1_use_unnamespaced(const ns::capi::AttrOpaque1Renamed* self, const diplomat::capi::Unnamespaced* _un);
-    
+
     void namespace_AttrOpaque1_use_namespaced(const ns::capi::AttrOpaque1Renamed* self, ns::capi::RenamedAttrEnum _n);
-    
-    
+
     void namespace_AttrOpaque1_destroy(AttrOpaque1Renamed* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

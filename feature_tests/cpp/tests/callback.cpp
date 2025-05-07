@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
         simple_assert_eq("mutable cb object", cb->call(5), 10);
     }
     {
-        
         auto opaque = MyString::new_("Bananna");
         simple_assert_eq("opaque cb arg", opaque->borrow(), "Bananna");
         o.test_opaque_cb_arg([](MyString& op) {

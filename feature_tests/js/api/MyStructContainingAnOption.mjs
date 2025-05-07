@@ -7,25 +7,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyStructContainingAnOption {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
     * Optional fields do not need to be included in the provided object.
     */
@@ -55,7 +50,6 @@ export class MyStructContainingAnOption {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
@@ -63,7 +57,7 @@ export class MyStructContainingAnOption {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 48, 8);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
+
         functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
@@ -109,15 +103,17 @@ export class MyStructContainingAnOption {
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
-        
+
+
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
-    
+
         try {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }
@@ -125,13 +121,14 @@ export class MyStructContainingAnOption {
 
     static filled() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
-        
+
+
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);
-    
+
         try {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }

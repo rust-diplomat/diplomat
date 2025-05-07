@@ -4,8 +4,8 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionString {
-    
     get ffiValue(): pointer;
+
 
     static new_(diplomatStr: string): OptionString | null;
 

@@ -24,5 +24,4 @@ int32_t TraitWrapper_test_trait_with_struct(DiplomatTraitStruct_TesterTrait t_tr
 
 
 
-
 #endif // TraitWrapper_H

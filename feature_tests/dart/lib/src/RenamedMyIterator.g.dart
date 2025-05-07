@@ -42,6 +42,7 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
     }
     return result.union.ok;
   }
+
 }
 
 @_DiplomatFfiUse('namespace_MyIterator_destroy')

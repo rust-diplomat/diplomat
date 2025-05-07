@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 enum MyEnum {
+
   a,
 
   b,
@@ -42,6 +43,7 @@ enum MyEnum {
     final result = _MyEnum_get_a();
     return MyEnum.values.firstWhere((v) => v._ffi == result);
   }
+
 }
 
 @_DiplomatFfiUse('MyEnum_into_value')

@@ -17,17 +17,16 @@
 namespace icu4x {
 namespace capi {
     extern "C" {
-    
+
     icu4x::capi::FixedDecimal* icu4x_FixedDecimal_new_mv1(int32_t v);
-    
+
     void icu4x_FixedDecimal_multiply_pow10_mv1(icu4x::capi::FixedDecimal* self, int16_t power);
-    
+
     typedef struct icu4x_FixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_FixedDecimal_to_string_mv1_result;
     icu4x_FixedDecimal_to_string_mv1_result icu4x_FixedDecimal_to_string_mv1(const icu4x::capi::FixedDecimal* self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
     void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

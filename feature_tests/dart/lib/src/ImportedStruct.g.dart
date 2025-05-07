@@ -34,6 +34,7 @@ final class ImportedStruct {
     return struct;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is ImportedStruct &&

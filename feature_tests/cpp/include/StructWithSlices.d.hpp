@@ -18,7 +18,7 @@ namespace capi {
       diplomat::capi::DiplomatStringView first;
       diplomat::capi::DiplomatU16View second;
     };
-    
+
     typedef struct StructWithSlices_option {union { StructWithSlices ok; }; bool is_ok; } StructWithSlices_option;
 } // namespace capi
 } // namespace

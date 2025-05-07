@@ -134,6 +134,7 @@ final class OptionOpaque implements ffi.Finalizable {
     final result = _OptionOpaque_returns_option_input_struct();
     return OptionInputStruct._fromFfi(result);
   }
+
 }
 
 @_DiplomatFfiUse('OptionOpaque_destroy')

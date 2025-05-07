@@ -7,7 +7,7 @@ import type { Locale } from "./Locale"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
-/** 
+/**
  * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
  *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
@@ -15,17 +15,17 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class FixedDecimalFormatter {
-    
     get ffiValue(): pointer;
 
-    /** 
+
+    /**
      * Creates a new [`FixedDecimalFormatter`] from locale data.
      *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
      */
     static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions_obj): FixedDecimalFormatter | null;
 
-    /** 
+    /**
      * Formats a [`FixedDecimal`] to a string.
      *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.

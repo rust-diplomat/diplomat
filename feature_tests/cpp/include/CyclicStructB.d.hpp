@@ -19,7 +19,7 @@ namespace capi {
     struct CyclicStructB {
       uint8_t field;
     };
-    
+
     typedef struct CyclicStructB_option {union { CyclicStructB ok; }; bool is_ok; } CyclicStructB_option;
 } // namespace capi
 } // namespace

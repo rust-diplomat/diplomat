@@ -101,6 +101,7 @@ final class Float64Vec implements ffi.Finalizable {
     }
     return result.union.ok;
   }
+
 }
 
 @_DiplomatFfiUse('Float64Vec_destroy')

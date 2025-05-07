@@ -33,6 +33,7 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
     return result;
   }
 
+
   @override
   bool operator ==(Object other) => other is RenamedComparable && compareTo(other) == 0;
   @override

@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OneLib: Library {
     fun One_destroy(handle: Pointer)
     fun One_transitivity(hold: Pointer, nohold: Pointer): Pointer

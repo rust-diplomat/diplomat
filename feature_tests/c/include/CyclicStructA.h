@@ -28,5 +28,4 @@ void CyclicStructA_getter_out(CyclicStructA self, DiplomatWrite* write);
 
 
 
-
 #endif // CyclicStructA_H

@@ -18,7 +18,6 @@
 
 const Foo* Bar_foo(const Bar* self);
 
-
 void Bar_destroy(Bar* self);
 
 

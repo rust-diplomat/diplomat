@@ -22,14 +22,13 @@ namespace capi {
         int32_t (*run_callback)(const void*, int32_t );
         void (*destructor)(const void*);
     } DiplomatCallback_MutableCallbackHolder_new_func;
-    
+
     diplomat::capi::MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_func func_cb_wrap);
-    
+
     int32_t MutableCallbackHolder_call(diplomat::capi::MutableCallbackHolder* self, int32_t a);
-    
-    
+
     void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

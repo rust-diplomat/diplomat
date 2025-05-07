@@ -24,7 +24,6 @@ MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbac
 
 int32_t MutableCallbackHolder_call(MutableCallbackHolder* self, int32_t a);
 
-
 void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
 
 

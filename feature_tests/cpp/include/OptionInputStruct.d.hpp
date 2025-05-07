@@ -22,7 +22,7 @@ namespace capi {
       diplomat::capi::OptionChar b;
       diplomat::capi::OptionEnum_option c;
     };
-    
+
     typedef struct OptionInputStruct_option {union { OptionInputStruct ok; }; bool is_ok; } OptionInputStruct_option;
 } // namespace capi
 } // namespace

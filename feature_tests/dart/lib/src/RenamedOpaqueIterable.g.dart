@@ -28,6 +28,7 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
     final result = _namespace_OpaqueIterable_iter(_ffi);
     return RenamedOpaqueIterator._fromFfi(result, [], aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_OpaqueIterable_destroy')

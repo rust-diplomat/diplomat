@@ -25,5 +25,4 @@ CyclicStructB_get_a_option_result CyclicStructB_get_a_option(void);
 
 
 
-
 #endif // CyclicStructB_H

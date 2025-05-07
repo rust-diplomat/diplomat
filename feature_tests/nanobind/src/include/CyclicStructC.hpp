@@ -18,12 +18,11 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::CyclicStructC CyclicStructC_takes_nested_parameters(diplomat::capi::CyclicStructC c);
-    
+
     void CyclicStructC_cyclic_out(diplomat::capi::CyclicStructC self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

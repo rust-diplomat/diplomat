@@ -24,5 +24,4 @@ uint32_t namespace_StructWithAttrs_c(StructWithAttrs self);
 
 
 
-
 #endif // StructWithAttrs_H

@@ -17,10 +17,9 @@
 namespace nested::ns2 {
 namespace capi {
     extern "C" {
-    
-    
+
     void namespace_Nested2_destroy(Nested* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

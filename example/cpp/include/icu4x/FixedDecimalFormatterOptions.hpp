@@ -18,10 +18,9 @@
 namespace icu4x {
 namespace capi {
     extern "C" {
-    
+
     icu4x::capi::FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1(void);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

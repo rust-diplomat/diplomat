@@ -54,6 +54,7 @@ final class CyclicStructA {
     return write.finalize();
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is CyclicStructA &&

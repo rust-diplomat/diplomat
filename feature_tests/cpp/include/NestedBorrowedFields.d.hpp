@@ -28,7 +28,7 @@ namespace capi {
       diplomat::capi::BorrowedFieldsWithBounds bounds;
       diplomat::capi::BorrowedFieldsWithBounds bounds2;
     };
-    
+
     typedef struct NestedBorrowedFields_option {union { NestedBorrowedFields ok; }; bool is_ok; } NestedBorrowedFields_option;
 } // namespace capi
 } // namespace

@@ -53,6 +53,7 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
     final result = _OpaqueThinVec_first(_ffi);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('OpaqueThinVec_destroy')

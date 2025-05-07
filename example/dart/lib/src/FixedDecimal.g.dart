@@ -47,6 +47,7 @@ final class FixedDecimal implements ffi.Finalizable {
     }
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimal_destroy_mv1')

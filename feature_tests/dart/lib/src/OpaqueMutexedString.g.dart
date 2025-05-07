@@ -73,6 +73,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     final result = _OpaqueMutexedString_to_unsigned_from_unsigned(_ffi, input);
     return result;
   }
+
 }
 
 @_DiplomatFfiUse('OpaqueMutexedString_destroy')
