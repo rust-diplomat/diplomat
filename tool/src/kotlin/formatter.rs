@@ -74,7 +74,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
-            PrimitiveType::Int(IntType::I8) => "Byte",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
@@ -95,7 +95,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
-            PrimitiveType::Int(IntType::I8) => "Byte",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
@@ -242,7 +242,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "BoolError".into(),
             PrimitiveType::Int(IntType::U8) => "UByteError".into(),
-            PrimitiveType::Int(IntType::I8) => "ByteError".into(),
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "ByteError".into(),
             PrimitiveType::Int(IntType::U16) => "UShortError".into(),
             PrimitiveType::Int(IntType::I16) => "ShortError".into(),
             PrimitiveType::Int(IntType::U32) => "UIntError".into(),
