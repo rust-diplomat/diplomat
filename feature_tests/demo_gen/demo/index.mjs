@@ -46,13 +46,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "RenamedStructWithAttrs:A",
+                name: "self.a",
                 type: "boolean",
                 typeUse: "boolean"
             },
             
             {
-                name: "RenamedStructWithAttrs:B",
+                name: "self.b",
                 type: "number",
                 typeUse: "number"
             }
@@ -67,7 +67,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructA:A:Field",
+                name: "self.a.field",
                 type: "number",
                 typeUse: "number"
             }
@@ -82,13 +82,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructA:A:Field",
+                name: "self.a.field",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "CyclicStructA:A:Field",
+                name: "cyclicStructA.a.field",
                 type: "number",
                 typeUse: "number"
             }
@@ -103,7 +103,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructA:A:Field",
+                name: "self.a.field",
                 type: "number",
                 typeUse: "number"
             }
@@ -118,7 +118,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "CyclicStructC:A:A:Field",
+                name: "self.a.a.field",
                 type: "number",
                 typeUse: "number"
             }
@@ -133,43 +133,43 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "MyStruct:A",
+                name: "self.a",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "MyStruct:B",
+                name: "self.b",
                 type: "boolean",
                 typeUse: "boolean"
             },
             
             {
-                name: "MyStruct:C",
+                name: "self.c",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "MyStruct:D",
+                name: "self.d",
                 type: "bigint",
                 typeUse: "bigint"
             },
             
             {
-                name: "MyStruct:E",
+                name: "self.e",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "MyStruct:F",
+                name: "self.f",
                 type: "codepoint",
                 typeUse: "codepoint"
             },
             
             {
-                name: "MyStruct:G",
+                name: "self.g",
                 type: "MyEnum",
                 typeUse: "enumerator"
             }
@@ -184,13 +184,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "StructWithSlices:First",
+                name: "self.first",
                 type: "string",
                 typeUse: "string"
             },
             
             {
-                name: "StructWithSlices:Second",
+                name: "self.second",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -223,13 +223,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OpaqueThinVec:A",
+                name: "self.a",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             },
             
             {
-                name: "OpaqueThinVec:B",
+                name: "self.b",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -244,7 +244,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OptionOpaque:I",
+                name: "self.i",
                 type: "number",
                 typeUse: "number"
             }
@@ -259,7 +259,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OptionOpaque:I",
+                name: "self.i",
                 type: "number",
                 typeUse: "number"
             }
@@ -274,7 +274,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OptionOpaque:I",
+                name: "self.i",
                 type: "number",
                 typeUse: "number"
             }
@@ -289,7 +289,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OptionOpaque:I",
+                name: "self.i",
                 type: "number",
                 typeUse: "number"
             }
@@ -304,7 +304,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Arg:I",
+                name: "arg.i",
                 type: "number",
                 typeUse: "number"
             }
@@ -319,13 +319,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Arg",
+                name: "arg",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "Sentinel",
+                name: "sentinel",
                 type: "number",
                 typeUse: "number"
             }
@@ -340,13 +340,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Arg",
+                name: "arg",
                 type: "OptionEnum",
                 typeUse: "enumerator"
             },
             
             {
-                name: "Sentinel",
+                name: "sentinel",
                 type: "number",
                 typeUse: "number"
             }
@@ -361,7 +361,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OptionString:DiplomatStr",
+                name: "self.diplomatStr",
                 type: "string",
                 typeUse: "string"
             }
@@ -376,7 +376,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "I",
+                name: "i",
                 type: "number",
                 typeUse: "number"
             }
@@ -391,7 +391,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "I",
+                name: "i",
                 type: "number",
                 typeUse: "number"
             }
@@ -406,7 +406,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Float64Vec:V",
+                name: "self.v",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -421,13 +421,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Float64Vec:V",
+                name: "self.v",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             },
             
             {
-                name: "I",
+                name: "i",
                 type: "number",
                 typeUse: "number"
             }
@@ -442,7 +442,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "MyString:V",
+                name: "self.v",
                 type: "string",
                 typeUse: "string"
             }
@@ -457,7 +457,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Foo",
+                name: "foo",
                 type: "string",
                 typeUse: "string"
             }
@@ -508,13 +508,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OpaqueMutexedString:Number",
+                name: "self.number",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "Other",
+                name: "other",
                 type: "number",
                 typeUse: "number"
             }
@@ -529,13 +529,13 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "OpaqueMutexedString:Number",
+                name: "self.number",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "Input",
+                name: "input",
                 type: "number",
                 typeUse: "number"
             }
@@ -550,7 +550,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "Utf16Wrap:Input",
+                name: "self.input",
                 type: "string",
                 typeUse: "string"
             }
@@ -574,7 +574,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "MyEnum",
+                name: "self",
                 type: "MyEnum",
                 typeUse: "enumerator"
             }

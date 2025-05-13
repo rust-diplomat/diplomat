@@ -1,18 +1,18 @@
 import { OpaqueMutexedString } from "../../js/api/index.mjs"
-export function getLenAndAdd(opaqueMutexedStringNumber, other) {
+export function getLenAndAdd(selfNumber, other) {
     
-    let opaqueMutexedString = OpaqueMutexedString.fromUsize(opaqueMutexedStringNumber);
+    let self = OpaqueMutexedString.fromUsize(selfNumber);
     
-    let out = opaqueMutexedString.getLenAndAdd(other);
+    let out = self.getLenAndAdd(other);
     
 
     return out;
 }
-export function toUnsignedFromUnsigned(opaqueMutexedStringNumber, input) {
+export function toUnsignedFromUnsigned(selfNumber, input) {
     
-    let opaqueMutexedString = OpaqueMutexedString.fromUsize(opaqueMutexedStringNumber);
+    let self = OpaqueMutexedString.fromUsize(selfNumber);
     
-    let out = opaqueMutexedString.toUnsignedFromUnsigned(input);
+    let out = self.toUnsignedFromUnsigned(input);
     
 
     return out;

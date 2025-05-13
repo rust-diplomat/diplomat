@@ -1,17 +1,17 @@
 import { MyStruct } from "../../js/api/index.mjs"
-export function intoA(myStructA, myStructB, myStructC, myStructD, myStructE, myStructF, myStructG) {
+export function intoA(selfA, selfB, selfC, selfD, selfE, selfF, selfG) {
     
-    let myStruct = MyStruct.fromFields({
-        a: myStructA,
-        b: myStructB,
-        c: myStructC,
-        d: myStructD,
-        e: myStructE,
-        f: myStructF,
-        g: myStructG
+    let self = MyStruct.fromFields({
+        a: selfA,
+        b: selfB,
+        c: selfC,
+        d: selfD,
+        e: selfE,
+        f: selfF,
+        g: selfG
     });
     
-    let out = myStruct.intoA();
+    let out = self.intoA();
     
 
     return out;

@@ -1,9 +1,9 @@
 import { OpaqueThinVec } from "../../js/api/index.mjs"
-export function len(opaqueThinVecA, opaqueThinVecB) {
+export function len(selfA, selfB) {
     
-    let opaqueThinVec = new OpaqueThinVec(opaqueThinVecA,opaqueThinVecB);
+    let self = new OpaqueThinVec(selfA,selfB);
     
-    let out = opaqueThinVec.len();
+    let out = self.len();
     
 
     return out;

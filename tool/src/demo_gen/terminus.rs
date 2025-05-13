@@ -229,15 +229,13 @@ impl RenderTerminusContext<'_, '_> {
     ) -> String {
         let attrs_default = attrs.unwrap_or_default();
 
-        let owning_str = node
-            .owning_param
-            .as_ref()
-            .map(|p| format!("{}:", p))
-            .unwrap_or_default();
         let owned_full_name = format!(
             "{}{}",
-            owning_str,
-            heck::AsUpperCamelCase(param_name.clone())
+            node.owning_param
+                .as_ref()
+                .map(|o| format!("{o}."))
+                .unwrap_or_default(),
+            heck::AsLowerCamelCase(param_name.clone())
         )
         .to_string();
         // This only works for enums, since otherwise we break the type into its component parts.
@@ -421,22 +419,20 @@ impl RenderTerminusContext<'_, '_> {
                         self.relative_import_path.clone(),
                     ));
 
-                let owned_type = format!(
+                let param = format!(
                     "{}{}",
                     node.owning_param
                         .as_ref()
-                        .map(|o| { format!("{o}:") })
+                        .map(|o| { format!("{o}.") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name.clone())
+                    heck::AsLowerCamelCase(param_name.clone())
                 );
-
-                let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
                     self,
                     self.get_constructor_js(type_name.to_string(), method),
-                    var_name,
-                    Some(owned_type),
+                    heck::AsLowerCamelCase(&param).to_string(),
+                    Some(param),
                 );
 
                 self.evaluate_constructor(method, &mut child);
@@ -479,22 +475,20 @@ impl RenderTerminusContext<'_, '_> {
                 self.relative_import_path.clone(),
             ));
 
-        let owned_type = format!(
+        let param = format!(
             "{}{}",
             node.owning_param
                 .as_ref()
-                .map(|o| { format!("{o}:") })
+                .map(|o| { format!("{o}.") })
                 .unwrap_or_default(),
-            heck::AsUpperCamelCase(param_name.clone())
+            heck::AsLowerCamelCase(param_name.clone())
         );
-
-        let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
         let mut child = MethodDependency::new(
             self,
             format!("{type_name}.fromFields"),
-            var_name,
-            Some(owned_type),
+            heck::AsLowerCamelCase(&param).to_string(),
+            Some(param),
         );
 
         struct FieldInfo {
@@ -540,10 +534,8 @@ impl RenderTerminusContext<'_, '_> {
 
             let ty: Type = s.ty.clone().into();
 
-            let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
-
             let self_param =
-                self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
+                self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
 
             let is_getter = matches!(

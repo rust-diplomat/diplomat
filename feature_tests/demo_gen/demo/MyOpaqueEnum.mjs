@@ -1,9 +1,9 @@
 import { MyOpaqueEnum } from "../../js/api/index.mjs"
 export function toString() {
     
-    let myOpaqueEnum = MyOpaqueEnum.new_();
+    let self = MyOpaqueEnum.new_();
     
-    let out = myOpaqueEnum.toString();
+    let out = self.toString();
     
 
     return out;

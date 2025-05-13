@@ -1,12 +1,12 @@
 import { RenamedStructWithAttrs } from "../../js/api/index.mjs"
-export function c(renamedStructWithAttrsA, renamedStructWithAttrsB) {
+export function c(selfA, selfB) {
     
-    let renamedStructWithAttrs = RenamedStructWithAttrs.fromFields({
-        a: renamedStructWithAttrsA,
-        b: renamedStructWithAttrsB
+    let self = RenamedStructWithAttrs.fromFields({
+        a: selfA,
+        b: selfB
     });
     
-    let out = renamedStructWithAttrs.c;
+    let out = self.c;
     
 
     return out;

@@ -1,36 +1,36 @@
 import { OptionOpaque } from "../../js/api/index.mjs"
-export function optionIsize(optionOpaqueI) {
+export function optionIsize(selfI) {
     
-    let optionOpaque = OptionOpaque.new_(optionOpaqueI);
+    let self = OptionOpaque.new_(selfI);
     
-    let out = optionOpaque.optionIsize();
-    
-
-    return out;
-}
-export function optionUsize(optionOpaqueI) {
-    
-    let optionOpaque = OptionOpaque.new_(optionOpaqueI);
-    
-    let out = optionOpaque.optionUsize();
+    let out = self.optionIsize();
     
 
     return out;
 }
-export function optionI32(optionOpaqueI) {
+export function optionUsize(selfI) {
     
-    let optionOpaque = OptionOpaque.new_(optionOpaqueI);
+    let self = OptionOpaque.new_(selfI);
     
-    let out = optionOpaque.optionI32();
+    let out = self.optionUsize();
     
 
     return out;
 }
-export function optionU32(optionOpaqueI) {
+export function optionI32(selfI) {
     
-    let optionOpaque = OptionOpaque.new_(optionOpaqueI);
+    let self = OptionOpaque.new_(selfI);
     
-    let out = optionOpaque.optionU32();
+    let out = self.optionI32();
+    
+
+    return out;
+}
+export function optionU32(selfI) {
+    
+    let self = OptionOpaque.new_(selfI);
+    
+    let out = self.optionU32();
     
 
     return out;

@@ -1,9 +1,9 @@
 import { Opaque } from "../../js/api/index.mjs"
 export function getDebugStr() {
     
-    let opaque = new Opaque();
+    let self = new Opaque();
     
-    let out = opaque.getDebugStr();
+    let out = self.getDebugStr();
     
 
     return out;

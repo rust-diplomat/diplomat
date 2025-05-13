@@ -1,18 +1,18 @@
 import { AttrOpaque1Renamed } from "../../js/api/index.mjs"
 export function methodRenamed() {
     
-    let attrOpaque1Renamed = new AttrOpaque1Renamed();
+    let self = new AttrOpaque1Renamed();
     
-    let out = attrOpaque1Renamed.methodRenamed;
+    let out = self.methodRenamed;
     
 
     return out;
 }
 export function abirenamed() {
     
-    let attrOpaque1Renamed = new AttrOpaque1Renamed();
+    let self = new AttrOpaque1Renamed();
     
-    let out = attrOpaque1Renamed.abirenamed;
+    let out = self.abirenamed;
     
 
     return out;

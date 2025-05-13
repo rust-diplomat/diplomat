@@ -1,9 +1,9 @@
 import { MyString } from "../../js/api/index.mjs"
-export function str(myStringV) {
+export function str(selfV) {
     
-    let myString = new MyString(myStringV);
+    let self = new MyString(selfV);
     
-    let out = myString.str;
+    let out = self.str;
     
 
     return out;
