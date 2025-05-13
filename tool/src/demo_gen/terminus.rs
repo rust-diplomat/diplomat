@@ -173,6 +173,16 @@ impl RenderTerminusContext<'_, '_> {
     /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
         method.output.success_type().is_write()
+            || method
+                .output
+                .success_type()
+                .as_type()
+                .is_some_and(|t| matches!(t, hir::OutType::Enum(_) | hir::OutType::Primitive(_)))
+                && method
+                    .param_self
+                    .iter()
+                    .all(|s| !s.ty.is_mutably_borrowed())
+                && method.params.iter().all(|p| !p.ty.is_mutably_borrowed())
     }
 
     /// Create a Render Terminus .js file from a method.
@@ -558,5 +568,29 @@ impl RenderTerminusContext<'_, '_> {
         self.terminus_info
             .node_call_stack
             .push(node.render().unwrap());
+
+        match method.output.as_type() {
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out ? 'true' : 'false';".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Ordering)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out == 0 ? '==' : out == 1 ? '>' : '<';".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Char)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = String.fromCharCode(out);".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Byte)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = '0x' + out.toString(16);".into()),
+            Some(hir::OutType::Enum(_)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out.value;".into()),
+            _ => {}
+        }
     }
 }
