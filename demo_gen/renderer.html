@@ -218,7 +218,7 @@ let evaluateExternal = (param, updateParamEvent) =&gt; {
 <p>Here's the current script that <a href="quickstart.html">the quickstart</a> has to list all possible function names:</p>
 <pre><code class="language-js">import { RenderInfo } from "./demo_gen/index.mjs";
 
-Object.values(RenderInfo.termini).forEach((t) =&gt; {
+Object.values(RenderInfo.termini).toSorted((a, b) =&gt; a.funcName &lt; b.funcName ? -1 : 1).forEach((t) =&gt; {
 	let a = document.createElement("li");
 	a.innerHTML = `&lt;a href="demo_gen/rendering/template.html?func=${t.funcName}"&gt;${t.funcName}&lt;/a&gt;`;
 	document.getElementById("links").appendChild(a);
