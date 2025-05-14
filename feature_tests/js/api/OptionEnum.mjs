@@ -41,6 +41,7 @@ export class OptionEnum {
         throw TypeError(value + " is not a OptionEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new OptionEnum(value);
     }

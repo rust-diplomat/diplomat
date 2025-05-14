@@ -5,6 +5,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class FixedDecimalGroupingStrategy {
 
+    /** @internal */
     static fromValue(value: FixedDecimalGroupingStrategy | string): FixedDecimalGroupingStrategy;
 
     get value(): string;

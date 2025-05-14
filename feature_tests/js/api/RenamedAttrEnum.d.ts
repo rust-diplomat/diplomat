@@ -5,6 +5,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class RenamedAttrEnum {
 
+    /** @internal */
     static fromValue(value: RenamedAttrEnum | string): RenamedAttrEnum;
 
     get value(): string;
