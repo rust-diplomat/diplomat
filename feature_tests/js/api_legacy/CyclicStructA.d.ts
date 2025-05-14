@@ -27,5 +27,6 @@ export class CyclicStructA {
 
     get getterOut(): string;
 
-    constructor(structObj: CyclicStructA_obj);
+    /** @hidden */
+    constructor();
 }

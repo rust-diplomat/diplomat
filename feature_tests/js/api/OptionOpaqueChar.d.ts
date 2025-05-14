@@ -9,4 +9,7 @@ export class OptionOpaqueChar {
 
 
     assertChar(ch: codepoint): void;
+
+    /** @hidden */
+    constructor();
 }

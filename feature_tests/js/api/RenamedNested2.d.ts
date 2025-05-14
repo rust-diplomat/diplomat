@@ -7,4 +7,7 @@ export class RenamedNested2 {
     /** @internal */
     get ffiValue(): pointer;
 
+
+    /** @hidden */
+    constructor();
 }

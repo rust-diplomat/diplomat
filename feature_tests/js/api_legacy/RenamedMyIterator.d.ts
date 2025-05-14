@@ -9,4 +9,7 @@ export class RenamedMyIterator {
 
 
     next(): IteratorResult<number>;
+
+    /** @hidden */
+    constructor();
 }

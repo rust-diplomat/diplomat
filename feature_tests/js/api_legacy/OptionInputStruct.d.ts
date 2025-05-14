@@ -24,5 +24,6 @@ export class OptionInputStruct {
 
 
 
-    constructor(structObj: OptionInputStruct_obj);
+    /** @hidden */
+    constructor();
 }

@@ -1,12 +1,12 @@
-{% if !doc_str.is_empty() %}
+{%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
+
+{%- block header_info %}{% endblock %}
+
+{% if !doc_str.is_empty() -%}
 /**
 {{doc_str|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-{%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
-
-{% block header_info %}{% endblock %}
-
 export class {{type_name}} {
     {%- block class_body %}{% endblock %}
 
@@ -73,5 +73,9 @@ export class {{type_name}} {
         {%- endif %}
     }
     {%- endif -%}
+{%- else if typescript %}
+
+    /** @hidden */
+    constructor();
 {%- endif %}
 }

@@ -3,11 +3,10 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
+
 /**
  * Testing JS-specific layout/padding behavior
  */
-
-
 export class ScalarPairWithPadding {
     #first;
     get first() {

@@ -11,4 +11,7 @@ export class OpaqueThin {
     get a(): number;
 
     get b(): number;
+
+    /** @hidden */
+    constructor();
 }

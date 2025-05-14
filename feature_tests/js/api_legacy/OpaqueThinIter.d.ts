@@ -10,4 +10,7 @@ export class OpaqueThinIter {
 
 
     next(): IteratorResult<OpaqueThin>;
+
+    /** @hidden */
+    constructor();
 }

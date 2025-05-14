@@ -14,5 +14,6 @@ export class MyZst {
 
 
 
-    constructor(structObj: MyZst_obj);
+    /** @hidden */
+    constructor();
 }

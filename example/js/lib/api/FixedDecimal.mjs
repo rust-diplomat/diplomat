@@ -2,14 +2,13 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
-/**
- * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
- */
 const FixedDecimal_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimal_destroy_mv1(ptr);
 });
 
+/**
+ * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
+ */
 export class FixedDecimal {
     // Internal ptr reference:
     #ptr = null;

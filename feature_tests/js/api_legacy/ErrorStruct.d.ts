@@ -20,5 +20,6 @@ export class ErrorStruct {
 
 
 
-    constructor(structObj: ErrorStruct_obj);
+    /** @hidden */
+    constructor();
 }

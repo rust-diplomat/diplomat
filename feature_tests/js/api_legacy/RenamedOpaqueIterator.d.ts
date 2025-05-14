@@ -10,4 +10,7 @@ export class RenamedOpaqueIterator {
 
 
     next(): IteratorResult<AttrOpaque1Renamed>;
+
+    /** @hidden */
+    constructor();
 }

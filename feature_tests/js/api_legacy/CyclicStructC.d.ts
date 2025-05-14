@@ -23,5 +23,6 @@ export class CyclicStructC {
 
     cyclicOut(): string;
 
-    constructor(structObj: CyclicStructC_obj);
+    /** @hidden */
+    constructor();
 }

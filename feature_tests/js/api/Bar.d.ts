@@ -10,4 +10,7 @@ export class Bar {
 
 
     get foo(): Foo;
+
+    /** @hidden */
+    constructor();
 }

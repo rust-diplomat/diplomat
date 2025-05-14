@@ -2,16 +2,15 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+const DataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.icu4x_DataProvider_destroy_mv1(ptr);
+});
 
 /**
  * An  data provider, capable of loading  data keys from some source.
  *
  * See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
  */
-const DataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_DataProvider_destroy_mv1(ptr);
-});
-
 export class DataProvider {
     // Internal ptr reference:
     #ptr = null;

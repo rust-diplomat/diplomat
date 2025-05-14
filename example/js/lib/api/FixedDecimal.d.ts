@@ -2,11 +2,10 @@
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
+
 /**
  * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
  */
-
-
 export class FixedDecimal {
     /** @internal */
     get ffiValue(): pointer;

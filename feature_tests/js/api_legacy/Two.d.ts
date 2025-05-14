@@ -7,4 +7,7 @@ export class Two {
     /** @internal */
     get ffiValue(): pointer;
 
+
+    /** @hidden */
+    constructor();
 }

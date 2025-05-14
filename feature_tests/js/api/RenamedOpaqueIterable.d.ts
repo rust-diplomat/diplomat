@@ -10,4 +10,7 @@ export class RenamedOpaqueIterable {
 
 
     [Symbol.iterator](): RenamedOpaqueIterator;
+
+    /** @hidden */
+    constructor();
 }

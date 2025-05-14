@@ -22,5 +22,6 @@ export class CyclicStructB {
 
     static getAOption(): CyclicStructA | null;
 
-    constructor(structObj: CyclicStructB_obj);
+    /** @hidden */
+    constructor();
 }

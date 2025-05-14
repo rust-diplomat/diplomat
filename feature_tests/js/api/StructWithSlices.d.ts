@@ -22,5 +22,6 @@ export class StructWithSlices {
 
     returnLast(): string;
 
-    constructor(structObj: StructWithSlices_obj);
+    /** @hidden */
+    constructor();
 }

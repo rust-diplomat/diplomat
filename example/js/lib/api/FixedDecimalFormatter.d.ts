@@ -7,13 +7,12 @@ import type { Locale } from "./Locale"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
+
 /**
  * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
  *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
  */
-
-
 export class FixedDecimalFormatter {
     /** @internal */
     get ffiValue(): pointer;
@@ -32,4 +31,7 @@ export class FixedDecimalFormatter {
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
     formatWrite(value: FixedDecimal): string;
+
+    /** @hidden */
+    constructor();
 }
