@@ -51,6 +51,7 @@ export class FixedDecimalGroupingStrategy {
         return [...FixedDecimalGroupingStrategy.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

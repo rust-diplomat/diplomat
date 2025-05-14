@@ -9,6 +9,7 @@ export class UnimportedEnum {
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static A : UnimportedEnum;

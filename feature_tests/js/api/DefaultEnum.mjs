@@ -49,6 +49,7 @@ export class DefaultEnum {
         return [...DefaultEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

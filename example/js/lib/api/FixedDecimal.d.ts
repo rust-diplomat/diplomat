@@ -8,6 +8,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class FixedDecimal {
+    /** @internal */
     get ffiValue(): pointer;
 
 
@@ -25,5 +26,8 @@ export class FixedDecimal {
      */
     toString(): string | null;
 
+    /**
+     * Construct an [`FixedDecimal`] from an integer.
+     */
     constructor(v: number);
 }

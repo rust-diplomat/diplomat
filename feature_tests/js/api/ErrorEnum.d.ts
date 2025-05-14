@@ -9,6 +9,7 @@ export class ErrorEnum {
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static Foo : ErrorEnum;

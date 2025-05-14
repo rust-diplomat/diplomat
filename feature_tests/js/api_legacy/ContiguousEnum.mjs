@@ -51,6 +51,7 @@ export class ContiguousEnum {
         return [...ContiguousEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

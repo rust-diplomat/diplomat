@@ -49,6 +49,7 @@ export class OptionEnum {
         return [...OptionEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

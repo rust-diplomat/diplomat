@@ -32,6 +32,7 @@ export class OptionOpaque {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

@@ -29,6 +29,7 @@ export class Utf16Wrap {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

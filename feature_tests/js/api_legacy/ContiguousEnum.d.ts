@@ -9,6 +9,7 @@ export class ContiguousEnum {
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static C : ContiguousEnum;

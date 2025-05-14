@@ -50,6 +50,7 @@ export class UnimportedEnum {
         return [...UnimportedEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

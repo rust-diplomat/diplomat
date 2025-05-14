@@ -10,6 +10,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Foo {
+    /** @internal */
     get ffiValue(): pointer;
 
 

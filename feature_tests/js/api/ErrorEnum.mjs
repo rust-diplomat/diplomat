@@ -49,6 +49,7 @@ export class ErrorEnum {
         return [...ErrorEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

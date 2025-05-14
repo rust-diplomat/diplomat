@@ -4,6 +4,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RenamedAttrOpaque2 {
+    /** @internal */
     get ffiValue(): pointer;
 
 }

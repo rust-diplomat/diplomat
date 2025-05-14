@@ -61,6 +61,7 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
         {%- endif %}
     }{% endif %}
 
+    /** @internal */
     get ffiValue() {%- if typescript %}: number;{% else %}{
         return this.#value;
     }{% endif %}

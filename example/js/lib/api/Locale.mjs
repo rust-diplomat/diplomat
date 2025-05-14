@@ -35,6 +35,7 @@ export class Locale {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
@@ -60,6 +61,9 @@ export class Locale {
         }
     }
 
+    /**
+     * Construct an [`Locale`] from a locale identifier represented as a string.
+     */
     constructor(name) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

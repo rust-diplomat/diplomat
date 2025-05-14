@@ -30,6 +30,7 @@ export class RenamedOpaqueIterable {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

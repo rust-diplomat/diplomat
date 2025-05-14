@@ -5,6 +5,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RenamedMyIterable {
+    /** @internal */
     get ffiValue(): pointer;
 
 

@@ -9,6 +9,7 @@ export class RenamedAttrEnum {
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static A : RenamedAttrEnum;

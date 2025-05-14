@@ -10,8 +10,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Locale {
+    /** @internal */
     get ffiValue(): pointer;
 
 
+    /**
+     * Construct an [`Locale`] from a locale identifier represented as a string.
+     */
     constructor(name: string);
 }

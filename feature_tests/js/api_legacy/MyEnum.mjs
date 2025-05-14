@@ -57,6 +57,7 @@ export class MyEnum {
         }
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

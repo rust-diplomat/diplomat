@@ -33,6 +33,7 @@ export class FixedDecimal {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
@@ -87,6 +88,9 @@ export class FixedDecimal {
         }
     }
 
+    /**
+     * Construct an [`FixedDecimal`] from an integer.
+     */
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

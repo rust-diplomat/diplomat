@@ -50,6 +50,7 @@ export class RenamedAttrEnum {
         return [...RenamedAttrEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }
