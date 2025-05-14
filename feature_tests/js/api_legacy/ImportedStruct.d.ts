@@ -17,7 +17,7 @@ export class ImportedStruct {
     /** @internal */
     static fromFields(structObj : ImportedStruct_obj) : ImportedStruct;
 
-    /** 
+    /**
     * Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */

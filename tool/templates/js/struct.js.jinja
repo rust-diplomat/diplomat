@@ -206,7 +206,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%- endif -%}
 
     {%- if methods.special_methods.constructor.is_none() && typescript && !is_out %}
-    /** 
+    /**
     * Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
     * Optional fields do not need to be included in the provided object.
     */

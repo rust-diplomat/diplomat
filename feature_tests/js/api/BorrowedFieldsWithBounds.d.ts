@@ -20,7 +20,7 @@ export class BorrowedFieldsWithBounds {
     /** @internal */
     static fromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
 
-    /** 
+    /**
     * Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
     * Optional fields do not need to be included in the provided object.
     */

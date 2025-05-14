@@ -25,7 +25,7 @@ export class NestedBorrowedFields {
     /** @internal */
     static fromFields(structObj : NestedBorrowedFields_obj) : NestedBorrowedFields;
 
-    /** 
+    /**
     * Create `NestedBorrowedFields` from an object that contains all of `NestedBorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */

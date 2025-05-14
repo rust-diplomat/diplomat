@@ -16,7 +16,7 @@ export class StructWithSlices {
     /** @internal */
     static fromFields(structObj : StructWithSlices_obj) : StructWithSlices;
 
-    /** 
+    /**
     * Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
     * Optional fields do not need to be included in the provided object.
     */

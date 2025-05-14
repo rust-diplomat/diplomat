@@ -15,7 +15,7 @@ export class CyclicStructA {
     /** @internal */
     static fromFields(structObj : CyclicStructA_obj) : CyclicStructA;
 
-    /** 
+    /**
     * Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
     * Optional fields do not need to be included in the provided object.
     */

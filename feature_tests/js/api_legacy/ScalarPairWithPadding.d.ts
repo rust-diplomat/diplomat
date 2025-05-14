@@ -19,7 +19,7 @@ export class ScalarPairWithPadding {
     /** @internal */
     static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
 
-    /** 
+    /**
     * Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
     * Optional fields do not need to be included in the provided object.
     */

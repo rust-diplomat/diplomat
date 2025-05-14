@@ -16,7 +16,7 @@ export class ErrorStruct {
     /** @internal */
     static fromFields(structObj : ErrorStruct_obj) : ErrorStruct;
 
-    /** 
+    /**
     * Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
     * Optional fields do not need to be included in the provided object.
     */

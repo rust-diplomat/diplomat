@@ -20,7 +20,7 @@ export class BorrowedFields {
     /** @internal */
     static fromFields(structObj : BorrowedFields_obj) : BorrowedFields;
 
-    /** 
+    /**
     * Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
     * Optional fields do not need to be included in the provided object.
     */

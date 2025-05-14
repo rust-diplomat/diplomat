@@ -30,7 +30,7 @@ export class BigStructWithStuff {
     /** @internal */
     static fromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
 
-    /** 
+    /**
     * Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
     * Optional fields do not need to be included in the provided object.
     */

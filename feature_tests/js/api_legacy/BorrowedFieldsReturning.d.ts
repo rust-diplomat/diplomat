@@ -13,7 +13,7 @@ export class BorrowedFieldsReturning {
     /** @internal */
     static fromFields(structObj : BorrowedFieldsReturning_obj) : BorrowedFieldsReturning;
 
-    /** 
+    /**
     * Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
     * Optional fields do not need to be included in the provided object.
     */
