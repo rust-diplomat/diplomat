@@ -27,9 +27,7 @@ export class BorrowedFields {
     set c(value){
         this.#c = value;
     }
-    /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BorrowedFields(structObj);
     }

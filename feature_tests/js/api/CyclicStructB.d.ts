@@ -11,17 +11,17 @@ type CyclicStructB_obj = {
 export class CyclicStructB {
     get field(): number;
     set field(value: number);
-    /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : CyclicStructB_obj) : CyclicStructB;
 
+    /** 
+    * Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: CyclicStructB_obj);
 
 
     static getA(): CyclicStructA;
 
     static getAOption(): CyclicStructA | null;
-
-    /** @hidden */
-    constructor();
 }

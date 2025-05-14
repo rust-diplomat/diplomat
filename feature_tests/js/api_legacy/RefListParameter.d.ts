@@ -6,8 +6,7 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class RefListParameter {
     /** @internal */
     get ffiValue(): pointer;
-
-
-    /** @hidden */
+    /** @internal */
     constructor();
+
 }

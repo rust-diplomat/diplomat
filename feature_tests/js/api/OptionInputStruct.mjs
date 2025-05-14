@@ -27,9 +27,7 @@ export class OptionInputStruct {
     set c(value){
         this.#c = value;
     }
-    /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new OptionInputStruct(structObj);
     }

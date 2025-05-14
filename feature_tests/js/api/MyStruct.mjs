@@ -56,9 +56,7 @@ export class MyStruct {
     set g(value){
         this.#g = value;
     }
-    /** Create `MyStruct` from an object that contains all of `MyStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new MyStruct(diplomatRuntime.exposeConstructor, structObj);
     }

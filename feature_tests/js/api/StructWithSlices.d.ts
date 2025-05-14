@@ -13,15 +13,15 @@ export class StructWithSlices {
     set first(value: string);
     get second(): Array<number>;
     set second(value: Array<number>);
-    /** Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : StructWithSlices_obj) : StructWithSlices;
 
+    /** 
+    * Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: StructWithSlices_obj);
 
 
     returnLast(): string;
-
-    /** @hidden */
-    constructor();
 }

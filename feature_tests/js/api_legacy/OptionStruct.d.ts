@@ -11,7 +11,4 @@ export class OptionStruct {
     get c(): number;
     get d(): OptionOpaque;
 
-
-    /** @hidden */
-    constructor();
 }

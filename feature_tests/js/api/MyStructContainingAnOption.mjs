@@ -21,9 +21,7 @@ export class MyStructContainingAnOption {
     set b(value){
         this.#b = value;
     }
-    /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }

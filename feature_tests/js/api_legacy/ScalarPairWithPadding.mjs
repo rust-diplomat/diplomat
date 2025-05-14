@@ -22,9 +22,7 @@ export class ScalarPairWithPadding {
     set second(value){
         this.#second = value;
     }
-    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new ScalarPairWithPadding(structObj);
     }

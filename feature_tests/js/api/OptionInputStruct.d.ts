@@ -17,13 +17,13 @@ export class OptionInputStruct {
     set b(value: codepoint | null);
     get c(): OptionEnum | null;
     set c(value: OptionEnum | null);
-    /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : OptionInputStruct_obj) : OptionInputStruct;
 
+    /** 
+    * Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: OptionInputStruct_obj);
 
-
-    /** @hidden */
-    constructor();
 }

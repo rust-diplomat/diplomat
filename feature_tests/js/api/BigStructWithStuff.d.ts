@@ -27,15 +27,15 @@ export class BigStructWithStuff {
     set fourth(value: ScalarPairWithPadding);
     get fifth(): number;
     set fifth(value: number);
-    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : BigStructWithStuff_obj) : BigStructWithStuff;
 
+    /** 
+    * Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: BigStructWithStuff_obj);
 
 
     assertValue(extraVal: number): void;
-
-    /** @hidden */
-    constructor();
 }

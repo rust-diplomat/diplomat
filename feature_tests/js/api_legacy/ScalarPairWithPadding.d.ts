@@ -16,15 +16,15 @@ export class ScalarPairWithPadding {
     set first(value: number);
     get second(): number;
     set second(value: number);
-    /** Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : ScalarPairWithPadding_obj) : ScalarPairWithPadding;
 
+    /** 
+    * Create `ScalarPairWithPadding` from an object that contains all of `ScalarPairWithPadding`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: ScalarPairWithPadding_obj);
 
 
     assertValue(): void;
-
-    /** @hidden */
-    constructor();
 }

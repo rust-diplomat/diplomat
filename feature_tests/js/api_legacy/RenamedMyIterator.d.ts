@@ -6,10 +6,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class RenamedMyIterator {
     /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 
     next(): IteratorResult<number>;
-
-    /** @hidden */
-    constructor();
 }

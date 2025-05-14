@@ -10,13 +10,13 @@ type BorrowedFieldsReturning_obj = {
 export class BorrowedFieldsReturning {
     get bytes(): string;
     set bytes(value: string);
-    /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : BorrowedFieldsReturning_obj) : BorrowedFieldsReturning;
 
+    /** 
+    * Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: BorrowedFieldsReturning_obj);
 
-
-    /** @hidden */
-    constructor();
 }

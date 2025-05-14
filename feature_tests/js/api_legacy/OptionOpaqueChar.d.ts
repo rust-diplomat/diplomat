@@ -6,10 +6,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class OptionOpaqueChar {
     /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 
     assertChar(ch: codepoint): void;
-
-    /** @hidden */
-    constructor();
 }

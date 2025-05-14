@@ -19,9 +19,7 @@ export class StructWithSlices {
     set second(value){
         this.#second = value;
     }
-    /** Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new StructWithSlices(structObj);
     }

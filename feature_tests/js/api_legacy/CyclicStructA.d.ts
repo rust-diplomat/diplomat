@@ -12,11 +12,14 @@ type CyclicStructA_obj = {
 export class CyclicStructA {
     get a(): CyclicStructB;
     set a(value: CyclicStructB);
-    /** Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : CyclicStructA_obj) : CyclicStructA;
 
+    /** 
+    * Create `CyclicStructA` from an object that contains all of `CyclicStructA`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: CyclicStructA_obj);
 
 
     static getB(): CyclicStructB;
@@ -26,7 +29,4 @@ export class CyclicStructA {
     doubleCyclicOut(cyclicStructA: CyclicStructA_obj): string;
 
     get getterOut(): string;
-
-    /** @hidden */
-    constructor();
 }

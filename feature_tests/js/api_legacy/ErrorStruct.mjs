@@ -19,9 +19,7 @@ export class ErrorStruct {
     set j(value){
         this.#j = value;
     }
-    /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new ErrorStruct(structObj);
     }

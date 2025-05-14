@@ -52,4 +52,9 @@ symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifeti
         return this.#ptr;
     }
     {%- endif -%}
+
+    {%- if methods.special_methods.constructor.is_none() && typescript %}
+    /** @internal */
+    constructor();
+    {%- endif -%}
 {% endblock %}

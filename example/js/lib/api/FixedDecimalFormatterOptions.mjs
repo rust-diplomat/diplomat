@@ -20,9 +20,7 @@ export class FixedDecimalFormatterOptions {
     set someOtherConfig(value){
         this.#someOtherConfig = value;
     }
-    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }

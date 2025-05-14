@@ -12,9 +12,7 @@ export class BorrowedFieldsReturning {
     set bytes(value){
         this.#bytes = value;
     }
-    /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BorrowedFieldsReturning(structObj);
     }

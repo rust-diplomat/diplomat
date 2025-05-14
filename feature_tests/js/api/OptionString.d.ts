@@ -6,6 +6,8 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 export class OptionString {
     /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 
     static new_(diplomatStr: string): OptionString | null;
@@ -13,7 +15,4 @@ export class OptionString {
     write(): string | null;
 
     borrow(): string | null;
-
-    /** @hidden */
-    constructor();
 }

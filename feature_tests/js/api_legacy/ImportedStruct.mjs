@@ -20,9 +20,7 @@ export class ImportedStruct {
     set count(value){
         this.#count = value;
     }
-    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new ImportedStruct(structObj);
     }
