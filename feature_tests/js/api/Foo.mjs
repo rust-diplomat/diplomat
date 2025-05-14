@@ -35,6 +35,7 @@ export class Foo {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

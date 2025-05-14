@@ -41,6 +41,7 @@ export class DefaultEnum {
         throw TypeError(value + " is not a DefaultEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new DefaultEnum(diplomatRuntime.exposeConstructor, value);
     }
@@ -49,6 +50,7 @@ export class DefaultEnum {
         return [...DefaultEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

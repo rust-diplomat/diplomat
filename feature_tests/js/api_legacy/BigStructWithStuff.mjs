@@ -4,11 +4,10 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
+
 /**
  * Testing JS-specific layout/padding behavior
  */
-
-
 export class BigStructWithStuff {
     #first;
     get first() {
@@ -45,9 +44,7 @@ export class BigStructWithStuff {
     set fifth(value){
         this.#fifth = value;
     }
-    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BigStructWithStuff(structObj);
     }

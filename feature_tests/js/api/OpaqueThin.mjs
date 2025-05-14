@@ -29,6 +29,7 @@ export class OpaqueThin {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

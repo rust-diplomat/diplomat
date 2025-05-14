@@ -5,7 +5,10 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class One {
+    /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 
     static transitivity(hold: One, nohold: One): One;

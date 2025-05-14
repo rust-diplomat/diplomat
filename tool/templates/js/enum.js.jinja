@@ -44,6 +44,7 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
     }
 {%- endif %}
 
+    /** @internal */
     static fromValue(value {%- if typescript -%} : {{type_name}} | string {%- endif %}) {%- if typescript -%} : {{type_name}}; {%- else %} {
         return new {{type_name}}({% if overrides_constructor -%} diplomatRuntime.exposeConstructor, {% endif -%} value);
     }
@@ -61,6 +62,7 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
         {%- endif %}
     }{% endif %}
 
+    /** @internal */
     get ffiValue() {%- if typescript %}: number;{% else %}{
         return this.#value;
     }{% endif %}

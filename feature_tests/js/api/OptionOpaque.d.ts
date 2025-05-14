@@ -7,7 +7,10 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionOpaque {
+    /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 
     static new_(i: number): OptionOpaque | null;

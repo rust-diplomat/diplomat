@@ -42,6 +42,7 @@ export class UnimportedEnum {
         throw TypeError(value + " is not a UnimportedEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new UnimportedEnum(value);
     }
@@ -50,6 +51,7 @@ export class UnimportedEnum {
         return [...UnimportedEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

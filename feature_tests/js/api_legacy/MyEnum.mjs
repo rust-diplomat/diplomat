@@ -45,6 +45,7 @@ export class MyEnum {
         throw TypeError(value + " is not a MyEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new MyEnum(value);
     }
@@ -57,6 +58,7 @@ export class MyEnum {
         }
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

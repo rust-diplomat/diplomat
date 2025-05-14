@@ -5,10 +5,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class ContiguousEnum {
 
+    /** @internal */
     static fromValue(value: ContiguousEnum | string): ContiguousEnum;
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static C : ContiguousEnum;

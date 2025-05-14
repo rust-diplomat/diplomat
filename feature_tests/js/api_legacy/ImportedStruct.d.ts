@@ -14,12 +14,13 @@ export class ImportedStruct {
     set foo(value: UnimportedEnum);
     get count(): number;
     set count(value: number);
-    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : ImportedStruct_obj) : ImportedStruct;
 
-
-
+    /**
+    * Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
     constructor(structObj: ImportedStruct_obj);
+
 }

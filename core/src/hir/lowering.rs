@@ -487,13 +487,7 @@ impl<'ast> LoweringContext<'ast> {
             &item.ty_parent_attrs,
             &mut self.errors,
         );
-        let fields = if ast_out_struct.fields.is_empty() {
-            self.errors.push(LoweringError::Other(format!(
-                "struct `{}` is a ZST because it has no fields",
-                ast_out_struct.name
-            )));
-            Err(())
-        } else {
+        let fields = {
             let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
             // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
             if !attrs.disable {

@@ -32,6 +32,7 @@ export class OpaqueThinIter {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

@@ -30,6 +30,7 @@ export class RenamedMyIterable {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

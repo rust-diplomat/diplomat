@@ -31,6 +31,7 @@ export class AttrOpaque1Renamed {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

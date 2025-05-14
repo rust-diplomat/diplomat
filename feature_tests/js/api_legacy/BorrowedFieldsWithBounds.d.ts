@@ -17,14 +17,15 @@ export class BorrowedFieldsWithBounds {
     set fieldB(value: string);
     get fieldC(): string;
     set fieldC(value: string);
-    /** Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : BorrowedFieldsWithBounds_obj) : BorrowedFieldsWithBounds;
 
+    /**
+    * Create `BorrowedFieldsWithBounds` from an object that contains all of `BorrowedFieldsWithBounds`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: BorrowedFieldsWithBounds_obj);
 
 
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
-
-    constructor(structObj: BorrowedFieldsWithBounds_obj);
 }

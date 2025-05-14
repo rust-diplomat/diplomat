@@ -42,6 +42,7 @@ export class RenamedAttrEnum {
         throw TypeError(value + " is not a RenamedAttrEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new RenamedAttrEnum(value);
     }
@@ -50,6 +51,7 @@ export class RenamedAttrEnum {
         return [...RenamedAttrEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

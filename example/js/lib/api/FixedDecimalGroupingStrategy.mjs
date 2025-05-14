@@ -43,6 +43,7 @@ export class FixedDecimalGroupingStrategy {
         throw TypeError(value + " is not a FixedDecimalGroupingStrategy and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new FixedDecimalGroupingStrategy(value);
     }
@@ -51,6 +52,7 @@ export class FixedDecimalGroupingStrategy {
         return [...FixedDecimalGroupingStrategy.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

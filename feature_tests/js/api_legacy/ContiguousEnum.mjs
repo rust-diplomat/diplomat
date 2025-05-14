@@ -43,6 +43,7 @@ export class ContiguousEnum {
         throw TypeError(value + " is not a ContiguousEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new ContiguousEnum(value);
     }
@@ -51,6 +52,7 @@ export class ContiguousEnum {
         return [...ContiguousEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

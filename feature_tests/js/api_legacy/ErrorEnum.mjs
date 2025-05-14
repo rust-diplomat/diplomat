@@ -41,6 +41,7 @@ export class ErrorEnum {
         throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new ErrorEnum(value);
     }
@@ -49,6 +50,7 @@ export class ErrorEnum {
         return [...ErrorEnum.#values.keys()][this.#value];
     }
 
+    /** @internal */
     get ffiValue(){
         return this.#value;
     }

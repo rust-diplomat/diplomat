@@ -6,16 +6,15 @@ import { Locale } from "./Locale.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
+const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
+});
 
 /**
  * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
  *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
  */
-const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
-});
-
 export class FixedDecimalFormatter {
     // Internal ptr reference:
     #ptr = null;
@@ -39,6 +38,7 @@ export class FixedDecimalFormatter {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

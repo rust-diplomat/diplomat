@@ -5,10 +5,12 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class DefaultEnum {
 
+    /** @internal */
     static fromValue(value: DefaultEnum | string): DefaultEnum;
 
     get value(): string;
 
+    /** @internal */
     get ffiValue(): number;
 
     static A : DefaultEnum;

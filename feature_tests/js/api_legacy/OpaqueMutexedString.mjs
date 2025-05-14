@@ -30,6 +30,7 @@ export class OpaqueMutexedString {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

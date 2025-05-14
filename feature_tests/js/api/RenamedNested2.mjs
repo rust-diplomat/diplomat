@@ -29,6 +29,7 @@ export class RenamedNested2 {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

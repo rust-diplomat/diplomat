@@ -15,9 +15,7 @@ export class MyStructContainingAnOption {
     set a(value: MyStruct | null);
     get b(): DefaultEnum | null;
     set b(value: DefaultEnum | null);
-    /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj : MyStructContainingAnOption_obj) : MyStructContainingAnOption;
 
 

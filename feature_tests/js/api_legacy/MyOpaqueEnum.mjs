@@ -29,6 +29,7 @@ export class MyOpaqueEnum {
 
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }

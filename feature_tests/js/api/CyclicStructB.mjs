@@ -13,9 +13,7 @@ export class CyclicStructB {
     set field(value){
         this.#field = value;
     }
-    /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new CyclicStructB(structObj);
     }
