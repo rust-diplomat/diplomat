@@ -173,6 +173,16 @@ impl RenderTerminusContext<'_, '_> {
     /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
         method.output.success_type().is_write()
+            || method
+                .output
+                .success_type()
+                .as_type()
+                .is_some_and(|t| matches!(t, hir::OutType::Enum(_) | hir::OutType::Primitive(_)))
+                && method
+                    .param_self
+                    .iter()
+                    .all(|s| !s.ty.is_mutably_borrowed())
+                && method.params.iter().all(|p| !p.ty.is_mutably_borrowed())
     }
 
     /// Create a Render Terminus .js file from a method.
@@ -219,15 +229,13 @@ impl RenderTerminusContext<'_, '_> {
     ) -> String {
         let attrs_default = attrs.unwrap_or_default();
 
-        let owning_str = node
-            .owning_param
-            .as_ref()
-            .map(|p| format!("{}:", p))
-            .unwrap_or_default();
         let owned_full_name = format!(
             "{}{}",
-            owning_str,
-            heck::AsUpperCamelCase(param_name.clone())
+            node.owning_param
+                .as_ref()
+                .map(|o| format!("{o}."))
+                .unwrap_or_default(),
+            heck::AsLowerCamelCase(param_name.clone())
         )
         .to_string();
         // This only works for enums, since otherwise we break the type into its component parts.
@@ -411,22 +419,20 @@ impl RenderTerminusContext<'_, '_> {
                         self.relative_import_path.clone(),
                     ));
 
-                let owned_type = format!(
+                let param = format!(
                     "{}{}",
                     node.owning_param
                         .as_ref()
-                        .map(|o| { format!("{o}:") })
+                        .map(|o| { format!("{o}.") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name.clone())
+                    heck::AsLowerCamelCase(param_name.clone())
                 );
-
-                let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
                     self,
                     self.get_constructor_js(type_name.to_string(), method),
-                    var_name,
-                    Some(owned_type),
+                    heck::AsLowerCamelCase(&param).to_string(),
+                    Some(param),
                 );
 
                 self.evaluate_constructor(method, &mut child);
@@ -469,22 +475,20 @@ impl RenderTerminusContext<'_, '_> {
                 self.relative_import_path.clone(),
             ));
 
-        let owned_type = format!(
+        let param = format!(
             "{}{}",
             node.owning_param
                 .as_ref()
-                .map(|o| { format!("{o}:") })
+                .map(|o| { format!("{o}.") })
                 .unwrap_or_default(),
-            heck::AsUpperCamelCase(param_name.clone())
+            heck::AsLowerCamelCase(param_name.clone())
         );
-
-        let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
         let mut child = MethodDependency::new(
             self,
             format!("{type_name}.fromFields"),
-            var_name,
-            Some(owned_type),
+            heck::AsLowerCamelCase(&param).to_string(),
+            Some(param),
         );
 
         struct FieldInfo {
@@ -530,10 +534,8 @@ impl RenderTerminusContext<'_, '_> {
 
             let ty: Type = s.ty.clone().into();
 
-            let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
-
             let self_param =
-                self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
+                self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
 
             let is_getter = matches!(
@@ -558,5 +560,29 @@ impl RenderTerminusContext<'_, '_> {
         self.terminus_info
             .node_call_stack
             .push(node.render().unwrap());
+
+        match method.output.as_type() {
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out ? 'true' : 'false';".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Ordering)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out == 0 ? '==' : out == 1 ? '>' : '<';".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Char)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = String.fromCharCode(out);".into()),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Byte)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = '0x' + out.toString(16);".into()),
+            Some(hir::OutType::Enum(_)) => self
+                .terminus_info
+                .node_call_stack
+                .push("out = out.value;".into()),
+            _ => {}
+        }
     }
 }

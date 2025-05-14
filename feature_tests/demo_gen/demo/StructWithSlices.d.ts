@@ -1,2 +1,2 @@
 import { StructWithSlices } from "../../js/api/index.mjs"
-export function returnLast(structWithSlicesFirst: string, structWithSlicesSecond: Array<number>);
+export function returnLast(selfFirst: string, selfSecond: Array<number>);

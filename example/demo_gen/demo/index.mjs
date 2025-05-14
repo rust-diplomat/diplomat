@@ -15,7 +15,7 @@ let termini = Object.assign({
         parameters: [
             
             {
-                name: "FixedDecimalFormatter:Locale:Name",
+                name: "self.locale.name",
                 type: "string",
                 typeUse: "string"
             },

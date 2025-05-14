@@ -1,9 +1,9 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
-    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
-    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
-    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
-    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, Lifetime, LifetimeEnv,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
+    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
+    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
     StructField, StructPath, SuccessType, SymbolId, TraitDef, TraitParamSelf, TraitPath,
     TyPosition, Type, TypeDef, TypeId,
@@ -989,7 +989,7 @@ impl<'ast> LoweringContext<'ast> {
                     ));
                     Err(())
                 } else {
-                    Ok(Type::Primitive(PrimitiveType::Int(IntType::I8)))
+                    Ok(Type::Primitive(PrimitiveType::Ordering))
                 }
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {

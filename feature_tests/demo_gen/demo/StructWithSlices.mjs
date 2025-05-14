@@ -1,12 +1,12 @@
 import { StructWithSlices } from "../../js/api/index.mjs"
-export function returnLast(structWithSlicesFirst, structWithSlicesSecond) {
+export function returnLast(selfFirst, selfSecond) {
     
-    let structWithSlices = StructWithSlices.fromFields({
-        first: structWithSlicesFirst,
-        second: structWithSlicesSecond
+    let self = StructWithSlices.fromFields({
+        first: selfFirst,
+        second: selfSecond
     });
     
-    let out = structWithSlices.returnLast();
+    let out = self.returnLast();
     
 
     return out;
