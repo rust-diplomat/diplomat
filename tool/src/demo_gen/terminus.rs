@@ -1,7 +1,8 @@
 use std::collections::{BTreeSet, HashMap};
 
 use diplomat_core::hir::{
-    self, DemoInfo, Method, OpaqueDef, StructDef, StructPath, TyPosition, Type, TypeContext,
+    self, DemoInfo, Method, OpaqueDef, OutType, StructDef, StructPath, SuccessType, TyPosition,
+    Type, TypeContext,
 };
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
@@ -172,17 +173,17 @@ impl RenderTerminusContext<'_, '_> {
     /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
     /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
-        method.output.success_type().is_write()
-            || method
-                .output
-                .success_type()
-                .as_type()
-                .is_some_and(|t| matches!(t, hir::OutType::Enum(_) | hir::OutType::Primitive(_)))
-                && method
-                    .param_self
-                    .iter()
-                    .all(|s| !s.ty.is_mutably_borrowed())
-                && method.params.iter().all(|p| !p.ty.is_mutably_borrowed())
+        let is_return_ty_displayable = match method.output.success_type() {
+            SuccessType::Write => true,
+            SuccessType::OutType(OutType::Primitive(_) | OutType::Enum(_)) => true,
+            _ => false,
+        };
+        let is_pure = method
+            .param_self
+            .iter()
+            .all(|s| !s.ty.is_mutably_borrowed())
+            && method.params.iter().all(|p| !p.ty.is_mutably_borrowed());
+        is_return_ty_displayable && is_pure
     }
 
     /// Create a Render Terminus .js file from a method.
