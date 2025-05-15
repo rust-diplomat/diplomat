@@ -173,6 +173,7 @@ impl RenderTerminusContext<'_, '_> {
     /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
     /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
+        #[allow(clippy::match_like_matches_macro)] // more readable
         let is_return_ty_displayable = match method.output.success_type() {
             SuccessType::Write => true,
             SuccessType::OutType(OutType::Primitive(_) | OutType::Enum(_)) => true,
