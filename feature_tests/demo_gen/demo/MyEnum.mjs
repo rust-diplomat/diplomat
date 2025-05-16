@@ -10,7 +10,7 @@ export function getA() {
     
     let out = MyEnum.getA();
     
-    out = out.value;;
+    out = out?.value || 'None';;
     
 
     return out;

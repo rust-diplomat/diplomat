@@ -482,7 +482,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
 
-            show_default_ctor: !typescript,
+            show_default_ctor: !typescript && !struct_def.fields.is_empty(),
 
             size: layout.size(),
             align: layout.align(),

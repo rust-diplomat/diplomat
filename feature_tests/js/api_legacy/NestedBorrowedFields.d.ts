@@ -7,7 +7,7 @@ import type { BorrowedFields_obj } from "./BorrowedFields"
 import type { Foo } from "./Foo"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type NestedBorrowedFields_obj = {
+export type NestedBorrowedFields_obj = {
     fields: BorrowedFields_obj;
     bounds: BorrowedFieldsWithBounds_obj;
     bounds2: BorrowedFieldsWithBounds_obj;

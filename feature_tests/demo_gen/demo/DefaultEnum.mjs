@@ -3,7 +3,7 @@ export function new_() {
     
     let out = new DefaultEnum();
     
-    out = out.value;;
+    out = out?.value || 'None';;
     
 
     return out;

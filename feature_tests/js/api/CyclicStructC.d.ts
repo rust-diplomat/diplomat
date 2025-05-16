@@ -3,7 +3,7 @@ import type { CyclicStructA } from "./CyclicStructA"
 import type { CyclicStructA_obj } from "./CyclicStructA"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type CyclicStructC_obj = {
+export type CyclicStructC_obj = {
     a: CyclicStructA_obj;
 };
 

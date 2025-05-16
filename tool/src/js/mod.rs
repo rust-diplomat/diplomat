@@ -249,9 +249,19 @@ pub(crate) fn run<'tcx>(
         );
         ts_exports.push(
             formatter
-                .fmt_export_statement(&context.type_name, true, "./".into(), &export_filename)
+                .fmt_export_statement(
+                    &match type_def {
+                        TypeDef::Struct(s) if !s.fields.is_empty() => {
+                            format!("{}, {}_obj", context.type_name, context.type_name).into()
+                        }
+                        _ => context.type_name,
+                    },
+                    true,
+                    "./".into(),
+                    &export_filename,
+                )
                 .into(),
-        )
+        );
     }
 
     /// Represents the `index.mjs` file that `export`s all classes that we generate.

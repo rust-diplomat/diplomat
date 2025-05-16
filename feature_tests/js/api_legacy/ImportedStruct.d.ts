@@ -2,7 +2,7 @@
 import type { UnimportedEnum } from "./UnimportedEnum"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type ImportedStruct_obj = {
+export type ImportedStruct_obj = {
     foo: UnimportedEnum;
     count: number;
 };

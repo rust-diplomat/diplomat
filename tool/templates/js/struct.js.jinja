@@ -1,8 +1,8 @@
 {% extends "js/js_class.js.jinja" %}
 
 {% block header_info %}
-{%- if typescript && !is_out -%}
-type {{type_name}}_obj = {
+{%- if typescript && !is_out && !fields.is_empty() -%}
+export type {{type_name}}_obj = {
     {%- for field in fields %}
     {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
     {%- endfor %}
@@ -32,7 +32,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%- endif %}
     {%- endfor -%}
 
-    {%~ if !is_out %}
+    {%~ if !is_out && !fields.is_empty() %}
     {# This function exists because some structs can override their default constructors.
      # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
      # For instance, demo_gen uses this function instead of the constructor
@@ -44,7 +44,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%~ endif -%}
 
     {%- if !(typescript && is_out) %}
-    {%- if !typescript %}
+    {%- if !typescript && !fields.is_empty() %}
     #internalConstructor(structObj
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
@@ -205,13 +205,13 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%- endif -%}
     {%- endif -%}
 
-    {%- if methods.special_methods.constructor.is_none() && typescript && !is_out %}
+    {%- if methods.special_methods.constructor.is_none() && typescript && !is_out && !fields.is_empty() %}
     /**
     * Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
     * Optional fields do not need to be included in the provided object.
     */
     constructor(structObj: {{type_name}}_obj);
-    {%- else if typescript && is_out %}
+    {%- else if typescript && is_out && !fields.is_empty() %}
     /** @internal */
     constructor();
     {%- endif -%}

@@ -219,7 +219,7 @@ export class MyStruct {
 
         try {
             if (result !== 1) {
-                const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
+                const cause = new MyZst();
                 throw new globalThis.Error('MyZst', { cause });
             }
         }
@@ -234,7 +234,7 @@ export class MyStruct {
 
         try {
             if (result !== 1) {
-                const cause = MyZst.fromFields({}, diplomatRuntime.internalConstructor);
+                const cause = new MyZst();
                 throw new globalThis.Error('MyZst', { cause });
             }
         }

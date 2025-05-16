@@ -57,7 +57,7 @@ export function acceptsOptionEnum(arg, sentinel) {
     
     let out = OptionOpaque.acceptsOptionEnum(arg,sentinel);
     
-    out = out.value;;
+    out = out?.value || 'None';;
     
 
     return out;

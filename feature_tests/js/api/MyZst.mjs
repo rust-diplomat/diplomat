@@ -5,22 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyZst {
-    /** @internal */
-    static fromFields(structObj) {
-        return new MyZst(structObj);
-    }
-
-    #internalConstructor(structObj) {
-        if (typeof structObj !== "object") {
-            throw new Error("MyZst's constructor takes an object of MyZst's fields.");
-        }
-
-        return this;
-    }
 
 
-
-    constructor(structObj) {
-        return this.#internalConstructor(...arguments)
-    }
 }
