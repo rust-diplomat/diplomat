@@ -486,6 +486,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         message = match e {
                             Type::Enum(..) => format!("'{type_name}.' + cause.value"),
                             Type::Struct(..) if fields_empty => format!("'{type_name}'"),
+                            Type::Primitive(..) => "cause.toString()".into(),
                             _ => format!("'{type_name}: ' + cause.toString()"),
                         },
                         ))
