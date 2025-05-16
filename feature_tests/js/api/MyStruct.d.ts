@@ -3,7 +3,7 @@ import type { MyEnum } from "./MyEnum"
 import type { MyZst } from "./MyZst"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type MyStruct_obj = {
+export type MyStruct_obj = {
     a: number;
     b: boolean;
     c: number;

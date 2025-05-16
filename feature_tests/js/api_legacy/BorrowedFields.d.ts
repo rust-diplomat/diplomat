@@ -2,7 +2,7 @@
 import type { Bar } from "./Bar"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type BorrowedFields_obj = {
+export type BorrowedFields_obj = {
     a: string;
     b: string;
     c: string;

@@ -3,7 +3,7 @@ import type { DefaultEnum } from "./DefaultEnum"
 import type { MyStruct } from "./MyStruct"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type MyStructContainingAnOption_obj = {
+export type MyStructContainingAnOption_obj = {
     a?: MyStruct | null;
     b?: DefaultEnum | null;
 };

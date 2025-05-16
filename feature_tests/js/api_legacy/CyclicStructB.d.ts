@@ -2,7 +2,7 @@
 import type { CyclicStructA } from "./CyclicStructA"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type CyclicStructB_obj = {
+export type CyclicStructB_obj = {
     field: number;
 };
 

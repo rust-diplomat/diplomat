@@ -2,39 +2,39 @@
 export { codepoint } from './diplomat-runtime';
 
 
-export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs"
+export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
-export { ImportedStruct } from "./ImportedStruct"
+export { ImportedStruct, ImportedStruct_obj } from "./ImportedStruct"
 
-export { BorrowedFields } from "./BorrowedFields"
+export { BorrowedFields, BorrowedFields_obj } from "./BorrowedFields"
 
-export { BorrowedFieldsReturning } from "./BorrowedFieldsReturning"
+export { BorrowedFieldsReturning, BorrowedFieldsReturning_obj } from "./BorrowedFieldsReturning"
 
-export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
+export { BorrowedFieldsWithBounds, BorrowedFieldsWithBounds_obj } from "./BorrowedFieldsWithBounds"
 
-export { NestedBorrowedFields } from "./NestedBorrowedFields"
+export { NestedBorrowedFields, NestedBorrowedFields_obj } from "./NestedBorrowedFields"
 
-export { OptionInputStruct } from "./OptionInputStruct"
+export { OptionInputStruct, OptionInputStruct_obj } from "./OptionInputStruct"
 
-export { ErrorStruct } from "./ErrorStruct"
+export { ErrorStruct, ErrorStruct_obj } from "./ErrorStruct"
 
-export { BigStructWithStuff } from "./BigStructWithStuff"
+export { BigStructWithStuff, BigStructWithStuff_obj } from "./BigStructWithStuff"
 
-export { CyclicStructA } from "./CyclicStructA"
+export { CyclicStructA, CyclicStructA_obj } from "./CyclicStructA"
 
-export { CyclicStructB } from "./CyclicStructB"
+export { CyclicStructB, CyclicStructB_obj } from "./CyclicStructB"
 
-export { CyclicStructC } from "./CyclicStructC"
+export { CyclicStructC, CyclicStructC_obj } from "./CyclicStructC"
 
-export { MyStruct } from "./MyStruct"
+export { MyStruct, MyStruct_obj } from "./MyStruct"
 
-export { MyStructContainingAnOption } from "./MyStructContainingAnOption"
+export { MyStructContainingAnOption, MyStructContainingAnOption_obj } from "./MyStructContainingAnOption"
 
 export { MyZst } from "./MyZst"
 
-export { ScalarPairWithPadding } from "./ScalarPairWithPadding"
+export { ScalarPairWithPadding, ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
 
-export { StructWithSlices } from "./StructWithSlices"
+export { StructWithSlices, StructWithSlices_obj } from "./StructWithSlices"
 
 export { OptionStruct } from "./OptionStruct"
 

@@ -3,7 +3,7 @@ import type { ScalarPairWithPadding } from "./ScalarPairWithPadding"
 import type { ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type BigStructWithStuff_obj = {
+export type BigStructWithStuff_obj = {
     first: number;
     second: number;
     third: number;
