@@ -1,9 +1,9 @@
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    Docs, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic,
-    PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext,
-    TypeId,
+    Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv,
+    MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type,
+    TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -56,7 +56,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
             .replace('\n', "\n*")
             .replace(" \n", "\n")

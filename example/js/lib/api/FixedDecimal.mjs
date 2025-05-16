@@ -39,7 +39,7 @@ export class FixedDecimal {
 
 
     /**
-     * Construct an [`FixedDecimal`] from an integer.
+     * Construct an {@link FixedDecimal} from an integer.
      */
     #defaultConstructor(v) {
 
@@ -54,7 +54,7 @@ export class FixedDecimal {
     }
 
     /**
-     * Multiply the [`FixedDecimal`] by a given power of ten.
+     * Multiply the {@link FixedDecimal} by a given power of ten.
      *
      * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
      */
@@ -68,7 +68,7 @@ export class FixedDecimal {
     }
 
     /**
-     * Format the [`FixedDecimal`] as a string.
+     * Format the {@link FixedDecimal} as a string.
      *
      * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
      */
@@ -88,7 +88,7 @@ export class FixedDecimal {
     }
 
     /**
-     * Construct an [`FixedDecimal`] from an integer.
+     * Construct an {@link FixedDecimal} from an integer.
      */
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

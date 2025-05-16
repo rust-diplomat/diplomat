@@ -27,5 +27,5 @@ pub use types::*;
 
 pub use lowering::{ErrorAndContext, ErrorContext, LoweringError};
 
-pub use crate::ast::{Docs, DocsUrlGenerator};
+pub use crate::ast::{Docs, DocsTypeReferenceSyntax, DocsUrlGenerator};
 pub use strck::ident::rust::{Ident, IdentBuf};

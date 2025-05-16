@@ -4,7 +4,8 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, Docs, DocsUrlGenerator, EnumVariant, SpecialMethod, TypeContext, TypeId,
+    self, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, SpecialMethod, TypeContext,
+    TypeId,
 };
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
@@ -100,7 +101,9 @@ impl<'tcx> JSFormatter<'tcx> {
 
     /// Just creates `/** */` doc strings.
     pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen).trim().to_string()
+        docs.to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
+            .trim()
+            .to_string()
     }
 
     /// Creates the body of an `import` or `export` statement.

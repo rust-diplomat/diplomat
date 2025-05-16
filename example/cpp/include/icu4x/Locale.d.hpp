@@ -33,7 +33,7 @@ class Locale {
 public:
 
   /**
-   * Construct an [`Locale`] from a locale identifier represented as a string.
+   * Construct an {@link Locale} from a locale identifier represented as a string.
    */
   inline static std::unique_ptr<icu4x::Locale> new_(std::string_view name);
 

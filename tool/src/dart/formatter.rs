@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsTypeReferenceSyntax, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -68,7 +68,9 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen).trim().to_string()
+        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
+            .trim()
+            .to_string()
     }
 
     /// Resolve and format a named type for use in code

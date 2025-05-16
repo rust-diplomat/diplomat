@@ -1,7 +1,8 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+    self, DocsTypeReferenceSyntax, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition,
+    TypeContext, TypeId,
 };
 use std::borrow::Cow;
 use std::sync::LazyLock;
@@ -277,7 +278,9 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen).trim().to_string()
+        docs.to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
+            .trim()
+            .to_string()
     }
 
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
