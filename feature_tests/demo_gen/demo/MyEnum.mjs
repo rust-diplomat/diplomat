@@ -1,7 +1,7 @@
 import { MyEnum } from "../../js/api/index.mjs"
 export function intoValue(self) {
     
-    let out = self.intoValue();
+    let out = new MyEnum(self).intoValue();
     
 
     return out;
