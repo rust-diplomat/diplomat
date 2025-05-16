@@ -484,7 +484,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         (!fields_empty || (is_out && !success_empty), format!(
                         "const cause = {cause};\n    throw new globalThis.Error({message}, {{ cause }})", 
                         message = match e {
-                            Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
+                            Type::Enum(..) => format!("'{type_name}.' + cause.value"),
                             Type::Struct(..) if fields_empty => format!("'{type_name}'"),
                             _ => format!("'{type_name}: ' + cause.toString()"),
                         },
