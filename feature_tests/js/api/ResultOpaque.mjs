@@ -46,7 +46,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum.' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -65,7 +65,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum.' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
@@ -84,7 +84,7 @@ export class ResultOpaque {
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new ErrorEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
-                throw new globalThis.Error('ErrorEnum: ' + cause.value, { cause });
+                throw new globalThis.Error('ErrorEnum.' + cause.value, { cause });
             }
             return new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }

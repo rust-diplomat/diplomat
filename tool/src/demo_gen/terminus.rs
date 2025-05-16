@@ -583,7 +583,7 @@ impl RenderTerminusContext<'_, '_> {
             Some(hir::OutType::Enum(_)) => self
                 .terminus_info
                 .node_call_stack
-                .push("out = out.value;".into()),
+                .push("out = out?.value || 'None';".into()),
             _ => {}
         }
     }
