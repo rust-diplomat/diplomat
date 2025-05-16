@@ -169,9 +169,6 @@ pub(super) struct TerminusInfo {
 
 impl RenderTerminusContext<'_, '_> {
     /// See [`TerminusInfo`] for more information on termini.
-    ///
-    /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
-    /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
         #[allow(clippy::match_like_matches_macro)] // more readable
         let is_return_ty_displayable = match method.output.success_type() {
@@ -317,6 +314,20 @@ impl RenderTerminusContext<'_, '_> {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
                 self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
+            }
+            Type::Enum(e) if param_name == "self" => {
+                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+
+                if e.resolve(self.tcx).attrs.disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
+
+                // Enum coercion only works for arguments, we need to construct self manually
+                format!(
+                    "new {type_name}({})",
+                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
+                )
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
