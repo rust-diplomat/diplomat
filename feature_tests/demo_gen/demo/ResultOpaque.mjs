@@ -10,7 +10,7 @@ export function newInEnumErr(i) {
     
     let out = ResultOpaque.newInEnumErr(i);
     
-    out = out.value;;
+    out = out?.value || 'None';;
     
 
     return out;
