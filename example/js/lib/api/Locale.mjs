@@ -41,7 +41,7 @@ export class Locale {
 
 
     /**
-     * Construct an [`Locale`] from a locale identifier represented as a string.
+     * Construct an {@link Locale} from a locale identifier represented as a string.
      */
     #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
@@ -61,7 +61,7 @@ export class Locale {
     }
 
     /**
-     * Construct an [`Locale`] from a locale identifier represented as a string.
+     * Construct an {@link Locale} from a locale identifier represented as a string.
      */
     constructor(name) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {

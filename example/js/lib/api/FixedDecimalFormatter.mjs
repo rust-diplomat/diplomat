@@ -11,7 +11,7 @@ const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr
 });
 
 /**
- * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+ * An  Fixed Decimal Format object, capable of formatting a {@link FixedDecimal} as a string.
  *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
  */
@@ -45,7 +45,7 @@ export class FixedDecimalFormatter {
 
 
     /**
-     * Creates a new [`FixedDecimalFormatter`] from locale data.
+     * Creates a new {@link FixedDecimalFormatter} from locale data.
      *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
      */
@@ -72,7 +72,7 @@ export class FixedDecimalFormatter {
     }
 
     /**
-     * Formats a [`FixedDecimal`] to a string.
+     * Formats a {@link FixedDecimal} to a string.
      *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
