@@ -48,25 +48,25 @@ class AttrOpaque1 internal constructor (
             return returnOpaque
         }
     }
-    
+    override
     fun method(): UByte {
         
         val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return (returnVal.toUByte())
     }
-    
+    override
     fun abirenamed(): UByte {
         
         val returnVal = lib.renamed_on_abi_only(handle);
         return (returnVal.toUByte())
     }
-    
+    override
     fun useUnnamespaced(un: Unnamespaced): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_unnamespaced(handle, un.handle);
         
     }
-    
+    override
     fun useNamespaced(n: AttrEnum): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());

@@ -47,7 +47,7 @@ class FixedDecimal internal constructor (
             return returnOpaque
         }
     }
-    
+    override
     /** Multiply the [`FixedDecimal`] by a given power of ten.
     *
     *See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
@@ -57,7 +57,7 @@ class FixedDecimal internal constructor (
         val returnVal = lib.icu4x_FixedDecimal_multiply_pow10_mv1(handle, power);
         
     }
-    
+    override
     /** Format the [`FixedDecimal`] as a string.
     *
     *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
