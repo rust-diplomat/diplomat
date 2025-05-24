@@ -91,11 +91,7 @@ class {{type_name}} internal constructor (
     }
 
 {%- for m in self_methods %}
-    {%- if generate_mocking_interface %}
-    override{{m.definition|indent(4)}}
-    {%- else %}
     {{m.definition|indent(4)}}
-    {%- endif %}
 {%- endfor %}
 
 {%- match special_methods.iterator_type -%}

@@ -1020,6 +1020,7 @@ returnVal.option() ?: return null
         self_type: Option<&'cx SelfType>,
         struct_name: Option<&str>,
         use_finalizers_not_cleaners: bool,
+        add_override_specifier_for_opaque_self_methods: bool,
     ) -> MethodInfo {
         if method.attrs.disable {
             return MethodInfo::default();
@@ -1284,6 +1285,7 @@ returnVal.option() ?: return null
             write_return,
             slice_conversions,
             docs: self.formatter.fmt_docs(&method.docs),
+            add_override_specifier_for_opaque_self_methods,
         }
         .render()
         .expect("Failed to render string for method");
@@ -1364,6 +1366,7 @@ returnVal.option() ?: return null
             .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
+
         let mut special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
@@ -1382,6 +1385,7 @@ returnVal.option() ?: return null
                     Some(self_param),
                     None,
                     use_finalizers_not_cleaners,
+                    ty.attrs.generate_mocking_interface, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -1399,6 +1403,7 @@ returnVal.option() ?: return null
                     None,
                     Some(type_name),
                     use_finalizers_not_cleaners,
+                    false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -1488,6 +1493,7 @@ returnVal.option() ?: return null
                     Some(self_param),
                     Some(type_name),
                     use_finalizers_not_cleaners,
+                    false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -1503,6 +1509,7 @@ returnVal.option() ?: return null
                     None,
                     Some(type_name),
                     use_finalizers_not_cleaners,
+                    false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -1769,6 +1776,7 @@ returnVal.option() ?: return null
                     Some(self_param),
                     None,
                     use_finalizers_not_cleaners,
+                    false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -1785,6 +1793,7 @@ returnVal.option() ?: return null
                     None,
                     None,
                     use_finalizers_not_cleaners,
+                    false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
             .collect::<Vec<_>>();
@@ -2054,6 +2063,7 @@ struct MethodTpl<'a> {
     write_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
     docs: String,
+    add_override_specifier_for_opaque_self_methods: bool,
 }
 
 #[derive(Default)]
