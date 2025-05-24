@@ -3,11 +3,8 @@
 /** {{docs}}
 */
 {%- endif %}
-{%- if add_override_specifier_for_opaque_self_methods %}
-override {{ declaration }} {
-{%- else %}
+{% if add_override_specifier_for_opaque_self_methods %}override {% endif -%}
 {{ declaration }} {
-{%- endif %}
 {%- for slice_conv in slice_conversions %}{{slice_conv|indent(4)}}{% endfor %}
     {% if write_return %}val write = DW.lib.diplomat_buffer_write_create(0){% endif %}
     val returnVal = lib.{{ native_method_name -}}(
