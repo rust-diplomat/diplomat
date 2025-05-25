@@ -1365,7 +1365,6 @@ returnVal.option() ?: return null
             .map(|method| self.gen_native_method_info(method, type_name))
             .collect::<Vec<_>>();
 
-
         let mut special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
