@@ -15,8 +15,6 @@ internal interface MyOpaqueStructLib: Library {
     fun MyOpaqueStruct_get_byte(): FFIUint8
     fun MyOpaqueStruct_get_string_wrapper(in1: Int): Int
 }
-internal interface MyOpaqueStructInterface {
-}
 
 class MyOpaqueStruct internal constructor (
     internal val handle: Pointer,
@@ -25,7 +23,7 @@ class MyOpaqueStruct internal constructor (
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any?>,
     internal var finalizer_registered: Boolean = false,
-): MyOpaqueStructInterface  {
+)  {
     fun registerFinalizer() {
         this.finalizer_registered = true
     }
