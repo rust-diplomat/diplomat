@@ -99,9 +99,9 @@ export class BorrowedFieldsWithBounds {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['bAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['cAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges, bEdges, cEdges) {

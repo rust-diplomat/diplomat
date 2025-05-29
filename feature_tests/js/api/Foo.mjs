@@ -45,7 +45,7 @@ export class Foo {
 
     #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const xSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
+        const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
@@ -118,7 +118,7 @@ export class Foo {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
-        const anotherStringSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
+        const anotherStringSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];

@@ -81,8 +81,8 @@ export class StructWithSlices {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

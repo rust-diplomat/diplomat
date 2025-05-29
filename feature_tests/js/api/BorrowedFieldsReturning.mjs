@@ -72,7 +72,7 @@ export class BorrowedFieldsReturning {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

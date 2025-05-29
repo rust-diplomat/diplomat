@@ -362,14 +362,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 // For the legacy ABI, we expect to return a splatted list of the
                 // fields converted into WASM friendly types and buffers for us. 
                 // So we use the List context here.
-                WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), JsToCConversionContext::List(force_padding)),
+                WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding)),
                 // For the C spec ABI, we use the _writeToArrayBuffer function (generated using js_to_c_write) info,
                 // so we don't need to provide any information here:
                 WasmABI::CSpec => "".into()
             };
 
             let js_to_c = format!("{js_to_c}{maybe_padding_after}");
-            let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
+            let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 
             FieldInfo {
                 field_name,
@@ -596,24 +596,26 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             // If we're a slice of strings or primitives. See [`hir::Type::Slice`].
             if let hir::Type::Slice(..) = param.ty {
-                match param_borrow_kind {
+                let alloc = match param_borrow_kind {
                     // Is Rust NOT taking ownership?
                     // Then that means we can free this after the function is done.
                     ParamBorrowInfo::TemporarySlice => {
                         method_info.needs_cleanup = true;
+                        "functionCleanupArena"
                     },
 
                     // Is this function borrowing the slice?
                     // I.e., Do we need it alive for at least as long as this function call?
                     ParamBorrowInfo::BorrowedSlice => {
                         method_info.needs_slice_collection = true;
+                        "functionGarbageCollectorGrip"
                     },
                     _ => unreachable!(
                         "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                     ),
-                }
+                };
 
-                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None,
+                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(alloc),
                     // We're specifically doing slice preallocation here
                     JsToCConversionContext::SlicePrealloc
                     );
@@ -659,6 +661,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         &param.ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
+                        alloc,
                         // Arguments need a list, and never force padding
                         JsToCConversionContext::List(ForcePaddingStatus::NoForce),
                     ));

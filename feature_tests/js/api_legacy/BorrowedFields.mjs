@@ -97,9 +97,9 @@ export class BorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str16(wasm, this.#a)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#b)).writePtrLenToArrayBuffer(arrayBuffer, offset + 8);
+        diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)).writePtrLenToArrayBuffer(arrayBuffer, offset + 16);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

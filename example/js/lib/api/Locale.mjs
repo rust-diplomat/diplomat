@@ -47,7 +47,7 @@ export class Locale {
     #defaultConstructor(name) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
         
-        const nameSlice = diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, name)));
+        const nameSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, name)));
         
         const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr);
     

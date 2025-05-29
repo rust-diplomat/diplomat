@@ -629,6 +629,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        alloc : Option<&str>,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
@@ -662,6 +663,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     inner,
                     "jsValue".into(),
                     struct_borrow_info,
+                    alloc,
                     // Option conversion helpers *always* need WriteToBuffer
                     JsToCConversionContext::WriteToBuffer("offset", 0),
                 );
@@ -690,8 +692,11 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-
-                    let mut alloc_stmnt = format!("diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(");
+                    let alloc = alloc.expect(
+                        "Must provide some allocation anchor for slice conversion generation!",
+                    );
+                    
+                    let mut alloc_stmnt = format!("{alloc}.alloc(");
                     let mut alloc_end = ")";
 
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
@@ -708,7 +713,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         JsToCConversionContext::SlicePrealloc => {
                             match self.config.abi {
                                 WasmABI::Legacy => ("".into(), Cow::Borrowed("")),
-                                WasmABI::CSpec => (format!("diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")"))
+                                WasmABI::CSpec => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")"))
                             }
                         },
                         // List mode wants a list of (ptr, len)
