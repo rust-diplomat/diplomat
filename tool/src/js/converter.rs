@@ -629,7 +629,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         ty: &Type<P>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
-        alloc : Option<&str>,
+        alloc: Option<&str>,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         match *ty {
@@ -695,12 +695,15 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     let alloc = alloc.expect(
                         "Must provide some allocation anchor for slice conversion generation!",
                     );
-                    
+
                     let mut alloc_stmnt = format!("{alloc}.alloc(");
                     let mut alloc_end = ")";
 
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
-                    if matches!(gen_context, JsToCConversionContext::List(..) | JsToCConversionContext::SlicePrealloc) {
+                    if matches!(
+                        gen_context,
+                        JsToCConversionContext::List(..) | JsToCConversionContext::SlicePrealloc
+                    ) {
                         alloc_stmnt = "".into();
 
                         if matches!(self.config.abi, WasmABI::Legacy) {
@@ -710,11 +713,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
                     let (spread_pre, spread_post) = match gen_context {
                         // SlicePreAlloc just wants the DiplomatBufe
-                        JsToCConversionContext::SlicePrealloc => {
-                            match self.config.abi {
-                                WasmABI::Legacy => ("".into(), Cow::Borrowed("")),
-                                WasmABI::CSpec => (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed(")"))
-                            }
+                        JsToCConversionContext::SlicePrealloc => match self.config.abi {
+                            WasmABI::Legacy => ("".into(), Cow::Borrowed("")),
+                            WasmABI::CSpec => (
+                                format!(
+                                    "{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "
+                                ),
+                                Cow::Borrowed(")"),
+                            ),
                         },
                         // List mode wants a list of (ptr, len)
                         // NOTE: This is only possible in the old WASM ABI, as _intoFFI requires this splatting:
@@ -799,19 +805,18 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             format!("{js_type}._fromSuppliedValue(diplomatRuntime.internalConstructor, {js_name})");
 
         match gen_context {
-            JsToCConversionContext::List(force_padding) => {
-                match self.config.abi {
-                    WasmABI::Legacy => {
-                        let force_padding = match force_padding {
-                            ForcePaddingStatus::NoForce => "",
-                            ForcePaddingStatus::Force => ", true",
-                            ForcePaddingStatus::PassThrough => ", forcePadding",
-                        };
-                        format!("...{js_call}._intoFFI({{{params}}}{force_padding})")
-                    },
-                    WasmABI::CSpec => format!("{js_call}._intoFFI({{{params}}}, false)")
-                }.into()
+            JsToCConversionContext::List(force_padding) => match self.config.abi {
+                WasmABI::Legacy => {
+                    let force_padding = match force_padding {
+                        ForcePaddingStatus::NoForce => "",
+                        ForcePaddingStatus::Force => ", true",
+                        ForcePaddingStatus::PassThrough => ", forcePadding",
+                    };
+                    format!("...{js_call}._intoFFI({{{params}}}{force_padding})")
+                }
+                WasmABI::CSpec => format!("{js_call}._intoFFI({{{params}}}, false)"),
             }
+            .into(),
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
                 "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {{{params}}})"
             )

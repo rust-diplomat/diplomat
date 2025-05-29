@@ -108,7 +108,7 @@ pub(crate) fn run<'tcx>(
     let mut ts_exports = Vec::new();
 
     // The size of the largest struct we have to pass into a function, ever.
-    let mut function_alloc_max : usize = 0;
+    let mut function_alloc_max: usize = 0;
 
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
