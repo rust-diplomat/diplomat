@@ -68,6 +68,7 @@ pub mod ffi {
     }
 
     impl OptionOpaque {
+        #[diplomat::demo(default_constructor)]
         pub fn new(i: i32) -> Option<Box<OptionOpaque>> {
             Some(Box::new(OptionOpaque(i)))
         }

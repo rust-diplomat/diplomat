@@ -9,6 +9,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 keywords.workspace = true
+readme = "../README.md"
 
 [dependencies]
 diplomat_core = { workspace = true, features = ["displaydoc", "hir"] }

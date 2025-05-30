@@ -73,7 +73,7 @@ fn param_conversion(
                 None
             }
         }
-        ast::TypeName::Function(in_types, out_type) => {
+        ast::TypeName::Function(in_types, out_type, mutability) => {
             let cb_wrap_ident = &name;
             let mut cb_param_list = vec![];
             let mut cb_params_and_types_list = vec![];
@@ -97,10 +97,15 @@ fn param_conversion(
             }
             let cb_ret_type = out_type.to_syn();
 
+            let mutability = match mutability {
+                ast::Mutability::Immutable => quote!(const),
+                ast::Mutability::Mutable => quote!(mut),
+            };
             let tokens = quote! {
                 let #cb_wrap_ident = move | #(#cb_params_and_types_list,)* | unsafe {
                     #(#all_params_conversion)*
-                    std::mem::transmute::<unsafe extern "C" fn (*const c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
+                    let _ = &#cb_wrap_ident; // Force the lambda to capture the full object, see https://doc.rust-lang.org/edition-guide/rust-2021/disjoint-capture-in-closures.html
+                    std::mem::transmute::<unsafe extern "C" fn (*mut c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*#mutability c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
                         (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*)
                 };
             };

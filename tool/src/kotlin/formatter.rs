@@ -1,9 +1,9 @@
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    Docs, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic,
-    PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type, TypeContext,
-    TypeId,
+    Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv,
+    MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type,
+    TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -56,7 +56,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
             .replace('\n', "\n*")
             .replace(" \n", "\n")
@@ -74,7 +74,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
-            PrimitiveType::Int(IntType::I8) => "Byte",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
@@ -95,7 +95,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
-            PrimitiveType::Int(IntType::I8) => "Byte",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
             PrimitiveType::Int(IntType::I64) => "Long",
@@ -242,7 +242,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "BoolError".into(),
             PrimitiveType::Int(IntType::U8) => "UByteError".into(),
-            PrimitiveType::Int(IntType::I8) => "ByteError".into(),
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "ByteError".into(),
             PrimitiveType::Int(IntType::U16) => "UShortError".into(),
             PrimitiveType::Int(IntType::I16) => "ShortError".into(),
             PrimitiveType::Int(IntType::U32) => "UIntError".into(),
@@ -470,7 +470,7 @@ pub mod test {
         let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
         attr_validator.support = super::super::attr_support();
 
-        match TypeContext::from_syn(&file, attr_validator) {
+        match TypeContext::from_syn(&file, Default::default(), attr_validator) {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {

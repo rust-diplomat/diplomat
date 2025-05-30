@@ -17,7 +17,7 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
     static getAllEntries() {
         return {{type_name}}.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -44,12 +44,13 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
     }
 {%- endif %}
 
-    static fromValue(value {%- if typescript %} : {{type_name}} | string {%- endif %}) {%- if typescript %} : {{type_name}}; {% else %} {
+    /** @internal */
+    static fromValue(value {%- if typescript -%} : {{type_name}} | string {%- endif %}) {%- if typescript -%} : {{type_name}}; {%- else %} {
         return new {{type_name}}({% if overrides_constructor -%} diplomatRuntime.exposeConstructor, {% endif -%} value);
     }
     {%- endif %}
 
-    get value() {% if typescript %}: string;{% else %}{
+    get value() {%- if typescript %}: string;{% else %}{
         {%- if is_contiguous %}
         return [...{{type_name}}.#values.keys()][this.#value];
         {%- else %}
@@ -61,7 +62,8 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
         {%- endif %}
     }{% endif %}
 
-    get ffiValue() {% if typescript %}: number;{% else %}{
+    /** @internal */
+    get ffiValue() {%- if typescript %}: number;{% else %}{
         return this.#value;
     }{% endif %}
 

@@ -9,7 +9,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface AnotherOpaqueLib: Library {
     fun AnotherOpaque_destroy(handle: Pointer)
     fun AnotherOpaque_get_rust_owned_bytes(handle: Pointer, a: Slice, b: Slice): Pointer

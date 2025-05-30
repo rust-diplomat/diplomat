@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "MyEnum.hpp"
 #include "MyZst.hpp"
 #include "diplomat_runtime.hpp"
@@ -18,18 +19,17 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::MyStruct MyStruct_new(void);
-    
+
     uint8_t MyStruct_into_a(diplomat::capi::MyStruct self);
-    
+
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
     MyStruct_returns_zst_result_result MyStruct_returns_zst_result(void);
-    
+
     typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
     MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

@@ -48,6 +48,8 @@ pub enum PrimitiveType {
     /// a primitive byte that is not meant to be interpreted numerically
     /// in languages that don't have fine-grained integer types
     Byte,
+    /// an i8 that is either -1, 0, or 1
+    Ordering,
     Int(IntType),
     IntSize(IntSizeType),
     Int128(Int128Type),
@@ -129,6 +131,7 @@ impl PrimitiveType {
             PrimitiveType::Bool => "bool",
             PrimitiveType::Char => "char",
             PrimitiveType::Byte => "byte",
+            PrimitiveType::Ordering => "ordering",
             PrimitiveType::Int(ty) => ty.as_str(),
             PrimitiveType::IntSize(ty) => ty.as_str(),
             PrimitiveType::Int128(ty) => ty.as_str(),

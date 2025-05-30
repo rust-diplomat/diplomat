@@ -9,6 +9,12 @@ use syn::{Attribute, Ident, Meta, Token};
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
 pub struct Docs(String, Vec<RustLink>);
 
+#[non_exhaustive]
+pub enum TypeReferenceSyntax {
+    SquareBrackets,
+    AtLink,
+}
+
 impl Docs {
     pub fn from_attrs(attrs: &[Attribute]) -> Self {
         Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs))
@@ -48,9 +54,17 @@ impl Docs {
     }
 
     /// Convert to markdown
-    pub fn to_markdown(&self, docs_url_gen: &DocsUrlGenerator) -> String {
+    pub fn to_markdown(
+        &self,
+        ref_syntax: TypeReferenceSyntax,
+        docs_url_gen: &DocsUrlGenerator,
+    ) -> String {
         use std::fmt::Write;
-        let mut lines = self.0.clone();
+        let mut lines = match ref_syntax {
+            TypeReferenceSyntax::SquareBrackets => self.0.replace("[`", "[").replace("`]", "]"),
+            TypeReferenceSyntax::AtLink => self.0.replace("[`", "{@link ").replace("`]", "}"),
+        };
+
         let mut has_compact = false;
         for rust_link in &self.1 {
             if rust_link.display == RustLinkDisplay::Compact {
@@ -136,6 +150,7 @@ impl Parse for RustLink {
             "EnumVariantField" => DocType::EnumVariantField,
             "Trait" => DocType::Trait,
             "FnInStruct" => DocType::FnInStruct,
+            "FnInTypedef" => DocType::FnInTypedef,
             "FnInEnum" => DocType::FnInEnum,
             "FnInTrait" => DocType::FnInTrait,
             "DefaultFnInTrait" => DocType::DefaultFnInTrait,
@@ -150,10 +165,10 @@ impl Parse for RustLink {
             "AssociatedTypeInTrait" => DocType::AssociatedTypeInTrait,
             "AssociatedTypeInStruct" => DocType::AssociatedTypeInStruct,
             "Typedef" => DocType::Typedef,
-            _ => {
+            t => {
                 return Err(parse::Error::new(
                     ty_ident.span(),
-                    "Unknown rust_link doc type",
+                    format!("Unknown rust_link doc type {t:?}"),
                 ))
             }
         };
@@ -189,6 +204,7 @@ pub enum DocType {
     EnumVariantField,
     Trait,
     FnInStruct,
+    FnInTypedef,
     FnInEnum,
     FnInTrait,
     DefaultFnInTrait,
@@ -248,6 +264,7 @@ impl DocsUrlGenerator {
                 Struct | Enum | Trait | Fn | Macro | Constant | Typedef => 1,
                 FnInEnum
                 | FnInStruct
+                | FnInTypedef
                 | FnInTrait
                 | DefaultFnInTrait
                 | EnumVariant
@@ -272,7 +289,7 @@ impl DocsUrlGenerator {
         }
 
         r.push_str(match rust_link.typ {
-            Typedef => "type.",
+            Typedef | FnInTypedef => "type.",
             Struct
             | StructField
             | FnInStruct
@@ -300,7 +317,7 @@ impl DocsUrlGenerator {
         r.push_str(".html");
 
         match rust_link.typ {
-            FnInStruct | FnInEnum | DefaultFnInTrait => {
+            FnInStruct | FnInEnum | DefaultFnInTrait | FnInTypedef => {
                 r.push_str("#method.");
                 r.push_str(elements.next().unwrap().as_str());
             }
@@ -330,7 +347,7 @@ impl DocsUrlGenerator {
                 r.push_str(".field.");
                 r.push_str(elements.next().unwrap().as_str());
             }
-            _ => {}
+            Struct | Enum | Trait | Fn | Mod | Constant | Macro | Typedef => {}
         }
         r
     }

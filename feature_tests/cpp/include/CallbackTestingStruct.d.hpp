@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -17,7 +18,7 @@ namespace capi {
       int32_t x;
       int32_t y;
     };
-    
+
     typedef struct CallbackTestingStruct_option {union { CallbackTestingStruct ok; }; bool is_ok; } CallbackTestingStruct_option;
 } // namespace capi
 } // namespace

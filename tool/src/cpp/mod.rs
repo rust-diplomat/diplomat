@@ -23,7 +23,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.named_constructors = false;
     a.fallible_constructors = false;
     a.accessors = false;
-    a.comparators = true; // TODO
+    a.static_accessors = false;
+    a.comparators = true;
     a.stringifiers = false; // TODO
     a.iterators = true;
     a.iterables = true;

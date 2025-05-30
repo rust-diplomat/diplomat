@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -17,7 +18,7 @@ namespace capi {
       int32_t x;
       int32_t y;
     };
-    
+
     typedef struct StructArithmetic_option {union { StructArithmetic ok; }; bool is_ok; } StructArithmetic_option;
 } // namespace capi
 } // namespace
@@ -26,6 +27,10 @@ namespace capi {
 struct StructArithmetic {
   int32_t x;
   int32_t y;
+
+  inline static StructArithmetic ORIGIN();
+
+  inline static void set_origin(StructArithmetic _new_origin);
 
   inline static StructArithmetic new_(int32_t x, int32_t y);
 

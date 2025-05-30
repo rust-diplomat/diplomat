@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "RenamedOpaqueIterator.hpp"
 
@@ -17,12 +18,11 @@
 namespace ns {
 namespace capi {
     extern "C" {
-    
+
     ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const ns::capi::RenamedOpaqueIterable* self);
-    
-    
+
     void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

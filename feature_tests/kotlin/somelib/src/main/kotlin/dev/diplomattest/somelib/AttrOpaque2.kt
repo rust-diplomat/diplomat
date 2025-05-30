@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface AttrOpaque2Lib: Library {
     fun namespace_AttrOpaque2_destroy(handle: Pointer)
 }

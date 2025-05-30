@@ -35,7 +35,7 @@ opt-level = "s"
 ```
 
 Next, create the bindings to your crate.
-> Instructions for how to write bindings are in [The Book](https://rust-diplomat.github.io/book/types.html).
+> Instructions for how to write bindings are in [The Book](https://rust-diplomat.github.io/diplomat/types.html).
 ```rust
 // my-bindings/src/lib.rs
 #[diplomat::bridge]

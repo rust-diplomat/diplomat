@@ -7,31 +7,22 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionStruct {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
     }
-    
     #c;
-    
-    get c()  {
+    get c() {
         return this.#c;
     }
-    
     #d;
-    
-    get d()  {
+    get d() {
         return this.#d;
     }
-    
     #internalConstructor(structObj, internalConstructor) {
         if (typeof structObj !== "object") {
             throw new Error("OptionStruct's constructor takes an object of OptionStruct's fields.");
@@ -69,12 +60,17 @@ export class OptionStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#a.ffiValue ?? 0, this.#b.ffiValue ?? 0, this.#c, this.#d.ffiValue]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -122,6 +118,7 @@ export class OptionStruct {
 
         return new OptionStruct(structObj, internalConstructor);
     }
+
 
     constructor(structObj, internalConstructor) {
         return this.#internalConstructor(...arguments)

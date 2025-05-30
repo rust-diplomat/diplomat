@@ -10,16 +10,16 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     void RefListParameter_destroy(RefListParameter* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

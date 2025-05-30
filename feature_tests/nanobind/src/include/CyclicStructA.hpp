@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "CyclicStructB.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -17,16 +18,15 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::CyclicStructB CyclicStructA_get_b(void);
-    
+
     void CyclicStructA_cyclic_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
-    
+
     void CyclicStructA_double_cyclic_out(diplomat::capi::CyclicStructA self, diplomat::capi::CyclicStructA cyclic_struct_a, diplomat::capi::DiplomatWrite* write);
-    
+
     void CyclicStructA_getter_out(diplomat::capi::CyclicStructA self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

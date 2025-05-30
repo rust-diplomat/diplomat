@@ -4,7 +4,9 @@
         "target": "es2022",
         // We use bundler because that allows tsc to recongize package.json's relatively modern "exports" entry point system.
         // This is based on an answer from https://stackoverflow.com/questions/70296652/how-can-i-use-exports-in-package-json-for-nested-submodules-and-typescript#comment135161951_74551879
-        "moduleResolution": "bundler"
+        "moduleResolution": "bundler",
+        // Doesn't really matter for the Typescript compiler which version we use:
+        "customConditions": ["stable"]
     },
     "include": ["test/*.mts"]
 }

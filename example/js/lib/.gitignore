@@ -1,5 +1,4 @@
-package-lock.json
 node_modules
 tsconfig.tsbuildinfo
-api/*.wasm
+*.wasm
 api/demo

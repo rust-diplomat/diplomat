@@ -1,21 +1,29 @@
 import { CyclicStructA } from "../../js/api/index.mjs"
 import { CyclicStructB } from "../../js/api/index.mjs"
-export function cyclicOut(cyclicStructAAField) {
+export function cyclicOut(selfAField) {
     
-    let cyclicStructAA = CyclicStructB.fromFields({
-        field: cyclicStructAAField
+    let selfA = CyclicStructB.fromFields({
+        field: selfAField
     });
     
-    let cyclicStructA = CyclicStructA.fromFields({
-        a: cyclicStructAA
+    let self = CyclicStructA.fromFields({
+        a: selfA
     });
     
-    let out = cyclicStructA.cyclicOut();
+    let out = self.cyclicOut();
     
 
     return out;
 }
-export function doubleCyclicOut(cyclicStructAAField, cyclicStructAAField_1) {
+export function doubleCyclicOut(selfAField, cyclicStructAAField) {
+    
+    let selfA = CyclicStructB.fromFields({
+        field: selfAField
+    });
+    
+    let self = CyclicStructA.fromFields({
+        a: selfA
+    });
     
     let cyclicStructAA = CyclicStructB.fromFields({
         field: cyclicStructAAField
@@ -25,30 +33,22 @@ export function doubleCyclicOut(cyclicStructAAField, cyclicStructAAField_1) {
         a: cyclicStructAA
     });
     
-    let cyclicStructAA_1 = CyclicStructB.fromFields({
-        field: cyclicStructAAField_1
-    });
-    
-    let cyclicStructA_1 = CyclicStructA.fromFields({
-        a: cyclicStructAA_1
-    });
-    
-    let out = cyclicStructA.doubleCyclicOut(cyclicStructA_1);
+    let out = self.doubleCyclicOut(cyclicStructA);
     
 
     return out;
 }
-export function getterOut(cyclicStructAAField) {
+export function getterOut(selfAField) {
     
-    let cyclicStructAA = CyclicStructB.fromFields({
-        field: cyclicStructAAField
+    let selfA = CyclicStructB.fromFields({
+        field: selfAField
     });
     
-    let cyclicStructA = CyclicStructA.fromFields({
-        a: cyclicStructAA
+    let self = CyclicStructA.fromFields({
+        a: selfA
     });
     
-    let out = cyclicStructA.getterOut;
+    let out = self.getterOut;
     
 
     return out;

@@ -24,9 +24,9 @@ class ParameterTemplate extends HTMLElement {
         if (this.inputElement !== null) {
             this.inputElement.addEventListener("input", this.input.bind(this));
         }
-        
-        clone.slot = "parameter";
-        baseClone.appendChild(clone);
+
+        clone.firstElementChild.slot = "parameter";
+        this.appendChild(clone);
 
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.appendChild(baseClone);
@@ -84,7 +84,7 @@ class NumberTemplate extends ParameterTemplate {
     constructor(options) {
         super(options, NumberTemplate, "template#number", 0);
     }
-    
+
     getEventValue(event) {
         return parseFloat(event.target.value);
     }
@@ -100,6 +100,28 @@ class StringTemplate extends ParameterTemplate {
 }
 
 customElements.define("terminus-param-string", StringTemplate);
+
+class CodepointTemplate extends ParameterTemplate {
+    static template;
+    constructor(options) {
+        super(options, CodepointTemplate, "template#string", "");
+    }
+
+    getEventValue(event) {
+        let value = event.target.value;
+        if (value.startsWith("U+")) {
+            return parseInt(value.substring(2), 16);
+        } else {
+            return value.codePointAt(0);
+        }
+    }
+
+    setValue(v) {
+        this.inputElement.value = String.fromCodePoint(v);
+    }
+}
+
+customElements.define("terminus-param-codepoint", CodepointTemplate);
 
 class StringArrayTemplate extends ParameterTemplate {
     static template;
@@ -122,7 +144,7 @@ class EnumOption extends HTMLElement {
         let clone = EnumOption.template.cloneNode(true);
 
         clone.querySelector("slot[name='option-text']").parentElement.innerText = optionText;
-        
+
         this.append(...clone.children);
     }
 }
@@ -140,9 +162,9 @@ class EnumTemplate extends ParameterTemplate {
 
     initialize(clone, enumType) {
         let options = clone.querySelector("*[data-options]");
-        
+
         for (let entry of enumType.getAllEntries()) {
-            
+
             if (this.default === null) {
                 this.default = entry[0];
             }
@@ -174,23 +196,21 @@ class TerminusParams extends HTMLElement {
             switch (param.typeUse) {
                 case "string":
                     newChild = new StringTemplate(param);
-                    this.#params[i] = "";
                     break;
                 case "boolean":
                     newChild = new BooleanTemplate(param);
-                    this.#params[i] = false;
                     break;
                 case "number":
                     newChild = new NumberTemplate(param);
-                    this.#params[i] = 0;
                     break;
                 case "Array<string>":
                     newChild = new StringArrayTemplate(param);
-                    this.#params[i] = [];
                     break;
                 case "enumerator":
                     newChild = new EnumTemplate(param, library[param.type]);
-                    this.#params[i] = newChild.default
+                    break;
+                case "codepoint":
+                    newChild = new CodepointTemplate(param);
                     break;
                 case "external":
                     let updateParamEvent = (value) => {
@@ -261,8 +281,10 @@ export class TerminusRender extends HTMLElement {
     submit() {
         try {
             this.#output.innerText = this.#func(...this.#parameters.paramArray);
+            this.#output.classList = "";
         } catch(e) {
-            this.#output.innerText = e;
+            this.#output.innerText = e.message;
+            this.#output.classList = "error";
             throw e;
         }
     }

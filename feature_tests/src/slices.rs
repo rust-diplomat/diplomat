@@ -1,10 +1,10 @@
 #[diplomat::bridge]
-mod ffi {
+pub mod ffi {
     use diplomat_runtime::{DiplomatStr, DiplomatStrSlice, DiplomatWrite};
     use std::fmt::Write as _;
 
     #[diplomat::opaque]
-    struct MyString(String);
+    pub struct MyString(String);
 
     impl MyString {
         #[diplomat::attr(auto, constructor)]

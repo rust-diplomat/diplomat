@@ -14,7 +14,7 @@ internal class TraitTestingStructNative: Structure(), Structure.ByValue {
     internal var x: Int = 0;
     @JvmField
     internal var y: Int = 0;
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("x", "y")

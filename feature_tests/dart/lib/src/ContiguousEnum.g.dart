@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 enum ContiguousEnum {
+
   c,
 
   d,
@@ -11,6 +12,7 @@ enum ContiguousEnum {
   e,
 
   f;
+
 }
 
 // dart format on

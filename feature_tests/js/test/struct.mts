@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum, StructWithSlices } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = new MyStruct();
@@ -70,8 +70,8 @@ test("Test struct layout: scalar pair layout", t => {
 
 test("Test struct layout: complex struct with multiple padding types and contained scalar pair", t => {
     const s = new BigStructWithStuff({
-        first: 101, 
-        second: 505, 
+        first: 101,
+        second: 505,
         third: 9345,
         fourth: new ScalarPairWithPadding({first: 122, second: 414}),
         fifth: 99
@@ -93,4 +93,12 @@ test("Verify Enum Construction", t => {
     t.is(new DefaultEnum(), DefaultEnum.A);
 
 	t.is(DefaultEnum.fromValue("B"), DefaultEnum.B);
+});
+
+test("Passing struct self with slice", t => {
+    let s = new StructWithSlices({
+        first: "testing",
+        second: []
+    });
+    t.is(s.returnLast(), "g");
 });

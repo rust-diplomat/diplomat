@@ -13,6 +13,7 @@
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsReturning.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
+#include "CallbackHolder.hpp"
 #include "CallbackTestingStruct.hpp"
 #include "CallbackWrapper.hpp"
 #include "ContiguousEnum.hpp"
@@ -25,6 +26,7 @@
 #include "Float64Vec.hpp"
 #include "Foo.hpp"
 #include "ImportedStruct.hpp"
+#include "MutableCallbackHolder.hpp"
 #include "MyEnum.hpp"
 #include "MyOpaqueEnum.hpp"
 #include "MyString.hpp"
@@ -48,6 +50,7 @@
 #include "RefListParameter.hpp"
 #include "ResultOpaque.hpp"
 #include "StructArithmetic.hpp"
+#include "StructWithSlices.hpp"
 #include "Two.hpp"
 #include "UnimportedEnum.hpp"
 #include "Unnamespaced.hpp"
@@ -265,7 +268,22 @@ namespace nanobind::detail
 
         // Cast C++ -> Python (when returning a span from a C++ function)
         static handle from_cpp(diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
-            return ListCaster::from_cpp(src, policy, cleanup);
+            using Array = nb::ndarray<std::remove_cv_t<T>, nb::numpy, nb::ndim<1>, nb::f_contig>;
+            if constexpr(is_ndarray_scalar_v<T>) {
+                nb::object owner;
+                if (cleanup->self()) {
+                    owner = nb::borrow(cleanup->self());
+                    policy = rv_policy::reference;
+                }
+
+                 object o = steal(type_caster<Array>::from_cpp(
+                    Array((void* )src.data(), {src.size()}, owner),
+                    policy, cleanup));
+
+                return o.release();
+            } else {
+                return ListCaster::from_cpp(src, policy, cleanup);
+            }
         }
     };
 }
@@ -323,6 +341,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("test_multi_arg_callback", &CallbackWrapper::test_multi_arg_callback, "f"_a, "x"_a)
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
+    	.def_static("test_opaque_cb_arg", &CallbackWrapper::test_opaque_cb_arg, "cb"_a, "a"_a)
     	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
     
     nb::class_<ImportedStruct>(somelib_mod, "ImportedStruct")
@@ -421,11 +440,21 @@ NB_MODULE(somelib, somelib_mod)
     nb::class_<StructArithmetic>(somelib_mod, "StructArithmetic")
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)
+    	.def_prop_rw_static("ORIGIN", [](nb::handle) -> decltype(StructArithmetic::ORIGIN()) { return StructArithmetic::ORIGIN(); },
+    				[](nb::handle, StructArithmetic _new_origin)
+    				  { StructArithmetic::set_origin(_new_origin); })
     	.def(nb::self + nb::self)
     	.def(nb::self / nb::self)
     	.def(nb::self * nb::self)
     	.def("__init__", [](StructArithmetic* self, int32_t x, int32_t y){ *self = StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
     	.def(nb::self - nb::self);
+    
+    nb::class_<StructWithSlices>(somelib_mod, "StructWithSlices")
+        .def(nb::init<>())
+        .def(nb::init<std::string_view, diplomat::span<const uint16_t>>(), "first"_a.none(),  "second"_a.none())
+        .def_rw("first", &StructWithSlices::first)
+        .def_rw("second", &StructWithSlices::second)
+    	.def("return_last", &StructWithSlices::return_last);
     
     nb::class_<OptionStruct>(somelib_mod, "OptionStruct")
         .def(nb::init<>())
@@ -483,7 +512,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<ns::RenamedMyIndexer>(ns_mod, "RenamedMyIndexer", nb::type_slots(ns_RenamedMyIndexer_slots))
-    	.def("__getitem__", &ns::RenamedMyIndexer::operator[], "i"_a, nb::keep_alive<0, 1>());
+    	.def("__getitem__", &ns::RenamedMyIndexer::operator[], "i"_a);
     
     PyType_Slot ns_RenamedMyIterable_slots[] = {
         {Py_tp_free, (void *)ns::RenamedMyIterable::operator delete },
@@ -575,6 +604,24 @@ NB_MODULE(somelib, somelib_mod)
     nb::class_<Unnamespaced>(somelib_mod, "Unnamespaced", nb::type_slots(Unnamespaced_slots))
     	.def_static("make", &Unnamespaced::make, "_e"_a ) // unsupported special method NamedConstructor(None)
     	.def("use_namespaced", &Unnamespaced::use_namespaced, "_n"_a);
+    
+    PyType_Slot CallbackHolder_slots[] = {
+        {Py_tp_free, (void *)CallbackHolder::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<CallbackHolder>(somelib_mod, "CallbackHolder", nb::type_slots(CallbackHolder_slots))
+    	.def("call", &CallbackHolder::call, "a"_a)
+    	.def(nb::new_(&CallbackHolder::new_), "func"_a);
+    
+    PyType_Slot MutableCallbackHolder_slots[] = {
+        {Py_tp_free, (void *)MutableCallbackHolder::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<MutableCallbackHolder>(somelib_mod, "MutableCallbackHolder", nb::type_slots(MutableCallbackHolder_slots))
+    	.def("call", &MutableCallbackHolder::call, "a"_a)
+    	.def(nb::new_(&MutableCallbackHolder::new_), "func"_a);
     
     PyType_Slot Bar_slots[] = {
         {Py_tp_free, (void *)Bar::operator delete },
@@ -701,7 +748,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<OptionString>(somelib_mod, "OptionString", nb::type_slots(OptionString_slots))
-    	.def("borrow", &OptionString::borrow, nb::keep_alive<0, 1>())
+    	.def("borrow", &OptionString::borrow)
     	.def_static("new", &OptionString::new_, "diplomat_str"_a)
     	.def("write", &OptionString::write);
     
@@ -764,7 +811,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<MyString>(somelib_mod, "MyString", nb::type_slots(MyString_slots))
-    	.def("borrow", &MyString::borrow, nb::keep_alive<0, 1>())
+    	.def("borrow", &MyString::borrow)
     	.def_static("get_static_str", &MyString::get_static_str)
     	.def(nb::new_(&MyString::new_), "v"_a)
     	.def_static("new_from_first", &MyString::new_from_first, "v"_a)
@@ -807,7 +854,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("borrow_other", &OpaqueMutexedString::borrow_other, "other"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
     	.def("borrow_self_or_other", &OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::rv_policy::reference)
     	.def("change", &OpaqueMutexedString::change, "number"_a)
-    	.def("dummy_str", &OpaqueMutexedString::dummy_str, nb::keep_alive<0, 1>())
+    	.def("dummy_str", &OpaqueMutexedString::dummy_str)
     	.def_static("from_usize", &OpaqueMutexedString::from_usize, "number"_a)
     	.def("get_len_and_add", &OpaqueMutexedString::get_len_and_add, "other"_a)
     	.def("to_unsigned_from_unsigned", &OpaqueMutexedString::to_unsigned_from_unsigned, "input"_a)
@@ -819,7 +866,7 @@ NB_MODULE(somelib, somelib_mod)
         {0, nullptr}};
     
     nb::class_<Utf16Wrap>(somelib_mod, "Utf16Wrap", nb::type_slots(Utf16Wrap_slots))
-    	.def("borrow_cont", &Utf16Wrap::borrow_cont, nb::keep_alive<0, 1>())
+    	.def("borrow_cont", &Utf16Wrap::borrow_cont)
     	.def(nb::new_(&Utf16Wrap::from_utf16), "input"_a)
     	.def("get_debug_str", &Utf16Wrap::get_debug_str);
     {

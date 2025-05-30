@@ -12,7 +12,7 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 
 {% endif -%}
 {% if !docs.is_empty() -%}
-/// {{docs}}
+{{ docs|prefix_trimmed("/// ")}}
 {% endif -%}
 final class {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
@@ -74,11 +74,10 @@ final class {{type_name}}
     {%- endfor %}
     return struct;
   }
-  {%- endif -%}
+  {%- endif %}
 
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
-
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
   {%- endfor %}
 
   @override
@@ -103,7 +102,7 @@ final class {{type_name}}
   {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
 
-  // Return all fields corresponding to lifetime `'{{ltname}}` 
+  // Return all fields corresponding to lifetime `'{{ltname}}`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
   // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,

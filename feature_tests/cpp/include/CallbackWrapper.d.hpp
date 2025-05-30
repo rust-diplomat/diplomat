@@ -8,8 +8,11 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
+namespace diplomat::capi { struct MyString; }
+class MyString;
 struct CallbackTestingStruct;
 
 
@@ -18,7 +21,7 @@ namespace capi {
     struct CallbackWrapper {
       bool cant_be_empty;
     };
-    
+
     typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok; } CallbackWrapper_option;
 } // namespace capi
 } // namespace
@@ -36,6 +39,8 @@ struct CallbackWrapper {
   inline static int32_t test_multiple_cb_args(std::function<int32_t()> f, std::function<int32_t(int32_t)> g);
 
   inline static int32_t test_str_cb_arg(std::function<int32_t(std::string_view)> f);
+
+  inline static void test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a);
 
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);

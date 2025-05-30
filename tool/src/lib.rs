@@ -2,6 +2,8 @@
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
 pub mod config;
+// Custom askama filters
+pub(crate) mod filters;
 
 // Backends
 pub mod c;
@@ -79,18 +81,21 @@ pub fn gen(
 
     let config = config.get_overridden(target_language);
 
-    let tcx = hir::TypeContext::from_syn(&module, attr_validator).unwrap_or_else(|e| {
-        for (ctx, err) in e {
-            eprintln!("Lowering error in {ctx}: {err}");
-        }
-        std::process::exit(1);
-    });
+    let lowering_config = config.shared_config.lowering_config();
+
+    let tcx =
+        hir::TypeContext::from_syn(&module, lowering_config, attr_validator).unwrap_or_else(|e| {
+            for (ctx, err) in e {
+                eprintln!("Lowering error in {ctx}: {err}");
+            }
+            std::process::exit(1);
+        });
 
     let (files, errors) = match target_language {
         "c" => c::run(&tcx, docs_url_gen),
         "cpp" => cpp::run(&tcx, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
-        "js" => js::run(&tcx, docs_url_gen),
+        "js" => js::run(&tcx, config, docs_url_gen),
         "py-nanobind" | "nanobind" => nanobind::run(&tcx, config, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:

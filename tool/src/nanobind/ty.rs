@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
+#[derive(Clone)]
 struct NamedType<'a> {
     var_name: Cow<'a, str>,
     type_name: Cow<'a, str>,
@@ -222,6 +223,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 );
                                 e.setter_name = Some(info.method_name.clone());
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
+                                e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
                         };
@@ -262,14 +264,6 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
-        if method.param_self.is_none()
-            && !matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
-            )
-        {
-            def_qualifiers.extend(["static"]);
-        }
 
         let mut prop_name = None;
         if let Some(hir::SpecialMethod::Getter(name)) = &method.attrs.special_method {
@@ -289,10 +283,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             );
         }
 
+        if method.param_self.is_none()
+            && !matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
+            )
+        {
+            def_qualifiers.extend(["static"]);
+        }
+
         let param_decls = {
             if matches!(
                 method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) // We only need type info for constructors...
+                Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
             ) && !matches!(
                 // and even then, only when the type isn't opaque
                 id,
@@ -313,7 +316,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
         };
 
-        let mut visitor = method.borrowing_param_visitor(self.c2.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
 
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = method
@@ -338,21 +341,31 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             0
         };
 
-        let mut lifetime_args = param_borrows
-            .into_iter()
-            .enumerate()
-            .filter_map(|(i, p)| match p {
-                hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
-                | hir::borrowing_param::ParamBorrowInfo::Struct(_)
-                | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
-                    Some(format!(
-                        "nb::keep_alive<{self_number}, {}>()",
-                        i + 1 + self_number
-                    )) // Keep 0 (the return) alive until the element at P is returned
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
+        let mut lifetime_args = vec![];
+
+        // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
+        if !matches!(
+            method.output.success_type(),
+            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
+        ) {
+            lifetime_args.extend(
+                param_borrows
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(i, p)| match p {
+                        hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
+                        | hir::borrowing_param::ParamBorrowInfo::Struct(_)
+                        | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
+                            Some(format!(
+                                "nb::keep_alive<{self_number}, {}>()",
+                                i + 1 + self_number
+                            )) // Keep 0 (the return) alive until the element at P is returned
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
+            );
+        }
 
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
         {

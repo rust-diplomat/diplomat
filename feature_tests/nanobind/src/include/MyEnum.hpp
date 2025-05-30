@@ -10,18 +10,18 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     int8_t MyEnum_into_value(diplomat::capi::MyEnum self);
-    
+
     diplomat::capi::MyEnum MyEnum_get_a(void);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -40,7 +40,7 @@ inline MyEnum MyEnum::FromFFI(diplomat::capi::MyEnum c_enum) {
     case diplomat::capi::MyEnum_F:
       return static_cast<MyEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 

@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 mod ffi {
+    use crate::slices::ffi::MyString;
+
     #[diplomat::attr(not(supports = "callbacks"), disable)]
     pub struct CallbackWrapper {
         cant_be_empty: bool,
@@ -28,6 +30,49 @@ mod ffi {
         #[diplomat::attr(kotlin, disable)]
         pub fn test_str_cb_arg(f: impl Fn(&str) -> i32) -> i32 {
             f("bananna")
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_opaque_cb_arg<'a>(cb: impl Fn(&mut MyString), a: &'a mut MyString) {
+            cb(a);
+        }
+    }
+
+    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::opaque]
+    pub struct CallbackHolder {
+        held: Box<dyn Fn(i32) -> i32>,
+    }
+
+    impl CallbackHolder {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(func: impl Fn(i32) -> i32 + 'static) -> Box<Self> {
+            Box::new(Self {
+                held: Box::new(func),
+            })
+        }
+
+        pub fn call(&self, a: i32) -> i32 {
+            (self.held)(a)
+        }
+    }
+
+    #[diplomat::attr(not(supports = "callbacks"), disable)]
+    #[diplomat::opaque]
+    pub struct MutableCallbackHolder {
+        held: Box<dyn FnMut(i32) -> i32>,
+    }
+
+    impl MutableCallbackHolder {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(func: impl FnMut(i32) -> i32 + 'static) -> Box<Self> {
+            Box::new(Self {
+                held: Box::new(func),
+            })
+        }
+
+        pub fn call(&mut self, a: i32) -> i32 {
+            (self.held)(a)
         }
     }
 }

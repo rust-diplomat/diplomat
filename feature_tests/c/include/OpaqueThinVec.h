@@ -27,7 +27,6 @@ const OpaqueThin* OpaqueThinVec_get(const OpaqueThinVec* self, size_t idx);
 
 const OpaqueThin* OpaqueThinVec_first(const OpaqueThinVec* self);
 
-
 void OpaqueThinVec_destroy(OpaqueThinVec* self);
 
 

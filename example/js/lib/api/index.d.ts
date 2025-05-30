@@ -2,7 +2,7 @@
 export { codepoint } from './diplomat-runtime';
 
 
-export { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions"
+export { FixedDecimalFormatterOptions, FixedDecimalFormatterOptions_obj } from "./FixedDecimalFormatterOptions"
 
 export { DataProvider } from "./DataProvider"
 

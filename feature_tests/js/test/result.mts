@@ -6,11 +6,11 @@ test('Verify result methods', t => {
     s.assertInteger(5);
 
     const error1 = t.throws(() => ResultOpaque.newFailingFoo());
-    t.is(error1.message, 'ErrorEnum: Foo');
+    t.is(error1.message, 'ErrorEnum.Foo');
     t.is(error1.cause, ErrorEnum.Foo);
 
     const error2 = t.throws(() => ResultOpaque.newFailingBar());
-    t.is(error2.message, 'ErrorEnum: Bar');
+    t.is(error2.message, 'ErrorEnum.Bar');
     t.is(error2.cause, ErrorEnum.Bar);
 
     t.is(ResultOpaque.newFailingUnit(), null);

@@ -35,6 +35,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.named_constructors = false; // TODO
     a.fallible_constructors = false; // TODO
     a.accessors = false;
+    a.static_accessors = false;
     a.stringifiers = true;
     a.comparators = false; // TODO
     a.iterators = true;
@@ -1025,7 +1026,7 @@ returnVal.option() ?: return null
             return MethodInfo::default();
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
         let native_method_name = method.abi_name.as_str();
 
         let mut param_decls_kt = Vec::with_capacity(method.params.len());
@@ -1157,6 +1158,7 @@ returnVal.option() ?: return null
                         ),
                         None => ("Unit".into(), "".into()),
                     };
+
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
@@ -1301,7 +1303,7 @@ returnVal.option() ?: return null
     ) -> NativeMethodInfo {
         let mut param_decls = Vec::with_capacity(method.params.len());
 
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
         let mut additional_name = None;
 
         if let Some(param_self) = method.param_self.as_ref() {
@@ -1399,7 +1401,7 @@ returnVal.option() ?: return null
                     &mut unused_special_methods,
                     method,
                     None,
-                    None,
+                    Some(type_name),
                     use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )

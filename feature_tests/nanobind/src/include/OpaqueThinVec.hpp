@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "OpaqueThin.hpp"
 #include "OpaqueThinIter.hpp"
 #include "diplomat_runtime.hpp"
@@ -18,20 +19,19 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::OpaqueThinVec* OpaqueThinVec_create(diplomat::capi::DiplomatI32View a, diplomat::capi::DiplomatF32View b);
-    
+
     diplomat::capi::OpaqueThinIter* OpaqueThinVec_iter(const diplomat::capi::OpaqueThinVec* self);
-    
+
     size_t OpaqueThinVec_len(const diplomat::capi::OpaqueThinVec* self);
-    
+
     const diplomat::capi::OpaqueThin* OpaqueThinVec_get(const diplomat::capi::OpaqueThinVec* self, size_t idx);
-    
+
     const diplomat::capi::OpaqueThin* OpaqueThinVec_first(const diplomat::capi::OpaqueThinVec* self);
-    
-    
+
     void OpaqueThinVec_destroy(OpaqueThinVec* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

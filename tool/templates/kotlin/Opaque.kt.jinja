@@ -5,11 +5,9 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface {{type_name}}Lib: Library {
     fun {{dtor_abi_name}}(handle: Pointer)
 
-    
     {%- for m in native_methods %}
     {{m.declaration}}
     {%- endfor %}
@@ -129,4 +127,3 @@ class {{type_name}} internal constructor (
 {%- endmatch %}
 
 }
-

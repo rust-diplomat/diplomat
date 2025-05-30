@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 namespace ns {
@@ -21,7 +22,7 @@ namespace capi {
       bool a;
       uint32_t b;
     };
-    
+
     typedef struct RenamedStructWithAttrs_option {union { RenamedStructWithAttrs ok; }; bool is_ok; } RenamedStructWithAttrs_option;
 } // namespace capi
 } // namespace

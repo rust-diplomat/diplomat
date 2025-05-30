@@ -45,7 +45,6 @@ ResultOpaque* ResultOpaque_takes_str(ResultOpaque* self, DiplomatStringView _v);
 
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 
-
 void ResultOpaque_destroy(ResultOpaque* self);
 
 

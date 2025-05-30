@@ -1,0 +1,1 @@
+global.api_folder = "api_legacy";

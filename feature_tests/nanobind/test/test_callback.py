@@ -59,3 +59,31 @@ def test_callback():
     out = o.test_str_cb_arg(lambda a: len(a))
     assert out == 7, "test_str_cb_arg output"
     print("END")
+
+            
+    cb = lambda a: 100 - a
+    holder = somelib.CallbackHolder(cb)
+    del cb
+
+    assert holder.call(5) == 95
+    assert holder.call(5) == 95
+
+    class HasMutatingStatic:
+        i = 100
+        @classmethod
+        def decrement(__cls__, a):
+            __cls__.i -= a
+            return __cls__.i
+        
+    assert HasMutatingStatic.decrement(5) == 95
+    assert HasMutatingStatic.decrement(5) == 90
+
+    # 'Fn' vs 'FnMut' is at best a suggestion with python, as there is no real way to distinguish between
+    # mutable and immutable callables
+    holder = somelib.CallbackHolder(lambda a: HasMutatingStatic.decrement(a))
+    assert holder.call(5) == 85
+    assert holder.call(5) == 80
+
+    holder = somelib.MutableCallbackHolder(lambda a: HasMutatingStatic.decrement(a))
+    assert holder.call(5) == 75
+    assert holder.call(5) == 70

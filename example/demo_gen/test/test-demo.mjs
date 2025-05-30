@@ -17,5 +17,5 @@ test("Custom Function", (t) => {
 
 test("Variable Names", (t) => {
 	// Can't exactly check variable names without reading the file, but RenderInfo re-uses the same info, so we check that instead.
-	t.is(RenderInfo.termini["FixedDecimalFormatter.formatWrite"].parameters[0].name, "FixedDecimalFormatter:Locale:Name");
+	t.is(RenderInfo.termini["FixedDecimalFormatter.formatWrite"].parameters[0].name, "self.locale.name");
 });

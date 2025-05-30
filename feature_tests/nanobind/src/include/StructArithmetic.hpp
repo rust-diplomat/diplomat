@@ -10,27 +10,40 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
+    diplomat::capi::StructArithmetic StructArithmetic_ORIGIN(void);
+
+    void StructArithmetic_set_origin(diplomat::capi::StructArithmetic _new_origin);
+
     diplomat::capi::StructArithmetic StructArithmetic_new(int32_t x, int32_t y);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_add(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_sub(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_mul(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_div(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline StructArithmetic StructArithmetic::ORIGIN() {
+  auto result = diplomat::capi::StructArithmetic_ORIGIN();
+  return StructArithmetic::FromFFI(result);
+}
+
+inline void StructArithmetic::set_origin(StructArithmetic _new_origin) {
+  diplomat::capi::StructArithmetic_set_origin(_new_origin.AsFFI());
+}
 
 inline StructArithmetic StructArithmetic::new_(int32_t x, int32_t y) {
   auto result = diplomat::capi::StructArithmetic_new(x,

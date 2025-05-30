@@ -15,10 +15,12 @@ pub struct DiplomatCallback<ReturnType> {
     // any data required to run the callback; e.g. a pointer to the
     // callback wrapper object in the foreign runtime + the runtime itself
     pub data: *mut c_void,
-    // function to actually run the callback
-    pub run_callback: unsafe extern "C" fn(*const c_void, ...) -> ReturnType,
+    // function to actually run the callback. Note the first param is mutable, but depending
+    // on if this is passed to a Fn or FnMut may not actually need to be. FFI-Callers
+    // of said functions should cast to mutable.
+    pub run_callback: unsafe extern "C" fn(*mut c_void, ...) -> ReturnType,
     // function to destroy this callback struct
-    pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
+    pub destructor: Option<unsafe extern "C" fn(*mut c_void)>,
 }
 
 impl<ReturnType> Drop for DiplomatCallback<ReturnType> {

@@ -298,6 +298,7 @@ pub mod ffi {
     // are all handled via attributes, which may have slightly different codepaths.
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
+    #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
 
     impl OpaqueThin {

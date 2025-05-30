@@ -112,6 +112,7 @@ pub mod ffi {
     }
 
     impl OpaqueMutexedString {
+        #[diplomat::demo(default_constructor)]
         pub fn from_usize(number: usize) -> Box<OpaqueMutexedString> {
             Box::new(OpaqueMutexedString(Mutex::new(format!("{number}"))))
         }
@@ -374,6 +375,15 @@ pub mod ffi {
     }
 
     impl StructArithmetic {
+        #[diplomat::attr(supports = static_accessors, getter)]
+        #[allow(non_snake_case)]
+        pub fn ORIGIN() -> Self {
+            Self { x: 0, y: 0 }
+        }
+
+        #[diplomat::attr(supports = static_accessors, setter = "ORIGIN")]
+        pub fn set_origin(_new_origin: StructArithmetic) {}
+
         #[diplomat::attr(auto, constructor)]
         pub fn new(x: i32, y: i32) -> Self {
             Self { x, y }
@@ -409,6 +419,17 @@ pub mod ffi {
                 x: self.x / o.x,
                 y: self.y / o.y,
             }
+        }
+    }
+
+    pub struct StructWithSlices<'a> {
+        pub first: DiplomatStrSlice<'a>,
+        pub second: DiplomatSlice<'a, u16>,
+    }
+
+    impl<'a> StructWithSlices<'a> {
+        pub fn return_last(self, w: &mut DiplomatWrite) {
+            w.write_char(*self.first.last().unwrap() as char).unwrap();
         }
     }
 }

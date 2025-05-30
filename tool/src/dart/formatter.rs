@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsTypeReferenceSyntax, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -68,10 +68,9 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n/// ")
-            .replace(" \n", "\n")
+            .to_string()
     }
 
     /// Resolve and format a named type for use in code
@@ -183,7 +182,10 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "bool",
                 PrimitiveType::Char => "Rune",
-                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) | PrimitiveType::Byte => "int",
+                PrimitiveType::Int(_)
+                | PrimitiveType::IntSize(_)
+                | PrimitiveType::Byte
+                | PrimitiveType::Ordering => "int",
                 PrimitiveType::Float(_) => "double",
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             }
@@ -191,7 +193,7 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "ffi.Bool",
                 PrimitiveType::Char => "ffi.Uint32",
-                PrimitiveType::Int(IntType::I8) => "ffi.Int8",
+                PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "ffi.Int8",
                 PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "ffi.Uint8",
                 PrimitiveType::Int(IntType::I16) => "ffi.Int16",
                 PrimitiveType::Int(IntType::U16) => "ffi.Uint16",
@@ -225,6 +227,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "core.List<int>",
             PrimitiveType::Float(_) => "core.List<double>",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 
@@ -254,6 +257,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Float(FloatType::F32) => "_float32AllocIn",
             PrimitiveType::Float(FloatType::F64) => "_float64AllocIn",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 
@@ -303,6 +307,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Float(FloatType::F32) => "_SliceFloat",
             PrimitiveType::Float(FloatType::F64) => "_SliceDouble",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 

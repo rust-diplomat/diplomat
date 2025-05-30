@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface LocaleLib: Library {
     fun icu4x_Locale_destroy_mv1(handle: Pointer)
     fun icu4x_Locale_new_mv1(name: Slice): Pointer
@@ -31,7 +30,7 @@ class Locale internal constructor (
         internal val libClass: Class<LocaleLib> = LocaleLib::class.java
         internal val lib: LocaleLib = Native.load("somelib", libClass)
         
-        /** Construct an [`Locale`] from a locale identifier represented as a string.
+        /** Construct an [Locale] from a locale identifier represented as a string.
         */
         fun new_(name: String): Locale {
             val (nameMem, nameSlice) = PrimitiveArrayTools.readUtf8(name)

@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 enum DefaultEnum {
+
   a,
 
   b;
@@ -12,6 +13,7 @@ enum DefaultEnum {
     final result = _DefaultEnum_new();
     return DefaultEnum.values[result];
   }
+
 }
 
 @_DiplomatFfiUse('DefaultEnum_new')

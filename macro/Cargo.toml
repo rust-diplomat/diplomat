@@ -9,6 +9,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 keywords.workspace = true
+readme = "../README.md"
 
 [lib]
 proc-macro = true

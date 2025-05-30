@@ -31,6 +31,7 @@ final class OpaqueThin implements ffi.Finalizable {
     final result = _OpaqueThin_b(_ffi);
     return result;
   }
+
 }
 
 @_DiplomatFfiUse('OpaqueThin_destroy')

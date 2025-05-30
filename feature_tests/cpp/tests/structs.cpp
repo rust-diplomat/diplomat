@@ -3,10 +3,13 @@
 #include "../include/MyEnum.hpp"
 #include "../include/Opaque.hpp"
 #include "../include/StructArithmetic.hpp"
+#include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "assert.hpp"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
+
+    static_assert(std::is_same_v<diplomat::as_ffi_t<ns::RenamedOpaqueArithmetic>, ns::capi::RenamedOpaqueArithmetic*>);
+
     std::unique_ptr<Opaque> o = Opaque::new_();
     MyStruct s = MyStruct::new_();
 
@@ -23,8 +26,8 @@ int main(int argc, char *argv[])
     simple_assert_eq("enum fn", s.g.into_value(), -1);
     simple_assert_eq("struct fn", s.into_a(), 17);
 
-    auto a = StructArithmetic{1, 2};
-    auto b = StructArithmetic{2, 3};
+    auto a = StructArithmetic{ 1, 2 };
+    auto b = StructArithmetic{ 2, 3 };
     {
         auto r = a + b;
 
@@ -34,4 +37,5 @@ int main(int argc, char *argv[])
         simple_assert_eq("self-adding x", r.x, 4);
         simple_assert_eq("self-adding y", r.y, 7);
     }
+
 }

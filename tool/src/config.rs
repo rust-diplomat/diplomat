@@ -8,25 +8,51 @@ use syn::{
 };
 use toml::{value::Table, Value};
 
-use crate::{demo_gen::DemoConfig, kotlin::KotlinConfig};
+use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
+use diplomat_core::hir::LoweringConfig;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct SharedConfig {
     pub lib_name: Option<String>,
+    /// Whether or not callbacks support references in parameters. This is unsafe: you need to be careful to not
+    /// retain these references on the foreign side.
+    pub unsafe_references_in_callbacks: Option<bool>,
 }
 
 impl SharedConfig {
-    /// Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
+    // / Quick and dirty way to tell [`set_overrides`] whether or not to copy an override from a specific language over.
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name")
+        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks")
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
-        if key == "lib_name" && value.is_str() {
-            self.lib_name = value.as_str().map(|v| v.to_string());
+        match key {
+            "lib_name" => {
+                if value.is_str() {
+                    self.lib_name = value.as_str().map(|v| v.to_string())
+                } else {
+                    panic!("Config key `lib_name` must be a string");
+                }
+            }
+            "unsafe_references_in_callbacks" => {
+                if value.is_bool() {
+                    self.unsafe_references_in_callbacks = value.as_bool()
+                } else {
+                    panic!("Config key `unsafe_references_in_callbacks` must be a boolean");
+                }
+            }
+            _ => (),
         }
+    }
+
+    pub fn lowering_config(&self) -> LoweringConfig {
+        let mut cfg = LoweringConfig::default();
+        if let Some(refs) = self.unsafe_references_in_callbacks {
+            cfg.unsafe_references_in_callbacks = refs;
+        }
+        cfg
     }
 }
 
@@ -38,6 +64,8 @@ pub struct Config {
     pub kotlin_config: KotlinConfig,
     #[serde(rename = "demo_gen")]
     pub demo_gen_config: DemoConfig,
+    #[serde(rename = "js")]
+    pub js_config: JsConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,
@@ -62,6 +90,12 @@ impl Config {
             if SharedConfig::overrides_shared(key) {
                 self.language_overrides.insert(key.to_string(), value);
             } // nanobind doesn't have any other config setting
+        } else if key.starts_with("js.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.js_config.set(&key.replace("js.", ""), value);
+            }
         } else {
             self.shared_config.set(key, value)
         }

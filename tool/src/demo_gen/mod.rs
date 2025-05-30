@@ -270,14 +270,6 @@ pub(crate) fn run<'tcx>(
             "rendering/rendering.mjs".into(),
             include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
         );
-        files.add_file(
-            "rendering/runtime.mjs".into(),
-            include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
-        );
-        files.add_file(
-            "rendering/template.html".into(),
-            include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
-        );
     }
 
     if !import_path_exists {
