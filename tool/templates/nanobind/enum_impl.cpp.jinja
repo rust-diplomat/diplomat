@@ -1,7 +1,5 @@
 {%- let is_self_opaque = false -%}
-{% include "module_impl.cpp.jinja" %}
-{
-	nb::class_<{{type_name}}> e_class({{module}}_mod, "{{type_name_unnamespaced}}");
+	nb::class_<{{type_name}}> e_class(mod, "{{type_name_unnamespaced}}");
 
 	nb::enum_<{{type_name}}::Value>(e_class, "{{type_name_unnamespaced}}")
 		{%- for value in values %}
@@ -15,5 +13,4 @@
 		.def("__repr__", [](const {{type_name}}& self){
 			return nb::str(nb::cast({{type_name}}::Value(self)));
 		});
-}
 
