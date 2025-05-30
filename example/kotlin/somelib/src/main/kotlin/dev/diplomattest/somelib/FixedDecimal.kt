@@ -47,7 +47,7 @@ class FixedDecimal internal constructor (
         }
     }
     
-    /** Multiply the [`FixedDecimal`] by a given power of ten.
+    /** Multiply the [FixedDecimal] by a given power of ten.
     *
     *See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
     */
@@ -57,7 +57,7 @@ class FixedDecimal internal constructor (
         
     }
     
-    /** Format the [`FixedDecimal`] as a string.
+    /** Format the [FixedDecimal] as a string.
     *
     *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
     */
