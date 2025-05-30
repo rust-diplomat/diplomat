@@ -125,7 +125,7 @@ pub(crate) fn run<'cx>(
             generating_struct_fields: false,
         };
 
-        context.includes.insert(cpp_impl_path.clone().into());
+        context.includes.insert(cpp_impl_path.clone());
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
 
@@ -138,22 +138,21 @@ pub(crate) fn run<'cx>(
             body: String,
         }
 
-        let mut binding_body = String::default();
+        let mut body = String::default();
         match ty {
-            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut binding_body),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut binding_body),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut binding_body),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut binding_body),
+            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
+            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body),
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
-        drop(context);
 
         let binding_impl = Binding {
-            includes: includes,
+            includes,
             namespace: formatter.fmt_namespaces(id).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
-            body: binding_body,
+            body,
         };
         files.add_file(binding_impl_path, binding_impl.to_string());
     }

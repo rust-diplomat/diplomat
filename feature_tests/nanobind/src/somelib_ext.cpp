@@ -79,7 +79,7 @@ void add_RenamedAttrEnum_binding(nb::handle);
 // the delete operator.
 // See https://nanobind.readthedocs.io/en/latest/lowlevel.html#customizing-type-creation and
 // https://github.com/wjakob/nanobind/discussions/932
-static void (*nb_tp_dealloc)(void *) = nullptr;
+void (*nb_tp_dealloc)(void *) = nullptr;
 
 void diplomat_tp_dealloc(PyObject *self)
 {

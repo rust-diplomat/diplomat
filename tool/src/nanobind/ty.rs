@@ -453,7 +453,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 let ret = ret.into_owned().into();
 
                 self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id));
                 ret
             }
             Type::Struct(ref st) => {
@@ -466,7 +466,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 }
 
                 self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
                 type_name
             }
             Type::Enum(ref e) => {
@@ -479,7 +479,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 }
 
                 self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
