@@ -24,6 +24,26 @@ impl<'tcx> PyFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_binding_fn(&self, id: TypeId, namespaced: bool) -> String {
+        let resolved = self.cxx.c.tcx().resolve_type(id);
+        let type_name = resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into());
+        match &resolved.attrs().namespace {
+            Some(ns) if namespaced => {
+                format!("{ns}::add_{type_name}_binding")
+            }
+            _ => {
+                format!("add_{type_name}_binding")
+            }
+        }
+    }
+
+    pub fn fmt_binding_impl_path(&self, id: TypeId) -> String {
+        self.cxx.fmt_type_name(id).replace("::", "/") + "_binding.cpp"
+    }
+
     /// Resolve and format the nested module names for this type
     /// Returns an iterator to the namespaces. Will always have at least one entry
     pub fn fmt_namespaces(&self, id: TypeId) -> impl Iterator<Item = &'tcx str> {
@@ -35,11 +55,6 @@ impl<'tcx> PyFormatter<'tcx> {
             .map(|v| v.split("::"))
             .into_iter()
             .flatten()
-    }
-
-    /// Resolve the name of the module to use
-    pub fn fmt_module(&'tcx self, id: TypeId, default: &'tcx str) -> Cow<'tcx, str> {
-        self.fmt_namespaces(id).last().unwrap_or(default).into()
     }
 
     pub fn fmt_method_name<'a>(&'tcx self, method: &'a Method) -> Cow<'a, str> {

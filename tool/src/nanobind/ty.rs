@@ -1,10 +1,12 @@
-use super::{binding::Binding, PyFormatter};
+use super::root_module::RootModule;
+use super::PyFormatter;
 use crate::{c::TyGenContext as C2TyGenContext, hir, ErrorStore};
 use askama::Template;
 use diplomat_core::hir::{OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
+use itertools::Itertools;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 #[derive(Clone)]
@@ -41,48 +43,41 @@ pub(super) struct TyGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub c2: C2TyGenContext<'cx, 'tcx>,
-    pub binding: &'cx mut Binding<'tcx>,
-    pub submodules: &'cx mut HashSet<Cow<'tcx, str>>,
+    pub root_module: &'cx mut RootModule<'tcx>,
+    pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
+    pub includes: &'cx mut BTreeSet<String>,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
-    /// Checks for & outputs a list of modules with their parents that still need to be defined for this type
-    pub fn get_module_defs(
-        &mut self,
-        id: TypeId,
-        _docstring: Option<&str>,
-    ) -> Vec<(Cow<'tcx, str>, Cow<'tcx, str>)> {
+    /// Checks for & adds modules with their parents to the root module definition.
+    pub fn gen_modules(&mut self, id: TypeId, _docstring: Option<&str>) {
         let namespaces = self.formatter.fmt_namespaces(id);
-        let mut modules: Vec<(Cow<'_, str>, Cow<'_, str>)> = Default::default();
 
-        let mut parent = self.binding.module_name.clone();
+        let mut parent = self.root_module.module_name.clone();
         for module in namespaces {
-            if self.submodules.contains(module) {
-                continue;
-            }
-            println!("Adding submodule entry for {module}");
-            self.submodules.insert(module.into());
-
-            modules.push((module.into(), parent));
+            println!("Adding {module} to parent {parent}");
+            self.submodules
+                .entry(parent)
+                .or_default()
+                .insert(module.into());
             parent = module.into();
         }
-        modules
     }
 
-    pub fn get_module(&mut self, id: TypeId) -> String {
-        self.formatter
-            .fmt_module(id, &self.binding.module_name)
-            .into_owned()
-    }
     /// Adds an enum definition to the current implementation.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
+    pub fn gen_enum_def<W: std::fmt::Write + ?Sized>(
+        &mut self,
+        ty: &'tcx hir::EnumDef,
+        id: TypeId,
+        out: &mut W,
+    ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
@@ -97,23 +92,51 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         struct ImplTemplate<'a> {
             type_name: &'a str,
             values: Vec<Cow<'a, str>>,
-            module: &'a str,
-            modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
             type_name_unnamespaced: &'a str,
         }
 
         ImplTemplate {
             type_name: &type_name,
             values,
-            module: &self.get_module(id),
-            modules: self.get_module_defs(id, None),
             type_name_unnamespaced: &type_name_unnamespaced,
         }
-        .render_into(self.binding)
+        .render_into(out)
         .unwrap();
+
+        self.add_to_root_module(id);
     }
 
-    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
+    pub fn add_to_root_module(&mut self, id: TypeId) {
+        self.gen_modules(id, None);
+        self.root_module
+            .fwd_decls
+            .entry(self.formatter.fmt_namespaces(id).join("::"))
+            .or_default()
+            .push(format!(
+                "void {}(nb::handle);",
+                self.formatter.fmt_binding_fn(id, false)
+            ));
+
+        let module_namespaces = [self.root_module.module_name.to_string()]
+            .into_iter()
+            .chain(self.formatter.fmt_namespaces(id).map(|s| s.to_owned()))
+            .collect();
+
+        let entry = self
+            .root_module
+            .module_fns
+            .entry(module_namespaces)
+            .or_default();
+
+        entry.push(self.formatter.fmt_binding_fn(id, true));
+    }
+
+    pub fn gen_opaque_def<W: std::fmt::Write + ?Sized>(
+        &mut self,
+        ty: &'tcx hir::OpaqueDef,
+        id: TypeId,
+        out: &mut W,
+    ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
@@ -124,23 +147,25 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         struct ImplTemplate<'a> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
-            modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
-            module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
         }
 
         ImplTemplate {
             type_name: &type_name,
             methods: methods.as_slice(),
-            modules: self.get_module_defs(id, None),
-            module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
         }
-        .render_into(self.binding)
+        .render_into(out)
         .unwrap();
+        self.add_to_root_module(id);
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
+    pub fn gen_struct_def<P: TyPosition, W: std::fmt::Write + ?Sized>(
+        &mut self,
+        def: &'tcx hir::StructDef<P>,
+        id: TypeId,
+        out: &mut W,
+    ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
 
@@ -154,14 +179,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let methods = self.gen_all_method_infos(id, def.methods.iter());
 
+        self.gen_modules(id, None);
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             fields: &'a [NamedType<'a>],
             methods: &'a [MethodInfo<'a>],
-            modules: Vec<(Cow<'a, str>, Cow<'a, str>)>,
-            module: Cow<'a, str>,
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
         }
@@ -170,8 +194,6 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             type_name: &type_name,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
-            modules: self.get_module_defs(id, None),
-            module: self.get_module(id).into(),
             type_name_unnamespaced: &type_name_unnamespaced,
             has_constructor: methods.iter().any(|v| {
                 matches!(
@@ -180,8 +202,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 )
             }),
         }
-        .render_into(self.binding)
+        .render_into(out)
         .unwrap();
+        self.add_to_root_module(id);
     }
 
     fn gen_all_method_infos(
@@ -429,8 +452,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 };
                 let ret = ret.into_owned().into();
 
-                self.binding
-                    .includes
+                self.includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(op_id).into());
                 ret
             }
@@ -443,8 +465,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.binding
-                    .includes
+                self.includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
                 type_name
             }
@@ -457,8 +478,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.binding
-                    .includes
+                self.includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id).into());
                 type_name
             }
