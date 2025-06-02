@@ -1,7 +1,6 @@
 {%- let is_self_opaque = false -%}
-{% include "module_impl.cpp.jinja" %}
 
-nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
+nb::class_<{{type_name}}>(mod, "{{type_name_unnamespaced}}")
     {%- if !has_constructor %}
     .def(nb::init<>())
 

@@ -1,16 +1,18 @@
----
-source: tool/src/nanobind/mod.rs
-expression: generated
----
 #include "diplomat_nanobind_common.hpp"
 #include <../src/nb_internals.h>  // Required for shimming
 
 // Forward declarations for binding add functions
-
-namespace mylib {
-void add_OpaqueStruct_binding(nb::handle);
+{% for (ns, lines) in fwd_decls.iter() -%}
+{%- if !ns.is_empty() %}
+namespace {{ns}} {
+{%- endif -%}
+  {% for line in lines %}
+    {{~ line }}
+  {%- endfor %}
+{%- if !ns.is_empty() %}
 }
-
+{% endif -%}
+{%- endfor %}
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
 // On module init, the dummy type will have the normal nanobind inst_dealloc function in the tp_dealloc slot, so we
@@ -50,14 +52,14 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-NB_MODULE(pymod, pymod_mod)
+NB_MODULE({{module_name}}, {{module_name}}_mod)
 {
 	{
-		nb::class_<_Dummy> dummy(pymod_mod, "__dummy__");
+		nb::class_<_Dummy> dummy({{module_name}}_mod, "__dummy__");
 		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
 	}
 
-    nb::class_<std::monostate>(pymod_mod, "monostate")
+    nb::class_<std::monostate>({{module_name}}_mod, "monostate")
 		.def("__repr__", [](const std::monostate &)
 			 { return ""; })
 		.def("__str__", [](const std::monostate &)
@@ -65,8 +67,19 @@ NB_MODULE(pymod, pymod_mod)
              
 
     // Module declarations
+    {% for module_path in sub_modules %}
+    {%- let module_name = module_path.join("_") -%}
+    {%- let parent_name = module_path[..module_path.len()-1].join("_") -%}
+        nb::module_ {{module_name}}_mod = {{parent_name}}_mod.def_submodule("{{module_path.last().unwrap()}}");
+    {% endfor -%}
+
     // Add bindings
-    mylib::add_OpaqueStruct_binding(pymod_mylib_mod);
-    
+    {%- for (module_path, fns) in module_fns -%}
+        {%- let module_name = module_path.join("_") -%}
+
+        {% for func in fns %}
+    {{ func -}}({{module_name}}_mod);
+        {%- endfor %}
+    {% endfor %}
 	
 }
