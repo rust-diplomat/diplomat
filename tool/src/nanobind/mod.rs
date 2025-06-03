@@ -1,13 +1,15 @@
-mod binding;
 mod formatter;
+mod root_module;
 mod ty;
 
-use std::{borrow::Cow, collections::HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{Config, ErrorStore, FileMap};
-use binding::Binding;
+use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
+use itertools::Itertools;
+use root_module::RootModule;
 use serde::{Deserialize, Serialize};
 use ty::TyGenContext;
 
@@ -70,7 +72,6 @@ pub(crate) fn run<'cx>(
         .expect("Nanobind backend requires lib_name to be set in the config");
 
     // Output the C++ bindings we rely on
-
     let (cpp_files, cpp_errors) = cpp::run(tcx, docs);
 
     files.files.borrow_mut().extend(
@@ -82,20 +83,31 @@ pub(crate) fn run<'cx>(
     );
     errors.errors.borrow_mut().extend(cpp_errors.errors.take());
 
-    let nanobind_filepath = format!("{lib_name}_ext.cpp");
-    let mut binding = Binding::new();
-    binding.module_name = lib_name.into();
+    let nanobind_common_filepath = "include/diplomat_nanobind_common.hpp";
 
-    let mut submodules = HashSet::<Cow<str>>::new();
+    #[derive(Template)]
+    #[template(path = "nanobind/common.h.jinja", escape = "none")]
+    struct Common {}
+
+    files.add_file(nanobind_common_filepath.to_owned(), Common {}.to_string());
+
+    let nanobind_filepath = format!("{lib_name}_ext.cpp");
+
+    let mut root_module = RootModule::new();
+    root_module.module_name = lib_name.into();
+
+    let mut submodules = BTreeMap::new();
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
         }
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(id);
+        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id);
+        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id);
+        let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
+        let mut includes = BTreeSet::default();
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -105,30 +117,65 @@ pub(crate) fn run<'cx>(
                 errors: &errors,
                 is_for_cpp: false,
                 id: id.into(),
-                decl_header_path: &decl_header_path,
-                impl_header_path: &impl_file_path,
+                decl_header_path: &cpp_decl_path,
+                impl_header_path: &cpp_impl_path,
             },
-            binding: &mut binding,
+            root_module: &mut root_module,
             submodules: &mut submodules,
+            includes: &mut includes,
             generating_struct_fields: false,
         };
 
-        context
-            .binding
-            .includes
-            .insert(impl_file_path.clone().into());
+        context.includes.insert(cpp_impl_path.clone());
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
+
+        #[derive(Template)]
+        #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
+        struct Binding {
+            includes: BTreeSet<String>,
+            namespace: String,
+            unqualified_type: String,
+            body: String,
+        }
+
+        let mut body = String::default();
         match ty {
-            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
+            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body),
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
+
+        let binding_impl = Binding {
+            includes,
+            namespace: formatter.fmt_namespaces(id).join("::"),
+            unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
+            body,
+        };
+        files.add_file(binding_impl_path, binding_impl.to_string());
     }
-    files.add_file(nanobind_filepath.to_owned(), binding.to_string());
+
+    // Traverse the module_fns keys list and expand into the list of submodules needing generation.
+    // In particular we're concerned about the case of nested modules that only contain other modules
+    for module_path in root_module.module_fns.keys() {
+        let mut path = module_path.clone();
+        while !path.is_empty() {
+            println!("Adding module with path: {}", path.join("::"));
+            root_module
+                .sub_modules
+                .insert(path.iter().cloned().collect_vec());
+
+            path.pop();
+        }
+    }
+    root_module
+        .sub_modules
+        .remove(&vec![root_module.module_name.clone().into()]); // remove the root module from the list of submodules
+
+    files.add_file(nanobind_filepath.to_owned(), root_module.to_string());
 
     (files, errors)
 }
@@ -137,8 +184,7 @@ pub(crate) fn run<'cx>(
 mod test {
     use diplomat_core::hir::{self, TypeDef};
     use quote::quote;
-    use std::borrow::Cow;
-    use std::collections::HashSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
     #[test]
     fn test_opaque_gen() {
@@ -188,13 +234,14 @@ mod test {
         let docs_gen = Default::default();
         let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
-        let mut binding = crate::nanobind::Binding::new();
-        binding.module_name = std::borrow::Cow::Borrowed("pymod");
+        let mut root_module = crate::nanobind::root_module::RootModule::new();
+        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
         let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
-        let mut submodules = HashSet::<Cow<str>>::new();
+        let mut submodules = BTreeMap::new();
+        let mut includes = BTreeSet::new();
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -207,13 +254,14 @@ mod test {
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_file_path,
             },
-            binding: &mut binding,
+            root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
+            includes: &mut includes,
         };
-
-        context.gen_opaque_def(opaque_def, type_id);
-        let generated = binding.to_string();
+        let mut generated = String::default();
+        context.gen_opaque_def(opaque_def, type_id, &mut generated);
+        let generated = root_module.to_string();
         insta::assert_snapshot!(generated)
     }
 
@@ -257,13 +305,14 @@ mod test {
         let docs_gen = Default::default();
         let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
-        let mut binding = crate::nanobind::Binding::new();
-        binding.module_name = std::borrow::Cow::Borrowed("pymod");
+        let mut root_module = crate::nanobind::RootModule::new();
+        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
         let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
-        let mut submodules = HashSet::<Cow<str>>::new();
+        let mut submodules = BTreeMap::new();
+        let mut includes = BTreeSet::new();
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -276,14 +325,14 @@ mod test {
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_file_path,
             },
-            binding: &mut binding,
+            root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
+            includes: &mut includes,
         };
-
-        context.gen_enum_def(enum_def, type_id);
-        let generated = binding.to_string();
-        insta::assert_snapshot!(generated)
+        let mut enum_gen = String::new();
+        context.gen_enum_def(enum_def, type_id, &mut enum_gen);
+        insta::assert_snapshot!(enum_gen)
     }
 
     #[test]
@@ -326,13 +375,14 @@ mod test {
         let docs_gen = Default::default();
         let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
         let errors = crate::ErrorStore::default();
-        let mut binding = crate::nanobind::Binding::new();
-        binding.module_name = std::borrow::Cow::Borrowed("pymod");
+        let mut root_module = crate::nanobind::RootModule::new();
+        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
         let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
-        let mut submodules = HashSet::<Cow<str>>::new();
+        let mut submodules = BTreeMap::new();
+        let mut includes = BTreeSet::new();
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -345,13 +395,14 @@ mod test {
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_file_path,
             },
-            binding: &mut binding,
+            root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
+            includes: &mut includes,
         };
 
-        context.gen_struct_def(struct_def, type_id);
-        let generated = binding.to_string();
-        insta::assert_snapshot!(generated)
+        let mut struct_gen = String::new();
+        context.gen_struct_def(struct_def, type_id, &mut struct_gen);
+        insta::assert_snapshot!(struct_gen)
     }
 }
