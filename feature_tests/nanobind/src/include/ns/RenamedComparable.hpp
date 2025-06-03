@@ -10,20 +10,20 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 
 namespace ns {
 namespace capi {
     extern "C" {
-    
+
     ns::capi::RenamedComparable* namespace_Comparable_new(uint8_t int_);
-    
+
     int8_t namespace_Comparable_cmp(const ns::capi::RenamedComparable* self, const ns::capi::RenamedComparable* other);
-    
-    
+
     void namespace_Comparable_destroy(RenamedComparable* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

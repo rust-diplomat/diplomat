@@ -23,5 +23,4 @@ void CyclicStructC_cyclic_out(CyclicStructC self, DiplomatWrite* write);
 
 
 
-
 #endif // CyclicStructC_H

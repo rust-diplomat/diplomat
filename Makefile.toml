@@ -41,7 +41,7 @@ dependencies = ["test-c-example"]
 
 [tasks.test-js]
 category = "Tests"
-dependencies = ["test-js-feature"]
+dependencies = ["test-js-feature", "test-js-feature-legacy"]
 
 [tasks.test-demo]
 category = "Tests"
@@ -75,6 +75,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-js-feature",
+    "test-js-feature-legacy",
     "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
@@ -121,9 +122,20 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-npm install && npm run test
+npm ci && npm run test -w stable
 '''
 
+[tasks.test-js-feature-legacy]
+category = "Tests"
+dependencies = ["build-feature-wasm-legacy"]
+script_runner = "@shell"
+script = '''
+cd feature_tests/js
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api_legacy/diplomat_feature_tests.wasm
+npm ci && npm run test -w legacy
+'''
+
+# We don't need to test legacy JS for demo_gen, as the call sites should be identical.
 [tasks.test-demo-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
@@ -131,7 +143,7 @@ script_runner = "@shell"
 script = '''
 cd feature_tests/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm ../js/api/diplomat_feature_tests.wasm
-npm install && npm run test
+npm ci && npm run test
 '''
 
 [tasks.test-demo-example]
@@ -141,7 +153,7 @@ script_runner = "@shell"
 script = '''
 cd example/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm ../js/lib/api/diplomat_example.wasm
-npm install && npm run test
+npm ci && npm run test
 '''
 
 [tasks.test-dart-example]
@@ -330,6 +342,26 @@ category = "Tests"
 dependencies = ["check-cpp-feature", "check-cpp-example"]
 
 
+[tasks.check-whitespace]
+category = "Tests"
+script_runner = "@duckscript"
+script = '''
+# Only these backends have clean output
+backends = array "c" "cpp" "js" "dart"
+tests = array "feature_tests" "example"
+for test in ${tests}
+ for backend in ${backends}
+    echo "Looking for trailing whitespace in generated code in ${test}/${backend}"
+    exit_code = exec --get-exit-code grep -Hrn \\s\\+$ "${test}/${backend}"
+    if eq ${exit_code} 0
+        echo "Found trailing whitespace (or Windows line endings) in ${test}/${backend}"
+        exit 1
+    end
+ end
+end
+
+'''
+
 # Generation
 [tasks.gen-feature]
 category = "Code generation"
@@ -337,6 +369,7 @@ dependencies = [
     "gen-cpp-feature",
     "gen-c-feature",
     "gen-js-feature",
+    "gen-js-feature-legacy",
     "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
@@ -369,6 +402,9 @@ dependencies = ["gen-dart-feature", "gen-dart-example"]
 category = "Code generation"
 dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 
+[tasks.gen-js]
+category = "Code generation"
+dependencies = ["gen-js-feature", "gen-js-feature-legacy", "gen-js-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -412,8 +448,19 @@ category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+
 !include_files ./support/functions.ds
-generate_generic feature_tests js api
+generate_js spec feature_tests .
+'''
+
+[tasks.gen-js-feature-legacy]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+
+!include_files ./support/functions.ds
+generate_js legacy feature_tests .
 '''
 
 [tasks.gen-js-example]
@@ -421,8 +468,9 @@ category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+
 !include_files ./support/functions.ds
-generate_generic example js lib/api
+generate_js spec example lib
 '''
 
 [tasks.gen-demo-feature]
@@ -511,14 +559,21 @@ category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests"]
 [tasks.build-example-wasm]
+toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
+
 [tasks.build-feature-wasm]
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
+toolchain = "nightly"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = [
     "build",
     "-p",
@@ -527,6 +582,20 @@ args = [
     "wasm32-unknown-unknown",
 ]
 
+[tasks.build-feature-wasm-legacy]
+# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
+toolchain = "nightly"
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+env = { "RUSTFLAGS" = "-Zwasm-c-abi=legacy" }
+args = [
+    "build",
+    "-p",
+    "diplomat-feature-tests",
+    "--target",
+    "wasm32-unknown-unknown",
+]
 
 [tasks.build-example-jvm]
 description = "Build feature_tests for wasm"

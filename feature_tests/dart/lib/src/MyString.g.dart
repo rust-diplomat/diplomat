@@ -74,6 +74,7 @@ final class MyString implements ffi.Finalizable {
     final result = _MyString_borrow(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('MyString_destroy')

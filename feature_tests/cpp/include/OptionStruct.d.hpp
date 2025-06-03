@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 namespace diplomat::capi { struct OptionOpaque; }
@@ -24,7 +25,7 @@ namespace capi {
       uint32_t c;
       diplomat::capi::OptionOpaque* d;
     };
-    
+
     typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
 } // namespace capi
 } // namespace

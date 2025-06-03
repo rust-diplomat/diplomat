@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "CyclicStructB.d.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -19,7 +20,7 @@ namespace capi {
     struct CyclicStructA {
       diplomat::capi::CyclicStructB a;
     };
-    
+
     typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
 } // namespace capi
 } // namespace

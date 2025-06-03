@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "DefaultEnum.d.hpp"
 #include "MyStruct.d.hpp"
 #include "diplomat_runtime.hpp"
@@ -22,7 +23,7 @@ namespace capi {
       diplomat::capi::MyStruct_option a;
       diplomat::capi::DefaultEnum_option b;
     };
-    
+
     typedef struct MyStructContainingAnOption_option {union { MyStructContainingAnOption ok; }; bool is_ok; } MyStructContainingAnOption_option;
 } // namespace capi
 } // namespace

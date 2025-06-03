@@ -12,7 +12,7 @@ internal interface BorrowedFieldsReturningLib: Library {
 internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
     @JvmField
     internal var bytes: Slice = Slice();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("bytes")

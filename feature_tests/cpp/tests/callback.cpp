@@ -2,10 +2,12 @@
 #include "../include/CallbackWrapper.hpp"
 #include "../include/CallbackHolder.hpp"
 #include "../include/MutableCallbackHolder.hpp"
+#include "../include/MyString.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
 {
+
     CallbackWrapper o;
     int32_t tmp = 0;
     {
@@ -57,5 +59,13 @@ int main(int argc, char *argv[])
         auto cb = MutableCallbackHolder::new_([copied](int32_t a) mutable { copied += a; return copied;});
         simple_assert_eq("mutable cb object", cb->call(5), 5);
         simple_assert_eq("mutable cb object", cb->call(5), 10);
+    }
+    {
+        auto opaque = MyString::new_("Bananna");
+        simple_assert_eq("opaque cb arg", opaque->borrow(), "Bananna");
+        o.test_opaque_cb_arg([](MyString& op) {
+            op.set_str("split");
+        }, *opaque);
+        simple_assert_eq("opaque cb arg", opaque->borrow(), "split");
     }
 }

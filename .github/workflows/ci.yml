@@ -10,16 +10,29 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
+  fmt:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
     - name: Check rustfmt
-      run: cargo fmt --all -- --check
+      run: cargo +stable fmt --all -- --check
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
     - name: Check clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: cargo +stable clippy --all-targets --all-features -- -D warnings
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
+
+    - name: Check trailing whitespace
+      run: cargo make check-whitespace
 
   build-test:
     runs-on: ubuntu-latest
@@ -163,8 +176,12 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Load Rust toolchain for WASM.
-      run: rustup target add wasm32-unknown-unknown
+    # - name: Load Rust toolchain for WASM.
+    # run: rustup target add wasm32-unknown-unknown
+    
+    # Can be removed when `-Zwasm-c-abi=spec` is no longer an experimental option:
+    - name: Load Rust Nightly toolchain for WASM
+      run: rustup target add wasm32-unknown-unknown --toolchain nightly
 
     - name: Install Node.js
       uses: actions/setup-node@v4
@@ -172,7 +189,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Test JS
-      run: cargo make test-js
+      run: cargo +nightly make test-js 
 
   test-demo:
     runs-on: ubuntu-latest
@@ -190,8 +207,12 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
     
-    - name: Load Rust toolchain for WASM.
-      run: rustup target add wasm32-unknown-unknown
+    # - name: Load Rust toolchain for WASM.
+    #   run: rustup target add wasm32-unknown-unknown
+      
+      # Can be removed when `-Zwasm-c-abi=spec` is no longer an experimental option:
+    - name: Load Rust Nightly toolchain for WASM
+      run: rustup target add wasm32-unknown-unknown --toolchain nightly
 
     - name: Install Node.js
       uses: actions/setup-node@v4

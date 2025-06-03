@@ -9,7 +9,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface BorrowWrapperLib: Library {
     fun BorrowWrapper_destroy(handle: Pointer)
 }

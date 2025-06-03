@@ -10,14 +10,14 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -34,7 +34,7 @@ inline ContiguousEnum ContiguousEnum::FromFFI(diplomat::capi::ContiguousEnum c_e
     case diplomat::capi::ContiguousEnum_F:
       return static_cast<ContiguousEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // ContiguousEnum_HPP

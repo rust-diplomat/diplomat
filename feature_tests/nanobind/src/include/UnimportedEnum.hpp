@@ -10,14 +10,14 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -33,7 +33,7 @@ inline UnimportedEnum UnimportedEnum::FromFFI(diplomat::capi::UnimportedEnum c_e
     case diplomat::capi::UnimportedEnum_C:
       return static_cast<UnimportedEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // UnimportedEnum_HPP

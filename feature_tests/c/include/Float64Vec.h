@@ -42,7 +42,6 @@ DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
 Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
 
-
 void Float64Vec_destroy(Float64Vec* self);
 
 

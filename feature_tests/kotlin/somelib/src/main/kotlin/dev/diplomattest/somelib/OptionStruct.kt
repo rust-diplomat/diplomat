@@ -18,7 +18,7 @@ internal class OptionStructNative: Structure(), Structure.ByValue {
     internal var c: FFIUint32 = FFIUint32();
     @JvmField
     internal var d: Pointer = Pointer(0);
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c", "d")

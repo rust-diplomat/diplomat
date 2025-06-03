@@ -10,14 +10,14 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -32,7 +32,7 @@ inline ErrorEnum ErrorEnum::FromFFI(diplomat::capi::ErrorEnum c_enum) {
     case diplomat::capi::ErrorEnum_Bar:
       return static_cast<ErrorEnum::Value>(c_enum);
     default:
-      abort();
+      std::abort();
   }
 }
 #endif // ErrorEnum_HPP

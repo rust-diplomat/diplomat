@@ -10,18 +10,18 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     void OptionOpaqueChar_assert_char(const diplomat::capi::OptionOpaqueChar* self, char32_t ch);
-    
-    
+
     void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

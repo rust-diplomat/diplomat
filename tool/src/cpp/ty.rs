@@ -13,6 +13,7 @@ use diplomat_core::hir::{
 use std::borrow::Cow;
 
 use crate::c::CAPI_NAMESPACE;
+use crate::filters;
 
 /// An expression with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedExpression<'a> {

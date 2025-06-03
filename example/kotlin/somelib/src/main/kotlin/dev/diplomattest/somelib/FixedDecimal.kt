@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface FixedDecimalLib: Library {
     fun icu4x_FixedDecimal_destroy_mv1(handle: Pointer)
     fun icu4x_FixedDecimal_new_mv1(v: Int): Pointer
@@ -35,7 +34,7 @@ class FixedDecimal internal constructor (
         internal val libClass: Class<FixedDecimalLib> = FixedDecimalLib::class.java
         internal val lib: FixedDecimalLib = Native.load("somelib", libClass)
         
-        /** Construct an [`FixedDecimal`] from an integer.
+        /** Construct an [FixedDecimal] from an integer.
         */
         fun new_(v: Int): FixedDecimal {
             
@@ -48,7 +47,7 @@ class FixedDecimal internal constructor (
         }
     }
     
-    /** Multiply the [`FixedDecimal`] by a given power of ten.
+    /** Multiply the [FixedDecimal] by a given power of ten.
     *
     *See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
     */
@@ -58,7 +57,7 @@ class FixedDecimal internal constructor (
         
     }
     
-    /** Format the [`FixedDecimal`] as a string.
+    /** Format the [FixedDecimal] as a string.
     *
     *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
     */

@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 
@@ -19,7 +20,7 @@ namespace capi {
       FixedDecimalGroupingStrategy_Always = 2,
       FixedDecimalGroupingStrategy_Min2 = 3,
     };
-    
+
     typedef struct FixedDecimalGroupingStrategy_option {union { FixedDecimalGroupingStrategy ok; }; bool is_ok; } FixedDecimalGroupingStrategy_option;
 } // namespace capi
 } // namespace

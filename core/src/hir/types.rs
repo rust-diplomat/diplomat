@@ -128,6 +128,7 @@ impl<P: TyPosition> Type<P> {
                     .map(|lt| std::slice::from_ref(lt).iter().copied())
                     .unwrap_or([].iter().copied()),
             ),
+            Type::DiplomatOption(ty) => ty.lifetimes(),
             // TODO the Callback case
             _ => Either::Left([].iter().copied()),
         }
@@ -159,6 +160,18 @@ impl<P: TyPosition> Type<P> {
             _ => false,
         }
     }
+    /// Returns whether the self parameter is borrowed immutably.
+    ///
+    /// Curently this can only happen with opaque types.
+    pub fn is_immutably_borrowed(&self) -> bool {
+        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Immutable))
+    }
+    /// Returns whether the self parameter is borrowed mutably.
+    ///
+    /// Curently this can only happen with opaque types.
+    pub fn is_mutably_borrowed(&self) -> bool {
+        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Mutable))
+    }
 }
 
 impl SelfType {
@@ -167,6 +180,12 @@ impl SelfType {
     /// Curently this can only happen with opaque types.
     pub fn is_immutably_borrowed(&self) -> bool {
         matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Immutable)
+    }
+    /// Returns whether the self parameter is borrowed mutably.
+    ///
+    /// Curently this can only happen with opaque types.
+    pub fn is_mutably_borrowed(&self) -> bool {
+        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Mutable)
     }
     /// Returns whether the self parameter is consuming.
     ///

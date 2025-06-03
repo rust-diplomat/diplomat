@@ -10,16 +10,16 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "../diplomat_runtime.hpp"
 
 
 namespace ns {
 namespace capi {
     extern "C" {
-    
-    
+
     void namespace_AttrOpaque2_destroy(RenamedAttrOpaque2* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

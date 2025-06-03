@@ -112,6 +112,7 @@ pub mod ffi {
     }
 
     impl OpaqueMutexedString {
+        #[diplomat::demo(default_constructor)]
         pub fn from_usize(number: usize) -> Box<OpaqueMutexedString> {
             Box::new(OpaqueMutexedString(Mutex::new(format!("{number}"))))
         }

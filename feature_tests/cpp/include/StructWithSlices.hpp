@@ -10,16 +10,16 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     void StructWithSlices_return_last(diplomat::capi::StructWithSlices self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

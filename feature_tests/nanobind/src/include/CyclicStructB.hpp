@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "CyclicStructA.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -17,13 +18,12 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::CyclicStructA CyclicStructB_get_a(void);
-    
+
     typedef struct CyclicStructB_get_a_option_result {union {diplomat::capi::CyclicStructA ok; }; bool is_ok;} CyclicStructB_get_a_option_result;
     CyclicStructB_get_a_option_result CyclicStructB_get_a_option(void);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

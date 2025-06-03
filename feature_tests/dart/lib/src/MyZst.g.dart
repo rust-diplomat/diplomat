@@ -7,6 +7,7 @@ final class MyZst {
 
   MyZst();
 
+
   @override
   bool operator ==(Object other) =>
       other is MyZst;

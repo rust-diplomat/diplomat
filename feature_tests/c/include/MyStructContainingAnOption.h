@@ -23,5 +23,4 @@ MyStructContainingAnOption MyStructContainingAnOption_filled(void);
 
 
 
-
 #endif // MyStructContainingAnOption_H

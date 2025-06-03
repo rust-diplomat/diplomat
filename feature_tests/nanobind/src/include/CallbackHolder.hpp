@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
@@ -21,14 +22,13 @@ namespace capi {
         int32_t (*run_callback)(const void*, int32_t );
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackHolder_new_func;
-    
+
     diplomat::capi::CallbackHolder* CallbackHolder_new(DiplomatCallback_CallbackHolder_new_func func_cb_wrap);
-    
+
     int32_t CallbackHolder_call(const diplomat::capi::CallbackHolder* self, int32_t a);
-    
-    
+
     void CallbackHolder_destroy(CallbackHolder* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

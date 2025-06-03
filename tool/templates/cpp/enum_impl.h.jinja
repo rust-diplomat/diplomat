@@ -11,7 +11,7 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
 {%- endfor %}
 			return static_cast<{{type_name}}::Value>(c_enum);
 		default:
-			abort();
+			std::abort();
 	}
 }
 

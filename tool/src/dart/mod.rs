@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
-use crate::{ErrorStore, FileMap};
+use crate::{filters, ErrorStore, FileMap};
 use diplomat_core::hir::OutputOnly;
 use diplomat_core::hir::{
     self,
@@ -623,7 +623,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         if let hir::ReturnType::Fallible(_, Some(e)) = &method.output {
             write!(
                 &mut docs,
-                "\n///\n/// Throws [{}] on failure.",
+                "\n\nThrows [{}] on failure.",
                 self.gen_type_name(e)
             )
             .unwrap();
@@ -1224,7 +1224,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "_diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());".into(),
         hir::Slice::Primitive(_, p) => {
             let (size, align) = match p {
-                hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => ("", "1"),
+                hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) | hir::PrimitiveType::Ordering => ("", "1"),
                 hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => (" * 2", "2"),
                 hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => (" * 4", "4"),
                 hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => (" * 8", "8"),

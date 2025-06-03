@@ -10,28 +10,28 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_ORIGIN(void);
-    
+
     void StructArithmetic_set_origin(diplomat::capi::StructArithmetic _new_origin);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_new(int32_t x, int32_t y);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_add(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_sub(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_mul(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
+
     diplomat::capi::StructArithmetic StructArithmetic_div(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

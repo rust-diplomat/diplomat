@@ -6,19 +6,14 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class CyclicStructB {
-    
     #field;
-    
-    get field()  {
+    get field() {
         return this.#field;
-    } 
-    set field(value) {
+    }
+    set field(value){
         this.#field = value;
     }
-    
-    /** Create `CyclicStructB` from an object that contains all of `CyclicStructB`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new CyclicStructB(structObj);
     }
@@ -39,12 +34,11 @@ export class CyclicStructB {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [this.#field]
+        return this.#field;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -79,31 +73,36 @@ export class CyclicStructB {
         }
         let structObj = {};
         structObj.field = primitiveValue;
-        
 
         return new CyclicStructB(structObj);
     }
-static getA() {
+
+
+    static getA() {
+
         const result = wasm.CyclicStructB_get_a();
-    
+
         try {
             return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, result);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
-static getAOption() {
+
+    static getAOption() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
-        
+
+
         const result = wasm.CyclicStructB_get_a_option(diplomatReceive.buffer);
-    
+
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return CyclicStructA._fromFFI(diplomatRuntime.internalConstructor, (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0]);
         }
-        
+
         finally {
             diplomatReceive.free();
         }

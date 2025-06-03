@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "OptionOpaque.hpp"
 #include "OptionOpaqueChar.hpp"
 #include "diplomat_runtime.hpp"
@@ -18,8 +19,7 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

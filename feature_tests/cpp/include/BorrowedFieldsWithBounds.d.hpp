@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 namespace diplomat::capi { struct Foo; }
@@ -21,7 +22,7 @@ namespace capi {
       diplomat::capi::DiplomatStringView field_b;
       diplomat::capi::DiplomatStringView field_c;
     };
-    
+
     typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds ok; }; bool is_ok; } BorrowedFieldsWithBounds_option;
 } // namespace capi
 } // namespace

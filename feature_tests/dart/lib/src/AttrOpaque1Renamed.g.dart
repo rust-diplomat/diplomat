@@ -44,6 +44,7 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
   void useNamespaced(RenamedAttrEnum n) {
     _namespace_AttrOpaque1_use_namespaced(_ffi, n.index);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_destroy')

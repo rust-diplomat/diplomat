@@ -5,28 +5,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class StructWithSlices {
-    
     #first;
-    
-    get first()  {
+    get first() {
         return this.#first;
-    } 
-    set first(value) {
+    }
+    set first(value){
         this.#first = value;
     }
-    
     #second;
-    
-    get second()  {
+    get second() {
         return this.#second;
-    } 
-    set second(value) {
+    }
+    set second(value){
         this.#second = value;
     }
-    
-    /** Create `StructWithSlices` from an object that contains all of `StructWithSlices`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new StructWithSlices(structObj);
     }
@@ -52,8 +45,7 @@ export class StructWithSlices {
     }
 
     // Return this struct in FFI function friendly format.
-    // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // Returns an array that can be expanded with spread syntax (...)// If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
@@ -61,7 +53,13 @@ export class StructWithSlices {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.str8(wasm, this.#first)).splat(), ...diplomatRuntime.CleanupArena.maybeCreateWith(functionCleanupArena, ...appendArrayMap['aAppendArray']).alloc(diplomatRuntime.DiplomatBuf.slice(wasm, this.#second, "u16")).splat()]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -99,30 +97,33 @@ export class StructWithSlices {
         return new StructWithSlices(structObj);
     }
 
-    // Return all fields corresponding to lifetime `'a` 
+    // Return all fields corresponding to lifetime `'a`
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'a`,
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeA() { 
+    get _fieldsForLifetimeA() {
         return [this.#first, this.#second];
     };
-returnLast() {
+
+
+    returnLast() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        
+
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...this._fieldsForLifetimeA];
-        wasm.StructWithSlices_return_last(...StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}), write.buffer);
-    
+
+    wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false), write.buffer);
+
         try {
             return write.readString8();
         }
-        
+
         finally {
             functionCleanupArena.free();
-        
+
             write.free();
         }
     }

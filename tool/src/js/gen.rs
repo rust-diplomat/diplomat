@@ -1,6 +1,7 @@
 //! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
 //! See [`converter`] for more conversion specific functions.
 
+use std::alloc::Layout;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -17,6 +18,8 @@ use diplomat_core::hir::{
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
+use super::{JsConfig, WasmABI};
+use crate::filters;
 use crate::ErrorStore;
 
 use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
@@ -39,6 +42,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
     pub errors: &'ctx ErrorStore<'tcx, String>,
     /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<Imports<'tcx>>,
+    pub config: JsConfig,
 }
 
 impl<'tcx> TyGenContext<'_, 'tcx> {
@@ -229,7 +233,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> (Vec<FieldInfo<P>>, bool) {
+    ) -> (Vec<FieldInfo<P>>, bool, Layout) {
         let struct_field_info =
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
         let mut needs_force_padding = false;
@@ -354,7 +358,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 "".into()
             };
             let js_name = format!("this.#{}", field_name);
-            let js_to_c = self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding));
+
+            let js_to_c = match self.config.abi {
+                // For the legacy ABI, we expect to return a splatted list of the
+                // fields converted into WASM friendly types and buffers for us. 
+                // So we use the List context here.
+                WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding)),
+                // For the C spec ABI, we use the _writeToArrayBuffer function (generated using js_to_c_write) info,
+                // so we don't need to provide any information here:
+                WasmABI::CSpec => "".into()
+            };
+
             let js_to_c = format!("{js_to_c}{maybe_padding_after}");
             let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 
@@ -371,7 +385,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             }
         }).collect::<Vec<_>>();
 
-        (fields, needs_force_padding)
+        (fields, needs_force_padding, struct_field_info.struct_layout)
     }
 
     pub(super) fn only_primitive<P: hir::TyPosition>(&self, st: &hir::StructDef<P>) -> bool {
@@ -402,6 +416,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
     }
 
+    // Going to have to be a lot of arguments for now (can remove `needs_force_padding` once Rust removes the `-Zwasm-c-abi=legacy` option).
+    #[allow(clippy::too_many_arguments)]
     /// Generate a struct type's body for a file from the given definition.
     ///
     /// Used for both [`hir::TypeDef::Struct`] and [`hir::TypeDef::OutStruct`], which is why `is_out` exists.
@@ -415,6 +431,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         is_out: bool,
         needs_force_padding: bool,
+        layout: Layout,
     ) -> String {
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
@@ -438,6 +455,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             /// Used by `js_class.js.jinja`. If a constructor isn't overridden by #[diplomat::attr(auto, constructor)], this is the logic that `js_class.js.jinja` will use to determine whether or not to generate constructor code.
             /// Useful for hiding the fact that an out_struct has a constructor in typescript headers, for instance.
             show_default_ctor: bool,
+
+            size: usize,
+            align: usize,
+            abi: WasmABI,
         }
 
         ImplTemplate {
@@ -461,7 +482,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             doc_str: self.formatter.fmt_docs(&struct_def.docs),
 
-            show_default_ctor: !is_out || !typescript,
+            show_default_ctor: !typescript && !struct_def.fields.is_empty(),
+
+            size: layout.size(),
+            align: layout.align(),
+
+            abi: self.config.abi.clone(),
         }
         .render()
         .unwrap()
@@ -491,7 +517,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         let mut method_info = MethodInfo {
             abi_name,
             method_output_is_ffi_unit: method.output.is_ffi_unit(),
-            needs_slice_cleanup: false,
+            needs_cleanup: false,
             doc_str: self.formatter.fmt_docs(&method.docs),
             ..Default::default()
         };
@@ -509,6 +535,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 None
             };
 
+            // If we're the struct, we always expect to generate functionCleanupArena to generate slices.
+            // It's easier to do it this way, so we don't have to check if each individual `_intoFFI` call requires this parameter or not.
+            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
+                method_info.needs_cleanup = true;
+            }
+
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info
                 .param_conversions
@@ -520,7 +552,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 ));
 
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                method_info.needs_slice_cleanup = true;
+                method_info.needs_cleanup = true;
             }
         }
 
@@ -561,7 +593,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                             // Is Rust NOT taking ownership?
                             // Then that means we can free this after the function is done.
                             ParamBorrowInfo::TemporarySlice => {
-                                method_info.needs_slice_cleanup = true;
+                                method_info.needs_cleanup = true;
                                 "functionCleanupArena"
                             },
 
@@ -579,18 +611,27 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     // We're specifically doing slice preallocation here
                     JsToCConversionContext::SlicePrealloc
                     );
+
                 // We add the pointer and size for slices:
-                method_info
-                    .param_conversions
-                    .push(format!("...{}Slice.splat()", param_info.name).into());
+                method_info.param_conversions.push(
+                    match self.config.abi {
+                        WasmABI::Legacy => format!("...{}Slice.splat()", param_info.name),
+                        WasmABI::CSpec => format!("{}Slice.ptr", param_info.name),
+                    }
+                    .into(),
+                );
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
                     slice_expr: slice_expr.to_string(),
                 });
             } else {
-                let alloc = if let hir::Type::Struct(..) = param.ty.unwrap_option() {
-                    method_info.needs_slice_cleanup = true;
+                // Set allocators for all the types we know require allocation (basically anything that's a struct in the underlying Rust):
+                let alloc = if matches!(
+                    param.ty,
+                    hir::Type::DiplomatOption(..) | hir::Type::Struct(..)
+                ) {
+                    method_info.needs_cleanup = true;
                     Some("functionCleanupArena")
                 } else {
                     None
@@ -709,8 +750,8 @@ pub(super) struct MethodInfo<'info> {
     /// Native C method name
     pub abi_name: String,
 
-    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s that are present.
-    pub needs_slice_cleanup: bool,
+    /// If we need to create a `CleanupArena` (see `runtime.mjs`) to free any [`SliceParam`]s or structs that are present.
+    pub needs_cleanup: bool,
     /// For calling .releaseToGarbageCollector on slices.
     pub needs_slice_collection: bool,
 

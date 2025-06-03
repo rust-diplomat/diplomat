@@ -10,43 +10,43 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new(diplomat::capi::DiplomatF64View v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_bool(diplomat::capi::DiplomatBoolView v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_i16(diplomat::capi::DiplomatI16View v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_u16(diplomat::capi::DiplomatU16View v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_isize(diplomat::capi::DiplomatIsizeView v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_usize(diplomat::capi::DiplomatUsizeView v);
-    
+
     diplomat::capi::Float64Vec* Float64Vec_new_f64_be_bytes(diplomat::capi::DiplomatU8View v);
-    
+
     diplomat::capi::DiplomatF64View Float64Vec_as_slice(const diplomat::capi::Float64Vec* self);
-    
+
     void Float64Vec_fill_slice(const diplomat::capi::Float64Vec* self, diplomat::capi::DiplomatF64ViewMut v);
-    
+
     void Float64Vec_set_value(diplomat::capi::Float64Vec* self, diplomat::capi::DiplomatF64View new_slice);
-    
+
     void Float64Vec_to_string(const diplomat::capi::Float64Vec* self, diplomat::capi::DiplomatWrite* write);
-    
+
     diplomat::capi::DiplomatF64View Float64Vec_borrow(const diplomat::capi::Float64Vec* self);
-    
+
     typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
     Float64Vec_get_result Float64Vec_get(const diplomat::capi::Float64Vec* self, size_t i);
-    
-    
+
     void Float64Vec_destroy(Float64Vec* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

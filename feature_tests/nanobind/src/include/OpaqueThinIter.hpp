@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "OpaqueThin.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -17,12 +18,11 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     const diplomat::capi::OpaqueThin* OpaqueThinIter_next(diplomat::capi::OpaqueThinIter* self);
-    
-    
+
     void OpaqueThinIter_destroy(OpaqueThinIter* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

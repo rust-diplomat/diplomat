@@ -6,37 +6,28 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionInputStruct {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     #c;
-    
-    get c()  {
+    get c() {
         return this.#c;
-    } 
-    set c(value) {
+    }
+    set c(value){
         this.#c = value;
     }
-    
-    /** Create `OptionInputStruct` from an object that contains all of `OptionInputStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new OptionInputStruct(structObj);
     }
@@ -69,12 +60,17 @@ export class OptionInputStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
         functionCleanupArena,
         appendArrayMap
     ) {
-        return [...diplomatRuntime.optionToArgsForCalling(this.#a, 1, 1, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array)]), /* [2 x i8] padding */ 0, 0 /* end padding */, ...diplomatRuntime.optionToArgsForCalling(this.#b, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint32Array)]), ...diplomatRuntime.optionToArgsForCalling(this.#c, 4, 4, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)])]
+        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
+
+        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+
+        functionCleanupArena.alloc(buffer);
+
+        return buffer.ptr;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -119,6 +115,7 @@ export class OptionInputStruct {
 
         return new OptionInputStruct(structObj);
     }
+
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

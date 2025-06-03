@@ -341,6 +341,7 @@ NB_MODULE(somelib, somelib_mod)
     	.def_static("test_multi_arg_callback", &CallbackWrapper::test_multi_arg_callback, "f"_a, "x"_a)
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
+    	.def_static("test_opaque_cb_arg", &CallbackWrapper::test_opaque_cb_arg, "cb"_a, "a"_a)
     	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
     
     nb::class_<ImportedStruct>(somelib_mod, "ImportedStruct")

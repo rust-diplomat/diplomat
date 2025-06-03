@@ -1,21 +1,21 @@
 import { CyclicStructA } from "../../js/api/index.mjs"
 import { CyclicStructB } from "../../js/api/index.mjs"
 import { CyclicStructC } from "../../js/api/index.mjs"
-export function cyclicOut(cyclicStructCAAField) {
+export function cyclicOut(selfAAField) {
     
-    let cyclicStructCAA = CyclicStructB.fromFields({
-        field: cyclicStructCAAField
+    let selfAA = CyclicStructB.fromFields({
+        field: selfAAField
     });
     
-    let cyclicStructCA = CyclicStructA.fromFields({
-        a: cyclicStructCAA
+    let selfA = CyclicStructA.fromFields({
+        a: selfAA
     });
     
-    let cyclicStructC = CyclicStructC.fromFields({
-        a: cyclicStructCA
+    let self = CyclicStructC.fromFields({
+        a: selfA
     });
     
-    let out = cyclicStructC.cyclicOut();
+    let out = self.cyclicOut();
     
 
     return out;

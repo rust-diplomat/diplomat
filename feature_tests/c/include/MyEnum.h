@@ -23,5 +23,4 @@ MyEnum MyEnum_get_a(void);
 
 
 
-
 #endif // MyEnum_H

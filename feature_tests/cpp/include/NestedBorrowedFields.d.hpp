@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
 #include "diplomat_runtime.hpp"
@@ -27,7 +28,7 @@ namespace capi {
       diplomat::capi::BorrowedFieldsWithBounds bounds;
       diplomat::capi::BorrowedFieldsWithBounds bounds2;
     };
-    
+
     typedef struct NestedBorrowedFields_option {union { NestedBorrowedFields ok; }; bool is_ok; } NestedBorrowedFields_option;
 } // namespace capi
 } // namespace

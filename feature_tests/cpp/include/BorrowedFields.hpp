@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <cstdlib>
 #include "Bar.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -17,10 +18,9 @@
 namespace diplomat {
 namespace capi {
     extern "C" {
-    
+
     diplomat::capi::BorrowedFields BorrowedFields_from_bar_and_strings(const diplomat::capi::Bar* bar, diplomat::capi::DiplomatString16View dstr16, diplomat::capi::DiplomatStringView utf8_str);
-    
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace

@@ -25,6 +25,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   void assertChar(Rune ch) {
     _OptionOpaqueChar_assert_char(_ffi, ch);
   }
+
 }
 
 @_DiplomatFfiUse('OptionOpaqueChar_destroy')

@@ -44,6 +44,7 @@ final class FixedDecimalFormatterOptions {
     return dart;
   }
 
+
   @override
   bool operator ==(Object other) =>
       other is FixedDecimalFormatterOptions &&

@@ -19,5 +19,4 @@
 
 
 
-
 #endif // OptionStruct_H

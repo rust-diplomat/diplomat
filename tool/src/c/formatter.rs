@@ -1,7 +1,8 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+    self, DocsTypeReferenceSyntax, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition,
+    TypeContext, TypeId,
 };
 use std::borrow::Cow;
 use std::sync::LazyLock;
@@ -200,7 +201,7 @@ impl<'tcx> CFormatter<'tcx> {
             PrimitiveType::Bool => "bool",
 
             PrimitiveType::Char => "char32_t",
-            PrimitiveType::Int(IntType::I8) => "int8_t",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "int8_t",
             PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "uint8_t",
             PrimitiveType::Int(IntType::I16) => "int16_t",
             PrimitiveType::Int(IntType::U16) => "uint16_t",
@@ -223,7 +224,7 @@ impl<'tcx> CFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Bool",
             PrimitiveType::Char => "Char",
-            PrimitiveType::Int(IntType::I8) => "I8",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "I8",
             PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "U8",
             PrimitiveType::Int(IntType::I16) => "I16",
             PrimitiveType::Int(IntType::U16) => "U16",
@@ -277,10 +278,9 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n * ")
-            .replace(" \n", "\n")
+            .to_string()
     }
 
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
