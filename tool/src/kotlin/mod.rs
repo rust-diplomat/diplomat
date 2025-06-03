@@ -1455,7 +1455,7 @@ returnVal.option() ?: return null
                 docs: self.formatter.fmt_docs(&ty.docs),
                 is_custom_error: ty.attrs.custom_errors,
                 generate_mocking_interface: (ty.attrs.generate_mocking_interface
-                    && self_methods.len() > 0),
+                    && !self_methods.is_empty()),
             }
             .render()
             .expect("failed to generate struct"),
