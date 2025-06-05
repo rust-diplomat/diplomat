@@ -30,7 +30,8 @@ public:
     B = 1,
   };
 
-  DefaultEnum() = default;
+  DefaultEnum(): value(Value::A) {}
+
   // Implicit conversions between enum and ::Value
   constexpr DefaultEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }

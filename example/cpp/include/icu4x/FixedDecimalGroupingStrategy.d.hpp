@@ -35,7 +35,8 @@ public:
     Min2 = 3,
   };
 
-  FixedDecimalGroupingStrategy() = default;
+  FixedDecimalGroupingStrategy(): value(Value::Auto) {}
+
   // Implicit conversions between enum and ::Value
   constexpr FixedDecimalGroupingStrategy(Value v) : value(v) {}
   constexpr operator Value() const { return value; }

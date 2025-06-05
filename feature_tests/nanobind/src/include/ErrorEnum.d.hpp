@@ -30,7 +30,8 @@ public:
     Bar = 1,
   };
 
-  ErrorEnum() = default;
+  ErrorEnum(): value(Value::Foo) {}
+
   // Implicit conversions between enum and ::Value
   constexpr ErrorEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }

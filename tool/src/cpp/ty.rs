@@ -85,6 +85,33 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id, method))
             .collect::<Vec<_>>();
 
+        let mut found_default: Option<&hir::EnumVariant> = None;
+        let mut found_zero = None;
+
+        // Not all enums have a zero-variant; zero-initializing those is a mistake and will
+        // lead to aborts in the conversion code. To allow default-initialization, we generate *some*
+        // default ctor. It is, in order: the explicit default variant, OR the variant with 0 discriminant,
+        // OR the first variant.
+        for v in ty.variants.iter() {
+            if v.attrs.default {
+                if let Some(existing) = found_default {
+                    self.errors.push_error(format!(
+                        "Found multiple default variants for enum: {} and {}",
+                        existing.name, v.name
+                    ))
+                }
+                found_default = Some(v)
+            }
+            if v.discriminant == 0 {
+                found_zero = Some(v)
+            }
+        }
+
+        let default_variant = found_default
+            .or(found_zero)
+            .unwrap_or(ty.variants.first().unwrap());
+
+        let default_variant = self.formatter.fmt_enum_variant(default_variant);
         #[derive(Template)]
         #[template(path = "cpp/enum_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
@@ -97,6 +124,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
             docs: &'a str,
+            default_variant: Cow<'a, str>,
         }
 
         DeclTemplate {
@@ -109,6 +137,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs),
+            default_variant,
         }
         .render_into(self.decl_header)
         .unwrap();

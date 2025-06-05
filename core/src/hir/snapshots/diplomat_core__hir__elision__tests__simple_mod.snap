@@ -1,6 +1,5 @@
 ---
 source: core/src/hir/elision.rs
-assertion_line: 473
 expression: tcx
 ---
 TypeContext {
@@ -49,6 +48,7 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
+                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -107,6 +107,7 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
+                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -153,6 +154,7 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
+                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -177,6 +179,7 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
+                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -242,6 +245,7 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
+                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -302,6 +306,7 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
+                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -341,6 +346,7 @@ TypeContext {
                                 },
                                 special_method: None,
                                 custom_errors: false,
+                                default: false,
                                 demo_attrs: DemoInfo {
                                     generate: false,
                                     default_constructor: false,
@@ -381,6 +387,7 @@ TypeContext {
                         },
                         special_method: None,
                         custom_errors: false,
+                        default: false,
                         demo_attrs: DemoInfo {
                             generate: false,
                             default_constructor: false,
@@ -405,6 +412,7 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
+                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -452,6 +460,7 @@ TypeContext {
                 },
                 special_method: None,
                 custom_errors: false,
+                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,

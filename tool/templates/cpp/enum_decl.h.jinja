@@ -16,7 +16,8 @@ public:
 		{%- endfor %}
 	};
 
-	{{type_name_unnamespaced}}() = default;
+	{{type_name_unnamespaced}}(): value(Value::{{default_variant}}) {}
+
 	// Implicit conversions between enum and ::Value
 	constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
 	constexpr operator Value() const { return value; }
