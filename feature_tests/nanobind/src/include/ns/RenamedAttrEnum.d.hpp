@@ -33,7 +33,8 @@ public:
     Renamed = 2,
   };
 
-  RenamedAttrEnum() = default;
+  RenamedAttrEnum(): value(Value::A) {}
+
   // Implicit conversions between enum and ::Value
   constexpr RenamedAttrEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }
