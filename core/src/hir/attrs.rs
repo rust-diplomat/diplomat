@@ -44,6 +44,11 @@ pub struct Attrs {
     /// This user-defined type can be used as the error type in a Result.
     pub custom_errors: bool,
 
+    /// This user-defined type has a "default" state that can be computed purely foreign-language-side
+    ///
+    /// Can be applied to enum variants to signal the default
+    pub default: bool,
+
     /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
     /// List of attributes specific to automatic demo generation.
     /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
@@ -308,6 +313,21 @@ impl Attrs {
                             }
                             warn_auto(errors);
                         }
+                        "default" => {
+                            if let Meta::Path(_) = attr.meta {
+                                if this.default {
+                                    errors.push(LoweringError::Other(
+                                        "Duplicate `default` attribute".into(),
+                                    ));
+                                } else {
+                                    this.default = true;
+                                }
+                            } else {
+                                errors.push(LoweringError::Other(
+                                    "`default` must be a simple path".into(),
+                                ))
+                            }
+                        }
                         "rename" => {
                             match RenameAttr::from_meta(&attr.meta) {
                                 Ok(rename) => {
@@ -438,6 +458,7 @@ impl Attrs {
             abi_rename,
             special_method,
             custom_errors,
+            default,
             demo_attrs: _,
         } = &self;
 
@@ -746,7 +767,11 @@ impl Attrs {
                 "`namespace` can only be used on types".to_string(),
             ));
         }
-
+        if *default && !matches!(context, AttributeContext::EnumVariant(..)) {
+            errors.push(LoweringError::Other(
+                "`default` can only be used on types and enum variants".to_string(),
+            ));
+        }
         if matches!(
             context,
             AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
@@ -810,6 +835,8 @@ impl Attrs {
             disable,
             rename,
             namespace,
+            // Should not inherit from enums to their variants
+            default: false,
             // Was already inherited on the AST side
             abi_rename: Default::default(),
             // Never inherited
@@ -864,6 +891,9 @@ pub struct BackendAttrSupport {
     /// Whether the language supports using slices with 'static lifetimes.
     pub static_slices: bool,
 
+    /// Whether the language supports marking types as having a default value
+    pub defaults: bool,
+
     // Special methods
     /// Marking a method as a constructor to generate special constructor methods.
     pub constructors: bool,
@@ -914,6 +944,7 @@ impl BackendAttrSupport {
             utf8_strings: true,
             utf16_strings: true,
             static_slices: true,
+            defaults: true,
 
             constructors: true,
             named_constructors: true,
@@ -944,6 +975,7 @@ impl BackendAttrSupport {
             "utf8_strings" => Some(self.utf8_strings),
             "utf16_strings" => Some(self.utf16_strings),
             "static_slices" => Some(self.static_slices),
+            "default" => Some(self.defaults),
             "constructors" => Some(self.constructors),
             "named_constructors" => Some(self.named_constructors),
             "fallible_constructors" => Some(self.fallible_constructors),
@@ -1080,6 +1112,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 utf8_strings,
                 utf16_strings,
                 static_slices,
+                defaults,
 
                 constructors,
                 named_constructors,
@@ -1107,6 +1140,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "utf8_strings" => utf8_strings,
                 "utf16_strings" => utf16_strings,
                 "static_slices" => static_slices,
+                "defaults" => defaults,
 
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,

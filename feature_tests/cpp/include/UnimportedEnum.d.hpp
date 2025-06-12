@@ -32,7 +32,8 @@ public:
     C = 2,
   };
 
-  UnimportedEnum() = default;
+  UnimportedEnum(): value(Value::A) {}
+
   // Implicit conversions between enum and ::Value
   constexpr UnimportedEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }

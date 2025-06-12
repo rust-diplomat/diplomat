@@ -38,7 +38,8 @@ public:
     F = 3,
   };
 
-  MyEnum() = default;
+  MyEnum(): value(Value::D) {}
+
   // Implicit conversions between enum and ::Value
   constexpr MyEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }
