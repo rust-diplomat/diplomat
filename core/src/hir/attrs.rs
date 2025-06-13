@@ -53,6 +53,8 @@ pub struct Attrs {
     /// List of attributes specific to automatic demo generation.
     /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
     pub demo_attrs: DemoInfo,
+    /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
+    pub generate_mocking_interface: bool,
 }
 
 // #region: Demo specific attributes.
@@ -356,6 +358,18 @@ impl Attrs {
                         "error" => {
                             this.custom_errors = true;
                         }
+                        "generate_mocking_interface" => {
+                            if !support.generate_mocking_interface {
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "generate_mocking_interface",
+                                    backend,
+                                    errors,
+                                );
+                                continue;
+                            }
+                            this.generate_mocking_interface = true;
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
                                 "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
@@ -460,6 +474,7 @@ impl Attrs {
             custom_errors,
             default,
             demo_attrs: _,
+            generate_mocking_interface,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -811,6 +826,13 @@ impl Attrs {
                 "`error` can only be used on types".to_string(),
             ));
         }
+        if *generate_mocking_interface
+            && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+        {
+            errors.push(LoweringError::Other(
+                "`generate_mocking_interface` can only be used on opaque types".to_string(),
+            ));
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -844,6 +866,8 @@ impl Attrs {
             // Not inherited
             custom_errors: false,
             demo_attrs: Default::default(),
+            // Not inherited
+            generate_mocking_interface: false,
         }
     }
 }
@@ -931,6 +955,8 @@ pub struct BackendAttrSupport {
     pub traits_are_send: bool,
     /// Traits are safe to Sync between threads (safe to mark as std::marker::Sync)
     pub traits_are_sync: bool,
+    /// Whether to generate mocking interface.
+    pub generate_mocking_interface: bool,
 }
 
 impl BackendAttrSupport {
@@ -963,6 +989,7 @@ impl BackendAttrSupport {
             custom_errors: true,
             traits_are_send: true,
             traits_are_sync: true,
+            generate_mocking_interface: true,
         }
     }
 
@@ -1131,6 +1158,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 custom_errors,
                 traits_are_send,
                 traits_are_sync,
+                generate_mocking_interface,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1159,6 +1187,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "custom_errors" => custom_errors,
                 "traits_are_send" => traits_are_send,
                 "traits_are_sync" => traits_are_sync,
+                "generate_mocking_interface" => generate_mocking_interface,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1394,6 +1423,91 @@ mod tests {
                     }
                 }
 
+            }
+        }
+    }
+
+    #[test]
+    fn test_mocking_interface_for_opaque_type() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                #[diplomat::attr(tests, generate_mocking_interface)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32,
+                }
+
+                impl Foo {
+                    pub fn new() -> Box<Self> {
+                        Box::new(Self { x: 0, y: 0 })
+                    }
+
+                    pub fn get_x(&self) -> u32 {
+                        self.x
+                    }
+
+                    pub fn get_y(&self) -> u32 {
+                        self.y
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_mocking_interface_for_non_opaque_type() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(tests, generate_mocking_interface)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32,
+                }
+
+                impl Foo {
+                    pub fn new() -> Self {
+                        Self { x: 0, y: 0 }
+                    }
+
+                    pub fn get_x(self) -> u32 {
+                        self.x
+                    }
+
+                    pub fn get_y(self) -> u32 {
+                        self.y
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_mocking_interface_for_unsupported_backend() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(tests, generate_mocking_interface)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32,
+                }
+
+                impl Foo {
+                    pub fn new() -> Self {
+                        Self { x: 0, y: 0 }
+                    }
+
+                    pub fn get_x(self) -> u32 {
+                        self.x
+                    }
+
+                    pub fn get_y(self) -> u32 {
+                        self.y
+                    }
+                }
             }
         }
     }

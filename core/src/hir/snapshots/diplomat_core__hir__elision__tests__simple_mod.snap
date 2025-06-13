@@ -59,6 +59,7 @@ TypeContext {
                                 default_value: "",
                             },
                         },
+                        generate_mocking_interface: false,
                     },
                 },
             ],
@@ -118,6 +119,7 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
+                                generate_mocking_interface: false,
                             },
                         },
                     ],
@@ -165,6 +167,7 @@ TypeContext {
                                 default_value: "",
                             },
                         },
+                        generate_mocking_interface: false,
                     },
                 },
             ],
@@ -190,6 +193,7 @@ TypeContext {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -256,6 +260,7 @@ TypeContext {
                                 default_value: "",
                             },
                         },
+                        generate_mocking_interface: false,
                     },
                 },
             ],
@@ -317,6 +322,7 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
+                                generate_mocking_interface: false,
                             },
                         },
                     ),
@@ -357,6 +363,7 @@ TypeContext {
                                         default_value: "",
                                     },
                                 },
+                                generate_mocking_interface: false,
                             },
                         },
                     ],
@@ -398,6 +405,7 @@ TypeContext {
                                 default_value: "",
                             },
                         },
+                        generate_mocking_interface: false,
                     },
                 },
             ],
@@ -423,6 +431,7 @@ TypeContext {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -471,6 +480,7 @@ TypeContext {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [

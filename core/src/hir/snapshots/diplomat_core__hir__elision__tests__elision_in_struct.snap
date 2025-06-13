@@ -56,6 +56,7 @@ Method {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
             },
         },
     ),
@@ -111,6 +112,7 @@ Method {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
             },
         },
     ],
@@ -139,5 +141,6 @@ Method {
                 default_value: "",
             },
         },
+        generate_mocking_interface: false,
     },
 }

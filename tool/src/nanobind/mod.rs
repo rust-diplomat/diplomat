@@ -48,6 +48,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.option = true;
     a.callbacks = true;
     a.traits = false;
+    a.generate_mocking_interface = false;
 
     a
 }
