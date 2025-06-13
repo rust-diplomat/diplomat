@@ -48,6 +48,13 @@ inline diplomat::result<std::string, std::monostate> icu4x::FixedDecimal::to_str
     &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
+template<typename W>
+inline diplomat::result<std::monostate, std::monostate> icu4x::FixedDecimal::to_string_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  auto result = icu4x::capi::icu4x_FixedDecimal_to_string_mv1(this->AsFFI(),
+    &write);
+  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+}
 
 inline const icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() const {
   return reinterpret_cast<const icu4x::capi::FixedDecimal*>(this);

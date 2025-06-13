@@ -48,6 +48,13 @@ inline std::string icu4x::FixedDecimalFormatter::format_write(const icu4x::Fixed
     &write);
   return output;
 }
+template<typename W>
+inline void icu4x::FixedDecimalFormatter::format_write_write(const icu4x::FixedDecimal& value, W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  icu4x::capi::icu4x_FixedDecimalFormatter_format_write_mv1(this->AsFFI(),
+    value.AsFFI(),
+    &write);
+}
 
 inline const icu4x::capi::FixedDecimalFormatter* icu4x::FixedDecimalFormatter::AsFFI() const {
   return reinterpret_cast<const icu4x::capi::FixedDecimalFormatter*>(this);

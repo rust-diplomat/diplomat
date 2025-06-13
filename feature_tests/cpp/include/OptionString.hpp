@@ -44,6 +44,13 @@ inline diplomat::result<std::string, std::monostate> OptionString::write() const
     &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
+template<typename W>
+inline diplomat::result<std::monostate, std::monostate> OptionString::write_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  auto result = diplomat::capi::OptionString_write(this->AsFFI(),
+    &write);
+  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+}
 
 inline std::optional<std::string_view> OptionString::borrow() const {
   auto result = diplomat::capi::OptionString_borrow(this->AsFFI());

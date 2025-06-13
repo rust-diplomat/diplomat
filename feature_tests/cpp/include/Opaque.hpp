@@ -67,6 +67,12 @@ inline std::string Opaque::get_debug_str() const {
     &write);
   return output;
 }
+template<typename W>
+inline void Opaque::get_debug_str_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
+    &write);
+}
 
 inline void Opaque::assert_struct(MyStruct s) const {
   diplomat::capi::Opaque_assert_struct(this->AsFFI(),

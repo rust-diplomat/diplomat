@@ -24,6 +24,8 @@ public:
   inline static std::unique_ptr<OptionString> new_(std::string_view diplomat_str);
 
   inline diplomat::result<std::string, std::monostate> write() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::monostate> write_write(W& writeable_output) const;
 
   inline std::optional<std::string_view> borrow() const;
 
