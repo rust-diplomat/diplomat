@@ -77,6 +77,12 @@ inline std::string MyString::get_str() const {
     &write);
   return output;
 }
+template<typename W>
+inline void MyString::get_str_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::MyString_get_str(this->AsFFI(),
+    &write);
+}
 
 inline std::string_view MyString::get_static_str() {
   auto result = diplomat::capi::MyString_get_static_str();
@@ -92,6 +98,16 @@ inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_trans
   diplomat::capi::MyString_string_transform({foo.data(), foo.size()},
     &write);
   return diplomat::Ok<std::string>(std::move(output));
+}
+template<typename W>
+inline diplomat::result<std::monostate, diplomat::Utf8Error> MyString::string_transform_write(std::string_view foo, W& writeable) {
+  if (!diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
+    return diplomat::Err<diplomat::Utf8Error>();
+  }
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::MyString_string_transform({foo.data(), foo.size()},
+    &write);
+  return diplomat::Ok<std::monostate>();
 }
 
 inline std::string_view MyString::borrow() const {

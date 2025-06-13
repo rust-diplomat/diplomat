@@ -39,6 +39,12 @@ inline std::string CyclicStructC::cyclic_out() const {
     &write);
   return output;
 }
+template<typename W>
+inline void CyclicStructC::cyclic_out_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
+    &write);
+}
 
 
 inline diplomat::capi::CyclicStructC CyclicStructC::AsFFI() const {

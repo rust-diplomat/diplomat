@@ -108,6 +108,16 @@ inline capi::DiplomatWrite WriteFromString(std::string& string) {
   return w;
 }
 
+template<typename T> struct WriteTrait {
+  // static inline capi::DiplomatWrite Construct(T& t);
+};
+
+template<> struct WriteTrait<std::string> {
+  static inline capi::DiplomatWrite Construct(std::string& t) {
+    return diplomat::WriteFromString(t);
+  }
+};
+
 template<class T> struct Ok {
   T inner;
   Ok(T&& i): inner(std::forward<T>(i)) {}

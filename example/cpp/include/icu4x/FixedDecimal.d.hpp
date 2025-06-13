@@ -48,6 +48,8 @@ public:
    * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
    */
   inline diplomat::result<std::string, std::monostate> to_string() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::monostate> to_string_write(W& writeable_output) const;
 
   inline const icu4x::capi::FixedDecimal* AsFFI() const;
   inline icu4x::capi::FixedDecimal* AsFFI();

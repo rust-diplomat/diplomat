@@ -42,6 +42,12 @@ inline std::string Utf16Wrap::get_debug_str() const {
     &write);
   return output;
 }
+template<typename W>
+inline void Utf16Wrap::get_debug_str_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::Utf16Wrap_get_debug_str(this->AsFFI(),
+    &write);
+}
 
 inline std::u16string_view Utf16Wrap::borrow_cont() const {
   auto result = diplomat::capi::Utf16Wrap_borrow_cont(this->AsFFI());
