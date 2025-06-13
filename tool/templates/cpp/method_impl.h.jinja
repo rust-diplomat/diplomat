@@ -2,12 +2,7 @@
 inline {##}
 {{- m.return_ty }} {##}
 {{- type_name }}::{{ m.method_name -}}
-(
-	{%- for param in m.param_decls %}
-		{%- if !loop.first %}, {% endif -%}
-		{{ param.type_name }} {{ param.var_name }}
-	{%- endfor -%}
-) {##}
+({% include "param_decls_list.h.jinja" %}) {##}
 {%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
 {
 	{%- for validation in m.param_validations %}
