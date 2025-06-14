@@ -1183,6 +1183,7 @@ impl TypeName {
         &self,
         mut transitivity: LifetimeTransitivity<'env>,
     ) -> Vec<&'env NamedLifetime> {
+        // We don't use the control flow here
         let _ = self.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
             if let Lifetime::Named(named) = lifetime {
                 transitivity.visit(named);
