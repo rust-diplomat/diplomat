@@ -42,6 +42,8 @@ public:
   inline void set_value(diplomat::span<const double> new_slice);
 
   inline std::string to_string() const;
+  template<typename W>
+  inline void to_string_write(W& writeable_output) const;
 
   inline diplomat::span<const double> borrow() const;
 

@@ -32,10 +32,14 @@ public:
   inline void set_str(std::string_view new_str);
 
   inline std::string get_str() const;
+  template<typename W>
+  inline void get_str_write(W& writeable_output) const;
 
   inline static std::string_view get_static_str();
 
   inline static diplomat::result<std::string, diplomat::Utf8Error> string_transform(std::string_view foo);
+  template<typename W>
+  inline static diplomat::result<std::monostate, diplomat::Utf8Error> string_transform_write(std::string_view foo, W& writeable_output);
 
   inline std::string_view borrow() const;
 

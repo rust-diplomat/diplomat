@@ -52,6 +52,8 @@ public:
    * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
    */
   inline std::string format_write(const icu4x::FixedDecimal& value) const;
+  template<typename W>
+  inline void format_write_write(const icu4x::FixedDecimal& value, W& writeable_output) const;
 
   inline const icu4x::capi::FixedDecimalFormatter* AsFFI() const;
   inline icu4x::capi::FixedDecimalFormatter* AsFFI();

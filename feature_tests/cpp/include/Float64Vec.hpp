@@ -108,6 +108,12 @@ inline std::string Float64Vec::to_string() const {
     &write);
   return output;
 }
+template<typename W>
+inline void Float64Vec::to_string_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::Float64Vec_to_string(this->AsFFI(),
+    &write);
+}
 
 inline diplomat::span<const double> Float64Vec::borrow() const {
   auto result = diplomat::capi::Float64Vec_borrow(this->AsFFI());

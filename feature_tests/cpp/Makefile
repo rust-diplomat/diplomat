@@ -28,9 +28,14 @@ $(ALL_HEADERS):
 ./tests/callback.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/callback.cpp
 	$(CXX) -std=c++17 ./tests/callback.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/callback.out
 
-test: ./tests/structs.out ./tests/result.out ./tests/option.out ./tests/attrs.out ./tests/callback.out
+./tests/strings.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/strings.cpp
+	$(CXX) -std=c++17 ./tests/strings.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/strings.out
+
+
+test: ./tests/structs.out ./tests/result.out ./tests/option.out ./tests/attrs.out ./tests/callback.out ./tests/strings.out
 	./tests/structs.out
 	./tests/result.out
 	./tests/option.out
 	./tests/attrs.out
 	./tests/callback.out
+	./tests/strings.out

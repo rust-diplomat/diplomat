@@ -1,0 +1,4 @@
+    {%- for param in m.param_decls %}
+        {%- if !loop.first %}, {% endif -%}
+        {{ param.type_name }} {{ param.var_name }}
+    {%- endfor -%}
