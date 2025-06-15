@@ -131,6 +131,7 @@ class MyNativeStruct internal constructor (
         internal val libClass: Class<MyNativeStructLib> = MyNativeStructLib::class.java
         internal val lib: MyNativeStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
+        @JvmStatic
         
         fun new_(): MyNativeStruct {
             
@@ -140,18 +141,21 @@ class MyNativeStruct internal constructor (
             val returnStruct = MyNativeStruct(returnVal, bEdges)
             return returnStruct
         }
+        @JvmStatic
         
         fun testMultiArgCallback(f: (Int, Int, Int)->Int, x: Int): Int {
             
             val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
         }
+        @JvmStatic
         
         fun getUByteSlice(): UByteArray {
             
             val returnVal = lib.MyNativeStruct_get_u_byte_slice();
                 return PrimitiveArrayTools.getUByteArray(returnVal)
         }
+        @JvmStatic
         
         fun booleanResult(): Result<Boolean> {
             
@@ -162,6 +166,7 @@ class MyNativeStruct internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun ubyteResult(): Result<UByte> {
             

@@ -33,6 +33,7 @@ class Opaque internal constructor (
     companion object {
         internal val libClass: Class<OpaqueLib> = OpaqueLib::class.java
         internal val lib: OpaqueLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(): Opaque {
             
@@ -43,6 +44,7 @@ class Opaque internal constructor (
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun tryFromUtf8(input: String): Opaque? {
             val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
@@ -55,6 +57,7 @@ class Opaque internal constructor (
             if (inputMem != null) inputMem.close()
             return returnOpaque
         }
+        @JvmStatic
         
         fun fromStr(input: String): Opaque {
             val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
@@ -67,12 +70,14 @@ class Opaque internal constructor (
             if (inputMem != null) inputMem.close()
             return returnOpaque
         }
+        @JvmStatic
         
         fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
             return (returnVal.toULong())
         }
+        @JvmStatic
         
         fun returnsImported(): ImportedStruct {
             
@@ -81,6 +86,7 @@ class Opaque internal constructor (
             val returnStruct = ImportedStruct(returnVal)
             return returnStruct
         }
+        @JvmStatic
         
         fun cmp(): Byte {
             

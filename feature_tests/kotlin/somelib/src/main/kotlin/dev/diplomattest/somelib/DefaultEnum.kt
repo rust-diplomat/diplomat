@@ -28,6 +28,7 @@ enum class DefaultEnum {
         fun default(): DefaultEnum {
             return A
         }
+        @JvmStatic
         
         fun new_(): DefaultEnum {
             

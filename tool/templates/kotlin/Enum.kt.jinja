@@ -72,6 +72,7 @@ enum class {{type_name}}
         }
         {%- endmatch %}
 {%- for m in companion_methods %}
+        @JvmStatic
         {{m.definition|indent(8)}}
 {%- endfor %}
     }

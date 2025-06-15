@@ -31,6 +31,7 @@ class CyclicStructA internal constructor (
         internal val libClass: Class<CyclicStructALib> = CyclicStructALib::class.java
         internal val lib: CyclicStructALib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CyclicStructANative::class.java).toLong()
+        @JvmStatic
         
         fun getB(): CyclicStructB {
             
