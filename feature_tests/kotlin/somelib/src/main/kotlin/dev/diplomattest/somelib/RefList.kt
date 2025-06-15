@@ -27,6 +27,7 @@ class RefList internal constructor (
     companion object {
         internal val libClass: Class<RefListLib> = RefListLib::class.java
         internal val lib: RefListLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun node(data: RefListParameter): RefList {
             

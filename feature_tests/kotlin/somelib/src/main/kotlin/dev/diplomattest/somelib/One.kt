@@ -37,6 +37,7 @@ class One internal constructor (
     companion object {
         internal val libClass: Class<OneLib> = OneLib::class.java
         internal val lib: OneLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun transitivity(hold: One, nohold: One): One {
             
@@ -48,6 +49,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun cycle(hold: Two, nohold: One): One {
             
@@ -59,6 +61,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun manyDependents(a: One, b: One, c: Two, d: Two, nohold: Two): One {
             
@@ -70,6 +73,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun returnOutlivesParam(hold: Two, nohold: One): One {
             
@@ -81,6 +85,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun diamondTop(top: One, left: One, right: One, bottom: One): One {
             
@@ -92,6 +97,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun diamondLeft(top: One, left: One, right: One, bottom: One): One {
             
@@ -103,6 +109,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun diamondRight(top: One, left: One, right: One, bottom: One): One {
             
@@ -114,6 +121,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun diamondBottom(top: One, left: One, right: One, bottom: One): One {
             
@@ -125,6 +133,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun diamondAndNestedTypes(a: One, b: One, c: One, d: One, nohold: One): One {
             
@@ -136,6 +145,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun implicitBounds(explicitHold: One, implicitHold: One, nohold: One): One {
             
@@ -147,6 +157,7 @@ class One internal constructor (
             CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun implicitBoundsDeep(explicit: One, implicit1: One, implicit2: One, nohold: One): One {
             

@@ -36,6 +36,7 @@ class ResultOpaque internal constructor (
     companion object {
         internal val libClass: Class<ResultOpaqueLib> = ResultOpaqueLib::class.java
         internal val lib: ResultOpaqueLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(i: Int): Result<ResultOpaque> {
             
@@ -50,6 +51,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingFoo(): Result<ResultOpaque> {
             
@@ -64,6 +66,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingBar(): Result<ResultOpaque> {
             
@@ -78,6 +81,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingUnit(): Result<ResultOpaque> {
             
@@ -92,6 +96,7 @@ class ResultOpaque internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun newFailingStruct(i: Int): Result<ResultOpaque> {
             
@@ -108,6 +113,7 @@ class ResultOpaque internal constructor (
                 return returnStruct.err()
             }
         }
+        @JvmStatic
         
         fun newInErr(i: Int): Result<Unit> {
             
@@ -122,6 +128,7 @@ class ResultOpaque internal constructor (
                 return returnOpaque.err()
             }
         }
+        @JvmStatic
         
         fun newInt(i: Int): Result<Int> {
             
@@ -132,6 +139,7 @@ class ResultOpaque internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun newFailingInt(i: Int): Result<Unit> {
             
@@ -142,6 +150,7 @@ class ResultOpaque internal constructor (
                 return IntError(returnVal.union.err).err()
             }
         }
+        @JvmStatic
         
         fun newInEnumErr(i: Int): Result<ErrorEnum> {
             

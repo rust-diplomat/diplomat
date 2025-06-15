@@ -27,6 +27,7 @@ class MyIterable internal constructor (
     companion object {
         internal val libClass: Class<MyIterableLib> = MyIterableLib::class.java
         internal val lib: MyIterableLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(x: UByteArray): MyIterable {
             val (xMem, xSlice) = PrimitiveArrayTools.native(x)

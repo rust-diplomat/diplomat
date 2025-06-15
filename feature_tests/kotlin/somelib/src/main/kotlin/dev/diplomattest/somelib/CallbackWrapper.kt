@@ -277,24 +277,28 @@ class CallbackWrapper internal constructor (
         internal val libClass: Class<CallbackWrapperLib> = CallbackWrapperLib::class.java
         internal val lib: CallbackWrapperLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackWrapperNative::class.java).toLong()
+        @JvmStatic
         
         fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
             
             val returnVal = lib.CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
         }
+        @JvmStatic
         
         fun testNoArgs(h: ()->Unit): Int {
             
             val returnVal = lib.CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
             return (returnVal)
         }
+        @JvmStatic
         
         fun testCbWithStruct(f: (CallbackTestingStruct)->Int): Int {
             
             val returnVal = lib.CallbackWrapper_test_cb_with_struct(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f.fromCallback(f).nativeStruct);
             return (returnVal)
         }
+        @JvmStatic
         
         fun testMultipleCbArgs(f: ()->Int, g: (Int)->Int): Int {
             

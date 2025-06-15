@@ -77,6 +77,7 @@ class MutableCallbackHolder internal constructor (
     companion object {
         internal val libClass: Class<MutableCallbackHolderLib> = MutableCallbackHolderLib::class.java
         internal val lib: MutableCallbackHolderLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(func: (Int)->Int): MutableCallbackHolder {
             

@@ -27,6 +27,7 @@ class MyOpaqueEnum internal constructor (
     companion object {
         internal val libClass: Class<MyOpaqueEnumLib> = MyOpaqueEnumLib::class.java
         internal val lib: MyOpaqueEnumLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(): MyOpaqueEnum {
             

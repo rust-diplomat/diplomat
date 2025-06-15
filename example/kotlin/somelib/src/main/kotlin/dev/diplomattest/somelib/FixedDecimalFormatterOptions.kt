@@ -31,6 +31,7 @@ class FixedDecimalFormatterOptions internal constructor (
         internal val libClass: Class<FixedDecimalFormatterOptionsLib> = FixedDecimalFormatterOptionsLib::class.java
         internal val lib: FixedDecimalFormatterOptionsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(FixedDecimalFormatterOptionsNative::class.java).toLong()
+        @JvmStatic
         
         fun default_(): FixedDecimalFormatterOptions {
             

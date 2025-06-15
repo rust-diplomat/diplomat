@@ -34,6 +34,7 @@ class OpaqueMutexedString internal constructor (
     companion object {
         internal val libClass: Class<OpaqueMutexedStringLib> = OpaqueMutexedStringLib::class.java
         internal val lib: OpaqueMutexedStringLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun fromUsize(number: ULong): OpaqueMutexedString {
             
@@ -44,6 +45,7 @@ class OpaqueMutexedString internal constructor (
             CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun borrowOther(other: OpaqueMutexedString): OpaqueMutexedString {
             

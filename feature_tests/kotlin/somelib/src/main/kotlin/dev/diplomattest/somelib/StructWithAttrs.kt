@@ -32,6 +32,7 @@ class StructWithAttrs internal constructor (
         internal val libClass: Class<StructWithAttrsLib> = StructWithAttrsLib::class.java
         internal val lib: StructWithAttrsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithAttrsNative::class.java).toLong()
+        @JvmStatic
         
         fun newFallible(a: Boolean, b: UInt): Result<StructWithAttrs> {
             

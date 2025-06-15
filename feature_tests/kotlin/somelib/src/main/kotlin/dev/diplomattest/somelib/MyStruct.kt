@@ -49,6 +49,7 @@ class MyStruct internal constructor (
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java
         internal val lib: MyStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructNative::class.java).toLong()
+        @JvmStatic
         
         fun new_(): MyStruct {
             
@@ -57,6 +58,7 @@ class MyStruct internal constructor (
             val returnStruct = MyStruct(returnVal)
             return returnStruct
         }
+        @JvmStatic
         
         fun returnsZstResult(): Result<Unit> {
             
@@ -67,6 +69,7 @@ class MyStruct internal constructor (
                 return MyZst().err()
             }
         }
+        @JvmStatic
         
         fun failsZstResult(): Result<Unit> {
             

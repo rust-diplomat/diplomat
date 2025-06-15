@@ -37,12 +37,14 @@ class MyOpaqueStruct internal constructor (
     companion object {
         internal val libClass: Class<MyOpaqueStructLib> = MyOpaqueStructLib::class.java
         internal val lib: MyOpaqueStructLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun getByte(): UByte {
             
             val returnVal = lib.MyOpaqueStruct_get_byte();
             return (returnVal.toUByte())
         }
+        @JvmStatic
         
         fun getStringWrapper(in1: Int): Int {
             
