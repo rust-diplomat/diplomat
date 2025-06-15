@@ -30,6 +30,7 @@ class FixedDecimalFormatter internal constructor (
     companion object {
         internal val libClass: Class<FixedDecimalFormatterLib> = FixedDecimalFormatterLib::class.java
         internal val lib: FixedDecimalFormatterLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         /** Creates a new [FixedDecimalFormatter] from locale data.
         *
