@@ -1,58 +1,49 @@
 export * as lib from "../../js/api/index.mjs";
-import * as RenamedStructWithAttrsDemo from "./RenamedStructWithAttrs.mjs";
-export * as RenamedStructWithAttrsDemo from "./RenamedStructWithAttrs.mjs";
-import * as CyclicStructADemo from "./CyclicStructA.mjs";
-export * as CyclicStructADemo from "./CyclicStructA.mjs";
-import * as CyclicStructCDemo from "./CyclicStructC.mjs";
-export * as CyclicStructCDemo from "./CyclicStructC.mjs";
-import * as MyStructDemo from "./MyStruct.mjs";
-export * as MyStructDemo from "./MyStruct.mjs";
-import * as StructWithSlicesDemo from "./StructWithSlices.mjs";
-export * as StructWithSlicesDemo from "./StructWithSlices.mjs";
-import * as AttrOpaque1RenamedDemo from "./AttrOpaque1Renamed.mjs";
-export * as AttrOpaque1RenamedDemo from "./AttrOpaque1Renamed.mjs";
-import * as OpaqueThinVecDemo from "./OpaqueThinVec.mjs";
-export * as OpaqueThinVecDemo from "./OpaqueThinVec.mjs";
-import * as OptionOpaqueDemo from "./OptionOpaque.mjs";
-export * as OptionOpaqueDemo from "./OptionOpaque.mjs";
-import * as OptionStringDemo from "./OptionString.mjs";
-export * as OptionStringDemo from "./OptionString.mjs";
-import * as ResultOpaqueDemo from "./ResultOpaque.mjs";
-export * as ResultOpaqueDemo from "./ResultOpaque.mjs";
-import * as Float64VecDemo from "./Float64Vec.mjs";
-export * as Float64VecDemo from "./Float64Vec.mjs";
-import * as MyStringDemo from "./MyString.mjs";
-export * as MyStringDemo from "./MyString.mjs";
-import * as MyOpaqueEnumDemo from "./MyOpaqueEnum.mjs";
-export * as MyOpaqueEnumDemo from "./MyOpaqueEnum.mjs";
-import * as OpaqueDemo from "./Opaque.mjs";
-export * as OpaqueDemo from "./Opaque.mjs";
-import * as OpaqueMutexedStringDemo from "./OpaqueMutexedString.mjs";
-export * as OpaqueMutexedStringDemo from "./OpaqueMutexedString.mjs";
-import * as Utf16WrapDemo from "./Utf16Wrap.mjs";
-export * as Utf16WrapDemo from "./Utf16Wrap.mjs";
-import * as DefaultEnumDemo from "./DefaultEnum.mjs";
-export * as DefaultEnumDemo from "./DefaultEnum.mjs";
-import * as MyEnumDemo from "./MyEnum.mjs";
-export * as MyEnumDemo from "./MyEnum.mjs";
+import { AttrOpaque1Renamed } from "../../js/api/index.mjs"
+import { CyclicStructA } from "../../js/api/index.mjs"
+import { CyclicStructB } from "../../js/api/index.mjs"
+import { CyclicStructC } from "../../js/api/index.mjs"
+import { DefaultEnum } from "../../js/api/index.mjs"
+import { Float64Vec } from "../../js/api/index.mjs"
+import { MyEnum } from "../../js/api/index.mjs"
+import { MyOpaqueEnum } from "../../js/api/index.mjs"
+import { MyString } from "../../js/api/index.mjs"
+import { MyStruct } from "../../js/api/index.mjs"
+import { Opaque } from "../../js/api/index.mjs"
+import { OpaqueMutexedString } from "../../js/api/index.mjs"
+import { OpaqueThinVec } from "../../js/api/index.mjs"
+import { OptionOpaque } from "../../js/api/index.mjs"
+import { OptionString } from "../../js/api/index.mjs"
+import { RenamedStructWithAttrs } from "../../js/api/index.mjs"
+import { ResultOpaque } from "../../js/api/index.mjs"
+import { StructWithSlices } from "../../js/api/index.mjs"
+import { Utf16Wrap } from "../../js/api/index.mjs"
 
-
+const displayBool = (out) => out ? 'true' : 'false';
+const displayOrdering = (out) => out == 0 ? '==' : out == 1 ? '>' : '<';
+const displayChar = (out) => String.fromCharCode(out);
+const displayByte = (out) => '0x' + out.toString(16);
+const displayOptionalEnum = (out) => out?.value || 'None';
 
 let termini = Object.assign({
     "RenamedStructWithAttrs.c": {
-        func: RenamedStructWithAttrsDemo.c,
+        func: (selfA, selfB) => RenamedStructWithAttrs.fromFields({
+            a: selfA,
+            b: selfB
+        }).c,
         // For avoiding webpacking minifying issues:
         funcName: "RenamedStructWithAttrs.c",
+        expr: (selfA, selfB) => "RenamedStructWithAttrs.fromFields({\n    a: selfA,\n    b: selfB\n}).c".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
         parameters: [
             
             {
-                name: "self.a",
+                name: "self_a",
                 type: "boolean",
                 typeUse: "boolean"
             },
             
             {
-                name: "self.b",
+                name: "self_b",
                 type: "number",
                 typeUse: "number"
             }
@@ -61,13 +52,18 @@ let termini = Object.assign({
     },
 
     "CyclicStructA.cyclicOut": {
-        func: CyclicStructADemo.cyclicOut,
+        func: (selfAField) => CyclicStructA.fromFields({
+            a: CyclicStructB.fromFields({
+            field: selfAField
+        })
+        }).cyclicOut(),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.cyclicOut",
+        expr: (selfAField) => "CyclicStructA.fromFields({\n    a: CyclicStructB.fromFields({\n    field: selfAField\n})\n}).cyclicOut()".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
         parameters: [
             
             {
-                name: "self.a.field",
+                name: "self_a_field",
                 type: "number",
                 typeUse: "number"
             }
@@ -76,19 +72,28 @@ let termini = Object.assign({
     },
 
     "CyclicStructA.doubleCyclicOut": {
-        func: CyclicStructADemo.doubleCyclicOut,
+        func: (selfAField, cyclicStructAAField) => CyclicStructA.fromFields({
+            a: CyclicStructB.fromFields({
+            field: selfAField
+        })
+        }).doubleCyclicOut(CyclicStructA.fromFields({
+            a: CyclicStructB.fromFields({
+            field: cyclicStructAAField
+        })
+        })),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.doubleCyclicOut",
+        expr: (selfAField, cyclicStructAAField) => "CyclicStructA.fromFields({\n    a: CyclicStructB.fromFields({\n    field: selfAField\n})\n}).doubleCyclicOut(CyclicStructA.fromFields({\n    a: CyclicStructB.fromFields({\n    field: cyclicStructAAField\n})\n}))".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2').replace(/([\( ])cyclicStructAAField([,\) \n])/, '$1' + cyclicStructAAField + '$2'),
         parameters: [
             
             {
-                name: "self.a.field",
+                name: "self_a_field",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "cyclicStructA.a.field",
+                name: "cyclicStructA_a_field",
                 type: "number",
                 typeUse: "number"
             }
@@ -97,13 +102,18 @@ let termini = Object.assign({
     },
 
     "CyclicStructA.getterOut": {
-        func: CyclicStructADemo.getterOut,
+        func: (selfAField) => CyclicStructA.fromFields({
+            a: CyclicStructB.fromFields({
+            field: selfAField
+        })
+        }).getterOut,
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.getterOut",
+        expr: (selfAField) => "CyclicStructA.fromFields({\n    a: CyclicStructB.fromFields({\n    field: selfAField\n})\n}).getterOut".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
         parameters: [
             
             {
-                name: "self.a.field",
+                name: "self_a_field",
                 type: "number",
                 typeUse: "number"
             }
@@ -112,13 +122,20 @@ let termini = Object.assign({
     },
 
     "CyclicStructC.cyclicOut": {
-        func: CyclicStructCDemo.cyclicOut,
+        func: (selfAAField) => CyclicStructC.fromFields({
+            a: CyclicStructA.fromFields({
+            a: CyclicStructB.fromFields({
+            field: selfAAField
+        })
+        })
+        }).cyclicOut(),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructC.cyclicOut",
+        expr: (selfAAField) => "CyclicStructC.fromFields({\n    a: CyclicStructA.fromFields({\n    a: CyclicStructB.fromFields({\n    field: selfAAField\n})\n})\n}).cyclicOut()".replace(/([\( ])selfAAField([,\) \n])/, '$1' + selfAAField + '$2'),
         parameters: [
             
             {
-                name: "self.a.a.field",
+                name: "self_a_a_field",
                 type: "number",
                 typeUse: "number"
             }
@@ -127,49 +144,58 @@ let termini = Object.assign({
     },
 
     "MyStruct.intoA": {
-        func: MyStructDemo.intoA,
+        func: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => MyStruct.fromFields({
+            a: selfA,
+            b: selfB,
+            c: selfC,
+            d: selfD,
+            e: selfE,
+            f: selfF,
+            g: selfG
+        }).intoA(),
         // For avoiding webpacking minifying issues:
         funcName: "MyStruct.intoA",
+        expr: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => "MyStruct.fromFields({\n    a: selfA,\n    b: selfB,\n    c: selfC,\n    d: selfD,\n    e: selfE,\n    f: selfF,\n    g: selfG\n}).intoA()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2').replace(/([\( ])selfD([,\) \n])/, '$1' + selfD + '$2').replace(/([\( ])selfE([,\) \n])/, '$1' + selfE + '$2').replace(/([\( ])selfF([,\) \n])/, '$1' + selfF + '$2').replace(/([\( ])selfG([,\) \n])/, '$1' + selfG + '$2'),
         parameters: [
             
             {
-                name: "self.a",
+                name: "self_a",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "self.b",
+                name: "self_b",
                 type: "boolean",
                 typeUse: "boolean"
             },
             
             {
-                name: "self.c",
+                name: "self_c",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "self.d",
+                name: "self_d",
                 type: "bigint",
                 typeUse: "bigint"
             },
             
             {
-                name: "self.e",
+                name: "self_e",
                 type: "number",
                 typeUse: "number"
             },
             
             {
-                name: "self.f",
+                name: "self_f",
                 type: "codepoint",
                 typeUse: "codepoint"
             },
             
             {
-                name: "self.g",
+                name: "self_g",
                 type: "MyEnum",
                 typeUse: "enumerator"
             }
@@ -178,19 +204,23 @@ let termini = Object.assign({
     },
 
     "StructWithSlices.returnLast": {
-        func: StructWithSlicesDemo.returnLast,
+        func: (selfFirst, selfSecond) => StructWithSlices.fromFields({
+            first: selfFirst,
+            second: selfSecond
+        }).returnLast(),
         // For avoiding webpacking minifying issues:
         funcName: "StructWithSlices.returnLast",
+        expr: (selfFirst, selfSecond) => "StructWithSlices.fromFields({\n    first: selfFirst,\n    second: selfSecond\n}).returnLast()".replace(/([\( ])selfFirst([,\) \n])/, '$1' + selfFirst + '$2').replace(/([\( ])selfSecond([,\) \n])/, '$1' + selfSecond + '$2'),
         parameters: [
             
             {
-                name: "self.first",
+                name: "self_first",
                 type: "string",
                 typeUse: "string"
             },
             
             {
-                name: "self.second",
+                name: "self_second",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -199,37 +229,40 @@ let termini = Object.assign({
     },
 
     "AttrOpaque1Renamed.methodRenamed": {
-        func: AttrOpaque1RenamedDemo.methodRenamed,
+        func: () => new AttrOpaque1Renamed().methodRenamed,
         // For avoiding webpacking minifying issues:
         funcName: "AttrOpaque1Renamed.methodRenamed",
+        expr: () => "new AttrOpaque1Renamed().methodRenamed",
         parameters: [
             
         ]
     },
 
     "AttrOpaque1Renamed.abirenamed": {
-        func: AttrOpaque1RenamedDemo.abirenamed,
+        func: () => new AttrOpaque1Renamed().abirenamed,
         // For avoiding webpacking minifying issues:
         funcName: "AttrOpaque1Renamed.abirenamed",
+        expr: () => "new AttrOpaque1Renamed().abirenamed",
         parameters: [
             
         ]
     },
 
     "OpaqueThinVec.len": {
-        func: OpaqueThinVecDemo.len,
+        func: (selfA, selfB) => new OpaqueThinVec(selfA, selfB).len(),
         // For avoiding webpacking minifying issues:
         funcName: "OpaqueThinVec.len",
+        expr: (selfA, selfB) => "new OpaqueThinVec(selfA, selfB).len()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
         parameters: [
             
             {
-                name: "self.a",
+                name: "self_a",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             },
             
             {
-                name: "self.b",
+                name: "self_b",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -238,13 +271,14 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.optionIsize": {
-        func: OptionOpaqueDemo.optionIsize,
+        func: (selfI) => OptionOpaque.new_(selfI).optionIsize(),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.optionIsize",
+        expr: (selfI) => "OptionOpaque.new_(selfI).optionIsize()".replace(/([\( ])selfI([,\) \n])/, '$1' + selfI + '$2'),
         parameters: [
             
             {
-                name: "self.i",
+                name: "self_i",
                 type: "number",
                 typeUse: "number"
             }
@@ -253,13 +287,14 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.optionUsize": {
-        func: OptionOpaqueDemo.optionUsize,
+        func: (selfI) => OptionOpaque.new_(selfI).optionUsize(),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.optionUsize",
+        expr: (selfI) => "OptionOpaque.new_(selfI).optionUsize()".replace(/([\( ])selfI([,\) \n])/, '$1' + selfI + '$2'),
         parameters: [
             
             {
-                name: "self.i",
+                name: "self_i",
                 type: "number",
                 typeUse: "number"
             }
@@ -268,13 +303,14 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.optionI32": {
-        func: OptionOpaqueDemo.optionI32,
+        func: (selfI) => OptionOpaque.new_(selfI).optionI32(),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.optionI32",
+        expr: (selfI) => "OptionOpaque.new_(selfI).optionI32()".replace(/([\( ])selfI([,\) \n])/, '$1' + selfI + '$2'),
         parameters: [
             
             {
-                name: "self.i",
+                name: "self_i",
                 type: "number",
                 typeUse: "number"
             }
@@ -283,13 +319,14 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.optionU32": {
-        func: OptionOpaqueDemo.optionU32,
+        func: (selfI) => OptionOpaque.new_(selfI).optionU32(),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.optionU32",
+        expr: (selfI) => "OptionOpaque.new_(selfI).optionU32()".replace(/([\( ])selfI([,\) \n])/, '$1' + selfI + '$2'),
         parameters: [
             
             {
-                name: "self.i",
+                name: "self_i",
                 type: "number",
                 typeUse: "number"
             }
@@ -298,13 +335,15 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.optionOpaqueArgument": {
-        func: OptionOpaqueDemo.optionOpaqueArgument,
+        func: (argI) => OptionOpaque.optionOpaqueArgument(OptionOpaque.new_(argI)),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.optionOpaqueArgument",
+        expr: (argI) => "OptionOpaque.optionOpaqueArgument(OptionOpaque.new_(argI))".replace(/([\( ])argI([,\) \n])/, '$1' + argI + '$2'),
+        display: displayBool,
         parameters: [
             
             {
-                name: "arg.i",
+                name: "arg_i",
                 type: "number",
                 typeUse: "number"
             }
@@ -313,9 +352,10 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.acceptsOptionU8": {
-        func: OptionOpaqueDemo.acceptsOptionU8,
+        func: (arg, sentinel) => OptionOpaque.acceptsOptionU8(arg, sentinel),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.acceptsOptionU8",
+        expr: (arg, sentinel) => "OptionOpaque.acceptsOptionU8(arg, sentinel)".replace(/([\( ])arg([,\) \n])/, '$1' + arg + '$2').replace(/([\( ])sentinel([,\) \n])/, '$1' + sentinel + '$2'),
         parameters: [
             
             {
@@ -334,9 +374,11 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.acceptsOptionEnum": {
-        func: OptionOpaqueDemo.acceptsOptionEnum,
+        func: (arg, sentinel) => OptionOpaque.acceptsOptionEnum(arg, sentinel),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.acceptsOptionEnum",
+        expr: (arg, sentinel) => "OptionOpaque.acceptsOptionEnum(arg, sentinel)".replace(/([\( ])arg([,\) \n])/, '$1' + arg + '$2').replace(/([\( ])sentinel([,\) \n])/, '$1' + sentinel + '$2'),
+        display: displayOptionalEnum,
         parameters: [
             
             {
@@ -355,13 +397,14 @@ let termini = Object.assign({
     },
 
     "OptionString.write": {
-        func: OptionStringDemo.write,
+        func: (selfDiplomatStr) => OptionString.new_(selfDiplomatStr).write(),
         // For avoiding webpacking minifying issues:
         funcName: "OptionString.write",
+        expr: (selfDiplomatStr) => "OptionString.new_(selfDiplomatStr).write()".replace(/([\( ])selfDiplomatStr([,\) \n])/, '$1' + selfDiplomatStr + '$2'),
         parameters: [
             
             {
-                name: "self.diplomatStr",
+                name: "self_diplomatStr",
                 type: "string",
                 typeUse: "string"
             }
@@ -370,9 +413,10 @@ let termini = Object.assign({
     },
 
     "ResultOpaque.newInt": {
-        func: ResultOpaqueDemo.newInt,
+        func: (i) => ResultOpaque.newInt(i),
         // For avoiding webpacking minifying issues:
         funcName: "ResultOpaque.newInt",
+        expr: (i) => "ResultOpaque.newInt(i)".replace(/([\( ])i([,\) \n])/, '$1' + i + '$2'),
         parameters: [
             
             {
@@ -385,9 +429,11 @@ let termini = Object.assign({
     },
 
     "ResultOpaque.newInEnumErr": {
-        func: ResultOpaqueDemo.newInEnumErr,
+        func: (i) => ResultOpaque.newInEnumErr(i),
         // For avoiding webpacking minifying issues:
         funcName: "ResultOpaque.newInEnumErr",
+        expr: (i) => "ResultOpaque.newInEnumErr(i)".replace(/([\( ])i([,\) \n])/, '$1' + i + '$2'),
+        display: displayOptionalEnum,
         parameters: [
             
             {
@@ -400,13 +446,14 @@ let termini = Object.assign({
     },
 
     "Float64Vec.toString": {
-        func: Float64VecDemo.toString,
+        func: (selfV) => new Float64Vec(selfV).toString(),
         // For avoiding webpacking minifying issues:
         funcName: "Float64Vec.toString",
+        expr: (selfV) => "new Float64Vec(selfV).toString()".replace(/([\( ])selfV([,\) \n])/, '$1' + selfV + '$2'),
         parameters: [
             
             {
-                name: "self.v",
+                name: "self_v",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             }
@@ -415,13 +462,14 @@ let termini = Object.assign({
     },
 
     "Float64Vec.get": {
-        func: Float64VecDemo.get,
+        func: (selfV, i) => new Float64Vec(selfV).get(i),
         // For avoiding webpacking minifying issues:
         funcName: "Float64Vec.get",
+        expr: (selfV, i) => "new Float64Vec(selfV).get(i)".replace(/([\( ])selfV([,\) \n])/, '$1' + selfV + '$2').replace(/([\( ])i([,\) \n])/, '$1' + i + '$2'),
         parameters: [
             
             {
-                name: "self.v",
+                name: "self_v",
                 type: "Array<number>",
                 typeUse: "Array<number>"
             },
@@ -436,13 +484,14 @@ let termini = Object.assign({
     },
 
     "MyString.str": {
-        func: MyStringDemo.str,
+        func: (selfV) => new MyString(selfV).str,
         // For avoiding webpacking minifying issues:
         funcName: "MyString.str",
+        expr: (selfV) => "new MyString(selfV).str".replace(/([\( ])selfV([,\) \n])/, '$1' + selfV + '$2'),
         parameters: [
             
             {
-                name: "self.v",
+                name: "self_v",
                 type: "string",
                 typeUse: "string"
             }
@@ -451,9 +500,10 @@ let termini = Object.assign({
     },
 
     "MyString.stringTransform": {
-        func: MyStringDemo.stringTransform,
+        func: (foo) => MyString.stringTransform(foo),
         // For avoiding webpacking minifying issues:
         funcName: "MyString.stringTransform",
+        expr: (foo) => "MyString.stringTransform(foo)".replace(/([\( ])foo([,\) \n])/, '$1' + foo + '$2'),
         parameters: [
             
             {
@@ -466,49 +516,55 @@ let termini = Object.assign({
     },
 
     "MyOpaqueEnum.toString": {
-        func: MyOpaqueEnumDemo.toString,
+        func: () => MyOpaqueEnum.new_().toString(),
         // For avoiding webpacking minifying issues:
         funcName: "MyOpaqueEnum.toString",
+        expr: () => "MyOpaqueEnum.new_().toString()",
         parameters: [
             
         ]
     },
 
     "Opaque.getDebugStr": {
-        func: OpaqueDemo.getDebugStr,
+        func: () => new Opaque().getDebugStr(),
         // For avoiding webpacking minifying issues:
         funcName: "Opaque.getDebugStr",
+        expr: () => "new Opaque().getDebugStr()",
         parameters: [
             
         ]
     },
 
     "Opaque.returnsUsize": {
-        func: OpaqueDemo.returnsUsize,
+        func: () => Opaque.returnsUsize(),
         // For avoiding webpacking minifying issues:
         funcName: "Opaque.returnsUsize",
+        expr: () => "Opaque.returnsUsize()",
         parameters: [
             
         ]
     },
 
     "Opaque.cmp": {
-        func: OpaqueDemo.cmp,
+        func: () => Opaque.cmp(),
         // For avoiding webpacking minifying issues:
         funcName: "Opaque.cmp",
+        expr: () => "Opaque.cmp()",
+        display: displayOrdering,
         parameters: [
             
         ]
     },
 
     "OpaqueMutexedString.getLenAndAdd": {
-        func: OpaqueMutexedStringDemo.getLenAndAdd,
+        func: (selfNumber, other) => OpaqueMutexedString.fromUsize(selfNumber).getLenAndAdd(other),
         // For avoiding webpacking minifying issues:
         funcName: "OpaqueMutexedString.getLenAndAdd",
+        expr: (selfNumber, other) => "OpaqueMutexedString.fromUsize(selfNumber).getLenAndAdd(other)".replace(/([\( ])selfNumber([,\) \n])/, '$1' + selfNumber + '$2').replace(/([\( ])other([,\) \n])/, '$1' + other + '$2'),
         parameters: [
             
             {
-                name: "self.number",
+                name: "self_number",
                 type: "number",
                 typeUse: "number"
             },
@@ -523,13 +579,14 @@ let termini = Object.assign({
     },
 
     "OpaqueMutexedString.toUnsignedFromUnsigned": {
-        func: OpaqueMutexedStringDemo.toUnsignedFromUnsigned,
+        func: (selfNumber, input) => OpaqueMutexedString.fromUsize(selfNumber).toUnsignedFromUnsigned(input),
         // For avoiding webpacking minifying issues:
         funcName: "OpaqueMutexedString.toUnsignedFromUnsigned",
+        expr: (selfNumber, input) => "OpaqueMutexedString.fromUsize(selfNumber).toUnsignedFromUnsigned(input)".replace(/([\( ])selfNumber([,\) \n])/, '$1' + selfNumber + '$2').replace(/([\( ])input([,\) \n])/, '$1' + input + '$2'),
         parameters: [
             
             {
-                name: "self.number",
+                name: "self_number",
                 type: "number",
                 typeUse: "number"
             },
@@ -544,13 +601,14 @@ let termini = Object.assign({
     },
 
     "Utf16Wrap.getDebugStr": {
-        func: Utf16WrapDemo.getDebugStr,
+        func: (selfInput) => new Utf16Wrap(selfInput).getDebugStr(),
         // For avoiding webpacking minifying issues:
         funcName: "Utf16Wrap.getDebugStr",
+        expr: (selfInput) => "new Utf16Wrap(selfInput).getDebugStr()".replace(/([\( ])selfInput([,\) \n])/, '$1' + selfInput + '$2'),
         parameters: [
             
             {
-                name: "self.input",
+                name: "self_input",
                 type: "string",
                 typeUse: "string"
             }
@@ -559,18 +617,21 @@ let termini = Object.assign({
     },
 
     "DefaultEnum.new_": {
-        func: DefaultEnumDemo.new_,
+        func: () => new DefaultEnum(),
         // For avoiding webpacking minifying issues:
         funcName: "DefaultEnum.new_",
+        expr: () => "new DefaultEnum()",
+        display: displayOptionalEnum,
         parameters: [
             
         ]
     },
 
     "MyEnum.intoValue": {
-        func: MyEnumDemo.intoValue,
+        func: (self) => new MyEnum(self).intoValue(),
         // For avoiding webpacking minifying issues:
         funcName: "MyEnum.intoValue",
+        expr: (self) => "new MyEnum(self).intoValue()".replace(/([\( ])self([,\) \n])/, '$1' + self + '$2'),
         parameters: [
             
             {
@@ -583,9 +644,11 @@ let termini = Object.assign({
     },
 
     "MyEnum.getA": {
-        func: MyEnumDemo.getA,
+        func: () => MyEnum.getA(),
         // For avoiding webpacking minifying issues:
         funcName: "MyEnum.getA",
+        expr: () => "MyEnum.getA()",
+        display: displayOptionalEnum,
         parameters: [
             
         ]
