@@ -84,6 +84,7 @@ class {{type_name}} internal constructor (
         internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
 
 {%- for m in companion_methods %}
+        @JvmStatic
         {{m.definition|indent(8)}}
 {%- endfor %}
     }
