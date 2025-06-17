@@ -710,9 +710,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     let alloc = if slice.lifetime().is_none() {
                         "diplomatRuntime.OwnedSliceLeaker"
                     } else {
-                        alloc.expect(
-                        "Must provide some allocation anchor for slice conversion generation!",
-                    )
+                        alloc.expect("Must provide some allocation anchor for slice conversion generation!")
                     };
 
                     let mut alloc_stmnt = format!("{alloc}.alloc(");
