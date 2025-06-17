@@ -32,6 +32,8 @@ struct CyclicStructC {
   inline static CyclicStructC takes_nested_parameters(CyclicStructC c);
 
   inline std::string cyclic_out() const;
+  template<typename W>
+  inline void cyclic_out_write(W& writeable_output) const;
 
   inline diplomat::capi::CyclicStructC AsFFI() const;
   inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);

@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     auto unit_err = ResultOpaque::new_failing_unit();
     simple_assert("unit error", unit_err.is_err())
 
-        auto struc = ResultOpaque::new_failing_struct(109).err().value();
+    auto struc = ResultOpaque::new_failing_struct(109).err().value();
     simple_assert_eq("struct error", struc.i, 109);
 
     auto integer = ResultOpaque::new_int(109).ok().value();

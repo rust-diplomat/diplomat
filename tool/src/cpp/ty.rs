@@ -27,6 +27,17 @@ struct NamedType<'a> {
     type_name: Cow<'a, str>,
 }
 
+/// We generate a pair of methods for writeables, one which returns a std::string
+/// and one which operates on a WriteTrait
+struct MethodWriteableInfo<'a> {
+    /// The method name. Usually `{}_write()`, but could potentially
+    /// be made customizeable
+    method_name: Cow<'a, str>,
+    /// The return type for the method without the std::string
+    return_ty: Cow<'a, str>,
+    c_to_cpp_return_expression: Option<Cow<'a, str>>,
+}
+
 /// Everything needed for rendering a method.
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
@@ -51,6 +62,9 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
     c_to_cpp_return_expression: Option<Cow<'a, str>>,
+
+    /// If the method returns a writeable, the info for that
+    writeable_info: Option<MethodWriteableInfo<'a>>,
     docs: String,
 }
 
@@ -376,24 +390,29 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             cpp_to_c_params.push(conversion);
         }
 
-        if method.output.is_write() {
-            cpp_to_c_params.push("&write".into());
+        /// The UTF8 errors are added in by the C++ backend when converting from C++
+        /// types. We wrap them in another layer of diplomat::result.
+        fn wrap_return_ty_and_expr_for_utf8(
+            return_ty: &mut Cow<str>,
+            c_to_cpp_return_expression: &mut Option<Cow<str>>,
+        ) {
+            if let Some(return_expr) = c_to_cpp_return_expression {
+                *c_to_cpp_return_expression =
+                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
+                *return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
+            } else {
+                *c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
+                *return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
+            }
         }
 
-        let mut return_ty = self.gen_cpp_return_type_name(&method.output);
+        let mut return_ty = self.gen_cpp_return_type_name(&method.output, false);
 
         let mut c_to_cpp_return_expression =
-            self.gen_c_to_cpp_for_return_type(&method.output, "result".into());
+            self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), false);
 
         if returns_utf8_err {
-            if let Some(return_expr) = c_to_cpp_return_expression {
-                c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
-                return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
-            } else {
-                c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
-                return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
-            }
+            wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
         };
 
         // If the return expression is a std::move, unwrap that, because the linter doesn't like it
@@ -404,6 +423,26 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 expr
             }
         });
+
+        // Writeable methods generate a `std::string foo()` and a
+        // `template<typename W> void foo_write(W& writeable)` where `W` is a `WriteTrait`
+        // implementor. The generic method needs its own return type and conversion code.
+        let mut writeable_info = None;
+        if method.output.is_write() {
+            cpp_to_c_params.push("&write".into());
+            let mut return_ty = self.gen_cpp_return_type_name(&method.output, true);
+
+            let mut c_to_cpp_return_expression =
+                self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), true);
+            if returns_utf8_err {
+                wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
+            };
+            writeable_info = Some(MethodWriteableInfo {
+                method_name: format!("{method_name}_write").into(),
+                return_ty,
+                c_to_cpp_return_expression,
+            });
+        }
 
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
@@ -432,6 +471,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             param_validations,
             cpp_to_c_params,
             c_to_cpp_return_expression,
+            writeable_info,
             docs: self.formatter.fmt_docs(&method.docs),
         })
     }
@@ -635,13 +675,22 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     /// Generates the C++ type name of a return type.
-    fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'ccx, str> {
+    ///
+    /// is_generic_write is whether we are generating the method that returns a string or
+    /// operates on a Writeable
+    fn gen_cpp_return_type_name(
+        &mut self,
+        result_ty: &ReturnType,
+        is_generic_write: bool,
+    ) -> Cow<'ccx, str> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
+            ReturnType::Infallible(SuccessType::Write) if is_generic_write => "void".into(),
             ReturnType::Infallible(SuccessType::Write) => self.formatter.fmt_owned_str(),
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name(o),
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
+                    SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
@@ -655,6 +704,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             ReturnType::Nullable(ref ty) => {
                 let type_name = match ty {
+                    SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
@@ -768,15 +818,18 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         &mut self,
         result_ty: &ReturnType,
         var_name: Cow<'a, str>,
+        is_generic_write: bool,
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
+            ReturnType::Infallible(SuccessType::Write) if is_generic_write => None,
             ReturnType::Infallible(SuccessType::Write) => Some("std::move(output)".into()),
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
+                    SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(ref o) => self.gen_type_name(o),
@@ -787,6 +840,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
+                    SuccessType::Write if is_generic_write => "".into(),
                     // Note: the `output` variable is a string initialized in the template
                     SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
@@ -805,6 +859,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             ReturnType::Nullable(ref ty) => {
                 let type_name = match ty {
+                    SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
@@ -812,6 +867,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 };
 
                 let conversion = match ty {
+                    SuccessType::Write if is_generic_write => "".into(),
                     // Note: the `output` variable is a string initialized in the template
                     SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),

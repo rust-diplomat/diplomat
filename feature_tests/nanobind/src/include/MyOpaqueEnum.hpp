@@ -40,6 +40,12 @@ inline std::string MyOpaqueEnum::to_string() const {
     &write);
   return output;
 }
+template<typename W>
+inline void MyOpaqueEnum::to_string_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
+    &write);
+}
 
 inline const diplomat::capi::MyOpaqueEnum* MyOpaqueEnum::AsFFI() const {
   return reinterpret_cast<const diplomat::capi::MyOpaqueEnum*>(this);
