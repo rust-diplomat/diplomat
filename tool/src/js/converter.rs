@@ -708,7 +708,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     panic!("'static not supported for JS backend.")
                 } else {
                     let alloc = if slice.lifetime().is_none() {
-                        "OwnedSliceLeaker"
+                        "diplomatRuntime.OwnedSliceLeaker"
                     } else {
                         alloc.expect(
                         "Must provide some allocation anchor for slice conversion generation!",
