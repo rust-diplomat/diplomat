@@ -21,3 +21,8 @@ test("Float64Vec", (t) => {
   let data = Float64Vec.newIsize(input);
   t.deepEqual(data.borrow(), input);
 });
+
+test("String Owned", async (t) => {
+  let s = MyString.newOwned("This is a test.");
+  t.is(s.borrow(), "This is a test.");
+});
