@@ -140,7 +140,7 @@ export class Float64Vec {
     #defaultConstructor(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
+        const vSlice = OwnedSliceLeaker.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
 
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr);
 

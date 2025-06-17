@@ -72,7 +72,7 @@ export class MyString {
     static newOwned(v) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
+        const vSlice = OwnedSliceLeaker.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, v)));
 
         const result = wasm.MyString_new_owned(vSlice.ptr);
 
