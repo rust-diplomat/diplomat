@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
     simple_assert_eq("enum fn", s.g.into_value(), -1);
     simple_assert_eq("struct fn", s.into_a(), 17);
 
+
+    MyStruct default_s;
+    simple_assert_eq("default struct values", default_s.g.into_value(), MyEnum(MyEnum::D).into_value());
+
     auto a = StructArithmetic{ 1, 2 };
     auto b = StructArithmetic{ 2, 3 };
     {

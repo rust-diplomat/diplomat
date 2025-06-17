@@ -6,6 +6,8 @@ pub mod ffi {
     use writeable::Writeable;
 
     #[diplomat::opaque]
+    // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
+    #[diplomat::attr(kotlin, generate_mocking_interface)]
     #[diplomat::rust_link(fixed_decimal::FixedDecimal, Struct)]
     // Link to where other custom functions for this class can be found.
     // Make sure any .mjs file export defaults an object that matches the `RenderTerminus.terminus` object in content.

@@ -28,6 +28,7 @@ class OptionString internal constructor (
     companion object {
         internal val libClass: Class<OptionStringLib> = OptionStringLib::class.java
         internal val lib: OptionStringLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {
             val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.readUtf8(diplomatStr)

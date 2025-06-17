@@ -61,13 +61,15 @@ class {{type_name}} internal constructor (
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
         internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
         val NATIVESIZE: Long = Native.getNativeSize({{type_name}}Native::class.java).toLong()
+
 {%- for m in companion_methods %}
-        {{m|indent(8)}}
+        @JvmStatic
+        {{m.definition|indent(8)}}
 {%- endfor %}
     }
 
 {%- for m in self_methods %}
-    {{m|indent(4)}}
+    {{m.definition|indent(4)}}
 {%- endfor %}
 
 {% endif -%}

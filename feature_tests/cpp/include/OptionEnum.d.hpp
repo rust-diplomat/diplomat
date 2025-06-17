@@ -30,7 +30,8 @@ public:
     Bar = 1,
   };
 
-  OptionEnum() = default;
+  OptionEnum(): value(Value::Foo) {}
+
   // Implicit conversions between enum and ::Value
   constexpr OptionEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }

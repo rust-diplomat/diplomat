@@ -41,6 +41,7 @@ enum class MyEnum(val inner: Int) {
         fun default(): MyEnum {
             return A
         }
+        @JvmStatic
         
         fun getA(): MyEnum {
             

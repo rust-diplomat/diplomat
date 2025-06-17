@@ -32,6 +32,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.utf8_strings = true;
     a.utf16_strings = true;
     a.static_slices = true;
+    a.defaults = true;
 
     a.constructors = true;
     a.named_constructors = false;
@@ -47,6 +48,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.option = true;
     a.callbacks = true;
     a.traits = false;
+    a.generate_mocking_interface = false;
 
     a
 }
