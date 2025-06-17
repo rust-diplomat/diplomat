@@ -3,10 +3,7 @@
 //! Designed to work in conjunction with the JS backend.
 //!
 //! See docs/demo_gen.md for more.
-use std::{
-    collections::{BTreeSet, HashMap},
-    fmt::Write,
-};
+use std::collections::{BTreeSet, HashMap};
 
 use askama::{self, Template};
 use diplomat_core::hir::{BackendAttrSupport, TypeContext};
@@ -14,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    js::{self, formatter::JSFormatter, FileType},
+    js::{self, formatter::JSFormatter},
     Config, ErrorStore, FileMap,
 };
 
@@ -95,29 +92,22 @@ pub(crate) fn run<'tcx>(
 
     let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
 
-    struct TerminusExport {
-        type_name: String,
-        js_file_name: String,
-    }
-
     #[derive(Template)]
     #[template(path = "demo_gen/index.js.jinja", escape = "none")]
     struct IndexInfo {
-        termini_exports: Vec<TerminusExport>,
         pub termini: Vec<TerminusInfo>,
         pub js_out: String,
 
-        pub imports: Vec<String>,
+        pub imports: BTreeSet<String>,
         pub custom_func_objs: Vec<String>,
     }
 
     let mut out_info = IndexInfo {
-        termini_exports: Vec::new(),
-        termini: Vec::new(),
+        termini: Default::default(),
         js_out: format!("{import_path}{module_name}"),
 
-        imports: Vec::new(),
-        custom_func_objs: Vec::new(),
+        imports: Default::default(),
+        custom_func_objs: Default::default(),
     };
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
@@ -127,16 +117,11 @@ pub(crate) fn run<'tcx>(
 
         let methods = ty.methods();
 
-        const FILE_TYPES: [FileType; 2] = [FileType::Module, FileType::Typescript];
-
         let mut termini = Vec::new();
 
         {
             let ty_name = formatter.fmt_type_name(id);
             let type_name: String = ty_name.into();
-
-            let js_file_name =
-                formatter.fmt_file_name(&type_name.clone(), &crate::js::FileType::Module);
 
             let ty = tcx.resolve_type(id);
 
@@ -172,7 +157,7 @@ pub(crate) fn run<'tcx>(
                 }
 
                 // Then add it to our imports for `index.mjs`:
-                out_info.imports.push(format!(
+                out_info.imports.insert(format!(
                     r#"import RenderTermini{type_name} from "./{file_name}";"#
                 ));
 
@@ -205,12 +190,8 @@ pub(crate) fn run<'tcx>(
 
                         type_name: type_name.clone(),
 
-                        js_file_name: js_file_name.clone(),
-
-                        node_call_stack: Vec::default(),
-
-                        // We set this in the init function of WebDemoGenerationContext.
-                        typescript: false,
+                        return_val: Default::default(),
+                        display_fn: Default::default(),
 
                         imports: BTreeSet::new(),
                     },
@@ -223,42 +204,15 @@ pub(crate) fn run<'tcx>(
 
                 ctx.evaluate(type_name.clone(), method);
 
+                out_info
+                    .imports
+                    .extend(core::mem::take(&mut ctx.terminus_info.imports));
+
                 termini.push(ctx.terminus_info);
             }
         }
 
-        if !termini.is_empty() {
-            let mut imports = BTreeSet::new();
-            for file_type in FILE_TYPES {
-                let type_name = formatter.fmt_type_name(id);
-                let file_name = formatter.fmt_file_name(&type_name, &file_type);
-
-                let mut method_str = String::new();
-
-                for terminus in &mut termini {
-                    terminus.typescript = file_type.is_typescript();
-                    writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
-
-                    imports.append(&mut terminus.imports);
-                }
-
-                let mut import_str = String::new();
-
-                for import in imports.iter() {
-                    writeln!(import_str, "{}", import).unwrap();
-                }
-
-                files.add_file(file_name.to_string(), format!("{import_str}{method_str}"));
-            }
-
-            // Only push the first one,
-            out_info.termini_exports.push(TerminusExport {
-                type_name: termini[0].type_name.clone(),
-                js_file_name: termini[0].js_file_name.clone(),
-            });
-
-            out_info.termini.append(&mut termini);
-        }
+        out_info.termini.extend(termini);
     }
 
     files.add_file("index.mjs".into(), out_info.render().unwrap());

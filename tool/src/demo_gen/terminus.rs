@@ -39,9 +39,6 @@ struct MethodDependency {
     /// Used to detect whether or not we need to add parentheses to the function call.
     is_getter: bool,
 
-    /// The variable name to assign to this method.
-    variable_name: String,
-
     /// Parameters names to pass into the method.
     params: Vec<String>,
 
@@ -66,26 +63,10 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
 }
 
 impl MethodDependency {
-    pub fn new(
-        ctx: &mut RenderTerminusContext,
-        method_js: String,
-        variable_name: String,
-        owning_param: Option<String>,
-    ) -> Self {
-        let (var_name, n) = if ctx.name_collision.contains_key(&variable_name) {
-            let n = ctx.name_collision.get(&variable_name).unwrap();
-
-            (format!("{variable_name}_{n}"), n + 1)
-        } else {
-            (variable_name.clone(), 1)
-        };
-
-        ctx.name_collision.insert(var_name.clone(), n);
-
+    pub fn new(method_js: String, owning_param: Option<String>) -> Self {
         MethodDependency {
             method_js,
             is_getter: false,
-            variable_name: var_name,
             params: Vec::new(),
             self_param: None,
             owning_param,
@@ -135,8 +116,6 @@ impl MethodDependency {
 ///     return out;
 /// }
 /// ```
-#[derive(Template)]
-#[template(path = "demo_gen/terminus.js.jinja", escape = "none")]
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     pub function_name: String,
@@ -155,13 +134,11 @@ pub(super) struct TerminusInfo {
     /// The type name of the type that this function belongs to.
     pub type_name: String,
 
-    pub js_file_name: String,
+    /// The function that displays a result, like converting a bool into 'true'/'false' strings
+    pub display_fn: Option<&'static str>,
 
-    /// Stack of results from calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`].
-    pub node_call_stack: Vec<String>,
-
-    /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
-    pub typescript: bool,
+    /// The expression of the return value
+    pub return_val: String,
 
     /// List of JS imports that this terminus needs.
     pub imports: BTreeSet<String>,
@@ -185,19 +162,14 @@ impl RenderTerminusContext<'_, '_> {
     }
 
     /// Create a Render Terminus .js file from a method.
-    /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate(&mut self, type_name: String, method: &Method) {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root = MethodDependency::new(
-            self,
-            self.get_constructor_js(type_name.clone(), method),
-            "out".into(),
-            None,
-        );
+        let mut root =
+            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
 
         // And then we just treat the terminus as a regular constructor method:
-        self.evaluate_constructor(method, &mut root);
+        self.terminus_info.return_val = self.evaluate_constructor(method, &mut root);
 
         let type_n = type_name.clone();
         let format = self.formatter.fmt_import_module(
@@ -207,6 +179,15 @@ impl RenderTerminusContext<'_, '_> {
         );
 
         self.terminus_info.imports.insert(format);
+
+        self.terminus_info.display_fn = match method.output.as_type() {
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => Some("displayBool"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Ordering)) => Some("displayOrdering"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Char)) => Some("displayChar"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Byte)) => Some("displayByte"),
+            Some(hir::OutType::Enum(_)) => Some("displayOptionalEnum"),
+            _ => None,
+        };
     }
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
@@ -232,7 +213,7 @@ impl RenderTerminusContext<'_, '_> {
             "{}{}",
             node.owning_param
                 .as_ref()
-                .map(|o| format!("{o}."))
+                .map(|o| format!("{o}_"))
                 .unwrap_or_default(),
             heck::AsLowerCamelCase(param_name.clone())
         )
@@ -436,20 +417,17 @@ impl RenderTerminusContext<'_, '_> {
                     "{}{}",
                     node.owning_param
                         .as_ref()
-                        .map(|o| { format!("{o}.") })
+                        .map(|o| { format!("{o}_") })
                         .unwrap_or_default(),
                     heck::AsLowerCamelCase(param_name.clone())
                 );
 
                 let mut child = MethodDependency::new(
-                    self,
                     self.get_constructor_js(type_name.to_string(), method),
-                    heck::AsLowerCamelCase(&param).to_string(),
                     Some(param),
                 );
 
-                self.evaluate_constructor(method, &mut child);
-                return child.variable_name;
+                return self.evaluate_constructor(method, &mut child);
             }
         }
 
@@ -492,17 +470,12 @@ impl RenderTerminusContext<'_, '_> {
             "{}{}",
             node.owning_param
                 .as_ref()
-                .map(|o| { format!("{o}.") })
+                .map(|o| { format!("{o}_") })
                 .unwrap_or_default(),
             heck::AsLowerCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new(
-            self,
-            format!("{type_name}.fromFields"),
-            heck::AsLowerCamelCase(&param).to_string(),
-            Some(param),
-        );
+        let mut child = MethodDependency::new(format!("{type_name}.fromFields"), Some(param));
 
         struct FieldInfo {
             field_name: String,
@@ -531,15 +504,11 @@ impl RenderTerminusContext<'_, '_> {
 
         child.params.push(StructInfo { fields }.render().unwrap());
 
-        self.terminus_info
-            .node_call_stack
-            .push(child.render().unwrap());
-
-        child.variable_name
+        child.render().unwrap()
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
-    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
+    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
         let param_self = method.param_self.as_ref();
 
         if param_self.is_some() {
@@ -569,33 +538,6 @@ impl RenderTerminusContext<'_, '_> {
             node.params.push(new_param);
         }
 
-        // Add this method to the call stack:
-        self.terminus_info
-            .node_call_stack
-            .push(node.render().unwrap());
-
-        match method.output.as_type() {
-            Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => self
-                .terminus_info
-                .node_call_stack
-                .push("out = out ? 'true' : 'false';".into()),
-            Some(hir::OutType::Primitive(hir::PrimitiveType::Ordering)) => self
-                .terminus_info
-                .node_call_stack
-                .push("out = out == 0 ? '==' : out == 1 ? '>' : '<';".into()),
-            Some(hir::OutType::Primitive(hir::PrimitiveType::Char)) => self
-                .terminus_info
-                .node_call_stack
-                .push("out = String.fromCharCode(out);".into()),
-            Some(hir::OutType::Primitive(hir::PrimitiveType::Byte)) => self
-                .terminus_info
-                .node_call_stack
-                .push("out = '0x' + out.toString(16);".into()),
-            Some(hir::OutType::Enum(_)) => self
-                .terminus_info
-                .node_call_stack
-                .push("out = out?.value || 'None';".into()),
-            _ => {}
-        }
+        node.render().unwrap()
     }
 }
