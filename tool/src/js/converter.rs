@@ -707,9 +707,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-                    let alloc = alloc.expect(
+                    let alloc = if slice.lifetime().is_none() {
+                        "diplomatRuntime.OwnedSliceLeaker"
+                    } else {
+                        alloc.expect(
                         "Must provide some allocation anchor for slice conversion generation!",
-                    );
+                    )
+                    };
 
                     let mut alloc_stmnt = format!("{alloc}.alloc(");
                     let mut alloc_end = ")";
