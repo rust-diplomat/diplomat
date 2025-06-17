@@ -260,7 +260,7 @@ class TerminusParams extends HTMLElement {
 
             newChild.addEventListener("parameter-input", this.input.bind(this, i));
             this.#params[i] = newChild.default;
-            this.#exprs[i] = `<b>${param.name}</b>`;
+            this.#exprs[i] = param.name;
 
             newChild.appendChild(paramName);
             this.appendChild(newChild);
@@ -292,7 +292,7 @@ export class TerminusRender extends HTMLElement {
     #parameters;
     #output;
     #code;
-    constructor(library, evaluateExternal, terminus) {
+    constructor(library, evaluateExternal, terminus, exprCallback = ((element) => {})) {
         super();
         generateTemplate(TerminusRender, "template", "template#terminus");
         let clone = TerminusRender.template.cloneNode(true);
@@ -327,10 +327,12 @@ export class TerminusRender extends HTMLElement {
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.appendChild(clone);
 
-        this.#code.innerHTML = this.#expr(...this.#parameters.exprs).replace('\n', '<br>');
+        this.#code.innerText = this.#expr(...this.#parameters.exprs);
+        exprCallback(this.#code);
         for (let param of this.#parameters.children) {
             param.addEventListener('parameter-input', () => {
-                this.#code.innerHTML = this.#expr(...this.#parameters.exprs).replace('\n', '<br>');
+                this.#code.innerText = this.#expr(...this.#parameters.exprs);
+                exprCallback(this.#code);                
                 this.#output.innerText = "";
                 this.#output.classList = "";
                 if (this.#parameters.values.every((e) => e != undefined)) {
