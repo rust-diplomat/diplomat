@@ -41,10 +41,9 @@ impl FileType {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum WasmABI {
     /// The default value for Rust versions <= 1.87.0, or -Zwasm-c-abi=legacy
-    /// FIXME: Is this the right version?
-    #[default]
     Legacy,
     /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
+    #[default]
     #[serde(rename = "spec")]
     CSpec,
 }
