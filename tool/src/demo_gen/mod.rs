@@ -91,12 +91,14 @@ pub(crate) fn run<'tcx>(
         });
 
     let module_name = unwrapped_conf.module_name.unwrap_or("index.mjs".into());
+    let lib_name = conf.shared_config.lib_name.unwrap_or("lib".into());
 
     #[derive(Template)]
     #[template(path = "demo_gen/index.js.jinja", escape = "none")]
     struct IndexInfo {
         pub termini: Vec<TerminusInfo>,
         pub js_out: String,
+        pub lib_name: String,
 
         pub imports: BTreeSet<String>,
         pub custom_func_objs: Vec<String>,
@@ -105,6 +107,7 @@ pub(crate) fn run<'tcx>(
     let mut out_info = IndexInfo {
         termini: Default::default(),
         js_out: format!("{import_path}{module_name}"),
+        lib_name: lib_name.clone(),
 
         imports: Default::default(),
         custom_func_objs: Default::default(),
@@ -192,21 +195,14 @@ pub(crate) fn run<'tcx>(
 
                         return_val: Default::default(),
                         display_fn: Default::default(),
-
-                        imports: BTreeSet::new(),
                     },
 
                     name_collision: HashMap::new(),
 
-                    relative_import_path: import_path.clone(),
-                    module_name: module_name.clone(),
+                    lib_name: lib_name.clone(),
                 };
 
                 ctx.evaluate(type_name.clone(), method);
-
-                out_info
-                    .imports
-                    .extend(core::mem::take(&mut ctx.terminus_info.imports));
 
                 termini.push(ctx.terminus_info);
             }

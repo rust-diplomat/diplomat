@@ -1,10 +1,6 @@
-export * as lib from "../../js/lib/api/index.mjs";
+import * as somelib from "../../js/lib/api/index.mjs";
+export * as somelib from "../../js/lib/api/index.mjs";
 import RenderTerminiFixedDecimal from "./a.mjs";
-import { DataProvider } from "../../js/lib/api/index.mjs"
-import { FixedDecimal } from "../../js/lib/api/index.mjs"
-import { FixedDecimalFormatter } from "../../js/lib/api/index.mjs"
-import { FixedDecimalFormatterOptions } from "../../js/lib/api/index.mjs"
-import { Locale } from "../../js/lib/api/index.mjs"
 
 const displayBool = (out) => out ? 'true' : 'false';
 const displayOrdering = (out) => out == 0 ? '==' : out == 1 ? '>' : '<';
@@ -14,13 +10,13 @@ const displayOptionalEnum = (out) => out?.value || 'None';
 
 let termini = Object.assign({
     "FixedDecimalFormatter.formatWrite": {
-        func: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => FixedDecimalFormatter.tryNew(new Locale(selfLocaleName), DataProvider.newStatic(), FixedDecimalFormatterOptions.fromFields({
+        func: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => somelib.FixedDecimalFormatter.tryNew(new somelib.Locale(selfLocaleName), somelib.DataProvider.newStatic(), somelib.FixedDecimalFormatterOptions.fromFields({
             groupingStrategy: selfOptionsGroupingStrategy,
             someOtherConfig: selfOptionsSomeOtherConfig
-        })).formatWrite(new FixedDecimal(valueV)),
+        })).formatWrite(new somelib.FixedDecimal(valueV)),
         // For avoiding webpacking minifying issues:
         funcName: "FixedDecimalFormatter.formatWrite",
-        expr: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => "FixedDecimalFormatter.tryNew(new Locale(selfLocaleName), DataProvider.newStatic(), FixedDecimalFormatterOptions.fromFields({\n    groupingStrategy: selfOptionsGroupingStrategy,\n    someOtherConfig: selfOptionsSomeOtherConfig\n})).formatWrite(new FixedDecimal(valueV))".replace(/([\( ])selfLocaleName([,\) \n])/, '$1' + selfLocaleName + '$2').replace(/([\( ])selfOptionsGroupingStrategy([,\) \n])/, '$1' + selfOptionsGroupingStrategy + '$2').replace(/([\( ])selfOptionsSomeOtherConfig([,\) \n])/, '$1' + selfOptionsSomeOtherConfig + '$2').replace(/([\( ])valueV([,\) \n])/, '$1' + valueV + '$2'),
+        expr: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => "somelib.FixedDecimalFormatter.tryNew(new somelib.Locale(selfLocaleName), somelib.DataProvider.newStatic(), somelib.FixedDecimalFormatterOptions.fromFields({\n    groupingStrategy: selfOptionsGroupingStrategy,\n    someOtherConfig: selfOptionsSomeOtherConfig\n})).formatWrite(new somelib.FixedDecimal(valueV))".replace(/([\( ])selfLocaleName([,\) \n])/, '$1' + selfLocaleName + '$2').replace(/([\( ])selfOptionsGroupingStrategy([,\) \n])/, '$1' + selfOptionsGroupingStrategy + '$2').replace(/([\( ])selfOptionsSomeOtherConfig([,\) \n])/, '$1' + selfOptionsSomeOtherConfig + '$2').replace(/([\( ])valueV([,\) \n])/, '$1' + valueV + '$2'),
         parameters: [
             
             {
@@ -53,10 +49,10 @@ let termini = Object.assign({
     },
 
     "FixedDecimal.toString": {
-        func: (selfV) => new FixedDecimal(selfV).toString(),
+        func: (selfV) => new somelib.FixedDecimal(selfV).toString(),
         // For avoiding webpacking minifying issues:
         funcName: "FixedDecimal.toString",
-        expr: (selfV) => "new FixedDecimal(selfV).toString()".replace(/([\( ])selfV([,\) \n])/, '$1' + selfV + '$2'),
+        expr: (selfV) => "new somelib.FixedDecimal(selfV).toString()".replace(/([\( ])selfV([,\) \n])/, '$1' + selfV + '$2'),
         parameters: [
             
             {

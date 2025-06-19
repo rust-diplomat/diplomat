@@ -1,7 +1,7 @@
-import { lib } from "./index.mjs";
+import { somelib } from "./index.mjs";
 
 export function multiplyPow10(power) {
-	let fixedDecimal = new lib.FixedDecimal(10);
+	let fixedDecimal = new somelib.FixedDecimal(10);
 	fixedDecimal.multiplyPow10(power);
 	return fixedDecimal.toString();
 }

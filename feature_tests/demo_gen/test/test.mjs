@@ -13,7 +13,7 @@ test("Cyclic Parameters", (t) => {
 });
 
 test("Expression", (t) => {
-	t.is(RenderInfo.termini["MyString.stringTransform"]["expr"]("'a'"), "MyString.stringTransform('a')");
+	t.is(RenderInfo.termini["MyString.stringTransform"]["expr"]("'a'"), "somelib.MyString.stringTransform('a')");
 })
 
 test("Variable Name Collisions", (t) => {

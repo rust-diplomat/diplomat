@@ -1,6 +1,5 @@
 import test from "ava";
 import { RenderInfo } from "mini-icu4x-demo";
-import { FixedDecimalGroupingStrategy } from "mini-icu4x";
 
 
 test("Test FixedDecimal", (t) => {
@@ -8,7 +7,7 @@ test("Test FixedDecimal", (t) => {
 });
 
 test("Test FixedDecimalFormatter", (t) => {
-	t.is(RenderInfo.termini["FixedDecimalFormatter.formatWrite"]["func"]("en", FixedDecimalGroupingStrategy.Always, false, 1000), "1,000");
+	t.is(RenderInfo.termini["FixedDecimalFormatter.formatWrite"]["func"]("en", "Always", false, 1000), "1,000");
 });
 
 test("Custom Function", (t) => {
