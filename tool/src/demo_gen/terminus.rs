@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use diplomat_core::hir::{
     self, DemoInfo, Method, OpaqueDef, OutType, StructDef, StructPath, SuccessType, TyPosition,
@@ -58,8 +58,7 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     /// To avoid similar parameter and variable names while we're collecting [`OutParam`]s and [`MethodDependency`]s.
     pub name_collision: HashMap<String, i32>,
 
-    pub relative_import_path: String,
-    pub module_name: String,
+    pub lib_name: String,
 }
 
 impl MethodDependency {
@@ -139,9 +138,6 @@ pub(super) struct TerminusInfo {
 
     /// The expression of the return value
     pub return_val: String,
-
-    /// List of JS imports that this terminus needs.
-    pub imports: BTreeSet<String>,
 }
 
 impl RenderTerminusContext<'_, '_> {
@@ -170,15 +166,6 @@ impl RenderTerminusContext<'_, '_> {
 
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.return_val = self.evaluate_constructor(method, &mut root);
-
-        let type_n = type_name.clone();
-        let format = self.formatter.fmt_import_module(
-            &type_n,
-            self.module_name.clone(),
-            self.relative_import_path.clone(),
-        );
-
-        self.terminus_info.imports.insert(format);
 
         self.terminus_info.display_fn = match method.output.as_type() {
             Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => Some("displayBool"),
@@ -304,11 +291,10 @@ impl RenderTerminusContext<'_, '_> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
+                let param =
+                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
                 // Enum coercion only works for arguments, we need to construct self manually
-                format!(
-                    "new {type_name}({})",
-                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
-                )
+                format!("new {}.{type_name}({param})", self.lib_name,)
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -378,9 +364,9 @@ impl RenderTerminusContext<'_, '_> {
         if method.param_self.is_some() {
             method_name
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
-            format!("new {owner_type_name}")
+            format!("new {}.{owner_type_name}", self.lib_name)
         } else {
-            format!("{owner_type_name}.{method_name}")
+            format!("{}.{owner_type_name}.{method_name}", self.lib_name)
         }
     }
 
@@ -405,14 +391,6 @@ impl RenderTerminusContext<'_, '_> {
             }
 
             if usable_constructor {
-                self.terminus_info
-                    .imports
-                    .insert(self.formatter.fmt_import_module(
-                        &type_name.clone(),
-                        self.module_name.clone(),
-                        self.relative_import_path.clone(),
-                    ));
-
                 let param = format!(
                     "{}{}",
                     node.owning_param
@@ -458,14 +436,6 @@ impl RenderTerminusContext<'_, '_> {
         param_name: String,
         node: &mut MethodDependency,
     ) -> String {
-        self.terminus_info
-            .imports
-            .insert(self.formatter.fmt_import_module(
-                &type_name,
-                self.module_name.clone(),
-                self.relative_import_path.clone(),
-            ));
-
         let param = format!(
             "{}{}",
             node.owning_param
@@ -475,7 +445,10 @@ impl RenderTerminusContext<'_, '_> {
             heck::AsLowerCamelCase(param_name.clone())
         );
 
-        let mut child = MethodDependency::new(format!("{type_name}.fromFields"), Some(param));
+        let mut child = MethodDependency::new(
+            format!("{}.{type_name}.fromFields", self.lib_name),
+            Some(param),
+        );
 
         struct FieldInfo {
             field_name: String,

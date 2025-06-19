@@ -141,20 +141,6 @@ impl<'tcx> JSFormatter<'tcx> {
         )
     }
 
-    /// A version of [`Self::fmt_import_statement`] that is focused more towards modules than specific files.
-    ///
-    /// Only used by [`crate::demo_gen`].
-    ///
-    /// (Probably could be consolidated with [`Self::fmt_import_statement`])
-    pub fn fmt_import_module(
-        &self,
-        type_name: &str,
-        module_name: String,
-        relative_path: String,
-    ) -> String {
-        format!(r#"import {{ {type_name} }} from "{relative_path}{module_name}""#)
-    }
-
     /// Uses [`Self::fmt_module_statement`] to create an export statement.
     pub fn fmt_export_statement(
         &self,
