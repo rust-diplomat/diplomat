@@ -394,7 +394,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-tool"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "askama",
  "clap",
@@ -416,7 +416,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "displaydoc",
  "either",
