@@ -15,6 +15,7 @@ pub struct OutParam {
     /// Full string name of the param.
     pub label: String,
     pub default_value: String,
+    pub values: Vec<String>,
     /// For typescript and RenderInfo output. Type that this parameter is. We get this directly from Rust.
     pub type_name: String,
     /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
@@ -240,6 +241,16 @@ impl RenderTerminusContext<'_, '_> {
             }
         };
 
+        let values = match type_info {
+            Type::Enum(e) => e
+                .resolve(self.tcx)
+                .variants
+                .iter()
+                .map(|v| v.name.as_str().to_string())
+                .collect(),
+            _ => vec![],
+        };
+
         let full_param_name = heck::AsLowerCamelCase(owned_full_name).to_string();
 
         let (p, n) = if self.name_collision.contains_key(&full_param_name) {
@@ -258,6 +269,7 @@ impl RenderTerminusContext<'_, '_> {
             type_name: type_name.clone(),
             type_use,
             default_value,
+            values,
         };
 
         self.terminus_info.out_params.push(out_param);
