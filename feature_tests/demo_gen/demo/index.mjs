@@ -179,7 +179,8 @@ let termini = Object.assign({
             {
                 name: "self_g",
                 type: "MyEnum",
-                typeUse: "enumerator"
+                typeUse: "enumerator",
+                values: ["A", "B", "C", "D", "E", "F"]
             }
             
         ]
@@ -366,7 +367,8 @@ let termini = Object.assign({
             {
                 name: "arg",
                 type: "OptionEnum",
-                typeUse: "enumerator"
+                typeUse: "enumerator",
+                values: ["Foo", "Bar"]
             },
             
             {
@@ -619,7 +621,8 @@ let termini = Object.assign({
             {
                 name: "self",
                 type: "MyEnum",
-                typeUse: "enumerator"
+                typeUse: "enumerator",
+                values: ["A", "B", "C", "D", "E", "F"]
             }
             
         ]

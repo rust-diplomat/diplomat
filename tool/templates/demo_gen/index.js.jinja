@@ -41,6 +41,10 @@ let termini = Object.assign({
                 ,
                 defaultValue: "{{ param.default_value }}"
                 {%- endif %}
+                {%- if !param.values.is_empty() -%}
+                ,
+                values: {{ format!("{:?}", param.values) }}
+                {%- endif %}
             }{% if !loop.last %},{% endif %}
             {% endfor %}
         ]
