@@ -242,7 +242,12 @@ impl RenderTerminusContext<'_, '_> {
         };
 
         let values = match type_info {
-            Type::Enum(e) => e.resolve(&self.tcx).variants.iter().map(|v| v.name.as_str().to_string()).collect(),
+            Type::Enum(e) => e
+                .resolve(&self.tcx)
+                .variants
+                .iter()
+                .map(|v| v.name.as_str().to_string())
+                .collect(),
             _ => vec![],
         };
 
