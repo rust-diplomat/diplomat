@@ -28,12 +28,12 @@ use core::{fmt, ptr};
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
 ///    `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
-///  - Unless grow_failed is true:
-///    - `buf` must be a valid pointer to `cap` bytes of memory
-///    - `buf` must point to `len` consecutive properly initialized bytes
-///    - `cap` must be less than or equal to isize::MAX
+///  - `buf` must be a valid pointer to `cap` bytes of memory
+///  - `buf` must point to `len` consecutive properly initialized bytes
+///  - `cap` must be less than or equal to isize::MAX
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
-///    of at least the requested buffer size
+///    of at least the requested buffer size.
+///  - If grow_failed is true all safety invariants on buf/cap/len MUST still hold.
 ///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
 ///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
 #[repr(C)]
@@ -82,18 +82,16 @@ impl DiplomatWrite {
 
     /// Returns a pointer to the buffer's bytes.
     ///
-    /// Safety:
-    /// 1. The bytes must not be mutated for as long as this reference is valid.
-    unsafe fn as_bytes(&self) -> Option<&[u8]> {
-        if self.grow_failed {
-            return None;
+    /// If growth has failed this still returns what has been written so far.
+    pub fn as_bytes(&self) -> &[u8] {
+        if self.buf.is_null() {
+            return &[]
         }
         debug_assert!(self.len <= self.cap);
         // Safety checklist, assuming this struct's safety invariants:
         // 1. `buf` is a valid pointer
         // 2. `buf` points to `len` consecutive properly initialized bytes
-        // 3. By this method's invariant, the bytes won't be mutated
-        // 4. `buf`'s total size is no larger than isize::MAX
+        // 3. `buf`'s total size is no larger than isize::MAX
         unsafe { Some(core::slice::from_raw_parts(self.buf, self.len)) }
     }
 }
@@ -193,9 +191,12 @@ pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite
 ///
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
+/// - The returned pointer is valid for both reads and writes, however Rust code
+///   may not write to it if `this` is being accessed by other methods simultaneously.
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
 ///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
+// TODO: make this take `*mut DiplomatWrite` in a future Diplomat version
 pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut u8 {
     if this.grow_failed {
         core::ptr::null_mut()
