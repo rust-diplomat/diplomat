@@ -27,7 +27,7 @@ use core::{fmt, ptr};
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
-///     `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
+///    `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
 ///  - Unless grow_failed is true:
 ///    - `buf` must be a valid pointer to `cap` bytes of memory
 ///    - `buf` must point to `len` consecutive properly initialized bytes
@@ -258,7 +258,7 @@ impl DiplomatWriteVec {
     }
 
     /// Mutably borrows the underlying [`DiplomatWrite`].
-    pub fn borrow_mut(&mut self) -> &mut DiplomatWrite {
+    pub const fn borrow_mut(&mut self) -> &mut DiplomatWrite {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &mut *self.ptr }
     }
