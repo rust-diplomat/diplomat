@@ -252,13 +252,13 @@ impl DiplomatWriteVec {
     }
 
     /// Borrows the underlying [`DiplomatWrite`].
-    pub const fn borrow(&self) -> &DiplomatWrite {
+    pub fn borrow(&self) -> &DiplomatWrite {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &*self.ptr }
     }
 
     /// Mutably borrows the underlying [`DiplomatWrite`].
-    pub const fn borrow_mut(&mut self) -> &mut DiplomatWrite {
+    pub fn borrow_mut(&mut self) -> &mut DiplomatWrite {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &mut *self.ptr }
     }
