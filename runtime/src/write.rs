@@ -27,8 +27,11 @@ use core::{fmt, ptr};
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
-///    `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
-///  - `buf` must be `cap` bytes long
+///     `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
+///  - Unless grow_failed is true:
+///    - `buf` must be a valid pointer to `cap` bytes of memory
+///    - `buf` must point to `len` consecutive properly initialized bytes
+///    - `cap` must be less than or equal to isize::MAX
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size
 ///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
@@ -70,6 +73,28 @@ impl DiplomatWrite {
     /// Call this function before releasing the buffer to C
     pub fn flush(&mut self) {
         (self.flush)(self);
+    }
+
+    /// Returns a new wrapped DiplomatWrite backed by a Vec.
+    pub fn new_vec(capacity: usize) -> DiplomatWriteVec {
+        DiplomatWriteVec::with_capacity(capacity)
+    }
+
+    /// Returns a pointer to the buffer's bytes.
+    ///
+    /// Safety:
+    /// 1. The bytes must not be mutated for as long as this reference is valid.
+    unsafe fn as_bytes(&self) -> Option<&[u8]> {
+        if self.grow_failed {
+            return None;
+        }
+        debug_assert!(self.len <= self.cap);
+        // Safety checklist, assuming this struct's safety invariants:
+        // 1. `buf` is a valid pointer
+        // 2. `buf` points to `len` consecutive properly initialized bytes
+        // 3. By this method's invariant, the bytes won't be mutated
+        // 4. `buf`'s total size is no larger than isize::MAX
+        unsafe { Some(core::slice::from_raw_parts(self.buf, self.len)) }
     }
 }
 impl fmt::Write for DiplomatWrite {
@@ -128,6 +153,9 @@ pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) ->
 /// Create an [`DiplomatWrite`] that can write to a dynamically allocated buffer managed by Rust.
 ///
 /// Use [`diplomat_buffer_write_destroy()`] to free the writable and its underlying buffer.
+/// The pointer is valid until that function is called.
+///
+/// The grow impl never sets `grow_failed`, although it is possible for it to panic.
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite {
     extern "C" fn grow(this: *mut DiplomatWrite, new_cap: usize) -> bool {
@@ -203,4 +231,65 @@ pub unsafe extern "C" fn diplomat_buffer_write_destroy(this: *mut DiplomatWrite)
     let vec = Vec::from_raw_parts(this.buf, 0, this.cap);
     drop(vec);
     drop(this);
+}
+
+/// A [`DiplomatWrite`] backed by a `Vec`, for use in Rust with all of
+/// Rust's safety guarantees.
+///
+/// Note: This is a separate type in Rust because [`DiplomatWrite`] is polymorphic: it can be
+/// backed by multiple different stores with different safety guarantees.
+pub struct DiplomatWriteVec {
+    /// Safety Invariant: must have been created by diplomat_buffer_write_create()
+    ptr: *mut DiplomatWrite,
+}
+
+impl DiplomatWriteVec {
+    /// Creates a new [`DiplomatWriteVec`] with the given initial buffer capacity.
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            ptr: diplomat_buffer_write_create(cap),
+        }
+    }
+
+    /// Borrows the underlying [`DiplomatWrite`].
+    pub const fn borrow(&self) -> &DiplomatWrite {
+        // Safety: the pointer is valid because the Drop impl hasn't been called yet.
+        unsafe { &*self.ptr }
+    }
+
+    /// Mutably borrows the underlying [`DiplomatWrite`].
+    pub fn borrow_mut(&mut self) -> &mut DiplomatWrite {
+        // Safety: the pointer is valid because the Drop impl hasn't been called yet.
+        unsafe { &mut *self.ptr }
+    }
+
+    /// Borrows the underlying byte slice.
+    pub fn as_bytes(&self) -> &[u8] {
+        // Safety: this class protects the raw DiplomatWrite, so it will not
+        // be mutated for the duration of this immutable borrow.
+        let option_bytes = unsafe { self.borrow().as_bytes() };
+        // The `grow` impl of `diplomat_buffer_write_create` never fails.
+        #[allow(clippy::unwrap_used)]
+        option_bytes.unwrap()
+    }
+}
+
+impl Drop for DiplomatWriteVec {
+    fn drop(&mut self) {
+        // Safety: by invariant, ptr was created by diplomat_buffer_write_create()
+        unsafe { diplomat_buffer_write_destroy(self.ptr) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fmt::Write;
+
+    #[test]
+    fn test_rust_write() {
+        let mut buffer = DiplomatWrite::new_vec(5);
+        buffer.borrow_mut().write_str("Hello World").unwrap();
+        assert_eq!(buffer.as_bytes(), b"Hello World");
+    }
 }
