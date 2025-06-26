@@ -35,7 +35,7 @@ use core::{fmt, ptr};
 /// Backends may have additional constructors for writing to various shapes of buffer.
 ///
 /// ⚠️ Because [`DiplomatWrite`] is polymorphic, the destructor must know how the instance
-/// was constructed. It is therefore most unsound to use functions such as [`core::mem::swap`]
+/// was constructed. It is therefore unsound to use functions such as [`core::mem::swap`]
 /// on instances of [`DiplomatWrite`] with potentially different sources. For example,
 /// the following code is not safe:
 ///
@@ -43,12 +43,13 @@ use core::{fmt, ptr};
 /// use diplomat_runtime::DiplomatWrite;
 /// fn bad(write: &mut DiplomatWrite) {
 ///   let mut some_other_write: DiplomatWrite = unimplemented!();
+///   // Not safe! The two `DiplomatWrite`s have different invariants
 ///   core::mem::swap(write, &mut some_other_write);
 /// }
 /// ```
 ///
-/// As a result, any function that returns a `&mut DiplomatWrite` must be unsafe. For example,
-/// see [`RustWriteVec::borrow_mut`].
+/// As a result, any function that returns a `&mut DiplomatWrite` must be `unsafe`. For an
+/// example, see [`RustWriteVec::borrow_mut`].
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
@@ -102,7 +103,7 @@ impl DiplomatWrite {
 
     /// Returns a pointer to the buffer's bytes.
     ///
-    /// If growth has failed this still returns what has been written so far.
+    /// If growth has failed, this returns what has been written so far.
     pub fn as_bytes(&self) -> &[u8] {
         if self.buf.is_null() {
             return &[];
