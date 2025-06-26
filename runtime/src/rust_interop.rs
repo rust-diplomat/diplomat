@@ -3,6 +3,7 @@
 use crate::diplomat_buffer_write_create;
 use crate::diplomat_buffer_write_destroy;
 use crate::DiplomatWrite;
+use core::borrow::Borrow;
 
 /// A [`DiplomatWrite`] backed by a `Vec`, for use in Rust with all of
 /// Rust's safety guarantees.
@@ -20,6 +21,7 @@ impl RustWriteVec {
     }
 
     /// Borrows the underlying [`DiplomatWrite`].
+    #[allow(clippy::should_implement_trait)] // the trait is also implemented
     pub fn borrow(&self) -> &DiplomatWrite {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &*self.ptr }
@@ -37,6 +39,12 @@ impl RustWriteVec {
     pub unsafe fn borrow_mut(&mut self) -> &mut DiplomatWrite {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &mut *self.ptr }
+    }
+}
+
+impl Borrow<DiplomatWrite> for RustWriteVec {
+    fn borrow(&self) -> &DiplomatWrite {
+        self.borrow()
     }
 }
 
