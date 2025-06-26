@@ -89,14 +89,14 @@ impl DiplomatWrite {
         }
         debug_assert!(self.len <= self.cap);
         // Safety checklist, assuming this struct's safety invariants:
-        // 1. `buf` is a valid pointer
+        // 1. `buf` is a valid pointer and not null
         // 2. `buf` points to `len` consecutive properly initialized bytes
         // 3. `buf` won't be mutated because it is only directly accessible via
         //    `diplomat_buffer_write_get_bytes`, whose safety invariant states
         //    that the bytes cannot be mutated while borrowed
         //    can only be dereferenced using unsafe code
         // 4. `buf`'s total size is no larger than isize::MAX
-        unsafe { Some(core::slice::from_raw_parts(self.buf, self.len)) }
+        unsafe { core::slice::from_raw_parts(self.buf, self.len) }
     }
 }
 impl fmt::Write for DiplomatWrite {
@@ -267,16 +267,6 @@ impl DiplomatWriteVec {
         // Safety: the pointer is valid because the Drop impl hasn't been called yet.
         unsafe { &mut *self.ptr }
     }
-
-    /// Borrows the underlying byte slice.
-    pub fn as_bytes(&self) -> &[u8] {
-        // Safety: this class protects the raw DiplomatWrite, so it will not
-        // be mutated for the duration of this immutable borrow.
-        let option_bytes = unsafe { self.borrow().as_bytes() };
-        // The `grow` impl of `diplomat_buffer_write_create` never fails.
-        #[allow(clippy::unwrap_used)]
-        option_bytes.unwrap()
-    }
 }
 
 impl Drop for DiplomatWriteVec {
@@ -295,6 +285,6 @@ mod tests {
     fn test_rust_write() {
         let mut buffer = DiplomatWrite::new_vec(5);
         buffer.borrow_mut().write_str("Hello World").unwrap();
-        assert_eq!(buffer.as_bytes(), b"Hello World");
+        assert_eq!(buffer.borrow().as_bytes(), b"Hello World");
     }
 }
