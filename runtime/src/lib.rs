@@ -10,7 +10,6 @@ mod wasm_glue;
 
 mod write;
 pub use write::DiplomatWrite;
-pub use write::DiplomatWriteVec;
 pub use write::{diplomat_buffer_write_create, diplomat_buffer_write_destroy};
 mod slices;
 pub use slices::{
@@ -23,6 +22,8 @@ pub use callback::DiplomatCallback;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
+
+pub mod rust_interop;
 
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;

@@ -18,12 +18,37 @@ use core::{fmt, ptr};
 /// need not perform additional state updates after passing an [`DiplomatWrite`] to
 /// a function.
 ///
-/// [`diplomat_simple_write()`] can be used to write to a fixed-size char buffer.
-///
 /// May be extended in the future to support further invariants
 ///
 /// DiplomatWrite will not perform any cleanup on `context` or `buf`, these are logically
 /// "borrows" from the FFI side.
+///
+/// # DiplomatWrite is Polymorphic
+///
+/// Instances of [`DiplomatWrite`] can be created from multiple different sources.
+/// There are two constructors available in `diplomat_runtime`:
+///
+/// 1. [`diplomat_simple_write()`] to write to a fixed-size buffer.
+/// 2. [`diplomat_buffer_write_create()`] to write to a Vec allocated by Rust.
+///    A wrapper is provided: [`RustWriteVec`](rust_interop::RustWriteVec).
+///
+/// Backends may have additional constructors for writing to various shapes of buffer.
+///
+/// ⚠️ Because [`DiplomatWrite`] is polymorphic, the destructor must know how the instance
+/// was constructed. It is therefore most unsound to use functions such as [`core::mem::swap`]
+/// on instances of [`DiplomatWrite`] with potentially different sources. For example,
+/// the following code is not safe:
+///
+/// ```no_run
+/// use diplomat_runtime::DiplomatWrite;
+/// fn bad(write: &mut DiplomatWrite) {
+///   let mut some_other_write: DiplomatWrite = unimplemented!();
+///   core::mem::swap(write, &mut some_other_write);
+/// }
+/// ```
+///
+/// As a result, any function that returns a `&mut DiplomatWrite` must be unsafe. For example,
+/// see [`RustWriteVec::borrow_mut`].
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
@@ -75,17 +100,12 @@ impl DiplomatWrite {
         (self.flush)(self);
     }
 
-    /// Returns a new wrapped DiplomatWrite backed by a Vec.
-    pub fn new_vec(capacity: usize) -> DiplomatWriteVec {
-        DiplomatWriteVec::with_capacity(capacity)
-    }
-
     /// Returns a pointer to the buffer's bytes.
     ///
     /// If growth has failed this still returns what has been written so far.
     pub fn as_bytes(&self) -> &[u8] {
         if self.buf.is_null() {
-            return &[]
+            return &[];
         }
         debug_assert!(self.len <= self.cap);
         // Safety checklist, assuming this struct's safety invariants:
@@ -236,55 +256,4 @@ pub unsafe extern "C" fn diplomat_buffer_write_destroy(this: *mut DiplomatWrite)
     let vec = Vec::from_raw_parts(this.buf, 0, this.cap);
     drop(vec);
     drop(this);
-}
-
-/// A [`DiplomatWrite`] backed by a `Vec`, for use in Rust with all of
-/// Rust's safety guarantees.
-///
-/// Note: This is a separate type in Rust because [`DiplomatWrite`] is polymorphic: it can be
-/// backed by multiple different stores with different safety guarantees.
-pub struct DiplomatWriteVec {
-    /// Safety Invariant: must have been created by diplomat_buffer_write_create()
-    ptr: *mut DiplomatWrite,
-}
-
-impl DiplomatWriteVec {
-    /// Creates a new [`DiplomatWriteVec`] with the given initial buffer capacity.
-    pub fn with_capacity(cap: usize) -> Self {
-        Self {
-            ptr: diplomat_buffer_write_create(cap),
-        }
-    }
-
-    /// Borrows the underlying [`DiplomatWrite`].
-    pub fn borrow(&self) -> &DiplomatWrite {
-        // Safety: the pointer is valid because the Drop impl hasn't been called yet.
-        unsafe { &*self.ptr }
-    }
-
-    /// Mutably borrows the underlying [`DiplomatWrite`].
-    pub fn borrow_mut(&mut self) -> &mut DiplomatWrite {
-        // Safety: the pointer is valid because the Drop impl hasn't been called yet.
-        unsafe { &mut *self.ptr }
-    }
-}
-
-impl Drop for DiplomatWriteVec {
-    fn drop(&mut self) {
-        // Safety: by invariant, ptr was created by diplomat_buffer_write_create()
-        unsafe { diplomat_buffer_write_destroy(self.ptr) }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use fmt::Write;
-
-    #[test]
-    fn test_rust_write() {
-        let mut buffer = DiplomatWrite::new_vec(5);
-        buffer.borrow_mut().write_str("Hello World").unwrap();
-        assert_eq!(buffer.borrow().as_bytes(), b"Hello World");
-    }
 }
