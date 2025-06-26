@@ -91,7 +91,11 @@ impl DiplomatWrite {
         // Safety checklist, assuming this struct's safety invariants:
         // 1. `buf` is a valid pointer
         // 2. `buf` points to `len` consecutive properly initialized bytes
-        // 3. `buf`'s total size is no larger than isize::MAX
+        // 3. `buf` won't be mutated because it is only directly accessible via
+        //    `diplomat_buffer_write_get_bytes`, whose safety invariant states
+        //    that the bytes cannot be mutated while borrowed
+        //    can only be dereferenced using unsafe code
+        // 4. `buf`'s total size is no larger than isize::MAX
         unsafe { Some(core::slice::from_raw_parts(self.buf, self.len)) }
     }
 }
