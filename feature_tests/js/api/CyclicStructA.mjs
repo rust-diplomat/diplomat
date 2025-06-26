@@ -38,7 +38,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
+        return this.#a._intoFFI(functionCleanupArena, appendArrayMap);
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

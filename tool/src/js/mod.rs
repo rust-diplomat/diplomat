@@ -35,33 +35,11 @@ impl FileType {
     }
 }
 
-/// The ABI to use.
-/// Should mirror the value you've set for the `-Zwasm-c-abi=VALUE`.
-/// Read https://blog.rust-lang.org/2025/04/04/c-abi-changes-for-wasm32-unknown-unknown.html for more details.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub enum WasmABI {
-    /// The default value for Rust versions <= 1.87.0, or -Zwasm-c-abi=legacy
-    Legacy,
-    /// -Zwasm-c-abi=spec, the default value for Rust versions > 1.87.0
-    #[default]
-    #[serde(rename = "spec")]
-    CSpec,
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct JsConfig {
-    abi: WasmABI,
-}
+pub struct JsConfig {}
 
 impl JsConfig {
-    pub fn set(&mut self, key: &str, value: toml::Value) {
-        if key == "abi" {
-            match value.as_str().unwrap_or_default() {
-                "spec" => self.abi = WasmABI::CSpec,
-                _ => self.abi = WasmABI::Legacy,
-            }
-        }
-    }
+    pub fn set(&mut self, _key: &str, _value: toml::Value) {}
 }
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
@@ -197,28 +175,12 @@ pub(crate) fn run<'tcx>(
                 TypeDef::Enum(e) => context.gen_enum(ts, e, &methods_info),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, o, &methods_info),
                 TypeDef::Struct(s) => {
-                    let (fields, needs_force_padding, layout) = fields.clone().unwrap();
-                    context.gen_struct(
-                        ts,
-                        s,
-                        &fields,
-                        &methods_info,
-                        false,
-                        needs_force_padding,
-                        layout,
-                    )
+                    let (fields, layout) = fields.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, false, layout)
                 }
                 TypeDef::OutStruct(s) => {
-                    let (fields, needs_force_padding, layout) = fields_out.clone().unwrap();
-                    context.gen_struct(
-                        ts,
-                        s,
-                        &fields,
-                        &methods_info,
-                        true,
-                        needs_force_padding,
-                        layout,
-                    )
+                    let (fields, layout) = fields_out.clone().unwrap();
+                    context.gen_struct(ts, s, &fields, &methods_info, true, layout)
                 }
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
             };

@@ -47,13 +47,9 @@ export class ImportedStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
-    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
-    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
         functionCleanupArena,
-        appendArrayMap,
-        forcePadding
+        appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
@@ -80,8 +76,7 @@ export class ImportedStruct {
         arrayBuffer,
         offset,
         functionCleanupArena,
-        appendArrayMap,
-        forcePadding
+        appendArrayMap
     ) {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#foo.ffiValue, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#count, Uint8Array);
