@@ -160,7 +160,7 @@ export class BorrowedFieldsWithBounds {
         let zEdges = [utf8StrZSlice];
 
 
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, dstr16XSlice.ptr, utf8StrZSlice.ptr);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo instanceof Foo ? foo.ffiValue : typeError('foo', 'Foo'), dstr16XSlice.ptr, utf8StrZSlice.ptr);
 
         try {
             return BorrowedFieldsWithBounds._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);

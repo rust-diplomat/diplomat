@@ -43,7 +43,7 @@ export class RefList {
         let bEdges = [data];
 
 
-        const result = wasm.RefList_node(data.ffiValue);
+        const result = wasm.RefList_node(data instanceof RefListParameter ? data.ffiValue : typeError('data', 'RefListParameter'));
 
         try {
             return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);

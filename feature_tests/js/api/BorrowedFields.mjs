@@ -134,7 +134,7 @@ export class BorrowedFields {
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
 
 
-        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, dstr16Slice.ptr, utf8StrSlice.ptr);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar instanceof Bar ? bar.ffiValue : typeError('bar', 'Bar'), dstr16Slice.ptr, utf8StrSlice.ptr);
 
         try {
             return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);

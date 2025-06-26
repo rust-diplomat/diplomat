@@ -93,7 +93,7 @@ export class OptionInputStruct {
     ) {
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 1, 1, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint8Array));
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 4, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue, Uint32Array));
-        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 12, this.#c, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array));
+        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 12, this.#c, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, new OptionEnum(jsValue).ffiValue, Int32Array));
     }
 
     // This struct contains borrowed fields, so this takes in a list of
