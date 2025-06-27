@@ -156,8 +156,9 @@ jobs:
         CXX_STD: c++23
 
     - name: bump-llvm
-      if: ${{ matrix.os == "windows-latest" }}
+      if: ${{ matrix.os == 'windows-latest' }}
       run: choco install llvm --version=17 -y 
+
     - name: clang, c++17
       run: cargo make check-cpp
       env:
