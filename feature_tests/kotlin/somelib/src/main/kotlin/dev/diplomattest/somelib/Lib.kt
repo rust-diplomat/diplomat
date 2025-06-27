@@ -18,6 +18,8 @@ interface DiplomatWriteLib: Library {
     fun diplomat_buffer_write_len(diplomatWrite: Pointer): Long
     fun diplomat_buffer_write_destroy(diplomatWrite: Pointer)
 }
+
+
 object DW {
 
     val libClass: Class<DiplomatWriteLib> = DiplomatWriteLib::class.java
@@ -82,7 +84,7 @@ internal object PrimitiveArrayTools {
         // we can't use the Memory constructor for a memory of size 0
         // so, if the size is zero, then we return null
         if (size > 0L)
-            return lib.diplomat_alloc(size, align)
+            return lib.diplomat_allocate(size, align)
         else
             return null
     }
