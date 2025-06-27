@@ -142,6 +142,7 @@ jobs:
       uses: taiki-e/install-action@cargo-make
 
     - name: clang, c++17
+      run: choco install llvm -y
       run: cargo make check-cpp
       env:
         CXX: clang
