@@ -286,9 +286,12 @@ if is_empty ${cxx_std}
     cxx_std = set "c++17"
 end
 
+echo $(which clang++)
+
 cd example/cpp/include
 files_list = glob_array "./**/*.hpp"
 exit_code = set 0
+echo "${cxx} -std=${cxx_std} -pedantic-errors -Wall %{cxx_flags}"
 for file in ${files_list}
     echo "Checking ${file}"
     output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall %{cxx_flags} ${file}
