@@ -22,8 +22,6 @@ pub struct StructFieldLayout {
     pub padding_count: usize,
     /// The width of an individual padding field
     pub padding_field_width: usize,
-    /// The number of scalar (integer primitive) fields in this field, transitively. Does not count padding fields.
-    pub scalar_count: ScalarCount,
 }
 
 pub struct StructFieldsInfo {
@@ -88,7 +86,6 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
             offset: next_offset,
             padding_count: 0,
             padding_field_width: 1,
-            scalar_count: field_scalars,
         });
         prev_align = align;
         next_offset += size;

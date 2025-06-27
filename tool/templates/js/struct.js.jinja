@@ -90,31 +90,15 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     {%- endif -%}
     {%- endif %}
-    {%- if needs_force_padding %}
-    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
-    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
-    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
-    {%- endif %}
     _intoFFI(
         functionCleanupArena,
-        appendArrayMap{% if needs_force_padding %},
-        forcePadding
-        {%- endif %}
+        appendArrayMap
     ) {
-        {%- match abi -%}
-        {%- when WasmABI::Legacy %}
-        return [
-            {%- for field in fields -%}
-            {{field.js_to_c}}
-            {%- if !loop.last -%}, {% endif %}
-            {%- endfor -%}
-        ]
-        {%- when WasmABI::CSpec -%}
         {%- if wraps_primitive -%}
         {%- if owns_wrapped_primitive %}
         return this.#{{fields.first().unwrap().field_name}};
         {%- else %}
-        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap, false);
+        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap);
         {%- endif -%}
         {%- else %}
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
@@ -125,7 +109,6 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
 
         return buffer.ptr;
         {%- endif %}
-        {%- endmatch %}
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -144,9 +127,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
         arrayBuffer,
         offset,
         functionCleanupArena,
-        appendArrayMap{% if needs_force_padding %},
-        forcePadding
-        {%- endif %}
+        appendArrayMap
     ) {
         {%- for field in fields %}
         {{field.js_to_c_write}};
