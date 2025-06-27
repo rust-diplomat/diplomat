@@ -84,7 +84,7 @@ internal object PrimitiveArrayTools {
         // we can't use the Memory constructor for a memory of size 0
         // so, if the size is zero, then we return null
         if (size > 0L)
-            return lib.diplomat_allocate(size, align)
+            return lib.diplomat_alloc(size, align)
         else
             return null
     }
