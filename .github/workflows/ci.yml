@@ -142,7 +142,7 @@ jobs:
       uses: taiki-e/install-action@cargo-make
     - name: bump llvm windows
       if: ${{ matrix.os == 'windows-latest' }} 
-      run: choco install llvm -y
+      run: choco install llvm -y --version 17 -f
 
     - name: clang, c++17
       run: cargo make check-cpp
