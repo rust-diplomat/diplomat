@@ -140,6 +140,8 @@ jobs:
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
+    - name: llvm-install
+      run: choco install llvm --version 20.1.4 -f
 
     - name: clang, c++17
       run: cargo make check-cpp
