@@ -150,7 +150,7 @@ jobs:
 
     - name: bump llvm windows
       if: ${{ matrix.os == 'windows-latest' }} 
-      run: choco install llvm -y --version 20 -f
+      run: choco install llvm -y -f
     - name: clang, c++20
       run: cargo make check-cpp
       env:
