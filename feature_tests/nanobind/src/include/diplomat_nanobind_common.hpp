@@ -81,19 +81,37 @@ namespace nanobind::detail
         }
     };
 
+    template <typename T>
+    struct type_caster<std::reference_wrapper<T>>
+    {
+        using Value = std::reference_wrapper<T>;
+        Value value;
+        Py_ssize_t size;
+        using Caster = make_caster<T>;
+        static constexpr auto Name = Caster::Name;
+
+        static handle from_cpp(std::reference_wrapper<T> value, rv_policy p, cleanup_list *cl) noexcept
+        {
+            return Caster::from_cpp(value.get(), p, cl);
+        }
+
+        NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+    };
+
     template <typename T, typename E>
 	struct type_caster<diplomat::result<T, E>>
 	{
+        using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
 		using Value = diplomat::result<T, E>;
 		Value value;
 		Py_ssize_t size;
-		using Caster = make_caster<T>;
+        using Caster = make_caster<U>;
 		static constexpr auto Name = Caster::Name;
 
 		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
 		{
 			if (value.is_ok()) {
-				return Caster::from_cpp(forward_like_<T>(std::move(value).ok().value()), p, cl);
+                return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
 			}
 
 			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
@@ -111,7 +129,7 @@ namespace nanobind::detail
             return nullptr;
 		}
 
-		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+        NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
 	};
 
     template <typename T, std::size_t E>
