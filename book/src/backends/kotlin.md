@@ -32,7 +32,7 @@ Diplomat always create the following structure in the `OUTPUT_PATH`
 │                       ├── Lib.kt
 │                       ├── ...
 ```
-The `Lib.kt` file includes some utility methods that the library uses, as well as a dedicated cleaner. The backend supports both
+The `Lib.kt` file includes some utility methods that the library uses, as well as a dedicated cleaner. 
 If you choose `scaffold` then it will also generate a couple of config files
 ```
 ├── src 
