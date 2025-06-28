@@ -4,7 +4,7 @@ The backend ensures safe sharing and disposal of memory, but it is still experim
 
 To run the kotlin backend you need to provide some configuration
 ```sh
-diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} kotlin {OUTPUT_PATH}
+diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} --config {CONFIG_OVERRIDE_1} --config {CONFIG_OVERRIDE_2} kotlin {OUTPUT_PATH}
 ```
 The configuration consists of three parts
 * `lib-name` - the name of the library. This can be different to the rust library name, but native access will 
