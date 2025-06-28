@@ -266,9 +266,11 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
 
 #[cfg(test)]
 mod test {
+    use toml::Value;
+
     #[test]
     fn test_toml_parse() {
         let t = "true";
-        assert!(toml::from_str::<toml::Value>(t).is_err());
+        assert_eq!(super::toml_value_from_str(t), Value::String(t.to_string()));
     }
 }
