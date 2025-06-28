@@ -158,6 +158,7 @@ pub fn toml_value_from_str(string: &str) -> toml::Value {
     let try_parse = toml::from_str::<toml::Value>(string);
 
     // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
+    // toml from_str
     if let Ok(out) = try_parse {
         out
     } else {
@@ -261,4 +262,13 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
     }
 
     out_config
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_toml_parse() {
+        let t = "true";
+        assert!(toml::from_str::<toml::Value>(t).is_err());
+    }
 }

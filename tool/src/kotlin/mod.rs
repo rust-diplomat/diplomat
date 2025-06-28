@@ -67,7 +67,10 @@ impl KotlinConfig {
                 }
             }
             "use_finalizers_not_cleaners" => {
-                self.use_finalizers_not_cleaners = value.as_bool();
+                self.use_finalizers_not_cleaners = value.as_str().map(|val| val == "true");
+            }
+            "scaffold" => {
+                self.scaffold = value.as_str().map(|val| val == "true");
             }
             _ => {}
         }
