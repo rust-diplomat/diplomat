@@ -74,7 +74,7 @@ export class AttrOpaque1Renamed {
     }
 
     useUnnamespaced(un) {
-    wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
+    wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un instanceof Unnamespaced ? un.ffiValue : typeError('un', 'Unnamespaced'));
 
         try {}
 
@@ -83,7 +83,7 @@ export class AttrOpaque1Renamed {
     }
 
     useNamespaced(n) {
-    wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
+    wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, new RenamedAttrEnum(n).ffiValue);
 
         try {}
 
