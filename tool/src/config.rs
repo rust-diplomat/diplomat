@@ -271,6 +271,7 @@ mod test {
     #[test]
     fn test_toml_parse() {
         let t = "true";
+        assert!(toml::from_str::<Value>(t).is_err());
         assert_eq!(super::toml_value_from_str(t), Value::String(t.to_string()));
     }
 }
