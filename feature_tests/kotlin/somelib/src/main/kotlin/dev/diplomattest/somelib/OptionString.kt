@@ -31,7 +31,7 @@ class OptionString internal constructor (
         @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {
-            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.readUtf8(diplomatStr)
+            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
             val returnVal = lib.OptionString_new(diplomatStrSlice);
             val selfEdges: List<Any> = listOf()

@@ -35,7 +35,7 @@ class Foo internal constructor (
         @JvmStatic
         
         fun new_(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.readUtf8(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
             
             val returnVal = lib.Foo_new(xSlice);
             val selfEdges: List<Any> = listOf()
@@ -48,7 +48,7 @@ class Foo internal constructor (
         @JvmStatic
         
         fun newStatic(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.readUtf8(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
             
             val returnVal = lib.Foo_new_static(xSlice);
             val selfEdges: List<Any> = listOf()
@@ -76,7 +76,7 @@ class Foo internal constructor (
         /** Test that the extraction logic correctly pins the right fields
         */
         fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
-            val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.readUtf8(anotherString)
+            val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.borrowUtf8(anotherString)
             
             val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
             val selfEdges: List<Any> = listOf()

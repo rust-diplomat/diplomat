@@ -495,7 +495,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests kotlin somelib "" /src/main/kotlin
+generate_generic feature_tests kotlin somelib "--config kotlin.scaffold=false" /src/main/kotlin
 '''
 
 [tasks.gen-kotlin-example]
@@ -504,7 +504,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example kotlin somelib "" /src/main/kotlin
+generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/main/kotlin
 '''
 
 [tasks.gen-nanobind-feature]

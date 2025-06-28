@@ -55,6 +55,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub struct KotlinConfig {
     domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
+    scaffold: Option<bool>,
 }
 
 impl KotlinConfig {
@@ -66,7 +67,10 @@ impl KotlinConfig {
                 }
             }
             "use_finalizers_not_cleaners" => {
-                self.use_finalizers_not_cleaners = value.as_bool();
+                self.use_finalizers_not_cleaners = value.as_str().map(|val| val == "true");
+            }
+            "scaffold" => {
+                self.scaffold = value.as_str().map(|val| val == "true");
             }
             _ => {}
         }
@@ -81,6 +85,7 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         use_finalizers_not_cleaners,
+        scaffold,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -187,34 +192,36 @@ pub(crate) fn run<'tcx>(
         files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
 
-    #[derive(Template)]
-    #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
-    struct Build<'a> {
-        domain: &'a str,
-        lib_name: &'a str,
-    }
+    if scaffold.unwrap_or(false) {
+        #[derive(Template)]
+        #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
+        struct Build<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+        }
 
-    let build = Build {
-        domain: &domain,
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render build file");
+        let build = Build {
+            domain: &domain,
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render build file");
 
-    files.add_file("build.gradle.kts".to_string(), build);
+        files.add_file("build.gradle.kts".to_string(), build);
 
-    #[derive(Template)]
-    #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
-    struct Settings<'a> {
-        lib_name: &'a str,
-    }
-    let settings = Settings {
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render settings file");
+        #[derive(Template)]
+        #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
+        struct Settings<'a> {
+            lib_name: &'a str,
+        }
+        let settings = Settings {
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render settings file");
 
-    files.add_file("settings.gradle.kts".to_string(), settings);
+        files.add_file("settings.gradle.kts".to_string(), settings);
+    }
     let native_results = ty_gen_cx
         .result_types
         .borrow()
@@ -974,11 +981,14 @@ returnVal.option() ?: return null
             closeable: bool,
         }
         let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
-            Slice::Str(_, _) => ("readUtf8".into(), true),
-            Slice::Primitive(_, _) => ("native".into(), true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("readUtf16s".into(), true),
-            Slice::Strs(_) => ("readUtf8s".into(), true),
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16".into(), true),
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
+            Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
+            Slice::Str(None, _) => ("moveUtf8".into(), true),
+            Slice::Primitive(Some(_), _) => ("borrow".into(), true),
+            Slice::Primitive(_, _) => ("move".into(), true),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
+            Slice::Strs(_) => ("borrowUtf8s".into(), true),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
