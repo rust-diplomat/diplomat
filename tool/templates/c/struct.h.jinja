@@ -10,6 +10,7 @@ typedef struct {{ ty_name }}_option {union { {{ty_name}} ok; }; bool is_ok; } {{
 {%- endif %}
 
 {% if is_sliceable %}
+// TODO: Need to add Mut types.
 typedef struct Diplomat{{ty_name}}View {
   const {{ty_name}}* data;
   size_t len;
