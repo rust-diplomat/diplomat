@@ -938,11 +938,11 @@ impl<'ast> LoweringContext<'ast> {
                             }
                         }
                         _ => self.errors.push(LoweringError::Other(
-                            format!("{type_name} slices are not supported.").into(),
+                            format!("{type_name} slices are not supported.")
                         )),
                     },
                     _ => self.errors.push(LoweringError::Other(
-                        format!("{type_name} slices are not supported.").into(),
+                        format!("{type_name} slices are not supported."),
                     )),
                 }
 
@@ -980,7 +980,7 @@ impl<'ast> LoweringContext<'ast> {
                     },
                     _ => {
                         self.errors.push(LoweringError::Other(
-                            format!("Cannot make a slice from type {type_name}").into(),
+                            format!("Cannot make a slice from type {type_name}"),
                         ));
                         Err(())
                     }
@@ -1314,7 +1314,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Err(())
                             } else {
                                 let inner = self.lower_out_type(
-                                    &type_name,
+                                    type_name,
                                     ltl,
                                     in_path,
                                     in_struct,
@@ -1338,7 +1338,7 @@ impl<'ast> LoweringContext<'ast> {
                     },
                     _ => {
                         self.errors.push(LoweringError::Other(
-                            format!("Cannot make a slice from type {type_name}").into(),
+                            format!("Cannot make a slice from type {type_name}"),
                         ));
                         Err(())
                     }

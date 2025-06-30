@@ -798,7 +798,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(ref s) => self.gen_slice(&s).into(),
+            Type::Slice(ref s) => self.gen_slice(s).into(),
             Type::DiplomatOption(ref inner) => self.gen_result(Some(inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
