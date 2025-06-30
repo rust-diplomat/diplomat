@@ -348,6 +348,7 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
+    /// Also being used to test CPP backends taking structs with primitive values.
     #[diplomat::attr(not(js), disable)]
     pub struct BigStructWithStuff {
         pub first: u8,
@@ -367,6 +368,11 @@ pub mod ffi {
             self.fourth.assert_value();
             assert_eq!(self.fifth, 99);
             assert_eq!(extra_val, 853);
+        }
+
+        pub fn assert_slice(slice : &[BigStructWithStuff], size : usize, second_value : u16) {
+            assert!(size > 1);
+            assert_eq!(slice.iter().next().unwrap().second, second_value)
         }
     }
 
