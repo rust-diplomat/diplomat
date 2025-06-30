@@ -21,7 +21,7 @@ namespace capi {
 
     void BigStructWithStuff_assert_value(diplomat::capi::BigStructWithStuff self, uint16_t extra_val);
 
-    void BigStructWithStuff_assert_slice(diplomat::capi::DiplomatBigStructWithStuffView slice, size_t size, uint16_t second_value);
+    void BigStructWithStuff_assert_slice(diplomat::capi::DiplomatBigStructWithStuffView slice, uint16_t second_value);
 
     } // extern "C"
 } // namespace capi
@@ -32,9 +32,8 @@ inline void BigStructWithStuff::assert_value(uint16_t extra_val) const {
     extra_val);
 }
 
-inline void BigStructWithStuff::assert_slice(diplomat::span<const BigStructWithStuff> slice, size_t size, uint16_t second_value) {
-  diplomat::capi::BigStructWithStuff_assert_slice({slice.data(), slice.size()},
-    size,
+inline void BigStructWithStuff::assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value) {
+  diplomat::capi::BigStructWithStuff_assert_slice({reinterpret_cast<const diplomat::capi::BigStructWithStuff*>(slice.data()), slice.size()},
     second_value);
 }
 

@@ -50,7 +50,7 @@ struct BigStructWithStuff {
 
   inline void assert_value(uint16_t extra_val) const;
 
-  inline static void assert_slice(diplomat::span<const BigStructWithStuff> slice, size_t size, uint16_t second_value);
+  inline static void assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value);
 
   inline diplomat::capi::BigStructWithStuff AsFFI() const;
   inline static BigStructWithStuff FromFFI(diplomat::capi::BigStructWithStuff c_struct);

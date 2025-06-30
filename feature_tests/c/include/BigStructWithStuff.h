@@ -17,7 +17,7 @@
 
 void BigStructWithStuff_assert_value(BigStructWithStuff self, uint16_t extra_val);
 
-void BigStructWithStuff_assert_slice(DiplomatBigStructWithStuffView slice, size_t size, uint16_t second_value);
+void BigStructWithStuff_assert_slice(DiplomatBigStructWithStuffView slice, uint16_t second_value);
 
 
 
