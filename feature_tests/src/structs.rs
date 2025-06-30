@@ -349,7 +349,7 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
-    #[diplomat::attr(not(js), disable)]
+    #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]
