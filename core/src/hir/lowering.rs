@@ -937,13 +937,13 @@ impl<'ast> LoweringContext<'ast> {
                                 ));
                             }
                         }
-                        _ => self.errors.push(LoweringError::Other(
-                            format!("{type_name} slices are not supported.")
-                        )),
+                        _ => self.errors.push(LoweringError::Other(format!(
+                            "{type_name} slices are not supported."
+                        ))),
                     },
-                    _ => self.errors.push(LoweringError::Other(
-                        format!("{type_name} slices are not supported."),
-                    )),
+                    _ => self.errors.push(LoweringError::Other(format!(
+                        "{type_name} slices are not supported."
+                    ))),
                 }
 
                 let new_lifetime = lm
@@ -979,9 +979,9 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     },
                     _ => {
-                        self.errors.push(LoweringError::Other(
-                            format!("Cannot make a slice from type {type_name}"),
-                        ));
+                        self.errors.push(LoweringError::Other(format!(
+                            "Cannot make a slice from type {type_name}"
+                        )));
                         Err(())
                     }
                 }
@@ -1337,9 +1337,9 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     },
                     _ => {
-                        self.errors.push(LoweringError::Other(
-                            format!("Cannot make a slice from type {type_name}"),
-                        ));
+                        self.errors.push(LoweringError::Other(format!(
+                            "Cannot make a slice from type {type_name}"
+                        )));
                         Err(())
                     }
                 }
