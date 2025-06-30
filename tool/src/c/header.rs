@@ -44,6 +44,7 @@ pub struct Header {
     /// What string to use for indentation.
     pub indent_str: &'static str,
     pub is_for_cpp: bool,
+    pub slices_used : BTreeSet<String>,
 }
 
 impl Header {
@@ -55,6 +56,7 @@ impl Header {
             body: String::new(),
             indent_str: "  ",
             is_for_cpp,
+            slices_used: BTreeSet::new()
         }
     }
 }

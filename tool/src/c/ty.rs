@@ -238,6 +238,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
 
         for param in &method.params {
+            if let Type::Slice(hir::Slice::Struct(_, st)) = &param.ty {
+                header.slices_used.insert(self.formatter.fmt_type_name(st.id()).into());
+            }
             param_decls.push(self.gen_ty_decl(
                 &param.ty,
                 param.name.as_str(),
@@ -256,8 +259,16 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 ));
                 "void".into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                if let Type::Slice(hir::Slice::Struct(_, st)) = o {
+                    header.slices_used.insert(self.formatter.fmt_type_name(st.id()).into());
+                };
+                self.gen_ty_name(o, header)
+            },
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                if let SuccessType::OutType(Type::Slice(hir::Slice::Struct(_, st))) = ok {
+                    header.slices_used.insert(self.formatter.fmt_type_name(st.id()).into());
+                };
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
                     Some(e)

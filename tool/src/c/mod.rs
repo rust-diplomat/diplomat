@@ -2,6 +2,8 @@ mod formatter;
 mod header;
 mod ty;
 
+use std::collections::BTreeSet;
+
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
@@ -47,7 +49,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 #[derive(askama::Template)]
 #[template(path = "c/runtime.h.jinja", escape = "none")]
-pub struct Runtime;
+pub struct Runtime {
+    slice_structs : BTreeSet<String>
+}
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
@@ -57,7 +61,9 @@ pub(crate) fn run<'tcx>(
     let formatter = CFormatter::new(tcx, false, docs_url_gen);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
+    let mut r = Runtime{
+        slice_structs: BTreeSet::new()
+    };
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -88,6 +94,7 @@ pub(crate) fn run<'tcx>(
         };
 
         let impl_header = context.gen_impl(ty);
+        r.slice_structs.append(&mut impl_header.slices_used.clone());
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -117,6 +124,8 @@ pub(crate) fn run<'tcx>(
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
+    
+    files.add_file("diplomat_runtime.h".into(), r.to_string());
 
     (files, errors)
 }

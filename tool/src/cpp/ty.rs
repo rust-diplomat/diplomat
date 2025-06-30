@@ -11,6 +11,7 @@ use diplomat_core::hir::{
     Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 
 use crate::c::CAPI_NAMESPACE;
 use crate::filters;
@@ -77,6 +78,7 @@ pub(super) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub decl_header: &'header mut Header,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
+    pub slice_structs : BTreeSet<String>,
 }
 
 impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
@@ -92,6 +94,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let ctype = self.formatter.fmt_c_type_name(id);
         let c_header = self.c.gen_enum_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
+
+        // FIXME: This is gross.
+        self.slice_structs.append(&mut c_impl_header.slices_used.clone());
 
         let methods = ty
             .methods
@@ -191,6 +196,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
+        self.slice_structs.append(&mut c_impl_header.slices_used.clone());
 
         let methods = ty
             .methods
@@ -260,6 +266,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         let c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
+        self.slice_structs.append(&mut c_impl_header.slices_used.clone());
 
         self.generating_struct_fields = true;
         let field_decls = def

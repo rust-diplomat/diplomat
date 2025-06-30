@@ -2,6 +2,8 @@ mod formatter;
 mod header;
 mod ty;
 
+use std::collections::BTreeSet;
+
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use ty::TyGenContext;
@@ -53,9 +55,13 @@ pub(crate) fn run<'tcx>(
 
     #[derive(askama::Template)]
     #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
-    struct Runtime;
+    struct Runtime {
+        slice_structs : BTreeSet<String>,
+    }
 
-    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
+    let mut r = Runtime{
+        slice_structs: BTreeSet::new()
+    };
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -83,6 +89,7 @@ pub(crate) fn run<'tcx>(
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
             generating_struct_fields: false,
+            slice_structs: BTreeSet::new()
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
@@ -95,6 +102,8 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
+
+        r.slice_structs.append(&mut context.slice_structs.clone());
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own forwards and includes. Instead of
@@ -109,12 +118,15 @@ pub(crate) fn run<'tcx>(
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
     }
+    files.add_file("diplomat_runtime.hpp".into(), r.to_string());
 
     (files, errors)
 }
 
 #[cfg(test)]
 mod test {
+
+    use std::collections::BTreeSet;
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
@@ -167,6 +179,7 @@ mod test {
                 decl_header: &mut decl_header,
                 impl_header: &mut impl_header,
                 generating_struct_fields: false,
+                slice_structs: BTreeSet::new()
             };
 
             ty_gen_cx.gen_opaque_def(opaque_def, id);

@@ -79,6 +79,13 @@ MAKE_SLICES_AND_OPTIONS(String16, char16_t)
 MAKE_SLICES_AND_OPTIONS(Strings, DiplomatStringView)
 MAKE_SLICES_AND_OPTIONS(Strings16, DiplomatString16View)
 
+
+typedef struct DiplomatBigStructWithStuffView {
+    const BigStructWithStuff* data;
+    size_t len;
+}
+
+
 } // extern "C"
 } // namespace capi
 
