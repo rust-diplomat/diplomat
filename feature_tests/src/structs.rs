@@ -333,7 +333,7 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
-    #[diplomat::attr(not(js), disable)]
+    #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
