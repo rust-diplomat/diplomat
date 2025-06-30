@@ -1537,26 +1537,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_non_primitive_struct_slices_fails() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                pub struct Foo<'a> {
-                    pub x: u32,
-                    pub y: u32,
-                    pub z : DiplomatStrSlice<'a>
-                }
-
-                impl Foo {
-                    pub fn takes_slice(sl : &[Foo]) {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-
 
     #[test]
     fn test_primitive_struct_slices_for_unsupported_backend() {

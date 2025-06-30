@@ -406,14 +406,14 @@ impl TypeContext {
         param_ty: &hir::Type<P>,
         method: &hir::Method,
     ) {
+        if let hir::Type::Slice(hir::Slice::Struct(.., st)) = param_ty {
+            self.validate_primitive_slice_struct::<P>(errors, st);
+        };
+        
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
             hir::Type::Struct(p) => p.link_lifetimes(self),
             _ => return,
-        };
-
-        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = param_ty {
-            self.validate_primitive_slice_struct::<P>(errors, st);
         };
 
         for (use_lt, def_lt) in linked.lifetimes_all() {
@@ -645,6 +645,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
+            attr_validator.support.struct_primitive_slices = true;
             match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -995,5 +996,26 @@ mod tests {
                 }
             }
         };
+    }
+
+    
+    #[test]
+    fn test_non_primitive_struct_slices_fails() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Foo<'a> {
+                    pub x: u32,
+                    pub y: u32,
+                    pub z : DiplomatStrSlice<'a>
+                }
+
+                impl Foo {
+                    pub fn takes_slice(sl : &[Foo]) {
+                        todo!()
+                    }
+                }
+            }
+        }
     }
 }
