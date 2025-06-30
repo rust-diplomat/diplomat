@@ -525,26 +525,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ret
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
-                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-                let def = self.c.tcx.resolve_type(id);
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-
-                self.decl_header
-                    .append_forward(def, &type_name_unnamespaced);
-                if self.generating_struct_fields {
-                    self.decl_header
-                        .includes
-                        .insert(self.formatter.fmt_decl_header_path(id));
-                }
-                self.impl_header
-                    .includes
-                    .insert(self.formatter.fmt_impl_header_path(id));
-                type_name
+                self.gen_struct_name::<P>(st)
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
@@ -582,12 +563,40 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 self.formatter.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
+                let st_name = self.gen_struct_name::<P>(st_ty);
+                let ret = self.formatter.fmt_borrowed_slice(&st_name, b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable));
+                ret.into_owned().into()
+            }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    fn gen_struct_name<P: TyPosition>(&mut self, st : &P::StructPath) -> Cow<'ccx, str> {
+        let id = st.id();
+        let type_name = self.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
+        let def = self.c.tcx.resolve_type(id);
+        if def.attrs().disable {
+            self.errors
+                .push_error(format!("Found usage of disabled type {type_name}"))
+        }
+
+        self.decl_header
+            .append_forward(def, &type_name_unnamespaced);
+        if self.generating_struct_fields {
+            self.decl_header
+                .includes
+                .insert(self.formatter.fmt_decl_header_path(id));
+        }
+        self.impl_header
+            .includes
+            .insert(self.formatter.fmt_impl_header_path(id));
+        type_name
     }
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
@@ -800,6 +809,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 let span = self.formatter.fmt_borrowed_slice(
                     &prim_name,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
+                format!("{span}({var_name}.data, {var_name}.len)").into()
+            }
+            Type::Slice(hir::Slice::Struct(b, ref st_ty)) =>  {
+                let st_name = self.formatter.fmt_type_name(st_ty.id());
+                let span = self.formatter.fmt_borrowed_slice(
+                    &st_name,
+                b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }
