@@ -7,6 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * Testing JS-specific layout/padding behavior
+ * Also being used to test CPP backends taking structs with primitive values.
  */
 export class BigStructWithStuff {
     #first;
