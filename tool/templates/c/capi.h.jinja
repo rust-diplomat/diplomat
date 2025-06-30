@@ -53,10 +53,3 @@ MAKE_SLICES_AND_OPTIONS(String, char)
 MAKE_SLICES_AND_OPTIONS(String16, char16_t)
 MAKE_SLICES_AND_OPTIONS(Strings, DiplomatStringView)
 MAKE_SLICES_AND_OPTIONS(Strings16, DiplomatString16View)
-
-{% for s in slice_structs %}
-typedef struct Diplomat{{s}}View {
-    const {{s}}* data;
-    size_t len;
-}
-{% endfor %}
