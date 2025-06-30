@@ -923,10 +923,24 @@ impl<'ast> LoweringContext<'ast> {
                 )))
             }
             ast::TypeName::PrimitiveStructSlice(lm, type_name) => {
-                if !self.attr_validator.attrs_supported().struct_primitive_slices {
-                    self.errors.push(LoweringError::Other(
-                        "Primitive struct slices are not supported by this backend".into(),
-                    ));
+                match type_name.as_ref() {
+                    ast::TypeName::Named(path) => {
+                        match path.resolve(in_path, self.env) {
+                            ast::CustomType::Struct(st) => {
+                                if !self.attr_validator.attrs_supported().struct_primitive_slices {
+                                    self.errors.push(LoweringError::Other(
+                                        "Primitive struct slices are not supported by this backend".into(),
+                                    ));
+                                }
+                            }
+                            _ => self.errors.push(LoweringError::Other(
+                                format!("{type_name} slices are not supported.").into(),
+                            ))
+                        }
+                    }
+                    _ => self.errors.push(LoweringError::Other(
+                        format!("{type_name} slices are not supported.").into(),
+                    ))
                 }
                 // TODO: Validation for the struct to see if it only contains non-slice primitives.
 
