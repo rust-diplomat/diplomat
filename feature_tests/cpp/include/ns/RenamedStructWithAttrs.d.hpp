@@ -24,6 +24,12 @@ namespace capi {
     };
 
     typedef struct RenamedStructWithAttrs_option {union { RenamedStructWithAttrs ok; }; bool is_ok; } RenamedStructWithAttrs_option;
+
+
+    typedef struct DiplomatRenamedStructWithAttrsView {
+      const RenamedStructWithAttrs* data;
+      size_t len;
+    } DiplomatRenamedStructWithAttrsView;
 } // namespace capi
 } // namespace
 

@@ -14,7 +14,10 @@
 
 namespace diplomat {
 namespace capi {
-
+    typedef struct DiplomatMyZstView {
+      const MyZst* data;
+      size_t len;
+    } DiplomatMyZstView;
 } // namespace capi
 } // namespace
 

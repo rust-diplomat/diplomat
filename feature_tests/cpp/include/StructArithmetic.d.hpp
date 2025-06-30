@@ -20,6 +20,12 @@ namespace capi {
     };
 
     typedef struct StructArithmetic_option {union { StructArithmetic ok; }; bool is_ok; } StructArithmetic_option;
+
+
+    typedef struct DiplomatStructArithmeticView {
+      const StructArithmetic* data;
+      size_t len;
+    } DiplomatStructArithmeticView;
 } // namespace capi
 } // namespace
 

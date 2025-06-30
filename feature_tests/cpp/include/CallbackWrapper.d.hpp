@@ -23,6 +23,12 @@ namespace capi {
     };
 
     typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok; } CallbackWrapper_option;
+
+
+    typedef struct DiplomatCallbackWrapperView {
+      const CallbackWrapper* data;
+      size_t len;
+    } DiplomatCallbackWrapperView;
 } // namespace capi
 } // namespace
 
