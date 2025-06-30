@@ -22,7 +22,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     ImplTrait(P::TraitPath),
     Enum(EnumPath),
-    Slice(Slice),
+    Slice(Slice<P>),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
     /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
     ///
@@ -48,7 +48,7 @@ pub enum SelfType {
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
-pub enum Slice {
+pub enum Slice<P : TyPosition> {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
     ///
     /// Owned slices are useful for garbage-collected languages that have to
@@ -72,6 +72,9 @@ pub enum Slice {
     /// Rust ABI. In other languages this is the idiomatic list of string
     /// views, i.e. `std::span<std::string_view>` or `core.List<core.String>`.
     Strs(StringEncoding),
+
+    /// TODO: document
+    Struct(Option<Borrow>, P::StructPath),
 }
 
 // For now, the lifetime in not optional. This is because when you have references
@@ -195,14 +198,14 @@ impl SelfType {
     }
 }
 
-impl Slice {
+impl<P : TyPosition> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {
         match self {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
-            Slice::Primitive(Some(reference), ..) => Some(&reference.lifetime),
-            Slice::Primitive(..) => None,
+            Slice::Primitive(Some(reference), ..) | Slice::Struct(Some(reference), ..) => Some(&reference.lifetime),
+            Slice::Primitive(..) | Slice::Struct(..) => None,
             Slice::Strs(..) => Some({
                 const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));
                 &X

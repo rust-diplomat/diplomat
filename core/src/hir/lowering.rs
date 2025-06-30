@@ -926,7 +926,8 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(st) => {
+                            // TODO: Validation for the struct to see if it only contains non-slice primitives.
+                            ast::CustomType::Struct(..) => {
                                 if !self.attr_validator.attrs_supported().struct_primitive_slices {
                                     self.errors.push(LoweringError::Other(
                                         "Primitive struct slices are not supported by this backend".into(),
@@ -942,7 +943,6 @@ impl<'ast> LoweringContext<'ast> {
                         format!("{type_name} slices are not supported.").into(),
                     ))
                 }
-                // TODO: Validation for the struct to see if it only contains non-slice primitives.
 
                 let new_lifetime = lm
                     .as_ref()
@@ -961,12 +961,15 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(st) => {
-                                let inner = self.lower_type(type_name, ltl, in_struct, in_path)?;
-                                Ok(Type::Slice(Slice::Struct(
-                                    new_lifetime,
-                                    Box::new(inner)
-                                )))
+                            ast::CustomType::Struct(..) => {
+                                let inner = self.lower_type::<P>(type_name, ltl, in_struct, in_path)?;
+                                match inner {
+                                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
+                                        new_lifetime,
+                                        st
+                                    ))),
+                                    _ => unreachable!()
+                                }
                             },
                             _ => {
                                 self.errors.push(LoweringError::Other(
@@ -1300,12 +1303,15 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(st) => {
+                            ast::CustomType::Struct(..) => {
                                 let inner = self.lower_out_type(&type_name, ltl, in_path, in_struct, in_result_option)?;
-                                Ok(OutType::Slice(Slice::Struct(
-                                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
-                                    Box::new(inner)
-                                )))
+                                match inner {
+                                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
+                                        Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                                        st
+                                    ))),
+                                    _ => unreachable!()
+                                }
                             },
                             _ => {
                                 self.errors.push(LoweringError::Other(
@@ -1323,7 +1329,7 @@ impl<'ast> LoweringContext<'ast> {
                      }
                 }
             }
-            ast::TypeName::PrimitiveStructSlice(None, type_name) => {
+            ast::TypeName::PrimitiveStructSlice(None, ..) => {
                 self.errors.push(LoweringError::Other(
                     "Owned slices cannot be returned".into()
                 ));
