@@ -1542,10 +1542,10 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                pub struct Foo {
+                pub struct Foo<'a> {
                     pub x: u32,
                     pub y: u32,
-                    pub z : DiplomatStr
+                    pub z : DiplomatStrSlice<'a>
                 }
 
                 impl Foo {
