@@ -1,6 +1,5 @@
 ---
 source: core/src/hir/attrs.rs
-assertion_line: 1542
 expression: output
 ---
 
