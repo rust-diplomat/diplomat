@@ -477,7 +477,7 @@ impl TypeContext {
                         },
                         _ => {
                             errors.push(LoweringError::Other(
-                                format!("Cannot construct a slice of non-primitive type {:?}", f.ty)
+                                format!("Cannot construct a slice of {:?} with non-primitive field {:?}", st.name, f.name)
                             ));
                         }
                     }
@@ -492,7 +492,7 @@ impl TypeContext {
                         },
                         _ => {
                             errors.push(LoweringError::Other(
-                                format!("Cannot construct a slice of non-primitive type {:?}", f.ty)
+                                format!("Cannot construct a slice of {:?} with non-primitive field {:?}", st.name, f.name)
                             ));
                         }
                     }

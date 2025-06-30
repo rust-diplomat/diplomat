@@ -2,4 +2,4 @@
 source: core/src/hir/type_context.rs
 expression: output
 ---
-Lowering error in Foo::takes_slice: Cannot construct a slice of non-primitive type Slice(Str(Some(NonStatic(Lifetime(0))), UnvalidatedUtf8))
+Lowering error in Foo::takes_slice: Cannot construct a slice of "Foo" with non-primitive field "z"
