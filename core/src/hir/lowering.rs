@@ -924,23 +924,26 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveStructSlice(lm, type_name) => {
                 match type_name.as_ref() {
-                    ast::TypeName::Named(path) => {
-                        match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(..) => {
-                                if !self.attr_validator.attrs_supported().struct_primitive_slices {
-                                    self.errors.push(LoweringError::Other(
-                                        "Primitive struct slices are not supported by this backend".into(),
-                                    ));
-                                }
+                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
+                        ast::CustomType::Struct(..) => {
+                            if !self
+                                .attr_validator
+                                .attrs_supported()
+                                .struct_primitive_slices
+                            {
+                                self.errors.push(LoweringError::Other(
+                                    "Primitive struct slices are not supported by this backend"
+                                        .into(),
+                                ));
                             }
-                            _ => self.errors.push(LoweringError::Other(
-                                format!("{type_name} slices are not supported.").into(),
-                            ))
                         }
-                    }
+                        _ => self.errors.push(LoweringError::Other(
+                            format!("{type_name} slices are not supported.").into(),
+                        )),
+                    },
                     _ => self.errors.push(LoweringError::Other(
                         format!("{type_name} slices are not supported.").into(),
-                    ))
+                    )),
                 }
 
                 let new_lifetime = lm
@@ -958,32 +961,29 @@ impl<'ast> LoweringContext<'ast> {
                 }
 
                 match type_name.as_ref() {
-                    ast::TypeName::Named(path) => {
-                        match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(..) => {
-                                let inner = self.lower_type::<P>(type_name, ltl, in_struct, in_path)?;
-                                match inner {
-                                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
-                                        new_lifetime,
-                                        st
-                                    ))),
-                                    _ => unreachable!()
+                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
+                        ast::CustomType::Struct(..) => {
+                            let inner = self.lower_type::<P>(type_name, ltl, in_struct, in_path)?;
+                            match inner {
+                                Type::Struct(st) => {
+                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
                                 }
-                            },
-                            _ => {
-                                self.errors.push(LoweringError::Other(
-                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
-                                ));
-                                Err(())
+                                _ => unreachable!(),
                             }
                         }
+                        _ => {
+                            self.errors.push(LoweringError::Other(
+                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
+                                ));
+                            Err(())
+                        }
                     },
-                    _ => { 
+                    _ => {
                         self.errors.push(LoweringError::Other(
                             format!("Cannot make a slice from type {type_name}").into(),
                         ));
                         Err(())
-                     }
+                    }
                 }
             }
             ast::TypeName::Function(input_types, out_type, _mutability) => {
@@ -1300,44 +1300,53 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveStructSlice(Some((lt, m)), type_name) => {
                 match type_name.as_ref() {
-                    ast::TypeName::Named(path) => {
-                        match path.resolve(in_path, self.env) {
-                            ast::CustomType::Struct(..) => {
-                                if !self.attr_validator.attrs_supported().struct_primitive_slices {
-                                    self.errors.push(LoweringError::Other(
-                                        "Primitive struct slices are not supported by this backend".into(),
-                                    ));
-                                    Err(())
-                                } else {
-                                    let inner = self.lower_out_type(&type_name, ltl, in_path, in_struct, in_result_option)?;
-                                    match inner {
-                                        Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
-                                            Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
-                                            st
-                                        ))),
-                                        _ => unreachable!()
-                                    }
-                                }
-                            },
-                            _ => {
+                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
+                        ast::CustomType::Struct(..) => {
+                            if !self
+                                .attr_validator
+                                .attrs_supported()
+                                .struct_primitive_slices
+                            {
                                 self.errors.push(LoweringError::Other(
-                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
+                                    "Primitive struct slices are not supported by this backend"
+                                        .into(),
                                 ));
                                 Err(())
+                            } else {
+                                let inner = self.lower_out_type(
+                                    &type_name,
+                                    ltl,
+                                    in_path,
+                                    in_struct,
+                                    in_result_option,
+                                )?;
+                                match inner {
+                                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
+                                        Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                                        st,
+                                    ))),
+                                    _ => unreachable!(),
+                                }
                             }
                         }
+                        _ => {
+                            self.errors.push(LoweringError::Other(
+                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
+                                ));
+                            Err(())
+                        }
                     },
-                    _ => { 
+                    _ => {
                         self.errors.push(LoweringError::Other(
                             format!("Cannot make a slice from type {type_name}").into(),
                         ));
                         Err(())
-                     }
+                    }
                 }
             }
             ast::TypeName::PrimitiveStructSlice(None, ..) => {
                 self.errors.push(LoweringError::Other(
-                    "Owned slices cannot be returned".into()
+                    "Owned slices cannot be returned".into(),
                 ));
                 Err(())
             }

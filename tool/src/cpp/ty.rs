@@ -524,9 +524,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     .insert(self.formatter.fmt_impl_header_path(op_id));
                 ret
             }
-            Type::Struct(ref st) => {
-                self.gen_struct_name::<P>(st)
-            }
+            Type::Struct(ref st) => self.gen_struct_name::<P>(st),
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
@@ -565,7 +563,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let st_name = self.gen_struct_name::<P>(st_ty);
-                let ret = self.formatter.fmt_borrowed_slice(&st_name, b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable));
+                let ret = self.formatter.fmt_borrowed_slice(
+                    &st_name,
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
                 ret.into_owned().into()
             }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
@@ -576,7 +577,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         }
     }
 
-    fn gen_struct_name<P: TyPosition>(&mut self, st : &P::StructPath) -> Cow<'ccx, str> {
+    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
         let id = st.id();
         let type_name = self.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
@@ -812,11 +813,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 );
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }
-            Type::Slice(hir::Slice::Struct(b, ref st_ty)) =>  {
+            Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let st_name = self.formatter.fmt_type_name(st_ty.id());
                 let span = self.formatter.fmt_borrowed_slice(
                     &st_name,
-                b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }

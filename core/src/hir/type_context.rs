@@ -409,7 +409,7 @@ impl TypeContext {
         if let hir::Type::Slice(hir::Slice::Struct(.., st)) = param_ty {
             self.validate_primitive_slice_struct::<P>(errors, st);
         };
-        
+
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
             hir::Type::Struct(p) => p.link_lifetimes(self),
@@ -465,40 +465,46 @@ impl TypeContext {
         }
     }
 
-    fn validate_primitive_slice_struct<P : TyPosition>(&self, errors: &mut ErrorStore, st : &P::StructPath) {
+    fn validate_primitive_slice_struct<P: TyPosition>(
+        &self,
+        errors: &mut ErrorStore,
+        st: &P::StructPath,
+    ) {
         let ty = self.resolve_type(st.id());
         match ty {
             TypeDef::Struct(st) => {
                 for f in &st.fields {
                     match &f.ty {
-                        hir::Type::Primitive(..) => {},
+                        hir::Type::Primitive(..) => {}
                         hir::Type::Struct(st) => {
                             self.validate_primitive_slice_struct::<hir::Everywhere>(errors, st);
-                        },
+                        }
                         _ => {
-                            errors.push(LoweringError::Other(
-                                format!("Cannot construct a slice of {:?} with non-primitive field {:?}", st.name, f.name)
-                            ));
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?} with non-primitive field {:?}",
+                                st.name, f.name
+                            )));
                         }
                     }
                 }
-            },
+            }
             TypeDef::OutStruct(st) => {
                 for f in &st.fields {
                     match &f.ty {
-                        hir::Type::Primitive(..) => {},
+                        hir::Type::Primitive(..) => {}
                         hir::Type::Struct(st) => {
                             self.validate_primitive_slice_struct::<hir::OutputOnly>(errors, st);
-                        },
+                        }
                         _ => {
-                            errors.push(LoweringError::Other(
-                                format!("Cannot construct a slice of {:?} with non-primitive field {:?}", st.name, f.name)
-                            ));
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?} with non-primitive field {:?}",
+                                st.name, f.name
+                            )));
                         }
                     }
                 }
-            },
-            _ => unreachable!()
+            }
+            _ => unreachable!(),
         }
     }
 }
@@ -998,7 +1004,6 @@ mod tests {
         };
     }
 
-    
     #[test]
     fn test_non_primitive_struct_slices_fails() {
         uitest_lowering! {

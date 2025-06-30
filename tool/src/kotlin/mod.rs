@@ -1068,14 +1068,17 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
+                    slice_conversions
+                        .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
 
                     let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
                         ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), slice.clone()) {
+                            if let Some(cleanup) =
+                                self.gen_cleanup(param_name.clone(), slice.clone())
+                            {
                                 cleanups.push(cleanup)
                             }
                         }

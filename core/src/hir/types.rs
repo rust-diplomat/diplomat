@@ -199,13 +199,15 @@ impl SelfType {
     }
 }
 
-impl <P> Slice<P> {
+impl<P> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {
         match self {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
-            Slice::Primitive(Some(reference), ..) | Slice::Struct(Some(reference), ..) => Some(&reference.lifetime),
+            Slice::Primitive(Some(reference), ..) | Slice::Struct(Some(reference), ..) => {
+                Some(&reference.lifetime)
+            }
             Slice::Primitive(..) | Slice::Struct(..) => None,
             Slice::Strs(..) => Some({
                 const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));

@@ -958,7 +958,7 @@ pub struct BackendAttrSupport {
     /// Whether to generate mocking interface.
     pub generate_mocking_interface: bool,
     /// Passing slices of structs that only hold (non-slice) primitive types:
-    pub struct_primitive_slices : bool
+    pub struct_primitive_slices: bool,
 }
 
 impl BackendAttrSupport {
@@ -992,7 +992,7 @@ impl BackendAttrSupport {
             traits_are_send: true,
             traits_are_sync: true,
             generate_mocking_interface: true,
-            struct_primitive_slices: true
+            struct_primitive_slices: true,
         }
     }
 
@@ -1536,7 +1536,6 @@ mod tests {
             }
         }
     }
-
 
     #[test]
     fn test_primitive_struct_slices_for_unsupported_backend() {

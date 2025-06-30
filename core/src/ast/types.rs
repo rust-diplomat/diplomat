@@ -458,10 +458,7 @@ pub enum TypeName {
     StrSlice(StringEncoding, StdlibOrDiplomat),
     /// `&[Struct]`. Meant for structs that are only composed of primitives (or structs of primitives) that are *not* slices.
     /// This makes custom math types like `Vec<Vector3>` easier to pass directly, and this is implemented on a per-backend basis.
-    PrimitiveStructSlice(
-        Option<(Lifetime, Mutability)>,
-        Box<TypeName>
-    ),
+    PrimitiveStructSlice(Option<(Lifetime, Mutability)>, Box<TypeName>),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -791,7 +788,10 @@ impl TypeName {
                         }
                         return TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib);
                     }
-                    return TypeName::PrimitiveStructSlice(Some((lifetime, mutability)), Box::new(TypeName::from_syn(slice.elem.as_ref(), self_path_type)))
+                    return TypeName::PrimitiveStructSlice(
+                        Some((lifetime, mutability)),
+                        Box::new(TypeName::from_syn(slice.elem.as_ref(), self_path_type)),
+                    );
                 }
                 TypeName::Reference(
                     lifetime,
