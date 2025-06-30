@@ -9,6 +9,7 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
+use crate::hir::TyPosition;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -411,6 +412,10 @@ impl TypeContext {
             _ => return,
         };
 
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = param_ty {
+            self.validate_primitive_slice_struct::<P>(errors, st);
+        };
+
         for (use_lt, def_lt) in linked.lifetimes_all() {
             let MaybeStatic::NonStatic(use_lt) = use_lt else {
                 continue;
@@ -457,6 +462,43 @@ impl TypeContext {
                                         lifetime bound from {param}: '{use_longer_name}: '{use_name} ({def_cause})")))
                 }
             }
+        }
+    }
+
+    fn validate_primitive_slice_struct<P : TyPosition>(&self, errors: &mut ErrorStore, st : &P::StructPath) {
+        let ty = self.resolve_type(st.id());
+        match ty {
+            TypeDef::Struct(st) => {
+                for f in &st.fields {
+                    match &f.ty {
+                        hir::Type::Primitive(..) => {},
+                        hir::Type::Struct(st) => {
+                            self.validate_primitive_slice_struct::<hir::Everywhere>(errors, st);
+                        },
+                        _ => {
+                            errors.push(LoweringError::Other(
+                                format!("Cannot construct a slice of non-primitive type {:?}", f.ty)
+                            ));
+                        }
+                    }
+                }
+            },
+            TypeDef::OutStruct(st) => {
+                for f in &st.fields {
+                    match &f.ty {
+                        hir::Type::Primitive(..) => {},
+                        hir::Type::Struct(st) => {
+                            self.validate_primitive_slice_struct::<hir::OutputOnly>(errors, st);
+                        },
+                        _ => {
+                            errors.push(LoweringError::Other(
+                                format!("Cannot construct a slice of non-primitive type {:?}", f.ty)
+                            ));
+                        }
+                    }
+                }
+            },
+            _ => unreachable!()
         }
     }
 }

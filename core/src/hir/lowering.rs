@@ -926,7 +926,6 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => {
                         match path.resolve(in_path, self.env) {
-                            // TODO: Validation for the struct to see if it only contains non-slice primitives.
                             ast::CustomType::Struct(..) => {
                                 if !self.attr_validator.attrs_supported().struct_primitive_slices {
                                     self.errors.push(LoweringError::Other(
@@ -1304,13 +1303,20 @@ impl<'ast> LoweringContext<'ast> {
                     ast::TypeName::Named(path) => {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Struct(..) => {
-                                let inner = self.lower_out_type(&type_name, ltl, in_path, in_struct, in_result_option)?;
-                                match inner {
-                                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
-                                        Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
-                                        st
-                                    ))),
-                                    _ => unreachable!()
+                                if !self.attr_validator.attrs_supported().struct_primitive_slices {
+                                    self.errors.push(LoweringError::Other(
+                                        "Primitive struct slices are not supported by this backend".into(),
+                                    ));
+                                    Err(())
+                                } else {
+                                    let inner = self.lower_out_type(&type_name, ltl, in_path, in_struct, in_result_option)?;
+                                    match inner {
+                                        Type::Struct(st) => Ok(Type::Slice(Slice::Struct(
+                                            Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                                            st
+                                        ))),
+                                        _ => unreachable!()
+                                    }
                                 }
                             },
                             _ => {

@@ -74,6 +74,7 @@ pub enum Slice<Path> {
     Strs(StringEncoding),
 
     /// TODO: document
+    /// Validated in [`super::type_context::TypeContext::validate_primitive_slice_struct`]
     Struct(Option<Borrow>, Path),
 }
 
