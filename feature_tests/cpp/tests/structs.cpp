@@ -43,26 +43,30 @@ int main(int argc, char* argv[]) {
         simple_assert_eq("self-adding y", r.y, 7);
     }
 
-    diplomat::span<const BigStructWithStuff> in({
-        .first=0,
-        .second=1,
-        .third=2,
-        .fourth = {
-            .first=200,
-            .second=100
-        },
-        .fifth=3
-    }, {
-        .first=5,
-        .second=4,
-        .third=3,
-        .fourth = {
-            .first = 100,
-            .second = 200
-        },
-        .fifth = 2
-    });
+    BigStructWithStuff bigArr[] {
+        {
+            .first=0,
+            .second=1,
+            .third=2,
+            .fourth = {
+                .first=200,
+                .second=100
+            },
+            .fifth=3
+        }, {
+            .first=5,
+            .second=4,
+            .third=3,
+            .fourth = {
+                .first = 100,
+                .second = 200
+            },
+            .fifth = 2
+        }
+    };
+
+    diplomat::span<const BigStructWithStuff> in(bigArr, 2);
 
 
-    BigStructWithStuff::assert_slice(in, in.size(), 4);
+    BigStructWithStuff::assert_slice(in, 4);
 }

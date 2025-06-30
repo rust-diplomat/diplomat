@@ -371,9 +371,11 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
-        pub fn assert_slice(slice: &[BigStructWithStuff], size: usize, second_value: u16) {
-            assert!(size > 1);
-            assert_eq!(slice.iter().next().unwrap().second, second_value)
+        pub fn assert_slice(slice: &[BigStructWithStuff], second_value: u16) {
+            assert!(slice.len() > 1);
+            let mut i = slice.iter();
+            i.next();
+            assert_eq!(i.next().unwrap().second, second_value)
         }
     }
 
