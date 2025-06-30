@@ -23,5 +23,13 @@ typedef struct BigStructWithStuff {
 typedef struct BigStructWithStuff_option {union { BigStructWithStuff ok; }; bool is_ok; } BigStructWithStuff_option;
 
 
+// TODO: Need to add Mut types.
+typedef struct DiplomatBigStructWithStuffView {
+  const BigStructWithStuff* data;
+  size_t len;
+} DiplomatBigStructWithStuffView;
+
+
+
 
 #endif // BigStructWithStuff_D_H

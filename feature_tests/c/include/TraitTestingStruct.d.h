@@ -19,5 +19,13 @@ typedef struct TraitTestingStruct {
 typedef struct TraitTestingStruct_option {union { TraitTestingStruct ok; }; bool is_ok; } TraitTestingStruct_option;
 
 
+// TODO: Need to add Mut types.
+typedef struct DiplomatTraitTestingStructView {
+  const TraitTestingStruct* data;
+  size_t len;
+} DiplomatTraitTestingStructView;
+
+
+
 
 #endif // TraitTestingStruct_D_H

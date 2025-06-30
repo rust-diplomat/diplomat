@@ -19,5 +19,13 @@ typedef struct CyclicStructA {
 typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
 
 
+// TODO: Need to add Mut types.
+typedef struct DiplomatCyclicStructAView {
+  const CyclicStructA* data;
+  size_t len;
+} DiplomatCyclicStructAView;
+
+
+
 
 #endif // CyclicStructA_D_H

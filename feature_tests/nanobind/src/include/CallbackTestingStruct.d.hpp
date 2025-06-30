@@ -20,6 +20,13 @@ namespace capi {
     };
 
     typedef struct CallbackTestingStruct_option {union { CallbackTestingStruct ok; }; bool is_ok; } CallbackTestingStruct_option;
+
+
+    // TODO: Need to add Mut types.
+    typedef struct DiplomatCallbackTestingStructView {
+      const CallbackTestingStruct* data;
+      size_t len;
+    } DiplomatCallbackTestingStructView;
 } // namespace capi
 } // namespace
 

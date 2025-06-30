@@ -22,4 +22,6 @@ typedef struct OptionInputStruct_option {union { OptionInputStruct ok; }; bool i
 
 
 
+
+
 #endif // OptionInputStruct_D_H

@@ -22,6 +22,7 @@ namespace capi {
     typedef struct StructArithmetic_option {union { StructArithmetic ok; }; bool is_ok; } StructArithmetic_option;
 
 
+    // TODO: Need to add Mut types.
     typedef struct DiplomatStructArithmeticView {
       const StructArithmetic* data;
       size_t len;

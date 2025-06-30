@@ -21,4 +21,6 @@ typedef struct ImportedStruct_option {union { ImportedStruct ok; }; bool is_ok; 
 
 
 
+
+
 #endif // ImportedStruct_D_H

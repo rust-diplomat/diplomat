@@ -18,5 +18,13 @@ typedef struct CallbackWrapper {
 typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok; } CallbackWrapper_option;
 
 
+// TODO: Need to add Mut types.
+typedef struct DiplomatCallbackWrapperView {
+  const CallbackWrapper* data;
+  size_t len;
+} DiplomatCallbackWrapperView;
+
+
+
 
 #endif // CallbackWrapper_D_H

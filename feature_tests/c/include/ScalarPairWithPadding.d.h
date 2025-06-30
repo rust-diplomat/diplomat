@@ -19,5 +19,13 @@ typedef struct ScalarPairWithPadding {
 typedef struct ScalarPairWithPadding_option {union { ScalarPairWithPadding ok; }; bool is_ok; } ScalarPairWithPadding_option;
 
 
+// TODO: Need to add Mut types.
+typedef struct DiplomatScalarPairWithPaddingView {
+  const ScalarPairWithPadding* data;
+  size_t len;
+} DiplomatScalarPairWithPaddingView;
+
+
+
 
 #endif // ScalarPairWithPadding_D_H

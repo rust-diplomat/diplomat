@@ -22,6 +22,7 @@ namespace capi {
     typedef struct ErrorStruct_option {union { ErrorStruct ok; }; bool is_ok; } ErrorStruct_option;
 
 
+    // TODO: Need to add Mut types.
     typedef struct DiplomatErrorStructView {
       const ErrorStruct* data;
       size_t len;

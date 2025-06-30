@@ -21,6 +21,13 @@ namespace capi {
     };
 
     typedef struct CyclicStructB_option {union { CyclicStructB ok; }; bool is_ok; } CyclicStructB_option;
+
+
+    // TODO: Need to add Mut types.
+    typedef struct DiplomatCyclicStructBView {
+      const CyclicStructB* data;
+      size_t len;
+    } DiplomatCyclicStructBView;
 } // namespace capi
 } // namespace
 
