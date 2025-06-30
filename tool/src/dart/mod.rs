@@ -275,7 +275,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
                 /// Get the name/initializer of the allocator needed for a particular type
                 fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
-                    if let &hir::Type::Slice(slice) = field_ty {
+                    if let hir::Type::Slice(ref slice) = field_ty {
                         match slice.lifetime() {
                             Some(MaybeStatic::NonStatic(lt)) => {
                                 Some(format!(
@@ -798,7 +798,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(s) => self.gen_slice(&s).into(),
+            Type::Slice(ref s) => self.gen_slice(&s).into(),
             Type::DiplomatOption(ref inner) => self.gen_result(Some(inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -876,15 +876,15 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info, alloc.unwrap())
             }
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
-            Type::Slice(s) => {
-                self.gen_slice(&s);
+            Type::Slice(ref s) => {
+                self.gen_slice(s);
                 let alloc_in = match s {
                     hir::Slice::Primitive(_, hir::PrimitiveType::Byte) => {
                         "asUint8List()._uint8AllocIn"
                     }
-                    hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(p),
-                    hir::Slice::Str(_, encoding) => self.formatter.fmt_str_alloc_in(encoding),
-                    hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_alloc_in(encoding),
+                    hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(*p),
+                    hir::Slice::Str(_, encoding) => self.formatter.fmt_str_alloc_in(*encoding),
+                    hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_alloc_in(*encoding),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let alloc = if s.lifetime().is_none() {
@@ -1021,7 +1021,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => match slice.lifetime() {
+            Type::Slice(ref slice) => match slice.lifetime() {
                 Some(MaybeStatic::NonStatic(lifetime)) => format!(
                     "{var_name}._toDart({}Edges)",
                     lifetime_env.fmt_lifetime(lifetime)
@@ -1104,7 +1104,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         }
     }
 
-    fn gen_slice_element_ty(&mut self, slice: &hir::Slice) -> Cow<'cx, str> {
+    fn gen_slice_element_ty<P>(&mut self, slice: &hir::Slice<P>) -> Cow<'cx, str> {
         match slice {
             hir::Slice::Str(_, encoding) => {
                 self.formatter.fmt_string_element_as_ffi(*encoding).into()
@@ -1121,7 +1121,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
     }
 
     /// Generates a Dart helper class for a slice type.
-    fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
+    fn gen_slice<P>(&mut self, slice: &hir::Slice<P>) -> &'static str {
         let slice_ty = self.formatter.fmt_slice_type(slice);
 
         if self.helper_classes.contains_key(slice_ty) {
@@ -1205,7 +1205,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U32)) => format!("this[i].clamp(0, {})", u32::MAX).into(),
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U64)) => format!("this[i].clamp(0, {})", u64::MAX).into(),
                         hir::Slice::Strs(e) => {
-                            self.gen_slice(&hir::Slice::Str(None, *e));
+                            self.gen_slice(&hir::Slice::Str::<P>(None, *e));
                             format!("this[i].{}(alloc)", self.formatter.fmt_str_alloc_in(*e)).into()
                         },
                         _ => unreachable!("unknown AST/HIR variant"),

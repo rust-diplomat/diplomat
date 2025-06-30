@@ -22,7 +22,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     ImplTrait(P::TraitPath),
     Enum(EnumPath),
-    Slice(Slice<P>),
+    Slice(Slice<P::StructPath>),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
     /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
     ///
@@ -48,7 +48,7 @@ pub enum SelfType {
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
-pub enum Slice<P : TyPosition> {
+pub enum Slice<Path> {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
     ///
     /// Owned slices are useful for garbage-collected languages that have to
@@ -74,7 +74,7 @@ pub enum Slice<P : TyPosition> {
     Strs(StringEncoding),
 
     /// TODO: document
-    Struct(Option<Borrow>, P::StructPath),
+    Struct(Option<Borrow>, Path),
 }
 
 // For now, the lifetime in not optional. This is because when you have references
@@ -198,7 +198,7 @@ impl SelfType {
     }
 }
 
-impl<P : TyPosition> Slice<P> {
+impl <P> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {

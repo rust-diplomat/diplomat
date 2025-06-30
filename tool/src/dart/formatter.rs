@@ -280,7 +280,7 @@ impl<'tcx> DartFormatter<'tcx> {
     /// Get the FFI slice type corresponding to a slice
     ///
     /// Note: you probably want to call gen_slice() to ensure helpers get made
-    pub fn fmt_slice_type(&self, slice: &hir::Slice) -> &'static str {
+    pub fn fmt_slice_type<P>(&self, slice: &hir::Slice<P>) -> &'static str {
         match slice {
             hir::Slice::Primitive(_, p) => self.fmt_prim_slice_type(*p),
             hir::Slice::Str(_, encoding) => self.fmt_str_slice_type(*encoding),
