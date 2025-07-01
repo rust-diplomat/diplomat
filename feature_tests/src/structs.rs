@@ -449,16 +449,16 @@ pub mod ffi {
     #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
     #[diplomat::attr(auto, allowed_in_slices)]
     pub struct PrimitiveStruct {
-        x : f32,
-        a : bool,
-        b : DiplomatChar,
-        c : i64,
-        d : isize,
-        e : DiplomatByte
+        x: f32,
+        a: bool,
+        b: DiplomatChar,
+        c: i64,
+        d: isize,
+        e: DiplomatByte,
     }
 
     impl PrimitiveStruct {
-        pub fn mutable_slice(a : &mut [PrimitiveStruct]) {
+        pub fn mutable_slice(a: &mut [PrimitiveStruct]) {
             let mut running_sum = 0.0;
             let mut alternate = false;
             for p in a.iter_mut() {
