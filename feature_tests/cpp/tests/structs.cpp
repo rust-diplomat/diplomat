@@ -82,14 +82,19 @@ int main(int argc, char* argv[]) {
         }, {
             .x = 2.0f,
             .a = false,
-            .b = '',
+            .b = '\0',
             .c = 0,
             .d = 0,
             .e = 0
-        }, {}
+        }, {.x=-1.0f}
     };
 
     diplomat::span<PrimitiveStruct> primitiveSpan(primitiveArr, 3);
     PrimitiveStruct::mutable_slice(primitiveSpan);
-    simple_assert_eq("primitiveArr cumulative sum", primitiveArr[2].x, 3.0f);
+    simple_assert_eq("primitiveArr cumulative sum", primitiveArr[2].x, 2.0f);
+    simple_assert_eq("primitiveArr alternating bool", primitiveArr[0].a, false);
+    simple_assert_eq("primitiveArr alternating bool 2", primitiveArr[1].a, true);
+    simple_assert_eq("primitiveArr DiplomatChar", (int)primitiveArr[2].b, 2);
+    simple_assert_eq("primitiveArr isize", primitiveArr[0].d, 101);
+    simple_assert_eq("primitiveArr DiplomatByte", primitiveArr[1].e, 3);
 }
