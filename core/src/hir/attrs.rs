@@ -56,7 +56,7 @@ pub struct Attrs {
     /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
     pub generate_mocking_interface: bool,
     /// From #[diplomat::attr()]. If true, will be used for generation of [`super::Slice::Struct`] types.
-    pub allowed_in_slices : bool,
+    pub allowed_in_slices: bool,
 }
 
 // #region: Demo specific attributes.
@@ -374,7 +374,12 @@ impl Attrs {
                         }
                         "allowed_in_slices" => {
                             if !support.struct_primitive_slices {
-                                maybe_error_unsupported(auto_found, "allowed_in_slices", backend, errors);
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "allowed_in_slices",
+                                    backend,
+                                    errors,
+                                );
                                 continue;
                             }
                             this.allowed_in_slices = true;
@@ -847,7 +852,7 @@ impl Attrs {
         if *allowed_in_slices && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
             // TODO: Allow OutStructs?
             errors.push(LoweringError::Other(
-                "`allowed_in_slices` can only be used on input-only struct types.".into()
+                "`allowed_in_slices` can only be used on input-only struct types.".into(),
             ));
         }
     }

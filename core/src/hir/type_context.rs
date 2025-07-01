@@ -476,7 +476,7 @@ impl TypeContext {
                 if !st.attrs.allowed_in_slices {
                     errors.push(LoweringError::Other(format!(
                         "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
-                        st.name 
+                        st.name
                     )));
                     return;
                 }
