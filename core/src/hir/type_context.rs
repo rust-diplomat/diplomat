@@ -480,6 +480,13 @@ impl TypeContext {
                     )));
                     return;
                 }
+                
+                if st.lifetimes.num_lifetimes() > 0 {
+                    errors.push(LoweringError::Other(
+                        format!("Struct {:?} cannot have any lifetimes if it is within a slice.", st.name)
+                    ));
+                }
+                
                 for f in &st.fields {
                     match &f.ty {
                         hir::Type::Primitive(..) => {}
