@@ -24,6 +24,7 @@
     - [Arithmetic](attrs/arithmetic.md)
     - [Comparators](attrs/comparators.md)
     - [Stringifiers](attrs/stringifiers.md)
+    - [Slices] (attrs/slices.md)
   - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)
 - [demo_gen](demo_gen/intro.md)

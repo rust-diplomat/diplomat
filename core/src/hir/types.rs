@@ -73,7 +73,9 @@ pub enum Slice<P: TyPosition = super::InputOnly> {
     /// views, i.e. `std::span<std::string_view>` or `core.List<core.String>`.
     Strs(StringEncoding),
 
-    /// TODO: document
+    /// A `&[Struct]`, where `Struct` is a structure that is only comprised of primitive types and
+    /// structures that only contain primitive types. Must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.
+    /// Currently assumes that `&[Struct]` is provided as an input only for function parameters.
     /// Validated in [`super::type_context::TypeContext::validate_primitive_slice_struct`]
     Struct(Option<Borrow>, P::StructPath),
 }
