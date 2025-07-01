@@ -486,7 +486,7 @@ impl TypeContext {
                         format!("Struct {:?} cannot have any lifetimes if it is within a slice.", st.name)
                     ));
                 }
-                
+
                 for f in &st.fields {
                     match &f.ty {
                         hir::Type::Primitive(..) => {}
@@ -1013,6 +1013,7 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
                 pub struct Foo<'a> {
                     pub x: u32,
                     pub y: u32,

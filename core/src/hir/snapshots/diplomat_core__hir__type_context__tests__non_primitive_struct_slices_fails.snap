@@ -2,4 +2,5 @@
 source: core/src/hir/type_context.rs
 expression: output
 ---
-Lowering error in Foo::takes_slice: Cannot construct a slice of "Foo" with non-primitive field "z"
+Lowering error in Foo::takes_slice: Struct "Foo" cannot have any lifetimes if it is within a slice.
+Lowering error in Foo::takes_slice: Cannot construct a slice of "Foo" with non-primitive, non-struct field "z"

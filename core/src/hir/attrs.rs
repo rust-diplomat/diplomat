@@ -1546,6 +1546,7 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
@@ -1565,6 +1566,7 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
