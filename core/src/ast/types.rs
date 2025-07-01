@@ -457,7 +457,7 @@ pub enum TypeName {
     /// as `DiplomatSlice<&DiplomatFoo>`
     StrSlice(StringEncoding, StdlibOrDiplomat),
     /// `&[Struct]`. Meant for passing slices of structs where the struct's layout is known to be shared between Rust
-    /// and the backend language. Primarily meant for large lists of compound types like `Vector3f64` or `Color4i16`. 
+    /// and the backend language. Primarily meant for large lists of compound types like `Vector3f64` or `Color4i16`.
     /// This is implemented on a per-backend basis.
     PrimitiveStructSlice(Option<(Lifetime, Mutability)>, Box<TypeName>),
     /// The `()` type.
