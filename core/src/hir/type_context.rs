@@ -1024,4 +1024,24 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_return_struct_slice() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn returns_slice() -> &[Foo] {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
 }
