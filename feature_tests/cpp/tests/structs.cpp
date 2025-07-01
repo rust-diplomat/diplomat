@@ -6,6 +6,7 @@
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/BigStructWithStuff.hpp"
 #include "../include/PrimitiveStruct.hpp"
+#include "../include/CyclicStructA.hpp"
 #include "assert.hpp"
 
 int main(int argc, char* argv[]) {
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
 
     BigStructWithStuff::assert_slice(in, 4);
 
-    PrimitiveStruct primitiveArr[] {
+    PrimitiveStruct primitive_arr[] {
         {
             .x = 1.0f,
             .a = true,
@@ -89,12 +90,39 @@ int main(int argc, char* argv[]) {
         }, {.x=-1.0f}
     };
 
-    diplomat::span<PrimitiveStruct> primitiveSpan(primitiveArr, 3);
-    PrimitiveStruct::mutable_slice(primitiveSpan);
-    simple_assert_eq("primitiveArr cumulative sum", primitiveArr[2].x, 2.0f);
-    simple_assert_eq("primitiveArr alternating bool", primitiveArr[0].a, false);
-    simple_assert_eq("primitiveArr alternating bool 2", primitiveArr[1].a, true);
-    simple_assert_eq("primitiveArr DiplomatChar", (int)primitiveArr[2].b, 2);
-    simple_assert_eq("primitiveArr isize", primitiveArr[0].d, 101);
-    simple_assert_eq("primitiveArr DiplomatByte", primitiveArr[1].e, 3);
+    diplomat::span<PrimitiveStruct> primitive_span(primitive_arr, 3);
+    PrimitiveStruct::mutable_slice(primitive_span);
+    simple_assert_eq("primitiveArr cumulative sum", primitive_arr[2].x, 2.0f);
+    simple_assert_eq("primitiveArr alternating bool", primitive_arr[0].a, false);
+    simple_assert_eq("primitiveArr alternating bool 2", primitive_arr[1].a, true);
+    simple_assert_eq("primitiveArr DiplomatChar", (int)primitive_arr[2].b, 2);
+    simple_assert_eq("primitiveArr isize", primitive_arr[0].d, 101);
+    simple_assert_eq("primitiveArr DiplomatByte", primitive_arr[1].e, 3);
+
+    CyclicStructA cyclic_arr[] {
+        {
+            .a = {
+                .field = 3
+            }
+        },
+        {
+            .a = {
+                .field = 2
+            }
+        },
+        {
+            .a = {
+                .field = 4
+            }
+        },
+        {
+            .a = {
+                .field = 5
+            }
+        }
+    };
+
+    diplomat::span<const CyclicStructA> cyclic_span(cyclic_arr, 4);
+    uint8_t cyclic_a_sum = CyclicStructA::nested_slice(cyclic_span);
+    simple_assert_eq("CyclicStructA slice sum", cyclic_a_sum, 14);
 }

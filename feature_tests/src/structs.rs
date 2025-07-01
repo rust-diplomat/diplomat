@@ -274,10 +274,12 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct CyclicStructB {
         pub field: u8,
     }
@@ -295,6 +297,15 @@ pub mod ffi {
 
         pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.field.to_string()).unwrap();
+        }
+
+        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        pub fn nested_slice(sl : &[CyclicStructA]) -> u8 {
+            let mut sum = 0;
+            for a in sl.iter() {
+                sum += a.a.field;
+            }
+            sum
         }
 
         // For demo gen: tests having the same variables in the namespace

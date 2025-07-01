@@ -21,6 +21,17 @@ namespace capi {
     };
 
     typedef struct CyclicStructB_option {union { CyclicStructB ok; }; bool is_ok; } CyclicStructB_option;
+
+
+    typedef struct DiplomatCyclicStructBView {
+      const CyclicStructB* data;
+      size_t len;
+    } DiplomatCyclicStructBView;
+
+    typedef struct DiplomatCyclicStructBViewMut {
+      const CyclicStructB* data;
+      size_t len;
+    } DiplomatCyclicStructBViewMut;
 } // namespace capi
 } // namespace
 
