@@ -850,9 +850,8 @@ impl Attrs {
         }
 
         if *allowed_in_slices && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
-            // TODO: Allow OutStructs?
             errors.push(LoweringError::Other(
-                "`allowed_in_slices` can only be used on input-only struct types.".into(),
+                "`allowed_in_slices` can only be used on non-output-only struct types.".into(),
             ));
         }
     }
