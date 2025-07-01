@@ -483,18 +483,18 @@ impl TypeContext {
                 for f in &st.fields {
                     match &f.ty {
                         hir::Type::Primitive(..) => {}
-                        hir::Type::Struct(st) => {
-                            let st = st.resolve(self);
-                            if !st.attrs.allowed_in_slices {
+                        hir::Type::Struct(f_st) => {
+                            let f_st = f_st.resolve(self);
+                            if !f_st.attrs.allowed_in_slices {
                                 errors.push(LoweringError::Other(format!(
                                     "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
-                                    st.name, f.name, f.ty
+                                    st.name, f.name, f_st.name
                                 )));
                             }
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?} with non-primitive field {:?}",
+                                "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
                                 st.name, f.name
                             )));
                         }
