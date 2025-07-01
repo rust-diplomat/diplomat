@@ -26,6 +26,4 @@ typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_o
 
 
 
-
-
 #endif // MyStruct_D_H

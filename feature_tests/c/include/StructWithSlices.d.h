@@ -20,6 +20,4 @@ typedef struct StructWithSlices_option {union { StructWithSlices ok; }; bool is_
 
 
 
-
-
 #endif // StructWithSlices_D_H

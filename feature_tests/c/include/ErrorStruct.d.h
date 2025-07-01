@@ -20,6 +20,4 @@ typedef struct ErrorStruct_option {union { ErrorStruct ok; }; bool is_ok; } Erro
 
 
 
-
-
 #endif // ErrorStruct_D_H

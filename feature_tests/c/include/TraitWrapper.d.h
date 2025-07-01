@@ -19,6 +19,4 @@ typedef struct TraitWrapper_option {union { TraitWrapper ok; }; bool is_ok; } Tr
 
 
 
-
-
 #endif // TraitWrapper_D_H

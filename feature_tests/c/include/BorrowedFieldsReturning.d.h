@@ -19,6 +19,4 @@ typedef struct BorrowedFieldsReturning_option {union { BorrowedFieldsReturning o
 
 
 
-
-
 #endif // BorrowedFieldsReturning_D_H

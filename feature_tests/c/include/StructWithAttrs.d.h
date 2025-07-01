@@ -20,6 +20,4 @@ typedef struct StructWithAttrs_option {union { StructWithAttrs ok; }; bool is_ok
 
 
 
-
-
 #endif // StructWithAttrs_D_H

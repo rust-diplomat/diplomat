@@ -19,6 +19,4 @@ typedef struct CallbackWrapper_option {union { CallbackWrapper ok; }; bool is_ok
 
 
 
-
-
 #endif // CallbackWrapper_D_H

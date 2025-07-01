@@ -24,8 +24,6 @@ namespace capi {
     };
 
     typedef struct PrimitiveStruct_option {union { PrimitiveStruct ok; }; bool is_ok; } PrimitiveStruct_option;
-
-
     typedef struct DiplomatPrimitiveStructView {
       const PrimitiveStruct* data;
       size_t len;

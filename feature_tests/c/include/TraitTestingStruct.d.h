@@ -20,6 +20,4 @@ typedef struct TraitTestingStruct_option {union { TraitTestingStruct ok; }; bool
 
 
 
-
-
 #endif // TraitTestingStruct_D_H

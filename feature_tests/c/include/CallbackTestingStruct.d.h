@@ -20,6 +20,4 @@ typedef struct CallbackTestingStruct_option {union { CallbackTestingStruct ok; }
 
 
 
-
-
 #endif // CallbackTestingStruct_D_H

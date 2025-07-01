@@ -21,6 +21,4 @@ typedef struct BorrowedFields_option {union { BorrowedFields ok; }; bool is_ok; 
 
 
 
-
-
 #endif // BorrowedFields_D_H

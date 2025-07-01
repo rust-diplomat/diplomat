@@ -24,6 +24,4 @@ typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } Op
 
 
 
-
-
 #endif // OptionStruct_D_H

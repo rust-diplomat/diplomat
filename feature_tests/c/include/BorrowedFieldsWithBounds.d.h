@@ -21,6 +21,4 @@ typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds
 
 
 
-
-
 #endif // BorrowedFieldsWithBounds_D_H
