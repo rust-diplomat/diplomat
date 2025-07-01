@@ -275,7 +275,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
                 /// Get the name/initializer of the allocator needed for a particular type
                 fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
-                    if let hir::Type::Slice(ref slice) = field_ty {
+                    if let hir::Type::Slice(slice) = field_ty {
                         match slice.lifetime() {
                             Some(MaybeStatic::NonStatic(lt)) => {
                                 Some(format!(
@@ -288,7 +288,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                             }
                             _ => None
                         }
-                    } else if let &hir::Type::Struct(..) = field_ty {
+                    } else if let hir::Type::Struct(..) = field_ty {
                         Some("temp".into())
                     } else if let hir::Type::DiplomatOption(inner) = field_ty {
                         alloc_name(ty, inner)
