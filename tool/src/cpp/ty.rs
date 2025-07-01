@@ -562,7 +562,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             )
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
-                let st_name = self.gen_struct_name::<P>(st_ty);
+                let st_name = self.gen_struct_name::<hir::InputOnly>(st_ty);
                 let ret = self.formatter.fmt_borrowed_slice(
                     &st_name,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),

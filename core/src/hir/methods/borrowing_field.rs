@@ -229,8 +229,8 @@ impl<'m> BorrowingFieldVisitor<'m> {
     }
 
     /// Add a slice as a leaf during construction of a [`BorrowingFieldsVisitor`].
-    fn visit_slice<P>(
-        slice: &Slice<P>,
+    fn visit_slice(
+        slice: &Slice,
         parent: ParentId,
         method_lifetimes: &Lifetimes,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,

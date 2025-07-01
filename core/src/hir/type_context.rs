@@ -9,7 +9,6 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
-use crate::hir::TyPosition;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -407,7 +406,7 @@ impl TypeContext {
         method: &hir::Method,
     ) {
         if let hir::Type::Slice(hir::Slice::Struct(.., st)) = param_ty {
-            self.validate_primitive_slice_struct::<P>(errors, st);
+            self.validate_primitive_slice_struct(errors, st);
         };
 
         let linked = match &param_ty {
@@ -465,10 +464,10 @@ impl TypeContext {
         }
     }
 
-    fn validate_primitive_slice_struct<P: TyPosition>(
+    fn validate_primitive_slice_struct(
         &self,
         errors: &mut ErrorStore,
-        st: &P::StructPath,
+        st: &hir::StructPath,
     ) {
         let ty = self.resolve_type(st.id());
         match ty {
