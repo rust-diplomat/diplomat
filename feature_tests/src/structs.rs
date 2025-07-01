@@ -334,6 +334,7 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
@@ -350,6 +351,7 @@ pub mod ffi {
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
     #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]

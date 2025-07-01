@@ -107,28 +107,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         decl_header
     }
 
-    fn struct_is_sliceable<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Result<(), ()> {
-        for field in def.fields.iter() {
-            match &field.ty {
-                hir::Type::Primitive(..) => {}
-                hir::Type::Struct(st) => {
-                    let st = self.tcx.resolve_type(st.id());
-                    match st {
-                        TypeDef::OutStruct(st) => {
-                            self.struct_is_sliceable::<hir::OutputOnly>(st)?
-                        }
-                        TypeDef::Struct(st) => self.struct_is_sliceable::<hir::Everywhere>(st)?,
-                        _ => unreachable!(),
-                    }
-                }
-                _ => {
-                    return Err(());
-                }
-            }
-        }
-        Ok(())
-    }
-
     pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
@@ -148,7 +126,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             ty_name,
             fields,
             is_for_cpp: self.is_for_cpp,
-            is_sliceable: self.struct_is_sliceable(def).is_ok(),
+            is_sliceable: def.attrs.allowed_in_slices,
         }
         .render_into(&mut decl_header)
         .unwrap();
