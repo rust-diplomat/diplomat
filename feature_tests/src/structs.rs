@@ -468,10 +468,10 @@ pub mod ffi {
                 p.a = alternate;
                 alternate = !alternate;
 
-                p.b = (running_sum as u32).into();
+                p.b = running_sum as u32;
                 p.c = running_sum as i64;
                 p.d = (running_sum + 100.0) as isize;
-                p.e = (running_sum as u8).into();
+                p.e = running_sum as u8;
             }
         }
     }
