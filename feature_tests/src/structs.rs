@@ -300,7 +300,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
-        pub fn nested_slice(sl : &[CyclicStructA]) -> u8 {
+        pub fn nested_slice(sl: &[CyclicStructA]) -> u8 {
             let mut sum = 0;
             for a in sl.iter() {
                 sum += a.a.field;
