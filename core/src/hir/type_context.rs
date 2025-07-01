@@ -473,27 +473,24 @@ impl TypeContext {
         let ty = self.resolve_type(st.id());
         match ty {
             TypeDef::Struct(st) => {
-                for f in &st.fields {
-                    match &f.ty {
-                        hir::Type::Primitive(..) => {}
-                        hir::Type::Struct(st) => {
-                            self.validate_primitive_slice_struct::<hir::Everywhere>(errors, st);
-                        }
-                        _ => {
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?} with non-primitive field {:?}",
-                                st.name, f.name
-                            )));
-                        }
-                    }
+                if !st.attrs.allowed_in_slices {
+                    errors.push(LoweringError::Other(format!(
+                        "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                        st.name 
+                    )));
+                    return;
                 }
-            }
-            TypeDef::OutStruct(st) => {
                 for f in &st.fields {
                     match &f.ty {
                         hir::Type::Primitive(..) => {}
                         hir::Type::Struct(st) => {
-                            self.validate_primitive_slice_struct::<hir::OutputOnly>(errors, st);
+                            let st = st.resolve(self);
+                            if !st.attrs.allowed_in_slices {
+                                errors.push(LoweringError::Other(format!(
+                                    "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
+                                    st.name, f.name, f.ty
+                                )));
+                            }
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(

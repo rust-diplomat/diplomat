@@ -55,6 +55,8 @@ pub struct Attrs {
     pub demo_attrs: DemoInfo,
     /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
     pub generate_mocking_interface: bool,
+    /// From #[diplomat::attr()]. If true, will be used for generation of [`super::Slice::Struct`] types.
+    pub allowed_in_slices : bool,
 }
 
 // #region: Demo specific attributes.
@@ -370,6 +372,13 @@ impl Attrs {
                             }
                             this.generate_mocking_interface = true;
                         }
+                        "allowed_in_slices" => {
+                            if !support.struct_primitive_slices {
+                                maybe_error_unsupported(auto_found, "allowed_in_slices", backend, errors);
+                                continue;
+                            }
+                            this.allowed_in_slices = true;
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
                                 "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
@@ -475,6 +484,7 @@ impl Attrs {
             default,
             demo_attrs: _,
             generate_mocking_interface,
+            allowed_in_slices,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -833,6 +843,13 @@ impl Attrs {
                 "`generate_mocking_interface` can only be used on opaque types".to_string(),
             ));
         }
+
+        if *allowed_in_slices && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
+            // TODO: Allow OutStructs?
+            errors.push(LoweringError::Other(
+                "`allowed_in_slices` can only be used on input-only struct types.".into()
+            ));
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -868,6 +885,7 @@ impl Attrs {
             demo_attrs: Default::default(),
             // Not inherited
             generate_mocking_interface: false,
+            allowed_in_slices: false,
         }
     }
 }
