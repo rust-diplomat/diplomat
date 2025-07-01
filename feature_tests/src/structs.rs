@@ -445,6 +445,32 @@ pub mod ffi {
             w.write_char(*self.first.last().unwrap() as char).unwrap();
         }
     }
+
+    #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
+    pub struct PrimitiveStruct {
+        x : f32,
+        a : bool,
+        b : DiplomatChar,
+        c : i64,
+        d : isize,
+        e : DiplomatByte
+    }
+
+    impl PrimitiveStruct {
+        pub fn mutable_slice(a : &mut [PrimitiveStruct]) {
+            let mut running_sum = 0.0;
+            for p in a.iter_mut() {
+                running_sum += p.x;
+                p.x = running_sum;
+
+                p.b = (running_sum as u32).into();
+                p.c = running_sum as i64;
+                p.d = (running_sum + 100.0) as isize;
+                p.e = (running_sum as u8).into();
+            }
+        }
+    }
 }
 
 #[allow(unused)]
