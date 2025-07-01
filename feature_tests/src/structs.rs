@@ -460,9 +460,13 @@ pub mod ffi {
     impl PrimitiveStruct {
         pub fn mutable_slice(a : &mut [PrimitiveStruct]) {
             let mut running_sum = 0.0;
+            let mut alternate = false;
             for p in a.iter_mut() {
                 running_sum += p.x;
                 p.x = running_sum;
+
+                p.a = alternate;
+                alternate = !alternate;
 
                 p.b = (running_sum as u32).into();
                 p.c = running_sum as i64;

@@ -5,6 +5,7 @@
 #include "../include/StructArithmetic.hpp"
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/BigStructWithStuff.hpp"
+#include "../include/PrimitiveStruct.hpp"
 #include "assert.hpp"
 
 int main(int argc, char* argv[]) {
@@ -69,4 +70,26 @@ int main(int argc, char* argv[]) {
 
 
     BigStructWithStuff::assert_slice(in, 4);
+
+    PrimitiveStruct primitiveArr[] {
+        {
+            .x = 1.0f,
+            .a = true,
+            .b = 'a',
+            .c = 0,
+            .d = 0,
+            .e = 0
+        }, {
+            .x = 2.0f,
+            .a = false,
+            .b = '',
+            .c = 0,
+            .d = 0,
+            .e = 0
+        }, {}
+    };
+
+    diplomat::span<PrimitiveStruct> primitiveSpan(primitiveArr, 3);
+    PrimitiveStruct::mutable_slice(primitiveSpan);
+    simple_assert_eq("primitiveArr cumulative sum", primitiveArr[2].x, 3.0f);
 }
