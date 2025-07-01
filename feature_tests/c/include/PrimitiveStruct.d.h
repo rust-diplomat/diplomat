@@ -23,11 +23,15 @@ typedef struct PrimitiveStruct {
 typedef struct PrimitiveStruct_option {union { PrimitiveStruct ok; }; bool is_ok; } PrimitiveStruct_option;
 
 
-// TODO: Need to add Mut types.
 typedef struct DiplomatPrimitiveStructView {
   const PrimitiveStruct* data;
   size_t len;
 } DiplomatPrimitiveStructView;
+
+typedef struct DiplomatPrimitiveStructViewMut {
+  const PrimitiveStruct* data;
+  size_t len;
+} DiplomatPrimitiveStructViewMut;
 
 
 
