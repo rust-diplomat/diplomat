@@ -456,8 +456,9 @@ pub enum TypeName {
     /// If StdlibOrDiplomat::Stdlib, it's specified as `&[&DiplomatFoo]`, if StdlibOrDiplomat::Diplomat it's specified
     /// as `DiplomatSlice<&DiplomatFoo>`
     StrSlice(StringEncoding, StdlibOrDiplomat),
-    /// `&[Struct]`. Meant for structs that are only composed of primitives (or structs of primitives) that are *not* slices.
-    /// This makes custom math types like `Vec<Vector3>` easier to pass directly, and this is implemented on a per-backend basis.
+    /// `&[Struct]`. Meant for passing slices of structs where the struct's layout is known to be shared between Rust
+    /// and the backend language. Primarily meant for large lists of compound types like `Vector3f64` or `Color4i16`. 
+    /// This is implemented on a per-backend basis.
     PrimitiveStructSlice(Option<(Lifetime, Mutability)>, Box<TypeName>),
     /// The `()` type.
     Unit,
