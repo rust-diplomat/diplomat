@@ -464,7 +464,11 @@ impl TypeContext {
         }
     }
 
-    fn validate_primitive_slice_struct<P: super::TyPosition>(&self, errors: &mut ErrorStore, st: &P::StructPath) {
+    fn validate_primitive_slice_struct<P: super::TyPosition>(
+        &self,
+        errors: &mut ErrorStore,
+        st: &P::StructPath,
+    ) {
         let ty = self.resolve_type(st.id());
         match ty {
             TypeDef::Struct(st) => {

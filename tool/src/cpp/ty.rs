@@ -820,12 +820,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let mt = b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable);
                 let st_name = self.formatter.fmt_type_name(st_ty.id());
-                let span = self.formatter.fmt_borrowed_slice(
-                    &st_name,
-                    mt,
-                );
-                format!("{span}(reinterpret_cast<{}{st_name}*>({var_name}.data), {var_name}.len)",  
-                if mt.is_mutable() { "" } else { "const " }).into()
+                let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
+                format!(
+                    "{span}(reinterpret_cast<{}{st_name}*>({var_name}.data), {var_name}.len)",
+                    if mt.is_mutable() { "" } else { "const " }
+                )
+                .into()
             }
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());

@@ -1316,7 +1316,13 @@ impl<'ast> LoweringContext<'ast> {
                 match &type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
                         ast::CustomType::Struct(..) => {
-                            let inner = self.lower_out_type(type_name, ltl, in_path, in_struct, in_result_option)?;
+                            let inner = self.lower_out_type(
+                                type_name,
+                                ltl,
+                                in_path,
+                                in_struct,
+                                in_result_option,
+                            )?;
                             match inner {
                                 Type::Struct(st) => {
                                     Ok(Type::Slice(Slice::Struct(new_lifetime, st)))

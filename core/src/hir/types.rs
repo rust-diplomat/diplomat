@@ -201,7 +201,7 @@ impl SelfType {
     }
 }
 
-impl<P : TyPosition> Slice<P> {
+impl<P: TyPosition> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {

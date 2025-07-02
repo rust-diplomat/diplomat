@@ -498,12 +498,12 @@ pub mod ffi {
             Box::new(Self(Vec::new()))
         }
 
-        #[diplomat::attr(nanobind, rename="append")]
-        pub fn push(&mut self, value : PrimitiveStruct) {
+        #[diplomat::attr(nanobind, rename = "append")]
+        pub fn push(&mut self, value: PrimitiveStruct) {
             self.0.push(value);
         }
 
-        #[diplomat::attr(nanobind, rename="__len__")]
+        #[diplomat::attr(nanobind, rename = "__len__")]
         pub fn len(&self) -> usize {
             self.0.len()
         }
@@ -512,14 +512,14 @@ pub mod ffi {
         pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
             &self.0
         }
-        
+
         #[diplomat::attr(auto, getter = "asSliceMut")]
         pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
             &mut self.0
         }
 
-        #[diplomat::attr(nanobind, rename="__get__")]
-        pub fn get(&self, idx : usize) -> PrimitiveStruct {
+        #[diplomat::attr(nanobind, rename = "__get__")]
+        pub fn get(&self, idx: usize) -> PrimitiveStruct {
             self.0[idx].clone()
         }
     }

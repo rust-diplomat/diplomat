@@ -996,7 +996,11 @@ returnVal.option() ?: return null
         .into()
     }
 
-    fn gen_cleanup<P: TyPosition>(&self, param_name: Cow<'cx, str>, slice: Slice<P>) -> Option<Cow<'cx, str>> {
+    fn gen_cleanup<P: TyPosition>(
+        &self,
+        param_name: Cow<'cx, str>,
+        slice: Slice<P>,
+    ) -> Option<Cow<'cx, str>> {
         match slice {
             Slice::Str(Some(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
