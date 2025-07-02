@@ -1298,11 +1298,46 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::PrimitiveStructSlice(..) => {
-                self.errors.push(LoweringError::Other(
-                    "Primitive struct slices cannot be returned".into(),
-                ));
-                Err(())
+            ast::TypeName::PrimitiveStructSlice(ltmt, type_name) => {
+                let new_lifetime = ltmt
+                    .as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
+
+                if let Some(b) = new_lifetime {
+                    if let super::MaybeStatic::Static = b.lifetime {
+                        if !self.attr_validator.attrs_supported().static_slices {
+                            self.errors.push(LoweringError::Other(
+                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                            ));
+                        }
+                    }
+                }
+
+                match &type_name.as_ref() {
+                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
+                        ast::CustomType::Struct(..) => {
+                            let inner = self.lower_out_type(type_name, ltl, in_path, in_struct, in_result_option)?;
+                            match inner {
+                                Type::Struct(st) => {
+                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        _ => {
+                            self.errors.push(LoweringError::Other(
+                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
+                                ));
+                            Err(())
+                        }
+                    },
+                    _ => {
+                        self.errors.push(LoweringError::Other(format!(
+                            "Cannot make a slice from type {type_name}"
+                        )));
+                        Err(())
+                    }
+                }
             }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
