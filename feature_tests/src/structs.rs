@@ -299,6 +299,15 @@ pub mod ffi {
             out.write_str(&self.a.field.to_string()).unwrap();
         }
 
+        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        pub fn nested_slice(sl: &[CyclicStructA]) -> u8 {
+            let mut sum = 0;
+            for a in sl.iter() {
+                sum += a.a.field;
+            }
+            sum
+        }
+
         // For demo gen: tests having the same variables in the namespace
         pub fn double_cyclic_out(self, cyclic_struct_a: Self, out: &mut DiplomatWrite) {
             out.write_fmt(format_args!(
@@ -336,6 +345,7 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     #[diplomat::attr(not(any(js, supports=struct_primitive_slices)), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
@@ -351,7 +361,8 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
-    #[diplomat::attr(not(js), disable)]
+    #[diplomat::attr(not(any(js, supports=struct_primitive_slices)), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]
@@ -370,6 +381,14 @@ pub mod ffi {
             self.fourth.assert_value();
             assert_eq!(self.fifth, 99);
             assert_eq!(extra_val, 853);
+        }
+
+        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        pub fn assert_slice(slice: &[BigStructWithStuff], second_value: u16) {
+            assert!(slice.len() > 1);
+            let mut i = slice.iter();
+            i.next();
+            assert_eq!(i.next().unwrap().second, second_value)
         }
     }
 
@@ -435,6 +454,36 @@ pub mod ffi {
     impl<'a> StructWithSlices<'a> {
         pub fn return_last(self, w: &mut DiplomatWrite) {
             w.write_char(*self.first.last().unwrap() as char).unwrap();
+        }
+    }
+
+    #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+    #[diplomat::attr(auto, allowed_in_slices)]
+    pub struct PrimitiveStruct {
+        x: f32,
+        a: bool,
+        b: DiplomatChar,
+        c: i64,
+        d: isize,
+        e: DiplomatByte,
+    }
+
+    impl PrimitiveStruct {
+        pub fn mutable_slice(a: &mut [PrimitiveStruct]) {
+            let mut running_sum = 0.0;
+            let mut alternate = false;
+            for p in a.iter_mut() {
+                running_sum += p.x;
+                p.x = running_sum;
+
+                p.a = alternate;
+                alternate = !alternate;
+
+                p.b = running_sum as u32;
+                p.c = running_sum as i64;
+                p.d = (running_sum + 100.0) as isize;
+                p.e = running_sum as u8;
+            }
         }
     }
 }
