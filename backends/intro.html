@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Making Custom Functions - The Diplomat Book</title>
+        <title>Backend specific documentation - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -166,75 +166,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="making-custom-functions"><a class="header" href="#making-custom-functions">Making Custom Functions</a></h1>
-<h2 id="what-is-a-custom-function"><a class="header" href="#what-is-a-custom-function">What is a custom function?</a></h2>
-<p>demo_gen tends towards automagical configuration. demo_gen will do its best to take Rust functions and convert them into JS output.</p>
-<p>But there arise situations where we want to create our own custom Javascript functions to demonstrate our library's capabilities to the user, then add them to demo_gen's output. This may be the case if you want to demonstrate functionality that is more involved than demo_gen's automagical work.</p>
-<h3 id="example"><a class="header" href="#example">Example</a></h3>
-<p>Let's look at the <a href="quickstart.html">quickstart</a> repository for an example.</p>
-<p>We only have one function exposed: <code>get_add_str(left : u32, right: u32)</code>.</p>
-<p>What if we have variables <code>a</code>, <code>b</code>, and <code>c</code>, and we want to show the user the results of calling:</p>
-<p><code>get_add_str(a, b)</code> and <code>get_add_str(b, c)</code>?</p>
-<p>We can do this without adding a new binding, through the use of a custom Javascript function.</p>
-<h2 id="diplomatdemocustom_func"><a class="header" href="#diplomatdemocustom_func">#[diplomat::demo(custom_func="...")]</a></h2>
-<p><code>#[diplomat::demo(custom_func="filename.mjs")]</code> can be added above any <code>struct</code> definition. demo_gen will search for files relative to <code>lib.rs</code>, and add the contents of <code>filename.mjs</code> to its output.</p>
-<p>Then demo_gen will import the default export of <code>filename.mjs</code>, and append it to the list of <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md#step-two-constructing-renderinfo">RenderInfo</a> termini.</p>
-<h3 id="example-1"><a class="header" href="#example-1">Example</a></h3>
-<p>So, first we create a file called <code>adder_custom.mjs</code> in the same folder as <code>adder_bindings/src/lib.rs</code>:</p>
-<pre><code class="language-js">// adder_bindings/src/adder_custom.mjs
-import { lib } from "./index.mjs";
-export default {
-    "AddThreeVariables": {
-        func: (a, b, c) =&gt; { return lib.AddResult.getAddStr(a, b) + " and " + lib.AddResult.getAddStr(b, c); },
-        funcName: "Add a + b, b + c",
-        parameters: [
-            {
-                name: "a",
-                type: "number"
-            },
-            {
-                name: "b",
-                type: "number"
-            },
-            {
-                name: "c",
-                type: "number"
-            }
-        ]
-    }
-}
-</code></pre>
-<p>Then we make sure to link <code>adder_custom.mjs</code> in <code>lib.rs</code>:</p>
-<pre><code class="language-rs">// adder_bindings/src/lib.rs
-#[diplomat::bridge]
-mod ffi {
-    use std::fmt::Write;
-
-	#[diplomat::opaque]
-	#[diplomat::rust_link(basic_adder, Mod)]
-    #[diplomat::demo(custom_func="adder_custom.mjs")]
-	pub struct AddResult;
-
-	impl AddResult {
-		pub fn get_add_str(left : u32, right : u32, write: &amp;mut DiplomatWrite) {
-			write.write_str(&amp;format!("{}", basic_adder::add(left, right))).unwrap();
-			write.flush();
-		}
-	}
-}
-</code></pre>
-<p>And our exported object is then added to <code>RenderInfo</code>s list of render termini, and is evaluated by the renderer accordingly!</p>
-<p>If you <a href="https://rust-diplomat.github.io/diplomat/demo_gen/quickstart.html#getting-started">regenerate the bindings and start the web server</a>, you should see <code>Add a + b, b + c</code> in the list of functions.</p>
+                        <p>The different backends have specific considerations or configurations. Check below
+to see what is necessary. Documentation for more backends will be added in the future.</p>
+<ul>
+<li><a href="kotlin.html">Kotlin</a></li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../demo_gen/custom_renderer.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../demo_gen/custom_functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../backends/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../backends/kotlin.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -244,11 +190,11 @@ mod ffi {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../demo_gen/custom_renderer.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../demo_gen/custom_functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../backends/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../backends/kotlin.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

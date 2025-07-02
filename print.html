@@ -186,7 +186,7 @@
 </ul>
 </li>
 <li>Dart</li>
-<li>Kotlin (using JNA)</li>
+<li><a href="./backends/kotlin.html">Kotlin (using JNA)</a></li>
 <li>Python via <a href="https://github.com/wjakob/nanobind">Nanobind</a> (maintained by <a href="https://www.zeromatter.com/">Zeromatter</a>)</li>
 </ul>
 <p>There is work in progress for a <a href="https://github.com/rust-diplomat/diplomat/issues/144">Java backend</a> (using Panama). We used to have a .NET backend but it was removed in a refactor, it may get added again.</p>
@@ -1649,6 +1649,68 @@ mod ffi {
 </code></pre>
 <p>And our exported object is then added to <code>RenderInfo</code>s list of render termini, and is evaluated by the renderer accordingly!</p>
 <p>If you <a href="https://rust-diplomat.github.io/diplomat/demo_gen/quickstart.html#getting-started">regenerate the bindings and start the web server</a>, you should see <code>Add a + b, b + c</code> in the list of functions.</p>
+<div style="break-before: page; page-break-before: always;"></div><p>The different backends have specific considerations or configurations. Check below
+to see what is necessary. Documentation for more backends will be added in the future.</p>
+<ul>
+<li><a href="backends/kotlin.html">Kotlin</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="kotlin-backend"><a class="header" href="#kotlin-backend">Kotlin Backend</a></h1>
+<p>The kotlin backend uses JNA to wrap the ABI types from diplomat into an ergonomic library for use in the JVM.
+The backend ensures safe sharing and disposal of memory, but it is still experimental so bugs may exist.</p>
+<p>To run the kotlin backend you need to provide some configuration</p>
+<pre><code class="language-sh">diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} --config {CONFIG_OVERRIDE_1} --config {CONFIG_OVERRIDE_2} kotlin {OUTPUT_PATH}
+</code></pre>
+<p>The configuration consists of three parts</p>
+<ul>
+<li><code>lib-name</code> - the name of the library. This can be different to the rust library name, but native access will
+look for a file with the name <code>lib{lib-name}.so</code> (linux) or <code>lib{lib-name}.dylib</code> (macos) or <code>{lib-name}.dll</code> (windows)
+If you include this in <code>src/main/resources</code> then the library should be packaged automatically when you publish
+the kotlin library. With the appropriate directory structure you can include binaries for multple operating
+systems and architectures.</li>
+<li><code>kotlin.domain</code> - this is the group of the package, e.g. <code>io.apache</code>.</li>
+<li><code>kotlin.use_finalizers_not_cleaners</code> - An optional binary value. By default kotlin uses the Cleaner API from
+Java 9 onwards for cleaning up the native memory alloated by the diplomat library. It can, however, be
+configured to use the finalizer api from Java 8 and prior.</li>
+<li><code>kotlin.scaffold</code> - an optional binary value. If it is set to <code>true</code>, <code>diplomat-tool</code> will scaffold a project
+for you with configuration corresponding to your group and library name.</li>
+</ul>
+<p>Diplomat always create the following structure in the <code>OUTPUT_PATH</code></p>
+<pre><code>├── src 
+│   └── main
+│       └── kotlin
+│           └──{group-tld}
+│               └──{group-name}
+│                   └──{lib-name} 
+│                       ├── GeneratedFile.kt
+│                       ├── ...
+│                       ├── Lib.kt
+│                       ├── ...
+</code></pre>
+<p>The <code>Lib.kt</code> file includes some utility methods that the library uses, as well as a dedicated cleaner.
+If you choose <code>scaffold</code> then it will also generate a couple of config files</p>
+<pre><code>├── src 
+│   └── ...
+├── build.gradle.kts
+├── setttings.gradle.kts
+</code></pre>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<p>The best way to learn to use the kotlin backend is first understand diplomat generally by reading this <a href="backends/../SUMMARY.html">book</a>.
+Then look at the <code>example</code> and <code>feature_tests</code> directories in the diplomat project. Then you can look at the tests
+for how to use them</p>
+<ul>
+<li>Feature tests: <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
+<li>Example: <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
+</ul>
+<h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
+<p>The kotlin backend supports passing kotlin functions and closures as callbacks to native code. To do this you need to add the
+enable the <code>jvm-callback-support</code> feature when you add  the diplomat runtime to your project. For examples on how to use them
+look in the <code>feature_tests</code> directory of the diplomat project. This is a bit conceptually different to the rest of diplomat
+so here some specific examples</p>
+<ul>
+<li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/src/callbacks.rs">rust code</a></li>
+<li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/main/kotlin/dev/diplomattest/somelib/CallbackWrapper.kt">generated kotlin code</a></li>
+<li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib/CallbackWrapperTest.kt">example usage</a></li>
+</ul>
 
                     </main>
 
