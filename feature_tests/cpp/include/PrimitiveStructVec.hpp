@@ -27,6 +27,10 @@ namespace capi {
 
     diplomat::capi::DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const diplomat::capi::PrimitiveStructVec* self);
 
+    diplomat::capi::DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(diplomat::capi::PrimitiveStructVec* self);
+
+    diplomat::capi::PrimitiveStruct PrimitiveStructVec_get(const diplomat::capi::PrimitiveStructVec* self, size_t idx);
+
     void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
     } // extern "C"
@@ -51,6 +55,17 @@ inline size_t PrimitiveStructVec::len() const {
 inline diplomat::span<const PrimitiveStruct> PrimitiveStructVec::as_slice() const {
   auto result = diplomat::capi::PrimitiveStructVec_as_slice(this->AsFFI());
   return diplomat::span<const PrimitiveStruct>(reinterpret_cast<const PrimitiveStruct*>(result.data), result.len);
+}
+
+inline diplomat::span<PrimitiveStruct> PrimitiveStructVec::as_slice_mut() {
+  auto result = diplomat::capi::PrimitiveStructVec_as_slice_mut(this->AsFFI());
+  return diplomat::span<PrimitiveStruct>(reinterpret_cast<PrimitiveStruct*>(result.data), result.len);
+}
+
+inline PrimitiveStruct PrimitiveStructVec::get(size_t idx) const {
+  auto result = diplomat::capi::PrimitiveStructVec_get(this->AsFFI(),
+    idx);
+  return PrimitiveStruct::FromFFI(result);
 }
 
 inline const diplomat::capi::PrimitiveStructVec* PrimitiveStructVec::AsFFI() const {

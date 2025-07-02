@@ -27,7 +27,7 @@ namespace capi {
     } DiplomatCyclicStructBView;
 
     typedef struct DiplomatCyclicStructBViewMut {
-      const CyclicStructB* data;
+      CyclicStructB* data;
       size_t len;
     } DiplomatCyclicStructBViewMut;
 } // namespace capi

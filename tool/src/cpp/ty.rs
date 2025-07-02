@@ -670,7 +670,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
                 "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),
-            Type::Slice(Slice::Struct(_, ref st)) => format!("{{reinterpret_cast<const diplomat::capi::{}*>({cpp_name}.data()), {cpp_name}.size()}}",
+            Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}diplomat::capi::{}*>({cpp_name}.data()), {cpp_name}.size()}}",
+                if b.map(|b| b.mutability).unwrap_or(Mutability::Mutable).is_mutable() { "" } else { "const " },
                 self.formatter.fmt_type_name(st.id())
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),

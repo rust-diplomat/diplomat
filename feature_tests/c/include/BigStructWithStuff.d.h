@@ -27,7 +27,7 @@ typedef struct DiplomatBigStructWithStuffView {
 } DiplomatBigStructWithStuffView;
 
 typedef struct DiplomatBigStructWithStuffViewMut {
-  const BigStructWithStuff* data;
+  BigStructWithStuff* data;
   size_t len;
 } DiplomatBigStructWithStuffViewMut;
 

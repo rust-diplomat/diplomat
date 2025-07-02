@@ -25,7 +25,7 @@ namespace capi {
 } // namespace
 
 inline void PrimitiveStruct::mutable_slice(diplomat::span<PrimitiveStruct> a) {
-  diplomat::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<const diplomat::capi::PrimitiveStruct*>(a.data()), a.size()});
+  diplomat::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<diplomat::capi::PrimitiveStruct*>(a.data()), a.size()});
 }
 
 

@@ -26,7 +26,7 @@ namespace capi {
     } DiplomatScalarPairWithPaddingView;
 
     typedef struct DiplomatScalarPairWithPaddingViewMut {
-      const ScalarPairWithPadding* data;
+      ScalarPairWithPadding* data;
       size_t len;
     } DiplomatScalarPairWithPaddingViewMut;
 } // namespace capi

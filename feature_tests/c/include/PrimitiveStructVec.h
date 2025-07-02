@@ -24,6 +24,10 @@ size_t PrimitiveStructVec_len(const PrimitiveStructVec* self);
 
 DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const PrimitiveStructVec* self);
 
+DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(PrimitiveStructVec* self);
+
+PrimitiveStruct PrimitiveStructVec_get(const PrimitiveStructVec* self, size_t idx);
+
 void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
 

@@ -459,6 +459,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
     #[diplomat::attr(auto, allowed_in_slices)]
+    #[derive(Clone)]
     pub struct PrimitiveStruct {
         x: f32,
         a: bool,
@@ -510,6 +511,16 @@ pub mod ffi {
         #[diplomat::attr(auto, getter = "asSlice")]
         pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
             &self.0
+        }
+        
+        #[diplomat::attr(auto, getter = "asSliceMut")]
+        pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
+            &mut self.0
+        }
+
+        #[diplomat::attr(nanobind, rename="__get__")]
+        pub fn get(&self, idx : usize) -> PrimitiveStruct {
+            self.0[idx].clone()
         }
     }
 }

@@ -30,7 +30,7 @@ namespace capi {
     } DiplomatPrimitiveStructView;
 
     typedef struct DiplomatPrimitiveStructViewMut {
-      const PrimitiveStruct* data;
+      PrimitiveStruct* data;
       size_t len;
     } DiplomatPrimitiveStructViewMut;
 } // namespace capi

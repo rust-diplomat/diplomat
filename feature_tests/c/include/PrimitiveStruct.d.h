@@ -27,7 +27,7 @@ typedef struct DiplomatPrimitiveStructView {
 } DiplomatPrimitiveStructView;
 
 typedef struct DiplomatPrimitiveStructViewMut {
-  const PrimitiveStruct* data;
+  PrimitiveStruct* data;
   size_t len;
 } DiplomatPrimitiveStructViewMut;
 

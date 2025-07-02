@@ -23,7 +23,7 @@ typedef struct DiplomatCyclicStructAView {
 } DiplomatCyclicStructAView;
 
 typedef struct DiplomatCyclicStructAViewMut {
-  const CyclicStructA* data;
+  CyclicStructA* data;
   size_t len;
 } DiplomatCyclicStructAViewMut;
 
