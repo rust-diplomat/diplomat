@@ -202,7 +202,7 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test  --warning-mode all --stacktrace --debug
+exec --fail-on-error gradle test  --warning-mode all 
 '''
 
 [tasks.test-nanobind-feature]
