@@ -5,7 +5,7 @@
 #include "../include/StructArithmetic.hpp"
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/BigStructWithStuff.hpp"
-#include "../include/PrimitiveStruct.hpp"
+#include "../include/PrimitiveStructVec.hpp"
 #include "../include/CyclicStructA.hpp"
 #include "assert.hpp"
 
