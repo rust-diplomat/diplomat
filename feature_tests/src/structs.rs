@@ -486,6 +486,32 @@ pub mod ffi {
             }
         }
     }
+
+    #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+    #[diplomat::opaque]
+    pub struct PrimitiveStructVec(Vec<PrimitiveStruct>);
+
+    impl PrimitiveStructVec {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> Box<Self> {
+            Box::new(Self(Vec::new()))
+        }
+
+        #[diplomat::attr(nanobind, rename="append")]
+        pub fn push(&mut self, value : PrimitiveStruct) {
+            self.0.push(value);
+        }
+
+        #[diplomat::attr(nanobind, rename="__len__")]
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
+        #[diplomat::attr(auto, getter = "asSlice")]
+        pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
+            &self.0
+        }
+    }
 }
 
 #[allow(unused)]

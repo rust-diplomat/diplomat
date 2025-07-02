@@ -72,26 +72,26 @@ int main(int argc, char* argv[]) {
 
     BigStructWithStuff::assert_slice(in, 4);
 
-    PrimitiveStruct primitive_arr[] {
-        {
+    PrimitiveStructVec primitive_vec();
+    primitive_vec.push({
             .x = 1.0f,
             .a = true,
             .b = 'a',
             .c = 0,
             .d = 0,
             .e = 0
-        }, {
-            .x = 2.0f,
-            .a = false,
-            .b = '\0',
-            .c = 0,
-            .d = 0,
-            .e = 0
-        }, {.x=-1.0f}
-    };
+        });
+    primitive_vec.push({
+        .x = 2.0f,
+        .a = false,
+        .b = '\0',
+        .c = 0,
+        .d = 0,
+        .e = 0
+    });
+    primitive_vec.push({.x = -1.0f});
 
-    diplomat::span<PrimitiveStruct> primitive_span(primitive_arr, 3);
-    PrimitiveStruct::mutable_slice(primitive_span);
+    PrimitiveStruct::mutable_slice(primitive_vec.asSlice);
     simple_assert_eq("primitiveArr cumulative sum", primitive_arr[2].x, 2.0f);
     simple_assert_eq("primitiveArr alternating bool", primitive_arr[0].a, false);
     simple_assert_eq("primitiveArr alternating bool 2", primitive_arr[1].a, true);
