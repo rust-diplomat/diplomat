@@ -18,11 +18,12 @@ def test_structs():
 
     assert somelib.StructArithmetic.ORIGIN.x == 0
 
-    sl = somelib.PrimitiveStructView()
+    sl = somelib.PrimitiveStructVec()
     sl.append(somelib.PrimitiveStruct(1, True, 'c', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(2, False, ' ', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(-1, False, ' ', 0, 0, 0))
-    sl = somelib.PrimitiveStruct.mutable_slice(sl.as_mut_slice())
+    print(sl.asSliceMut)
+    somelib.PrimitiveStruct.mutable_slice(sl.asSliceMut)
     assert sl[0].x == 1
     assert sl[1].x == 3
     assert sl[2].x == 2
