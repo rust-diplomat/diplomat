@@ -1,0 +1,20 @@
+#include "diplomat_nanobind_common.hpp"
+
+
+#include "BigStructWithStuff.hpp"
+#include "ScalarPairWithPadding.hpp"
+
+
+void add_BigStructWithStuff_binding(nb::handle mod) {
+    nb::class_<BigStructWithStuff>(mod, "BigStructWithStuff")
+        .def(nb::init<>())
+        .def(nb::init<uint8_t, uint16_t, uint16_t, ScalarPairWithPadding, uint8_t>(), "first"_a.none(),  "second"_a.none(),  "third"_a.none(),  "fourth"_a.none(),  "fifth"_a.none())
+        .def_rw("first", &BigStructWithStuff::first)
+        .def_rw("second", &BigStructWithStuff::second)
+        .def_rw("third", &BigStructWithStuff::third)
+        .def_rw("fourth", &BigStructWithStuff::fourth)
+        .def_rw("fifth", &BigStructWithStuff::fifth)
+    	.def_static("assert_slice", &BigStructWithStuff::assert_slice, "slice"_a, "second_value"_a)
+    	.def("assert_value", &BigStructWithStuff::assert_value, "extra_val"_a);
+}
+

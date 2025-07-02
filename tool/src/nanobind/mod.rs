@@ -49,6 +49,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.callbacks = true;
     a.traits = false;
     a.generate_mocking_interface = false;
+    a.struct_primitive_slices = true;
 
     a
 }
