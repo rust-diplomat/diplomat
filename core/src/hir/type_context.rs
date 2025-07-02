@@ -1031,13 +1031,14 @@ mod tests {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::out]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
                 }
 
                 impl Foo {
-                    pub fn returns_slice() -> &[Foo] {
+                    pub fn returns_slice<'a>() -> &'a [Foo] {
                         todo!()
                     }
                 }

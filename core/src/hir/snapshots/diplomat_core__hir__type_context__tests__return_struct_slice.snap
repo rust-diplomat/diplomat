@@ -2,4 +2,4 @@
 source: core/src/hir/type_context.rs
 expression: output
 ---
-Lowering error in Foo::returns_slice: Primitive struct slices cannot be returned
+Lowering error in Foo::returns_slice: `allowed_in_slices` can only be used on non-output-only struct types.
