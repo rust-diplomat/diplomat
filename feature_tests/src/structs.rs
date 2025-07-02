@@ -274,12 +274,10 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
-    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
-    #[diplomat::attr(auto, allowed_in_slices)]
     pub struct CyclicStructB {
         pub field: u8,
     }
@@ -335,8 +333,7 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
-    #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(not(js), disable)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
@@ -352,8 +349,7 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
-    #[diplomat::attr(all(not(js), not(supports=struct_primitive_slices)), disable)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(not(js), disable)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]
