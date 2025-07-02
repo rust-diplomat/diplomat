@@ -1104,7 +1104,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         }
     }
 
-    fn gen_slice_element_ty(&mut self, slice: &hir::Slice) -> Cow<'cx, str> {
+    fn gen_slice_element_ty<P: TyPosition>(&mut self, slice: &hir::Slice<P>) -> Cow<'cx, str> {
         match slice {
             hir::Slice::Str(_, encoding) => {
                 self.formatter.fmt_string_element_as_ffi(*encoding).into()
@@ -1121,7 +1121,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
     }
 
     /// Generates a Dart helper class for a slice type.
-    fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
+    fn gen_slice<P: TyPosition>(&mut self, slice: &hir::Slice<P>) -> &'static str {
         let slice_ty = self.formatter.fmt_slice_type(slice);
 
         if self.helper_classes.contains_key(slice_ty) {
@@ -1205,7 +1205,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U32)) => format!("this[i].clamp(0, {})", u32::MAX).into(),
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U64)) => format!("this[i].clamp(0, {})", u64::MAX).into(),
                         hir::Slice::Strs(e) => {
-                            self.gen_slice(&hir::Slice::Str(None, *e));
+                            self.gen_slice::<P>(&hir::Slice::Str(None, *e));
                             format!("this[i].{}(alloc)", self.formatter.fmt_str_alloc_in(*e)).into()
                         },
                         _ => unreachable!("unknown AST/HIR variant"),

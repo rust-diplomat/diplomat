@@ -22,7 +22,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     ImplTrait(P::TraitPath),
     Enum(EnumPath),
-    Slice(Slice),
+    Slice(Slice<P>),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
     /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
     ///
@@ -48,7 +48,7 @@ pub enum SelfType {
 
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
-pub enum Slice<P: TyPosition = super::InputOnly> {
+pub enum Slice<P: TyPosition> {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
     ///
     /// Owned slices are useful for garbage-collected languages that have to
@@ -201,7 +201,7 @@ impl SelfType {
     }
 }
 
-impl Slice {
+impl<P : TyPosition> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {

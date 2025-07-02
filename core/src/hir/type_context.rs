@@ -406,7 +406,7 @@ impl TypeContext {
         method: &hir::Method,
     ) {
         if let hir::Type::Slice(hir::Slice::Struct(.., st)) = param_ty {
-            self.validate_primitive_slice_struct(errors, st);
+            self.validate_primitive_slice_struct::<P>(errors, st);
         };
 
         let linked = match &param_ty {
@@ -464,7 +464,7 @@ impl TypeContext {
         }
     }
 
-    fn validate_primitive_slice_struct(&self, errors: &mut ErrorStore, st: &hir::StructPath) {
+    fn validate_primitive_slice_struct<P: super::TyPosition>(&self, errors: &mut ErrorStore, st: &P::StructPath) {
         let ty = self.resolve_type(st.id());
         match ty {
             TypeDef::Struct(st) => {

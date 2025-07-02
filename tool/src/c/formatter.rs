@@ -253,10 +253,10 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
-    pub fn fmt_struct_slice_name(
+    pub fn fmt_struct_slice_name<P: TyPosition>(
         &self,
         borrow: Option<hir::Borrow>,
-        st_ty: &hir::StructPath,
+        st_ty: &P::StructPath,
     ) -> Cow<'tcx, str> {
         let st_name = self.fmt_type_name(hir::StructPathLike::id(st_ty));
         let mtb = match borrow {
