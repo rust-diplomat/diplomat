@@ -6,6 +6,9 @@
 
 
 void add_CyclicStructA_binding(nb::handle mod) {
+    
+    NB_MAKE_OPAQUE(std::vector<CyclicStructA>)
+    nb::bind_vector<std::vector<CyclicStructA>>(mod, "CyclicStructASlice"); 
     nb::class_<CyclicStructA>(mod, "CyclicStructA")
         .def(nb::init<>())
         .def(nb::init<CyclicStructB>(), "a"_a.none())

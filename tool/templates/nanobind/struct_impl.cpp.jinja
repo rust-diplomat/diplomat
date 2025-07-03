@@ -1,5 +1,10 @@
 {%- let is_self_opaque = false -%}
 
+{%- if is_sliceable %}
+NB_MAKE_OPAQUE(std::vector<{{type_name}}>)
+nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name}}Slice"); 
+{% endif -%}
+
 nb::class_<{{type_name}}>(mod, "{{type_name_unnamespaced}}")
     {%- if !has_constructor %}
     .def(nb::init<>())

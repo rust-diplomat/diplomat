@@ -188,6 +188,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
+            is_sliceable: bool,
         }
 
         ImplTemplate {
@@ -201,6 +202,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     Some(hir::SpecialMethod::Constructor)
                 )
             }),
+            is_sliceable: def.attrs.allowed_in_slices
         }
         .render_into(out)
         .unwrap();

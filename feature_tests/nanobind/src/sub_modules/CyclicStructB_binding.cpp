@@ -5,6 +5,9 @@
 
 
 void add_CyclicStructB_binding(nb::handle mod) {
+    
+    NB_MAKE_OPAQUE(std::vector<CyclicStructB>)
+    nb::bind_vector<std::vector<CyclicStructB>>(mod, "CyclicStructBSlice"); 
     nb::class_<CyclicStructB>(mod, "CyclicStructB")
         .def(nb::init<>())
         .def(nb::init<uint8_t>(), "field"_a.none())

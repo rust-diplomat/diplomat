@@ -5,6 +5,9 @@
 
 
 void add_PrimitiveStruct_binding(nb::handle mod) {
+    
+    NB_MAKE_OPAQUE(std::vector<PrimitiveStruct>)
+    nb::bind_vector<std::vector<PrimitiveStruct>>(mod, "PrimitiveStructSlice"); 
     nb::class_<PrimitiveStruct>(mod, "PrimitiveStruct")
         .def(nb::init<>())
         .def(nb::init<float, bool, char32_t, int64_t, intptr_t, uint8_t>(), "x"_a.none(),  "a"_a.none(),  "b"_a.none(),  "c"_a.none(),  "d"_a.none(),  "e"_a.none())
