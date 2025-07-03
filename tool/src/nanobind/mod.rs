@@ -139,14 +139,16 @@ pub(crate) fn run<'cx>(
             namespace: String,
             unqualified_type: String,
             body: String,
+            header: String,
         }
 
         let mut body = String::default();
+        let mut header = String::default();
         match ty {
             hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
             hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body, &mut header),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body, &mut header),
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
@@ -156,6 +158,7 @@ pub(crate) fn run<'cx>(
             namespace: formatter.fmt_namespaces(id).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
+            header,
         };
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
@@ -404,7 +407,8 @@ mod test {
         };
 
         let mut struct_gen = String::new();
-        context.gen_struct_def(struct_def, type_id, &mut struct_gen);
+        let mut header = String::new();
+        context.gen_struct_def(struct_def, type_id, &mut struct_gen, &mut header);
         insta::assert_snapshot!(struct_gen)
     }
 }
