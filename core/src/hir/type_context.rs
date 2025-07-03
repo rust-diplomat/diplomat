@@ -353,6 +353,9 @@ impl TypeContext {
         // Lifetime validity check
         for (_id, ty) in self.all_types() {
             errors.set_item(ty.name().as_str());
+            
+            self.validate_type_def(errors, ty);
+
             for method in ty.methods() {
                 errors.set_subitem(method.name.as_str());
 
@@ -405,9 +408,7 @@ impl TypeContext {
         param_ty: &hir::Type<P>,
         method: &hir::Method,
     ) {
-        if let hir::Type::Slice(hir::Slice::Struct(.., st)) = param_ty {
-            self.validate_primitive_slice_struct::<P>(errors, st);
-        };
+        self.validate_ty(errors, param_ty);
 
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
@@ -464,51 +465,75 @@ impl TypeContext {
         }
     }
 
-    fn validate_primitive_slice_struct<P: super::TyPosition>(
-        &self,
-        errors: &mut ErrorStore,
-        st: &P::StructPath,
-    ) {
-        let ty = self.resolve_type(st.id());
-        match ty {
+    fn validate_type_def(&self, errors: &mut ErrorStore, def : TypeDef) {
+        match def {
             TypeDef::Struct(st) => {
-                if !st.attrs.allowed_in_slices {
-                    errors.push(LoweringError::Other(format!(
-                        "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
-                        st.name
-                    )));
-                    return;
-                }
+                self.validate_struct(errors, st);
+            }
+            _ => {}
+        }
+    }
 
-                if st.lifetimes.num_lifetimes() > 0 {
-                    errors.push(LoweringError::Other(format!(
-                        "Struct {:?} cannot have any lifetimes if it is within a slice.",
-                        st.name
-                    )));
-                }
+    fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st : &StructDef<P>) {
+        if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
+            errors.push(LoweringError::Other(format!(
+                "Struct {:?} cannot have any lifetimes if it is allowed within a slice.",
+                st.name
+            )));
+        }
 
-                for f in &st.fields {
-                    match &f.ty {
-                        hir::Type::Primitive(..) => {}
-                        hir::Type::Struct(f_st) => {
-                            let f_st = f_st.resolve(self);
-                            if !f_st.attrs.allowed_in_slices {
-                                errors.push(LoweringError::Other(format!(
-                                    "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
-                                    st.name, f.name, f_st.name
-                                )));
+        for f in &st.fields {
+            self.validate_ty(errors, &f.ty);
+            if st.attrs.allowed_in_slices {
+                match &f.ty {
+                    hir::Type::Primitive(..) => {}
+                    hir::Type::Struct(st_pth) => {
+                        let ty = self.resolve_type(st_pth.id());
+                        match ty {
+                            TypeDef::Struct(f_st) => {
+                                if !f_st.attrs.allowed_in_slices {
+                                    errors.push(LoweringError::Other(format!(
+                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
+                                        st.name, f.name, f_st.name
+                                    )));
+                                }
                             }
+                            TypeDef::OutStruct(out) => {
+                                errors.push(LoweringError::Other(
+                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, allowed_in_slices)].")
+                                ));
+                            }
+                            _ => unreachable!()
                         }
-                        _ => {
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
-                                st.name, f.name
-                            )));
-                        }
+                    }
+                    _ => {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
+                            st.name, f.name
+                        )));
                     }
                 }
             }
-            _ => unreachable!(),
+        }
+    }
+
+    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty : &hir::Type<P>) {
+        match ty {
+            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
+                let st = self.resolve_type(st.id());
+                match st {
+                    TypeDef::Struct(st) => {
+                        if !st.attrs.allowed_in_slices {
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                                st.name
+                            )));
+                        }
+                    }
+                    _ => unreachable!()
+                }
+            }
+            _ => {}
         }
     }
 }
