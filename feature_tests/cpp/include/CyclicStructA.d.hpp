@@ -22,6 +22,15 @@ namespace capi {
     };
 
     typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
+    typedef struct DiplomatCyclicStructAView {
+      const CyclicStructA* data;
+      size_t len;
+    } DiplomatCyclicStructAView;
+
+    typedef struct DiplomatCyclicStructAViewMut {
+      CyclicStructA* data;
+      size_t len;
+    } DiplomatCyclicStructAViewMut;
 } // namespace capi
 } // namespace
 
@@ -34,6 +43,8 @@ struct CyclicStructA {
   inline std::string cyclic_out() const;
   template<typename W>
   inline void cyclic_out_write(W& writeable_output) const;
+
+  inline static uint8_t nested_slice(diplomat::span<const CyclicStructA> sl);
 
   inline std::string double_cyclic_out(CyclicStructA cyclic_struct_a) const;
   template<typename W>

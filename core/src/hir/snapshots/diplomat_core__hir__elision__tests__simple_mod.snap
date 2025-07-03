@@ -60,6 +60,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
+                        allowed_in_slices: false,
                     },
                 },
             ],
@@ -120,6 +121,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
+                                allowed_in_slices: false,
                             },
                         },
                     ],
@@ -168,6 +170,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
+                        allowed_in_slices: false,
                     },
                 },
             ],
@@ -194,6 +197,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
+                allowed_in_slices: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -261,6 +265,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
+                        allowed_in_slices: false,
                     },
                 },
             ],
@@ -323,6 +328,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
+                                allowed_in_slices: false,
                             },
                         },
                     ),
@@ -364,6 +370,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
+                                allowed_in_slices: false,
                             },
                         },
                     ],
@@ -406,6 +413,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
+                        allowed_in_slices: false,
                     },
                 },
             ],
@@ -432,6 +440,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
+                allowed_in_slices: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -481,6 +490,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
+                allowed_in_slices: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
