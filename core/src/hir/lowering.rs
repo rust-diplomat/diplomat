@@ -922,7 +922,7 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::PrimitiveStructSlice(lm, type_name) => {
+            ast::TypeName::CustomTypeSlice(lm, type_name) => {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
                         ast::CustomType::Struct(..) => {
@@ -1298,7 +1298,7 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::PrimitiveStructSlice(ltmt, type_name) => {
+            ast::TypeName::CustomTypeSlice(ltmt, type_name) => {
                 let new_lifetime = ltmt
                     .as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
