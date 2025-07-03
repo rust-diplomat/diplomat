@@ -4,6 +4,10 @@
 #include "{{include}}"
 {%- endfor %}
 
+{%- for line in header.lines() %}
+{{ line }}
+{%- endfor %}
+
 {% if !namespace.is_empty() %}
 namespace {{namespace}}{
 {% endif %}
