@@ -2,11 +2,11 @@
 
 
 #include "PrimitiveStruct.hpp"
+NB_MAKE_OPAQUE(std::vector<PrimitiveStruct>)
 
 
 void add_PrimitiveStruct_binding(nb::handle mod) {
     
-    NB_MAKE_OPAQUE(std::vector<PrimitiveStruct>)
     nb::bind_vector<std::vector<PrimitiveStruct>>(mod, "PrimitiveStructSlice"); 
     nb::class_<PrimitiveStruct>(mod, "PrimitiveStruct")
         .def(nb::init<>())

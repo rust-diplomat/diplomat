@@ -2,11 +2,11 @@
 
 
 #include "ScalarPairWithPadding.hpp"
+NB_MAKE_OPAQUE(std::vector<ScalarPairWithPadding>)
 
 
 void add_ScalarPairWithPadding_binding(nb::handle mod) {
     
-    NB_MAKE_OPAQUE(std::vector<ScalarPairWithPadding>)
     nb::bind_vector<std::vector<ScalarPairWithPadding>>(mod, "ScalarPairWithPaddingSlice"); 
     nb::class_<ScalarPairWithPadding>(mod, "ScalarPairWithPadding")
         .def(nb::init<>())
