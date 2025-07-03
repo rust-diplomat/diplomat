@@ -466,11 +466,8 @@ impl TypeContext {
     }
 
     fn validate_type_def(&self, errors: &mut ErrorStore, def: TypeDef) {
-        match def {
-            TypeDef::Struct(st) => {
-                self.validate_struct(errors, st);
-            }
-            _ => {}
+        if let TypeDef::Struct(st) = def {
+            self.validate_struct(errors, st);
         }
     }
 
@@ -518,22 +515,19 @@ impl TypeContext {
     }
 
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        match ty {
-            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
-                let st = self.resolve_type(st.id());
-                match st {
-                    TypeDef::Struct(st) => {
-                        if !st.attrs.allowed_in_slices {
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
-                                st.name
-                            )));
-                        }
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
+            let st = self.resolve_type(st.id());
+            match st {
+                TypeDef::Struct(st) => {
+                    if !st.attrs.allowed_in_slices {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                            st.name
+                        )));
                     }
-                    _ => unreachable!(),
                 }
+                _ => unreachable!(),
             }
-            _ => {}
         }
     }
 }
