@@ -3,11 +3,11 @@
 
 #include "BigStructWithStuff.hpp"
 #include "ScalarPairWithPadding.hpp"
+NB_MAKE_OPAQUE(std::vector<BigStructWithStuff>)
 
 
 void add_BigStructWithStuff_binding(nb::handle mod) {
     
-    NB_MAKE_OPAQUE(std::vector<BigStructWithStuff>)
     nb::bind_vector<std::vector<BigStructWithStuff>>(mod, "BigStructWithStuffSlice"); 
     nb::class_<BigStructWithStuff>(mod, "BigStructWithStuff")
         .def(nb::init<>())

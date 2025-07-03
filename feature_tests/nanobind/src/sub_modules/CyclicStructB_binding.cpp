@@ -2,11 +2,11 @@
 
 
 #include "CyclicStructB.hpp"
+NB_MAKE_OPAQUE(std::vector<CyclicStructB>)
 
 
 void add_CyclicStructB_binding(nb::handle mod) {
     
-    NB_MAKE_OPAQUE(std::vector<CyclicStructB>)
     nb::bind_vector<std::vector<CyclicStructB>>(mod, "CyclicStructBSlice"); 
     nb::class_<CyclicStructB>(mod, "CyclicStructB")
         .def(nb::init<>())
