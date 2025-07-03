@@ -353,7 +353,7 @@ impl TypeContext {
         // Lifetime validity check
         for (_id, ty) in self.all_types() {
             errors.set_item(ty.name().as_str());
-            
+
             self.validate_type_def(errors, ty);
 
             for method in ty.methods() {
@@ -465,7 +465,7 @@ impl TypeContext {
         }
     }
 
-    fn validate_type_def(&self, errors: &mut ErrorStore, def : TypeDef) {
+    fn validate_type_def(&self, errors: &mut ErrorStore, def: TypeDef) {
         match def {
             TypeDef::Struct(st) => {
                 self.validate_struct(errors, st);
@@ -474,7 +474,7 @@ impl TypeContext {
         }
     }
 
-    fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st : &StructDef<P>) {
+    fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
         if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
             errors.push(LoweringError::Other(format!(
                 "Struct {:?} cannot have any lifetimes if it is allowed within a slice.",
@@ -503,7 +503,7 @@ impl TypeContext {
                                     format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, allowed_in_slices)].")
                                 ));
                             }
-                            _ => unreachable!()
+                            _ => unreachable!(),
                         }
                     }
                     _ => {
@@ -517,7 +517,7 @@ impl TypeContext {
         }
     }
 
-    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty : &hir::Type<P>) {
+    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
         match ty {
             hir::Type::Slice(hir::Slice::Struct(_, st)) => {
                 let st = self.resolve_type(st.id());
@@ -530,7 +530,7 @@ impl TypeContext {
                             )));
                         }
                     }
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 }
             }
             _ => {}
