@@ -6,6 +6,9 @@
 
 
 void add_BigStructWithStuff_binding(nb::handle mod) {
+    
+    NB_MAKE_OPAQUE(std::vector<BigStructWithStuff>)
+    nb::bind_vector<std::vector<BigStructWithStuff>>(mod, "BigStructWithStuffSlice"); 
     nb::class_<BigStructWithStuff>(mod, "BigStructWithStuff")
         .def(nb::init<>())
         .def(nb::init<uint8_t, uint16_t, uint16_t, ScalarPairWithPadding, uint8_t>(), "first"_a.none(),  "second"_a.none(),  "third"_a.none(),  "fourth"_a.none(),  "fifth"_a.none())
