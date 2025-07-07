@@ -190,6 +190,7 @@ namespace nanobind::detail
 
             // Are we a bound vector type?
             using U = std::conditional_t<std::is_class_v<T> && !std::is_const_v<T>, std::vector<T>, std::vector<int>>;
+            // TODO: Using std::vector<int> as the default feels a little icky.
 
             if (nb::inst_check(src) && nb::isinstance<U>(src)) {
                 U* bound_vec = nb::inst_ptr<U>(src);

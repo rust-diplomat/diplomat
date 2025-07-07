@@ -27,3 +27,8 @@ def test_structs():
     assert sl[0].x == 1
     assert sl[1].x == 3
     assert sl[2].x == 2
+
+    bg = somelib.BigStructWithStuffSlice()
+    bg.append(somelib.BigStructWithStuff())
+    bg.append(somelib.BigStructWithStuff())
+    somelib.BigStructWithStuff.assert_slice(bg, 0)
