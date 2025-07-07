@@ -523,9 +523,8 @@ pub mod ffi {
             self.0[idx].clone()
         }
 
-        
         #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
-        pub fn take_slice_from_other_namespace(_sl : &[crate::attrs::ffi::StructWithAttrs]) {
+        pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
         }
     }
