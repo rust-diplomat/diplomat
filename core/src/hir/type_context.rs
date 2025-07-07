@@ -397,10 +397,37 @@ impl TypeContext {
                 })
             }
         }
+
+        for (_id, def) in self.all_traits() {
+            errors.set_item(def.name.as_str());
+            self.validate_trait(errors, def);
+        }
+    }
+
+    /// Perform validation checks on any given type
+    /// (whether it be a struct field, a method argument, etc.)
+    /// Currently used to check if a given type is a slice of structs,
+    /// and ensure the relevant attributes are set there.
+    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
+            let st = self.resolve_type(st.id());
+            match st {
+                TypeDef::Struct(st) => {
+                    if !st.attrs.allowed_in_slices {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                            st.name
+                        )));
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
     }
 
     /// Ensure that a given method's input our output type does not implicitly introduce bounds that are not
     /// already specified on the method
+    /// Also validates the type of each given parameter.
     fn validate_ty_in_method<P: hir::TyPosition>(
         &self,
         errors: &mut ErrorStore,
@@ -471,6 +498,14 @@ impl TypeContext {
         }
     }
 
+    fn validate_trait(&self, errors: &mut ErrorStore, def : &TraitDef) {
+        for m in &def.methods {
+            for p in &m.params {
+                self.validate_ty(errors, &p.ty);
+            }
+        }
+    }
+
     fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
         if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
             errors.push(LoweringError::Other(format!(
@@ -510,23 +545,6 @@ impl TypeContext {
                         )));
                     }
                 }
-            }
-        }
-    }
-
-    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
-            let st = self.resolve_type(st.id());
-            match st {
-                TypeDef::Struct(st) => {
-                    if !st.attrs.allowed_in_slices {
-                        errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
-                            st.name
-                        )));
-                    }
-                }
-                _ => unreachable!(),
             }
         }
     }
