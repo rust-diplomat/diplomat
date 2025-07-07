@@ -518,7 +518,7 @@ pub mod ffi {
             &mut self.0
         }
 
-        #[diplomat::attr(nanobind, rename = "__get__")]
+        #[diplomat::attr(nanobind, rename = "__getitem__")]
         pub fn get(&self, idx: usize) -> PrimitiveStruct {
             self.0[idx].clone()
         }

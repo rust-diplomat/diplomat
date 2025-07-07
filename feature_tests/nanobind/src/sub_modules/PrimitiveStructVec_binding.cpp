@@ -11,7 +11,7 @@ void add_PrimitiveStructVec_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<PrimitiveStructVec>(mod, "PrimitiveStructVec", nb::type_slots(PrimitiveStructVec_slots))
-    	.def("__get__", &PrimitiveStructVec::__get__, "idx"_a)
+    	.def("__getitem__", &PrimitiveStructVec::__getitem__, "idx"_a)
     	.def("__len__", &PrimitiveStructVec::__len__)
     	.def("append", &PrimitiveStructVec::append, "value"_a)
     	.def_prop_ro("asSlice", &PrimitiveStructVec::as_slice)

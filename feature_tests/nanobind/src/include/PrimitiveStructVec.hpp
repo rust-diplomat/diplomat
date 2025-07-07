@@ -62,7 +62,7 @@ inline diplomat::span<PrimitiveStruct> PrimitiveStructVec::as_slice_mut() {
   return diplomat::span<PrimitiveStruct>(reinterpret_cast<PrimitiveStruct*>(result.data), result.len);
 }
 
-inline PrimitiveStruct PrimitiveStructVec::__get__(size_t idx) const {
+inline PrimitiveStruct PrimitiveStructVec::__getitem__(size_t idx) const {
   auto result = diplomat::capi::PrimitiveStructVec_get(this->AsFFI(),
     idx);
   return PrimitiveStruct::FromFFI(result);

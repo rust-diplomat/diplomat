@@ -33,7 +33,7 @@ public:
 
   inline diplomat::span<PrimitiveStruct> as_slice_mut();
 
-  inline PrimitiveStruct __get__(size_t idx) const;
+  inline PrimitiveStruct __getitem__(size_t idx) const;
 
   inline const diplomat::capi::PrimitiveStructVec* AsFFI() const;
   inline diplomat::capi::PrimitiveStructVec* AsFFI();

@@ -22,13 +22,13 @@ def test_structs():
     sl.append(somelib.PrimitiveStruct(1, True, 'c', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(2, False, ' ', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(-1, False, ' ', 0, 0, 0))
-    print(sl.asSliceMut)
-    somelib.PrimitiveStruct.mutable_slice(sl.asSliceMut)
+    sl = somelib.PrimitiveStructSlice(sl.asSliceMut)
+    somelib.PrimitiveStruct.mutable_slice(sl)
     assert sl[0].x == 1
     assert sl[1].x == 3
     assert sl[2].x == 2
 
     bg = somelib.BigStructWithStuffSlice()
     bg.append(somelib.BigStructWithStuff())
-    bg.append(somelib.BigStructWithStuff())
-    somelib.BigStructWithStuff.assert_slice(bg, 0)
+    bg.append(somelib.BigStructWithStuff(1, 2, 3, somelib.ScalarPairWithPadding(1, 2), 0))
+    somelib.BigStructWithStuff.assert_slice(bg, 2)
