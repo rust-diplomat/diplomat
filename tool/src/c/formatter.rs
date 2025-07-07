@@ -259,7 +259,7 @@ impl<'tcx> CFormatter<'tcx> {
         st_ty: &P::StructPath,
     ) -> Cow<'tcx, str> {
         let st_id = hir::StructPathLike::id(st_ty);
-        let st_name = self.fmt_type_name(st_id.into());
+        let st_name = self.fmt_type_name(st_id);
 
         let def = self.tcx.resolve_type(st_id);
 

@@ -484,7 +484,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     let st_id = st_ty.id();
                     let st_name = self
                         .formatter
-                        .fmt_struct_slice_name::<P>(borrow.clone(), st_ty);
+                        .fmt_struct_slice_name::<P>(*borrow, st_ty);
 
                     if self.tcx.resolve_type(st_id).attrs().disable {
                         self.errors
