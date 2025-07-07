@@ -260,11 +260,11 @@ impl<'tcx> CFormatter<'tcx> {
     ) -> Cow<'tcx, str> {
         let st_id = hir::StructPathLike::id(st_ty);
         let st_name = self.fmt_type_name(st_id.into());
-        
+
         let def = self.tcx.resolve_type(st_id);
 
         let ns = def.attrs().namespace.clone();
-        
+
         let mtb = match borrow {
             Some(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
