@@ -31,16 +31,16 @@ somelib.Foo.takes_mut_slice(f)
 print([foo.x for foo in f])
 ```
 
-You will get:
+You will get an error:
 
 ```
 [10]
-[10]
+TypeError: takes_mut_slice(): incompatible function arguments. The following argument types are supported:
+    1. mutable_slice(s: collections.abc.Sequence[somelib.somelib.Foo]) -> None
+Invoked with types: list
 ```
 
-TODO: Is this still correct in the current API?
-
-You must use the `somelib.FooSlice` type:
+Diplomat's bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a `TSlice` type (i.e., `somelib.FooSlice`):
 
 ```python
 f = somelib.FooSlice([somelib.Foo(x=10, y=10)])
