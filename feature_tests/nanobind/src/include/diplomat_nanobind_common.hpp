@@ -170,6 +170,17 @@ namespace nanobind::detail
                 }
             }
 
+            // Are we a bound vector type? If so, we can pass over data directly.
+            // We remove any constant values because C++ allocators don't like that, but we will re-cast as constant when we past to diplomat::span.  
+            // TODO: Using std::vector<int> as the default feels a little icky.
+            using U = std::conditional_t<std::is_class_v<T>, std::vector<std::remove_cv_t<T>>, std::vector<int>>;
+
+            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                U* bound_vec = nb::inst_ptr<U>(src);
+                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                return true;
+            }
+
             // Attempt to convert a native sequence. We must convert all elements & store
             // them in a temporary object which will be cleaned up 
             if (std::is_const_v<T> &&
@@ -186,16 +197,6 @@ namespace nanobind::detail
 
                     return true;
                 }
-            }
-
-            // Are we a bound vector type?
-            using U = std::conditional_t<std::is_class_v<T> && !std::is_const_v<T>, std::vector<T>, std::vector<int>>;
-            // TODO: Using std::vector<int> as the default feels a little icky.
-
-            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
-                U* bound_vec = nb::inst_ptr<U>(src);
-                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
-                return true;
             }
 
             return false; // Python type cannot be loaded into a span.
