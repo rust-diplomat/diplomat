@@ -506,7 +506,7 @@ impl TypeContext {
 
             if let Some(ref o) = *m.output {
                 self.validate_ty(errors, o);
-            } 
+            }
         }
     }
 
