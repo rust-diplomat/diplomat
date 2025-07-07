@@ -503,6 +503,10 @@ impl TypeContext {
             for p in &m.params {
                 self.validate_ty(errors, &p.ty);
             }
+
+            if let Some(ref o) = *m.output {
+                self.validate_ty(errors, o);
+            } 
         }
     }
 
