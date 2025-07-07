@@ -498,7 +498,7 @@ impl TypeContext {
         }
     }
 
-    fn validate_trait(&self, errors: &mut ErrorStore, def : &TraitDef) {
+    fn validate_trait(&self, errors: &mut ErrorStore, def: &TraitDef) {
         for m in &def.methods {
             for p in &m.params {
                 self.validate_ty(errors, &p.ty);
