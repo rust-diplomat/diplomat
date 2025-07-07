@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "PrimitiveStruct.hpp"
 #include "diplomat_runtime.hpp"
+#include "ns/RenamedStructWithAttrs.hpp"
 
 
 namespace diplomat {
@@ -30,6 +31,8 @@ namespace capi {
     diplomat::capi::DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(diplomat::capi::PrimitiveStructVec* self);
 
     diplomat::capi::PrimitiveStruct PrimitiveStructVec_get(const diplomat::capi::PrimitiveStructVec* self, size_t idx);
+
+    void PrimitiveStructVec_take_slice_from_other_namespace(diplomat::capi::DiplomatRenamedStructWithAttrsView _sl);
 
     void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
@@ -66,6 +69,10 @@ inline PrimitiveStruct PrimitiveStructVec::get(size_t idx) const {
   auto result = diplomat::capi::PrimitiveStructVec_get(this->AsFFI(),
     idx);
   return PrimitiveStruct::FromFFI(result);
+}
+
+inline void PrimitiveStructVec::take_slice_from_other_namespace(diplomat::span<const ns::RenamedStructWithAttrs> _sl) {
+  diplomat::capi::PrimitiveStructVec_take_slice_from_other_namespace({reinterpret_cast<const ns::capi::RenamedStructWithAttrs*>(_sl.data()), _sl.size()});
 }
 
 inline const diplomat::capi::PrimitiveStructVec* PrimitiveStructVec::AsFFI() const {
