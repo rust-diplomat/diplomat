@@ -32,7 +32,7 @@ namespace capi {
 
     diplomat::capi::PrimitiveStruct PrimitiveStructVec_get(const diplomat::capi::PrimitiveStructVec* self, size_t idx);
 
-    void PrimitiveStructVec_take_slice_from_other_namespace(diplomat::capi::DiplomatRenamedStructWithAttrsView _sl);
+    void PrimitiveStructVec_take_slice_from_other_namespace(ns::capi::DiplomatRenamedStructWithAttrsView _sl);
 
     void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
