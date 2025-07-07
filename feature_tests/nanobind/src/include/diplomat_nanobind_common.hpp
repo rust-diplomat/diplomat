@@ -188,6 +188,15 @@ namespace nanobind::detail
                 }
             }
 
+            // Are we a bound vector type?
+            using U = std::conditional_t<std::is_class_v<T> && !std::is_const_v<T>, std::vector<T>, std::vector<int>>;
+
+            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                U* bound_vec = nb::inst_ptr<U>(src);
+                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                return true;
+            }
+
             return false; // Python type cannot be loaded into a span.
         }
 
