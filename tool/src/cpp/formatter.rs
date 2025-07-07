@@ -196,7 +196,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_slice_name(&self, ty : TypeId, name : &str) -> String {
+    pub fn namespace_c_slice_name(&self, ty: TypeId, name: &str) -> String {
         let resolved = self.c.tcx().resolve_type(ty);
         if let Some(ref ns) = resolved.attrs().namespace {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
