@@ -481,7 +481,18 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     self.formatter.fmt_primitive_slice_name(*borrow, *prim)
                 }
                 hir::Slice::Struct(borrow, ref st_ty) => {
-                    self.formatter.fmt_struct_slice_name::<P>(*borrow, st_ty)
+                    let st_id = st_ty.id();
+                    let st_name = self.formatter.fmt_struct_slice_name::<P>(borrow.clone(), st_ty);
+
+                    if self.tcx.resolve_type(st_id).attrs().disable {
+                        self.errors
+                            .push_error(format!("Found usage of disabled type {st_name}"))
+                    }
+
+                    let header_path = self.formatter.fmt_decl_header_path(st_id.into());
+                    header.includes.insert(header_path);
+
+                    st_name
                 }
                 hir::Slice::Str(_, encoding) => self.formatter.fmt_str_view_name(*encoding),
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
