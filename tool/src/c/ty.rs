@@ -383,7 +383,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 ));
                 (
                     cb_wrapper_type.clone().into(),
-                    format!("{}_cb_wrap", param_name).into(),
+                    format!("{param_name}_cb_wrap").into(),
                 )
             }
             Type::ImplTrait(t) => {
@@ -394,8 +394,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         .push_error(format!("Found usage of disabled trait {trt_name}"))
                 }
                 (
-                    format!("DiplomatTraitStruct_{}", trt_name).into(),
-                    format!("{}_trait_wrap", param_name).into(),
+                    format!("DiplomatTraitStruct_{trt_name}").into(),
+                    format!("{param_name}_trait_wrap").into(),
                 )
             }
             _ => {
