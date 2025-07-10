@@ -19,7 +19,8 @@ final class OpaqueThin implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-
+  
+  @_DiplomatFfiUse('OpaqueThin_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThin_destroy));
 
   int get a {

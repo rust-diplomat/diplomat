@@ -19,7 +19,8 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
       _finalizer.attach(this, _ffi.cast());
     }
   }
-
+  
+  @_DiplomatFfiUse('namespace_Comparable_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Comparable_destroy));
 
   static RenamedComparable new_(int int) {

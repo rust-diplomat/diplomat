@@ -21,7 +21,8 @@ final class Foo implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-
+  
+  @_DiplomatFfiUse('Foo_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
 
   factory Foo(String x) {
