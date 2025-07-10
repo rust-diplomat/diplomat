@@ -341,12 +341,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
 
+        let borrowed_self = if let Some(s) = &method.param_self {
+            Some(visitor.visit_param(&s.ty.clone().into(), "self"))
+        } else {
+            None
+        };
+
         // Collect all the relevant borrowed params, with self in position 1 if present
-        let mut param_borrows = method
-            .param_self
-            .iter()
-            .map(|s| visitor.visit_param(&s.ty.clone().into(), "self"))
-            .collect::<Vec<_>>();
+        let mut param_borrows = Vec::new();
         // Must be a separate call *after* collect to avoid double-borrowing visitor
         param_borrows.extend(
             method
@@ -370,7 +372,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         if !matches!(
             method.output.success_type(),
             hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
-        ) && !matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
+        )
         {
             lifetime_args.extend(
                 param_borrows
@@ -389,11 +391,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     })
                     .collect::<Vec<_>>(),
             );
-        }
 
-        if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
-        {
-            lifetime_args.push("nb::rv_policy::reference_internal".to_owned());
+            if matches!(borrowed_self, 
+                Some(hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque)) {
+                lifetime_args.push("nb::rv_policy::reference_internal".to_owned());
+            }
+            
         }
 
         Some(MethodInfo {
