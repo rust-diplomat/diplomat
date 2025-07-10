@@ -370,7 +370,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         if !matches!(
             method.output.success_type(),
             hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
-        ) {
+        ) && !matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
+        {
             lifetime_args.extend(
                 param_borrows
                     .into_iter()
@@ -392,7 +393,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
         {
-            lifetime_args.push("nb::rv_policy::reference".to_owned());
+            lifetime_args.push("nb::rv_policy::reference_internal".to_owned());
         }
 
         Some(MethodInfo {
