@@ -105,7 +105,7 @@ impl Config {
         let mut out = self.clone();
 
         // Look for a match of language_name.some_value in a potential key.
-        let m = format!("{}.", target_language);
+        let m = format!("{target_language}.");
         for (k, v) in out.language_overrides.iter() {
             if k.starts_with(&m) {
                 out.shared_config.set(&k.replace(&m, ""), v.clone());
@@ -132,7 +132,7 @@ impl Config {
             if let toml::Value::Table(t) = value {
                 for (subkey, subvalue) in t {
                     let subkey = heck::AsSnakeCase(subkey).to_string();
-                    self.set(&format!("{}.{}", key, subkey), subvalue);
+                    self.set(&format!("{key}.{subkey}"), subvalue);
                 }
             } else {
                 self.set(&key, value);

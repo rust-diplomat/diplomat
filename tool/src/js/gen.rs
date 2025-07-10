@@ -303,7 +303,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 None
             };
 
-            let js_name = format!("this.#{}", field_name);
+            let js_name = format!("this.#{field_name}");
 
             let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 

@@ -1120,7 +1120,7 @@ returnVal.option() ?: return null
                     let param_names: Vec<String> = params
                         .iter()
                         .enumerate()
-                        .map(|(index, _)| format!("arg{}", index))
+                        .map(|(index, _)| format!("arg{index}"))
                         .collect();
                     let (native_input_names, native_input_params_and_types): (
                         Vec<String>,
@@ -1134,26 +1134,26 @@ returnVal.option() ?: return null
                                 // named types have a _Native wrapper, this needs to be passed as the "native"
                                 // version of the argument
                                 (
-                                    format!("{}({})", in_ty, in_name),
-                                    format!("{}: {}Native", in_name, in_ty),
+                                    format!("{in_ty}({in_name})"),
+                                    format!("{in_name}: {in_ty}Native"),
                                 )
                             }
                             Type::Slice(Slice::Primitive(_, _)) => {
                                 // slices need to be passed as Slice type
                                 // and only primitive slices are allowed
                                 (
-                                    format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                                    format!("{}: Slice", in_name),
+                                    format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                                    format!("{in_name}: Slice"),
                                 )
                             }
                             Type::Slice(_) => {
                                 panic!("Non-primitive slices are not allowed as callback args")
                             }
                             Type::Opaque(_) => (
-                                format!("{}({}, listOf())", in_ty, in_name),
-                                format!("{}: Pointer", in_name),
+                                format!("{in_ty}({in_name}, listOf())"),
+                                format!("{in_name}: Pointer"),
                             ),
-                            _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                            _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                         })
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
@@ -1620,7 +1620,7 @@ returnVal.option() ?: return null
                 if let Some(param_name) = &param.name {
                     param_name.to_string()
                 } else {
-                    format!("arg{}", index)
+                    format!("arg{index}")
                 }
             })
             .collect();
@@ -1635,25 +1635,25 @@ returnVal.option() ?: return null
                         // named types have a _Native wrapper, this needs to be passed as the "native"
                         // version of the argument
                         (
-                            format!("{}({})", in_ty, in_name),
-                            format!("{}: {}Native", in_name, in_ty),
+                            format!("{in_ty}({in_name})"),
+                            format!("{in_name}: {in_ty}Native"),
                         )
                     }
                     Type::Slice(Slice::Primitive(_, _)) => {
                         // slices need to be passed as Slice type
                         (
-                            format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                            format!("{}: Slice", in_name),
+                            format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                            format!("{in_name}: Slice"),
                         )
                     }
                     Type::Slice(_) => {
                         panic!("Non-primitive slices are not allowed as callback args")
                     }
                     Type::Opaque(_) => (
-                        format!("{}({}, listOf())", in_ty, in_name),
-                        format!("{}: Pointer", in_name),
+                        format!("{in_ty}({in_name}, listOf())"),
+                        format!("{in_name}: Pointer"),
                     ),
-                    _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                    _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                 })
                 .unzip();
         let non_native_params_and_types = method
@@ -1664,7 +1664,7 @@ returnVal.option() ?: return null
             .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
                 cur.clone()
                     + (if !cur.is_empty() { ", " } else { "" })
-                    + &format!("{}: {}", in_name, in_ty)
+                    + &format!("{in_name}: {in_ty}")
             });
         let (native_output_type, return_modification, return_cast) = match *method.output {
             Some(ref ty) => (
@@ -2000,7 +2000,7 @@ returnVal.option() ?: return null
                     Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
                     None => "Unit".into(),
                 };
-                format!("({})->{}", in_type_string, out_type_string).into()
+                format!("({in_type_string})->{out_type_string}").into()
             }
             Type::ImplTrait(trt) => {
                 let trait_id = trt.id();

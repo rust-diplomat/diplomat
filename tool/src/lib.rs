@@ -131,7 +131,7 @@ pub fn gen(
     if !silent {
         println!(
             "{}",
-            format!("Generating {} bindings:", target_language)
+            format!("Generating {target_language} bindings:")
                 .green()
                 .bold()
         );
