@@ -25,7 +25,7 @@ final class {{type_name}}
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('{{destructor}}')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
