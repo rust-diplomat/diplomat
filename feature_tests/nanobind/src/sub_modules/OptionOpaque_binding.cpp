@@ -28,8 +28,8 @@ void add_OptionOpaque_binding(nb::handle mod) {
     	.def("option_u32", &OptionOpaque::option_u32)
     	.def("option_usize", &OptionOpaque::option_usize)
     	.def_static("returns", &OptionOpaque::returns)
-    	.def("returns_none_self", &OptionOpaque::returns_none_self, nb::rv_policy::reference_internal)
+    	.def("returns_none_self", &OptionOpaque::returns_none_self, nb::keep_alive<0, 1>(), nb::rv_policy::reference_internal)
     	.def_static("returns_option_input_struct", &OptionOpaque::returns_option_input_struct)
-    	.def("returns_some_self", &OptionOpaque::returns_some_self, nb::rv_policy::reference_internal);
+    	.def("returns_some_self", &OptionOpaque::returns_some_self, nb::keep_alive<0, 1>(), nb::rv_policy::reference_internal);
 }
 
