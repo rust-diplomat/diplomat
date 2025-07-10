@@ -19,7 +19,7 @@ final class RenamedAttrOpaque2 implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('namespace_AttrOpaque2_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_AttrOpaque2_destroy));
 

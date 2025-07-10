@@ -19,7 +19,7 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('OpaqueThinVec_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinVec_destroy));
 

@@ -21,7 +21,7 @@ final class One implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('One_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_One_destroy));
 

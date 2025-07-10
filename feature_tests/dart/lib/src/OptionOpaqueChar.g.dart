@@ -19,7 +19,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('OptionOpaqueChar_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaqueChar_destroy));
 

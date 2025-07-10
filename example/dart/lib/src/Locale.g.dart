@@ -22,7 +22,7 @@ final class Locale implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('icu4x_Locale_destroy_mv1')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_Locale_destroy_mv1));
 

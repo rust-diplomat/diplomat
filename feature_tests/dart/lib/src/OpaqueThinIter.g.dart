@@ -21,7 +21,7 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('OpaqueThinIter_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinIter_destroy));
 

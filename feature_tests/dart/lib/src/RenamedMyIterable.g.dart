@@ -19,7 +19,7 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('namespace_MyIterable_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterable_destroy));
 

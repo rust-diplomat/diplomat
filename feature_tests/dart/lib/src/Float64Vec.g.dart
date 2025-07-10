@@ -19,7 +19,7 @@ final class Float64Vec implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('Float64Vec_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Float64Vec_destroy));
 

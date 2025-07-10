@@ -23,7 +23,7 @@ final class Bar implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('Bar_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Bar_destroy));
 

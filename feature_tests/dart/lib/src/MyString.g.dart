@@ -19,7 +19,7 @@ final class MyString implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('MyString_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 

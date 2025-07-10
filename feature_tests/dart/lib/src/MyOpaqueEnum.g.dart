@@ -19,7 +19,7 @@ final class MyOpaqueEnum implements ffi.Finalizable {
       _finalizer.attach(this, _ffi.cast());
     }
   }
-  
+
   @_DiplomatFfiUse('MyOpaqueEnum_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyOpaqueEnum_destroy));
 
