@@ -24,6 +24,7 @@ struct StructTemplate<'a> {
     ty_name: Cow<'a, str>,
     fields: Vec<(Cow<'a, str>, Cow<'a, str>)>,
     is_for_cpp: bool,
+    is_sliceable: bool,
 }
 
 #[derive(Template)]
@@ -125,6 +126,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             ty_name,
             fields,
             is_for_cpp: self.is_for_cpp,
+            is_sliceable: def.attrs.allowed_in_slices,
         }
         .render_into(&mut decl_header)
         .unwrap();
@@ -477,6 +479,20 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             Type::Slice(ref s) => match s {
                 hir::Slice::Primitive(borrow, prim) => {
                     self.formatter.fmt_primitive_slice_name(*borrow, *prim)
+                }
+                hir::Slice::Struct(borrow, ref st_ty) => {
+                    let st_id = st_ty.id();
+                    let st_name = self.formatter.fmt_struct_slice_name::<P>(*borrow, st_ty);
+
+                    if self.tcx.resolve_type(st_id).attrs().disable {
+                        self.errors
+                            .push_error(format!("Found usage of disabled type {st_name}"))
+                    }
+
+                    let header_path = self.formatter.fmt_decl_header_path(st_id.into());
+                    header.includes.insert(header_path);
+
+                    st_name
                 }
                 hir::Slice::Str(_, encoding) => self.formatter.fmt_str_view_name(*encoding),
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),

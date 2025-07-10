@@ -57,6 +57,7 @@ Method {
                     },
                 },
                 generate_mocking_interface: false,
+                allowed_in_slices: false,
             },
         },
     ),
@@ -113,6 +114,7 @@ Method {
                     },
                 },
                 generate_mocking_interface: false,
+                allowed_in_slices: false,
             },
         },
     ],
@@ -142,5 +144,6 @@ Method {
             },
         },
         generate_mocking_interface: false,
+        allowed_in_slices: false,
     },
 }

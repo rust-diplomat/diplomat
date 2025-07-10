@@ -353,6 +353,9 @@ impl TypeContext {
         // Lifetime validity check
         for (_id, ty) in self.all_types() {
             errors.set_item(ty.name().as_str());
+
+            self.validate_type_def(errors, ty);
+
             for method in ty.methods() {
                 errors.set_subitem(method.name.as_str());
 
@@ -394,10 +397,37 @@ impl TypeContext {
                 })
             }
         }
+
+        for (_id, def) in self.all_traits() {
+            errors.set_item(def.name.as_str());
+            self.validate_trait(errors, def);
+        }
+    }
+
+    /// Perform validation checks on any given type
+    /// (whether it be a struct field, a method argument, etc.)
+    /// Currently used to check if a given type is a slice of structs,
+    /// and ensure the relevant attributes are set there.
+    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
+            let st = self.resolve_type(st.id());
+            match st {
+                TypeDef::Struct(st) => {
+                    if !st.attrs.allowed_in_slices {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                            st.name
+                        )));
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
     }
 
     /// Ensure that a given method's input our output type does not implicitly introduce bounds that are not
     /// already specified on the method
+    /// Also validates the type of each given parameter.
     fn validate_ty_in_method<P: hir::TyPosition>(
         &self,
         errors: &mut ErrorStore,
@@ -405,6 +435,8 @@ impl TypeContext {
         param_ty: &hir::Type<P>,
         method: &hir::Method,
     ) {
+        self.validate_ty(errors, param_ty);
+
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
             hir::Type::Struct(p) => p.link_lifetimes(self),
@@ -455,6 +487,67 @@ impl TypeContext {
                     };
                     errors.push(LoweringError::Other(format!("Method should explicitly include this \
                                         lifetime bound from {param}: '{use_longer_name}: '{use_name} ({def_cause})")))
+                }
+            }
+        }
+    }
+
+    fn validate_type_def(&self, errors: &mut ErrorStore, def: TypeDef) {
+        if let TypeDef::Struct(st) = def {
+            self.validate_struct(errors, st);
+        }
+    }
+
+    fn validate_trait(&self, errors: &mut ErrorStore, def: &TraitDef) {
+        for m in &def.methods {
+            for p in &m.params {
+                self.validate_ty(errors, &p.ty);
+            }
+
+            if let Some(ref o) = *m.output {
+                self.validate_ty(errors, o);
+            }
+        }
+    }
+
+    fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
+        if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
+            errors.push(LoweringError::Other(format!(
+                "Struct {:?} cannot have any lifetimes if it is allowed within a slice.",
+                st.name
+            )));
+        }
+
+        for f in &st.fields {
+            self.validate_ty(errors, &f.ty);
+            if st.attrs.allowed_in_slices {
+                match &f.ty {
+                    hir::Type::Primitive(..) => {}
+                    hir::Type::Struct(st_pth) => {
+                        let ty = self.resolve_type(st_pth.id());
+                        match ty {
+                            TypeDef::Struct(f_st) => {
+                                if !f_st.attrs.allowed_in_slices {
+                                    errors.push(LoweringError::Other(format!(
+                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
+                                        st.name, f.name, f_st.name
+                                    )));
+                                }
+                            }
+                            TypeDef::OutStruct(out) => {
+                                errors.push(LoweringError::Other(
+                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, allowed_in_slices)].")
+                                ));
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
+                    _ => {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
+                            st.name, f.name
+                        )));
+                    }
                 }
             }
         }
@@ -603,6 +696,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
+            attr_validator.support.struct_primitive_slices = true;
             match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -953,5 +1047,47 @@ mod tests {
                 }
             }
         };
+    }
+
+    #[test]
+    fn test_non_primitive_struct_slices_fails() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
+                pub struct Foo<'a> {
+                    pub x: u32,
+                    pub y: u32,
+                    pub z : DiplomatStrSlice<'a>
+                }
+
+                impl Foo {
+                    pub fn takes_slice(sl : &[Foo]) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_return_struct_slice() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::out]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn returns_slice<'a>() -> &'a [Foo] {
+                        todo!()
+                    }
+                }
+            }
+        }
     }
 }

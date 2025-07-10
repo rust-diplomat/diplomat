@@ -55,6 +55,8 @@ pub struct Attrs {
     pub demo_attrs: DemoInfo,
     /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
     pub generate_mocking_interface: bool,
+    /// From #[diplomat::attr()]. If true, will be used for generation of [`super::Slice::Struct`] types.
+    pub allowed_in_slices: bool,
 }
 
 // #region: Demo specific attributes.
@@ -370,6 +372,18 @@ impl Attrs {
                             }
                             this.generate_mocking_interface = true;
                         }
+                        "allowed_in_slices" => {
+                            if !support.struct_primitive_slices {
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "allowed_in_slices",
+                                    backend,
+                                    errors,
+                                );
+                                continue;
+                            }
+                            this.allowed_in_slices = true;
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
                                 "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
@@ -475,6 +489,7 @@ impl Attrs {
             default,
             demo_attrs: _,
             generate_mocking_interface,
+            allowed_in_slices,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -833,6 +848,12 @@ impl Attrs {
                 "`generate_mocking_interface` can only be used on opaque types".to_string(),
             ));
         }
+
+        if *allowed_in_slices && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
+            errors.push(LoweringError::Other(
+                "`allowed_in_slices` can only be used on non-output-only struct types.".into(),
+            ));
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -868,6 +889,7 @@ impl Attrs {
             demo_attrs: Default::default(),
             // Not inherited
             generate_mocking_interface: false,
+            allowed_in_slices: false,
         }
     }
 }
@@ -957,6 +979,8 @@ pub struct BackendAttrSupport {
     pub traits_are_sync: bool,
     /// Whether to generate mocking interface.
     pub generate_mocking_interface: bool,
+    /// Passing slices of structs that only hold (non-slice) primitive types:
+    pub struct_primitive_slices: bool,
 }
 
 impl BackendAttrSupport {
@@ -990,6 +1014,7 @@ impl BackendAttrSupport {
             traits_are_send: true,
             traits_are_sync: true,
             generate_mocking_interface: true,
+            struct_primitive_slices: true,
         }
     }
 
@@ -1019,6 +1044,7 @@ impl BackendAttrSupport {
             "custom_errors" => Some(self.custom_errors),
             "traits_are_send" => Some(self.traits_are_send),
             "traits_are_sync" => Some(self.traits_are_sync),
+            "struct_primitive_slices" => Some(self.struct_primitive_slices),
             _ => None,
         }
     }
@@ -1159,6 +1185,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 traits_are_send,
                 traits_are_sync,
                 generate_mocking_interface,
+                struct_primitive_slices,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1188,6 +1215,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "traits_are_send" => traits_are_send,
                 "traits_are_sync" => traits_are_sync,
                 "generate_mocking_interface" => generate_mocking_interface,
+                "struct_primitive_slices" => struct_primitive_slices,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1506,6 +1534,46 @@ mod tests {
 
                     pub fn get_y(self) -> u32 {
                         self.y
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_primitive_struct_slices() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_slice(sl : &[Foo]) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_primitive_struct_slices_for_unsupported_backend() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, allowed_in_slices)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_slice(sl : &[Foo]) {
+                        todo!()
                     }
                 }
             }
