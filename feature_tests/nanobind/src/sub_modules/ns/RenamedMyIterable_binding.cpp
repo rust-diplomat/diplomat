@@ -14,7 +14,7 @@ void add_RenamedMyIterable_binding(nb::handle mod) {
     
     nb::class_<ns::RenamedMyIterable>(mod, "RenamedMyIterable", nb::type_slots(ns_RenamedMyIterable_slots))
     	.def("__len__", &ns::RenamedMyIterable::__len__)
-    	.def("__iter__", &ns::RenamedMyIterable::iter, nb::keep_alive<0, 1>())
+    	.def("__iter__", &ns::RenamedMyIterable::iter, nb::rv_policy::reference_internal)
     	.def(nb::new_(&ns::RenamedMyIterable::new_), "x"_a);
 }
 

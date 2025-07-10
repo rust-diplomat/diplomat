@@ -15,6 +15,6 @@ void add_OpaqueThinVec_binding(nb::handle mod) {
     	.def(nb::new_(&OpaqueThinVec::create), "a"_a, "b"_a)
     	.def_prop_ro("first", &OpaqueThinVec::first)
     	.def("__getitem__", &OpaqueThinVec::operator[], "idx"_a, nb::rv_policy::reference_internal)
-    	.def("__iter__", &OpaqueThinVec::iter, nb::keep_alive<0, 1>());
+    	.def("__iter__", &OpaqueThinVec::iter, nb::rv_policy::reference_internal);
 }
 

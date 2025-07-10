@@ -12,8 +12,8 @@ void add_OpaqueMutexedString_binding(nb::handle mod) {
     
     nb::class_<OpaqueMutexedString>(mod, "OpaqueMutexedString", nb::type_slots(OpaqueMutexedString_slots))
     	.def("borrow", &OpaqueMutexedString::borrow, nb::rv_policy::reference_internal)
-    	.def_static("borrow_other", &OpaqueMutexedString::borrow_other, "other"_a, nb::rv_policy::reference_internal)
-    	.def("borrow_self_or_other", &OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::rv_policy::reference_internal)
+    	.def_static("borrow_other", &OpaqueMutexedString::borrow_other, "other"_a, nb::keep_alive<0, 1>())
+    	.def("borrow_self_or_other", &OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference_internal)
     	.def("change", &OpaqueMutexedString::change, "number"_a)
     	.def("dummy_str", &OpaqueMutexedString::dummy_str)
     	.def_static("from_usize", &OpaqueMutexedString::from_usize, "number"_a)
