@@ -17,7 +17,7 @@ void add_OpaqueThinIter_binding(nb::handle mod) {
     				throw nb::stop_iteration();
     			}
     			return next_inner_extractor<decltype(next)>::get(std::move(next));
-    		}, nb::keep_alive<0, 1>(), nb::rv_policy::reference)
+    		}, nb::rv_policy::reference_internal)
     		.def("__iter__", [](nb::handle self) { return self; });
 }
 
