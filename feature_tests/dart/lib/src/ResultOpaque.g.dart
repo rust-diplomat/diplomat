@@ -20,6 +20,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('ResultOpaque_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
 
   ///

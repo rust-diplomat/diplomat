@@ -20,6 +20,7 @@ final class MyString implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('MyString_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 
   factory MyString(String v) {

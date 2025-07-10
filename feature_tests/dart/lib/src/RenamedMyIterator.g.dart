@@ -22,6 +22,7 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
     }
   }
 
+  @_DiplomatFfiUse('namespace_MyIterator_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterator_destroy));
 
   int? _current;

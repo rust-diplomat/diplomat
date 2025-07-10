@@ -20,6 +20,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('OpaqueMutexedString_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueMutexedString_destroy));
 
   static OpaqueMutexedString fromUsize(int number) {

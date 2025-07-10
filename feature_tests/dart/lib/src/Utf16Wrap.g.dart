@@ -20,6 +20,7 @@ final class Utf16Wrap implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('Utf16Wrap_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
 
   factory Utf16Wrap(String input) {
