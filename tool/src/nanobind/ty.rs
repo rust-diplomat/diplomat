@@ -366,11 +366,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let mut lifetime_args = vec![];
 
+        // Any returned values that are created on return (i.e., iterators, owned structs, owned opaques)
+        // that reference lifetimes are the only returned values that need to be kept alive, per: https://nanobind.readthedocs.io/en/latest/api_core.html#_CPPv4N8nanobind9rv_policyE
+        // They are an instantiated C++ type that is unknown to nanobind.
+        // For non-iterator references, Nanobind handles reference conversion automatically.
         // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
-        if !matches!(
+        if matches!(
+            method.attrs.special_method,
+            Some(hir::SpecialMethod::Iterator)
+        ) || matches!(
             method.output.success_type(),
-            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
-        ) {
+            hir::SuccessType::OutType(hir::OutType::Struct(..))
+        ) || matches!(method.output.success_type(), hir::SuccessType::OutType(hir::OutType::Opaque(pth)) if pth.is_owned())
+        {
             lifetime_args.extend(
                 param_borrows
                     .into_iter()
@@ -389,9 +397,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     .collect::<Vec<_>>(),
             );
         }
+
+        // Keep this just in case our method is returning some initially unknown value to an Opaque.
+        // This won't make a difference for methods that return a reference to an already created value.
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
         {
-            lifetime_args.push("nb::rv_policy::reference_internal".to_owned());
+            lifetime_args.push("nb::rv_policy::reference".to_owned());
         }
 
         Some(MethodInfo {
