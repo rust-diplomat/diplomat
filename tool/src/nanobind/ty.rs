@@ -366,10 +366,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let mut lifetime_args = vec![];
 
-        // Any returned values that are created on return (i.e., iterators, owned structs, owned opaques)
-        // that reference lifetimes are the only returned values that need to be kept alive, per: https://nanobind.readthedocs.io/en/latest/api_core.html#_CPPv4N8nanobind9rv_policyE
-        // They are an instantiated C++ type that is unknown to nanobind.
-        // For non-iterator references, Nanobind handles reference conversion automatically.
+        // Only returned values that are either created on return or return addresses previously unknown
+        // to nanobind require additional annotation with keep_alive per: https://nanobind.readthedocs.io/en/latest/api_core.html#_CPPv4N8nanobind9rv_policyE
+        // For any return of a reference to an existing object, nanobind is smart enough to locate it's python wrapper object & correctly increment it's refcount
         // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
         if matches!(
             method.attrs.special_method,
