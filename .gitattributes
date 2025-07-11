@@ -21,3 +21,4 @@ feature_tests/kotlin/somelib/** linguist-generated=true
 feature_tests/js/api/** linguist-generated=true
 feature_tests/js/api_legacy/** linguist-generated=true
 feature_tests/demo_gen/demo/** linguist-generated=true
+feature_tests/nanobind/src/** linguist-generated=true

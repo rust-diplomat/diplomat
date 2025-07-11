@@ -20,6 +20,6 @@ void add_ResultOpaque_binding(nb::handle mod) {
     	.def_static("new_in_enum_err", &ResultOpaque::new_in_enum_err, "i"_a)
     	.def_static("new_in_err", &ResultOpaque::new_in_err, "i"_a)
     	.def_static("new_int", &ResultOpaque::new_int, "i"_a)
-    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a, nb::keep_alive<0, 1>(), nb::rv_policy::reference);
+    	.def("takes_str", &ResultOpaque::takes_str, "_v"_a, nb::rv_policy::reference);
 }
 
