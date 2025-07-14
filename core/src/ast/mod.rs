@@ -44,3 +44,8 @@ pub use docs::{
     DocType, Docs, DocsUrlGenerator, RustLink, RustLinkDisplay,
     TypeReferenceSyntax as DocsTypeReferenceSyntax,
 };
+
+mod macros;
+pub use macros::{
+    Macros, Macro
+};

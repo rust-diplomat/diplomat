@@ -7,7 +7,7 @@ use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
     AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueType,
-    Path, PathType, RustLink, Struct, Trait,
+    Path, PathType, RustLink, Struct, Trait, Macros,
 };
 use crate::environment::*;
 
@@ -172,6 +172,8 @@ impl Module {
             mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule);
         let type_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Type);
 
+        let mut mod_macros = Macros::new();
+
         input
             .content
             .as_ref()
@@ -276,6 +278,9 @@ impl Module {
                         custom_traits_by_name
                             .insert(ident, trt);
                     }
+                }
+                Item::Macro(mac) => {
+                    let read = mod_macros.read_item_macro(mac);
                 }
                 _ => {}
             });
