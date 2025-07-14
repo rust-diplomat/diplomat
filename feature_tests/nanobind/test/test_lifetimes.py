@@ -16,5 +16,11 @@ def test_lifetimes():
         assert o.a == i+1, "Iteraton over thin vec didn't work"
 
     a = it.first
+    b = it[0]
+    
     it = None
     assert a.a == 1 
+    assert b.a == 1
+    
+    del a
+    assert b.a == 1
