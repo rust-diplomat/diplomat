@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 
 use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn::{braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse}, parse_macro_input, spanned::Spanned, token::{self, Token}, Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token};
 
 pub struct Macros {
-    defs : BTreeMap<Path, Macro>,
+    defs : BTreeMap<String, MacroRules>,
 }
 
 impl Macros {
@@ -14,15 +15,28 @@ impl Macros {
         }
     }
 
-    pub fn read_item_macro(input : ItemMacro) -> TokenStream {
+    pub fn read_item_macro(&mut self, input : &ItemMacro) -> Option<Vec<Item>> {
         let mac = Macro::from_syn(&input);
-        if let Ok((pth, mac)) = mac {
-            println!("{:?}", pth);
-            // m.body
-            // self.defs.insert(m.ident.clone(), m);
-            TokenStream::default()
+        // FIXME: Extremely hacky.
+        let path_str = input.mac.path.to_token_stream().to_string();
+        if let Ok(mac) = mac {
+            match mac {
+                Macro::MacroRules(rules) => {
+                    self.defs.insert(path_str, rules);
+                    // Macro rules add no new items: 
+                    None
+                },
+                Macro::MacroMatch(matched) => {
+                    if let Some(def) = self.defs.get(&path_str) {
+                        Some(def.evaluate(matched))
+                    } else {
+                        panic!("Could not find definition for {:?}", path_str);
+                    } 
+                }
+            }
         } else {
-            mac.unwrap_err().to_compile_error()
+            // We handle errors automatically in `diplomat/macro`
+            None
         }
     }
 }
@@ -34,16 +48,57 @@ pub enum Macro {
 }
 
 impl Macro {
-    pub fn from_syn(input : &ItemMacro) -> Result<(Path, Macro), syn::Error> {
+    pub fn from_syn(input : &ItemMacro) -> Result<Macro, syn::Error> {
         // Are we macro_rules!
-        if let Some(_) = &input.ident {
-            let o = input.mac.parse_body();
-            println!("TEST {:?}", o);
-            Ok((input.mac.path.clone(), Macro::MacroRules(o?)))
+        if input.ident.is_some() {
+            let r = input.mac.parse_body()?;
+            Ok(Macro::MacroRules(r))
         } else {
             let m = input.mac.parse_body()?;
-            Ok((input.mac.path.clone(), Macro::MacroMatch(m)))
+            Ok(Macro::MacroMatch(m))
         }
+    }
+
+    pub fn validate(input: ItemMacro) -> TokenStream {
+        if input.ident.is_some() {
+            let r = input.mac.parse_body::<MacroRules>();
+
+            if let Ok(..) = r {
+                TokenStream::default()
+            } else {
+                r.unwrap_err().to_compile_error()
+            }
+        } else {
+            let m = input.mac.parse_body::<MacroMatch>();
+            
+            if let Ok(..) = m {
+                TokenStream::default()
+            } else {
+                m.unwrap_err().to_compile_error()
+            }
+        }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct MacroMatch {
+    pub args : Vec<Expr>,
+}
+
+impl Parse for MacroMatch {
+    fn parse(input: parse::ParseStream) -> syn::Result<Self> {
+        let mut args = Vec::new();
+
+        // TODO: Need some custom logic based on the parent macro definition.
+        let args_p = input.parse_terminated(Expr::parse, Token![,])?;
+        for a in args_p {
+            args.push(a);
+        }
+
+        Ok(Self {
+            args
+        })
     }
 }
 
@@ -66,7 +121,7 @@ impl Parse for MacroIdent {
 #[derive(Debug)]
 pub struct MacroRules {
     pub match_tokens : Vec<MacroIdent>,
-    pub body : TokenStream
+    pub body : TokenStream,
 }
 
 impl Parse for MacroRules {
@@ -112,23 +167,10 @@ impl Parse for MacroRules {
     }
 }
 
-#[derive(Debug)]
-pub struct MacroMatch {
-    pub args : Vec<Expr>,
-}
+impl MacroRules {
+    fn evaluate(&self, matched : MacroMatch) -> Vec<Item> {
+        let mut out = Vec::new();
 
-impl Parse for MacroMatch {
-    fn parse(input: parse::ParseStream) -> syn::Result<Self> {
-        let mut args = Vec::new();
-
-        // TODO: Need some custom logic based on the parent macro definition.
-        let args_p = input.parse_terminated(Expr::parse, Token![,])?;
-        for a in args_p {
-            args.push(a);
-        }
-
-        Ok(Self {
-            args
-        })
+        out
     }
 }

@@ -106,6 +106,17 @@ pub struct Module {
     pub attrs: Attrs,
 }
 
+struct ModuleSynTraverse {
+    custom_types_by_name : BTreeMap<Ident, CustomType>,
+    custom_traits_by_name :  BTreeMap<Ident, Trait>,
+    sub_modules : Vec<Module>,
+    imports : Vec<(Path, Ident)>,
+    analyze_types : bool,
+    type_parent_attrs : Attrs,
+    impl_parent_attrs : Attrs,
+    mod_macros : Macros,
+}
+
 impl Module {
     pub fn all_rust_links(&self) -> HashSet<&RustLink> {
         let mut rust_links = self
@@ -154,25 +165,135 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
-    pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
-        let mut custom_types_by_name = BTreeMap::new();
-        let mut custom_traits_by_name = BTreeMap::new();
-        let mut sub_modules = Vec::new();
-        let mut imports = Vec::new();
+    pub fn evaluate_item(a : &Item, mst : &mut ModuleSynTraverse) {
+        match a {
+            Item::Use(u) => {
+                if mst.analyze_types {
+                    extract_imports(&Path::empty(), &u.tree, &mut mst.imports);
+                }
+            }
+            Item::Struct(strct) => {
+                if mst.analyze_types {
+                    let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
+                        Ok(None) => CustomType::Struct(Struct::new(strct, false, &mst.type_parent_attrs)),
+                        Ok(Some(DiplomatStructAttribute::Out)) => {
+                            CustomType::Struct(Struct::new(strct, true, &mst.type_parent_attrs))
+                        }
+                        Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::Opaque))) => {
+                            CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Immutable, &mst.type_parent_attrs))
+                        }
+                        Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::OpaqueMut))) => {
+                            CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Mutable, &mst.type_parent_attrs))
+                        }
+                        Err(errors) => {
+                            panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
+                        }
+                    };
 
-        let analyze_types = force_analyze
+                    mst.custom_types_by_name.insert(Ident::from(&strct.ident), custom_type);
+                }
+            }
+
+            Item::Enum(enm) => {
+                if mst.analyze_types {
+                    let ident = (&enm.ident).into();
+                    let custom_enum = match DiplomatTypeAttribute::parse(&enm.attrs[..]) {
+                        Ok(None) => CustomType::Enum(Enum::new(enm, &mst.type_parent_attrs)),
+                        Ok(Some(DiplomatTypeAttribute::Opaque)) => {
+                            CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Immutable, &mst.type_parent_attrs))
+                        }
+                        Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => {
+                            CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Mutable, &mst.type_parent_attrs))
+                        }
+                        Err(errors) => {
+                            panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
+                        }
+                    };
+                    mst.custom_types_by_name
+                        .insert(ident, custom_enum);
+                }
+            }
+
+            Item::Impl(imp) => {
+                if mst.analyze_types && imp.trait_.is_none() {
+                    let self_path = match imp.self_ty.as_ref() {
+                        syn::Type::Path(s) => PathType::from(s),
+                        _ => panic!("Self type not found"),
+                    };
+                    let mut impl_attrs = mst.impl_parent_attrs.clone();
+                    impl_attrs.add_attrs(&imp.attrs);
+                    let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
+                    let self_ident = self_path.path.elements.last().unwrap();
+                    let mut new_methods = imp
+                        .items
+                        .iter()
+                        .filter_map(|i| match i {
+                            ImplItem::Fn(m) => Some(m),
+                            _ => None,
+                        })
+                        .filter(|m| {
+                            let is_public = matches!(m.vis, Visibility::Public(_));
+                            let has_diplomat_attrs = m.attrs.iter().any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
+                            assert!(is_public || !has_diplomat_attrs, "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
+                            is_public
+                        })
+                        .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
+                        .collect();
+
+                    match mst.custom_types_by_name.get_mut(self_ident)
+                                                .expect("Diplomat currently requires impls to be in the same module as their self type") {
+                        CustomType::Struct(strct) => {
+                            strct.methods.append(&mut new_methods);
+                        }
+                        CustomType::Opaque(strct) => {
+                            strct.methods.append(&mut new_methods);
+                        }
+                        CustomType::Enum(enm) => {
+                            enm.methods.append(&mut new_methods);
+                        }
+                    }
+                }
+            }
+            Item::Mod(item_mod) => {
+                mst.sub_modules.push(Module::from_syn(item_mod, false));
+            }
+            Item::Trait(trt) => {
+                if mst.analyze_types {
+                    let ident = (&trt.ident).into();
+                    let trt = Trait::new(trt, &mst.type_parent_attrs);
+                    mst.custom_traits_by_name
+                        .insert(ident, trt);
+                }
+            }
+            Item::Macro(mac) => {
+                let maybe_items = mst.mod_macros.read_item_macro(mac);
+                if let Some(items) = maybe_items {
+                    for i in items {
+                        Module::evaluate_item(&i, mst);
+                    }
+                }
+            }
+            _ => {}
+        }
+    } 
+
+    pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
+        let mod_attrs: Attrs = (&*input.attrs).into();
+
+        let mut mst = ModuleSynTraverse {
+            custom_types_by_name: BTreeMap::new(),
+            custom_traits_by_name: BTreeMap::new(),
+            sub_modules: Vec::new(),
+            imports: Vec::new(),
+            analyze_types: force_analyze
             || input
                 .attrs
                 .iter()
-                .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge");
-
-        let mod_attrs: Attrs = (&*input.attrs).into();
-
-        let impl_parent_attrs: Attrs =
-            mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule);
-        let type_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Type);
-
-        let mut mod_macros = Macros::new();
+                .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge"),
+            impl_parent_attrs: mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule),
+            type_parent_attrs: mod_attrs.attrs_for_inheritance(AttrInheritContext::Type),
+            mod_macros: Macros::new()
+        };
 
         input
             .content
@@ -180,117 +301,16 @@ impl Module {
             .map(|t| &t.1[..])
             .unwrap_or_default()
             .iter()
-            .for_each(|a| match a {
-                Item::Use(u) => {
-                    if analyze_types {
-                        extract_imports(&Path::empty(), &u.tree, &mut imports);
-                    }
-                }
-                Item::Struct(strct) => {
-                    if analyze_types {
-                        let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
-                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &type_parent_attrs)),
-                            Ok(Some(DiplomatStructAttribute::Out)) => {
-                                CustomType::Struct(Struct::new(strct, true, &type_parent_attrs))
-                            }
-                            Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::Opaque))) => {
-                                CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Immutable, &type_parent_attrs))
-                            }
-                            Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::OpaqueMut))) => {
-                                CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Mutable, &type_parent_attrs))
-                            }
-                            Err(errors) => {
-                                panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
-                            }
-                        };
-
-                        custom_types_by_name.insert(Ident::from(&strct.ident), custom_type);
-                    }
-                }
-
-                Item::Enum(enm) => {
-                    if analyze_types {
-                        let ident = (&enm.ident).into();
-                        let custom_enum = match DiplomatTypeAttribute::parse(&enm.attrs[..]) {
-                            Ok(None) => CustomType::Enum(Enum::new(enm, &type_parent_attrs)),
-                            Ok(Some(DiplomatTypeAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Immutable, &type_parent_attrs))
-                            }
-                            Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Mutable, &type_parent_attrs))
-                            }
-                            Err(errors) => {
-                                panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
-                            }
-                        };
-                        custom_types_by_name
-                            .insert(ident, custom_enum);
-                    }
-                }
-
-                Item::Impl(imp) => {
-                    if analyze_types && imp.trait_.is_none() {
-                        let self_path = match imp.self_ty.as_ref() {
-                            syn::Type::Path(s) => PathType::from(s),
-                            _ => panic!("Self type not found"),
-                        };
-                        let mut impl_attrs = impl_parent_attrs.clone();
-                        impl_attrs.add_attrs(&imp.attrs);
-                        let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
-                        let self_ident = self_path.path.elements.last().unwrap();
-                        let mut new_methods = imp
-                            .items
-                            .iter()
-                            .filter_map(|i| match i {
-                                ImplItem::Fn(m) => Some(m),
-                                _ => None,
-                            })
-                            .filter(|m| {
-                                let is_public = matches!(m.vis, Visibility::Public(_));
-                                let has_diplomat_attrs = m.attrs.iter().any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                                assert!(is_public || !has_diplomat_attrs, "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
-                                is_public
-                            })
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
-                            .collect();
-
-                        match custom_types_by_name.get_mut(self_ident)
-                                                  .expect("Diplomat currently requires impls to be in the same module as their self type") {
-                            CustomType::Struct(strct) => {
-                                strct.methods.append(&mut new_methods);
-                            }
-                            CustomType::Opaque(strct) => {
-                                strct.methods.append(&mut new_methods);
-                            }
-                            CustomType::Enum(enm) => {
-                                enm.methods.append(&mut new_methods);
-                            }
-                        }
-                    }
-                }
-                Item::Mod(item_mod) => {
-                    sub_modules.push(Module::from_syn(item_mod, false));
-                }
-                Item::Trait(trt) => {
-                    if analyze_types {
-                        let ident = (&trt.ident).into();
-                        let trt = Trait::new(trt, &type_parent_attrs);
-                        custom_traits_by_name
-                            .insert(ident, trt);
-                    }
-                }
-                Item::Macro(mac) => {
-                    let read = mod_macros.read_item_macro(mac);
-                }
-                _ => {}
+            .for_each(|a| {
+                Module::evaluate_item(a, &mut mst);
             });
 
         Module {
             name: (&input.ident).into(),
-            imports,
-            declared_types: custom_types_by_name,
-            declared_traits: custom_traits_by_name,
-            sub_modules,
+            imports: mst.imports,
+            declared_types: mst.custom_types_by_name,
+            declared_traits: mst.custom_traits_by_name,
+            sub_modules: mst.sub_modules,
             attrs: mod_attrs,
         }
     }
