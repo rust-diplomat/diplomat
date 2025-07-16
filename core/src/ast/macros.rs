@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use proc_macro2::TokenStream;
-use syn::{braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse}, parse_macro_input, token::{self, Token}, Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token};
+use syn::{braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse}, parse_macro_input, spanned::Spanned, token::{self, Token}, Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token};
 
 pub struct Macros {
     defs : BTreeMap<Path, Macro>,
@@ -14,17 +14,15 @@ impl Macros {
         }
     }
 
-    pub fn read_item_macro(&mut self, input : &ItemMacro) -> Option<TokenStream> {
-        let mac = Macro::from_syn(input);
+    pub fn read_item_macro(input : ItemMacro) -> TokenStream {
+        let mac = Macro::from_syn(&input);
         if let Ok((pth, mac)) = mac {
             println!("{:?}", pth);
             // m.body
             // self.defs.insert(m.ident.clone(), m);
-            None
+            TokenStream::default()
         } else {
-            // FIXME:
-            // panic!("{:?}", mac.unwrap_err());
-            None
+            mac.unwrap_err().to_compile_error()
         }
     }
 }
@@ -39,7 +37,9 @@ impl Macro {
     pub fn from_syn(input : &ItemMacro) -> Result<(Path, Macro), syn::Error> {
         // Are we macro_rules!
         if let Some(_) = &input.ident {
-            Ok((input.mac.path.clone(), Macro::MacroRules(input.mac.parse_body()?)))
+            let o = input.mac.parse_body();
+            println!("TEST {:?}", o);
+            Ok((input.mac.path.clone(), Macro::MacroRules(o?)))
         } else {
             let m = input.mac.parse_body()?;
             Ok((input.mac.path.clone(), Macro::MacroMatch(m)))
@@ -95,8 +95,13 @@ impl Parse for MacroRules {
         let arm_body;
         braced!(arm_body in input);
 
-        let body = arm_body.cursor().token_stream();
+        let body = arm_body.parse::<TokenStream>()?;
 
+        let _semicolon = input.parse::<Token![;]>()?;
+
+        if !input.is_empty() {
+            return Err(syn::Error::new(input.span(), "Diplomat does not support macros of more than one arm."));
+        }
         
         // We don't support any other rules, so we ignore them.
 

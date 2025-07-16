@@ -3,6 +3,7 @@
 #[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
+    #[diplomat::macro_rules]
     macro_rules! create_vec {
         ($vec_name:ident) => {
             pub struct $vec_name {
@@ -14,7 +15,7 @@ pub mod ffi {
                     Self {}
                 }
             }
-        }
+        };
     }
 
     create_vec!(VectorTest);
