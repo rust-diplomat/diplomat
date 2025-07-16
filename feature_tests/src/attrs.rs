@@ -7,12 +7,12 @@ pub mod ffi {
     macro_rules! create_vec {
         ($vec_name:ident) => {
             pub struct $vec_name {
-
+                pub test: f64,
             }
 
             impl $vec_name {
-                pub fn new(&self) -> Self {
-                    Self {}
+                pub fn new() -> Self {
+                    Self { test: 0.0 }
                 }
             }
         };
