@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Basics - The Diplomat Book</title>
+        <title>Slices - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -12,34 +12,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="highlight-css" href="highlight.css">
-        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
-        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex.js";
+            window.path_to_searchindex_js = "../searchindex.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
+        <script src="../toc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -106,7 +106,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -141,7 +141,7 @@
                     <h1 class="menu-title">The Diplomat Book</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
 
@@ -175,82 +175,47 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="basics"><a class="header" href="#basics">Basics</a></h1>
-<p>When using Diplomat, you'll need to define Rust modules that contain the Rust APIs you want to expose. You can do this by using the <code>diplomat::bridge</code> macro:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::bridge]
+                        <h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
+<h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, <code>nanobind</code>, queried with <code>supports=static_slices</code>)</p>
+<p>Support for <code>&amp;'static</code> slices.</p>
+<h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, queried with <code>supports=struct_primitive_slices</code>)</p>
+<p>Some Diplomat backends support providing slices of structs as function parameters:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
-    pub struct MyFFIStruct {
-        pub a: i32,
-        pub b: bool,
+    #[diplomat::attr(auto, allowed_in_slices)]
+    struct Struct {
+        a : bool,
+        b : i32
     }
-    
-    impl MyFFIStruct {
-        pub fn create() -&gt; MyFFIStruct {
-            MyFFIStruct {
-                a: 42,
-                b: true
-            }
-        }
 
-        pub fn do_a_thing(self) {
-            println!("doing thing {:?}", self.b);
-        }
+    impl Struct {
+        pub fn bar(slice : &amp;mut [Struct]) {}
+        pub fn baz(other_slice : &amp;[Struct]) {}
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>This is a simple struct with public fields; which is easier to reason about in an introductory example. <em>Most</em> APIs exposed via Diplomat will be via "opaque types", to be covered in the <a href="./opaque.html">chapter on opaque types</a>.</p>
-<p>Every type declared within a <code>diplomat::bridge</code> module along with all methods in its associated impl will be exposed over FFI. For example, the above code will generate the following extern API:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[no_mangle]
-extern "C" fn MyFFIStruct_create() -&gt; MyFFIStruct {
-    MyFFIStruct::create()
-}
-
-#[no_mangle]
-extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
-    this.do_a_thing()
-}
-<span class="boring">}</span></code></pre></pre>
-<p>We can then generate the bindings for this API using the <code>diplomat-tool</code> CLI.</p>
-<h2 id="c"><a class="header" href="#c">C++</a></h2>
-<p>For example, if we want to generate C++ bindings, we can create a folder `cpp/`` and generate bindings in it by running:</p>
-<pre><code class="language-shell">$ diplomat-tool cpp cpp/
 </code></pre>
-<p>This will generate the following struct in <code>MyFFIStruct.hpp</code>, along with some boilerplate:</p>
-<pre><code class="language-cpp">struct MyFFIStruct {
- public:
-  int32_t a;
-  bool b;
-  static MyFFIStruct create();
-  void do_a_thing();
-};
-</code></pre>
-<p>If we want to generate Sphinx documentation to cpp-docs, we can run with that as an additional parameter:</p>
-<pre><code class="language-shell">$ diplomat-tool cpp cpp/ --docs cpp-docs/
-</code></pre>
-<h2 id="wasm"><a class="header" href="#wasm">WASM</a></h2>
-<p>For WASM JS/TypeScript bindings, you can use the following options, with similarly named directories:</p>
-<pre><code class="language-shell">$ diplomat-tool js js/ --docs js/docs/
-</code></pre>
-<p>This will generate JS that has a <code>MyFFIStruct</code> class, with a static <code>create()</code> method, a <code>do_a_thing()</code> method, and getters for the fields. This JS will require there to be a <code>wasm.mjs</code> file that loads in the built wasm file (See <a href="https://github.com/rust-diplomat/diplomat/issues/80">issue #80</a> for improving this), which you can base off of <a href="https://github.com/rust-diplomat/diplomat/blob/38cffa9bc2ef21d0aba89ed7d76236de4153248a/example/js/wasm.mjs">this file</a>.</p>
-<h2 id="c-1"><a class="header" href="#c-1">C</a></h2>
-<p>While low-level C headers are generated in the process of running <code>diplomat-tool cpp</code>, you can also generate just the C headers with</p>
-<pre><code class="language-shell">$ diplomat-tool c c/
-</code></pre>
-<p>Note that Diplomat's C mode generates direct bindings to the lower level <code>extern "C"</code> API, and is not idiomatic C code. It is recommended that one build a higher level API around the C API (perhaps by writing a plugin) if C bindings are desired.</p>
+<p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
+<ul>
+<li>The struct type must have <code>#[diplomat::attr(auto, allowed_in_slices)]</code> attribute.</li>
+<li>The struct can only have fields that are either:
+<ul>
+<li>Primitive</li>
+<li>Nested primitive structs</li>
+</ul>
+</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="user.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/stringifiers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="config.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../safety.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -260,11 +225,11 @@ extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="user.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/stringifiers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="config.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../safety.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -279,13 +244,13 @@ extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 
