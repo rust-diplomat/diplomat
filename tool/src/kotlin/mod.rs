@@ -592,9 +592,9 @@ return string{return_type_modifier}"#
         )
     }
 
-    fn gen_slice_return_conversion<'d>(
+    fn gen_slice_return_conversion<'d, P: TyPosition>(
         &'d self,
-        slice_ty: &'d Slice,
+        slice_ty: &'d Slice<P>,
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
@@ -968,10 +968,10 @@ returnVal.option() ?: return null
         }
     }
 
-    fn gen_slice_conversion(
+    fn gen_slice_conversion<P: TyPosition>(
         &self,
         kt_param_name: Cow<'cx, str>,
-        slice_type: Slice,
+        slice_type: Slice<P>,
     ) -> Cow<'cx, str> {
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
@@ -1006,7 +1006,11 @@ returnVal.option() ?: return null
         .into()
     }
 
-    fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Option<Cow<'cx, str>> {
+    fn gen_cleanup<P: TyPosition>(
+        &self,
+        param_name: Cow<'cx, str>,
+        slice: Slice<P>,
+    ) -> Option<Cow<'cx, str>> {
         match slice {
             Slice::Str(Some(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
@@ -1078,14 +1082,17 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), *slice));
+                    slice_conversions
+                        .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
 
                     let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
                         ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), *slice) {
+                            if let Some(cleanup) =
+                                self.gen_cleanup(param_name.clone(), slice.clone())
+                            {
                                 cleanups.push(cleanup)
                             }
                         }
