@@ -14,6 +14,7 @@ void add_CallbackWrapper_binding(nb::handle mod) {
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
     	.def_static("test_opaque_cb_arg", &CallbackWrapper::test_opaque_cb_arg, "cb"_a, "a"_a)
+    	.def_static("test_slice_cb_arg", &CallbackWrapper::test_slice_cb_arg, "arg"_a, "f"_a)
     	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
 }
 

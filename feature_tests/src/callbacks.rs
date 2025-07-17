@@ -36,6 +36,10 @@ mod ffi {
         pub fn test_opaque_cb_arg<'a>(cb: impl Fn(&mut MyString), a: &'a mut MyString) {
             cb(a);
         }
+
+        pub fn test_slice_cb_arg(arg: &[u8], f: impl Fn(&[u8])) {
+            f(arg);
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
