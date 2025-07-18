@@ -3,6 +3,23 @@
 #[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
+    #[diplomat::macro_rules]
+    macro_rules! create_vec {
+        ($vec_name:ident) => {
+            pub struct $vec_name {
+                pub test: f64,
+            }
+
+            impl $vec_name {
+                pub fn new() -> Self {
+                    Self { test: 0.0 }
+                }
+            }
+        };
+    }
+
+    create_vec!(VectorTest);
+
     #[derive(Clone)]
     #[diplomat::opaque]
     // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
