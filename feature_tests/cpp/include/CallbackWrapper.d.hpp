@@ -42,6 +42,8 @@ struct CallbackWrapper {
 
   inline static void test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a);
 
+  inline static void test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f);
+
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };
