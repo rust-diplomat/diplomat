@@ -232,8 +232,8 @@ impl MacroRules {
                 },
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
+                    // We need to read inside of any groups to find and replace `$` idents.
                     let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
-                    // Once we detect a group, we push it to the array for syn to evaluate.
                     stream.append(group);
                     c = next;
                 },
@@ -244,7 +244,7 @@ impl MacroRules {
             }
         }
 
-        // Now we have a stream to read through. 
+        // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
 
         let maybe_list = syn::parse_str::<ItemList>(&stream.to_string());
         if let Ok(i) = maybe_list {
