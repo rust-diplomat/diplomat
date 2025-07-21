@@ -22,6 +22,7 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
     }
   }
 
+  @_DiplomatFfiUse('namespace_OpaqueIterator_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterator_destroy));
 
   AttrOpaque1Renamed? _current;

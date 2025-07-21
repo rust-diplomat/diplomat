@@ -47,7 +47,7 @@ class Opaque internal constructor (
         @JvmStatic
         
         fun tryFromUtf8(input: String): Opaque? {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_try_from_utf8(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -60,7 +60,7 @@ class Opaque internal constructor (
         @JvmStatic
         
         fun fromStr(input: String): Opaque {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_from_str(inputSlice);
             val selfEdges: List<Any> = listOf()

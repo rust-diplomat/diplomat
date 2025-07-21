@@ -24,6 +24,7 @@ final class Bar implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('Bar_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Bar_destroy));
 
   Foo get foo {

@@ -22,6 +22,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("net.jqwik:jqwik-kotlin:1.9.3")
 }
 publishing {
     publications {

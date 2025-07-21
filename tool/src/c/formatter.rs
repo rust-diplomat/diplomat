@@ -253,6 +253,34 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
+    pub fn fmt_struct_slice_name<P: TyPosition>(
+        &self,
+        borrow: Option<hir::Borrow>,
+        st_ty: &P::StructPath,
+    ) -> Cow<'tcx, str> {
+        let st_id = hir::StructPathLike::id(st_ty);
+        let st_name = self.fmt_type_name(st_id);
+
+        let def = self.tcx.resolve_type(st_id);
+
+        let ns = def.attrs().namespace.clone();
+
+        let mtb = match borrow {
+            Some(borrow) if borrow.mutability.is_immutable() => "",
+            _ => "Mut",
+        };
+
+        let ty = format!("Diplomat{st_name}View{mtb}");
+
+        if self.is_for_cpp {
+            if let Some(ref ns) = ns {
+                return format!("{ns}::{CAPI_NAMESPACE}::{ty}").into();
+            }
+        }
+
+        self.diplomat_namespace(ty.into())
+    }
+
     pub(crate) fn fmt_write_name(&self) -> Cow<'tcx, str> {
         self.diplomat_namespace("DiplomatWrite".into())
     }

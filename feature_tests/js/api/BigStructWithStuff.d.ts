@@ -15,6 +15,7 @@ export type BigStructWithStuff_obj = {
 
 /**
  * Testing JS-specific layout/padding behavior
+ * Also being used to test CPP backends taking structs with primitive values.
  */
 export class BigStructWithStuff {
     get first(): number;
