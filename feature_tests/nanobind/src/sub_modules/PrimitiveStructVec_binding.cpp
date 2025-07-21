@@ -16,6 +16,7 @@ void add_PrimitiveStructVec_binding(nb::handle mod) {
     	.def("append", &PrimitiveStructVec::append, "value"_a)
     	.def_prop_ro("asSlice", &PrimitiveStructVec::as_slice)
     	.def_prop_ro("asSliceMut", &PrimitiveStructVec::as_slice_mut)
-    	.def(nb::new_(&PrimitiveStructVec::new_));
+    	.def(nb::new_(&PrimitiveStructVec::new_))
+    	.def_static("take_slice_from_other_namespace", &PrimitiveStructVec::take_slice_from_other_namespace, "_sl"_a);
 }
 

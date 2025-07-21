@@ -12,6 +12,9 @@
 #include "diplomat_runtime.hpp"
 
 struct PrimitiveStruct;
+namespace ns {
+struct RenamedStructWithAttrs;
+}
 
 
 namespace diplomat {
@@ -34,6 +37,8 @@ public:
   inline diplomat::span<PrimitiveStruct> as_slice_mut();
 
   inline PrimitiveStruct __getitem__(size_t idx) const;
+
+  inline static void take_slice_from_other_namespace(diplomat::span<const ns::RenamedStructWithAttrs> _sl);
 
   inline const diplomat::capi::PrimitiveStructVec* AsFFI() const;
   inline diplomat::capi::PrimitiveStructVec* AsFFI();
