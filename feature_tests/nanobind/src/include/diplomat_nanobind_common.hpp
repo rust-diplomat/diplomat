@@ -8,6 +8,7 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/bind_vector.h>
 #include <nanobind/stl/detail/nb_list.h>
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
@@ -167,6 +168,17 @@ namespace nanobind::detail
                     value = diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
                     return true;
                 }
+            }
+
+            // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
+            using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+
+
+            // Are we a bound vector type? If so, we can pass over data directly.
+            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                U* bound_vec = nb::inst_ptr<U>(src);
+                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                return true;
             }
 
             // Attempt to convert a native sequence. We must convert all elements & store
