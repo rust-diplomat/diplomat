@@ -37,7 +37,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun new_(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -50,7 +50,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun newUnsafe(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new_unsafe(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -63,7 +63,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun newOwned(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.moveUtf8(v)
             
             val returnVal = lib.MyString_new_owned(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -75,7 +75,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun newFromFirst(v: Array<String>): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8s(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.MyString_new_from_first(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -95,7 +95,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun stringTransform(foo: String): String {
-            val (fooMem, fooSlice) = PrimitiveArrayTools.readUtf8(foo)
+            val (fooMem, fooSlice) = PrimitiveArrayTools.borrowUtf8(foo)
             val write = DW.lib.diplomat_buffer_write_create(0)
             val returnVal = lib.MyString_string_transform(fooSlice, write);
             
@@ -105,7 +105,7 @@ class MyString internal constructor (
     }
     
     fun setStr(newStr: String): Unit {
-        val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
+        val (newStrMem, newStrSlice) = PrimitiveArrayTools.borrowUtf8(newStr)
         
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
         

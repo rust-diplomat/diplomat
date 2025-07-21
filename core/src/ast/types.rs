@@ -1095,7 +1095,7 @@ impl TypeName {
                             );
                         }
                         _ => {
-                            panic!("Unsupported trait component: {:?}", trait_bound);
+                            panic!("Unsupported trait component: {trait_bound:?}");
                         }
                     }
                 }

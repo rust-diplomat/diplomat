@@ -80,7 +80,7 @@ fn param_conversion(
             let mut cb_arg_type_list = vec![];
             let mut all_params_conversion = vec![];
             for (index, in_ty) in in_types.iter().enumerate() {
-                let param_ident_str = format!("arg{}", index);
+                let param_ident_str = format!("arg{index}");
                 let orig_type = in_ty.to_syn();
                 let param_converted_type = param_ty(in_ty);
                 if let Some(conversion) = param_conversion(
@@ -211,7 +211,7 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
             }
         };
         let runner_method_name =
-            Ident::new(&format!("run_{}_callback", method_name), Span::call_site());
+            Ident::new(&format!("run_{method_name}_callback"), Span::call_site());
         methods.push(syn::Item::Fn(syn::parse_quote!(
             fn #method_name #lifetimes (#(#param_names_and_types),*) #return_tokens {
                 unsafe {
@@ -412,7 +412,7 @@ impl AttributeInfo {
                     } else if seg == "config" {
                         panic!("#[diplomat::config] is restricted to top level types in lib.rs.");
                     } else {
-                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {:?}", seg)
+                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {seg:?}")
                     }
                 } else {
                     panic!("#[diplomat::foo] attrs have a single-segment path name")
@@ -450,10 +450,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                     let ty = ast::TypeName::from_syn(&field.ty, None);
                     if !ty.is_ffi_safe() {
                         let ffisafe = ty.ffi_safe_version();
-                        panic!(
-                            "Found non-FFI safe type inside struct: {}, try {}",
-                            ty, ffisafe
-                        );
+                        panic!("Found non-FFI safe type inside struct: {ty}, try {ffisafe}");
                     }
                 }
             }

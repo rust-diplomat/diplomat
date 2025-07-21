@@ -510,8 +510,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 if requires_buf {
                     method_info.alloc_expressions.push(
                         format!(
-                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
-                            size, align
+                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {size}, {align}, true);"
                         )
                         .into(),
                     );

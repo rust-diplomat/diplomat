@@ -55,6 +55,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub struct KotlinConfig {
     domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
+    scaffold: Option<bool>,
 }
 
 impl KotlinConfig {
@@ -66,7 +67,10 @@ impl KotlinConfig {
                 }
             }
             "use_finalizers_not_cleaners" => {
-                self.use_finalizers_not_cleaners = value.as_bool();
+                self.use_finalizers_not_cleaners = value.as_str().map(|val| val == "true");
+            }
+            "scaffold" => {
+                self.scaffold = value.as_str().map(|val| val == "true");
             }
             _ => {}
         }
@@ -81,6 +85,7 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         use_finalizers_not_cleaners,
+        scaffold,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -187,34 +192,36 @@ pub(crate) fn run<'tcx>(
         files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
 
-    #[derive(Template)]
-    #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
-    struct Build<'a> {
-        domain: &'a str,
-        lib_name: &'a str,
-    }
+    if scaffold.unwrap_or(false) {
+        #[derive(Template)]
+        #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
+        struct Build<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+        }
 
-    let build = Build {
-        domain: &domain,
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render build file");
+        let build = Build {
+            domain: &domain,
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render build file");
 
-    files.add_file("build.gradle.kts".to_string(), build);
+        files.add_file("build.gradle.kts".to_string(), build);
 
-    #[derive(Template)]
-    #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
-    struct Settings<'a> {
-        lib_name: &'a str,
-    }
-    let settings = Settings {
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render settings file");
+        #[derive(Template)]
+        #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
+        struct Settings<'a> {
+            lib_name: &'a str,
+        }
+        let settings = Settings {
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render settings file");
 
-    files.add_file("settings.gradle.kts".to_string(), settings);
+        files.add_file("settings.gradle.kts".to_string(), settings);
+    }
     let native_results = ty_gen_cx
         .result_types
         .borrow()
@@ -974,11 +981,14 @@ returnVal.option() ?: return null
             closeable: bool,
         }
         let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
-            Slice::Str(_, _) => ("readUtf8".into(), true),
-            Slice::Primitive(_, _) => ("native".into(), true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("readUtf16s".into(), true),
-            Slice::Strs(_) => ("readUtf8s".into(), true),
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16".into(), true),
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
+            Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
+            Slice::Str(None, _) => ("moveUtf8".into(), true),
+            Slice::Primitive(Some(_), _) => ("borrow".into(), true),
+            Slice::Primitive(_, _) => ("move".into(), true),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
+            Slice::Strs(_) => ("borrowUtf8s".into(), true),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
@@ -1117,7 +1127,7 @@ returnVal.option() ?: return null
                     let param_names: Vec<String> = params
                         .iter()
                         .enumerate()
-                        .map(|(index, _)| format!("arg{}", index))
+                        .map(|(index, _)| format!("arg{index}"))
                         .collect();
                     let (native_input_names, native_input_params_and_types): (
                         Vec<String>,
@@ -1131,26 +1141,26 @@ returnVal.option() ?: return null
                                 // named types have a _Native wrapper, this needs to be passed as the "native"
                                 // version of the argument
                                 (
-                                    format!("{}({})", in_ty, in_name),
-                                    format!("{}: {}Native", in_name, in_ty),
+                                    format!("{in_ty}({in_name})"),
+                                    format!("{in_name}: {in_ty}Native"),
                                 )
                             }
                             Type::Slice(Slice::Primitive(_, _)) => {
                                 // slices need to be passed as Slice type
                                 // and only primitive slices are allowed
                                 (
-                                    format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                                    format!("{}: Slice", in_name),
+                                    format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                                    format!("{in_name}: Slice"),
                                 )
                             }
                             Type::Slice(_) => {
                                 panic!("Non-primitive slices are not allowed as callback args")
                             }
                             Type::Opaque(_) => (
-                                format!("{}({}, listOf())", in_ty, in_name),
-                                format!("{}: Pointer", in_name),
+                                format!("{in_ty}({in_name}, listOf())"),
+                                format!("{in_name}: Pointer"),
                             ),
-                            _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                            _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                         })
                         .unzip();
                     let (native_output_type, return_modification) = match **output {
@@ -1617,7 +1627,7 @@ returnVal.option() ?: return null
                 if let Some(param_name) = &param.name {
                     param_name.to_string()
                 } else {
-                    format!("arg{}", index)
+                    format!("arg{index}")
                 }
             })
             .collect();
@@ -1632,25 +1642,25 @@ returnVal.option() ?: return null
                         // named types have a _Native wrapper, this needs to be passed as the "native"
                         // version of the argument
                         (
-                            format!("{}({})", in_ty, in_name),
-                            format!("{}: {}Native", in_name, in_ty),
+                            format!("{in_ty}({in_name})"),
+                            format!("{in_name}: {in_ty}Native"),
                         )
                     }
                     Type::Slice(Slice::Primitive(_, _)) => {
                         // slices need to be passed as Slice type
                         (
-                            format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                            format!("{}: Slice", in_name),
+                            format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                            format!("{in_name}: Slice"),
                         )
                     }
                     Type::Slice(_) => {
                         panic!("Non-primitive slices are not allowed as callback args")
                     }
                     Type::Opaque(_) => (
-                        format!("{}({}, listOf())", in_ty, in_name),
-                        format!("{}: Pointer", in_name),
+                        format!("{in_ty}({in_name}, listOf())"),
+                        format!("{in_name}: Pointer"),
                     ),
-                    _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                    _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                 })
                 .unzip();
         let non_native_params_and_types = method
@@ -1661,7 +1671,7 @@ returnVal.option() ?: return null
             .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
                 cur.clone()
                     + (if !cur.is_empty() { ", " } else { "" })
-                    + &format!("{}: {}", in_name, in_ty)
+                    + &format!("{in_name}: {in_ty}")
             });
         let (native_output_type, return_modification, return_cast) = match *method.output {
             Some(ref ty) => (
@@ -1997,7 +2007,7 @@ returnVal.option() ?: return null
                     Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
                     None => "Unit".into(),
                 };
-                format!("({})->{}", in_type_string, out_type_string).into()
+                format!("({in_type_string})->{out_type_string}").into()
             }
             Type::ImplTrait(trt) => {
                 let trait_id = trt.id();

@@ -51,6 +51,11 @@ typedef struct DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb {
     void (*run_callback)(const void*, MyString* );
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb;
+typedef struct DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f {
+    const void* data;
+    void (*run_callback)(const void*, DiplomatU8View );
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f;
 
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -63,6 +68,8 @@ int32_t CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_t
 int32_t CallbackWrapper_test_str_cb_arg(DiplomatCallback_CallbackWrapper_test_str_cb_arg_f f_cb_wrap);
 
 void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb cb_cb_wrap, MyString* a);
+
+void CallbackWrapper_test_slice_cb_arg(DiplomatU8View arg, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f f_cb_wrap);
 
 
 

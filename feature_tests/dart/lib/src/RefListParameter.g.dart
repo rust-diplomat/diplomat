@@ -20,6 +20,7 @@ final class RefListParameter implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('RefListParameter_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefListParameter_destroy));
 
 }

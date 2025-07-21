@@ -31,7 +31,7 @@ class Utf16Wrap internal constructor (
         @JvmStatic
         
         fun fromUtf16(input: String): Utf16Wrap {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf16(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf16(input)
             
             val returnVal = lib.Utf16Wrap_from_utf16(inputSlice);
             val selfEdges: List<Any> = listOf()

@@ -46,6 +46,14 @@ int main(int argc, char *argv[])
         simple_assert_eq("test_str_cb_arg output", out, 7);
     }
     {
+        std::vector<uint8_t> vector {1,2,3,4};
+
+        o.test_slice_cb_arg(diplomat::span<const uint8_t>(vector.data(), vector.size()), [](diplomat::span<const uint8_t> sp){
+            simple_assert_eq("test_cb_size", sp.size(), 4);
+            simple_assert_eq("test_cb_entry", sp.data()[3], 4);
+        });
+    }
+    {
         int copied = 0;
         // TODO: Make C++ reject this by using move_only_function in c++23.
         // We cannot reject this in earlier standards due to a defect in std::function.

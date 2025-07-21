@@ -64,7 +64,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_part(&self, part: &str) -> Cow<'static, str> {
-        format!("part '{}';", part).into()
+        format!("part '{part}';").into()
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {

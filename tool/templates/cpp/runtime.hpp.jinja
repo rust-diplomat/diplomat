@@ -233,12 +233,42 @@ using as_ffi_t = typename as_ffi<T>::type;
 template<typename T>
 using replace_string_view_t = std::conditional_t<std::is_same_v<T, std::string_view>, capi::DiplomatStringView, T>;
 
+template<typename T, typename = void>
+struct diplomat_c_span_convert {
+  using type = T;
+};
+
+#define MAKE_SLICE_CONVERTERS(name, c_ty) \
+  template<typename T> \
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const c_ty>>>> { \
+    using type = diplomat::capi::Diplomat##name##View; \
+  }; \
+  template<typename T> \
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<c_ty>>>> { \
+    using type = diplomat::capi::Diplomat##name##ViewMut; \
+  }; \
+
+MAKE_SLICE_CONVERTERS(I8, int8_t)
+MAKE_SLICE_CONVERTERS(U8, uint8_t)
+MAKE_SLICE_CONVERTERS(I16, int16_t)
+MAKE_SLICE_CONVERTERS(U16, uint16_t)
+MAKE_SLICE_CONVERTERS(I32, int32_t)
+MAKE_SLICE_CONVERTERS(U32, uint32_t)
+MAKE_SLICE_CONVERTERS(I64, int64_t)
+MAKE_SLICE_CONVERTERS(U64, uint64_t)
+MAKE_SLICE_CONVERTERS(F32, float)
+MAKE_SLICE_CONVERTERS(F64, double)
+MAKE_SLICE_CONVERTERS(Bool, bool)
+MAKE_SLICE_CONVERTERS(Char, char32_t)
+MAKE_SLICE_CONVERTERS(String, char)
+MAKE_SLICE_CONVERTERS(String16, char16_t)
+
 template<typename T>
-using replace_ref_with_ptr_t = std::conditional_t<std::is_reference_v<T>, std::add_pointer_t<std::remove_reference_t<T>>, T>;
+using diplomat_c_span_convert_t = typename diplomat_c_span_convert<T>::type;
 
 /// Replace the argument types from the std::function with the argument types for th function pointer
 template<typename T>
-using replace_fn_t = replace_string_view_t<as_ffi_t<T>>;
+using replace_fn_t = diplomat_c_span_convert_t<replace_string_view_t<as_ffi_t<T>>>;
 
 template <typename T> struct fn_traits;
 template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Args...)>> {
@@ -251,6 +281,8 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     static T replace(replace_fn_t<T> val) {
       if constexpr(std::is_same_v<T, std::string_view>)   {
           return std::string_view{val.data, val.len};
+      } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
+        return T{ val.data, val.len };
       } else if constexpr (!std::is_same_v<T, as_ffi_t<T>>) {
         if constexpr (std::is_lvalue_reference_v<T>) {
           return *std::remove_reference_t<T>::FromFFI(val);
