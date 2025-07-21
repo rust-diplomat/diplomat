@@ -7,8 +7,7 @@ use syn::{
     buffer::{Cursor, TokenBuffer},
     parenthesized,
     parse::{self, Parse},
-    token,
-    Error, Expr, Ident, Item, ItemMacro, Token,
+    token, Error, Expr, Ident, Item, ItemMacro, Token,
 };
 
 #[derive(Default)]
@@ -185,8 +184,9 @@ impl MacroRules {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
                             let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args[arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
-                                .to_tokens(&mut stream);
+                            matched.args
+                                [arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
+                            .to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {tt:?}");
@@ -225,8 +225,9 @@ impl MacroRules {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
                             let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args[arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
-                                .to_tokens(&mut stream);
+                            matched.args
+                                [arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
+                            .to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {tt:?}");

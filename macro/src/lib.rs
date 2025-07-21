@@ -450,9 +450,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                     let ty = ast::TypeName::from_syn(&field.ty, None);
                     if !ty.is_ffi_safe() {
                         let ffisafe = ty.ffi_safe_version();
-                        panic!(
-                            "Found non-FFI safe type inside struct: {ty}, try {ffisafe}"
-                        );
+                        panic!("Found non-FFI safe type inside struct: {ty}, try {ffisafe}");
                     }
                 }
             }
