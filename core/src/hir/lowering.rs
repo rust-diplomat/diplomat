@@ -1051,7 +1051,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {in_path:?}")));
+                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {:?}", in_path)));
                     Err(())
                 }
             },
