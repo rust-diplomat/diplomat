@@ -2,6 +2,8 @@
 
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
+export { RenamedVectorTest } from "./RenamedVectorTest.mjs"
+
 export { ImportedStruct } from "./ImportedStruct.mjs"
 
 export { BorrowedFields } from "./BorrowedFields.mjs"

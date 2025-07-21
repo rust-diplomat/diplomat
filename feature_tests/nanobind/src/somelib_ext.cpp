@@ -59,6 +59,7 @@ void add_Nested_binding(nb::handle);
 
 namespace ns {
 void add_RenamedStructWithAttrs_binding(nb::handle);
+void add_RenamedVectorTest_binding(nb::handle);
 void add_AttrOpaque1Renamed_binding(nb::handle);
 void add_RenamedAttrOpaque2_binding(nb::handle);
 void add_RenamedComparable_binding(nb::handle);
@@ -182,6 +183,7 @@ NB_MODULE(somelib, somelib_mod)
     nested::ns2::add_Nested_binding(somelib_nested_ns2_mod);
     
     ns::add_RenamedStructWithAttrs_binding(somelib_ns_mod);
+    ns::add_RenamedVectorTest_binding(somelib_ns_mod);
     ns::add_AttrOpaque1Renamed_binding(somelib_ns_mod);
     ns::add_RenamedAttrOpaque2_binding(somelib_ns_mod);
     ns::add_RenamedComparable_binding(somelib_ns_mod);

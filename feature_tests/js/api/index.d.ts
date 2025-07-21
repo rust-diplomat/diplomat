@@ -4,6 +4,8 @@ export { codepoint } from './diplomat-runtime';
 
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
+export { RenamedVectorTest, RenamedVectorTest_obj } from "./RenamedVectorTest"
+
 export { ImportedStruct, ImportedStruct_obj } from "./ImportedStruct"
 
 export { BorrowedFields, BorrowedFields_obj } from "./BorrowedFields"
