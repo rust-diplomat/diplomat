@@ -2,34 +2,43 @@ use std::collections::BTreeMap;
 
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use quote::{ToTokens, TokenStreamExt};
-use syn::{braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse, ParseBuffer}, parse_macro_input, spanned::Spanned, token::{self, Token}, Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token};
+use syn::{
+    braced, bracketed,
+    buffer::{Cursor, TokenBuffer},
+    parenthesized,
+    parse::{self, Parse, ParseBuffer},
+    parse_macro_input,
+    spanned::Spanned,
+    token::{self, Token},
+    Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token,
+};
 
 pub struct Macros {
-    defs : BTreeMap<Ident, MacroRules>,
+    defs: BTreeMap<Ident, MacroRules>,
 }
 
 impl Macros {
     pub fn new() -> Macros {
         Macros {
-            defs: BTreeMap::new()
+            defs: BTreeMap::new(),
         }
     }
 
-    pub fn read_item_macro(&mut self, input : &ItemMacro) -> Option<Vec<Item>> {
+    pub fn read_item_macro(&mut self, input: &ItemMacro) -> Option<Vec<Item>> {
         let mac = Macro::from_syn(&input);
         if let Ok((ident, mac)) = mac {
             match mac {
                 Macro::MacroRules(rules) => {
                     self.defs.insert(ident, rules);
-                    // Macro rules add no new items: 
+                    // Macro rules add no new items:
                     None
-                },
+                }
                 Macro::MacroMatch(matched) => {
                     if let Some(def) = self.defs.get(&ident) {
                         Some(def.evaluate(matched))
                     } else {
                         panic!("Could not find definition for {:?}", ident);
-                    } 
+                    }
                 }
             }
         } else {
@@ -42,11 +51,11 @@ impl Macros {
 #[derive(Debug)]
 pub enum Macro {
     MacroRules(MacroRules),
-    MacroMatch(MacroMatch)
+    MacroMatch(MacroMatch),
 }
 
 impl Macro {
-    pub fn from_syn(input : &ItemMacro) -> Result<(Ident, Macro), syn::Error> {
+    pub fn from_syn(input: &ItemMacro) -> Result<(Ident, Macro), syn::Error> {
         // Are we macro_rules!
         if let Some(ident) = &input.ident {
             let r = input.mac.parse_body()?;
@@ -70,7 +79,7 @@ impl Macro {
             }
         } else {
             let m = input.mac.parse_body::<MacroMatch>();
-            
+
             if let Ok(..) = m {
                 TokenStream::default()
             } else {
@@ -80,10 +89,9 @@ impl Macro {
     }
 }
 
-
 #[derive(Debug)]
 pub struct MacroMatch {
-    pub args : Vec<Expr>,
+    pub args: Vec<Expr>,
 }
 
 impl Parse for MacroMatch {
@@ -96,38 +104,36 @@ impl Parse for MacroMatch {
             args.push(a);
         }
 
-        Ok(Self {
-            args
-        })
+        Ok(Self { args })
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct MacroIdent {
-    pub ident : Ident,
-    pub ty : Ident
+    pub ident: Ident,
+    pub ty: Ident,
 }
 
 impl Parse for MacroIdent {
     fn parse(input: parse::ParseStream) -> syn::Result<Self> {
         input.parse::<Token![$]>()?;
-        let ident : Ident = input.parse()?;
+        let ident: Ident = input.parse()?;
         input.parse::<Token![:]>()?;
-        let ty : Ident = input.parse()?;
-        Ok(Self{ident, ty})
+        let ty: Ident = input.parse()?;
+        Ok(Self { ident, ty })
     }
 }
 
 #[derive(Debug)]
 pub struct MacroRules {
-    pub match_tokens : Vec<MacroIdent>,
-    pub body : TokenStream,
+    pub match_tokens: Vec<MacroIdent>,
+    pub body: TokenStream,
 }
 
 impl Parse for MacroRules {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
-        
+
         // Read the matcher:
         let arm;
         if lookahead.peek(token::Paren) {
@@ -137,13 +143,13 @@ impl Parse for MacroRules {
         } else if lookahead.peek(token::Bracket) {
             bracketed!(arm in input);
         } else {
-            return Err(Error::new(input.span(), "Expected {}, (), or []"))
+            return Err(Error::new(input.span(), "Expected {}, (), or []"));
         }
 
         // FIXME: This is not a comma separated list in actuality.
         let punc = arm.parse_terminated(MacroIdent::parse, Token![,])?;
 
-        let match_tokens = punc.iter().map(|i| { i.clone() }).collect();
+        let match_tokens = punc.iter().map(|i| i.clone()).collect();
 
         let _arrow = input.parse::<Token![=>]>()?;
 
@@ -156,32 +162,31 @@ impl Parse for MacroRules {
         let _semicolon = input.parse::<Token![;]>()?;
 
         if !input.is_empty() {
-            return Err(syn::Error::new(input.span(), "Diplomat does not support macros of more than one arm."));
+            return Err(syn::Error::new(
+                input.span(),
+                "Diplomat does not support macros of more than one arm.",
+            ));
         }
-        
+
         // We don't support any other rules, so we ignore them.
 
-        Ok(Self {
-            match_tokens,
-            body
-        })
+        Ok(Self { match_tokens, body })
     }
 }
 
 impl MacroRules {
-    fn parse_group(&self, matched : &MacroMatch, inner : Cursor) -> TokenStream {
+    fn parse_group(&self, matched: &MacroMatch, inner: Cursor) -> TokenStream {
         let mut stream = TokenStream::new();
-        
+
         let mut c = inner;
         while let Some((tt, next)) = c.token_tree() {
             match &tt {
                 TokenTree::Punct(p) if p.as_char() == '$' => {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
-                            let arg = self.match_tokens.iter().position(|mi| {
-                                mi.ident == i
-                            });
-                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))].to_tokens(&mut stream);
+                            let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
+                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))]
+                                .to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {:?}", tt);
@@ -189,25 +194,26 @@ impl MacroRules {
                     } else {
                         panic!("Expected token tree.");
                     }
-                },
+                }
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
-                    let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
+                    let group =
+                        proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
                     // Once we detect a group, we push it to the array for syn to evaluate.
                     stream.append(group);
                     c = next;
-                },
+                }
                 _ => {
                     stream.append(tt);
                     c = next
-                },
+                }
             }
         }
 
         stream
     }
 
-    fn evaluate(&self, matched : MacroMatch) -> Vec<Item> {
+    fn evaluate(&self, matched: MacroMatch) -> Vec<Item> {
         let mut stream = TokenStream::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
@@ -218,10 +224,9 @@ impl MacroRules {
                 TokenTree::Punct(punct) if punct.as_char() == '$' => {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
-                            let arg = self.match_tokens.iter().position(|mi| {
-                                mi.ident == i
-                            });
-                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))].to_tokens(&mut stream);
+                            let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
+                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))]
+                                .to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {:?}", tt);
@@ -229,18 +234,19 @@ impl MacroRules {
                     } else {
                         panic!("Expected token tree.");
                     }
-                },
+                }
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
                     // We need to read inside of any groups to find and replace `$` idents.
-                    let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
+                    let group =
+                        proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
                     stream.append(group);
                     c = next;
-                },
+                }
                 _ => {
                     stream.append(tt);
                     c = next
-                },
+                }
             }
         }
 
@@ -257,7 +263,7 @@ impl MacroRules {
 
 #[derive(Debug)]
 struct ItemList {
-    items : Vec<Item>
+    items: Vec<Item>,
 }
 
 impl Parse for ItemList {

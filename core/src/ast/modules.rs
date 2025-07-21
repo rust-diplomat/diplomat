@@ -6,8 +6,8 @@ use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueType,
-    Path, PathType, RustLink, Struct, Trait, Macros,
+    AttrInheritContext, Attrs, CustomType, Enum, Ident, Macros, Method, ModSymbol, Mutability,
+    OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::environment::*;
 
@@ -107,14 +107,14 @@ pub struct Module {
 }
 
 struct ModuleSynTraverse {
-    custom_types_by_name : BTreeMap<Ident, CustomType>,
-    custom_traits_by_name :  BTreeMap<Ident, Trait>,
-    sub_modules : Vec<Module>,
-    imports : Vec<(Path, Ident)>,
-    analyze_types : bool,
-    type_parent_attrs : Attrs,
-    impl_parent_attrs : Attrs,
-    mod_macros : Macros,
+    custom_types_by_name: BTreeMap<Ident, CustomType>,
+    custom_traits_by_name: BTreeMap<Ident, Trait>,
+    sub_modules: Vec<Module>,
+    imports: Vec<(Path, Ident)>,
+    analyze_types: bool,
+    type_parent_attrs: Attrs,
+    impl_parent_attrs: Attrs,
+    mod_macros: Macros,
 }
 
 impl Module {
@@ -165,7 +165,7 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
-    pub fn evaluate_item(a : &Item, mst : &mut ModuleSynTraverse) {
+    pub fn evaluate_item(a: &Item, mst: &mut ModuleSynTraverse) {
         match a {
             Item::Use(u) => {
                 if mst.analyze_types {
@@ -175,22 +175,33 @@ impl Module {
             Item::Struct(strct) => {
                 if mst.analyze_types {
                     let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
-                        Ok(None) => CustomType::Struct(Struct::new(strct, false, &mst.type_parent_attrs)),
+                        Ok(None) => {
+                            CustomType::Struct(Struct::new(strct, false, &mst.type_parent_attrs))
+                        }
                         Ok(Some(DiplomatStructAttribute::Out)) => {
                             CustomType::Struct(Struct::new(strct, true, &mst.type_parent_attrs))
                         }
-                        Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::Opaque))) => {
-                            CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Immutable, &mst.type_parent_attrs))
-                        }
-                        Ok(Some(DiplomatStructAttribute::TypeAttr(DiplomatTypeAttribute::OpaqueMut))) => {
-                            CustomType::Opaque(OpaqueType::new_struct(strct, Mutability::Mutable, &mst.type_parent_attrs))
-                        }
+                        Ok(Some(DiplomatStructAttribute::TypeAttr(
+                            DiplomatTypeAttribute::Opaque,
+                        ))) => CustomType::Opaque(OpaqueType::new_struct(
+                            strct,
+                            Mutability::Immutable,
+                            &mst.type_parent_attrs,
+                        )),
+                        Ok(Some(DiplomatStructAttribute::TypeAttr(
+                            DiplomatTypeAttribute::OpaqueMut,
+                        ))) => CustomType::Opaque(OpaqueType::new_struct(
+                            strct,
+                            Mutability::Mutable,
+                            &mst.type_parent_attrs,
+                        )),
                         Err(errors) => {
                             panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
                         }
                     };
 
-                    mst.custom_types_by_name.insert(Ident::from(&strct.ident), custom_type);
+                    mst.custom_types_by_name
+                        .insert(Ident::from(&strct.ident), custom_type);
                 }
             }
 
@@ -200,17 +211,20 @@ impl Module {
                     let custom_enum = match DiplomatTypeAttribute::parse(&enm.attrs[..]) {
                         Ok(None) => CustomType::Enum(Enum::new(enm, &mst.type_parent_attrs)),
                         Ok(Some(DiplomatTypeAttribute::Opaque)) => {
-                            CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Immutable, &mst.type_parent_attrs))
+                            CustomType::Opaque(OpaqueType::new_enum(
+                                enm,
+                                Mutability::Immutable,
+                                &mst.type_parent_attrs,
+                            ))
                         }
-                        Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => {
-                            CustomType::Opaque(OpaqueType::new_enum(enm, Mutability::Mutable, &mst.type_parent_attrs))
-                        }
+                        Ok(Some(DiplomatTypeAttribute::OpaqueMut)) => CustomType::Opaque(
+                            OpaqueType::new_enum(enm, Mutability::Mutable, &mst.type_parent_attrs),
+                        ),
                         Err(errors) => {
                             panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
                         }
                     };
-                    mst.custom_types_by_name
-                        .insert(ident, custom_enum);
+                    mst.custom_types_by_name.insert(ident, custom_enum);
                 }
             }
 
@@ -222,7 +236,8 @@ impl Module {
                     };
                     let mut impl_attrs = mst.impl_parent_attrs.clone();
                     impl_attrs.add_attrs(&imp.attrs);
-                    let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
+                    let method_parent_attrs =
+                        impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                     let self_ident = self_path.path.elements.last().unwrap();
                     let mut new_methods = imp
                         .items
@@ -233,11 +248,24 @@ impl Module {
                         })
                         .filter(|m| {
                             let is_public = matches!(m.vis, Visibility::Public(_));
-                            let has_diplomat_attrs = m.attrs.iter().any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                            assert!(is_public || !has_diplomat_attrs, "Non-public method with diplomat attrs found: {self_ident}::{}", m.sig.ident);
+                            let has_diplomat_attrs = m.attrs.iter().any(|a| {
+                                a.path().segments.iter().next().unwrap().ident == "diplomat"
+                            });
+                            assert!(
+                                is_public || !has_diplomat_attrs,
+                                "Non-public method with diplomat attrs found: {self_ident}::{}",
+                                m.sig.ident
+                            );
                             is_public
                         })
-                        .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
+                        .map(|m| {
+                            Method::from_syn(
+                                m,
+                                self_path.clone(),
+                                Some(&imp.generics),
+                                &method_parent_attrs,
+                            )
+                        })
                         .collect();
 
                     match mst.custom_types_by_name.get_mut(self_ident)
@@ -261,8 +289,7 @@ impl Module {
                 if mst.analyze_types {
                     let ident = (&trt.ident).into();
                     let trt = Trait::new(trt, &mst.type_parent_attrs);
-                    mst.custom_traits_by_name
-                        .insert(ident, trt);
+                    mst.custom_traits_by_name.insert(ident, trt);
                 }
             }
             Item::Macro(mac) => {
@@ -275,7 +302,7 @@ impl Module {
             }
             _ => {}
         }
-    } 
+    }
 
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mod_attrs: Attrs = (&*input.attrs).into();
@@ -286,13 +313,14 @@ impl Module {
             sub_modules: Vec::new(),
             imports: Vec::new(),
             analyze_types: force_analyze
-            || input
-                .attrs
-                .iter()
-                .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge"),
-            impl_parent_attrs: mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule),
+                || input
+                    .attrs
+                    .iter()
+                    .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge"),
+            impl_parent_attrs: mod_attrs
+                .attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule),
             type_parent_attrs: mod_attrs.attrs_for_inheritance(AttrInheritContext::Type),
-            mod_macros: Macros::new()
+            mod_macros: Macros::new(),
         };
 
         input

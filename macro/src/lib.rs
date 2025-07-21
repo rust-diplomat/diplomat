@@ -679,9 +679,9 @@ pub fn transparent_convert(
 
 #[proc_macro_attribute]
 pub fn macro_rules(
-        _attr: proc_macro::TokenStream,
-        input: proc_macro::TokenStream,
-    ) -> proc_macro::TokenStream {
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     // proc macros handle compile errors by using special error tokens.
     // In case of an error, we don't want the original code to go away too
     // (otherwise that will cause more errors) so we hold on to it and we tack it in
