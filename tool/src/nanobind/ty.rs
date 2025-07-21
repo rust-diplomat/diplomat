@@ -165,7 +165,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         def: &'tcx hir::StructDef<P>,
         id: TypeId,
         out: &mut W,
-        header: &mut W,
+        binding_prefix: &mut W,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -193,7 +193,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         }
 
         if def.attrs.allowed_in_slices {
-            write!(header, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
+            write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
                 .expect("Could not write to header.");
         }
 

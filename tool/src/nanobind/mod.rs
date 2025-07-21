@@ -139,16 +139,20 @@ pub(crate) fn run<'cx>(
             namespace: String,
             unqualified_type: String,
             body: String,
-            header: String,
+            binding_prefix: String,
         }
 
         let mut body = String::default();
-        let mut header = String::default();
+        let mut binding_prefix = String::default();
         match ty {
             hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
             hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body, &mut header),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body, &mut header),
+            hir::TypeDef::Struct(s) => {
+                context.gen_struct_def(s, id, &mut body, &mut binding_prefix)
+            }
+            hir::TypeDef::OutStruct(s) => {
+                context.gen_struct_def(s, id, &mut body, &mut binding_prefix)
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
@@ -158,7 +162,7 @@ pub(crate) fn run<'cx>(
             namespace: formatter.fmt_namespaces(id).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
-            header,
+            binding_prefix,
         };
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
