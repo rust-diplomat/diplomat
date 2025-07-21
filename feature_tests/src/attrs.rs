@@ -11,7 +11,8 @@ pub mod ffi {
             }
 
             impl $vec_name {
-                pub fn new() -> Self {
+                pub fn $vec_name() -> Self {
+                    println!("$vec_name");
                     Self { test: 0.0 }
                 }
             }

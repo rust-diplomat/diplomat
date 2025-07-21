@@ -169,6 +169,44 @@ impl Parse for MacroRules {
 }
 
 impl MacroRules {
+    fn parse_group(&self, matched : &MacroMatch, inner : Cursor) -> TokenStream {
+        let mut stream = TokenStream::new();
+        
+        let mut c = inner;
+        while let Some((tt, next)) = c.token_tree() {
+            match &tt {
+                TokenTree::Punct(p) if p.as_char() == '$' => {
+                    if let Some((tt, next)) = next.token_tree() {
+                        if let TokenTree::Ident(i) = tt {
+                            let arg = self.match_tokens.iter().position(|mi| {
+                                mi.ident == i
+                            });
+                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))].to_tokens(&mut stream);
+                            c = next;
+                        } else {
+                            panic!("Expected ident next to $, got {:?}", tt);
+                        }
+                    } else {
+                        panic!("Expected token tree.");
+                    }
+                },
+                TokenTree::Group(g) => {
+                    let (inner, _, next) = c.group(g.delimiter()).unwrap();
+                    let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
+                    // Once we detect a group, we push it to the array for syn to evaluate.
+                    stream.append(group);
+                    c = next;
+                },
+                _ => {
+                    stream.append(tt);
+                    c = next
+                },
+            }
+        }
+
+        stream
+    }
+
     fn evaluate(&self, matched : MacroMatch) -> Vec<Item> {
         let mut out = Vec::new();
 
@@ -198,8 +236,10 @@ impl MacroRules {
                     }
                 },
                 TokenTree::Group(g) => {
+                    let (inner, _, next) = c.group(g.delimiter()).unwrap();
+                    let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
                     // Once we detect a group, we push it to the array for syn to evaluate.
-                    stream.append(TokenTree::Group(g.clone()));
+                    stream.append(group);
                     streams.push(stream.clone());
                     stream = TokenStream::new();
                     c = next;
