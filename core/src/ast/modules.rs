@@ -165,7 +165,7 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
-    pub fn evaluate_item(a: &Item, mst: &mut ModuleSynTraverse) {
+    fn evaluate_item(a: &Item, mst: &mut ModuleSynTraverse) {
         match a {
             Item::Use(u) => {
                 if mst.analyze_types {

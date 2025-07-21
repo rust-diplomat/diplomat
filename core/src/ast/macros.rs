@@ -1,18 +1,17 @@
 use std::collections::BTreeMap;
 
-use proc_macro2::{Delimiter, TokenStream, TokenTree};
+use proc_macro2::{TokenStream, TokenTree};
 use quote::{ToTokens, TokenStreamExt};
 use syn::{
     braced, bracketed,
     buffer::{Cursor, TokenBuffer},
     parenthesized,
-    parse::{self, Parse, ParseBuffer},
-    parse_macro_input,
-    spanned::Spanned,
-    token::{self, Token},
-    Error, Expr, ExprParen, Ident, Item, ItemMacro, PatParen, Path, Token,
+    parse::{self, Parse},
+    token,
+    Error, Expr, Ident, Item, ItemMacro, Token,
 };
 
+#[derive(Default)]
 pub struct Macros {
     defs: BTreeMap<Ident, MacroRules>,
 }
@@ -25,7 +24,7 @@ impl Macros {
     }
 
     pub fn read_item_macro(&mut self, input: &ItemMacro) -> Option<Vec<Item>> {
-        let mac = Macro::from_syn(&input);
+        let mac = Macro::from_syn(input);
         if let Ok((ident, mac)) = mac {
             match mac {
                 Macro::MacroRules(rules) => {
@@ -37,7 +36,7 @@ impl Macros {
                     if let Some(def) = self.defs.get(&ident) {
                         Some(def.evaluate(matched))
                     } else {
-                        panic!("Could not find definition for {:?}", ident);
+                        panic!("Could not find definition for {ident:?}");
                     }
                 }
             }
@@ -49,6 +48,7 @@ impl Macros {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Macro {
     MacroRules(MacroRules),
     MacroMatch(MacroMatch),
@@ -72,18 +72,18 @@ impl Macro {
         if input.ident.is_some() {
             let r = input.mac.parse_body::<MacroRules>();
 
-            if let Ok(..) = r {
-                TokenStream::default()
+            if let Err(e) = r {
+                e.to_compile_error()
             } else {
-                r.unwrap_err().to_compile_error()
+                TokenStream::default()
             }
         } else {
             let m = input.mac.parse_body::<MacroMatch>();
 
-            if let Ok(..) = m {
-                TokenStream::default()
+            if let Err(e) = m {
+                e.to_compile_error()
             } else {
-                m.unwrap_err().to_compile_error()
+                TokenStream::default()
             }
         }
     }
@@ -149,7 +149,7 @@ impl Parse for MacroRules {
         // FIXME: This is not a comma separated list in actuality.
         let punc = arm.parse_terminated(MacroIdent::parse, Token![,])?;
 
-        let match_tokens = punc.iter().map(|i| i.clone()).collect();
+        let match_tokens = punc.iter().cloned().collect();
 
         let _arrow = input.parse::<Token![=>]>()?;
 
@@ -185,11 +185,11 @@ impl MacroRules {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
                             let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))]
+                            matched.args[arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
                                 .to_tokens(&mut stream);
                             c = next;
                         } else {
-                            panic!("Expected ident next to $, got {:?}", tt);
+                            panic!("Expected ident next to $, got {tt:?}");
                         }
                     } else {
                         panic!("Expected token tree.");
@@ -225,11 +225,11 @@ impl MacroRules {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
                             let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args[arg.expect(&format!("Could not find arg ${:?}", i))]
+                            matched.args[arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
                                 .to_tokens(&mut stream);
                             c = next;
                         } else {
-                            panic!("Expected ident next to $, got {:?}", tt);
+                            panic!("Expected ident next to $, got {tt:?}");
                         }
                     } else {
                         panic!("Expected token tree.");
