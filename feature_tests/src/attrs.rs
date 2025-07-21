@@ -10,8 +10,10 @@ pub mod ffi {
                 pub test: f64,
             }
 
+            const X : i32 = 0;
+
             impl $vec_name {
-                pub fn $vec_name() -> Self {
+                pub fn new() -> $vec_name {
                     println!("$vec_name");
                     Self { test: 0.0 }
                 }

@@ -208,12 +208,7 @@ impl MacroRules {
     }
 
     fn evaluate(&self, matched : MacroMatch) -> Vec<Item> {
-        let mut out = Vec::new();
-
         let mut stream = TokenStream::new();
-
-        // Cheap trick to get syn to parse items for us:
-        let mut streams = Vec::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
         let mut c = buf.begin();
@@ -240,8 +235,6 @@ impl MacroRules {
                     let group = proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
                     // Once we detect a group, we push it to the array for syn to evaluate.
                     stream.append(group);
-                    streams.push(stream.clone());
-                    stream = TokenStream::new();
                     c = next;
                 },
                 _ => {
@@ -253,17 +246,27 @@ impl MacroRules {
 
         // Now we have a stream to read through. 
 
-        for s in streams {
-            let maybe_item = syn::parse_str::<syn::Item>(&s.to_string());
-
-            if let Ok(i) = maybe_item {
-                out.push(i);
-            } else {
-                panic!("{:?}", maybe_item.unwrap_err());
-            }
+        let maybe_list = syn::parse_str::<ItemList>(&stream.to_string());
+        if let Ok(i) = maybe_list {
+            i.items
+        } else {
+            panic!("{:?}", maybe_list.unwrap_err());
         }
-        
+    }
+}
 
-        out
+#[derive(Debug)]
+struct ItemList {
+    items : Vec<Item>
+}
+
+impl Parse for ItemList {
+    fn parse(input: parse::ParseStream) -> syn::Result<Self> {
+        let mut items = Vec::new();
+        while !input.is_empty() {
+            items.push(input.parse::<Item>()?);
+        }
+
+        Ok(Self { items })
     }
 }
