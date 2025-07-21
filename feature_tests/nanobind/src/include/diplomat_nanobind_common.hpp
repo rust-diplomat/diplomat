@@ -170,11 +170,11 @@ namespace nanobind::detail
                 }
             }
 
-            // Are we a bound vector type? If so, we can pass over data directly.
-            // We remove any constant values because C++ allocators don't like that, but we will re-cast as constant when we past to diplomat::span.  
-            // TODO: Using std::vector<int> as the default feels a little icky.
-            using U = std::conditional_t<std::is_class_v<T>, std::vector<std::remove_cv_t<T>>, std::vector<int>>;
+            // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
+            using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
 
+
+            // Are we a bound vector type? If so, we can pass over data directly.
             if (nb::inst_check(src) && nb::isinstance<U>(src)) {
                 U* bound_vec = nb::inst_ptr<U>(src);
                 value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
