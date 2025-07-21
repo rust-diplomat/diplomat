@@ -8,6 +8,9 @@ NB_MAKE_OPAQUE(std::vector<BigStructWithStuff>)
 
 void add_BigStructWithStuff_binding(nb::handle mod) {
     
+    // Python lists are represented as PyObject**, which runs somewhat counter to any use cases where we want to be able to transparently pass over lists without copying over memory in any ways.
+    // bind_vector solves this issue by exposing std::vector<BigStructWithStuff> as a type that will exist inside of C++, with functions to access its memory from Python.
+    // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<BigStructWithStuff>>(mod, "BigStructWithStuffSlice"); 
     nb::class_<BigStructWithStuff>(mod, "BigStructWithStuff")
         .def(nb::init<>())

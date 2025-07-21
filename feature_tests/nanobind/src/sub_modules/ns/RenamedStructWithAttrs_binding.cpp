@@ -9,6 +9,9 @@ namespace ns{
 
 void add_RenamedStructWithAttrs_binding(nb::handle mod) {
     
+    // Python lists are represented as PyObject**, which runs somewhat counter to any use cases where we want to be able to transparently pass over lists without copying over memory in any ways.
+    // bind_vector solves this issue by exposing std::vector<ns::RenamedStructWithAttrs> as a type that will exist inside of C++, with functions to access its memory from Python.
+    // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<ns::RenamedStructWithAttrs>>(mod, "ns::RenamedStructWithAttrsSlice"); 
     nb::class_<ns::RenamedStructWithAttrs>(mod, "RenamedStructWithAttrs")
         .def_rw("a", &ns::RenamedStructWithAttrs::a)
