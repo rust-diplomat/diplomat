@@ -33,7 +33,7 @@ public:
 
   inline std::optional<double> operator[](size_t idx) const;
 
-  inline void push(double val);
+  inline void push(double value);
 
   inline const ns::capi::RenamedVectorTest* AsFFI() const;
   inline ns::capi::RenamedVectorTest* AsFFI();

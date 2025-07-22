@@ -25,7 +25,7 @@ namespace capi {
     typedef struct namespace_VectorTest_get_result {union {double ok; }; bool is_ok;} namespace_VectorTest_get_result;
     namespace_VectorTest_get_result namespace_VectorTest_get(const ns::capi::RenamedVectorTest* self, size_t idx);
 
-    void namespace_VectorTest_push(ns::capi::RenamedVectorTest* self, double val);
+    void namespace_VectorTest_push(ns::capi::RenamedVectorTest* self, double value);
 
     void namespace_VectorTest_destroy(RenamedVectorTest* self);
 
@@ -49,9 +49,9 @@ inline std::optional<double> ns::RenamedVectorTest::operator[](size_t idx) const
   return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
 }
 
-inline void ns::RenamedVectorTest::push(double val) {
+inline void ns::RenamedVectorTest::push(double value) {
   ns::capi::namespace_VectorTest_push(this->AsFFI(),
-    val);
+    value);
 }
 
 inline const ns::capi::RenamedVectorTest* ns::RenamedVectorTest::AsFFI() const {

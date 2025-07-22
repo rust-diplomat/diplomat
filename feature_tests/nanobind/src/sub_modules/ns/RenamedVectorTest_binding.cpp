@@ -16,7 +16,7 @@ void add_RenamedVectorTest_binding(nb::handle mod) {
     	.def("__getitem__", &ns::RenamedVectorTest::operator[], "idx"_a)
     	.def_prop_ro("len", &ns::RenamedVectorTest::len)
     	.def(nb::new_(&ns::RenamedVectorTest::new_))
-    	.def("push", &ns::RenamedVectorTest::push, "val"_a);
+    	.def("push", &ns::RenamedVectorTest::push, "value"_a);
 }
 
 

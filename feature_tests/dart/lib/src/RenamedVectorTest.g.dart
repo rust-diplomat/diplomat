@@ -41,8 +41,8 @@ final class RenamedVectorTest implements ffi.Finalizable {
     return result.union.ok;
   }
 
-  void push(double val) {
-    _namespace_VectorTest_push(_ffi, val);
+  void push(double value) {
+    _namespace_VectorTest_push(_ffi, value);
   }
 
 }
@@ -70,6 +70,6 @@ external _ResultDoubleVoid _namespace_VectorTest_get(ffi.Pointer<ffi.Opaque> sel
 @_DiplomatFfiUse('namespace_VectorTest_push')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Double)>(isLeaf: true, symbol: 'namespace_VectorTest_push')
 // ignore: non_constant_identifier_names
-external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double val);
+external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double value);
 
 // dart format on

@@ -12,7 +12,7 @@ export class RenamedVectorTest {
 
     get(idx: number): number | null;
 
-    push(val: number): void;
+    push(value: number): void;
 
     constructor();
 }

@@ -40,8 +40,8 @@ pub mod ffi {
                     self.0.get(idx).cloned()
                 }
 
-                pub fn push(&mut self, val: $ty) {
-                    self.0.push(val)
+                pub fn push(&mut self, value: $ty) {
+                    self.0.push(value)
                 }
             }
         };

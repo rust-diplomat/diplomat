@@ -10,7 +10,7 @@ internal interface VectorTestLib: Library {
     fun namespace_VectorTest_new(): Pointer
     fun namespace_VectorTest_len(handle: Pointer): FFISizet
     fun namespace_VectorTest_get(handle: Pointer, idx: FFISizet): OptionDouble
-    fun namespace_VectorTest_push(handle: Pointer, val: Double): Unit
+    fun namespace_VectorTest_push(handle: Pointer, value: Double): Unit
 }
 
 class VectorTest internal constructor (
@@ -54,9 +54,9 @@ class VectorTest internal constructor (
         return returnVal.option()
     }
     
-    fun push(val: Double): Unit {
+    fun push(value: Double): Unit {
         
-        val returnVal = lib.namespace_VectorTest_push(handle, val);
+        val returnVal = lib.namespace_VectorTest_push(handle, value);
         
     }
 

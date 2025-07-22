@@ -77,8 +77,8 @@ export class RenamedVectorTest {
         }
     }
 
-    push(val) {
-    wasm.namespace_VectorTest_push(this.ffiValue, val);
+    push(value) {
+    wasm.namespace_VectorTest_push(this.ffiValue, value);
 
         try {}
 
