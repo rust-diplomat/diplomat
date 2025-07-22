@@ -20,6 +20,7 @@ final class RenamedVectorTest implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_VectorTest_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_VectorTest_destroy));
 
   factory RenamedVectorTest() {
