@@ -11,11 +11,8 @@
 
 
 
-typedef struct VectorTest {
-  double test;
-} VectorTest;
+typedef struct VectorTest VectorTest;
 
-typedef struct VectorTest_option {union { VectorTest ok; }; bool is_ok; } VectorTest_option;
 
 
 

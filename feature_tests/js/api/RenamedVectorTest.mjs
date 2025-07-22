@@ -2,94 +2,97 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
+const RenamedVectorTest_box_destroy_registry = new FinalizationRegistry((ptr) => {
+    wasm.namespace_VectorTest_destroy(ptr);
+});
 
 export class RenamedVectorTest {
-    #test;
-    get test() {
-        return this.#test;
-    }
-    set test(value){
-        this.#test = value;
-    }
-    /** @internal */
-    static fromFields(structObj) {
-        return new RenamedVectorTest(structObj);
-    }
+    // Internal ptr reference:
+    #ptr = null;
 
-    #internalConstructor(structObj) {
-        if (typeof structObj !== "object") {
-            throw new Error("RenamedVectorTest's constructor takes an object of RenamedVectorTest's fields.");
+    // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
+    #selfEdge = [];
+
+    #internalConstructor(symbol, ptr, selfEdge) {
+        if (symbol !== diplomatRuntime.internalConstructor) {
+            console.error("RenamedVectorTest is an Opaque type. You cannot call its constructor.");
+            return;
         }
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
 
-        if ("test" in structObj) {
-            this.#test = structObj.test;
-        } else {
-            throw new Error("Missing required field test.");
+        // Are we being borrowed? If not, we can register.
+        if (this.#selfEdge.length === 0) {
+            RenamedVectorTest_box_destroy_registry.register(this, this.#ptr);
         }
 
         return this;
     }
-
-    // Return this struct in FFI function friendly format.
-    // Returns an array that can be expanded with spread syntax (...)
-    _intoFFI(
-        functionCleanupArena,
-        appendArrayMap
-    ) {
-        return this.#test;
-    }
-
-    static _fromSuppliedValue(internalConstructor, obj) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("_fromSuppliedValue cannot be called externally.");
-        }
-
-        if (obj instanceof RenamedVectorTest) {
-            return obj;
-        }
-
-        return RenamedVectorTest.fromFields(obj);
-    }
-
-    _writeToArrayBuffer(
-        arrayBuffer,
-        offset,
-        functionCleanupArena,
-        appendArrayMap
-    ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#test, Float64Array);
-    }
-
-    // This struct contains borrowed fields, so this takes in a list of
-    // "edges" corresponding to where each lifetime's data may have been borrowed from
-    // and passes it down to individual fields containing the borrow.
-    // This method does not attempt to handle any dependencies between lifetimes, the caller
-    // should handle this when constructing edge arrays.
-    static _fromFFI(internalConstructor, primitiveValue) {
-        if (internalConstructor !== diplomatRuntime.internalConstructor) {
-            throw new Error("RenamedVectorTest._fromFFI is not meant to be called externally. Please use the default constructor.");
-        }
-        let structObj = {};
-        structObj.test = primitiveValue;
-
-        return new RenamedVectorTest(structObj);
+    /** @internal */
+    get ffiValue() {
+        return this.#ptr;
     }
 
 
-    static new_() {
+    #defaultConstructor() {
 
         const result = wasm.namespace_VectorTest_new();
 
         try {
-            return RenamedVectorTest._fromFFI(diplomatRuntime.internalConstructor, result);
+            return new RenamedVectorTest(diplomatRuntime.internalConstructor, result, []);
         }
 
         finally {
         }
     }
 
-    constructor(structObj) {
-        return this.#internalConstructor(...arguments)
+    get len() {
+
+        const result = wasm.namespace_VectorTest_len(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+        }
+    }
+
+    get(idx) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
+
+
+        const result = wasm.namespace_VectorTest_get(diplomatReceive.buffer, this.ffiValue, idx);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
+        }
+
+        finally {
+            diplomatReceive.free();
+        }
+    }
+
+    push(val) {
+    wasm.namespace_VectorTest_push(this.ffiValue, val);
+
+        try {}
+
+        finally {
+        }
+    }
+
+    constructor() {
+        if (arguments[0] === diplomatRuntime.exposeConstructor) {
+            return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
+        } else if (arguments[0] === diplomatRuntime.internalConstructor) {
+            return this.#internalConstructor(...arguments);
+        } else {
+            return this.#defaultConstructor(...arguments);
+        }
     }
 }

@@ -2,8 +2,6 @@
 
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
-export { RenamedVectorTest } from "./RenamedVectorTest.mjs"
-
 export { ImportedStruct } from "./ImportedStruct.mjs"
 
 export { BorrowedFields } from "./BorrowedFields.mjs"
@@ -55,6 +53,8 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable.mjs"
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"
+
+export { RenamedVectorTest } from "./RenamedVectorTest.mjs"
 
 export { Bar } from "./Bar.mjs"
 

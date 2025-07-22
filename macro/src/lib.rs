@@ -692,6 +692,24 @@ pub fn macro_rules(
     proc_macro::TokenStream::from(full.to_token_stream())
 }
 
+
+// Expose attributes for macro_rules to parse:
+macro_rules! expose_attrs {
+    ($($attr_name:ident),+) => {
+        $(
+            #[proc_macro_attribute]
+            pub fn $attr_name(
+                _attr: proc_macro::TokenStream,
+                input: proc_macro::TokenStream,
+            ) -> proc_macro::TokenStream {
+                input
+            }
+        )*
+    }
+}
+
+expose_attrs!{opaque, attr, demo}
+
 #[cfg(test)]
 mod tests {
 

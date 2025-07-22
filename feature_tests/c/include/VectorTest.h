@@ -15,7 +15,16 @@
 
 
 
-VectorTest namespace_VectorTest_new(void);
+VectorTest* namespace_VectorTest_new(void);
+
+size_t namespace_VectorTest_len(const VectorTest* self);
+
+typedef struct namespace_VectorTest_get_result {union {double ok; }; bool is_ok;} namespace_VectorTest_get_result;
+namespace_VectorTest_get_result namespace_VectorTest_get(const VectorTest* self, size_t idx);
+
+void namespace_VectorTest_push(VectorTest* self, double val);
+
+void namespace_VectorTest_destroy(VectorTest* self);
 
 
 

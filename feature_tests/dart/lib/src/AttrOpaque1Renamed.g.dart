@@ -31,6 +31,10 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     _namespace_AttrOpaque1_mac_test();
   }
 
+  static void hello() {
+    _namespace_AttrOpaque1_hello();
+  }
+
   int get methodRenamed {
     final result = _namespace_AttrOpaque1_method(_ffi);
     return result;
@@ -65,6 +69,11 @@ external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 @ffi.Native<ffi.Void Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_mac_test')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque1_mac_test();
+
+@_DiplomatFfiUse('namespace_AttrOpaque1_hello')
+@ffi.Native<ffi.Void Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_hello')
+// ignore: non_constant_identifier_names
+external void _namespace_AttrOpaque1_hello();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_method')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')

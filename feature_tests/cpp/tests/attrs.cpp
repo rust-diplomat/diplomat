@@ -8,6 +8,7 @@
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
 #include "../include/Float64Vec.hpp"
+#include "../include/Renamed"
 
 #include "assert.hpp"
 

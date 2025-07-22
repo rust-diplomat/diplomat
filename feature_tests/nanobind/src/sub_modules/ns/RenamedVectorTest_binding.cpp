@@ -7,11 +7,16 @@
 namespace ns{
 
 void add_RenamedVectorTest_binding(nb::handle mod) {
-    nb::class_<ns::RenamedVectorTest>(mod, "RenamedVectorTest")
-        .def(nb::init<>())
-        .def(nb::init<double>(), "test"_a.none())
-        .def_rw("test", &ns::RenamedVectorTest::test)
-    	.def_static("new", &ns::RenamedVectorTest::new_);
+    PyType_Slot ns_RenamedVectorTest_slots[] = {
+        {Py_tp_free, (void *)ns::RenamedVectorTest::operator delete },
+        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+        {0, nullptr}};
+    
+    nb::class_<ns::RenamedVectorTest>(mod, "RenamedVectorTest", nb::type_slots(ns_RenamedVectorTest_slots))
+    	.def("__getitem__", &ns::RenamedVectorTest::operator[], "idx"_a)
+    	.def_prop_ro("len", &ns::RenamedVectorTest::len)
+    	.def(nb::new_(&ns::RenamedVectorTest::new_))
+    	.def("push", &ns::RenamedVectorTest::push, "val"_a);
 }
 
 

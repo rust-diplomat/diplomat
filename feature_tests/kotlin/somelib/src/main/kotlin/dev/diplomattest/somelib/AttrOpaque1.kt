@@ -9,6 +9,7 @@ internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_destroy(handle: Pointer)
     fun namespace_AttrOpaque1_new(): Pointer
     fun namespace_AttrOpaque1_mac_test(): Unit
+    fun namespace_AttrOpaque1_hello(): Unit
     fun namespace_AttrOpaque1_method(handle: Pointer): FFIUint8
     fun renamed_on_abi_only(handle: Pointer): FFIUint8
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
@@ -53,6 +54,13 @@ class AttrOpaque1 internal constructor (
         fun macTest(): Unit {
             
             val returnVal = lib.namespace_AttrOpaque1_mac_test();
+            
+        }
+        @JvmStatic
+        
+        fun hello(): Unit {
+            
+            val returnVal = lib.namespace_AttrOpaque1_hello();
             
         }
     }

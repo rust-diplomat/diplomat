@@ -12,29 +12,41 @@
 #include "../diplomat_runtime.hpp"
 
 namespace ns {
-struct RenamedVectorTest;
+namespace capi { struct RenamedVectorTest; }
+class RenamedVectorTest;
 }
 
 
 namespace ns {
 namespace capi {
-    struct RenamedVectorTest {
-      double test;
-    };
-
-    typedef struct RenamedVectorTest_option {union { RenamedVectorTest ok; }; bool is_ok; } RenamedVectorTest_option;
+    struct RenamedVectorTest;
 } // namespace capi
 } // namespace
 
-
 namespace ns {
-struct RenamedVectorTest {
-  double test;
+class RenamedVectorTest {
+public:
 
-  inline static ns::RenamedVectorTest new_();
+  inline static std::unique_ptr<ns::RenamedVectorTest> new_();
 
-  inline ns::capi::RenamedVectorTest AsFFI() const;
-  inline static ns::RenamedVectorTest FromFFI(ns::capi::RenamedVectorTest c_struct);
+  inline size_t len() const;
+
+  inline std::optional<double> operator[](size_t idx) const;
+
+  inline void push(double val);
+
+  inline const ns::capi::RenamedVectorTest* AsFFI() const;
+  inline ns::capi::RenamedVectorTest* AsFFI();
+  inline static const ns::RenamedVectorTest* FromFFI(const ns::capi::RenamedVectorTest* ptr);
+  inline static ns::RenamedVectorTest* FromFFI(ns::capi::RenamedVectorTest* ptr);
+  inline static void operator delete(void* ptr);
+private:
+  RenamedVectorTest() = delete;
+  RenamedVectorTest(const ns::RenamedVectorTest&) = delete;
+  RenamedVectorTest(ns::RenamedVectorTest&&) noexcept = delete;
+  RenamedVectorTest operator=(const ns::RenamedVectorTest&) = delete;
+  RenamedVectorTest operator=(ns::RenamedVectorTest&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

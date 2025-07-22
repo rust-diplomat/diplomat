@@ -3,52 +3,72 @@
 
 part of 'lib.g.dart';
 
-final class _RenamedVectorTestFfi extends ffi.Struct {
-  @ffi.Double()
-  external double test;
-}
+final class RenamedVectorTest implements ffi.Finalizable {
+  final ffi.Pointer<ffi.Opaque> _ffi;
 
-final class RenamedVectorTest {
-  double test;
+  // These are "used" in the sense that they keep dependencies alive
+  // ignore: unused_field
+  final core.List<Object> _selfEdge;
 
-  RenamedVectorTest({required this.test});
-
-  // This struct contains borrowed fields, so this takes in a list of
-  // "edges" corresponding to where each lifetime's data may have been borrowed from
-  // and passes it down to individual fields containing the borrow.
-  // This method does not attempt to handle any dependencies between lifetimes, the caller
-  // should handle this when constructing edge arrays.
-  // ignore: unused_element
-  RenamedVectorTest._fromFfi(_RenamedVectorTestFfi ffi) :
-    test = ffi.test;
-
-  // ignore: unused_element
-  _RenamedVectorTestFfi _toFfi(ffi.Allocator temp) {
-    final struct = ffi.Struct.create<_RenamedVectorTestFfi>();
-    struct.test = test;
-    return struct;
+  // This takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  RenamedVectorTest._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
+      _finalizer.attach(this, _ffi.cast());
+    }
   }
 
-  static RenamedVectorTest new_() {
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_VectorTest_destroy));
+
+  factory RenamedVectorTest() {
     final result = _namespace_VectorTest_new();
-    return RenamedVectorTest._fromFfi(result);
+    return RenamedVectorTest._fromFfi(result, []);
   }
 
+  int get len {
+    final result = _namespace_VectorTest_len(_ffi);
+    return result;
+  }
 
-  @override
-  bool operator ==(Object other) =>
-      other is RenamedVectorTest &&
-      other.test == test;
+  double? operator [](int idx) {
+    final result = _namespace_VectorTest_get(_ffi, idx);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
 
-  @override
-  int get hashCode => Object.hashAll([
-        test,
-      ]);
+  void push(double val) {
+    _namespace_VectorTest_push(_ffi, val);
+  }
+
 }
+
+@_DiplomatFfiUse('namespace_VectorTest_destroy')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_VectorTest_destroy')
+// ignore: non_constant_identifier_names
+external void _namespace_VectorTest_destroy(ffi.Pointer<ffi.Void> self);
 
 @_DiplomatFfiUse('namespace_VectorTest_new')
-@ffi.Native<_RenamedVectorTestFfi Function()>(isLeaf: true, symbol: 'namespace_VectorTest_new')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_VectorTest_new')
 // ignore: non_constant_identifier_names
-external _RenamedVectorTestFfi _namespace_VectorTest_new();
+external ffi.Pointer<ffi.Opaque> _namespace_VectorTest_new();
+
+@_DiplomatFfiUse('namespace_VectorTest_len')
+@ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_VectorTest_len')
+// ignore: non_constant_identifier_names
+external int _namespace_VectorTest_len(ffi.Pointer<ffi.Opaque> self);
+
+@_DiplomatFfiUse('namespace_VectorTest_get')
+@ffi.Native<_ResultDoubleVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_VectorTest_get')
+// ignore: non_constant_identifier_names
+external _ResultDoubleVoid _namespace_VectorTest_get(ffi.Pointer<ffi.Opaque> self, int idx);
+
+@_DiplomatFfiUse('namespace_VectorTest_push')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Double)>(isLeaf: true, symbol: 'namespace_VectorTest_push')
+// ignore: non_constant_identifier_names
+external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double val);
 
 // dart format on

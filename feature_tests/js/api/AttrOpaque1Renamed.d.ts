@@ -12,6 +12,8 @@ export class AttrOpaque1Renamed {
 
     static macTest(): void;
 
+    static hello(): void;
+
     get methodRenamed(): number;
 
     get abirenamed(): number;

@@ -35,7 +35,7 @@ impl Macros {
                     if let Some(def) = self.defs.get(&ident) {
                         Some(def.evaluate(matched))
                     } else {
-                        panic!("Could not find definition for {ident:?}");
+                        panic!("Could not find definition for {ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {ident} definition?");
                     }
                 }
             }
@@ -54,7 +54,7 @@ impl Macros {
             if let Some(def) = self.defs.get(&path_ident) {
                 def.evaluate(matched)
             } else {
-                panic!("Could not find definition for {path_ident:?}");
+                panic!("Could not find definition for {path_ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {path_ident} definition?");
             }
         } else {
             // We handle errors automatically in `diplomat/macro`

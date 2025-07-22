@@ -34,6 +34,8 @@ public:
 
   inline static void mac_test();
 
+  inline static void hello();
+
   inline uint8_t method_renamed() const;
 
   inline uint8_t abirenamed() const;

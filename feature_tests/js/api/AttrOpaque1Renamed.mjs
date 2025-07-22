@@ -58,6 +58,15 @@ export class AttrOpaque1Renamed {
         }
     }
 
+    static hello() {
+    wasm.namespace_AttrOpaque1_hello();
+
+        try {}
+
+        finally {
+        }
+    }
+
     get methodRenamed() {
 
         const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
