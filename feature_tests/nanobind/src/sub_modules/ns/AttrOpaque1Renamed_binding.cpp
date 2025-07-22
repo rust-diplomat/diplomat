@@ -14,6 +14,7 @@ void add_AttrOpaque1Renamed_binding(nb::handle mod) {
     
     nb::class_<ns::AttrOpaque1Renamed>(mod, "AttrOpaque1Renamed", nb::type_slots(ns_AttrOpaque1Renamed_slots))
     	.def_prop_ro("abirenamed", &ns::AttrOpaque1Renamed::abirenamed)
+    	.def_static("mac_test", &ns::AttrOpaque1Renamed::mac_test)
     	.def_prop_ro("method", &ns::AttrOpaque1Renamed::method_renamed)
     	.def(nb::new_(&ns::AttrOpaque1Renamed::totally_not_new))
     	.def("use_namespaced", &ns::AttrOpaque1Renamed::use_namespaced, "_n"_a)
