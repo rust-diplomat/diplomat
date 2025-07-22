@@ -323,10 +323,14 @@ impl Module {
                     if macro_rules_attr.is_some() {
                         true
                     } else {
-                        println!(r#"WARNING: Found macro_rules definition "macro_rules! {i}" with no #[diplomat::macro_rules] attribute. This will not be evaluated in Diplomat bindings."#);
+                        println!(
+                            r#"WARNING: Found macro_rules definition "macro_rules! {i}" with no #[diplomat::macro_rules] attribute. This will not be evaluated in Diplomat bindings."#
+                        );
                         false
                     }
-                } else { true };
+                } else {
+                    true
+                };
 
                 if should_eval {
                     let maybe_items = mst.mod_macros.read_item_macro(mac);
