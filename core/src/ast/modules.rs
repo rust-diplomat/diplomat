@@ -248,7 +248,7 @@ impl Module {
                                 impl_item_vec.push(ImplItem::Fn(f.clone()));
                             }
                             ImplItem::Macro(mac) => {
-                                let mut items = mst.mod_macros.read_impl_item_macro(&mac);
+                                let mut items = mst.mod_macros.read_impl_item_macro(mac);
                                 impl_item_vec.append(&mut items);
                             }
                             _ => {}
