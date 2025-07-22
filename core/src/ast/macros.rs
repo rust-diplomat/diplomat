@@ -61,7 +61,7 @@ impl Macro {
             Ok((ident.clone(), Macro::MacroRules(r)))
         } else {
             let m = input.mac.parse_body()?;
-            // FIXME: Extremely hacky.
+            // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
             let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
             Ok((path_ident, Macro::MacroMatch(m)))
         }
@@ -145,7 +145,7 @@ impl Parse for MacroRules {
             return Err(Error::new(input.span(), "Expected {}, (), or []"));
         }
 
-        // FIXME: This is not a comma separated list in actuality.
+        // TODO: This is not a comma separated list in actuality, at some point we'll want to add more complicated parsing.
         let punc = arm.parse_terminated(MacroIdent::parse, Token![,])?;
 
         let match_tokens = punc.iter().cloned().collect();
