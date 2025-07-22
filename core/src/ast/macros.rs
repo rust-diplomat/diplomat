@@ -3,7 +3,11 @@ use std::{collections::BTreeMap, fmt::Debug};
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{ToTokens, TokenStreamExt};
 use syn::{
-    braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse}, token, Error, Expr, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token
+    braced, bracketed,
+    buffer::{Cursor, TokenBuffer},
+    parenthesized,
+    parse::{self, Parse},
+    token, Error, Expr, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
 #[derive(Default)]
@@ -41,8 +45,8 @@ impl Macros {
         }
     }
 
-    pub fn read_impl_item_macro(&self, input : &ImplItemMacro) -> Vec<ImplItem> {
-        let m : syn::Result<MacroMatch> = input.mac.parse_body();
+    pub fn read_impl_item_macro(&self, input: &ImplItemMacro) -> Vec<ImplItem> {
+        let m: syn::Result<MacroMatch> = input.mac.parse_body();
         // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
         let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
 
@@ -226,7 +230,7 @@ impl MacroRules {
         stream
     }
 
-    fn evaluate_buf(&self, matched : MacroMatch) -> TokenStream {
+    fn evaluate_buf(&self, matched: MacroMatch) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
@@ -282,11 +286,11 @@ impl MacroRules {
 }
 
 #[derive(Debug)]
-struct ItemList<T : Parse> {
+struct ItemList<T: Parse> {
     items: Vec<T>,
 }
 
-impl<T : Parse> Parse for ItemList<T> {
+impl<T: Parse> Parse for ItemList<T> {
     fn parse(input: parse::ParseStream) -> syn::Result<Self> {
         let mut items = Vec::new();
         while !input.is_empty() {
