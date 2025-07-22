@@ -1,6 +1,6 @@
 # Macros
 
-Diplomat has support for generating bindings macro_rules!, with quite a few caveats:
+Diplomat has support for generating bindings with macro_rules!, with quite a few caveats:
 
 1. Any `macro_rules` definitions that you wish Diplomat to evaluate must use the `#[diplomat::macro_rules]` attribute.
 2. Macros can only contain a single arm.
