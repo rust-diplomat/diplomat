@@ -32,9 +32,9 @@ public:
 
   inline static std::unique_ptr<ns::AttrOpaque1Renamed> totally_not_new();
 
-  inline static void mac_test();
+  inline static int32_t mac_test();
 
-  inline static void hello();
+  inline static int32_t hello();
 
   inline uint8_t method_renamed() const;
 

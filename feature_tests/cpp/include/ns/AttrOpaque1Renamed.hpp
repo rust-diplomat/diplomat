@@ -22,9 +22,9 @@ namespace capi {
 
     ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
 
-    void namespace_AttrOpaque1_mac_test(void);
+    int32_t namespace_AttrOpaque1_mac_test(void);
 
-    void namespace_AttrOpaque1_hello(void);
+    int32_t namespace_AttrOpaque1_hello(void);
 
     uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);
 
@@ -45,12 +45,14 @@ inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_n
   return std::unique_ptr<ns::AttrOpaque1Renamed>(ns::AttrOpaque1Renamed::FromFFI(result));
 }
 
-inline void ns::AttrOpaque1Renamed::mac_test() {
-  ns::capi::namespace_AttrOpaque1_mac_test();
+inline int32_t ns::AttrOpaque1Renamed::mac_test() {
+  auto result = ns::capi::namespace_AttrOpaque1_mac_test();
+  return result;
 }
 
-inline void ns::AttrOpaque1Renamed::hello() {
-  ns::capi::namespace_AttrOpaque1_hello();
+inline int32_t ns::AttrOpaque1Renamed::hello() {
+  auto result = ns::capi::namespace_AttrOpaque1_hello();
+  return result;
 }
 
 inline uint8_t ns::AttrOpaque1Renamed::method_renamed() const {

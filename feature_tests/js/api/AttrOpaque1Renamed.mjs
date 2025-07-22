@@ -50,18 +50,24 @@ export class AttrOpaque1Renamed {
     }
 
     static macTest() {
-    wasm.namespace_AttrOpaque1_mac_test();
 
-        try {}
+        const result = wasm.namespace_AttrOpaque1_mac_test();
+
+        try {
+            return result;
+        }
 
         finally {
         }
     }
 
     static hello() {
-    wasm.namespace_AttrOpaque1_hello();
 
-        try {}
+        const result = wasm.namespace_AttrOpaque1_hello();
+
+        try {
+            return result;
+        }
 
         finally {
         }

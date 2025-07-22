@@ -211,6 +211,26 @@ let termini = Object.assign({
         ]
     },
 
+    "AttrOpaque1Renamed.macTest": {
+        func: () => somelib.AttrOpaque1Renamed.macTest(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.macTest",
+        expr: () => "somelib.AttrOpaque1Renamed.macTest()",
+        parameters: [
+            
+        ]
+    },
+
+    "AttrOpaque1Renamed.hello": {
+        func: () => somelib.AttrOpaque1Renamed.hello(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.hello",
+        expr: () => "somelib.AttrOpaque1Renamed.hello()",
+        parameters: [
+            
+        ]
+    },
+
     "AttrOpaque1Renamed.methodRenamed": {
         func: () => new somelib.AttrOpaque1Renamed().methodRenamed,
         // For avoiding webpacking minifying issues:

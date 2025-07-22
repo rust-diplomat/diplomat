@@ -6,10 +6,11 @@ pub mod ffi {
     #[diplomat::macro_rules]
     macro_rules! impl_mac {
         ($arg1:ident, $arg2:ident, $arg3:block) => {
-            pub fn $arg1() { $arg3 }
+            pub fn $arg1() -> i32 { $arg3 }
 
-            pub fn $arg2() {
+            pub fn $arg2() -> i32 {
                 println!("Test");
+                0
             }
         };
     }
@@ -23,7 +24,7 @@ pub mod ffi {
             impl $vec_name {
                 #[diplomat::attr(auto, constructor)]
                 pub fn new() -> Box<$vec_name> {
-                    println!("$vec_name");
+                    println!("{}", stringify!($vec_name));
                     Box::new(Self(Vec::new()))
                 }
 
@@ -62,6 +63,7 @@ pub mod ffi {
 
         impl_mac!(mac_test, hello, {
             println!("Hello world!");
+            10
         });
 
         #[diplomat::attr(not(kotlin), rename = "method_renamed")]

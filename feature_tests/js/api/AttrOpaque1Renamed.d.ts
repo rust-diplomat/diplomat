@@ -10,9 +10,9 @@ export class AttrOpaque1Renamed {
     get ffiValue(): pointer;
 
 
-    static macTest(): void;
+    static macTest(): number;
 
-    static hello(): void;
+    static hello(): number;
 
     get methodRenamed(): number;
 

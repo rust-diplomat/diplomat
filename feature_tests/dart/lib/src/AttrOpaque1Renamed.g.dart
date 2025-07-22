@@ -27,12 +27,14 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     return AttrOpaque1Renamed._fromFfi(result, []);
   }
 
-  static void macTest() {
-    _namespace_AttrOpaque1_mac_test();
+  static int macTest() {
+    final result = _namespace_AttrOpaque1_mac_test();
+    return result;
   }
 
-  static void hello() {
-    _namespace_AttrOpaque1_hello();
+  static int hello() {
+    final result = _namespace_AttrOpaque1_hello();
+    return result;
   }
 
   int get methodRenamed {
@@ -66,14 +68,14 @@ external void _namespace_AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_mac_test')
-@ffi.Native<ffi.Void Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_mac_test')
+@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_mac_test')
 // ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque1_mac_test();
+external int _namespace_AttrOpaque1_mac_test();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_hello')
-@ffi.Native<ffi.Void Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_hello')
+@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_hello')
 // ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque1_hello();
+external int _namespace_AttrOpaque1_hello();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_method')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
