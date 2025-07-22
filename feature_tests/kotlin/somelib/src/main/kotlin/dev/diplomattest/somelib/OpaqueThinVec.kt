@@ -33,8 +33,8 @@ class OpaqueThinVec internal constructor (
         @JvmStatic
         
         fun create(a: IntArray, b: FloatArray): OpaqueThinVec {
-            val (aMem, aSlice) = PrimitiveArrayTools.native(a)
-            val (bMem, bSlice) = PrimitiveArrayTools.native(b)
+            val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
+            val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
             
             val returnVal = lib.OpaqueThinVec_create(aSlice, bSlice);
             val selfEdges: List<Any> = listOf()

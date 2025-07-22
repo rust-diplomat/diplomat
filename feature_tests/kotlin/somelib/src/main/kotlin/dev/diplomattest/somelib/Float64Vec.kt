@@ -41,7 +41,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newBool(v: BooleanArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_bool(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -54,7 +54,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newI16(v: ShortArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_i16(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -67,7 +67,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newU16(v: UShortArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_u16(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -80,7 +80,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newIsize(v: LongArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_isize(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -93,7 +93,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newUsize(v: ULongArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_usize(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -106,7 +106,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newF64BeBytes(v: ByteArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
             
             val returnVal = lib.Float64Vec_new_f64_be_bytes(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -119,7 +119,7 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newFromOwned(v: DoubleArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.move(v)
             
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -137,14 +137,14 @@ class Float64Vec internal constructor (
     }
     
     fun fillSlice(v: DoubleArray): Unit {
-        val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+        val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
         
         val returnVal = lib.Float64Vec_fill_slice(handle, vSlice);
         
     }
     
     fun setValue(newSlice: DoubleArray): Unit {
-        val (newSliceMem, newSliceSlice) = PrimitiveArrayTools.native(newSlice)
+        val (newSliceMem, newSliceSlice) = PrimitiveArrayTools.borrow(newSlice)
         
         val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
         

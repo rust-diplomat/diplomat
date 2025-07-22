@@ -205,7 +205,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
                     .into()
             }
-            Type::Slice(slice) => {
+            Type::Slice(ref slice) => {
                 let edges = match slice.lifetime() {
                     Some(hir::MaybeStatic::NonStatic(lt)) => {
                         format!("{}Edges", lifetime_environment.fmt_lifetime(lt))
@@ -217,7 +217,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 match slice {
                     hir::Slice::Primitive(_, primitive_type) => format!(
                         r#"Array.from(new diplomatRuntime.DiplomatSlicePrimitive(wasm, {variable_name}, "{}", {edges}).getValue())"#,
-                        self.formatter.fmt_primitive_list_view(primitive_type)
+                        self.formatter.fmt_primitive_list_view(*primitive_type)
                     )
                     .into(),
                     hir::Slice::Str(_, encoding) => format!(
@@ -510,8 +510,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 if requires_buf {
                     method_info.alloc_expressions.push(
                         format!(
-                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
-                            size, align
+                            "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {size}, {align}, true);"
                         )
                         .into(),
                     );
@@ -674,7 +673,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     }
                 }
             }
-            Type::Slice(slice) => {
+            Type::Slice(ref slice) => {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
@@ -729,7 +728,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         ),
                         hir::Slice::Primitive(_, p) => format!(
                             r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
-                            self.formatter.fmt_primitive_list_view(p)
+                            self.formatter.fmt_primitive_list_view(*p)
                         ),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }

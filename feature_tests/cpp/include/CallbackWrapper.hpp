@@ -54,6 +54,11 @@ namespace capi {
         void (*run_callback)(const void*, diplomat::capi::MyString* );
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb;
+    typedef struct DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f {
+        const void* data;
+        void (*run_callback)(const void*, diplomat::capi::DiplomatU8View );
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f;
 
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -66,6 +71,8 @@ namespace capi {
     int32_t CallbackWrapper_test_str_cb_arg(DiplomatCallback_CallbackWrapper_test_str_cb_arg_f f_cb_wrap);
 
     void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_opaque_cb_arg_cb cb_cb_wrap, diplomat::capi::MyString* a);
+
+    void CallbackWrapper_test_slice_cb_arg(diplomat::capi::DiplomatU8View arg, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f f_cb_wrap);
 
     } // extern "C"
 } // namespace capi
@@ -101,6 +108,11 @@ inline int32_t CallbackWrapper::test_str_cb_arg(std::function<int32_t(std::strin
 inline void CallbackWrapper::test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a) {
   diplomat::capi::CallbackWrapper_test_opaque_cb_arg({new decltype(cb)(std::move(cb)), diplomat::fn_traits(cb).c_run_callback, diplomat::fn_traits(cb).c_delete},
     a.AsFFI());
+}
+
+inline void CallbackWrapper::test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f) {
+  diplomat::capi::CallbackWrapper_test_slice_cb_arg({arg.data(), arg.size()},
+    {new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
 }
 
 

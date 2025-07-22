@@ -196,6 +196,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
+    pub fn namespace_c_slice_name(&self, ty: TypeId, name: &str) -> String {
+        let resolved = self.c.tcx().resolve_type(ty);
+        if let Some(ref ns) = resolved.attrs().namespace {
+            format!("{ns}::{CAPI_NAMESPACE}::{name}")
+        } else {
+            format!("diplomat::{CAPI_NAMESPACE}::{name}")
+        }
+    }
+
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
         self.c.fmt_primitive_as_c(prim)
@@ -222,7 +231,7 @@ pub mod test {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
+                    eprintln!("Lowering error: {err}");
                 }
                 panic!("Failed to create context")
             }

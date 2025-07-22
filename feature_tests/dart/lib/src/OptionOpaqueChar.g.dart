@@ -20,6 +20,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('OptionOpaqueChar_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaqueChar_destroy));
 
   void assertChar(Rune ch) {

@@ -26,6 +26,7 @@ final class {{type_name}}
     }
   }
 
+  @_DiplomatFfiUse('{{destructor}}')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
   {%- if let Some(it) = special.iterator %}

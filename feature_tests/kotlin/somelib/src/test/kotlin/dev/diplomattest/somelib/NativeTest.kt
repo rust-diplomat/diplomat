@@ -11,7 +11,7 @@ class NativeTest {
         val random =  Random(2984751)
         for (run in 0 .. 100) {
             val array = random.nextBytes(1000)
-            val (mem, slice) = PrimitiveArrayTools.native(array)
+            val (mem, slice) = PrimitiveArrayTools.borrow(array)
             val got = slice.data.getByteArray(0, array.size)
             if (mem != null) mem.close()
             assertEquals(got.toList(), array.toList())
@@ -20,7 +20,7 @@ class NativeTest {
         for (run in 0 .. 100) {
             val array = random.nextBytes(1000)
             val uByteArray = array.map { it.toUByte()}.toUByteArray()
-            val (mem, slice) = PrimitiveArrayTools.native(array)
+            val (mem, slice) = PrimitiveArrayTools.borrow(array)
             val got = slice.data.getByteArray(0, array.size).asUByteArray()
             if (mem != null) mem.close()
             assertEquals(got.map { it.toUByte()}, uByteArray.toList())
@@ -30,7 +30,7 @@ class NativeTest {
         for (run in 0 .. 100) {
             val size = 1000
             val intArray = (0..size).map { random.nextInt() }.toIntArray()
-            val (mem, slice) = PrimitiveArrayTools.native(intArray)
+            val (mem, slice) = PrimitiveArrayTools.borrow(intArray)
             val got = slice.data.getIntArray(0, intArray.size)
             if (mem != null) mem.close()
             assertEquals(got.toList(), intArray.toList())
@@ -39,7 +39,7 @@ class NativeTest {
         for (run in 0 .. 100) {
             val size = 1000
             val intArray = (0..size).map { random.nextInt().toUInt() }.toUIntArray()
-            val (mem, slice) = PrimitiveArrayTools.native(intArray)
+            val (mem, slice) = PrimitiveArrayTools.borrow(intArray)
             val got = slice.data.getIntArray(0, intArray.size).asUIntArray()
             if (mem != null) mem.close()
             assertEquals(got.toList(), intArray.toList())

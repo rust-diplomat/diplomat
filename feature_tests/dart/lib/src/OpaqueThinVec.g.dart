@@ -20,6 +20,7 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
     }
   }
 
+  @_DiplomatFfiUse('OpaqueThinVec_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinVec_destroy));
 
   factory OpaqueThinVec(core.List<int> a, core.List<double> b) {

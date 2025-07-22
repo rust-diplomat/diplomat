@@ -20,6 +20,7 @@ final class RenamedNested implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_Nested_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Nested_destroy));
 
 }

@@ -12,7 +12,7 @@ void add_Float64Vec_binding(nb::handle mod) {
     
     nb::class_<Float64Vec>(mod, "Float64Vec", nb::type_slots(Float64Vec_slots))
     	.def_prop_ro("asSlice", &Float64Vec::as_slice)
-    	.def("borrow", &Float64Vec::borrow, nb::keep_alive<0, 1>())
+    	.def("borrow", &Float64Vec::borrow)
     	.def("fill_slice", &Float64Vec::fill_slice, "v"_a)
     	.def("__getitem__", &Float64Vec::operator[], "i"_a)
     	.def_static("new", &Float64Vec::new_, "v"_a)

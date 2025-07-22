@@ -105,7 +105,7 @@ impl Config {
         let mut out = self.clone();
 
         // Look for a match of language_name.some_value in a potential key.
-        let m = format!("{}.", target_language);
+        let m = format!("{target_language}.");
         for (k, v) in out.language_overrides.iter() {
             if k.starts_with(&m) {
                 out.shared_config.set(&k.replace(&m, ""), v.clone());
@@ -132,7 +132,7 @@ impl Config {
             if let toml::Value::Table(t) = value {
                 for (subkey, subvalue) in t {
                     let subkey = heck::AsSnakeCase(subkey).to_string();
-                    self.set(&format!("{}.{}", key, subkey), subvalue);
+                    self.set(&format!("{key}.{subkey}"), subvalue);
                 }
             } else {
                 self.set(&key, value);
@@ -158,6 +158,7 @@ pub fn toml_value_from_str(string: &str) -> toml::Value {
     let try_parse = toml::from_str::<toml::Value>(string);
 
     // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
+    // toml from_str
     if let Ok(out) = try_parse {
         out
     } else {
@@ -261,4 +262,16 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
     }
 
     out_config
+}
+
+#[cfg(test)]
+mod test {
+    use toml::Value;
+
+    #[test]
+    fn test_toml_parse() {
+        let t = "true";
+        assert!(toml::from_str::<Value>(t).is_err());
+        assert_eq!(super::toml_value_from_str(t), Value::String(t.to_string()));
+    }
 }
