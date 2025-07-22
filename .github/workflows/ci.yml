@@ -141,13 +141,6 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Upgrade Clang
-      if: runner.os == 'Windows'
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: 19.0.0
-        platform: x64
-
     - name: clang, c++17
       run: cargo make check-cpp
       env:

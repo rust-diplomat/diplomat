@@ -165,6 +165,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         def: &'tcx hir::StructDef<P>,
         id: TypeId,
         out: &mut W,
+        binding_prefix: &mut W,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -188,6 +189,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
+            is_sliceable: bool,
+        }
+
+        if def.attrs.allowed_in_slices {
+            write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
+                .expect("Could not write to header.");
         }
 
         ImplTemplate {
@@ -201,6 +208,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     Some(hir::SpecialMethod::Constructor)
                 )
             }),
+            is_sliceable: def.attrs.allowed_in_slices,
         }
         .render_into(out)
         .unwrap();

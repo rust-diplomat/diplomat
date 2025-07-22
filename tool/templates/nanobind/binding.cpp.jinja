@@ -4,6 +4,10 @@
 #include "{{include}}"
 {%- endfor %}
 
+{%- for line in binding_prefix.lines() %}
+{{ line }}
+{%- endfor %}
+
 {% if !namespace.is_empty() %}
 namespace {{namespace}}{
 {% endif %}
