@@ -1,13 +1,9 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Debug};
 
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{ToTokens, TokenStreamExt};
 use syn::{
-    braced, bracketed,
-    buffer::{Cursor, TokenBuffer},
-    parenthesized,
-    parse::{self, Parse},
-    token, Error, Expr, Ident, Item, ItemMacro, Token,
+    braced, bracketed, buffer::{Cursor, TokenBuffer}, parenthesized, parse::{self, Parse}, token, Error, Expr, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token
 };
 
 #[derive(Default)]
@@ -42,6 +38,23 @@ impl Macros {
         } else {
             // We handle errors automatically in `diplomat/macro`
             None
+        }
+    }
+
+    pub fn read_impl_item_macro(&self, input : &ImplItemMacro) -> Vec<ImplItem> {
+        let m : syn::Result<MacroMatch> = input.mac.parse_body();
+        // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
+        let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
+
+        if let Ok(matched) = m {
+            if let Some(def) = self.defs.get(&path_ident) {
+                def.evaluate(matched)
+            } else {
+                panic!("Could not find definition for {path_ident:?}");
+            }
+        } else {
+            // We handle errors automatically in `diplomat/macro`
+            Vec::new()
         }
     }
 }
@@ -213,7 +226,7 @@ impl MacroRules {
         stream
     }
 
-    fn evaluate(&self, matched: MacroMatch) -> Vec<Item> {
+    fn evaluate_buf(&self, matched : MacroMatch) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
@@ -251,9 +264,15 @@ impl MacroRules {
             }
         }
 
+        stream
+    }
+
+    fn evaluate<T: Parse + Debug>(&self, matched: MacroMatch) -> Vec<T> {
+        let stream = self.evaluate_buf(matched);
+
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
 
-        let maybe_list = syn::parse_str::<ItemList>(&stream.to_string());
+        let maybe_list = syn::parse_str::<ItemList<T>>(&stream.to_string());
         if let Ok(i) = maybe_list {
             i.items
         } else {
@@ -263,15 +282,15 @@ impl MacroRules {
 }
 
 #[derive(Debug)]
-struct ItemList {
-    items: Vec<Item>,
+struct ItemList<T : Parse> {
+    items: Vec<T>,
 }
 
-impl Parse for ItemList {
+impl<T : Parse> Parse for ItemList<T> {
     fn parse(input: parse::ParseStream) -> syn::Result<Self> {
         let mut items = Vec::new();
         while !input.is_empty() {
-            items.push(input.parse::<Item>()?);
+            items.push(input.parse::<T>()?);
         }
 
         Ok(Self { items })

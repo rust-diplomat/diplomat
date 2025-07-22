@@ -4,6 +4,15 @@
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
     #[diplomat::macro_rules]
+    macro_rules! impl_mac {
+        () => {
+            pub fn mac_test() {
+                todo!()
+            }
+        };
+    }
+
+    #[diplomat::macro_rules]
     macro_rules! create_vec {
         ($vec_name:ident) => {
             pub struct $vec_name {
@@ -36,6 +45,8 @@ pub mod ffi {
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
+
+        impl_mac!();
 
         #[diplomat::attr(not(kotlin), rename = "method_renamed")]
         #[diplomat::attr(auto, getter = "method")]

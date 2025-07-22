@@ -239,8 +239,24 @@ impl Module {
                     let method_parent_attrs =
                         impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                     let self_ident = self_path.path.elements.last().unwrap();
-                    let mut new_methods = imp
-                        .items
+
+                    // Do a prepass to evaluate macros:
+                    let mut impl_item_vec = Vec::new();
+                    for i in &imp.items {
+                        match i {
+                            ImplItem::Fn(f) => {
+                                impl_item_vec.push(ImplItem::Fn(f.clone()));
+                            },
+                            ImplItem::Macro(mac) => {
+                                let mut items = mst.mod_macros.read_impl_item_macro(&mac);
+                                impl_item_vec.append(&mut items);
+                            },
+                            _ => {}
+                        }
+                    }
+
+                    // Then only add functions to the block:
+                    let mut new_methods = impl_item_vec
                         .iter()
                         .filter_map(|i| match i {
                             ImplItem::Fn(m) => Some(m),
@@ -293,6 +309,21 @@ impl Module {
                 }
             }
             Item::Macro(mac) => {
+                if let Some(i) = &mac.ident {
+                    let macro_rules_attr = mac.attrs.iter().find_map(move |a| {
+                        if a.path()
+                            == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
+                        {
+                            Some(())
+                        } else {
+                            None
+                        }
+                    });
+                    assert!(
+                        macro_rules_attr.is_some(),
+                        r#"Found macro_rules definition "macro_rules! {i}" with no #[diplomat::macro_rules] attribute."#
+                    );
+                }
                 let maybe_items = mst.mod_macros.read_item_macro(mac);
                 if let Some(items) = maybe_items {
                     for i in items {

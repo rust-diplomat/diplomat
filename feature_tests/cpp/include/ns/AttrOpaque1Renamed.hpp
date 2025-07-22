@@ -22,6 +22,8 @@ namespace capi {
 
     ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
 
+    void namespace_AttrOpaque1_mac_test(void);
+
     uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);
 
     uint8_t renamed_on_abi_only(const ns::capi::AttrOpaque1Renamed* self);
@@ -39,6 +41,10 @@ namespace capi {
 inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_not_new() {
   auto result = ns::capi::namespace_AttrOpaque1_new();
   return std::unique_ptr<ns::AttrOpaque1Renamed>(ns::AttrOpaque1Renamed::FromFFI(result));
+}
+
+inline void ns::AttrOpaque1Renamed::mac_test() {
+  ns::capi::namespace_AttrOpaque1_mac_test();
 }
 
 inline uint8_t ns::AttrOpaque1Renamed::method_renamed() const {

@@ -32,6 +32,8 @@ public:
 
   inline static std::unique_ptr<ns::AttrOpaque1Renamed> totally_not_new();
 
+  inline static void mac_test();
+
   inline uint8_t method_renamed() const;
 
   inline uint8_t abirenamed() const;
