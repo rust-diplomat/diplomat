@@ -6,7 +6,9 @@ pub mod ffi {
     #[diplomat::macro_rules]
     macro_rules! impl_mac {
         ($arg1:ident, $arg2:ident, $arg3:block) => {
-            pub fn $arg1() -> i32 { $arg3 }
+            pub fn $arg1() -> i32 {
+                $arg3
+            }
 
             pub fn $arg2() -> i32 {
                 println!("Test");
@@ -34,11 +36,11 @@ pub mod ffi {
                 }
 
                 #[diplomat::attr(auto, indexer)]
-                pub fn get(&self, idx : usize) -> Option<$ty> {
+                pub fn get(&self, idx: usize) -> Option<$ty> {
                     self.0.get(idx).cloned()
                 }
 
-                pub fn push(&mut self, val : $ty) {
+                pub fn push(&mut self, val: $ty) {
                     self.0.push(val)
                 }
             }
