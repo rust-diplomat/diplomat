@@ -1396,7 +1396,6 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                     let (borrow, mut param_ltl) = if let Some((lt, mt)) = &self_param.reference {
                         if self.attr_validator.attrs_supported().abi_compatibles {
-                            // FIXME: Need to check for #[diplomat::attr(auto, abi_compatible)].
                             let (borrow_lt, param_ltl) = self_param_ltl.lower_self_ref(lt);
                             let borrow = Borrow::new(borrow_lt, *mt);
 
