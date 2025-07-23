@@ -929,7 +929,7 @@ impl<'ast> LoweringContext<'ast> {
                             if !self
                                 .attr_validator
                                 .attrs_supported()
-                                .struct_primitive_slices
+                                .abi_compatibles
                             {
                                 self.errors.push(LoweringError::Other(
                                     "Primitive struct slices are not supported by this backend"

@@ -126,7 +126,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             ty_name,
             fields,
             is_for_cpp: self.is_for_cpp,
-            is_sliceable: def.attrs.allowed_in_slices,
+            is_sliceable: def.attrs.abi_compatible,
         }
         .render_into(&mut decl_header)
         .unwrap();

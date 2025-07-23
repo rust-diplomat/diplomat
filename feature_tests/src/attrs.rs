@@ -225,7 +225,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct StructWithAttrs {
         a: bool,
         b: u32,

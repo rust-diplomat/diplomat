@@ -274,12 +274,12 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructB {
         pub field: u8,
     }
@@ -299,7 +299,7 @@ pub mod ffi {
             out.write_str(&self.a.field.to_string()).unwrap();
         }
 
-        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
         pub fn nested_slice(sl: &[CyclicStructA]) -> u8 {
             let mut sum = 0;
             for a in sl.iter() {
@@ -344,8 +344,8 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
-    #[diplomat::attr(not(any(js, supports=struct_primitive_slices)), disable)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(not(any(js, supports=abi_compatibles)), disable)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
@@ -361,8 +361,8 @@ pub mod ffi {
 
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
-    #[diplomat::attr(not(any(js, supports=struct_primitive_slices)), disable)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(not(any(js, supports=abi_compatibles)), disable)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]
@@ -383,7 +383,7 @@ pub mod ffi {
             assert_eq!(extra_val, 853);
         }
 
-        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
         pub fn assert_slice(slice: &[BigStructWithStuff], second_value: u16) {
             assert!(slice.len() > 1);
             let mut i = slice.iter();
@@ -457,8 +457,8 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(not(supports=abi_compatibles), disable)]
+    #[diplomat::attr(auto, abi_compatible)]
     #[derive(Clone)]
     pub struct PrimitiveStruct {
         x: f32,
@@ -488,7 +488,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+    #[diplomat::attr(not(supports=abi_compatibles), disable)]
     #[diplomat::opaque]
     pub struct PrimitiveStructVec(Vec<PrimitiveStruct>);
 
@@ -523,7 +523,7 @@ pub mod ffi {
             self.0[idx].clone()
         }
 
-        #[diplomat::attr(not(supports=struct_primitive_slices), disable)]
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
         pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
         }

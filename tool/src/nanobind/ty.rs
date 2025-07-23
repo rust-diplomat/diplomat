@@ -192,7 +192,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             is_sliceable: bool,
         }
 
-        if def.attrs.allowed_in_slices {
+        if def.attrs.abi_compatible {
             write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
                 .expect("Could not write to header.");
         }
@@ -208,7 +208,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     Some(hir::SpecialMethod::Constructor)
                 )
             }),
-            is_sliceable: def.attrs.allowed_in_slices,
+            is_sliceable: def.attrs.abi_compatible,
         }
         .render_into(out)
         .unwrap();

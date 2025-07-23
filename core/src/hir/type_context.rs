@@ -413,9 +413,9 @@ impl TypeContext {
             let st = self.resolve_type(st.id());
             match st {
                 TypeDef::Struct(st) => {
-                    if !st.attrs.allowed_in_slices {
+                    if !st.attrs.abi_compatible {
                         errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                             st.name
                         )));
                     }
@@ -511,32 +511,32 @@ impl TypeContext {
     }
 
     fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
-        if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
+        if st.attrs.abi_compatible && st.lifetimes.num_lifetimes() > 0 {
             errors.push(LoweringError::Other(format!(
-                "Struct {:?} cannot have any lifetimes if it is allowed within a slice.",
+                "Struct {:?} cannot have any lifetimes if it is marked as transparent.",
                 st.name
             )));
         }
 
         for f in &st.fields {
             self.validate_ty(errors, &f.ty);
-            if st.attrs.allowed_in_slices {
+            if st.attrs.abi_compatible {
                 match &f.ty {
                     hir::Type::Primitive(..) => {}
                     hir::Type::Struct(st_pth) => {
                         let ty = self.resolve_type(st_pth.id());
                         match ty {
                             TypeDef::Struct(f_st) => {
-                                if !f_st.attrs.allowed_in_slices {
+                                if !f_st.attrs.abi_compatible {
                                     errors.push(LoweringError::Other(format!(
-                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
+                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, abi_compatible)]`.",
                                         st.name, f.name, f_st.name
                                     )));
                                 }
                             }
                             TypeDef::OutStruct(out) => {
                                 errors.push(LoweringError::Other(
-                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, allowed_in_slices)].")
+                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, abi_compatible)].")
                                 ));
                             }
                             _ => unreachable!(),
@@ -696,7 +696,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
-            attr_validator.support.struct_primitive_slices = true;
+            attr_validator.support.abi_compatibles = true;
             match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -1054,7 +1054,7 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 pub struct Foo<'a> {
                     pub x: u32,
                     pub y: u32,
@@ -1075,7 +1075,7 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 #[diplomat::out]
                 pub struct Foo {
                     pub x: u32,
