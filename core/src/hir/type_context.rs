@@ -1110,7 +1110,6 @@ mod tests {
             }
         }
     }
-    
 
     #[test]
     fn test_mut_struct_fails() {

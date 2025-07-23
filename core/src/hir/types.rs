@@ -170,13 +170,15 @@ impl<P: TyPosition> Type<P> {
     ///
     /// Curently this can only happen with opaque types.
     pub fn is_immutably_borrowed(&self) -> bool {
-        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Immutable)) || matches!(self, Self::Struct(st) if st.owner().map(|b| { b.mutability.is_immutable() }).unwrap_or(false))
+        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Immutable))
+            || matches!(self, Self::Struct(st) if st.owner().map(|b| { b.mutability.is_immutable() }).unwrap_or(false))
     }
     /// Returns whether the self parameter is borrowed mutably.
     ///
     /// Curently this can only happen with opaque types.
     pub fn is_mutably_borrowed(&self) -> bool {
-        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Mutable)) || matches!(self, Self::Struct(st) if st.owner().map(|b| { b.mutability.is_mutable() }).unwrap_or(false))
+        matches!(self, Self::Opaque(opaque_path) if opaque_path.owner.mutability() == Some(Mutability::Mutable))
+            || matches!(self, Self::Struct(st) if st.owner().map(|b| { b.mutability.is_mutable() }).unwrap_or(false))
     }
 }
 
@@ -185,19 +187,22 @@ impl SelfType {
     ///
     /// Curently this can only happen with opaque types.
     pub fn is_immutably_borrowed(&self) -> bool {
-        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Immutable) || matches!(self, SelfType::Struct(st) if st.owner().map(|b| { b.mutability.is_immutable() }).unwrap_or(false))
+        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Immutable)
+            || matches!(self, SelfType::Struct(st) if st.owner().map(|b| { b.mutability.is_immutable() }).unwrap_or(false))
     }
     /// Returns whether the self parameter is borrowed mutably.
     ///
     /// Curently this can only happen with opaque types.
     pub fn is_mutably_borrowed(&self) -> bool {
-        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Mutable) || matches!(self, SelfType::Struct(st) if st.owner().map(|b| { b.mutability.is_mutable() }).unwrap_or(false))
+        matches!(self, SelfType::Opaque(opaque_path) if opaque_path.owner.mutability == Mutability::Mutable)
+            || matches!(self, SelfType::Struct(st) if st.owner().map(|b| { b.mutability.is_mutable() }).unwrap_or(false))
     }
     /// Returns whether the self parameter is consuming.
     ///
     /// Currently this can only (and must) only happen for non-opaque types.
     pub fn is_consuming(&self) -> bool {
-        matches!(self, SelfType::Enum(_)) || matches!(self, SelfType::Struct(st) if st.owner().is_none())
+        matches!(self, SelfType::Enum(_))
+            || matches!(self, SelfType::Struct(st) if st.owner().is_none())
     }
 }
 

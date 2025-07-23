@@ -487,7 +487,7 @@ pub mod ffi {
             }
         }
 
-        pub fn mutable_ref(&mut self, a : &mut Self) {
+        pub fn mutable_ref(&mut self, a: &mut Self) {
             self.a = false;
             a.d = 1;
         }

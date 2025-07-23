@@ -778,7 +778,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Ok(Type::Struct(StructPath::new(
                                     lifetimes,
                                     tcx_id,
-                                    Some(borrow)
+                                    Some(borrow),
                                 )))
                             } else {
                                 self.errors.push(LoweringError::Other(format!("found &T in input where T is a struct. The backend must support abi_compatibles.")));
@@ -947,11 +947,7 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
                         ast::CustomType::Struct(..) => {
-                            if !self
-                                .attr_validator
-                                .attrs_supported()
-                                .abi_compatibles
-                            {
+                            if !self.attr_validator.attrs_supported().abi_compatibles {
                                 self.errors.push(LoweringError::Other(
                                     "Primitive struct slices are not supported by this backend"
                                         .into(),
@@ -1412,7 +1408,7 @@ impl<'ast> LoweringContext<'ast> {
                     } else {
                         (None, self_param_ltl.no_self_ref())
                     };
-                    
+
                     let attrs = self.attr_validator.attr_from_ast(
                         &self_param.attrs,
                         &Attrs::default(),
@@ -1427,7 +1423,6 @@ impl<'ast> LoweringContext<'ast> {
                         &strct.lifetimes,
                         true,
                     );
-
 
                     self.attr_validator.validate(
                         &attrs,

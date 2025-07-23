@@ -21,7 +21,7 @@ pub type OutStructPath = StructPath<OutputOnly>;
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: Lifetimes,
     pub tcx_id: P::StructId,
-    pub owner : Option<Borrow>,
+    pub owner: Option<Borrow>,
 }
 
 #[derive(Debug, Clone)]
@@ -146,8 +146,12 @@ impl ReturnableStructPath {
 
 impl<P: TyPosition> StructPath<P> {
     /// Returns a new [`EnumPath`].
-    pub(super) fn new(lifetimes: Lifetimes, tcx_id: P::StructId, owner : Option<Borrow> ) -> Self {
-        Self { lifetimes, tcx_id, owner }
+    pub(super) fn new(lifetimes: Lifetimes, tcx_id: P::StructId, owner: Option<Borrow>) -> Self {
+        Self {
+            lifetimes,
+            tcx_id,
+            owner,
+        }
     }
 }
 impl StructPath {

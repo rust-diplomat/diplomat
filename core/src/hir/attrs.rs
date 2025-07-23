@@ -1579,7 +1579,6 @@ mod tests {
             }
         }
     }
-    
 
     #[test]
     fn test_abi_compatibility_for_unsupported_backend() {

@@ -579,7 +579,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
         let id = st.id();
         let type_name = self.formatter.fmt_type_name(id);
-        
+
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let def = self.c.tcx.resolve_type(id);
         if def.attrs().disable {
@@ -604,7 +604,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 (true, _) => self.formatter.fmt_owned(&type_name),
                 (false, true) => self.formatter.fmt_optional_borrowed(&type_name, mutability),
                 (false, false) => self.formatter.fmt_borrowed(&type_name, mutability),
-            }.into_owned().into()
+            }
+            .into_owned()
+            .into()
         } else {
             type_name
         }
@@ -634,19 +636,23 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
                 if let Some(b) = s.owner {
-                    let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                    let c_name = self.formatter.namespace_c_name(
+                        s.id(),
+                        &self.formatter.fmt_type_name_unnamespaced(s.id()),
+                    );
                     match b.mutability {
                         Mutability::Immutable => {
                             format!("reinterpret_cast<const {c_name}*>(this)")
-                        },
+                        }
                         Mutability::Mutable => {
                             format!("reinterpret_cast<{c_name}*>(this)")
                         }
-                    }.into()
+                    }
+                    .into()
                 } else {
                     "this->AsFFI()".into()
                 }
-            },
+            }
             SelfType::Enum(..) => "this->AsFFI()".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }

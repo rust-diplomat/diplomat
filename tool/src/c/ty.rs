@@ -460,7 +460,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                
+
                 let header_path = self.formatter.fmt_decl_header_path(st_id.into());
                 header.includes.insert(header_path);
 
