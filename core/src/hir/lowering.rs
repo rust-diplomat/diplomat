@@ -781,7 +781,7 @@ impl<'ast> LoweringContext<'ast> {
                                     Some(borrow),
                                 )))
                             } else {
-                                self.errors.push(LoweringError::Other(format!("found &T in input where T is a struct. The backend must support abi_compatibles.")));
+                                self.errors.push(LoweringError::Other("found &T in input where T is a struct. The backend must support abi_compatibles.".to_string()));
                                 Err(())
                             }
                         }
