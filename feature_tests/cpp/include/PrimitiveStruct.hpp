@@ -31,7 +31,7 @@ inline void PrimitiveStruct::mutable_slice(diplomat::span<PrimitiveStruct> a) {
 }
 
 inline void PrimitiveStruct::mutable_ref(PrimitiveStruct& a) const {
-  diplomat::capi::PrimitiveStruct_mutable_ref(this->AsFFI(),
+  diplomat::capi::PrimitiveStruct_mutable_ref(reinterpret_cast<diplomat::capi::PrimitiveStruct*>(this),
     reinterpret_cast<diplomat::capi::PrimitiveStruct*>(a));
 }
 

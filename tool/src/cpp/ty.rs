@@ -632,7 +632,21 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
-            SelfType::Struct(..) => "this->AsFFI()".into(),
+            SelfType::Struct(ref s) => {
+                if let Some(b) = s.owner {
+                    let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                    match b.mutability {
+                        Mutability::Immutable => {
+                            format!("reinterpret_cast<const {c_name}*>(this)")
+                        },
+                        Mutability::Mutable => {
+                            format!("reinterpret_cast<{c_name}*>(this)")
+                        }
+                    }.into()
+                } else {
+                    "this->AsFFI()".into()
+                }
+            },
             SelfType::Enum(..) => "this->AsFFI()".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
