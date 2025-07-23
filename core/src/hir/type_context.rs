@@ -409,19 +409,38 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
-            let st = self.resolve_type(st.id());
-            match st {
-                TypeDef::Struct(st) => {
-                    if !st.attrs.abi_compatible {
-                        errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                            st.name
-                        )));
+        match ty {
+            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
+                let st = self.resolve_type(st.id());
+                match st {
+                    TypeDef::Struct(st) => {
+                        if !st.attrs.abi_compatible {
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                st.name
+                            )));
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            hir::Type::Struct(ref st) => {
+                if st.owner().is_some() {
+                    let st = self.resolve_type(st.id());
+                    match st {
+                        TypeDef::Struct(st) => {
+                            if !st.attrs.abi_compatible {
+                                errors.push(LoweringError::Other(format!(
+                                    "Cannot borrow struct {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                    st.name
+                                )));
+                            }
+                        }
+                        _ => unreachable!(),
                     }
                 }
-                _ => unreachable!(),
             }
+            _ => {}
         }
     }
 
@@ -513,7 +532,7 @@ impl TypeContext {
     fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
         if st.attrs.abi_compatible && st.lifetimes.num_lifetimes() > 0 {
             errors.push(LoweringError::Other(format!(
-                "Struct {:?} cannot have any lifetimes if it is marked as transparent.",
+                "Struct {:?} cannot have any lifetimes if it is marked as ABI compatible.",
                 st.name
             )));
         }
