@@ -684,7 +684,7 @@ pub fn macro_rules(
     // (otherwise that will cause more errors) so we hold on to it and we tack it in
     // with no modifications below
     let input_cached: proc_macro2::TokenStream = input.clone().into();
-    let expanded = diplomat_core::ast::Macro::validate(parse_macro_input!(input));
+    let expanded = diplomat_core::ast::MacroDef::validate(parse_macro_input!(input));
     let full = quote! {
         #expanded
         #input_cached

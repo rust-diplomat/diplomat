@@ -248,7 +248,7 @@ impl Module {
                                 impl_item_vec.push(ImplItem::Fn(f.clone()));
                             }
                             ImplItem::Macro(mac) => {
-                                let mut items = mst.mod_macros.read_impl_item_macro(mac);
+                                let mut items = mst.mod_macros.evaluate_impl_item_macro(mac);
                                 impl_item_vec.append(&mut items);
                             }
                             _ => {}
@@ -333,8 +333,10 @@ impl Module {
                 };
 
                 if should_eval {
-                    let maybe_items = mst.mod_macros.read_item_macro(mac);
-                    if let Some(items) = maybe_items {
+                    if mac.ident.is_some() {
+                        mst.mod_macros.add_item_macro(mac);
+                    } else {
+                        let items = mst.mod_macros.evaluate_item_macro(mac);
                         for i in items {
                             Module::evaluate_item(&i, mst);
                         }

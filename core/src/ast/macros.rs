@@ -12,7 +12,7 @@ use syn::{
 
 #[derive(Default)]
 pub struct Macros {
-    defs: BTreeMap<Ident, MacroRules>,
+    defs: BTreeMap<Ident, MacroDef>,
 }
 
 impl Macros {
@@ -22,31 +22,35 @@ impl Macros {
         }
     }
 
-    pub fn read_item_macro(&mut self, input: &ItemMacro) -> Option<Vec<Item>> {
-        let mac = Macro::from_syn(input);
-        if let Ok((ident, mac)) = mac {
-            match mac {
-                Macro::MacroRules(rules) => {
-                    self.defs.insert(ident, rules);
-                    // Macro rules add no new items:
-                    None
-                }
-                Macro::MacroMatch(matched) => {
-                    if let Some(def) = self.defs.get(&ident) {
-                        Some(def.evaluate(matched))
-                    } else {
-                        panic!("Could not find definition for {ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {ident} definition?");
-                    }
-                }
-            }
-        } else {
-            // We handle errors automatically in `diplomat/macro`
-            None
+    pub fn add_item_macro(&mut self, input: &ItemMacro) {
+        assert!(input.ident.is_some(), "Expected macro_rules! def. Got {input:?}");
+        let m = input.mac.parse_body::<MacroDef>();
+        if let Ok(mac) = m {
+            let ident = input.ident.clone().unwrap();
+            self.defs.insert(ident, mac);
         }
     }
 
-    pub fn read_impl_item_macro(&self, input: &ImplItemMacro) -> Vec<ImplItem> {
-        let m: syn::Result<MacroMatch> = input.mac.parse_body();
+    pub fn evaluate_item_macro(&self, input: &ItemMacro) -> Vec<Item> {
+        assert!(input.ident.is_none(), "Expected macro usage. Got {input:?}");
+        let m = input.mac.parse_body::<MacroUse>();
+        if let Ok(mac) = m {
+            // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
+            let ident = input.mac.path.segments.last().unwrap().ident.clone();
+
+            if let Some(def) = self.defs.get(&ident) {
+                def.evaluate(mac)
+            } else {
+                panic!("Could not find definition for {ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {ident} definition?");
+            }
+        } else {
+            // We handle errors automatically in `diplomat/macro`
+            Vec::new()
+        }
+    }
+
+    pub fn evaluate_impl_item_macro(&self, input: &ImplItemMacro) -> Vec<ImplItem> {
+        let m: syn::Result<MacroUse> = input.mac.parse_body();
         // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
         let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
 
@@ -64,53 +68,11 @@ impl Macros {
 }
 
 #[derive(Debug)]
-#[non_exhaustive]
-pub enum Macro {
-    MacroRules(MacroRules),
-    MacroMatch(MacroMatch),
-}
-
-impl Macro {
-    pub fn from_syn(input: &ItemMacro) -> Result<(Ident, Macro), syn::Error> {
-        // Are we macro_rules!
-        if let Some(ident) = &input.ident {
-            let r = input.mac.parse_body()?;
-            Ok((ident.clone(), Macro::MacroRules(r)))
-        } else {
-            let m = input.mac.parse_body()?;
-            // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
-            let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
-            Ok((path_ident, Macro::MacroMatch(m)))
-        }
-    }
-
-    pub fn validate(input: ItemMacro) -> TokenStream {
-        if input.ident.is_some() {
-            let r = input.mac.parse_body::<MacroRules>();
-
-            if let Err(e) = r {
-                e.to_compile_error()
-            } else {
-                TokenStream::default()
-            }
-        } else {
-            let m = input.mac.parse_body::<MacroMatch>();
-
-            if let Err(e) = m {
-                e.to_compile_error()
-            } else {
-                TokenStream::default()
-            }
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct MacroMatch {
+pub struct MacroUse {
     pub args: Vec<Expr>,
 }
 
-impl Parse for MacroMatch {
+impl Parse for MacroUse {
     fn parse(input: parse::ParseStream) -> syn::Result<Self> {
         let mut args = Vec::new();
 
@@ -141,12 +103,12 @@ impl Parse for MacroIdent {
 }
 
 #[derive(Debug)]
-pub struct MacroRules {
+pub struct MacroDef {
     pub match_tokens: Vec<MacroIdent>,
     pub body: TokenStream,
 }
 
-impl Parse for MacroRules {
+impl Parse for MacroDef {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
 
@@ -190,8 +152,18 @@ impl Parse for MacroRules {
     }
 }
 
-impl MacroRules {
-    fn parse_group(&self, matched: &MacroMatch, inner: Cursor) -> TokenStream {
+impl MacroDef {
+    pub fn validate(input : ItemMacro) -> TokenStream {
+        let r = input.mac.parse_body::<Self>();
+
+        if let Err(e) = r {
+            e.to_compile_error()
+        } else {
+            TokenStream::default()
+        }
+    }
+
+    fn parse_group(&self, matched: &MacroUse, inner: Cursor) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let mut c = inner;
@@ -230,7 +202,7 @@ impl MacroRules {
         stream
     }
 
-    fn evaluate_buf(&self, matched: MacroMatch) -> TokenStream {
+    fn evaluate_buf(&self, matched: MacroUse) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
@@ -271,7 +243,7 @@ impl MacroRules {
         stream
     }
 
-    fn evaluate<T: Parse + Debug>(&self, matched: MacroMatch) -> Vec<T> {
+    fn evaluate<T: Parse + Debug>(&self, matched: MacroUse) -> Vec<T> {
         let stream = self.evaluate_buf(matched);
 
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.

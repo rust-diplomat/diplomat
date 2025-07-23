@@ -46,4 +46,4 @@ pub use docs::{
 };
 
 mod macros;
-pub use macros::{Macro, Macros};
+pub use macros::{MacroDef, MacroUse, Macros};
