@@ -1361,6 +1361,16 @@ mod tests {
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
+                    
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparison_ref(&self, other: &Self) -> cmp::Ordering {
+                        todo!()
+                    }
+                    
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparison_mut(&mut self, other: &Self) -> cmp::Ordering {
+                        todo!()
+                    }
                 }
             }
         }
