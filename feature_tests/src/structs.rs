@@ -486,6 +486,11 @@ pub mod ffi {
                 p.e = running_sum as u8;
             }
         }
+
+        pub fn mutable_ref(&mut self, a : &mut Self) {
+            self.a = false;
+            a.d = 1;
+        }
     }
 
     #[diplomat::attr(not(supports=abi_compatibles), disable)]
