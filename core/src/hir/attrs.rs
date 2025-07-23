@@ -634,6 +634,13 @@ impl Attrs {
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
+
+                                        if p.owner.map(|b| b.mutability != Mutability::Immutable).unwrap_or(false) || p.owner.map(|b| b.mutability != Mutability::Immutable).unwrap_or(false) {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept immutable parameters"
+                                                    .into(),
+                                            ));
+                                        }
                                     }
                                     (SelfType::Enum(p), Type::Enum(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
