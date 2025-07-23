@@ -127,15 +127,15 @@ int main(int argc, char* argv[]) {
     uint8_t cyclic_a_sum = CyclicStructA::nested_slice(cyclic_span);
     simple_assert_eq("CyclicStructA slice sum", cyclic_a_sum, 14);
 
-    PrimitiveStruct s = {
+    PrimitiveStruct primitive_one = {
         .x = 0.0f,
         .a = true,
         .b = 'a', 
     };
-    PrimitiveStruct o = {
+    PrimitiveStruct primitive_two = {
         .d = 0
     };
-    s.mutable_ref(o);
-    simple_assert_eq("Mutable ref in", s.a, false);
-    simple_assert_eq("Mutable ref in", o.d, 1);
+    primitive_one.mutable_ref(primitive_two);
+    simple_assert_eq("Mutable ref in", primitive_one.a, false);
+    simple_assert_eq("Mutable ref in", primitive_two.d, 1);
 }

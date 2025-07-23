@@ -693,10 +693,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
                     match borrow.mutability {
                         Mutability::Immutable => {
-                            format!("reinterpret_cast<const {c_name}*>({cpp_name})")
+                            format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
                         },
                         Mutability::Mutable => {
-                            format!("reinterpret_cast<{c_name}*>({cpp_name})")
+                            format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
                         }
                     }.into()
                 } else {
