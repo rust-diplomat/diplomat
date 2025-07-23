@@ -635,7 +635,13 @@ impl Attrs {
                                             ));
                                         }
 
-                                        if p.owner.map(|b| b.mutability != Mutability::Immutable).unwrap_or(false) || p.owner.map(|b| b.mutability != Mutability::Immutable).unwrap_or(false) {
+                                        if p.owner
+                                            .map(|b| b.mutability != Mutability::Immutable)
+                                            .unwrap_or(false)
+                                            || p.owner
+                                                .map(|b| b.mutability != Mutability::Immutable)
+                                                .unwrap_or(false)
+                                        {
                                             errors.push(LoweringError::Other(
                                                 "comparators must accept immutable parameters"
                                                     .into(),
@@ -1361,12 +1367,12 @@ mod tests {
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
-                    
+
                     #[diplomat::attr(auto, comparison)]
                     pub fn comparison_ref(&self, other: &Self) -> cmp::Ordering {
                         todo!()
                     }
-                    
+
                     #[diplomat::attr(auto, comparison)]
                     pub fn comparison_mut(&mut self, other: &Self) -> cmp::Ordering {
                         todo!()
