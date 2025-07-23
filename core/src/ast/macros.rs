@@ -23,7 +23,10 @@ impl Macros {
     }
 
     pub fn add_item_macro(&mut self, input: &ItemMacro) {
-        assert!(input.ident.is_some(), "Expected macro_rules! def. Got {input:?}");
+        assert!(
+            input.ident.is_some(),
+            "Expected macro_rules! def. Got {input:?}"
+        );
         let m = input.mac.parse_body::<MacroDef>();
         if let Ok(mac) = m {
             let ident = input.ident.clone().unwrap();
@@ -68,6 +71,7 @@ impl Macros {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct MacroUse {
     pub args: Vec<Expr>,
 }
@@ -103,6 +107,7 @@ impl Parse for MacroIdent {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct MacroDef {
     pub match_tokens: Vec<MacroIdent>,
     pub body: TokenStream,
@@ -153,7 +158,7 @@ impl Parse for MacroDef {
 }
 
 impl MacroDef {
-    pub fn validate(input : ItemMacro) -> TokenStream {
+    pub fn validate(input: ItemMacro) -> TokenStream {
         let r = input.mac.parse_body::<Self>();
 
         if let Err(e) = r {
