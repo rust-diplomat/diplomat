@@ -1,0 +1,5 @@
+---
+source: core/src/hir/type_context.rs
+expression: output
+---
+Lowering error in Foo::takes_mut: Cannot borrow struct "Foo". Try marking with `#[diplomat::attr(auto, abi_compatible)]`

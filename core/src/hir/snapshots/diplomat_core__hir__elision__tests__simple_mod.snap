@@ -142,6 +142,7 @@ TypeContext {
                                         tcx_id: OutStructId(
                                             0,
                                         ),
+                                        owner: None,
                                     },
                                 ),
                             ),
@@ -303,6 +304,7 @@ TypeContext {
                                     tcx_id: StructId(
                                         0,
                                     ),
+                                    owner: None,
                                 },
                             ),
                             attrs: Attrs {
