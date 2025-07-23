@@ -1579,4 +1579,25 @@ mod tests {
             }
         }
     }
+    
+
+    #[test]
+    fn test_abi_compatibility_for_unsupported_backend() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&mut self) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
 }

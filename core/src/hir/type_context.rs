@@ -1090,4 +1090,44 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_mut_struct() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&mut self, sl : &mut Self) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+    
+
+    #[test]
+    fn test_mut_struct_fails() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&mut self, sl : &mut Self) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
 }

@@ -74,7 +74,7 @@ pub enum Slice<P: TyPosition> {
     Strs(StringEncoding),
 
     /// A `&[Struct]`, where `Struct` is a structure that is only comprised of primitive types and
-    /// structures that only contain primitive types. Must be marked with `#[diplomat::attr(auto, abi_compatible)]`.
+    /// structures that only contain primitive types. Must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.
     /// Currently assumes that `&[Struct]` is provided as an input only for function parameters.
     /// Validated in [`super::type_context::TypeContext::validate_primitive_slice_struct`]
     Struct(Option<Borrow>, P::StructPath),

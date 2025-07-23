@@ -702,7 +702,7 @@ impl<'ast> LoweringContext<'ast> {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
 
-                        Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
+                        Ok(Type::Struct(StructPath::new(lifetimes, tcx_id, None)))
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
                         Err(())
@@ -763,6 +763,27 @@ impl<'ast> LoweringContext<'ast> {
                                 borrow,
                                 tcx_id,
                             )))
+                        }
+                        ast::CustomType::Struct(st) => {
+                            if self.attr_validator.attrs_supported().abi_compatibles {
+                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes[..],
+                                    &st.lifetimes,
+                                    ref_ty.is_self(),
+                                );
+                                let tcx_id = self.lookup_id.resolve_struct(st).expect(
+                                    "Can't find struct in lookup map, which contains all structs from env"
+                                );
+                                Ok(Type::Struct(StructPath::new(
+                                    lifetimes,
+                                    tcx_id,
+                                    Some(borrow)
+                                )))
+                            } else {
+                                self.errors.push(LoweringError::Other(format!("found &T in input where T is a struct. The backend must support abi_compatibles.")));
+                                Err(())
+                            }
                         }
                         _ => {
                             self.errors.push(LoweringError::Other(format!("found &T in input where T is a custom type, but not opaque. T = {ref_ty}")));
@@ -1062,11 +1083,11 @@ impl<'ast> LoweringContext<'ast> {
 
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::Struct(
-                                StructPath::new(lifetimes, tcx_id),
+                                StructPath::new(lifetimes, tcx_id, None),
                             )))
                         } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::OutStruct(
-                                OutStructPath::new(lifetimes, tcx_id),
+                                OutStructPath::new(lifetimes, tcx_id, None),
                             )))
                         } else {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
@@ -1377,41 +1398,50 @@ impl<'ast> LoweringContext<'ast> {
         match self_param.path_type.resolve(in_path, self.env) {
             ast::CustomType::Struct(strct) => {
                 if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                    if self_param.reference.is_some() {
-                        self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
-                        Err(())
+                    let (borrow, mut param_ltl) = if let Some((lt, mt)) = &self_param.reference {
+                        if self.attr_validator.attrs_supported().abi_compatibles {
+                            // FIXME: Need to check for #[diplomat::attr(auto, abi_compatible)].
+                            let (borrow_lt, param_ltl) = self_param_ltl.lower_self_ref(lt);
+                            let borrow = Borrow::new(borrow_lt, *mt);
+
+                            (Some(borrow), param_ltl)
+                        } else {
+                            self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed. Backend must support abi_compatibles.")));
+                            return Err(());
+                        }
                     } else {
-                        let mut param_ltl = self_param_ltl.no_self_ref();
+                        (None, self_param_ltl.no_self_ref())
+                    };
+                    
+                    let attrs = self.attr_validator.attr_from_ast(
+                        &self_param.attrs,
+                        &Attrs::default(),
+                        &mut self.errors,
+                    );
 
-                        // Even if we explicitly write out the type of `self` like
-                        // `self: Foo<'a>`, the `'a` is still not considered for
-                        // elision according to rustc, so is_self=true.
-                        let type_lifetimes = param_ltl.lower_generics(
-                            &self_param.path_type.lifetimes[..],
-                            &strct.lifetimes,
-                            true,
-                        );
+                    // Even if we explicitly write out the type of `self` like
+                    // `self: Foo<'a>`, the `'a` is still not considered for
+                    // elision according to rustc, so is_self=true.
+                    let type_lifetimes = param_ltl.lower_generics(
+                        &self_param.path_type.lifetimes[..],
+                        &strct.lifetimes,
+                        true,
+                    );
 
-                        let attrs = self.attr_validator.attr_from_ast(
-                            &self_param.attrs,
-                            &Attrs::default(),
-                            &mut self.errors,
-                        );
 
-                        self.attr_validator.validate(
-                            &attrs,
-                            AttributeContext::SelfParam,
-                            &mut self.errors,
-                        );
+                    self.attr_validator.validate(
+                        &attrs,
+                        AttributeContext::SelfParam,
+                        &mut self.errors,
+                    );
 
-                        Ok((
-                            ParamSelf::new(
-                                SelfType::Struct(StructPath::new(type_lifetimes, tcx_id)),
-                                attrs,
-                            ),
-                            param_ltl,
-                        ))
-                    }
+                    Ok((
+                        ParamSelf::new(
+                            SelfType::Struct(StructPath::new(type_lifetimes, tcx_id, borrow)),
+                            attrs,
+                        ),
+                        param_ltl,
+                    ))
                 } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                     if let Some((lifetime, _)) = &self_param.reference {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
