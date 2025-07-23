@@ -20,12 +20,19 @@ namespace capi {
 
     void PrimitiveStruct_mutable_slice(diplomat::capi::DiplomatPrimitiveStructViewMut a);
 
+    void PrimitiveStruct_mutable_ref(diplomat::capi::PrimitiveStruct* self, diplomat::capi::PrimitiveStruct* a);
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
 inline void PrimitiveStruct::mutable_slice(diplomat::span<PrimitiveStruct> a) {
   diplomat::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<diplomat::capi::PrimitiveStruct*>(a.data()), a.size()});
+}
+
+inline void PrimitiveStruct::mutable_ref(PrimitiveStruct& a) const {
+  diplomat::capi::PrimitiveStruct_mutable_ref(this->AsFFI(),
+    reinterpret_cast<diplomat::capi::PrimitiveStruct*>(a));
 }
 
 

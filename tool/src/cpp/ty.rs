@@ -187,7 +187,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let ctype = self.formatter.fmt_c_type_name(id);
         let dtor_name = self
             .formatter
-            .namespace_c_method_name(id, ty.dtor_abi_name.as_str());
+            .namespace_c_name(id, ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
@@ -361,7 +361,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = self
             .formatter
-            .namespace_c_method_name(id, method.abi_name.as_str());
+            .namespace_c_name(id, method.abi_name.as_str());
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -579,6 +579,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
         let id = st.id();
         let type_name = self.formatter.fmt_type_name(id);
+        
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let def = self.c.tcx.resolve_type(id);
         if def.attrs().disable {
@@ -596,7 +597,17 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         self.impl_header
             .includes
             .insert(self.formatter.fmt_impl_header_path(id));
-        type_name
+        if let Some(borrow) = st.owner() {
+            let mutability = borrow.mutability;
+            match (borrow.is_owned(), false) {
+                // unique_ptr is nullable
+                (true, _) => self.formatter.fmt_owned(&type_name),
+                (false, true) => self.formatter.fmt_optional_borrowed(&type_name, mutability),
+                (false, false) => self.formatter.fmt_borrowed(&type_name, mutability),
+            }.into_owned().into()
+        } else {
+            type_name
+        }
     }
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
@@ -663,7 +674,21 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
-            Type::Struct(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Struct(ref s) => {
+                if let Some(borrow) = s.owner() {
+                    let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                    match borrow.mutability {
+                        Mutability::Immutable => {
+                            format!("reinterpret_cast<const {c_name}*>({cpp_name})")
+                        },
+                        Mutability::Mutable => {
+                            format!("reinterpret_cast<{c_name}*>({cpp_name})")
+                        }
+                    }.into()
+                } else {
+                    format!("{cpp_name}.AsFFI()").into()
+                }
+            },
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
                 // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
@@ -671,7 +696,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.map(|b| b.mutability).unwrap_or(Mutability::Mutable).is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_slice_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
+                self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
