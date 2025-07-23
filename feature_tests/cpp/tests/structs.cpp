@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
     PrimitiveStruct primitive_one = {
         .x = 0.0f,
         .a = true,
-        .b = 'a', 
+        .b = 'a',
     };
     PrimitiveStruct primitive_two = {
         .d = 0
