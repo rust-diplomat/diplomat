@@ -106,7 +106,9 @@ pub struct Module {
     pub attrs: Attrs,
 }
 
-struct ModuleSynTraverse {
+/// Contains all items needed to build an AST representation of a given [`Module`],
+/// as we traverse through [`syn::ItemMod`]. We build this up in [`Module::add_item`]
+struct ModuleBuilder {
     custom_types_by_name: BTreeMap<Ident, CustomType>,
     custom_traits_by_name: BTreeMap<Ident, Trait>,
     sub_modules: Vec<Module>,
@@ -165,7 +167,7 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
-    fn add_item(a: &Item, mst: &mut ModuleSynTraverse) {
+    fn add_item(a: &Item, mst: &mut ModuleBuilder) {
         match a {
             Item::Use(u) => {
                 if mst.analyze_types {
@@ -345,7 +347,7 @@ impl Module {
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mod_attrs: Attrs = (&*input.attrs).into();
 
-        let mut mst = ModuleSynTraverse {
+        let mut mst = ModuleBuilder {
             custom_types_by_name: BTreeMap::new(),
             custom_traits_by_name: BTreeMap::new(),
             sub_modules: Vec::new(),
