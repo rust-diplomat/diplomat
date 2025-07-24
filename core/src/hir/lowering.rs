@@ -765,7 +765,7 @@ impl<'ast> LoweringContext<'ast> {
                             )))
                         }
                         ast::CustomType::Struct(st) => {
-                            if self.attr_validator.attrs_supported().abi_compatibles {
+                            if self.attr_validator.attrs_supported().struct_refs {
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes[..],
@@ -781,7 +781,7 @@ impl<'ast> LoweringContext<'ast> {
                                     Some(borrow),
                                 )))
                             } else {
-                                self.errors.push(LoweringError::Other("found &T in input where T is a struct. The backend must support abi_compatibles.".to_string()));
+                                self.errors.push(LoweringError::Other("found &T in input where T is a struct. The backend must support struct_refs.".to_string()));
                                 Err(())
                             }
                         }
@@ -1395,13 +1395,13 @@ impl<'ast> LoweringContext<'ast> {
             ast::CustomType::Struct(strct) => {
                 if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                     let (borrow, mut param_ltl) = if let Some((lt, mt)) = &self_param.reference {
-                        if self.attr_validator.attrs_supported().abi_compatibles {
+                        if self.attr_validator.attrs_supported().struct_refs {
                             let (borrow_lt, param_ltl) = self_param_ltl.lower_self_ref(lt);
                             let borrow = Borrow::new(borrow_lt, *mt);
 
                             (Some(borrow), param_ltl)
                         } else {
-                            self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed. Backend must support abi_compatibles.")));
+                            self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed. Backend must support struct_refs.")));
                             return Err(());
                         }
                     } else {

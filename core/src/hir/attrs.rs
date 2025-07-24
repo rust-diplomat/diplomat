@@ -992,8 +992,11 @@ pub struct BackendAttrSupport {
     pub traits_are_sync: bool,
     /// Whether to generate mocking interface.
     pub generate_mocking_interface: bool,
-    /// Passing of structs that only hold (non-slice) primitive types (for use in slices and returning mutable references to the struct):
+    /// Passing of structs that only hold (non-slice) primitive types
+    /// (for use in slices and languages that support taking direct pointers to structs):
     pub abi_compatibles: bool,
+    /// Whether or not the language supports &Struct or &mut Struct
+    pub struct_refs : bool,
 }
 
 impl BackendAttrSupport {
@@ -1028,6 +1031,7 @@ impl BackendAttrSupport {
             traits_are_sync: true,
             generate_mocking_interface: true,
             abi_compatibles: true,
+            struct_refs: true,
         }
     }
 
@@ -1199,6 +1203,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 traits_are_sync,
                 generate_mocking_interface,
                 abi_compatibles,
+                struct_refs,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1229,6 +1234,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "traits_are_sync" => traits_are_sync,
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
+                "struct_refs" => struct_refs,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1604,7 +1610,7 @@ mod tests {
     }
 
     #[test]
-    fn test_abi_compatibility_for_unsupported_backend() {
+    fn test_struct_ref_for_unsupported_backend() {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
