@@ -309,37 +309,28 @@ impl Module {
                 }
             }
             Item::Macro(mac) => {
-                let should_eval = if let Some(i) = &mac.ident {
+                if let Some(i) = &mac.ident {
                     let macro_rules_attr = mac.attrs.iter().find_map(move |a| {
                         if a.path()
                             == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
                         {
-                            Some(())
+                            Some(true)
                         } else {
                             None
                         }
-                    });
+                    }).unwrap_or(false);
 
-                    if macro_rules_attr.is_some() {
-                        true
+                    if macro_rules_attr {
+                        mst.mod_macros.add_item_macro(mac);
                     } else {
                         println!(
                             r#"WARNING: Found macro_rules definition "macro_rules! {i}" with no #[diplomat::macro_rules] attribute. This will not be evaluated in Diplomat bindings."#
                         );
-                        false
                     }
                 } else {
-                    true
-                };
-
-                if should_eval {
-                    if mac.ident.is_some() {
-                        mst.mod_macros.add_item_macro(mac);
-                    } else {
-                        let items = mst.mod_macros.evaluate_item_macro(mac);
-                        for i in items {
-                            Module::add_item(&i, mst);
-                        }
+                    let items = mst.mod_macros.evaluate_item_macro(mac);
+                    for i in items {
+                        Module::add_item(&i, mst);
                     }
                 }
             }
