@@ -268,18 +268,11 @@ impl ModuleBuilder {
                     let macro_rules_attr = mac
                         .attrs
                         .iter()
-                        .find_map(move |a| {
-                            if a.path()
-                                == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
-                            {
-                                Some(true)
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or(false);
+                        .find(|a| {
+                            a.path() == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
+                        });
 
-                    if macro_rules_attr {
+                    if macro_rules_attr.is_some() {
                         self.mod_macros.add_item_macro(mac);
                     } else {
                         println!(
