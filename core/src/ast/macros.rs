@@ -75,6 +75,8 @@ impl Macros {
 
 #[derive(Debug)]
 #[non_exhaustive]
+/// Struct for showing how some defined macro (i.e., from `macro_rules! example`) is used whenever it is called.
+/// Right now, only supports reading comma parsed lists (i.e., example!(one, two, three, ...)).
 pub struct MacroUse {
     pub args: Vec<Expr>,
 }
@@ -94,9 +96,15 @@ impl Parse for MacroUse {
 }
 
 #[derive(Debug, Clone)]
+/// Represents $Identifier:MacroFragSpec (see https://doc.rust-lang.org/reference/macros-by-example.html#railroad-MacroMatch)
 pub struct MacroIdent {
+    /// represents Identifier.
     pub ident: Ident,
-    // To be used in future arg parsing:
+    /// Represents MacroFragSpec.
+    /// Currently unused, since [`MacroUse::args`] will always expect to read an [`Expr`] when a macro is used.
+    /// This is a very hands-off approach to parsing arguments in the usage of macros, and will work in most cases.
+    /// However, this makes some valid macro frag specs unusable in the current parser (I believe :block doesn't work, for instance).
+    /// The hope is that this will eventually be used in a more advanced parser.
     pub _ty: Ident,
 }
 
@@ -112,6 +120,7 @@ impl Parse for MacroIdent {
 
 #[derive(Debug)]
 #[non_exhaustive]
+/// Struct for defining a macro (i.e., `macro_rules! example`)
 pub struct MacroDef {
     pub match_tokens: HashMap<Ident, usize>,
     pub body: TokenStream,
