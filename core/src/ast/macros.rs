@@ -1,4 +1,7 @@
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fmt::Debug,
+};
 
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{ToTokens, TokenStreamExt};
@@ -93,7 +96,8 @@ impl Parse for MacroUse {
 #[derive(Debug, Clone)]
 pub struct MacroIdent {
     pub ident: Ident,
-    pub ty: Ident,
+    // To be used in future arg parsing:
+    pub _ty: Ident,
 }
 
 impl Parse for MacroIdent {
@@ -102,14 +106,14 @@ impl Parse for MacroIdent {
         let ident: Ident = input.parse()?;
         input.parse::<Token![:]>()?;
         let ty: Ident = input.parse()?;
-        Ok(Self { ident, ty })
+        Ok(Self { ident, _ty: ty })
     }
 }
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct MacroDef {
-    pub match_tokens: Vec<MacroIdent>,
+    pub match_tokens: HashMap<Ident, usize>,
     pub body: TokenStream,
 }
 
@@ -132,7 +136,12 @@ impl Parse for MacroDef {
         // TODO: This is not a comma separated list in actuality, at some point we'll want to add more complicated parsing.
         let punc = arm.parse_terminated(MacroIdent::parse, Token![,])?;
 
-        let match_tokens = punc.iter().cloned().collect();
+        let match_tokens = punc
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(c, i)| (i.ident, c))
+            .collect();
 
         let _arrow = input.parse::<Token![=>]>()?;
 
@@ -177,10 +186,11 @@ impl MacroDef {
                 TokenTree::Punct(p) if p.as_char() == '$' => {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
-                            let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args
-                                [arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
-                            .to_tokens(&mut stream);
+                            let arg = *self
+                                .match_tokens
+                                .get(&i)
+                                .unwrap_or_else(|| panic!("Could not find arg ${i:?}"));
+                            matched.args[arg].to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {tt:?}");
@@ -218,10 +228,11 @@ impl MacroDef {
                 TokenTree::Punct(punct) if punct.as_char() == '$' => {
                     if let Some((tt, next)) = next.token_tree() {
                         if let TokenTree::Ident(i) = tt {
-                            let arg = self.match_tokens.iter().position(|mi| mi.ident == i);
-                            matched.args
-                                [arg.unwrap_or_else(|| panic!("Could not find arg ${i:?}"))]
-                            .to_tokens(&mut stream);
+                            let arg = *self
+                                .match_tokens
+                                .get(&i)
+                                .unwrap_or_else(|| panic!("Could not find arg ${i:?}"));
+                            matched.args[arg].to_tokens(&mut stream);
                             c = next;
                         } else {
                             panic!("Expected ident next to $, got {tt:?}");
