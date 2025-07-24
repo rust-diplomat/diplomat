@@ -165,7 +165,7 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
-    fn evaluate_item(a: &Item, mst: &mut ModuleSynTraverse) {
+    fn add_item(a: &Item, mst: &mut ModuleSynTraverse) {
         match a {
             Item::Use(u) => {
                 if mst.analyze_types {
@@ -338,7 +338,7 @@ impl Module {
                     } else {
                         let items = mst.mod_macros.evaluate_item_macro(mac);
                         for i in items {
-                            Module::evaluate_item(&i, mst);
+                            Module::add_item(&i, mst);
                         }
                     }
                 }
@@ -373,7 +373,7 @@ impl Module {
             .unwrap_or_default()
             .iter()
             .for_each(|a| {
-                Module::evaluate_item(a, &mut mst);
+                Module::add_item(a, &mut mst);
             });
 
         Module {
