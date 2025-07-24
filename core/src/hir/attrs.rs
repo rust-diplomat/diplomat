@@ -996,7 +996,7 @@ pub struct BackendAttrSupport {
     /// (for use in slices and languages that support taking direct pointers to structs):
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
-    pub struct_refs : bool,
+    pub struct_refs: bool,
 }
 
 impl BackendAttrSupport {
