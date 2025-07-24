@@ -310,15 +310,19 @@ impl Module {
             }
             Item::Macro(mac) => {
                 if let Some(i) = &mac.ident {
-                    let macro_rules_attr = mac.attrs.iter().find_map(move |a| {
-                        if a.path()
-                            == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
-                        {
-                            Some(true)
-                        } else {
-                            None
-                        }
-                    }).unwrap_or(false);
+                    let macro_rules_attr = mac
+                        .attrs
+                        .iter()
+                        .find_map(move |a| {
+                            if a.path()
+                                == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
+                            {
+                                Some(true)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or(false);
 
                     if macro_rules_attr {
                         mst.mod_macros.add_item_macro(mac);
