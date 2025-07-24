@@ -265,12 +265,9 @@ impl ModuleBuilder {
             }
             Item::Macro(mac) => {
                 if let Some(i) = &mac.ident {
-                    let macro_rules_attr = mac
-                        .attrs
-                        .iter()
-                        .find(|a| {
-                            a.path() == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
-                        });
+                    let macro_rules_attr = mac.attrs.iter().find(|a| {
+                        a.path() == &syn::parse_str::<syn::Path>("diplomat::macro_rules").unwrap()
+                    });
 
                     if macro_rules_attr.is_some() {
                         self.mod_macros.add_item_macro(mac);
