@@ -999,6 +999,7 @@ mod tests {
                 impl Opaque {
                     pub fn returns_self(&self) -> &Self {}
                     pub fn returns_foo(&self) -> Foo {}
+                    pub fn returns_foo_ref(&self) -> &Foo {}
                 }
             }
         };
