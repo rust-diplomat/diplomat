@@ -1135,22 +1135,22 @@ mod tests {
 
     #[test]
     fn test_mut_struct() {
-        let parsed: syn::File = syn::parse_quote! { 
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::attr(auto, abi_compatible)]
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
-                }
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               #[diplomat::attr(auto, abi_compatible)]
+               pub struct Foo {
+                   pub x: u32,
+                   pub y: u32
+               }
 
-                impl Foo {
-                    pub fn takes_mut(&mut self, sl : &mut Self) {
-                        todo!()
-                    }
-                }
-            } 
-         };
+               impl Foo {
+                   pub fn takes_mut(&mut self, sl : &mut Self) {
+                       todo!()
+                   }
+               }
+           }
+        };
 
         let mut output = String::new();
 
@@ -1165,9 +1165,7 @@ mod tests {
                 }
             }
         };
-        insta::with_settings!({}, {
-            insta::assert_snapshot!(output)
-        });
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 
     #[test]
