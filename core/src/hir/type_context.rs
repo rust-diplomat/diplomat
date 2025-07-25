@@ -385,12 +385,16 @@ impl TypeContext {
 
                 let mut struct_ref_lifetimes = BTreeSet::new();
 
-                if let Some(super::ParamSelf { ty: super::SelfType::Struct(s), attrs: _attrs }) = &method.param_self  {
+                if let Some(super::ParamSelf {
+                    ty: super::SelfType::Struct(s),
+                    attrs: _attrs,
+                }) = &method.param_self
+                {
                     if let Some(b) = s.owner {
                         match b.lifetime {
                             MaybeStatic::NonStatic(ns) => {
                                 struct_ref_lifetimes.insert(ns);
-                            },
+                            }
                             _ => {}
                         }
                     }
@@ -398,17 +402,19 @@ impl TypeContext {
 
                 for param in &method.params {
                     match &param.ty {
-                        super::Type::Struct(ref st) => if let Some(b) = st.owner {
-                            match b.lifetime {
-                                MaybeStatic::NonStatic(ns) => {
-                                    struct_ref_lifetimes.insert(ns);
-                                },
-                                _ => {}
+                        super::Type::Struct(ref st) => {
+                            if let Some(b) = st.owner {
+                                match b.lifetime {
+                                    MaybeStatic::NonStatic(ns) => {
+                                        struct_ref_lifetimes.insert(ns);
+                                    }
+                                    _ => {}
+                                }
                             }
-                        },
+                        }
                         _ => {}
                     }
-                    
+
                     self.validate_ty_in_method(
                         errors,
                         Param::Input(param.name.as_str()),
@@ -419,7 +425,7 @@ impl TypeContext {
 
                 let lts = method.output.used_method_lifetimes();
                 let mut intersection = lts.intersection(&struct_ref_lifetimes).peekable();
-                if  intersection.peek().is_some() {
+                if intersection.peek().is_some() {
                     errors.push(LoweringError::Other(
                         format!("Found lifetimes used in struct references also used in the return type: {}", intersection.map(|lt| {
                             format!("'{} ", method.lifetime_env.fmt_lifetime(lt))
@@ -559,7 +565,9 @@ impl TypeContext {
         for f in &st.fields {
             self.validate_ty(errors, &f.ty);
 
-            if matches!(f.ty, hir::Type::Struct(..)) && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed()) {
+            if matches!(f.ty, hir::Type::Struct(..))
+                && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed())
+            {
                 errors.push(LoweringError::Other(format!(
                     "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs.",
                      st.name, f.name
@@ -1178,23 +1186,23 @@ mod tests {
 
     #[test]
     fn test_struct_ref_fails() {
-        let parsed: syn::File = syn::parse_quote! { 
-            #[diplomat::bridge]
-            mod ffi {
-                pub struct Foo<'a> {
-                    pub x: u32,
-                    pub y: u32,
-                    pub foo : &'a Foo<'a>
-                }
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               pub struct Foo<'a> {
+                   pub x: u32,
+                   pub y: u32,
+                   pub foo : &'a Foo<'a>
+               }
 
-                #[diplomat::opaque]
-                pub struct Bar<'a>(&'a Foo<'a>);
+               #[diplomat::opaque]
+               pub struct Bar<'a>(&'a Foo<'a>);
 
-                impl Foo {
-                    pub fn out<'a>(&'a self) -> Box<Bar<'a>> {}
-                }
-            }
-         };
+               impl Foo {
+                   pub fn out<'a>(&'a self) -> Box<Bar<'a>> {}
+               }
+           }
+        };
 
         let mut output = String::new();
 
@@ -1209,8 +1217,6 @@ mod tests {
                 }
             }
         };
-        insta::with_settings!({}, {
-            insta::assert_snapshot!(output)
-        });
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 }
