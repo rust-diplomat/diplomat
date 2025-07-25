@@ -674,6 +674,41 @@ pub fn transparent_convert(
     proc_macro::TokenStream::from(full.to_token_stream())
 }
 
+#[proc_macro_attribute]
+pub fn macro_rules(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    // proc macros handle compile errors by using special error tokens.
+    // In case of an error, we don't want the original code to go away too
+    // (otherwise that will cause more errors) so we hold on to it and we tack it in
+    // with no modifications below
+    let input_cached: proc_macro2::TokenStream = input.clone().into();
+    let expanded = diplomat_core::ast::MacroDef::validate(parse_macro_input!(input));
+    let full = quote! {
+        #expanded
+        #input_cached
+    };
+    proc_macro::TokenStream::from(full.to_token_stream())
+}
+
+// Expose attributes for macro_rules to parse:
+macro_rules! expose_attrs {
+    ($($attr_name:ident),+) => {
+        $(
+            #[proc_macro_attribute]
+            pub fn $attr_name(
+                _attr: proc_macro::TokenStream,
+                input: proc_macro::TokenStream,
+            ) -> proc_macro::TokenStream {
+                input
+            }
+        )*
+    }
+}
+
+expose_attrs! {opaque, attr, demo}
+
 #[cfg(test)]
 mod tests {
 

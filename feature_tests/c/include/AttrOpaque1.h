@@ -19,6 +19,10 @@
 
 AttrOpaque1* namespace_AttrOpaque1_new(void);
 
+int32_t namespace_AttrOpaque1_mac_test(void);
+
+int32_t namespace_AttrOpaque1_hello(void);
+
 uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
 
 uint8_t renamed_on_abi_only(const AttrOpaque1* self);

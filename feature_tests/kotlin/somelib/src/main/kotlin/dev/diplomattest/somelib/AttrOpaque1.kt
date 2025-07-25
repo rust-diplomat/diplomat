@@ -8,6 +8,8 @@ import com.sun.jna.Structure
 internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_destroy(handle: Pointer)
     fun namespace_AttrOpaque1_new(): Pointer
+    fun namespace_AttrOpaque1_mac_test(): Int
+    fun namespace_AttrOpaque1_hello(): Int
     fun namespace_AttrOpaque1_method(handle: Pointer): FFIUint8
     fun renamed_on_abi_only(handle: Pointer): FFIUint8
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
@@ -46,6 +48,20 @@ class AttrOpaque1 internal constructor (
             val returnOpaque = AttrOpaque1(handle, selfEdges)
             CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
             return returnOpaque
+        }
+        @JvmStatic
+        
+        fun macTest(): Int {
+            
+            val returnVal = lib.namespace_AttrOpaque1_mac_test();
+            return (returnVal)
+        }
+        @JvmStatic
+        
+        fun hello(): Int {
+            
+            val returnVal = lib.namespace_AttrOpaque1_hello();
+            return (returnVal)
         }
     }
     

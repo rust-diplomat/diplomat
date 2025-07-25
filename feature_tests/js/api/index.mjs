@@ -54,6 +54,8 @@ export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"
 
+export { RenamedVectorTest } from "./RenamedVectorTest.mjs"
+
 export { Bar } from "./Bar.mjs"
 
 export { Foo } from "./Foo.mjs"

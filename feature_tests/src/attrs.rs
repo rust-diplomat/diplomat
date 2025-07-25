@@ -3,6 +3,52 @@
 #[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
+    #[diplomat::macro_rules]
+    macro_rules! impl_mac {
+        ($arg1:ident, $arg2:ident, $arg3:block) => {
+            pub fn $arg1() -> i32 {
+                $arg3
+            }
+
+            pub fn $arg2() -> i32 {
+                println!("Test");
+                0
+            }
+        };
+    }
+
+    #[diplomat::macro_rules]
+    macro_rules! create_vec {
+        ($vec_name:ident, $ty:ident) => {
+            #[diplomat::opaque]
+            pub struct $vec_name(Vec<$ty>);
+
+            impl $vec_name {
+                #[diplomat::attr(auto, constructor)]
+                pub fn new() -> Box<$vec_name> {
+                    println!("{}", stringify!($vec_name));
+                    Box::new(Self(Vec::new()))
+                }
+
+                #[diplomat::attr(auto, getter)]
+                pub fn len(&self) -> usize {
+                    self.0.len()
+                }
+
+                #[diplomat::attr(auto, indexer)]
+                pub fn get(&self, idx: usize) -> Option<$ty> {
+                    self.0.get(idx).cloned()
+                }
+
+                pub fn push(&mut self, value: $ty) {
+                    self.0.push(value)
+                }
+            }
+        };
+    }
+
+    create_vec!(VectorTest, f64);
+
     #[derive(Clone)]
     #[diplomat::opaque]
     // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
@@ -16,6 +62,11 @@ pub mod ffi {
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
+
+        impl_mac!(mac_test, hello, {
+            println!("Hello world!");
+            10
+        });
 
         #[diplomat::attr(not(kotlin), rename = "method_renamed")]
         #[diplomat::attr(auto, getter = "method")]

@@ -4,6 +4,7 @@
 #include "../include/ns/RenamedAttrEnum.hpp"
 #include "../include/ns/RenamedMyIterable.hpp"
 #include "../include/ns/RenamedComparable.hpp"
+#include "../include/ns/RenamedVectorTest.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
@@ -15,6 +16,8 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<ns::AttrOpaque1Renamed> r = ns::AttrOpaque1Renamed::totally_not_new();
     simple_assert_eq("method should call", r->method_renamed(), 77);
     simple_assert_eq("method should call", r->abirenamed(), 123);
+    simple_assert_eq("Macro method should call", r->mac_test(), 10);
+    simple_assert_eq("Macro method should call", r->hello(), 0);
 
     // These C names should also resolve
     void* renamed = (void*)ns::capi::renamed_on_abi_only;
@@ -72,4 +75,11 @@ int main(int argc, char* argv[]) {
     simple_assert("greater or equal", *cmpC >= *cmpA);
     simple_assert("less", *cmpA < *cmpC);
     simple_assert("greater", *cmpC > *cmpA);
+
+    auto v = ns::RenamedVectorTest::new_();
+    v->push(0.0f);
+    v->push(1.0f);
+    v->push(2.0f);
+    simple_assert_eq("Macro vector indexing", (*v)[0].value(), 0.0f);
+    simple_assert_eq("Macro vector indexing 2", (*v)[2].value(), 2.0f);
 }

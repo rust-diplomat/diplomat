@@ -12,6 +12,7 @@
     - [Returning Strings: Writeable](./writeable.md)
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
+  - [Macros](macros.md)
   - [ABI naming/renaming](abi.md)
   - [Customizing via attributes](attrs.md)
     - [Disabling APIs](attrs/disable.md)

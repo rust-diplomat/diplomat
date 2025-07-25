@@ -211,6 +211,26 @@ let termini = Object.assign({
         ]
     },
 
+    "AttrOpaque1Renamed.macTest": {
+        func: () => somelib.AttrOpaque1Renamed.macTest(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.macTest",
+        expr: () => "somelib.AttrOpaque1Renamed.macTest()",
+        parameters: [
+            
+        ]
+    },
+
+    "AttrOpaque1Renamed.hello": {
+        func: () => somelib.AttrOpaque1Renamed.hello(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.hello",
+        expr: () => "somelib.AttrOpaque1Renamed.hello()",
+        parameters: [
+            
+        ]
+    },
+
     "AttrOpaque1Renamed.methodRenamed": {
         func: () => new somelib.AttrOpaque1Renamed().methodRenamed,
         // For avoiding webpacking minifying issues:
@@ -227,6 +247,32 @@ let termini = Object.assign({
         funcName: "AttrOpaque1Renamed.abirenamed",
         expr: () => "new somelib.AttrOpaque1Renamed().abirenamed",
         parameters: [
+            
+        ]
+    },
+
+    "RenamedVectorTest.len": {
+        func: () => new somelib.RenamedVectorTest().len,
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedVectorTest.len",
+        expr: () => "new somelib.RenamedVectorTest().len",
+        parameters: [
+            
+        ]
+    },
+
+    "RenamedVectorTest.get": {
+        func: (idx) => new somelib.RenamedVectorTest().get(idx),
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedVectorTest.get",
+        expr: (idx) => "new somelib.RenamedVectorTest().get(idx)".replace(/([\( ])idx([,\) \n])/, '$1' + idx + '$2'),
+        parameters: [
+            
+            {
+                name: "idx",
+                type: "number",
+                typeUse: "number"
+            }
             
         ]
     },

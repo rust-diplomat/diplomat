@@ -56,6 +56,8 @@ export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 
 export { Unnamespaced } from "./Unnamespaced"
 
+export { RenamedVectorTest } from "./RenamedVectorTest"
+
 export { Bar } from "./Bar"
 
 export { Foo } from "./Foo"
