@@ -1135,7 +1135,7 @@ mod tests {
 
     #[test]
     fn test_mut_struct() {
-        uitest_lowering! {
+        let parsed: syn::File = syn::parse_quote! { 
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::attr(auto, abi_compatible)]
@@ -1149,8 +1149,25 @@ mod tests {
                         todo!()
                     }
                 }
+            } 
+         };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.abi_compatibles = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
             }
-        }
+        };
+        insta::with_settings!({}, {
+            insta::assert_snapshot!(output)
+        });
     }
 
     #[test]
