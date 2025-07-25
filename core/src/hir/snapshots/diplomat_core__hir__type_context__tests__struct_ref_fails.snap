@@ -2,5 +2,7 @@
 source: core/src/hir/type_context.rs
 expression: output
 ---
-Lowering error in Foo: Struct "Foo" field "foo" cannot be borrowed. Structs cannot be borrowed inside of other structs.
+Lowering error in Foo: Cannot take a non-abi compatible struct reference "Foo". Try marking with `#[diplomat::attr(auto, abi_compatible)]`
+Lowering error in Foo: Struct "Foo" field "foo" cannot be borrowed. Structs cannot be borrowed inside of other structs, try removing the borrow and storing the struct directly.
+Lowering error in Foo::out: Cannot take a non-abi compatible struct reference "Foo". Try marking with `#[diplomat::attr(auto, abi_compatible)]`
 Lowering error in Foo::out: Found lifetimes used in struct references also used in the return type: 'a
