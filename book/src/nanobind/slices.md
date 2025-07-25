@@ -6,7 +6,7 @@ Nanobind supports taking mutable slices:
 ```
 #[diplomat::bridge]
 mod ffi {
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct Foo {
         x: i32,
         y : i32

@@ -6,6 +6,7 @@
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/BigStructWithStuff.hpp"
 #include "../include/PrimitiveStructVec.hpp"
+#include "../include/PrimitiveStruct.hpp"
 #include "../include/CyclicStructA.hpp"
 #include "assert.hpp"
 
@@ -125,4 +126,16 @@ int main(int argc, char* argv[]) {
     diplomat::span<const CyclicStructA> cyclic_span(cyclic_arr, 4);
     uint8_t cyclic_a_sum = CyclicStructA::nested_slice(cyclic_span);
     simple_assert_eq("CyclicStructA slice sum", cyclic_a_sum, 14);
+
+    PrimitiveStruct primitive_one = {
+        .x = 0.0f,
+        .a = true,
+        .b = 'a',
+    };
+    PrimitiveStruct primitive_two = {
+        .d = 0
+    };
+    primitive_one.mutable_ref(primitive_two);
+    simple_assert_eq("Mutable ref in", primitive_one.a, false);
+    simple_assert_eq("Mutable ref in", primitive_two.d, 1);
 }

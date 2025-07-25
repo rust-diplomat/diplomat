@@ -211,6 +211,7 @@ impl TyPosition for InputOnly {
 pub trait StructPathLike {
     fn lifetimes(&self) -> &Lifetimes;
     fn id(&self) -> TypeId;
+    fn owner(&self) -> Option<Borrow>;
 
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
@@ -226,6 +227,10 @@ impl StructPathLike for StructPath {
     }
     fn id(&self) -> TypeId {
         self.tcx_id.into()
+    }
+
+    fn owner(&self) -> Option<Borrow> {
+        self.owner
     }
 
     fn link_lifetimes<'def, 'tcx>(
@@ -247,6 +252,10 @@ impl StructPathLike for ReturnableStructPath {
             ReturnableStructPath::Struct(p) => p.tcx_id.into(),
             ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
         }
+    }
+
+    fn owner(&self) -> Option<Borrow> {
+        None
     }
 
     fn link_lifetimes<'def, 'tcx>(

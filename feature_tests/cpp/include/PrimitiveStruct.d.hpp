@@ -47,6 +47,8 @@ struct PrimitiveStruct {
 
   inline static void mutable_slice(diplomat::span<PrimitiveStruct> a);
 
+  inline void mutable_ref(PrimitiveStruct& a);
+
   inline diplomat::capi::PrimitiveStruct AsFFI() const;
   inline static PrimitiveStruct FromFFI(diplomat::capi::PrimitiveStruct c_struct);
 };
