@@ -476,8 +476,8 @@ impl TypeContext {
                                     st.name
                                 )));
                             }
-                        },
-                        _ => unreachable!()
+                        }
+                        _ => unreachable!(),
                     }
                 }
             }
