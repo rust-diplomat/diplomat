@@ -391,28 +391,19 @@ impl TypeContext {
                 }) = &method.param_self
                 {
                     if let Some(b) = s.owner {
-                        match b.lifetime {
-                            MaybeStatic::NonStatic(ns) => {
-                                struct_ref_lifetimes.insert(ns);
-                            }
-                            _ => {}
+                        if let MaybeStatic::NonStatic(ns) = b.lifetime {
+                            struct_ref_lifetimes.insert(ns);
                         }
                     }
                 }
 
                 for param in &method.params {
-                    match &param.ty {
-                        super::Type::Struct(ref st) => {
-                            if let Some(b) = st.owner {
-                                match b.lifetime {
-                                    MaybeStatic::NonStatic(ns) => {
-                                        struct_ref_lifetimes.insert(ns);
-                                    }
-                                    _ => {}
-                                }
+                    if let super::Type::Struct(ref st) = &param.ty {
+                        if let Some(b) = st.owner {
+                            if let MaybeStatic::NonStatic(ns) = b.lifetime {
+                                struct_ref_lifetimes.insert(ns);
                             }
                         }
-                        _ => {}
                     }
 
                     self.validate_ty_in_method(
@@ -450,22 +441,19 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        match ty {
-            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
-                let st = self.resolve_type(st.id());
-                match st {
-                    TypeDef::Struct(st) => {
-                        if !st.attrs.abi_compatible {
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                                st.name
-                            )));
-                        }
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
+            let st = self.resolve_type(st.id());
+            match st {
+                TypeDef::Struct(st) => {
+                    if !st.attrs.abi_compatible {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                            st.name
+                        )));
                     }
-                    _ => unreachable!(),
                 }
+                _ => unreachable!(),
             }
-            _ => {}
         }
     }
 
