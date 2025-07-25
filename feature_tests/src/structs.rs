@@ -457,7 +457,6 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(not(supports=abi_compatibles), disable)]
     #[diplomat::attr(auto, abi_compatible)]
     #[derive(Clone)]
     pub struct PrimitiveStruct {
@@ -470,6 +469,7 @@ pub mod ffi {
     }
 
     impl PrimitiveStruct {
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
         pub fn mutable_slice(a: &mut [PrimitiveStruct]) {
             let mut running_sum = 0.0;
             let mut alternate = false;
@@ -487,6 +487,7 @@ pub mod ffi {
             }
         }
 
+        #[diplomat::attr(not(supports=struct_refs), disable)]
         pub fn mutable_ref(&mut self, a: &mut Self) {
             self.a = false;
             a.d = 1;

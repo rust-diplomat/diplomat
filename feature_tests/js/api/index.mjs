@@ -30,6 +30,8 @@ export { MyStructContainingAnOption } from "./MyStructContainingAnOption.mjs"
 
 export { MyZst } from "./MyZst.mjs"
 
+export { PrimitiveStruct } from "./PrimitiveStruct.mjs"
+
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding.mjs"
 
 export { StructWithSlices } from "./StructWithSlices.mjs"
