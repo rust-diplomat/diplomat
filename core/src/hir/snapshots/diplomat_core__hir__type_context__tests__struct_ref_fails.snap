@@ -1,0 +1,7 @@
+---
+source: core/src/hir/type_context.rs
+assertion_line: 1213
+expression: output
+---
+Lowering error in Foo: Struct "Foo" field "foo" cannot be borrowed. Structs cannot be borrowed inside of other structs.
+Lowering error in Foo::out: Found lifetimes used in struct references also used in the return type: 'a

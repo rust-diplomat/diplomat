@@ -13,7 +13,7 @@ use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
@@ -383,13 +383,48 @@ impl TypeContext {
                     continue;
                 }
 
+                let mut struct_ref_lifetimes = BTreeSet::new();
+
+                if let Some(super::ParamSelf { ty: super::SelfType::Struct(s), attrs: _attrs }) = &method.param_self  {
+                    if let Some(b) = s.owner {
+                        match b.lifetime {
+                            MaybeStatic::NonStatic(ns) => {
+                                struct_ref_lifetimes.insert(ns);
+                            },
+                            _ => {}
+                        }
+                    }
+                }
+
                 for param in &method.params {
+                    match &param.ty {
+                        super::Type::Struct(ref st) => if let Some(b) = st.owner {
+                            match b.lifetime {
+                                MaybeStatic::NonStatic(ns) => {
+                                    struct_ref_lifetimes.insert(ns);
+                                },
+                                _ => {}
+                            }
+                        },
+                        _ => {}
+                    }
+                    
                     self.validate_ty_in_method(
                         errors,
                         Param::Input(param.name.as_str()),
                         &param.ty,
                         method,
                     )
+                }
+
+                let lts = method.output.used_method_lifetimes();
+                let mut intersection = lts.intersection(&struct_ref_lifetimes).peekable();
+                if  intersection.peek().is_some() {
+                    errors.push(LoweringError::Other(
+                        format!("Found lifetimes used in struct references also used in the return type: {}", intersection.map(|lt| {
+                            format!("'{} ", method.lifetime_env.fmt_lifetime(lt))
+                        }).collect::<String>())
+                    ));
                 }
 
                 method.output.with_contained_types(|out_ty| {
@@ -422,22 +457,6 @@ impl TypeContext {
                         }
                     }
                     _ => unreachable!(),
-                }
-            }
-            hir::Type::Struct(ref st) => {
-                if st.owner().is_some() {
-                    let st = self.resolve_type(st.id());
-                    match st {
-                        TypeDef::Struct(st) => {
-                            if !st.attrs.abi_compatible {
-                                errors.push(LoweringError::Other(format!(
-                                    "Cannot borrow struct {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                                    st.name
-                                )));
-                            }
-                        }
-                        _ => unreachable!(),
-                    }
                 }
             }
             _ => {}
@@ -539,6 +558,13 @@ impl TypeContext {
 
         for f in &st.fields {
             self.validate_ty(errors, &f.ty);
+
+            if matches!(f.ty, hir::Type::Struct(..)) && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed()) {
+                errors.push(LoweringError::Other(format!(
+                    "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs.",
+                     st.name, f.name
+                )));
+            }
             if st.attrs.abi_compatible {
                 match &f.ty {
                     hir::Type::Primitive(..) => {}
@@ -1142,11 +1168,49 @@ mod tests {
                 }
 
                 impl Foo {
-                    pub fn takes_mut(&mut self, sl : &mut Self) {
+                    pub fn takes_mut(&mut self, sl : &mut Self) -> &mut Self {
                         todo!()
                     }
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_struct_ref_fails() {
+        let parsed: syn::File = syn::parse_quote! { 
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Foo<'a> {
+                    pub x: u32,
+                    pub y: u32,
+                    pub foo : &'a Foo<'a>
+                }
+
+                #[diplomat::opaque]
+                pub struct Bar<'a>(&'a Foo<'a>);
+
+                impl Foo {
+                    pub fn out<'a>(&'a self) -> Box<Bar<'a>> {}
+                }
+            }
+         };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, {
+            insta::assert_snapshot!(output)
+        });
     }
 }
