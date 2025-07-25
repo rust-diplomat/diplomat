@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Lifetimes - The Diplomat Book</title>
+        <title>Macros - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -175,56 +175,30 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="lifetimes"><a class="header" href="#lifetimes">Lifetimes</a></h1>
-<p>Diplomat <em>is</em> able to safely handle methods that do complex borrowing, as long as the lifetimes are fully specified (i.e., not elided).</p>
-<p>In general, Diplomat attempts to follow language norms when it comes to patterns akin to borrowing. In C++, for example, the norm is to document the behavior of a method, which is what Diplomat does. However, in JS, the norm is to not have use-after-frees, which Diplomat attempts to achieve by stashing extra references to borrowed-from objects.</p>
-<p>For example, let's take this iterator API:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::bridge]
-mod ffi {
-
-    #[diplomat::opaque]
-    pub struct MyFancyVec(Vec&lt;u32&gt;); // not very fancy
-
-    pub struct MyFancyIterator&lt;'a&gt;(std::slice::Iter&lt;'a, u32&gt;);
-
-
-    impl MyFancyVec {
-        pub fn new(count: usize) -&gt; Box&lt;MyFancyVec&gt; {
-            // make a random vector, this is an example
-            let vec = (5..(count + 5)).collect();
-            Box::new(MyFancyVec(vec));
-        }
-
-        pub fn iter&lt;'a&gt;(&amp;'a self) -&gt; Box&lt;MyFancyIterator&lt;'a&gt;&gt; {
-            Box::new(MyFancyIterator(self.0.iter()))
-        }
-    }
-
-    impl&lt;'a&gt; MyFancyIterator&lt;'a&gt; {
-        fn next(&amp;mut self) -&gt; Option&lt;u32&gt; {
-            self.0.next().copied()
-        }
-    }
-}
-<span class="boring">}</span></code></pre></pre>
-<p>It's crucial the return type of <code>MyFancyVec::iter()</code> is not held on to longer than the <code>MyFancyVec</code> it came from.</p>
-<p>In C++, this will produce documentation that looks like the following:</p>
-<pre><code>Lifetimes: `self` must live at least as long as the output.
-</code></pre>
-<p>On the other hand, in JS, the JS object wrapping <code>MyFancyIterator</code> will internally stash a reference to the <code>MyFancyVec</code>, which will be noticed by the GC, keeping the vector alive as long as needed.</p>
-<p>This also works with non-opaque structs; you can have a function that takes in a struct where one field has a lifetime, and returns a different struct with a similar property, and Diplomat will document or GC-link the appropriate fields.</p>
+                        <h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
+<p>Diplomat has support for generating bindings with macro_rules!, with quite a few caveats:</p>
+<ol>
+<li>Any <code>macro_rules</code> definitions that you wish Diplomat to evaluate must use the <code>#[diplomat::macro_rules]</code> attribute.</li>
+<li>Macros can only contain a single arm.
+<ul>
+<li>The arm can only contain a sequence of comma separated matchers. I.e., <code>$matcher:expr, $matcher:ident, ...</code> etc.</li>
+<li>Note that the current implementation of the matcher parser pays no mind to fragment specifiers of the matcher. More robust parsing is TBD.</li>
+</ul>
+</li>
+<li>Macros can exist only in <code>#[diplomat::bridge] mod ... { ... }</code> blocks or <code>impl</code> blocks.</li>
+<li>Macros exist solely in the file you've defined them in. They must also be defined first.</li>
+<li>Macros do not use interpolation matchers, nor do they allow recursive usage of other <code>#[diplomat::macro_rules]</code> macros.</li>
+</ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="docs.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="lifetimes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="macros.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="abi.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -234,11 +208,11 @@ mod ffi {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="docs.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="lifetimes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="macros.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="abi.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

@@ -767,6 +767,20 @@ mod ffi {
 </code></pre>
 <p>On the other hand, in JS, the JS object wrapping <code>MyFancyIterator</code> will internally stash a reference to the <code>MyFancyVec</code>, which will be noticed by the GC, keeping the vector alive as long as needed.</p>
 <p>This also works with non-opaque structs; you can have a function that takes in a struct where one field has a lifetime, and returns a different struct with a similar property, and Diplomat will document or GC-link the appropriate fields.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
+<p>Diplomat has support for generating bindings with macro_rules!, with quite a few caveats:</p>
+<ol>
+<li>Any <code>macro_rules</code> definitions that you wish Diplomat to evaluate must use the <code>#[diplomat::macro_rules]</code> attribute.</li>
+<li>Macros can only contain a single arm.
+<ul>
+<li>The arm can only contain a sequence of comma separated matchers. I.e., <code>$matcher:expr, $matcher:ident, ...</code> etc.</li>
+<li>Note that the current implementation of the matcher parser pays no mind to fragment specifiers of the matcher. More robust parsing is TBD.</li>
+</ul>
+</li>
+<li>Macros can exist only in <code>#[diplomat::bridge] mod ... { ... }</code> blocks or <code>impl</code> blocks.</li>
+<li>Macros exist solely in the file you've defined them in. They must also be defined first.</li>
+<li>Macros do not use interpolation matchers, nor do they allow recursive usage of other <code>#[diplomat::macro_rules]</code> macros.</li>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="abi-namingrenaming"><a class="header" href="#abi-namingrenaming">ABI naming/renaming</a></h1>
 <p>As previously mentioned, the <code>#[diplomat::bridge]</code> macro from the <code>diplomat</code> crate will generate <code>extern "C"</code> functions for all methods expected to be exposed over FFI.</p>
 <p><em>By default</em>, the naming scheme for these types is <code>TypeName_method()</code>. For example, <code>Foo::bar()</code> becomes <code>Foo_bar()</code>.</p>
