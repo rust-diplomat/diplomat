@@ -465,7 +465,7 @@ impl TypeContext {
                 }
             }
             hir::Type::Struct(st) => {
-                if let Some(..) = st.owner() {
+                if st.owner().is_some() {
                     let ty = self.resolve_type(st.id());
                     match ty {
                         TypeDef::Struct(st) => {
