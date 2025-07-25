@@ -557,7 +557,7 @@ impl TypeContext {
                 && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed())
             {
                 errors.push(LoweringError::Other(format!(
-                    "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs.",
+                    "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs, try removing the borrow and storing the struct directly.",
                      st.name, f.name
                 )));
             }
