@@ -8,7 +8,7 @@ Support for `&'static` slices.
 
 ## Primitive Structs
 
-(Supported by `c`, `cpp`, queried with `supports=abi_compatibles`)
+(Supported by `c`, `cpp`, `nanobind`, queried with `supports=abi_compatibles`)
 
 Some Diplomat backends support providing slices of structs as function parameters:
 
