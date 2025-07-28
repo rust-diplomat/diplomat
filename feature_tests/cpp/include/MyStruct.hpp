@@ -46,7 +46,7 @@ inline MyStruct MyStruct::new_() {
 inline void MyStruct::takes_mut(MyStruct& o) {
   auto thisDiplomatRefClone = this->AsFFI();
   auto oDiplomatRefClone = o.AsFFI();
-  diplomat::capi::MyStruct_takes_mut(&thisClone,
+  diplomat::capi::MyStruct_takes_mut(&thisDiplomatRefClone,
     oDiplomatRefClone);
   *this = MyStruct::FromFFI(thisDiplomatRefClone);
   o = MyStruct::FromFFI(oDiplomatRefClone);
@@ -55,7 +55,7 @@ inline void MyStruct::takes_mut(MyStruct& o) {
 inline void MyStruct::takes_const(MyStruct& o) const {
   auto thisDiplomatRefClone = this->AsFFI();
   auto oDiplomatRefClone = o.AsFFI();
-  diplomat::capi::MyStruct_takes_const(&thisClone,
+  diplomat::capi::MyStruct_takes_const(&thisDiplomatRefClone,
     oDiplomatRefClone);
   o = MyStruct::FromFFI(oDiplomatRefClone);
 }
