@@ -382,7 +382,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if s.owner.is_some() && !attrs.abi_compatible {
                     param_pre_conversions
-                        .push(format!("auto thisDiplomatRefClone = {};", conversion));
+                        .push(format!("auto thisDiplomatRefClone = {conversion};"));
 
                     if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
                         param_post_conversions.push(format!(
@@ -390,7 +390,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             self.formatter.fmt_type_name(s.id())
                         ));
                     }
-                    format!("&thisDiplomatRefClone").into()
+                    "&thisDiplomatRefClone".to_string().into()
                 } else {
                     conversion
                 }
