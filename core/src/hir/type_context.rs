@@ -393,7 +393,7 @@ impl TypeContext {
                     if let Some(b) = s.owner {
                         let ty = s.resolve(self);
                         if !ty.attrs.abi_compatible {
-                            // TODO: Remove once C, C++ support is in
+                            // TODO: Remove once C, C++ support is in (https://github.com/rust-diplomat/diplomat/issues/921)
                             errors.push(LoweringError::Other(format!(
                                 "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                                 ty.name
@@ -470,7 +470,7 @@ impl TypeContext {
                     match ty {
                         TypeDef::Struct(st) => {
                             if !st.attrs.abi_compatible {
-                                // TODO: Remove once C and C++ have this support.
+                                // TODO: Remove once C and C++ have this support. (https://github.com/rust-diplomat/diplomat/issues/921)
                                 errors.push(LoweringError::Other(format!(
                                     "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                                     st.name
