@@ -57,11 +57,11 @@ struct MethodInfo<'a> {
     /// Parameter validations, such as string checks
     param_validations: Vec<String>,
     /// Conversion code from C++ to C, used to fill out cpp_to_c_params before a call. Used for converting clones of structs to references.
-    param_pre_conversions : Vec<String>,
+    param_pre_conversions: Vec<String>,
     /// C++ conversion code for each parameter of the C function
     cpp_to_c_params: Vec<Cow<'a, str>>,
     /// Conversion code of params from C to C++, grabbing the results of cpp_to_c_params and converting them into something C++ friendly. Used for converting references to clones of structs.
-    param_post_conversions : Vec<String>,
+    param_post_conversions: Vec<String>,
     /// If the function has a return value, the C++ code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
@@ -374,18 +374,21 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         if let Some(param_self) = method.param_self.as_ref() {
             let conversion = self.gen_cpp_to_c_self(&param_self.ty);
-            let conversion = if let hir::ParamSelf { ty: SelfType::Struct(ref s), .. } = param_self {
+            let conversion = if let hir::ParamSelf {
+                ty: SelfType::Struct(ref s),
+                ..
+            } = param_self
+            {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if s.owner.is_some() && !attrs.abi_compatible {
-                    param_pre_conversions.push(format!(
-                        "auto thisDiplomatRefClone = {};",
-                        conversion
-                    ));
+                    param_pre_conversions
+                        .push(format!("auto thisDiplomatRefClone = {};", conversion));
 
-                    if s.owner.is_some_and(|o| { o.mutability.is_mutable() }) {
-                        param_post_conversions.push(
-                            format!("*this = {}::FromFFI(thisDiplomatRefClone);", self.formatter.fmt_type_name(s.id()))
-                        );
+                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                        param_post_conversions.push(format!(
+                            "*this = {}::FromFFI(thisDiplomatRefClone);",
+                            self.formatter.fmt_type_name(s.id())
+                        ));
                     }
                     format!("&thisDiplomatRefClone").into()
                 } else {
@@ -394,7 +397,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             } else {
                 conversion
             };
-            
+
             cpp_to_c_params.push(conversion);
         }
 
@@ -414,9 +417,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ));
                 returns_utf8_err = true;
             }
-            
+
             let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
-            let conversion = if let hir::Param { ty: hir::Type::Struct(ref s), .. } = param {
+            let conversion = if let hir::Param {
+                ty: hir::Type::Struct(ref s),
+                ..
+            } = param
+            {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if s.owner.is_some() && !attrs.abi_compatible {
                     param_pre_conversions.push(format!(
@@ -424,11 +431,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         param.name, conversion
                     ));
 
-                    
-                    if s.owner.is_some_and(|o| { o.mutability.is_mutable() }) {
-                        param_post_conversions.push(
-                            format!("{} = {}::FromFFI({}DiplomatRefClone);", param.name, self.formatter.fmt_type_name(s.id()), param.name)
-                        );
+                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                        param_post_conversions.push(format!(
+                            "{} = {}::FromFFI({}DiplomatRefClone);",
+                            param.name,
+                            self.formatter.fmt_type_name(s.id()),
+                            param.name
+                        ));
                     }
                     format!("&{}DiplomatRefClone", param.name).into()
                 } else {
@@ -696,7 +705,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         s.id(),
                         &self.formatter.fmt_type_name_unnamespaced(s.id()),
                     );
-                    
+
                     match b.mutability {
                         Mutability::Immutable => {
                             format!("reinterpret_cast<const {c_name}*>(this)")
