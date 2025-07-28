@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Slices - The Diplomat Book</title>
+        <title>References - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -175,47 +175,20 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
-<h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, <code>nanobind</code>, queried with <code>supports=static_slices</code>)</p>
-<p>Support for <code>&amp;'static</code> slices.</p>
-<h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, <code>nanobind</code>, queried with <code>supports=abi_compatibles</code>)</p>
-<p>Some Diplomat backends support providing slices of structs as function parameters:</p>
-<pre><code class="language-rs">#[diplomat::bridge]
-mod ffi {
-    #[diplomat::attr(auto, abi_compatible)]
-    struct Struct {
-        a : bool,
-        b : i32
-    }
-
-    impl Struct {
-        pub fn bar(slice : &amp;mut [Struct]) {}
-        pub fn baz(other_slice : &amp;[Struct]) {}
-    }
-}
-</code></pre>
-<p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
-<ul>
-<li>The struct type must have <code>#[diplomat::attr(auto, abi_compatible)]</code> attribute.</li>
-<li>The struct can only have fields that are either:
-<ul>
-<li>Primitive</li>
-<li>Nested primitive structs</li>
-</ul>
-</li>
-</ul>
+                        <h1 id="references"><a class="header" href="#references">References</a></h1>
+<h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>supports=struct_refs</code>)</p>
+<p>Structs can be borrowed mutably or immutably as parameters to functions, but nowhere else.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../attrs/stringifiers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/slices.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../attrs/references.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../safety.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -225,11 +198,11 @@ mod ffi {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../attrs/stringifiers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/slices.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../attrs/references.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../safety.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

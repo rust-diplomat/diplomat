@@ -1110,11 +1110,11 @@ mod ffi {
 <p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, <code>nanobind</code>, queried with <code>supports=static_slices</code>)</p>
 <p>Support for <code>&amp;'static</code> slices.</p>
 <h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, queried with <code>supports=struct_primitive_slices</code>)</p>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>nanobind</code>, queried with <code>supports=abi_compatibles</code>)</p>
 <p>Some Diplomat backends support providing slices of structs as function parameters:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
-    #[diplomat::attr(auto, allowed_in_slices)]
+    #[diplomat::attr(auto, abi_compatible)]
     struct Struct {
         a : bool,
         b : i32
@@ -1128,7 +1128,7 @@ mod ffi {
 </code></pre>
 <p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
 <ul>
-<li>The struct type must have <code>#[diplomat::attr(auto, allowed_in_slices)]</code> attribute.</li>
+<li>The struct type must have <code>#[diplomat::attr(auto, abi_compatible)]</code> attribute.</li>
 <li>The struct can only have fields that are either:
 <ul>
 <li>Primitive</li>
@@ -1136,6 +1136,10 @@ mod ffi {
 </ul>
 </li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="references"><a class="header" href="#references">References</a></h1>
+<h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>supports=struct_refs</code>)</p>
+<p>Structs can be borrowed mutably or immutably as parameters to functions, but nowhere else.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="notes-on-diplomat-and-safety"><a class="header" href="#notes-on-diplomat-and-safety">Notes on Diplomat and safety</a></h1>
 <p>Overall, Diplomat is intended to provide safe FFI. However, there are some caveats around the current state of Diplomat's safety.</p>
 <h2 id="the-safety-of-the-bridge-crate-when-called-from-rust"><a class="header" href="#the-safety-of-the-bridge-crate-when-called-from-rust">The safety of the bridge crate when called from Rust</a></h2>
