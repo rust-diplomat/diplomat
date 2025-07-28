@@ -182,9 +182,9 @@ macro_rules! accepted_tokens {
             }
         )*
         $(
-            if $lookahead.peek(syn::token::$p) {
+            if $lookahead.peek(token::$p) {
 
-                $input.parse::<syn::token::$p>()?.to_tokens(&mut $tokens);
+                $input.parse::<token::$p>()?.to_tokens(&mut $tokens);
             }
         )*
     };
@@ -197,11 +197,11 @@ impl Parse for MacroMatch {
 
         if lookahead.peek(Token![$]) {
             return Ok(MacroMatch::Ident(input.parse()?));
-        } else if lookahead.peek(syn::token::Brace) {
+        } else if lookahead.peek(token::Brace) {
             return Ok(MacroMatch::MacroMatcher(input.parse()?));
-        } else if lookahead.peek(syn::token::Bracket) {
+        } else if lookahead.peek(token::Bracket) {
             return Ok(MacroMatch::MacroMatcher(input.parse()?));
-        } else if lookahead.peek(syn::token::Paren) {
+        } else if lookahead.peek(token::Paren) {
             return Ok(MacroMatch::MacroMatcher(input.parse()?));
         }
 
