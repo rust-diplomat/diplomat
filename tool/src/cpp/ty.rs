@@ -387,7 +387,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             format!("*this = {}::FromFFI(thisDiplomatRefClone);", self.formatter.fmt_type_name(s.id()))
                         );
                     }
-                    format!("&thisClone").into()
+                    format!("&thisDiplomatRefClone").into()
                 } else {
                     conversion
                 }
