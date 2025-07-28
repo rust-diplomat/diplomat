@@ -430,7 +430,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             format!("{} = {}::FromFFI({}DiplomatRefClone);", param.name, self.formatter.fmt_type_name(s.id()), param.name)
                         );
                     }
-                    format!("{}DiplomatRefClone", param.name).into()
+                    format!("&{}DiplomatRefClone", param.name).into()
                 } else {
                     conversion
                 }
