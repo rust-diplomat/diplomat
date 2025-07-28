@@ -13,7 +13,7 @@ use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
@@ -383,13 +383,53 @@ impl TypeContext {
                     continue;
                 }
 
+                let mut struct_ref_lifetimes = BTreeSet::new();
+
+                if let Some(super::ParamSelf {
+                    ty: super::SelfType::Struct(s),
+                    attrs: _attrs,
+                }) = &method.param_self
+                {
+                    if let Some(b) = s.owner {
+                        let ty = s.resolve(self);
+                        if !ty.attrs.abi_compatible {
+                            // TODO: Remove once C, C++ support is in (https://github.com/rust-diplomat/diplomat/issues/921)
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                ty.name
+                            )));
+                        }
+                        if let MaybeStatic::NonStatic(ns) = b.lifetime {
+                            struct_ref_lifetimes.insert(ns);
+                        }
+                    }
+                }
+
                 for param in &method.params {
+                    if let super::Type::Struct(ref st) = &param.ty {
+                        if let Some(b) = st.owner {
+                            if let MaybeStatic::NonStatic(ns) = b.lifetime {
+                                struct_ref_lifetimes.insert(ns);
+                            }
+                        }
+                    }
+
                     self.validate_ty_in_method(
                         errors,
                         Param::Input(param.name.as_str()),
                         &param.ty,
                         method,
                     )
+                }
+
+                let lts = method.output.used_method_lifetimes();
+                let mut intersection = lts.intersection(&struct_ref_lifetimes).peekable();
+                if intersection.peek().is_some() {
+                    errors.push(LoweringError::Other(
+                        format!("Found lifetimes used in struct references also used in the return type: {}", intersection.map(|lt| {
+                            format!("'{} ", method.lifetime_env.fmt_lifetime(lt))
+                        }).collect::<String>())
+                    ));
                 }
 
                 method.output.with_contained_types(|out_ty| {
@@ -409,19 +449,39 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
-            let st = self.resolve_type(st.id());
-            match st {
-                TypeDef::Struct(st) => {
-                    if !st.attrs.allowed_in_slices {
-                        errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, allowed_in_slices)]`",
-                            st.name
-                        )));
+        match ty {
+            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
+                let st = self.resolve_type(st.id());
+                match st {
+                    TypeDef::Struct(st) => {
+                        if !st.attrs.abi_compatible {
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                st.name
+                            )));
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            hir::Type::Struct(st) => {
+                if st.owner().is_some() {
+                    let ty = self.resolve_type(st.id());
+                    match ty {
+                        TypeDef::Struct(st) => {
+                            if !st.attrs.abi_compatible {
+                                // TODO: Remove once C and C++ have this support. (https://github.com/rust-diplomat/diplomat/issues/921)
+                                errors.push(LoweringError::Other(format!(
+                                    "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                    st.name
+                                )));
+                            }
+                        }
+                        _ => unreachable!(),
                     }
                 }
-                _ => unreachable!(),
             }
+            _ => {}
         }
     }
 
@@ -511,32 +571,41 @@ impl TypeContext {
     }
 
     fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
-        if st.attrs.allowed_in_slices && st.lifetimes.num_lifetimes() > 0 {
+        if st.attrs.abi_compatible && st.lifetimes.num_lifetimes() > 0 {
             errors.push(LoweringError::Other(format!(
-                "Struct {:?} cannot have any lifetimes if it is allowed within a slice.",
+                "Struct {:?} cannot have any lifetimes if it is marked as ABI compatible.",
                 st.name
             )));
         }
 
         for f in &st.fields {
             self.validate_ty(errors, &f.ty);
-            if st.attrs.allowed_in_slices {
+
+            if matches!(f.ty, hir::Type::Struct(..))
+                && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed())
+            {
+                errors.push(LoweringError::Other(format!(
+                    "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs, try removing the borrow and storing the struct directly.",
+                     st.name, f.name
+                )));
+            }
+            if st.attrs.abi_compatible {
                 match &f.ty {
                     hir::Type::Primitive(..) => {}
                     hir::Type::Struct(st_pth) => {
                         let ty = self.resolve_type(st_pth.id());
                         match ty {
                             TypeDef::Struct(f_st) => {
-                                if !f_st.attrs.allowed_in_slices {
+                                if !f_st.attrs.abi_compatible {
                                     errors.push(LoweringError::Other(format!(
-                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.",
+                                        "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, abi_compatible)]`.",
                                         st.name, f.name, f_st.name
                                     )));
                                 }
                             }
                             TypeDef::OutStruct(out) => {
                                 errors.push(LoweringError::Other(
-                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, allowed_in_slices)].")
+                                    format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, abi_compatible)].")
                                 ));
                             }
                             _ => unreachable!(),
@@ -696,7 +765,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
-            attr_validator.support.struct_primitive_slices = true;
+            attr_validator.support.abi_compatibles = true;
             match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -980,6 +1049,7 @@ mod tests {
                 impl Opaque {
                     pub fn returns_self(&self) -> &Self {}
                     pub fn returns_foo(&self) -> Foo {}
+                    pub fn returns_foo_ref(&self) -> &Foo {}
                 }
             }
         };
@@ -1054,7 +1124,7 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 pub struct Foo<'a> {
                     pub x: u32,
                     pub y: u32,
@@ -1075,7 +1145,7 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 #[diplomat::out]
                 pub struct Foo {
                     pub x: u32,
@@ -1089,5 +1159,110 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_mut_struct() {
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               #[diplomat::attr(auto, abi_compatible)]
+               pub struct Foo {
+                   pub x: u32,
+                   pub y: u32
+               }
+
+               impl Foo {
+                   pub fn takes_mut(&mut self, sl : &mut Self) {
+                       todo!()
+                   }
+               }
+           }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.abi_compatibles = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+
+    #[test]
+    fn test_mut_struct_fails() {
+        let parsed: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&mut self, sl : &mut Self) -> &mut Self {
+                        todo!()
+                    }
+                }
+            }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+
+    #[test]
+    fn test_struct_ref_fails() {
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               pub struct Foo<'a> {
+                   pub x: u32,
+                   pub y: u32,
+                   pub foo : &'a Foo<'a>
+               }
+
+               #[diplomat::opaque]
+               pub struct Bar<'a>(&'a Foo<'a>);
+
+               impl Foo {
+                   pub fn out<'a>(&'a self) -> Box<Bar<'a>> {}
+               }
+           }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 }

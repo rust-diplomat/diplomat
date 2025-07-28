@@ -4,6 +4,9 @@ expression: output
 ---
 Lowering error in Struct::comparison_other: Comparator's parameter must be identical to self
 Lowering error in Struct::comparison_correct: Cannot define two comparators on the same type
+Lowering error in Struct::comparison_ref: Cannot define two comparators on the same type
+Lowering error in Struct::comparison_mut: Cannot define two comparators on the same type
+Lowering error in Struct::comparison_mut: comparators must accept immutable parameters
 Lowering error in Opaque::comparator_static: Comparators must accept a self parameter
 Lowering error in Opaque::comparator_none: Comparator must have exactly 1 parameter
 Lowering error in Opaque::comparator_none: Cannot define two comparators on the same type

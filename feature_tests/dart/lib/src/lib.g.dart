@@ -44,6 +44,7 @@ part 'OptionInputStruct.g.dart';
 part 'OptionOpaque.g.dart';
 part 'OptionOpaqueChar.g.dart';
 part 'OptionStruct.g.dart';
+part 'PrimitiveStruct.g.dart';
 part 'RefList.g.dart';
 part 'RefListParameter.g.dart';
 part 'RenamedAttrEnum.g.dart';

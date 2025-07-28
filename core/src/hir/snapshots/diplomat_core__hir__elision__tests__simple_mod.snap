@@ -60,7 +60,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
-                        allowed_in_slices: false,
+                        abi_compatible: false,
                     },
                 },
             ],
@@ -121,7 +121,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
-                                allowed_in_slices: false,
+                                abi_compatible: false,
                             },
                         },
                     ],
@@ -142,6 +142,7 @@ TypeContext {
                                         tcx_id: OutStructId(
                                             0,
                                         ),
+                                        owner: None,
                                     },
                                 ),
                             ),
@@ -170,7 +171,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
-                        allowed_in_slices: false,
+                        abi_compatible: false,
                     },
                 },
             ],
@@ -197,7 +198,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
-                allowed_in_slices: false,
+                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -265,7 +266,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
-                        allowed_in_slices: false,
+                        abi_compatible: false,
                     },
                 },
             ],
@@ -303,6 +304,7 @@ TypeContext {
                                     tcx_id: StructId(
                                         0,
                                     ),
+                                    owner: None,
                                 },
                             ),
                             attrs: Attrs {
@@ -328,7 +330,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
-                                allowed_in_slices: false,
+                                abi_compatible: false,
                             },
                         },
                     ),
@@ -370,7 +372,7 @@ TypeContext {
                                     },
                                 },
                                 generate_mocking_interface: false,
-                                allowed_in_slices: false,
+                                abi_compatible: false,
                             },
                         },
                     ],
@@ -413,7 +415,7 @@ TypeContext {
                             },
                         },
                         generate_mocking_interface: false,
-                        allowed_in_slices: false,
+                        abi_compatible: false,
                     },
                 },
             ],
@@ -440,7 +442,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
-                allowed_in_slices: false,
+                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -490,7 +492,7 @@ TypeContext {
                     },
                 },
                 generate_mocking_interface: false,
-                allowed_in_slices: false,
+                abi_compatible: false,
             },
             lifetimes: LifetimeEnv {
                 nodes: [

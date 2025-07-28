@@ -55,8 +55,8 @@ pub struct Attrs {
     pub demo_attrs: DemoInfo,
     /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
     pub generate_mocking_interface: bool,
-    /// From #[diplomat::attr()]. If true, will be used for generation of [`super::Slice::Struct`] types.
-    pub allowed_in_slices: bool,
+    /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
+    pub abi_compatible: bool,
 }
 
 // #region: Demo specific attributes.
@@ -372,17 +372,17 @@ impl Attrs {
                             }
                             this.generate_mocking_interface = true;
                         }
-                        "allowed_in_slices" => {
-                            if !support.struct_primitive_slices {
+                        "abi_compatible" => {
+                            if !support.abi_compatibles {
                                 maybe_error_unsupported(
                                     auto_found,
-                                    "allowed_in_slices",
+                                    "abi_compatible",
                                     backend,
                                     errors,
                                 );
                                 continue;
                             }
-                            this.allowed_in_slices = true;
+                            this.abi_compatible = true;
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
@@ -489,7 +489,7 @@ impl Attrs {
             default,
             demo_attrs: _,
             generate_mocking_interface,
-            allowed_in_slices,
+            abi_compatible,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -632,6 +632,19 @@ impl Attrs {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+
+                                        if p.owner
+                                            .map(|b| b.mutability != Mutability::Immutable)
+                                            .unwrap_or(false)
+                                            || p.owner
+                                                .map(|b| b.mutability != Mutability::Immutable)
+                                                .unwrap_or(false)
+                                        {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept immutable parameters"
+                                                    .into(),
                                             ));
                                         }
                                     }
@@ -849,9 +862,9 @@ impl Attrs {
             ));
         }
 
-        if *allowed_in_slices && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
+        if *abi_compatible && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
             errors.push(LoweringError::Other(
-                "`allowed_in_slices` can only be used on non-output-only struct types.".into(),
+                "`abi_compatible` can only be used on non-output-only struct types.".into(),
             ));
         }
     }
@@ -889,7 +902,7 @@ impl Attrs {
             demo_attrs: Default::default(),
             // Not inherited
             generate_mocking_interface: false,
-            allowed_in_slices: false,
+            abi_compatible: false,
         }
     }
 }
@@ -979,8 +992,11 @@ pub struct BackendAttrSupport {
     pub traits_are_sync: bool,
     /// Whether to generate mocking interface.
     pub generate_mocking_interface: bool,
-    /// Passing slices of structs that only hold (non-slice) primitive types:
-    pub struct_primitive_slices: bool,
+    /// Passing of structs that only hold (non-slice) primitive types
+    /// (for use in slices and languages that support taking direct pointers to structs):
+    pub abi_compatibles: bool,
+    /// Whether or not the language supports &Struct or &mut Struct
+    pub struct_refs: bool,
 }
 
 impl BackendAttrSupport {
@@ -1014,7 +1030,8 @@ impl BackendAttrSupport {
             traits_are_send: true,
             traits_are_sync: true,
             generate_mocking_interface: true,
-            struct_primitive_slices: true,
+            abi_compatibles: true,
+            struct_refs: true,
         }
     }
 
@@ -1044,7 +1061,7 @@ impl BackendAttrSupport {
             "custom_errors" => Some(self.custom_errors),
             "traits_are_send" => Some(self.traits_are_send),
             "traits_are_sync" => Some(self.traits_are_sync),
-            "struct_primitive_slices" => Some(self.struct_primitive_slices),
+            "abi_compatibles" => Some(self.abi_compatibles),
             _ => None,
         }
     }
@@ -1185,7 +1202,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 traits_are_send,
                 traits_are_sync,
                 generate_mocking_interface,
-                struct_primitive_slices,
+                abi_compatibles,
+                struct_refs,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1215,7 +1233,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 "traits_are_send" => traits_are_send,
                 "traits_are_sync" => traits_are_sync,
                 "generate_mocking_interface" => generate_mocking_interface,
-                "struct_primitive_slices" => struct_primitive_slices,
+                "abi_compatibles" => abi_compatibles,
+                "struct_refs" => struct_refs,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1352,6 +1371,16 @@ mod tests {
                     }
                     #[diplomat::attr(auto, comparison)]
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
+                        todo!()
+                    }
+
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparison_ref(&self, other: &Self) -> cmp::Ordering {
+                        todo!()
+                    }
+
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparison_mut(&mut self, other: &Self) -> cmp::Ordering {
                         todo!()
                     }
                 }
@@ -1545,7 +1574,7 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
@@ -1565,7 +1594,7 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, allowed_in_slices)]
+                #[diplomat::attr(auto, abi_compatible)]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
@@ -1573,6 +1602,26 @@ mod tests {
 
                 impl Foo {
                     pub fn takes_slice(sl : &[Foo]) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_struct_ref_for_unsupported_backend() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&mut self) {
                         todo!()
                     }
                 }

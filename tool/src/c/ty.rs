@@ -126,7 +126,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             ty_name,
             fields,
             is_for_cpp: self.is_for_cpp,
-            is_sliceable: def.attrs.allowed_in_slices,
+            is_sliceable: def.attrs.abi_compatible,
         }
         .render_into(&mut decl_header)
         .unwrap();
@@ -460,10 +460,16 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                let ret = ty_name.clone();
+
                 let header_path = self.formatter.fmt_decl_header_path(st_id.into());
                 header.includes.insert(header_path);
-                ret
+
+                if let Some(borrow) = st.owner() {
+                    let mt = borrow.mutability;
+                    self.formatter.fmt_ptr(&ty_name, mt).into_owned().into()
+                } else {
+                    ty_name.clone()
+                }
             }
             Type::Enum(ref e) => {
                 let id: TypeId = e.tcx_id.into();
