@@ -237,6 +237,12 @@ pub mod ffi {
             self.a = 0;
             o.c = 100;
         }
+        
+        #[diplomat::attr(not(supports=struct_refs), disable)]
+        pub fn takes_const(&self, o : &mut Self) {
+            o.c = self.a;
+        }
+
 
         pub fn into_a(self) -> u8 {
             self.a

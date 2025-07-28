@@ -44,6 +44,10 @@ struct MyStruct {
 
   inline static MyStruct new_();
 
+  inline void takes_mut(MyStruct& o);
+
+  inline void takes_const(MyStruct& o) const;
+
   inline uint8_t into_a() const;
 
   inline static diplomat::result<std::monostate, MyZst> returns_zst_result();
