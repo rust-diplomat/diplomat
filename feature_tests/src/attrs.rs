@@ -19,7 +19,7 @@ pub mod ffi {
 
     #[diplomat::macro_rules]
     macro_rules! create_vec {
-        ($vec_name:ident, $ty:ident) => {
+        ($vec_name:ident contains "hello"; $ty:ident) => {
             #[diplomat::opaque]
             pub struct $vec_name(Vec<$ty>);
 
@@ -47,7 +47,7 @@ pub mod ffi {
         };
     }
 
-    create_vec!(VectorTest, f64);
+    create_vec!(VectorTest contains "hello"; f64);
 
     #[derive(Clone)]
     #[diplomat::opaque]
