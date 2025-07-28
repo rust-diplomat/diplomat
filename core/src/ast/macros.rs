@@ -73,12 +73,68 @@ impl Macros {
     }
 }
 
+macro_rules! define_macro_fragments {
+    ($($i:ident($p:path)),*) => {
+        #[derive(Debug)]
+        pub enum MacroFrag {
+            $(
+                $i($p),
+            )*
+        }
+
+        impl ToTokens for MacroFrag {
+            fn to_token_stream(&self) -> TokenStream {
+                let mut tokens = TokenStream::new();
+                self.to_tokens(&mut tokens);
+                tokens
+            }
+
+            fn to_tokens(&self, tokens : &mut TokenStream) {
+                match self {
+                    $(
+                        MacroFrag::$i(item) => item.to_tokens(tokens),
+                    )*
+                }
+            }
+
+            fn into_token_stream(self) -> TokenStream
+            where
+                Self: Sized,
+            {
+                match self {
+                    $(
+                        MacroFrag::$i(item) => item.to_token_stream(),
+                    )*
+                }
+            }
+        }
+    }
+}
+
+define_macro_fragments! {
+    Block(syn::Block),
+    Expr(syn::Expr),
+    Ident(syn::Ident),
+    Item(syn::Item),
+    Lifetime(syn::Lifetime),
+    Literal(syn::Lit),
+    Meta(syn::Meta),
+    Pat(syn::Pat),
+    // TODO:
+    // PatParam()
+    Path(syn::Path),
+    Stmt(syn::Stmt),
+    TokenTree(proc_macro2::TokenTree),
+    Ty(syn::Type),
+    Vis(syn::Visibility)
+}
+
 #[derive(Debug)]
 #[non_exhaustive]
 /// Struct for showing how some defined macro (i.e., from `macro_rules! example`) is used whenever it is called.
 /// Right now, only supports reading comma parsed lists (i.e., example!(one, two, three, ...)).
 pub struct MacroUse {
-    pub args: Vec<Expr>,
+    pub args: Vec<MacroFrag>,
 }
 
 impl Parse for MacroUse {
