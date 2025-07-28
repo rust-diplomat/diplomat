@@ -55,7 +55,7 @@ pub struct Attrs {
     pub demo_attrs: DemoInfo,
     /// From #[diplomat::attr()]. If true, generates a mocking interface for this type.
     pub generate_mocking_interface: bool,
-    /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be returned mutably.
+    /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
     pub abi_compatible: bool,
 }
 
