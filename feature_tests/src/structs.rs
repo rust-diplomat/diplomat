@@ -231,6 +231,13 @@ pub mod ffi {
             }
         }
 
+        
+        #[diplomat::attr(not(supports=struct_refs), disable)]
+        pub fn takes_mut(&mut self, o : &mut Self) {
+            self.a = 0;
+            o.c = 100;
+        }
+
         pub fn into_a(self) -> u8 {
             self.a
         }
