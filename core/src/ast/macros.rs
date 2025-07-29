@@ -267,7 +267,7 @@ impl MacroUse {
                         c = buf.begin();
                     }
                     "stmt" => {
-                        buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
+                        buf = MaybeParse::<syn::Stmt>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "tt" => {
