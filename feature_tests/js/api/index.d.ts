@@ -4,6 +4,8 @@ export { codepoint } from './diplomat-runtime';
 
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
+export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"
+
 export { ImportedStruct, ImportedStruct_obj } from "./ImportedStruct"
 
 export { BorrowedFields, BorrowedFields_obj } from "./BorrowedFields"
@@ -55,6 +57,8 @@ export { RenamedNested2 } from "./RenamedNested2"
 export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
+
+export { RenamedTestOpaque } from "./RenamedTestOpaque"
 
 export { Unnamespaced } from "./Unnamespaced"
 

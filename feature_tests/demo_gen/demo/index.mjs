@@ -33,6 +33,16 @@ let termini = Object.assign({
         ]
     },
 
+    "RenamedTestMacroStruct.testFunc": {
+        func: () => somelib.RenamedTestMacroStruct.testFunc(),
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedTestMacroStruct.testFunc",
+        expr: () => "somelib.RenamedTestMacroStruct.testFunc()",
+        parameters: [
+            
+        ]
+    },
+
     "CyclicStructA.cyclicOut": {
         func: (selfAField) => somelib.CyclicStructA.fromFields({
             a: somelib.CyclicStructB.fromFields({
