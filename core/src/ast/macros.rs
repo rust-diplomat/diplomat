@@ -267,8 +267,14 @@ impl MacroUse {
                         c = buf.begin();
                     }
                     "stmt" => {
-                        buf = MaybeParse::<syn::Stmt>::try_parse(i, &c, args)?;
-                        c = buf.begin();
+                        // Syn expects a semicolon, Rust does not. This constitutes a parsing problem.
+                        return Err(Error::new(
+                            c.span(),
+                            format!("${}:stmt MacroFragSpec currently unsupported.", i.ident),
+                        ));
+                        // buf = MaybeParse::<syn::Stmt>::try_parse(i, &c, args)?;
+                        
+                        // c = buf.begin();
                     }
                     "tt" => {
                         args.insert(i.ident.clone(), MacroFrag::TokenTree(tt));
