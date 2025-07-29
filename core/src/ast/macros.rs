@@ -9,8 +9,8 @@ use syn::{
     braced, bracketed,
     buffer::{Cursor, TokenBuffer},
     parenthesized,
-    parse::{self, Parse, ParseBuffer, ParseStream, Parser},
-    token, Error, Expr, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
+    parse::{self, Parse, ParseStream, Parser},
+    token, Error, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
 #[derive(Default)]
@@ -230,7 +230,7 @@ impl MacroUse {
                         } else {
                             return Err(Error::new(
                                 c.span(),
-                                format!("Expected a block. Got {:?}", tt),
+                                format!("Expected a block. Got {tt:?}"),
                             ));
                         }
                     }
@@ -307,7 +307,7 @@ impl MacroUse {
                 _ => {
                     return Err(Error::new(
                         c.span(),
-                        format!("Expected {:?} next.", curr_match),
+                        format!("Expected {curr_match:?} next."),
                     ));
                 }
             }
@@ -316,8 +316,8 @@ impl MacroUse {
     }
 
     fn get_tokens_match(cursor: &mut Cursor, t: &TokenStream) -> syn::Result<()> {
-        let mut other_iter = t.clone().into_iter();
-        while let Some(other_tt) = other_iter.next() {
+        let other_iter = t.clone().into_iter();
+        for other_tt in other_iter {
             let maybe_tt = cursor.token_tree();
 
             if let Some((tt, next)) = maybe_tt {
@@ -427,7 +427,7 @@ impl Parse for MacroMatch {
         } else {
             Err(Error::new(
                 input.span(),
-                format!("Did not recognize token. {:?}", input),
+                format!("Did not recognize token. {input:?}"),
             ))
         }
     }
