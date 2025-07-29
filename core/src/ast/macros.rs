@@ -228,7 +228,10 @@ impl MacroUse {
                             );
                             c = next;
                         } else {
-                            return Err(Error::new(c.span(), format!("Expected a block. Got {:?}", tt)));
+                            return Err(Error::new(
+                                c.span(),
+                                format!("Expected a block. Got {:?}", tt),
+                            ));
                         }
                     }
                     "expr" => {
@@ -256,7 +259,10 @@ impl MacroUse {
                         c = buf.begin();
                     }
                     "pat" => {
-                        return Err(Error::new(c.span(), "pat MacroFragSpec currently unsupported."));
+                        return Err(Error::new(
+                            c.span(),
+                            "pat MacroFragSpec currently unsupported.",
+                        ));
                     }
                     "path" => {
                         buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
@@ -292,11 +298,17 @@ impl MacroUse {
                     if let TokenTree::Group(g) = &tt {
                         Self::parse_macro_matcher(&matcher.matches, g.stream(), args)?;
                     } else {
-                        return Err(Error::new(c.span(), format!("Expected {:?}", matcher.delim)));
+                        return Err(Error::new(
+                            c.span(),
+                            format!("Expected {:?}", matcher.delim),
+                        ));
                     }
                 }
                 _ => {
-                    return Err(Error::new(c.span(), format!("Expected {:?} next.", curr_match)));
+                    return Err(Error::new(
+                        c.span(),
+                        format!("Expected {:?} next.", curr_match),
+                    ));
                 }
             }
         }
