@@ -178,11 +178,11 @@ impl<T: Parse> Parse for MaybeParse<T> {
 }
 
 impl<T: Parse + MacroFraggable> MaybeParse<T> {
-    fn try_parse(cursor : &Cursor, args : &mut Vec<MacroFrag>) -> syn::Result<TokenBuffer> {
+    fn try_parse(i : &MacroIdent, cursor : &Cursor, args : &mut HashMap<Ident, MacroFrag>) -> syn::Result<TokenBuffer> {
         let out = syn::parse2::<MaybeParse<T>>(
         cursor.token_stream())?;
 
-        args.push(out.item.into());
+        args.insert(i.ident.clone(), out.item.into());
 
         let buf = TokenBuffer::new2(out.remaining);
         Ok(buf)
@@ -192,12 +192,12 @@ impl<T: Parse + MacroFraggable> MaybeParse<T> {
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct MacroUse {
-    args: Vec<MacroFrag>,
+    args: HashMap<Ident, MacroFrag>,
 }
 
 impl MacroUse {
     fn parse(def: &MacroDef, stream: TokenStream) -> syn::Result<Self> {
-        let mut args = Vec::new();
+        let mut args = HashMap::new();
 
         
         let mut buf = TokenBuffer::new2(stream);
@@ -211,34 +211,34 @@ impl MacroUse {
                     match i.ty.to_string().as_str() {
                         "block" => {
                             if let TokenTree::Group(..) = &tt {
-                                args.push(MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?));
+                                args.insert(i.ident.clone(), MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?));
                                 c = next;
                             } else {
                                 panic!("Expected a block. Got {:?}", tt);
                             }
                         }
                         "expr" => {
-                            buf = MaybeParse::<syn::Expr>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Expr>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "ident" => {
-                            buf = MaybeParse::<syn::Ident>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Ident>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "item" => {
-                            buf = MaybeParse::<syn::Item>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "lifetime" => {
-                            buf = MaybeParse::<syn::Lifetime>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "literal" => {
-                            buf = MaybeParse::<syn::Lit>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Lit>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "meta" => { 
-                            buf = MaybeParse::<syn::Meta>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Meta>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                          }
                         "pat" => { 
@@ -247,23 +247,23 @@ impl MacroUse {
                             todo!()
                          }
                         "path" => {
-                            buf = MaybeParse::<syn::Path>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Path>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "stmt" => { 
-                            buf = MaybeParse::<syn::Item>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "tt" => {
-                            args.push(MacroFrag::TokenTree(tt));
+                            args.insert(i.ident.clone(), MacroFrag::TokenTree(tt));
                             c = next;
                         }
                         "ty" => { 
-                            buf = MaybeParse::<syn::Type>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Type>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         "vis" => {
-                            buf = MaybeParse::<syn::Visibility>::try_parse(&c, &mut args)?;
+                            buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, &mut args)?;
                             c = buf.begin();
                         }
                         _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)
@@ -320,7 +320,7 @@ impl MacroUse {
             } else {
                 return Err(Error::new(cursor.span(), format!("Expected end of tokens, got {tt:?} instead")));
             }
-            
+
             *cursor = next;
         }
         Ok(())
@@ -473,92 +473,83 @@ impl MacroDef {
         }
     }
 
-    // fn parse_group(&self, matched: &MacroUse, inner: Cursor) -> TokenStream {
-    //     let mut stream = TokenStream::new();
+    fn parse_group(&self, matched: &MacroUse, inner: Cursor) -> TokenStream {
+        let mut stream = TokenStream::new();
 
-    //     let mut c = inner;
-    //     while let Some((tt, next)) = c.token_tree() {
-    //         match &tt {
-    //             TokenTree::Punct(p) if p.as_char() == '$' => {
-    //                 if let Some((tt, next)) = next.token_tree() {
-    //                     if let TokenTree::Ident(i) = tt {
-    //                         let arg = *self
-    //                             .match_tokens
-    //                             .get(&i)
-    //                             .unwrap_or_else(|| panic!("Could not find arg ${i:?}"));
-    //                         matched.args[arg].to_tokens(&mut stream);
-    //                         c = next;
-    //                     } else {
-    //                         panic!("Expected ident next to $, got {tt:?}");
-    //                     }
-    //                 } else {
-    //                     panic!("Expected token tree.");
-    //                 }
-    //             }
-    //             TokenTree::Group(g) => {
-    //                 let (inner, _, next) = c.group(g.delimiter()).unwrap();
-    //                 let group =
-    //                     proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
-    //                 // Once we detect a group, we push it to the array for syn to evaluate.
-    //                 stream.append(group);
-    //                 c = next;
-    //             }
-    //             _ => {
-    //                 stream.append(tt);
-    //                 c = next
-    //             }
-    //         }
-    //     }
+        let mut c = inner;
+        while let Some((tt, next)) = c.token_tree() {
+            match &tt {
+                TokenTree::Punct(p) if p.as_char() == '$' => {
+                    if let Some((tt, next)) = next.token_tree() {
+                        if let TokenTree::Ident(i) = tt {
+                            matched.args[&i].to_tokens(&mut stream);
+                            c = next;
+                        } else {
+                            panic!("Expected ident next to $, got {tt:?}");
+                        }
+                    } else {
+                        panic!("Expected token tree.");
+                    }
+                }
+                TokenTree::Group(g) => {
+                    let (inner, _, next) = c.group(g.delimiter()).unwrap();
+                    let group =
+                        proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
+                    // Once we detect a group, we push it to the array for syn to evaluate.
+                    stream.append(group);
+                    c = next;
+                }
+                _ => {
+                    stream.append(tt);
+                    c = next
+                }
+            }
+        }
 
-    //     stream
-    // }
+        stream
+    }
 
-    // fn evaluate_buf(&self, matched: MacroUse) -> TokenStream {
-    //     let mut stream = TokenStream::new();
+    fn evaluate_buf(&self, matched: MacroUse) -> TokenStream {
+        let mut stream = TokenStream::new();
 
-    //     let buf = TokenBuffer::new2(self.body.clone());
-    //     let mut c = buf.begin();
-    //     // Search until we find a token to replace:
-    //     while let Some((tt, next)) = c.token_tree() {
-    //         match &tt {
-    //             TokenTree::Punct(punct) if punct.as_char() == '$' => {
-    //                 if let Some((tt, next)) = next.token_tree() {
-    //                     if let TokenTree::Ident(i) = tt {
-    //                         let arg = *self
-    //                             .match_tokens
-    //                             .get(&i)
-    //                             .unwrap_or_else(|| panic!("Could not find arg ${i:?}"));
-    //                         matched.args[arg].to_tokens(&mut stream);
-    //                         c = next;
-    //                     } else {
-    //                         panic!("Expected ident next to $, got {tt:?}");
-    //                     }
-    //                 } else {
-    //                     panic!("Expected token tree.");
-    //                 }
-    //             }
-    //             TokenTree::Group(g) => {
-    //                 let (inner, _, next) = c.group(g.delimiter()).unwrap();
-    //                 // We need to read inside of any groups to find and replace `$` idents.
-    //                 let group =
-    //                     proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
-    //                 stream.append(group);
-    //                 c = next;
-    //             }
-    //             _ => {
-    //                 stream.append(tt);
-    //                 c = next
-    //             }
-    //         }
-    //     }
+        let buf = TokenBuffer::new2(self.body.clone());
+        let mut c = buf.begin();
+        // Search until we find a token to replace:
+        while let Some((tt, next)) = c.token_tree() {
+            match &tt {
+                TokenTree::Punct(punct) if punct.as_char() == '$' => {
+                    if let Some((tt, next)) = next.token_tree() {
+                        if let TokenTree::Ident(i) = tt {
+                            matched.args[&i].to_tokens(&mut stream);
+                            c = next;
+                        } else {
+                            panic!("Expected ident next to $, got {tt:?}");
+                        }
+                    } else {
+                        panic!("Expected token tree.");
+                    }
+                }
+                TokenTree::Group(g) => {
+                    let (inner, _, next) = c.group(g.delimiter()).unwrap();
+                    // We need to read inside of any groups to find and replace `$` idents.
+                    let group =
+                        proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
+                    stream.append(group);
+                    c = next;
+                }
+                _ => {
+                    stream.append(tt);
+                    c = next
+                }
+            }
+        }
 
-    //     stream
-    // }
+        stream
+    }
 
     fn evaluate<T: Parse + Debug>(&self, matched: TokenStream) -> Vec<T> {
-        let macro_use = MacroUse::parse(self, matched);
-        // let stream = self.evaluate_buf(macro_use);
-        let stream = TokenStream::new();
+        let macro_use = MacroUse::parse(self, matched).unwrap_or_else(|e| { panic!("{}", e) });
+        let stream = self.evaluate_buf(macro_use);
 
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
 
