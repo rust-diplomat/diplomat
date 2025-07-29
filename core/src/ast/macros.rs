@@ -9,7 +9,7 @@ use syn::{
     braced, bracketed,
     buffer::{Cursor, TokenBuffer},
     parenthesized,
-    parse::{self, Parse},
+    parse::{self, Parse, ParseBuffer, ParseStream, Parser},
     token, Error, Expr, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
@@ -82,6 +82,8 @@ macro_rules! define_macro_fragments {
             )*
         }
 
+        pub trait MacroFraggable : Into<MacroFrag> {}
+
         impl ToTokens for MacroFrag {
             fn to_token_stream(&self) -> TokenStream {
                 let mut tokens = TokenStream::new();
@@ -108,6 +110,15 @@ macro_rules! define_macro_fragments {
                 }
             }
         }
+
+        $(
+            impl MacroFraggable for $p {}
+            impl Into<MacroFrag> for $p {
+                fn into(self) -> MacroFrag {
+                    MacroFrag::$i(self)
+                }
+            }
+        )*
     }
 }
 
@@ -152,6 +163,32 @@ impl Parse for MacroIdent {
     }
 }
 
+// Hack to read information from the TokenTree while saving the rest to be later copied into a buffer:
+pub struct MaybeParse<T: Parse + MacroFraggable> {
+    item : T,
+    remaining : TokenStream
+}
+
+impl<T: Parse + MacroFraggable> Parse for MaybeParse<T> {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let item = input.parse::<T>()?;
+        let remaining = input.parse()?;
+        Ok(Self { item, remaining })
+    }
+}
+
+impl<T: Parse + MacroFraggable> MaybeParse<T> {
+    fn try_parse(cursor : &Cursor, args : &mut Vec<MacroFrag>) -> syn::Result<TokenBuffer> {
+        let out = syn::parse2::<MaybeParse<T>>(
+        cursor.token_stream())?;
+
+        args.push(out.item.into());
+
+        let buf = TokenBuffer::new2(out.remaining);
+        Ok(buf)
+    }
+}
+
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct MacroUse {
@@ -159,10 +196,97 @@ pub struct MacroUse {
 }
 
 impl MacroUse {
-    fn parse(def: &MacroDef, stream: TokenStream) -> Self {
+    fn parse(def: &MacroDef, stream: TokenStream) -> syn::Result<Self> {
         let mut args = Vec::new();
 
-        Self { args }
+        
+        let mut buf = TokenBuffer::new2(stream);
+        let mut c = buf.begin();
+
+        let mut match_iter = def.matcher.matches.iter();
+        while let Some((tt, next)) = c.token_tree() {
+            let curr_match = match_iter.next();
+            match curr_match {
+                Some(MacroMatch::Ident(i)) => {
+                    match i.ty.to_string().as_str() {
+                        "block" => {
+                            if let TokenTree::Group(..) = &tt {
+                                args.push(MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?));
+                                c = next;
+                            } else {
+                                panic!("Expected a block. Got {:?}", tt);
+                            }
+                        }
+                        "expr" => {
+                            buf = MaybeParse::<syn::Expr>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "ident" => {
+                            buf = MaybeParse::<syn::Ident>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "item" => {
+                            buf = MaybeParse::<syn::Item>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "lifetime" => {
+                            buf = MaybeParse::<syn::Lifetime>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "literal" => {
+                            buf = MaybeParse::<syn::Lit>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "meta" => { 
+                            buf = MaybeParse::<syn::Meta>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                         }
+                        "pat" => { 
+                            // buf = MaybeParse::<syn::Pat>::try_parse(&c, &mut args)?;
+                            // c = buf.begin();
+                            todo!()
+                         }
+                        "path" => {
+                            buf = MaybeParse::<syn::Path>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "stmt" => { 
+                            buf = MaybeParse::<syn::Item>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "tt" => {
+                            args.push(MacroFrag::TokenTree(tt));
+                            c = next;
+                        }
+                        "ty" => { 
+                            buf = MaybeParse::<syn::Type>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        "vis" => {
+                            buf = MaybeParse::<syn::Visibility>::try_parse(&c, &mut args)?;
+                            c = buf.begin();
+                        }
+                        _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)
+                    }
+                },
+                Some(MacroMatch::Tokens(t)) => {
+                    Self::get_tokens_match(&mut c, t)?;
+                },
+                Some(MacroMatch::MacroMatcher(matcher)) => {
+                    todo!()
+                }
+                _ => panic!("Expected {:?} next.", curr_match)
+            }
+        }
+
+        Ok(Self { args })
+    }
+
+    fn get_tokens_match(cursor : &mut Cursor, t : &TokenStream) -> syn::Result<()> {
+        while let Some((tt, next)) = cursor.token_tree() {
+            todo!()
+        }
+        Ok(())
     }
 }
 
