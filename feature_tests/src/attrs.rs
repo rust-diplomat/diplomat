@@ -310,6 +310,7 @@ pub mod ffi {
 
             use $p;
             impl $i {
+                #[allow(clippy::extra_unused_lifetimes)]
                 $vis fn test_func<$lt>(w : &mut DiplomatWrite) -> usize {
                     let a = $e;
                     write!(w, $l).unwrap();
