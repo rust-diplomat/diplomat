@@ -590,7 +590,6 @@ impl MacroDef {
         let stream = self.evaluate_buf(macro_use);
 
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
-        println!("{}", stream.to_string());
         let maybe_list = syn::parse_str::<ItemList<T>>(&stream.to_string());
         if let Ok(i) = maybe_list {
             i.items
