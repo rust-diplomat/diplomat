@@ -298,7 +298,7 @@ pub mod ffi {
             5
         }
     }
-    
+
     #[diplomat::macro_rules]
     macro_rules! macro_frag_spec_test {
         (BLOCK $b:block [EXPR $e:expr, IDENT $i:ident] LT $lt:lifetime literal $l:literal <=> $m:meta $p:path; $t:tt $ty:ty, $vis:vis, $it:item) => {
@@ -330,7 +330,7 @@ pub mod ffi {
         };
     }
 
-    macro_frag_spec_test!{BLOCK {
+    macro_frag_spec_test! {BLOCK {
         println!("Hello world");
     } [EXPR 0, IDENT TestMacroStruct] LT 'a literal "Testing" <=> diplomat::attr(auto, constructor) std::fmt::Write; {
         fn hello() {}

@@ -175,7 +175,10 @@ impl<T: Parse> Parse for MaybeParse<T> {
     }
 }
 
-impl<T: Parse> MaybeParse<T> where MacroFrag : From<T> {
+impl<T: Parse> MaybeParse<T>
+where
+    MacroFrag: From<T>,
+{
     fn try_parse(
         i: &MacroIdent,
         cursor: &Cursor,
@@ -273,7 +276,7 @@ impl MacroUse {
                             format!("${}:stmt MacroFragSpec currently unsupported.", i.ident),
                         ));
                         // buf = MaybeParse::<syn::Stmt>::try_parse(i, &c, args)?;
-                        
+
                         // c = buf.begin();
                     }
                     "tt" => {
@@ -312,7 +315,7 @@ impl MacroUse {
                 None => {
                     return Err(Error::new(
                         c.span(),
-                        format!("Macro use error, expected no more tokens. Got {tt:?}")
+                        format!("Macro use error, expected no more tokens. Got {tt:?}"),
                     ))
                 }
             }
@@ -406,7 +409,10 @@ impl Parse for MacroMatch {
 
         if lookahead.peek(Token![$]) {
             return Ok(MacroMatch::Ident(input.parse()?));
-        } else if lookahead.peek(token::Brace) || lookahead.peek(token::Bracket) || lookahead.peek(token::Paren) {
+        } else if lookahead.peek(token::Brace)
+            || lookahead.peek(token::Bracket)
+            || lookahead.peek(token::Paren)
+        {
             return Ok(MacroMatch::MacroMatcher(input.parse()?));
         }
 
@@ -417,9 +423,8 @@ impl Parse for MacroMatch {
             [syn::Ident, syn::Lit, syn::Lifetime],
             // Not including the Eq symbols (OrEq, AndEq), since they confuse the parser.
             [
-                Eq, Lt, Ne, Ge, Gt, Not, Tilde, Plus, Minus, Star, Slash,
-                Percent, Caret, And, Or, Shl, Shr, At, Dot, Comma,
-                Semi, Colon, Pound, Question, Underscore
+                Eq, Lt, Ne, Ge, Gt, Not, Tilde, Plus, Minus, Star, Slash, Percent, Caret, And, Or,
+                Shl, Shr, At, Dot, Comma, Semi, Colon, Pound, Question, Underscore
             ]
         );
 
