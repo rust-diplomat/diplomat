@@ -199,11 +199,16 @@ impl MacroUse {
     fn parse(def: &MacroDef, stream: TokenStream) -> syn::Result<Self> {
         let mut args = HashMap::new();
 
-        
+        Self::parse_macro_matcher(&def.matcher.matches, stream, &mut args)?;
+
+        Ok(Self { args })
+    }
+
+    fn parse_macro_matcher(matches : &Vec<MacroMatch>, stream : TokenStream, args : &mut HashMap<Ident, MacroFrag>) -> syn::Result<()> {
         let mut buf = TokenBuffer::new2(stream);
         let mut c = buf.begin();
 
-        let mut match_iter = def.matcher.matches.iter();
+        let mut match_iter = matches.iter();
         while let Some((tt, next)) = c.token_tree() {
             let curr_match = match_iter.next();
             match curr_match {
@@ -218,27 +223,27 @@ impl MacroUse {
                             }
                         }
                         "expr" => {
-                            buf = MaybeParse::<syn::Expr>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Expr>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "ident" => {
-                            buf = MaybeParse::<syn::Ident>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Ident>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "item" => {
-                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "lifetime" => {
-                            buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "literal" => {
-                            buf = MaybeParse::<syn::Lit>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Lit>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "meta" => { 
-                            buf = MaybeParse::<syn::Meta>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Meta>::try_parse(i, &c, args)?;
                             c = buf.begin();
                          }
                         "pat" => { 
@@ -247,11 +252,11 @@ impl MacroUse {
                             todo!()
                          }
                         "path" => {
-                            buf = MaybeParse::<syn::Path>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "stmt" => { 
-                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "tt" => {
@@ -259,11 +264,11 @@ impl MacroUse {
                             c = next;
                         }
                         "ty" => { 
-                            buf = MaybeParse::<syn::Type>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Type>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         "vis" => {
-                            buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, &mut args)?;
+                            buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
                         _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)
@@ -273,13 +278,16 @@ impl MacroUse {
                     Self::get_tokens_match(&mut c, t)?;
                 },
                 Some(MacroMatch::MacroMatcher(matcher)) => {
-                    todo!()
+                    if let TokenTree::Group(g) = &tt {
+                        Self::parse_macro_matcher(&matcher.matches, g.stream(), args)?;
+                    } else {
+                        panic!("Expected {:?}", matcher.delim);
+                    }
                 }
                 _ => panic!("Expected {:?} next.", curr_match)
             }
         }
-
-        Ok(Self { args })
+        Ok(())
     }
 
     fn get_tokens_match(cursor : &mut Cursor, t : &TokenStream) -> syn::Result<()> {
