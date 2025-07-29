@@ -9,7 +9,7 @@ use syn::{
     braced, bracketed,
     buffer::{Cursor, TokenBuffer},
     parenthesized,
-    parse::{self, Parse, ParseStream, Parser},
+    parse::{self, Parse, ParseStream},
     token, Error, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
@@ -82,8 +82,6 @@ macro_rules! define_macro_fragments {
             )*
         }
 
-        pub trait MacroFraggable : Into<MacroFrag> {}
-
         impl ToTokens for MacroFrag {
             fn to_token_stream(&self) -> TokenStream {
                 let mut tokens = TokenStream::new();
@@ -112,10 +110,9 @@ macro_rules! define_macro_fragments {
         }
 
         $(
-            impl MacroFraggable for $p {}
-            impl Into<MacroFrag> for $p {
-                fn into(self) -> MacroFrag {
-                    MacroFrag::$i(self)
+            impl From<$p> for MacroFrag {
+                fn from(value : $p) -> MacroFrag {
+                    MacroFrag::$i(value)
                 }
             }
         )*
@@ -177,7 +174,7 @@ impl<T: Parse> Parse for MaybeParse<T> {
     }
 }
 
-impl<T: Parse + MacroFraggable> MaybeParse<T> {
+impl<T: Parse> MaybeParse<T> where MacroFrag : From<T> {
     fn try_parse(
         i: &MacroIdent,
         cursor: &Cursor,
@@ -185,7 +182,7 @@ impl<T: Parse + MacroFraggable> MaybeParse<T> {
     ) -> syn::Result<TokenBuffer> {
         let out = syn::parse2::<MaybeParse<T>>(cursor.token_stream())?;
 
-        args.insert(i.ident.clone(), out.item.into());
+        args.insert(i.ident.clone(), MacroFrag::from(out.item));
 
         let buf = TokenBuffer::new2(out.remaining);
         Ok(buf)
@@ -208,7 +205,7 @@ impl MacroUse {
     }
 
     fn parse_macro_matcher(
-        matches: &Vec<MacroMatch>,
+        matches: &[MacroMatch],
         stream: TokenStream,
         args: &mut HashMap<Ident, MacroFrag>,
     ) -> syn::Result<()> {
@@ -401,11 +398,7 @@ impl Parse for MacroMatch {
 
         if lookahead.peek(Token![$]) {
             return Ok(MacroMatch::Ident(input.parse()?));
-        } else if lookahead.peek(token::Brace) {
-            return Ok(MacroMatch::MacroMatcher(input.parse()?));
-        } else if lookahead.peek(token::Bracket) {
-            return Ok(MacroMatch::MacroMatcher(input.parse()?));
-        } else if lookahead.peek(token::Paren) {
+        } else if lookahead.peek(token::Brace) || lookahead.peek(token::Bracket) || lookahead.peek(token::Paren) {
             return Ok(MacroMatch::MacroMatcher(input.parse()?));
         }
 
@@ -516,7 +509,7 @@ impl MacroDef {
         }
     }
 
-    fn parse_group(&self, matched: &MacroUse, inner: Cursor) -> TokenStream {
+    fn parse_group(matched: &MacroUse, inner: Cursor) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let mut c = inner;
@@ -537,7 +530,7 @@ impl MacroDef {
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
                     let group =
-                        proc_macro2::Group::new(g.delimiter(), self.parse_group(matched, inner));
+                        proc_macro2::Group::new(g.delimiter(), Self::parse_group(matched, inner));
                     // Once we detect a group, we push it to the array for syn to evaluate.
                     stream.append(group);
                     c = next;
@@ -576,7 +569,7 @@ impl MacroDef {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
                     // We need to read inside of any groups to find and replace `$` idents.
                     let group =
-                        proc_macro2::Group::new(g.delimiter(), self.parse_group(&matched, inner));
+                        proc_macro2::Group::new(g.delimiter(), Self::parse_group(&matched, inner));
                     stream.append(group);
                     c = next;
                 }
