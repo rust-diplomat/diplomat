@@ -164,12 +164,12 @@ impl Parse for MacroIdent {
 }
 
 // Hack to read information from the TokenTree while saving the rest to be later copied into a buffer:
-pub struct MaybeParse<T: Parse + MacroFraggable> {
+pub struct MaybeParse<T: Parse> {
     item : T,
     remaining : TokenStream
 }
 
-impl<T: Parse + MacroFraggable> Parse for MaybeParse<T> {
+impl<T: Parse> Parse for MaybeParse<T> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let item = input.parse::<T>()?;
         let remaining = input.parse()?;
@@ -283,8 +283,45 @@ impl MacroUse {
     }
 
     fn get_tokens_match(cursor : &mut Cursor, t : &TokenStream) -> syn::Result<()> {
+        let mut other_iter = t.clone().into_iter();
         while let Some((tt, next)) = cursor.token_tree() {
-            todo!()
+            let maybe_tt = other_iter.next();
+
+            if let Some(other_tt) = maybe_tt {
+                let matches = match &tt {
+                    TokenTree::Group(..) => unreachable!("Unexpected group token found in MacroMatch, this should not be possible."),
+                    TokenTree::Ident(i) => {
+                        if let TokenTree::Ident(other_i) = &other_tt {
+                            i.clone() == other_i.clone()
+                        } else {
+                            false
+                        }
+                    }
+                    TokenTree::Literal(l) => {
+                        if let TokenTree::Literal(other_l) = &other_tt {
+                            // TODO: Is this okay? Does this work?
+                            l.to_string() == other_l.to_string()
+                        } else {
+                            false
+                        }
+                    }
+                    TokenTree::Punct(p) => {
+                        if let TokenTree::Punct(other_p) = &other_tt {
+                            other_p.as_char() == p.as_char()
+                        } else {
+                            false
+                        }
+                    }
+                };
+
+                if !matches {
+                    return Err(Error::new(cursor.span(), format!("Expected {other_tt:?}, got {tt:?}")))
+                }
+            } else {
+                return Err(Error::new(cursor.span(), format!("Expected end of tokens, got {tt:?} instead")));
+            }
+            
+            *cursor = next;
         }
         Ok(())
     }
