@@ -284,10 +284,10 @@ impl MacroUse {
 
     fn get_tokens_match(cursor : &mut Cursor, t : &TokenStream) -> syn::Result<()> {
         let mut other_iter = t.clone().into_iter();
-        while let Some((tt, next)) = cursor.token_tree() {
-            let maybe_tt = other_iter.next();
+        while let Some(other_tt) = other_iter.next() {
+            let maybe_tt = cursor.token_tree();
 
-            if let Some(other_tt) = maybe_tt {
+            if let Some((tt, next)) = maybe_tt {
                 let matches = match &tt {
                     TokenTree::Group(..) => unreachable!("Unexpected group token found in MacroMatch, this should not be possible."),
                     TokenTree::Ident(i) => {
@@ -315,13 +315,13 @@ impl MacroUse {
                 };
 
                 if !matches {
-                    return Err(Error::new(cursor.span(), format!("Expected {other_tt:?}, got {tt:?}")))
+                    return Err(Error::new(cursor.span(), format!("Error reading macro use: expected {other_tt:?}, got {tt:?}")))
                 }
-            } else {
-                return Err(Error::new(cursor.span(), format!("Expected end of tokens, got {tt:?} instead")));
-            }
 
-            *cursor = next;
+                *cursor = next;
+            } else {
+                return Err(Error::new(cursor.span(), format!("Error reading macro use: Unexpected end of tokens, expected {other_tt:?}")));
+            }
         }
         Ok(())
     }
