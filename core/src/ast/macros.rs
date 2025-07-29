@@ -227,7 +227,7 @@ impl MacroUse {
                         } else {
                             return Err(Error::new(
                                 c.span(),
-                                format!("Expected a block. Got {tt:?}"),
+                                format!("${}:block expected. Got {tt:?}", i.ident),
                             ));
                         }
                     }
@@ -258,7 +258,7 @@ impl MacroUse {
                     "pat" => {
                         return Err(Error::new(
                             c.span(),
-                            "pat MacroFragSpec currently unsupported.",
+                            format!("${}:pat MacroFragSpec currently unsupported.", i.ident),
                         ));
                     }
                     "path" => {
@@ -294,17 +294,18 @@ impl MacroUse {
                 Some(MacroMatch::MacroMatcher(matcher)) => {
                     if let TokenTree::Group(g) = &tt {
                         Self::parse_macro_matcher(&matcher.matches, g.stream(), args)?;
+                        c = next;
                     } else {
                         return Err(Error::new(
                             c.span(),
-                            format!("Expected {:?}", matcher.delim),
+                            format!("Macro use error: expected {:?}", matcher.delim),
                         ));
                     }
                 }
                 _ => {
                     return Err(Error::new(
                         c.span(),
-                        format!("Expected {curr_match:?} next."),
+                        format!("Macro use error: expected {curr_match:?} next."),
                     ));
                 }
             }
