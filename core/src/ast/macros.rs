@@ -165,8 +165,8 @@ impl Parse for MacroIdent {
 
 // Hack to read information from the TokenTree while saving the rest to be later copied into a buffer:
 pub struct MaybeParse<T: Parse> {
-    item : T,
-    remaining : TokenStream
+    item: T,
+    remaining: TokenStream,
 }
 
 impl<T: Parse> Parse for MaybeParse<T> {
@@ -178,9 +178,12 @@ impl<T: Parse> Parse for MaybeParse<T> {
 }
 
 impl<T: Parse + MacroFraggable> MaybeParse<T> {
-    fn try_parse(i : &MacroIdent, cursor : &Cursor, args : &mut HashMap<Ident, MacroFrag>) -> syn::Result<TokenBuffer> {
-        let out = syn::parse2::<MaybeParse<T>>(
-        cursor.token_stream())?;
+    fn try_parse(
+        i: &MacroIdent,
+        cursor: &Cursor,
+        args: &mut HashMap<Ident, MacroFrag>,
+    ) -> syn::Result<TokenBuffer> {
+        let out = syn::parse2::<MaybeParse<T>>(cursor.token_stream())?;
 
         args.insert(i.ident.clone(), out.item.into());
 
@@ -204,7 +207,11 @@ impl MacroUse {
         Ok(Self { args })
     }
 
-    fn parse_macro_matcher(matches : &Vec<MacroMatch>, stream : TokenStream, args : &mut HashMap<Ident, MacroFrag>) -> syn::Result<()> {
+    fn parse_macro_matcher(
+        matches: &Vec<MacroMatch>,
+        stream: TokenStream,
+        args: &mut HashMap<Ident, MacroFrag>,
+    ) -> syn::Result<()> {
         let mut buf = TokenBuffer::new2(stream);
         let mut c = buf.begin();
 
@@ -216,7 +223,10 @@ impl MacroUse {
                     match i.ty.to_string().as_str() {
                         "block" => {
                             if let TokenTree::Group(..) = &tt {
-                                args.insert(i.ident.clone(), MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?));
+                                args.insert(
+                                    i.ident.clone(),
+                                    MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?),
+                                );
                                 c = next;
                             } else {
                                 panic!("Expected a block. Got {:?}", tt);
@@ -242,20 +252,20 @@ impl MacroUse {
                             buf = MaybeParse::<syn::Lit>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
-                        "meta" => { 
+                        "meta" => {
                             buf = MaybeParse::<syn::Meta>::try_parse(i, &c, args)?;
                             c = buf.begin();
-                         }
-                        "pat" => { 
+                        }
+                        "pat" => {
                             // buf = MaybeParse::<syn::Pat>::try_parse(&c, &mut args)?;
                             // c = buf.begin();
                             todo!()
-                         }
+                        }
                         "path" => {
                             buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
-                        "stmt" => { 
+                        "stmt" => {
                             buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
@@ -263,7 +273,7 @@ impl MacroUse {
                             args.insert(i.ident.clone(), MacroFrag::TokenTree(tt));
                             c = next;
                         }
-                        "ty" => { 
+                        "ty" => {
                             buf = MaybeParse::<syn::Type>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
@@ -271,12 +281,12 @@ impl MacroUse {
                             buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
-                        _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)
+                        _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty),
                     }
-                },
+                }
                 Some(MacroMatch::Tokens(t)) => {
                     Self::get_tokens_match(&mut c, t)?;
-                },
+                }
                 Some(MacroMatch::MacroMatcher(matcher)) => {
                     if let TokenTree::Group(g) = &tt {
                         Self::parse_macro_matcher(&matcher.matches, g.stream(), args)?;
@@ -284,20 +294,22 @@ impl MacroUse {
                         panic!("Expected {:?}", matcher.delim);
                     }
                 }
-                _ => panic!("Expected {:?} next.", curr_match)
+                _ => panic!("Expected {:?} next.", curr_match),
             }
         }
         Ok(())
     }
 
-    fn get_tokens_match(cursor : &mut Cursor, t : &TokenStream) -> syn::Result<()> {
+    fn get_tokens_match(cursor: &mut Cursor, t: &TokenStream) -> syn::Result<()> {
         let mut other_iter = t.clone().into_iter();
         while let Some(other_tt) = other_iter.next() {
             let maybe_tt = cursor.token_tree();
 
             if let Some((tt, next)) = maybe_tt {
                 let matches = match &tt {
-                    TokenTree::Group(..) => unreachable!("Unexpected group token found in MacroMatch, this should not be possible."),
+                    TokenTree::Group(..) => unreachable!(
+                        "Unexpected group token found in MacroMatch, this should not be possible."
+                    ),
                     TokenTree::Ident(i) => {
                         if let TokenTree::Ident(other_i) = &other_tt {
                             i.clone() == other_i.clone()
@@ -323,12 +335,20 @@ impl MacroUse {
                 };
 
                 if !matches {
-                    return Err(Error::new(cursor.span(), format!("Error reading macro use: expected {other_tt:?}, got {tt:?}")))
+                    return Err(Error::new(
+                        cursor.span(),
+                        format!("Error reading macro use: expected {other_tt:?}, got {tt:?}"),
+                    ));
                 }
 
                 *cursor = next;
             } else {
-                return Err(Error::new(cursor.span(), format!("Error reading macro use: Unexpected end of tokens, expected {other_tt:?}")));
+                return Err(Error::new(
+                    cursor.span(),
+                    format!(
+                        "Error reading macro use: Unexpected end of tokens, expected {other_tt:?}"
+                    ),
+                ));
             }
         }
         Ok(())
@@ -556,7 +576,7 @@ impl MacroDef {
     }
 
     fn evaluate<T: Parse + Debug>(&self, matched: TokenStream) -> Vec<T> {
-        let macro_use = MacroUse::parse(self, matched).unwrap_or_else(|e| { panic!("{}", e) });
+        let macro_use = MacroUse::parse(self, matched).unwrap_or_else(|e| panic!("{}", e));
         let stream = self.evaluate_buf(macro_use);
 
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
