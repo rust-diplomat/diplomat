@@ -302,11 +302,11 @@ impl MacroUse {
                         ));
                     }
                 }
-                _ => {
+                None => {
                     return Err(Error::new(
                         c.span(),
-                        format!("Macro use error: expected {curr_match:?} next."),
-                    ));
+                        format!("Macro use error, expected no more tokens. Got {tt:?}")
+                    ))
                 }
             }
         }
