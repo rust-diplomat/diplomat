@@ -127,6 +127,7 @@ define_macro_fragments! {
     Lifetime(syn::Lifetime),
     Literal(syn::Lit),
     Meta(syn::Meta),
+    // TODO:
     Pat(syn::Pat),
     // TODO:
     // PatParam()
@@ -408,11 +409,11 @@ impl Parse for MacroMatch {
             tokens,
             input,
             [syn::Ident, syn::Lit, syn::Lifetime],
+            // Not including the Eq symbols (OrEq, AndEq), since they confuse the parser.
             [
-                Eq, Lt, Le, EqEq, Ne, Ge, Gt, AndAnd, OrOr, Not, Tilde, Plus, Minus, Star, Slash,
-                Percent, Caret, And, Or, Shl, Shr, PlusEq, MinusEq, StarEq, SlashEq, PercentEq,
-                CaretEq, AndEq, OrEq, ShrEq, ShlEq, At, Dot, DotDot, DotDotDot, DotDotEq, Comma,
-                Semi, Colon, PathSep, RArrow, LArrow, FatArrow, Pound, Question, Underscore
+                Eq, Lt, Ne, Ge, Gt, Not, Tilde, Plus, Minus, Star, Slash,
+                Percent, Caret, And, Or, Shl, Shr, At, Dot, Comma,
+                Semi, Colon, Pound, Question, Underscore
             ]
         );
 
@@ -589,12 +590,12 @@ impl MacroDef {
         let stream = self.evaluate_buf(macro_use);
 
         // Now we have a stream to read through. We read through the whole thing and assume each thing we read is a top level item.
-
+        println!("{}", stream.to_string());
         let maybe_list = syn::parse_str::<ItemList<T>>(&stream.to_string());
         if let Ok(i) = maybe_list {
             i.items
         } else {
-            panic!("{:?}", maybe_list.unwrap_err());
+            panic!("Macro expansion error: {:?}", maybe_list.unwrap_err());
         }
     }
 }
