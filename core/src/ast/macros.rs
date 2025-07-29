@@ -219,69 +219,72 @@ impl MacroUse {
         while let Some((tt, next)) = c.token_tree() {
             let curr_match = match_iter.next();
             match curr_match {
-                Some(MacroMatch::Ident(i)) => {
-                    match i.ty.to_string().as_str() {
-                        "block" => {
-                            if let TokenTree::Group(..) = &tt {
-                                args.insert(
-                                    i.ident.clone(),
-                                    MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?),
-                                );
-                                c = next;
-                            } else {
-                                Error::new(c.span(),  format!("Expected a block. Got {:?}", tt));
-                            }
-                        }
-                        "expr" => {
-                            buf = MaybeParse::<syn::Expr>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "ident" => {
-                            buf = MaybeParse::<syn::Ident>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "item" => {
-                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "lifetime" => {
-                            buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "literal" => {
-                            buf = MaybeParse::<syn::Lit>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "meta" => {
-                            buf = MaybeParse::<syn::Meta>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "pat" => {
-                            Error::new(c.span(), "pat MacroFragSpec currently unsupported.");
-                        }
-                        "path" => {
-                            buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "stmt" => {
-                            buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "tt" => {
-                            args.insert(i.ident.clone(), MacroFrag::TokenTree(tt));
+                Some(MacroMatch::Ident(i)) => match i.ty.to_string().as_str() {
+                    "block" => {
+                        if let TokenTree::Group(..) = &tt {
+                            args.insert(
+                                i.ident.clone(),
+                                MacroFrag::Block(syn::parse2::<syn::Block>(tt.into())?),
+                            );
                             c = next;
+                        } else {
+                            Error::new(c.span(), format!("Expected a block. Got {:?}", tt));
                         }
-                        "ty" => {
-                            buf = MaybeParse::<syn::Type>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        "vis" => {
-                            buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
-                            c = buf.begin();
-                        }
-                        _ => { Error::new(c.span(), format!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)); },
                     }
-                }
+                    "expr" => {
+                        buf = MaybeParse::<syn::Expr>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "ident" => {
+                        buf = MaybeParse::<syn::Ident>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "item" => {
+                        buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "lifetime" => {
+                        buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "literal" => {
+                        buf = MaybeParse::<syn::Lit>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "meta" => {
+                        buf = MaybeParse::<syn::Meta>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "pat" => {
+                        Error::new(c.span(), "pat MacroFragSpec currently unsupported.");
+                    }
+                    "path" => {
+                        buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "stmt" => {
+                        buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "tt" => {
+                        args.insert(i.ident.clone(), MacroFrag::TokenTree(tt));
+                        c = next;
+                    }
+                    "ty" => {
+                        buf = MaybeParse::<syn::Type>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    "vis" => {
+                        buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
+                        c = buf.begin();
+                    }
+                    _ => {
+                        Error::new(
+                            c.span(),
+                            format!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty),
+                        );
+                    }
+                },
                 Some(MacroMatch::Tokens(t)) => {
                     Self::get_tokens_match(&mut c, t)?;
                 }
@@ -292,7 +295,9 @@ impl MacroUse {
                         Error::new(c.span(), format!("Expected {:?}", matcher.delim));
                     }
                 }
-                _ => { Error::new(c.span(), format!("Expected {:?} next.", curr_match)); },
+                _ => {
+                    Error::new(c.span(), format!("Expected {:?} next.", curr_match));
+                }
             }
         }
         Ok(())
