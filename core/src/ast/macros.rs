@@ -229,7 +229,7 @@ impl MacroUse {
                                 );
                                 c = next;
                             } else {
-                                panic!("Expected a block. Got {:?}", tt);
+                                Error::new(c.span(),  format!("Expected a block. Got {:?}", tt));
                             }
                         }
                         "expr" => {
@@ -257,9 +257,7 @@ impl MacroUse {
                             c = buf.begin();
                         }
                         "pat" => {
-                            // buf = MaybeParse::<syn::Pat>::try_parse(&c, &mut args)?;
-                            // c = buf.begin();
-                            todo!()
+                            Error::new(c.span(), "pat MacroFragSpec currently unsupported.");
                         }
                         "path" => {
                             buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
@@ -281,7 +279,7 @@ impl MacroUse {
                             buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
                             c = buf.begin();
                         }
-                        _ => panic!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty),
+                        _ => { Error::new(c.span(), format!("${}, unsupported MacroFragSpec :{}", i.ident, i.ty)); },
                     }
                 }
                 Some(MacroMatch::Tokens(t)) => {
@@ -291,10 +289,10 @@ impl MacroUse {
                     if let TokenTree::Group(g) = &tt {
                         Self::parse_macro_matcher(&matcher.matches, g.stream(), args)?;
                     } else {
-                        panic!("Expected {:?}", matcher.delim);
+                        Error::new(c.span(), format!("Expected {:?}", matcher.delim));
                     }
                 }
-                _ => panic!("Expected {:?} next.", curr_match),
+                _ => { Error::new(c.span(), format!("Expected {:?} next.", curr_match)); },
             }
         }
         Ok(())
