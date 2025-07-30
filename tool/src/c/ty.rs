@@ -330,12 +330,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         )
     }
 
-    fn gen_result_ty_struct<P: hir::TyPosition>(
+    fn gen_result_ty<P: hir::TyPosition>(
         &self,
         fn_name: &str,
         ok_ty: Option<&hir::Type<P>>,
         err_ty: Option<&hir::Type<P>>,
-        header: &mut Header
+        header: &mut Header,
     ) -> String {
         
         let ok_ty = ok_ty.filter(|t| {
@@ -379,19 +379,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         } else {
             "".into()
         };
-        format!("struct {fn_name}_result {{{union_def} bool is_ok;}}")
-    }
 
-    fn gen_result_ty<P: hir::TyPosition>(
-        &self,
-        fn_name: &str,
-        ok_ty: Option<&hir::Type<P>>,
-        err_ty: Option<&hir::Type<P>>,
-        header: &mut Header,
-    ) -> String {
         // We can't use an anonymous struct here: C++ doesn't like producing those in return types
         // Instead we name it something unique per-function. This is a bit ugly but works just fine.
-        format!("typedef {} {fn_name}_result;\n{fn_name}_result", self.gen_result_ty_struct(fn_name, ok_ty, err_ty, header))
+        format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;\n{fn_name}_result")
     }
 
     /// Generates a decl for a given type, returned as (type, name)
