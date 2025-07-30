@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
             return diplomat::result(diplomat::Ok(0));
         });
     }
-    
     {
         o.test_option_output([]() {
             return std::optional(std::monostate());
