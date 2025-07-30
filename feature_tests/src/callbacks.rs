@@ -40,6 +40,11 @@ mod ffi {
         pub fn test_slice_cb_arg(arg: &[u8], f: impl Fn(&[u8])) {
             f(arg);
         }
+
+        #[diplomat::attr(not(supports="fallible_traits_callbacks"), disable)]
+        pub fn test_result_output(t : impl Fn() -> Result<(), ()>) {
+            assert_eq!(t(), Ok(()));
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]

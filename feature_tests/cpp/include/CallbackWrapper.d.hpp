@@ -44,6 +44,8 @@ struct CallbackWrapper {
 
   inline static void test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f);
 
+  inline static void test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t);
+
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };
