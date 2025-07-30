@@ -564,8 +564,20 @@ impl TypeContext {
                 self.validate_ty(errors, &p.ty);
             }
 
-            if let Some(ref o) = *m.output {
-                self.validate_ty(errors, o);
+            let success = match &*m.output {
+                hir::ReturnType::Infallible(success) | hir::ReturnType::Nullable(success) => {
+                    success
+                },
+                hir::ReturnType::Fallible(success, fallible) => {
+                    if let Some(f) = fallible {
+                        self.validate_ty(errors, &f);
+                    }
+                    success
+                },
+            };
+            
+            if let hir::SuccessType::OutType(o) = success {
+                self.validate_ty(errors, &o);
             }
         }
     }

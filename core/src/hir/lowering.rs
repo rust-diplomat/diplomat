@@ -452,11 +452,7 @@ impl<'ast> LoweringContext<'ast> {
         let params =
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
-        let output = if let Some(out_ty) = &ast_trait_method.output_type {
-            Some(self.lower_type(out_ty, &mut param_ltl, false /* in_struct */, in_path)?)
-        } else {
-            None
-        };
+        let return_type = self.lower_callback_return_type(ast_trait_method.output_type.as_ref(), &mut param_ltl, in_path)?;
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_trait_method.attrs,
@@ -467,7 +463,7 @@ impl<'ast> LoweringContext<'ast> {
         Ok(Callback {
             param_self,
             params,
-            output: Box::new(output),
+            output: Box::new(return_type),
             name: Some(self.lower_ident(&name, "trait name")?),
             attrs: Some(attrs),
             docs: Some(ast_trait_method.docs.clone()),
@@ -1022,13 +1018,11 @@ impl<'ast> LoweringContext<'ast> {
 
                     params.push(param)
                 }
+
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,
                     params,
-                    output: Box::new(match **out_type {
-                        ast::TypeName::Unit => None,
-                        _ => Some(self.lower_type(out_type, ltl, in_struct, in_path)?),
-                    }),
+                    output: Box::new(self.lower_callback_return_type(Some(out_type), ltl, in_path)?),
                     name: None,
                     attrs: None,
                     docs: None,
@@ -1713,6 +1707,49 @@ impl<'ast> LoweringContext<'ast> {
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
         .map(|r_ty| (r_ty, return_ltl.finish()))
+    }
+
+    fn lower_callback_return_type(&mut self, 
+        return_type: Option<&ast::TypeName>,
+        ltl: &mut impl LifetimeLowerer,
+        in_path: &ast::Path,
+    ) -> Result<ReturnType<InputOnly>, ()> {
+        match return_type.unwrap_or(&ast::TypeName::Unit) {
+            ast::TypeName::Result(ok_ty, err_ty, _) => {
+                let ok_ty = match ok_ty.as_ref() {
+                    ast::TypeName::Unit => Ok(SuccessType::Unit),
+                    ty => self
+                        .lower_type(ty, ltl, false, in_path)
+                        .map(SuccessType::OutType),
+                };
+                let err_ty = match err_ty.as_ref() {
+                    ast::TypeName::Unit => Ok(None),
+                    ty => self
+                        .lower_type(ty, ltl,  false, in_path)
+                        .map(Some),
+                };
+
+                match (ok_ty, err_ty) {
+                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    _ => Err(()),
+                }
+            },
+            ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+                    .lower_type(ty, ltl, false, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Infallible),
+                ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
+                _ => self
+                    .lower_type(value_ty, ltl, false, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Nullable),
+            },
+            ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
+            ty => self
+                .lower_type(ty, ltl, false, in_path)
+                .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
+        }
     }
 
     fn lower_named_lifetime(
