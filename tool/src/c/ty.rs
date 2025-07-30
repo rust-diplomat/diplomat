@@ -163,7 +163,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         SuccessType::OutType(o) => Some(o),
                         _ => unreachable!("unknown AST/HIR variant"),
                     };
-                    format!("struct {}", self.gen_result_ty_anonymous(
+                    let name = m.name.as_ref().unwrap().as_str();
+                    format!("{}\n;    {name}_result", self.gen_result_ty(
+                        name,
                         ok_ty,
                         err,
                         &mut decl_header,
@@ -328,11 +330,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         )
     }
 
-    fn gen_result_ty_anonymous<P: hir::TyPosition>(
+    fn gen_result_ty<P: hir::TyPosition>(
         &self,
+        fn_name: &str,
         ok_ty: Option<&hir::Type<P>>,
         err_ty: Option<&hir::Type<P>>,
-        header: &mut Header
+        header: &mut Header,
     ) -> String {
         let ok_ty = ok_ty.filter(|t| {
             let Type::Struct(s) = t else {
@@ -375,20 +378,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         } else {
             "".into()
         };
-        format!("{{{union_def} bool is_ok;}}")
-    }
-
-    fn gen_result_ty<P: hir::TyPosition>(
-        &self,
-        fn_name: &str,
-        ok_ty: Option<&hir::Type<P>>,
-        err_ty: Option<&hir::Type<P>>,
-        header: &mut Header,
-    ) -> String {
 
         // We can't use an anonymous struct here: C++ doesn't like producing those in return types
         // Instead we name it something unique per-function. This is a bit ugly but works just fine.
-        format!("typedef struct {fn_name}_result {} {fn_name}_result;\n{fn_name}_result", self.gen_result_ty_anonymous(ok_ty, err_ty, header))
+        format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;\n{fn_name}_result")
     }
 
     /// Generates a decl for a given type, returned as (type, name)
@@ -463,7 +456,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
-                format!("struct {}", self.gen_result_ty_anonymous(ok_ty, err, header)).into()
+                format!("{};\n    {cb_wrapper_type}_result", self.gen_result_ty(cb_wrapper_type, ok_ty, err, header)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
