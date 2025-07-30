@@ -62,6 +62,18 @@ typedef struct DiplomatCallback_CallbackWrapper_test_result_output_t {
 DiplomatCallback_CallbackWrapper_test_result_output_t_result_void_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_result_output_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_result_usize_output_t {
+    const void* data;
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result {union {size_t ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result;
+DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_result_usize_output_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_option_output_t {
+    const void* data;
+    typedef struct DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result { bool is_ok;} DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result;
+DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_option_output_t;
 
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -78,6 +90,10 @@ void CallbackWrapper_test_opaque_cb_arg(DiplomatCallback_CallbackWrapper_test_op
 void CallbackWrapper_test_slice_cb_arg(DiplomatU8View arg, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f f_cb_wrap);
 
 void CallbackWrapper_test_result_output(DiplomatCallback_CallbackWrapper_test_result_output_t t_cb_wrap);
+
+void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
+
+void CallbackWrapper_test_option_output(DiplomatCallback_CallbackWrapper_test_option_output_t t_cb_wrap);
 
 
 

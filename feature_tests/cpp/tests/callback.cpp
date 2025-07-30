@@ -83,4 +83,15 @@ int main(int argc, char *argv[])
             return diplomat::result(diplomat::Ok(ok));
         });
     }
+    {
+        o.test_result_usize_output([]() {
+            return diplomat::result(diplomat::Ok(0));
+        });
+    }
+    
+    {
+        o.test_option_output([]() {
+            return std::optional(std::monostate());
+        });
+    }
 }

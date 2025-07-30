@@ -46,6 +46,10 @@ struct CallbackWrapper {
 
   inline static void test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t);
 
+  inline static void test_result_usize_output(std::function<diplomat::result<size_t, std::monostate>()> t);
+
+  inline static void test_option_output(std::function<std::optional<std::monostate>()> t);
+
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };

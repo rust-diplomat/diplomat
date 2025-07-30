@@ -65,6 +65,18 @@ namespace capi {
     DiplomatCallback_CallbackWrapper_test_result_output_t_result_void_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_result_output_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_usize_output_t {
+        const void* data;
+        typedef struct DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result {union {size_t ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result;
+    DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result_Usize_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_result_usize_output_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_option_output_t {
+        const void* data;
+        typedef struct DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result { bool is_ok;} DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result;
+    DiplomatCallback_CallbackWrapper_test_option_output_t_result_void_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_option_output_t;
 
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -81,6 +93,10 @@ namespace capi {
     void CallbackWrapper_test_slice_cb_arg(diplomat::capi::DiplomatU8View arg, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f f_cb_wrap);
 
     void CallbackWrapper_test_result_output(DiplomatCallback_CallbackWrapper_test_result_output_t t_cb_wrap);
+
+    void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
+
+    void CallbackWrapper_test_option_output(DiplomatCallback_CallbackWrapper_test_option_output_t t_cb_wrap);
 
     } // extern "C"
 } // namespace capi
@@ -125,6 +141,14 @@ inline void CallbackWrapper::test_slice_cb_arg(diplomat::span<const uint8_t> arg
 
 inline void CallbackWrapper::test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t) {
   diplomat::capi::CallbackWrapper_test_result_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::result<size_t, std::monostate>()> t) {
+  diplomat::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
+  diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
 }
 
 

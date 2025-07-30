@@ -45,6 +45,16 @@ mod ffi {
         pub fn test_result_output(t : impl Fn() -> Result<(), ()>) {
             assert_eq!(t(), Ok(()));
         }
+        
+        #[diplomat::attr(not(supports="fallible_traits_callbacks"), disable)]
+        pub fn test_result_usize_output(t : impl Fn() -> Result<usize, ()>) {
+            assert_eq!(t(), Ok(0));
+        }
+        
+        #[diplomat::attr(not(supports="fallible_traits_callbacks"), disable)]
+        pub fn test_option_output(t : impl Fn() -> Option<()>) {
+            assert_eq!(t(), Some(()));
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
