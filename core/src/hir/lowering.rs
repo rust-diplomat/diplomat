@@ -419,7 +419,6 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             let mut fcts = Vec::with_capacity(ast_trait.methods.len());
             for ast_trait_method in ast_trait.methods.iter() {
-
                 let trait_method_attrs = self.attr_validator.attr_from_ast(
                     &ast_trait_method.attrs,
                     &attrs,

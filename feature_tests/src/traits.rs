@@ -9,7 +9,7 @@ mod ffi {
         fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
-        #[diplomat::attr(not(supports="fallible_traits_callbacks"), disable)]
+        #[diplomat::attr(not(supports = "fallible_traits_callbacks"), disable)]
         fn test_result_output(&self) -> Result<u32, ()>;
     }
 
@@ -29,9 +29,8 @@ mod ffi {
             t.test_struct_trait_fn(arg)
         }
 
-
-        #[diplomat::attr(not(supports="fallible_traits_callbacks"), disable)]
-        pub fn test_result_output(t : impl TesterTrait) {
+        #[diplomat::attr(not(supports = "fallible_traits_callbacks"), disable)]
+        pub fn test_result_output(t: impl TesterTrait) {
             assert_eq!(t.test_result_output(), Ok(0));
         }
     }
