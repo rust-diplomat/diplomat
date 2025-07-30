@@ -32,7 +32,7 @@ struct StructTemplate<'a> {
 struct TraitTemplate<'a> {
     trt_name: Cow<'a, str>,
     method_sigs: Vec<String>,
-    trait_structs : Vec<String>,
+    trait_structs: Vec<String>,
     is_for_cpp: bool,
 }
 
@@ -64,7 +64,7 @@ struct CallbackAndStructDef {
     name: String,
     params_types: String,
     return_type: String,
-    return_struct : Option<String>,
+    return_struct: Option<String>,
 }
 
 /// The context used for generating a particular type
@@ -168,14 +168,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         _ => unreachable!("unknown AST/HIR variant"),
                     };
                     let name = m.name.as_ref().unwrap().as_str();
-                    
-                    trait_structs.push(
-                        format!("{};", self.gen_result_ty_struct(
-                            name,
-                            ok_ty,
-                            err,
-                            &mut decl_header,
-                        )
+
+                    trait_structs.push(format!(
+                        "{};",
+                        self.gen_result_ty_struct(name, ok_ty, err, &mut decl_header,)
                     ));
 
                     format!("{name}_result").into()
@@ -344,7 +340,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         fn_name: &str,
         ok_ty: Option<&hir::Type<P>>,
         err_ty: Option<&hir::Type<P>>,
-        header: &mut Header
+        header: &mut Header,
     ) -> String {
         let ok_ty = ok_ty.filter(|t| {
             let Type::Struct(s) = t else {
@@ -397,11 +393,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         err_ty: Option<&hir::Type<P>>,
         header: &mut Header,
     ) -> String {
-        
-
         // We can't use an anonymous struct here: C++ doesn't like producing those in return types
         // Instead we name it something unique per-function. This is a bit ugly but works just fine.
-        format!("{};\n{fn_name}_result", self.gen_result_ty_struct(fn_name, ok_ty, err_ty, header))
+        format!(
+            "{};\n{fn_name}_result",
+            self.gen_result_ty_struct(fn_name, ok_ty, err_ty, header)
+        )
     }
 
     /// Generates a decl for a given type, returned as (type, name)
@@ -462,7 +459,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     ) -> CallbackAndStructDef {
         let (return_type, maybe_st) = match output_type {
             ReturnType::Infallible(SuccessType::Unit) => ("void".into(), None),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => (self.gen_ty_name(o, header), None),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                (self.gen_ty_name(o, header), None)
+            }
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = output_type {
@@ -477,7 +476,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 };
 
                 // In my testing with GCC, I could never find a way to define a struct within a struct definition that would make both the C++ and C compiler happy. So we're going to continue to name the return types ugly names:
-                ( format!("{cb_wrapper_type}_result").into(), Some(format!("{};", self.gen_result_ty_struct(cb_wrapper_type, ok_ty, err, header))))
+                (
+                    format!("{cb_wrapper_type}_result").into(),
+                    Some(format!(
+                        "{};",
+                        self.gen_result_ty_struct(cb_wrapper_type, ok_ty, err, header)
+                    )),
+                )
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
