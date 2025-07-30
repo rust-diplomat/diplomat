@@ -147,14 +147,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             param_types.insert(0, "void*".into());
 
             let ret_type = match &*m.output {
-                hir::ReturnType::Infallible(success) => {
-                    match success {
-                        hir::SuccessType::OutType(out) => self.gen_ty_name(&out.clone(), &mut decl_header),
-                        hir::SuccessType::Unit => "void".into(),
-                        _ => panic!("Success type {success:?} not supported.")
+                hir::ReturnType::Infallible(success) => match success {
+                    hir::SuccessType::OutType(out) => {
+                        self.gen_ty_name(&out.clone(), &mut decl_header)
                     }
-                }
-                _ => panic!("Unsupported return type {:?}", m.output)
+                    hir::SuccessType::Unit => "void".into(),
+                    _ => panic!("Success type {success:?} not supported."),
+                },
+                _ => panic!("Unsupported return type {:?}", m.output),
             };
             method_sigs.push(format!(
                 "{} (*run_{}_callback)({});",
@@ -421,15 +421,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         header: &mut Header,
     ) -> CallbackAndStructDef {
         let return_type = match output_type {
-            hir::ReturnType::Infallible(success) => {
-                match success {
-                    hir::SuccessType::OutType(out) => self.gen_ty_name(&out.clone(), header),
-                    hir::SuccessType::Unit => "void".into(),
-                    _ => panic!("Success type {success:?} not supported.")
-                }
-            }
-            _ => panic!("Unsupported return type {:?}", output_type)
-        }.to_string();
+            hir::ReturnType::Infallible(success) => match success {
+                hir::SuccessType::OutType(out) => self.gen_ty_name(&out.clone(), header),
+                hir::SuccessType::Unit => "void".into(),
+                _ => panic!("Success type {success:?} not supported."),
+            },
+            _ => panic!("Unsupported return type {:?}", output_type),
+        }
+        .to_string();
 
         let params_types = params
             .iter()

@@ -567,15 +567,15 @@ impl TypeContext {
             let success = match &*m.output {
                 hir::ReturnType::Infallible(success) | hir::ReturnType::Nullable(success) => {
                     success
-                },
+                }
                 hir::ReturnType::Fallible(success, fallible) => {
                     if let Some(f) = fallible {
                         self.validate_ty(errors, &f);
                     }
                     success
-                },
+                }
             };
-            
+
             if let hir::SuccessType::OutType(o) = success {
                 self.validate_ty(errors, &o);
             }

@@ -613,16 +613,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
-        let t =  cb.get_output_type().unwrap();
+        let t = cb.get_output_type().unwrap();
         let return_type = match t {
-            hir::ReturnType::Infallible(success) => {
-                match success {
-                    hir::SuccessType::OutType(out) => self.gen_type_name(&out),
-                    hir::SuccessType::Unit => "void".into(),
-                    _ => panic!("Success type {success:?} not supported.")
-                }
-            }
-            _ => panic!("Unsupported return type {:?}", t)
+            hir::ReturnType::Infallible(success) => match success {
+                hir::SuccessType::OutType(out) => self.gen_type_name(&out),
+                hir::SuccessType::Unit => "void".into(),
+                _ => panic!("Success type {success:?} not supported."),
+            },
+            _ => panic!("Unsupported return type {:?}", t),
         };
 
         let params_types = cb

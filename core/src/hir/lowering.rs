@@ -452,7 +452,11 @@ impl<'ast> LoweringContext<'ast> {
         let params =
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
-        let return_type = self.lower_callback_return_type(ast_trait_method.output_type.as_ref(), &mut param_ltl, in_path)?;
+        let return_type = self.lower_callback_return_type(
+            ast_trait_method.output_type.as_ref(),
+            &mut param_ltl,
+            in_path,
+        )?;
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_trait_method.attrs,
@@ -1022,7 +1026,11 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(Type::Callback(P::build_callback(Callback {
                     param_self: None,
                     params,
-                    output: Box::new(self.lower_callback_return_type(Some(out_type), ltl, in_path)?),
+                    output: Box::new(self.lower_callback_return_type(
+                        Some(out_type),
+                        ltl,
+                        in_path,
+                    )?),
                     name: None,
                     attrs: None,
                     docs: None,
@@ -1709,7 +1717,8 @@ impl<'ast> LoweringContext<'ast> {
         .map(|r_ty| (r_ty, return_ltl.finish()))
     }
 
-    fn lower_callback_return_type(&mut self, 
+    fn lower_callback_return_type(
+        &mut self,
         return_type: Option<&ast::TypeName>,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
@@ -1724,16 +1733,14 @@ impl<'ast> LoweringContext<'ast> {
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
-                    ty => self
-                        .lower_type(ty, ltl,  false, in_path)
-                        .map(Some),
+                    ty => self.lower_type(ty, ltl, false, in_path).map(Some),
                 };
 
                 match (ok_ty, err_ty) {
                     (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
                     _ => Err(()),
                 }
-            },
+            }
             ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
                     .lower_type(ty, ltl, false, in_path)
