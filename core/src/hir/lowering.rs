@@ -1725,7 +1725,11 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<ReturnType<InputOnly>, ()> {
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                if !self.attr_validator.attrs_supported().fallible_traits_callbacks {
+                if !self
+                    .attr_validator
+                    .attrs_supported()
+                    .fallible_traits_callbacks
+                {
                     self.errors.push(LoweringError::Other(
                         format!("Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].")
                     ));
@@ -1747,12 +1751,16 @@ impl<'ast> LoweringContext<'ast> {
                 }
             }
             ty @ ast::TypeName::Option(value_ty, _stdlib) => {
-                    if !self.attr_validator.attrs_supported().fallible_traits_callbacks {
-                        self.errors.push(LoweringError::Other(
+                if !self
+                    .attr_validator
+                    .attrs_supported()
+                    .fallible_traits_callbacks
+                {
+                    self.errors.push(LoweringError::Other(
                             format!("Backend does not support Option<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].")
                         ));
-                    }
-                    match &**value_ty {
+                }
+                match &**value_ty {
                     ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
                         .lower_type(ty, ltl, false, in_path)
                         .map(SuccessType::OutType)
@@ -1763,7 +1771,7 @@ impl<'ast> LoweringContext<'ast> {
                         .map(SuccessType::OutType)
                         .map(ReturnType::Nullable),
                 }
-            },
+            }
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
                 .lower_type(ty, ltl, false, in_path)

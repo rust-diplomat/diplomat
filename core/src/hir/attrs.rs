@@ -998,7 +998,7 @@ pub struct BackendAttrSupport {
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
     /// Whether or not the language supports callbacks and traits that have non-infallible return types (i.e., nullable or infallible)
-    pub fallible_traits_callbacks : bool,
+    pub fallible_traits_callbacks: bool,
 }
 
 impl BackendAttrSupport {
@@ -1656,7 +1656,7 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_callback_result_unsupported() {
         uitest_lowering_attr! { hir::BackendAttrSupport {
