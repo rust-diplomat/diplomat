@@ -143,11 +143,7 @@ define_macro_fragments! {
 pub struct MacroIdent {
     /// represents Identifier.
     pub ident: Ident,
-    /// Represents MacroFragSpec.
-    /// Currently unused, since [`MacroUse::args`] will always expect to read an [`Expr`] when a macro is used.
-    /// This is a very hands-off approach to parsing arguments in the usage of macros, and will work in most cases.
-    /// However, this makes some valid macro frag specs unusable in the current parser (I believe :block doesn't work, for instance).
-    /// The hope is that this will eventually be used in a more advanced parser.
+    /// Represents MacroFragSpec. Parsed in construction of [`MacroDef`]
     pub ty: Ident,
 }
 
@@ -161,8 +157,9 @@ impl Parse for MacroIdent {
     }
 }
 
-// Hack to read information from the TokenTree while saving the rest to be later copied into a buffer:
-pub struct MaybeParse<T: Parse> {
+/// Hack to read information from the TokenTree while saving the rest to be later copied into a buffer.
+/// Will attempt to read `T`, and on a success all of the unread tokens after the stream will be written to `remaining`.
+struct MaybeParse<T: Parse> {
     item: T,
     remaining: TokenStream,
 }
@@ -200,6 +197,7 @@ pub struct MacroUse {
 }
 
 impl MacroUse {
+    /// Not an official implementation of [`syn::parse::Parse`], since we need to know the [`MacroDef`] to know how to extract [`MacroUse::args`].
     fn parse(def: &MacroDef, stream: TokenStream) -> syn::Result<Self> {
         let mut args = HashMap::new();
 
@@ -380,8 +378,11 @@ impl MacroUse {
 
 #[derive(Debug)]
 pub enum MacroMatch {
+    /// A token, excluding $ or delimeters. See https://doc.rust-lang.org/reference/tokens.html#grammar-Token
     Tokens(TokenStream),
+    /// A delimeter-separated vector of [`MacroMatch`].
     MacroMatcher(MacroMatcher),
+    /// A $ident:MacroFragSpec pairing.
     Ident(MacroIdent),
     // TODO: $(MacroMatch+) MacroRepSep? MacroRepOp
 }
@@ -440,6 +441,7 @@ impl Parse for MacroMatch {
 }
 
 #[derive(Debug)]
+/// Initially constructed as the root of a macro's tokens. I.e., for `example!(...)`` the macro matcher is `(...)`
 pub struct MacroMatcher {
     pub delim: proc_macro2::Delimiter,
     pub matches: Vec<MacroMatch>,
