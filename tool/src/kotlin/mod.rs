@@ -1175,9 +1175,9 @@ returnVal.option() ?: return null
                                 .into(),
                             ),
                             SuccessType::Unit => ("Unit".into(), "".into()),
-                            _ => panic!("Unsupported success type {:?}", success),
+                            _ => panic!("Unsupported success type {success:?}"),
                         },
-                        _ => panic!("Unsupported return type {:?}", output),
+                        _ => panic!("Unsupported return type {output:?}"),
                     };
 
                     self.callback_params.push(CallbackParamInfo {
@@ -1187,9 +1187,9 @@ returnVal.option() ?: return null
                             ReturnType::Infallible(success) => match success {
                                 SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
                                 SuccessType::Unit => "Unit".into(),
-                                _ => panic!("Unsupported success type {:?}", success),
+                                _ => panic!("Unsupported success type {success:?}"),
                             },
-                            _ => panic!("Unsupported return type {:?}", output),
+                            _ => panic!("Unsupported return type {output:?}"),
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
@@ -1700,7 +1700,7 @@ returnVal.option() ?: return null
                     .into(),
                 ),
                 SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
-                _ => panic!("Unsupported success type {:?}", success),
+                _ => panic!("Unsupported success type {success:?}"),
             },
             _ => panic!("Unsupported return type {:?}", method.output),
         };
@@ -1710,7 +1710,7 @@ returnVal.option() ?: return null
                 ReturnType::Infallible(success) => match success {
                     SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
                     SuccessType::Unit => "Unit".into(),
-                    _ => panic!("Unsupported success type {:?}", success),
+                    _ => panic!("Unsupported success type {success:?}"),
                 },
                 _ => panic!("Unsupported return type {:?}", method.output),
             },
@@ -2025,9 +2025,9 @@ returnVal.option() ?: return null
                     ReturnType::Infallible(success) => match success {
                         SuccessType::OutType(out_ty) => self.gen_type_name(out_ty, None).into(),
                         SuccessType::Unit => "Unit".into(),
-                        _ => panic!("Unsupported success type {:?}", success),
+                        _ => panic!("Unsupported success type {success:?}"),
                     },
-                    _ => panic!("Unsupported return type {:?}", output),
+                    _ => panic!("Unsupported return type {output:?}"),
                 };
                 format!("({in_type_string})->{out_type_string}").into()
             }

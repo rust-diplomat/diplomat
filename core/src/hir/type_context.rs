@@ -570,14 +570,14 @@ impl TypeContext {
                 }
                 hir::ReturnType::Fallible(success, fallible) => {
                     if let Some(f) = fallible {
-                        self.validate_ty(errors, &f);
+                        self.validate_ty(errors, f);
                     }
                     success
                 }
             };
 
             if let hir::SuccessType::OutType(o) = success {
-                self.validate_ty(errors, &o);
+                self.validate_ty(errors, o);
             }
         }
     }

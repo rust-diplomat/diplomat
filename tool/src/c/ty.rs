@@ -426,7 +426,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 hir::SuccessType::Unit => "void".into(),
                 _ => panic!("Success type {success:?} not supported."),
             },
-            _ => panic!("Unsupported return type {:?}", output_type),
+            _ => panic!("Unsupported return type {output_type:?}"),
         }
         .to_string();
 
