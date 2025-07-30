@@ -614,14 +614,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
         let t = cb.get_output_type().unwrap();
-        let return_type = match t {
-            hir::ReturnType::Infallible(success) => match success {
-                hir::SuccessType::OutType(out) => self.gen_type_name(out),
-                hir::SuccessType::Unit => "void".into(),
-                _ => panic!("Success type {success:?} not supported."),
-            },
-            _ => panic!("Unsupported return type {t:?}"),
-        };
+        
+        let return_type = self.gen_cpp_return_type_name(t, false);
 
         let params_types = cb
             .get_inputs()
@@ -740,9 +734,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// is_generic_write is whether we are generating the method that returns a string or
     /// operates on a Writeable
-    fn gen_cpp_return_type_name(
+    fn gen_cpp_return_type_name<P: hir::TyPosition>(
         &mut self,
-        result_ty: &ReturnType,
+        result_ty: &ReturnType<P>,
         is_generic_write: bool,
     ) -> Cow<'ccx, str> {
         match *result_ty {
