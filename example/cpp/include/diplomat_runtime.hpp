@@ -156,6 +156,16 @@ template<class T, class E>
 class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
+    union c_value_ok_err {
+      T ok;
+      E error;
+    };
+  
+  struct c_value {
+    union c_value_ok_err value;
+    bool is_ok;
+  };
+
 public:
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
@@ -220,6 +230,22 @@ public:
     } else {
       return result<T2, E>(Ok<T2>(std::move(t)));
     }
+  }
+  
+  c_value as_ffi() {
+    union c_value_ok_err value;
+    auto is_ok = this->is_ok();
+    
+    if (is_ok) {
+      value.ok = std::get<Ok<T>>(this->val).inner;
+    } else  {
+      value.error = std::get<Err<E>>(this->val).inner;
+    }
+
+    return {
+      .value = value,
+      .is_ok = is_ok
+    };
   }
 };
 
