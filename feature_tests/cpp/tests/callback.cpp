@@ -76,4 +76,11 @@ int main(int argc, char *argv[])
         }, *opaque);
         simple_assert_eq("opaque cb arg", opaque->borrow(), "split");
     }
+
+    {
+        o.test_result_output([]() {
+            std::monostate ok;
+            return diplomat::result(diplomat::Ok(ok));
+        });
+    }
 }
