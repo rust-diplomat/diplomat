@@ -997,8 +997,8 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
-    /// Support for DiplomatResult<> as an input type.
-    pub bidirectional_results : bool,
+    /// Support returning DiplomatResult<> for traits and callbacks
+    pub trait_callback_results : bool,
 }
 
 impl BackendAttrSupport {
@@ -1034,7 +1034,7 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
-            bidirectional_results: true,
+            trait_callback_results: true,
         }
     }
 
@@ -1207,7 +1207,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
-                bidirectional_results,
+                trait_callback_results,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1239,7 +1239,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
-                "bidirectional_results" => bidirectional_results,
+                "trait_callback_results" => trait_callback_results,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1634,17 +1634,16 @@ mod tests {
         }
     }
     #[test]
-    fn test_bidirectional_result() {
+    fn test_trait_result() {
         uitest_lowering_attr! {hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
+                pub trait Foo {
+                    fn returns_result() -> Result<(), ()>;
                 }
 
                 impl Foo {
-                    pub fn takes_result(res : Result<(), ()>) {
+                    pub fn returns_result() -> Result<(), ()> {
                         todo!()
                     }
                 }
@@ -1657,13 +1656,12 @@ mod tests {
         uitest_lowering_attr! {hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
-                pub struct Foo {
-                    pub x: u32,
-                    pub y: u32
+                pub trait Foo {
+                    fn returns_result() -> Result<(), ()>;
                 }
 
                 impl Foo {
-                    pub fn takes_result(res : Result<(), ()>) {
+                    pub fn returns_result() -> Result<(), ()> {
                         todo!()
                     }
                 }
