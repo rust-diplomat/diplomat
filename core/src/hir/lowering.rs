@@ -1731,7 +1731,7 @@ impl<'ast> LoweringContext<'ast> {
                     .fallible_traits_callbacks
                 {
                     self.errors.push(LoweringError::Other(
-                        format!("Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].")
+                        "Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].".to_string()
                     ));
                 }
                 let ok_ty = match ok_ty.as_ref() {
@@ -1757,7 +1757,7 @@ impl<'ast> LoweringContext<'ast> {
                     .fallible_traits_callbacks
                 {
                     self.errors.push(LoweringError::Other(
-                            format!("Backend does not support Option<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].")
+                            "Backend does not support Option<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].".to_string()
                         ));
                 }
                 match &**value_ty {
