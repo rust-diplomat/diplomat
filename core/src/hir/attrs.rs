@@ -997,8 +997,6 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
-    /// Support returning DiplomatResult<> for traits and callbacks
-    pub trait_callback_results : bool,
 }
 
 impl BackendAttrSupport {
@@ -1034,7 +1032,6 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
-            trait_callback_results: true,
         }
     }
 
@@ -1207,7 +1204,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
-                trait_callback_results,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1239,7 +1235,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
-                "trait_callback_results" => trait_callback_results,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1634,34 +1629,20 @@ mod tests {
         }
     }
     #[test]
-    fn test_trait_result() {
+    fn test_callback_result() {
         uitest_lowering_attr! {hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                pub trait Foo {
-                    fn returns_result() -> Result<(), ()>;
+                pub trait X {
+                    fn resulting() -> Result<(), ()>;
+                }
+
+                pub struct Foo {
+                    x : f32,
                 }
 
                 impl Foo {
-                    pub fn returns_result() -> Result<(), ()> {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_bidirectional_result_for_unsupported_backend() {
-        uitest_lowering_attr! {hir::BackendAttrSupport::default(),
-            #[diplomat::bridge]
-            mod ffi {
-                pub trait Foo {
-                    fn returns_result() -> Result<(), ()>;
-                }
-
-                impl Foo {
-                    pub fn returns_result() -> Result<(), ()> {
+                    pub fn callback_result(a : impl Fn() -> Result<(), ()>) {
                         todo!()
                     }
                 }
