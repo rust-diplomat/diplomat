@@ -1649,7 +1649,7 @@ mod tests {
                 }
 
                 impl Foo {
-                    pub fn callback_result(a : impl Fn() -> Result<(), ()>) {
+                    pub fn callback_result(a : impl Fn() -> Result<(), ()>, b: impl Fn() -> Option<()>) {
                         todo!()
                     }
                 }
@@ -1675,7 +1675,7 @@ mod tests {
                 }
 
                 impl Foo {
-                    pub fn callback_result(a : impl Fn() -> Result<(), ()>) {
+                    pub fn callback_result(a : impl Fn() -> Result<(), ()>, b: impl Fn() -> Option<()>) {
                         todo!()
                     }
                 }

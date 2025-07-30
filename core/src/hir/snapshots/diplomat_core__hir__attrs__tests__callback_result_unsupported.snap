@@ -1,0 +1,7 @@
+---
+source: core/src/hir/attrs.rs
+expression: output
+---
+Lowering error in Foo::callback_result: Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].
+Lowering error in Foo::callback_result: Backend does not support Option<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].
+Lowering error in X::resulting: Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].
