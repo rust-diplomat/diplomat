@@ -145,10 +145,16 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 .map(|param| self.gen_ty_name(&param.ty, &mut decl_header))
                 .collect();
             param_types.insert(0, "void*".into());
-            let ret_type = if m.output.is_some() {
-                self.gen_ty_name(&m.output.clone().unwrap(), &mut decl_header)
-            } else {
-                "void".into()
+
+            let ret_type = match &*m.output {
+                hir::ReturnType::Infallible(success) => {
+                    match success {
+                        hir::SuccessType::OutType(out) => self.gen_ty_name(&out.clone(), &mut decl_header),
+                        hir::SuccessType::Unit => "void".into(),
+                        _ => panic!("Success type {success:?} not supported.")
+                    }
+                }
+                _ => panic!("Unsupported return type {:?}", m.output)
             };
             method_sigs.push(format!(
                 "{} (*run_{}_callback)({});",
@@ -411,15 +417,20 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         &self,
         cb_wrapper_type: &str,
         params: &[hir::CallbackParam],
-        output_type: &Option<Type>,
+        output_type: &hir::ReturnType<hir::InputOnly>,
         header: &mut Header,
     ) -> CallbackAndStructDef {
-        let return_type = if output_type.is_some() {
-            self.gen_ty_name(&(*output_type).clone().unwrap(), header)
-                .into()
-        } else {
-            "void".into()
-        };
+        let return_type = match output_type {
+            hir::ReturnType::Infallible(success) => {
+                match success {
+                    hir::SuccessType::OutType(out) => self.gen_ty_name(&out.clone(), header),
+                    hir::SuccessType::Unit => "void".into(),
+                    _ => panic!("Success type {success:?} not supported.")
+                }
+            }
+            _ => panic!("Unsupported return type {:?}", output_type)
+        }.to_string();
+
         let params_types = params
             .iter()
             .map(|p| self.gen_ty_name(&p.ty, header).to_string())
