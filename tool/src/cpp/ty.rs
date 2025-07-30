@@ -614,7 +614,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
         let t = cb.get_output_type().unwrap();
-        
+
         let return_type = self.gen_cpp_return_type_name(t, false);
 
         let params_types = cb

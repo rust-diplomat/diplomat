@@ -2,11 +2,11 @@ use super::formatter::CFormatter;
 use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
-use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, OpaqueOwner, StructPathLike,
-    SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, OpaqueOwner, StructPathLike, SymbolId, TraitIdGetter,
+    TyPosition, Type, TypeDef, TypeId,
 };
+use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
 
 #[derive(Template)]
@@ -148,7 +148,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             let ret_type = match &*m.output {
                 ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-                ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, &mut decl_header),
+                ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                    self.gen_ty_name(o, &mut decl_header)
+                }
                 ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                     // Result<T, ()> and Option<T> are the same on the ABI
                     let err = if let ReturnType::Fallible(_, Some(ref e)) = &*m.output {
@@ -161,11 +163,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         SuccessType::OutType(o) => Some(o),
                         _ => unreachable!("unknown AST/HIR variant"),
                     };
-                    self.gen_result_ty(m.name.as_ref().unwrap().as_str(), ok_ty, err, &mut decl_header).into()
+                    self.gen_result_ty(
+                        m.name.as_ref().unwrap().as_str(),
+                        ok_ty,
+                        err,
+                        &mut decl_header,
+                    )
+                    .into()
                 }
                 _ => unreachable!("unknown AST/HIR variant"),
             };
-            
+
             method_sigs.push(format!(
                 "{} (*run_{}_callback)({});",
                 ret_type,
@@ -447,31 +455,45 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
-                let ok_name : String = match ok_ty {
-                    Some(Type::Primitive(p)) => self.formatter.fmt_primitive_name_for_derived_type(*p).to_string(),
-                    Some(o @ Type::Enum(..)) | Some(o @ Type::Struct(..)) | Some(o @ Type::Opaque(..)) => self.formatter.fmt_type_name(o.id().unwrap()).into(),
+                let ok_name: String = match ok_ty {
+                    Some(Type::Primitive(p)) => self
+                        .formatter
+                        .fmt_primitive_name_for_derived_type(*p)
+                        .to_string(),
+                    Some(o @ Type::Enum(..))
+                    | Some(o @ Type::Struct(..))
+                    | Some(o @ Type::Opaque(..)) => {
+                        self.formatter.fmt_type_name(o.id().unwrap()).into()
+                    }
                     Some(Type::ImplTrait(i)) => self.formatter.fmt_trait_name(i.id()).into(),
                     None => "void".into(),
                     _ => unreachable!("Unknown AST/HIR variant"),
                 };
 
-                let err_name : Option<String> = err.map(|ty| {
-                    match ty {
-                        Type::Primitive(p) => self.formatter.fmt_primitive_name_for_derived_type(*p).into(),
-                        o @ Type::Enum(..) | o @ Type::Struct(..) | o @ Type::Opaque(..) => self.formatter.fmt_type_name(o.id().unwrap()).into(),
-                        Type::ImplTrait(i) => self.formatter.fmt_trait_name(i.id()).into(),
-                        _ => unreachable!("Unknown AST/HIR variant"),
+                let err_name: Option<String> = err.map(|ty| match ty {
+                    Type::Primitive(p) => self
+                        .formatter
+                        .fmt_primitive_name_for_derived_type(*p)
+                        .into(),
+                    o @ Type::Enum(..) | o @ Type::Struct(..) | o @ Type::Opaque(..) => {
+                        self.formatter.fmt_type_name(o.id().unwrap()).into()
                     }
+                    Type::ImplTrait(i) => self.formatter.fmt_trait_name(i.id()).into(),
+                    _ => unreachable!("Unknown AST/HIR variant"),
                 });
 
-                let name = format!("{cb_wrapper_type}_result_{ok_name}{}", match err_name {
-                    Some(n) => format!("_{n}"),
-                    None => "".into()
-                });
+                let name = format!(
+                    "{cb_wrapper_type}_result_{ok_name}{}",
+                    match err_name {
+                        Some(n) => format!("_{n}"),
+                        None => "".into(),
+                    }
+                );
                 self.gen_result_ty(&name, ok_ty, err, header).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
-        }.to_string();
+        }
+        .to_string();
 
         let params_types = params
             .iter()
