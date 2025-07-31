@@ -997,8 +997,6 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
-    /// Whether or not the language supports callbacks and traits that have non-infallible return types (i.e., nullable or infallible)
-    pub fallible_traits_callbacks: bool,
 }
 
 impl BackendAttrSupport {
@@ -1034,7 +1032,6 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
-            fallible_traits_callbacks: true,
         }
     }
 
@@ -1209,7 +1206,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
-                fallible_traits_callbacks,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1241,7 +1237,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
-                "fallible_traits_callbacks" => fallible_traits_callbacks,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1629,53 +1624,6 @@ mod tests {
 
                 impl Foo {
                     pub fn takes_mut(&mut self) {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-    #[test]
-    fn test_callback_result() {
-        uitest_lowering_attr! {hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                pub trait X {
-                    fn resulting() -> Result<(), ()>;
-                }
-
-                pub struct Foo {
-                    x : f32,
-                }
-
-                impl Foo {
-                    pub fn callback_result(a : impl Fn() -> Result<(), ()>, b: impl Fn() -> Option<()>) {
-                        todo!()
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_callback_result_unsupported() {
-        uitest_lowering_attr! { hir::BackendAttrSupport {
-            traits: true,
-            callbacks: true,
-            ..Default::default()
-        },
-            #[diplomat::bridge]
-            mod ffi {
-                pub trait X {
-                    fn resulting() -> Result<(), ()>;
-                }
-
-                pub struct Foo {
-                    x : f32,
-                }
-
-                impl Foo {
-                    pub fn callback_result(a : impl Fn() -> Result<(), ()>, b: impl Fn() -> Option<()>) {
                         todo!()
                     }
                 }

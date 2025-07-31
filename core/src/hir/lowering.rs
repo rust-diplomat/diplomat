@@ -1735,15 +1735,6 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<ReturnType<InputOnly>, ()> {
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                if !self
-                    .attr_validator
-                    .attrs_supported()
-                    .fallible_traits_callbacks
-                {
-                    self.errors.push(LoweringError::Other(
-                        "Backend does not support Result<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].".to_string()
-                    ));
-                }
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
@@ -1761,15 +1752,6 @@ impl<'ast> LoweringContext<'ast> {
                 }
             }
             ty @ ast::TypeName::Option(value_ty, _stdlib) => {
-                if !self
-                    .attr_validator
-                    .attrs_supported()
-                    .fallible_traits_callbacks
-                {
-                    self.errors.push(LoweringError::Other(
-                            "Backend does not support Option<> being returned for callbacks. Query with #[diplomat::attr(supports=fallible_traits_callbacks)].".to_string()
-                        ));
-                }
                 match &**value_ty {
                     ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
                         .lower_type(ty, ltl, false, in_path)
