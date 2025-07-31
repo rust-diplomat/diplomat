@@ -385,7 +385,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ));
                 returns_utf8_err = true;
             }
-            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name, Some(method.abi_name.to_string()));
+            let conversion = self.gen_cpp_to_c_for_type(
+                &param.ty,
+                param_name,
+                Some(method.abi_name.to_string()),
+            );
             cpp_to_c_params.push(conversion);
         }
 
@@ -758,7 +762,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             }
                             _ => unreachable!("unknown AST/HIR variant"),
                         };
-                        
+
                         let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
                         format!("diplomat::fn_traits({cpp_name}).c_run_callback_diplomat_option<{type_name}, {return_type}>")
                     }
