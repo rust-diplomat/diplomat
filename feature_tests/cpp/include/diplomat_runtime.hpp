@@ -156,15 +156,6 @@ template<class T, class E>
 class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
-    union c_value_ok_err {
-      T ok;
-      E error;
-    };
-  
-  struct c_value {
-    union c_value_ok_err value;
-    bool is_ok;
-  };
 
 public:
   result(Ok<T>&& v): val(std::move(v)) {}
@@ -232,18 +223,60 @@ public:
     }
   }
   
-  c_value as_ffi() {
-    union c_value_ok_err value;
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
     auto is_ok = this->is_ok();
-    
+
     if (is_ok) {
-      value.ok = std::get<Ok<T>>(this->val).inner;
+      return {
+        .ok = std::get<Ok<T>>(this->val).inner,
+        .is_ok = is_ok
+      };
     } else  {
-      value.error = std::get<Err<E>>(this->val).inner;
+      return {
+        .err = std::get<Err<E>>(this->val).inner,
+        .is_ok = is_ok
+      };
     }
+  }
+
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    if (is_ok) {
+      return {
+        .ok = std::get<Ok<T>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    } else  {
+      return {
+        .is_ok = is_ok
+      };
+    }
+  }
+
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    if (is_ok) {
+      return {
+        .is_ok = is_ok
+      };
+    } else  {
+      return {
+        .err = std::get<Err<E>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    }
+  }
+  
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && std::is_same_v<U, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
 
     return {
-      .value = value,
       .is_ok = is_ok
     };
   }
@@ -378,6 +411,12 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
 
     static Ret c_run_callback(const void *cb, replace_fn_t<Args>... args) {
         return (*reinterpret_cast<const function_t *>(cb))(replace<Args>(args)...);
+    }
+    
+    template<typename T, typename E, typename T2>
+    static T2 c_run_callback_result(const void *cb, replace_fn_t<Args>... args) {
+      result<T, E> out = c_run_callback(cb, args...);
+      return out.template to_ffi<T2>();
     }
 
     static void c_delete(const void *cb) {

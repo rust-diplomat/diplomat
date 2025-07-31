@@ -143,11 +143,11 @@ inline void CallbackWrapper::test_slice_cb_arg(diplomat::span<const uint8_t> arg
 }
 
 inline void CallbackWrapper::test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_result_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
+  diplomat::capi::CallbackWrapper_test_result_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_result<std::monostate, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::result<size_t, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
+  diplomat::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_result<size_t, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
