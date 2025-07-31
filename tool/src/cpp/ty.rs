@@ -727,6 +727,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Callback(ref c) => {
                 let run_callback = match c.get_output_type().unwrap() {
                     ReturnType::Fallible(ref ok, ref err) => {
+                        // TODO: Make this into a function.
                         let ok_type_name = match ok {
                             SuccessType::Unit => "std::monostate".into(),
                             SuccessType::OutType(o) => match o {
@@ -748,6 +749,19 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
                         format!("diplomat::fn_traits({cpp_name}).c_run_callback_result<{ok_type_name}, {err_type_name}, {return_type}>")
                     },
+                    ReturnType::Nullable(ref success) => {
+                        let type_name = match success {
+                            SuccessType::Unit => "std::monostate".into(),
+                            SuccessType::OutType(o) => match o {
+                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
+                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
+                            }
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+                        
+                        let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
+                        format!("diplomat::fn_traits({cpp_name}).c_run_callback_diplomat_option<{type_name}, {return_type}>")
+                    }
                     _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
