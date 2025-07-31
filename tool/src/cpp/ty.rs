@@ -56,8 +56,12 @@ struct MethodInfo<'a> {
     param_decls: Vec<NamedType<'a>>,
     /// Parameter validations, such as string checks
     param_validations: Vec<String>,
+    /// Conversion code from C++ to C, used to fill out cpp_to_c_params before a call. Used for converting clones of structs to references.
+    param_pre_conversions: Vec<String>,
     /// C++ conversion code for each parameter of the C function
     cpp_to_c_params: Vec<Cow<'a, str>>,
+    /// Conversion code of params from C to C++, grabbing the results of cpp_to_c_params and converting them into something C++ friendly. Used for converting references to clones of structs.
+    param_post_conversions: Vec<String>,
     /// If the function has a return value, the C++ code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
@@ -365,8 +369,42 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
+        let mut param_pre_conversions = Vec::new();
+        let mut param_post_conversions = Vec::new();
+
         if let Some(param_self) = method.param_self.as_ref() {
-            cpp_to_c_params.push(self.gen_cpp_to_c_self(&param_self.ty));
+            // Convert the self parameter as normal:
+            let conversion = self.gen_cpp_to_c_self(&param_self.ty);
+            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
+            // Then we need to add some pre- and post- function call conversions to:
+            // 1. Create `thisDiplomatRefClone` as the converted FFI friendly struct.
+            // 2. Pass in the reference to `thisDiplomatRefClone`
+            // 3. Assign `*this` to the value of `thisDiplomatRefClone`
+            let conversion = if let hir::ParamSelf {
+                ty: SelfType::Struct(ref s),
+                ..
+            } = param_self
+            {
+                let attrs = &s.resolve(self.c.tcx).attrs;
+                if s.owner.is_some() && !attrs.abi_compatible {
+                    param_pre_conversions
+                        .push(format!("auto thisDiplomatRefClone = {conversion};"));
+
+                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                        param_post_conversions.push(format!(
+                            "*this = {}::FromFFI(thisDiplomatRefClone);",
+                            self.formatter.fmt_type_name(s.id())
+                        ));
+                    }
+                    "&thisDiplomatRefClone".to_string().into()
+                } else {
+                    conversion
+                }
+            } else {
+                conversion
+            };
+
+            cpp_to_c_params.push(conversion);
         }
 
         let mut param_validations = Vec::new();
@@ -385,7 +423,41 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ));
                 returns_utf8_err = true;
             }
+
             let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
+            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
+            // Then we need to add some pre- and post- function call conversions to:
+            // 1. Create `varNameDiplomatRefClone` as the converted FFI friendly struct.
+            // 2. Pass in the reference to `varNameDiplomatRefClone`
+            // 3. Assign `varName` to the value of `varNameDiplomatRefClone`
+            let conversion = if let hir::Param {
+                ty: hir::Type::Struct(ref s),
+                ..
+            } = param
+            {
+                let attrs = &s.resolve(self.c.tcx).attrs;
+                if s.owner.is_some() && !attrs.abi_compatible {
+                    param_pre_conversions.push(format!(
+                        "auto {}DiplomatRefClone = {};",
+                        param.name, conversion
+                    ));
+
+                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                        param_post_conversions.push(format!(
+                            "{} = {}::FromFFI({}DiplomatRefClone);",
+                            param.name,
+                            self.formatter.fmt_type_name(s.id()),
+                            param.name
+                        ));
+                    }
+                    format!("&{}DiplomatRefClone", param.name).into()
+                } else {
+                    conversion
+                }
+            } else {
+                conversion
+            };
+
             cpp_to_c_params.push(conversion);
         }
 
@@ -467,7 +539,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             pre_qualifiers,
             post_qualifiers,
             param_decls,
+            param_pre_conversions,
             param_validations,
+            param_post_conversions,
             cpp_to_c_params,
             c_to_cpp_return_expression,
             writeable_info,
@@ -635,11 +709,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
-                if let Some(b) = s.owner {
+                let attrs = &s.resolve(self.c.tcx).attrs;
+                if attrs.abi_compatible && s.owner.is_some() {
+                    let b = s.owner.unwrap();
                     let c_name = self.formatter.namespace_c_name(
                         s.id(),
                         &self.formatter.fmt_type_name_unnamespaced(s.id()),
                     );
+
                     match b.mutability {
                         Mutability::Immutable => {
                             format!("reinterpret_cast<const {c_name}*>(this)")
@@ -695,7 +772,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
             Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Struct(ref s) => {
-                if let Some(borrow) = s.owner() {
+                let attrs = match self.c.tcx.resolve_type(s.id()) {
+                    TypeDef::OutStruct(s) => &s.attrs,
+                    TypeDef::Struct(s) => &s.attrs,
+                    _ => unreachable!()
+                };
+
+                if attrs.abi_compatible && s.owner().is_some() {
+                    let borrow = s.owner().unwrap();
                     let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
                     match borrow.mutability {
                         Mutability::Immutable => {

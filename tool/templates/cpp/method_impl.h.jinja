@@ -22,6 +22,11 @@ inline {##}
 	{% if !m.method.output.is_ffi_unit() -%}
 	auto result = {##}
 	{%- endif -%}
+
+	{%- for p in m.param_pre_conversions -%}
+	{{p}}
+	{% endfor -%}
+
 	{{ m.abi_name }}(
 		{%- for param in m.cpp_to_c_params %}
 		{%- if !loop.first %},
@@ -29,6 +34,11 @@ inline {##}
 		{{ param }}
 		{%- endfor -%}
 	);
+
+	{%- for p in m.param_post_conversions %}
+	{{p}}
+	{%- endfor -%}
+
 	{%- if let Some(statement) = c_to_cpp_return_expression %}
 	return {{ statement }};
 	{%- endif %}

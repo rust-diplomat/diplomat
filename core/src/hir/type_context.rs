@@ -391,14 +391,6 @@ impl TypeContext {
                 }) = &method.param_self
                 {
                     if let Some(b) = s.owner {
-                        let ty = s.resolve(self);
-                        if !ty.attrs.abi_compatible {
-                            // TODO: Remove once C, C++ support is in (https://github.com/rust-diplomat/diplomat/issues/921)
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                                ty.name
-                            )));
-                        }
                         if let MaybeStatic::NonStatic(ns) = b.lifetime {
                             struct_ref_lifetimes.insert(ns);
                         }
@@ -449,39 +441,19 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        match ty {
-            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
-                let st = self.resolve_type(st.id());
-                match st {
-                    TypeDef::Struct(st) => {
-                        if !st.attrs.abi_compatible {
-                            errors.push(LoweringError::Other(format!(
-                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                                st.name
-                            )));
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            hir::Type::Struct(st) => {
-                if st.owner().is_some() {
-                    let ty = self.resolve_type(st.id());
-                    match ty {
-                        TypeDef::Struct(st) => {
-                            if !st.attrs.abi_compatible {
-                                // TODO: Remove once C and C++ have this support. (https://github.com/rust-diplomat/diplomat/issues/921)
-                                errors.push(LoweringError::Other(format!(
-                                    "Cannot take a non-abi compatible struct reference {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                                    st.name
-                                )));
-                            }
-                        }
-                        _ => unreachable!(),
+        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
+            let st = self.resolve_type(st.id());
+            match st {
+                TypeDef::Struct(st) => {
+                    if !st.attrs.abi_compatible {
+                        errors.push(LoweringError::Other(format!(
+                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                            st.name
+                        )));
                     }
                 }
+                _ => unreachable!(),
             }
-            _ => {}
         }
     }
 
