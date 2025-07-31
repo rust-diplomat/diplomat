@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     {
         o.test_result_output([]() {
             std::monostate ok;
-            return diplomat::result(diplomat::Ok(ok));
+            return diplomat::result<std::monostate, std::monostate>(diplomat::Ok(ok));
         });
     }
     {
