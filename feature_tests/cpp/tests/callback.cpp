@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     }
     {
         o.test_result_usize_output([]() {
-            return diplomat::result<size_t, std::monostate>(diplomat::Ok(0));
+            return diplomat::result<size_t, std::monostate>(diplomat::Ok<size_t>(0));
         });
     }
     {
