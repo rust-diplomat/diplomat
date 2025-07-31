@@ -385,7 +385,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ));
                 returns_utf8_err = true;
             }
-            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
+            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name, Some(method.abi_name.to_string()));
             cpp_to_c_params.push(conversion);
         }
 
@@ -668,7 +668,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into());
+        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None);
 
         NamedExpression {
             var_name,
@@ -684,6 +684,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         &self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
+        method_abi_name: Option<String>,
     ) -> Cow<'a, str> {
         match *ty {
             Type::Primitive(..) => cpp_name.clone(),
@@ -719,12 +720,37 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
-                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
+                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name);
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
-            Type::Callback(..) => {
-                format!("{{new decltype({cpp_name})(std::move({cpp_name})), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+            Type::Callback(ref c) => {
+                let run_callback = match c.get_output_type().unwrap() {
+                    ReturnType::Fallible(ref ok, ref err) => {
+                        let ok_type_name = match ok {
+                            SuccessType::Unit => "std::monostate".into(),
+                            SuccessType::OutType(o) => match o {
+                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
+                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
+                            }
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+
+                        let err_type_name = match err {
+                            Some(o) => match o {
+                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
+                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
+                            }
+                            None => "std::monostate".into(),
+                        };
+
+                        let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
+
+                        format!("diplomat::fn_traits({cpp_name}).c_run_callback_result<{ok_type_name}, {err_type_name}, {return_type}>")
+                    },
+                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
+                };
+                format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
