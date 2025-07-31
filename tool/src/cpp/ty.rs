@@ -373,7 +373,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut param_post_conversions = Vec::new();
 
         if let Some(param_self) = method.param_self.as_ref() {
+            // Convert the self parameter as normal:
             let conversion = self.gen_cpp_to_c_self(&param_self.ty);
+            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
+            // Then we need to add some pre- and post- function call conversions to:
+            // 1. Create `thisDiplomatRefClone` as the converted FFI friendly struct.
+            // 2. Pass in the reference to `thisDiplomatRefClone`
+            // 3. Assign `*this` to the value of `thisDiplomatRefClone`
             let conversion = if let hir::ParamSelf {
                 ty: SelfType::Struct(ref s),
                 ..
@@ -419,6 +425,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
 
             let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
+            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
+            // Then we need to add some pre- and post- function call conversions to:
+            // 1. Create `varNameDiplomatRefClone` as the converted FFI friendly struct.
+            // 2. Pass in the reference to `varNameDiplomatRefClone`
+            // 3. Assign `varName` to the value of `varNameDiplomatRefClone`
             let conversion = if let hir::Param {
                 ty: hir::Type::Struct(ref s),
                 ..
