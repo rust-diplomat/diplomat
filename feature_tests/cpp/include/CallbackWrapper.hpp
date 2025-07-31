@@ -151,7 +151,7 @@ inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::re
 }
 
 inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback, diplomat::fn_traits(t).c_delete});
+  diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_diplomat_option<std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 
