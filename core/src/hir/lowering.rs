@@ -1751,19 +1751,17 @@ impl<'ast> LoweringContext<'ast> {
                     _ => Err(()),
                 }
             }
-            ty @ ast::TypeName::Option(value_ty, _stdlib) => {
-                match &**value_ty {
-                    ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
-                        .lower_type(ty, ltl, false, in_path)
-                        .map(SuccessType::OutType)
-                        .map(ReturnType::Infallible),
-                    ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
-                    _ => self
-                        .lower_type(value_ty, ltl, false, in_path)
-                        .map(SuccessType::OutType)
-                        .map(ReturnType::Nullable),
-                }
-            }
+            ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+                    .lower_type(ty, ltl, false, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Infallible),
+                ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
+                _ => self
+                    .lower_type(value_ty, ltl, false, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Nullable),
+            },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
                 .lower_type(ty, ltl, false, in_path)
