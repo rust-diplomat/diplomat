@@ -97,8 +97,9 @@ int main(int argc, char *argv[])
     auto a = Opaque::from_str("This is a test value.").ok().value();
     auto ptr = a.get();
     {
-        o.test_option_opaque([ptr]() {
+        auto str = o.test_option_opaque([ptr]() {
             return ptr;
         });
+        simple_assert_eq("Test opaque string passing", str, "This is a test value.");
     }
 }
