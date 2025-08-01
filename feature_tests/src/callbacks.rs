@@ -74,11 +74,8 @@ mod ffi {
             a.get_debug_str(w);
         }
 
-        
         #[diplomat::attr(kotlin, disable)]
-        pub fn test_diplomat_result(
-            t: impl Fn() -> DiplomatResult<usize, usize>
-        ) {
+        pub fn test_diplomat_result(t: impl Fn() -> DiplomatResult<usize, usize>) {
             let out = t();
             assert_eq!(out.as_ref().err().cloned(), Some(10));
         }

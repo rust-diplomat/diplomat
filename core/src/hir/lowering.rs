@@ -1728,14 +1728,16 @@ impl<'ast> LoweringContext<'ast> {
     }
 
     // TODO: Merging this with lower_out_type somehow would be great.
-    fn lower_callback_out_type(&mut self, ty : &ast::TypeName, ltl: &mut impl LifetimeLowerer, in_path: &ast::Path, in_result_option: bool) -> Result<Type<InputOnly>, ()> {
+    fn lower_callback_out_type(
+        &mut self,
+        ty: &ast::TypeName,
+        ltl: &mut impl LifetimeLowerer,
+        in_path: &ast::Path,
+        in_result_option: bool,
+    ) -> Result<Type<InputOnly>, ()> {
         match ty {
-            ast::TypeName::Primitive(prim) => {
-                Ok(Type::Primitive(PrimitiveType::from_ast(*prim)))
-            }
-            ast::TypeName::Ordering => {
-                Ok(Type::Primitive(PrimitiveType::Ordering))
-            }
+            ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
+            ast::TypeName::Ordering => Ok(Type::Primitive(PrimitiveType::Ordering)),
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
@@ -1747,11 +1749,12 @@ impl<'ast> LoweringContext<'ast> {
                             ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
 
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                            Ok(Type::Struct(
-                                StructPath::new(lifetimes, tcx_id, None),
-                            ))
+                            Ok(Type::Struct(StructPath::new(lifetimes, tcx_id, None)))
                         } else {
-                            unreachable!("struct `{}` wasn't found in the set of structs.", strct.name);
+                            unreachable!(
+                                "struct `{}` wasn't found in the set of structs.",
+                                strct.name
+                            );
                         }
                     }
                     ast::CustomType::Opaque(_) => {
@@ -1803,10 +1806,10 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Box(..) => {
                 self.errors.push(LoweringError::Other(
-                    "Diplomat callbacks do not support returning Box<T>, only references.".into()
+                    "Diplomat callbacks do not support returning Box<T>, only references.".into(),
                 ));
                 Err(())
-            },
+            }
             ast::TypeName::Option(opt_ty, stdlib) => match opt_ty.as_ref() {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
@@ -1844,12 +1847,13 @@ impl<'ast> LoweringContext<'ast> {
                         Err(())
                     }
                 },
-                ast::TypeName::Box(..) => {    
+                ast::TypeName::Box(..) => {
                     self.errors.push(LoweringError::Other(
-                        "Diplomat callbacks do not support returning Box<T>, only references.".into()
+                        "Diplomat callbacks do not support returning Box<T>, only references."
+                            .into(),
                     ));
                     Err(())
-                },
+                }
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(_) => {
@@ -1864,8 +1868,7 @@ impl<'ast> LoweringContext<'ast> {
                             if !self.attr_validator.attrs_supported().option {
                                 self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
-                            let inner =
-                                self.lower_callback_out_type(opt_ty, ltl, in_path, true)?;
+                            let inner = self.lower_callback_out_type(opt_ty, ltl, in_path, true)?;
                             Ok(Type::DiplomatOption(Box::new(inner)))
                         }
                     }
@@ -1909,9 +1912,10 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(Type::Slice(
-                Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
-            )),
+            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(Type::Slice(Slice::Str(
+                Some(ltl.lower_lifetime(l)),
+                *encoding,
+            ))),
             ast::TypeName::StrSlice(.., _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "String slices can only be an input type".into(),
@@ -2005,7 +2009,9 @@ impl<'ast> LoweringContext<'ast> {
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
-                    ty => self.lower_callback_out_type(ty, ltl, in_path, false).map(Some),
+                    ty => self
+                        .lower_callback_out_type(ty, ltl, in_path, false)
+                        .map(Some),
                 };
 
                 match (ok_ty, err_ty) {
@@ -2027,10 +2033,9 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self
-                    .lower_type(ty, ltl, false, in_path)
-                    .map(SuccessType::OutType)
-                    .map(ReturnType::Infallible)
+                    self.lower_type(ty, ltl, false, in_path)
+                        .map(SuccessType::OutType)
+                        .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => self
