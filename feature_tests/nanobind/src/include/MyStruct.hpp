@@ -22,6 +22,10 @@ namespace capi {
 
     diplomat::capi::MyStruct MyStruct_new(void);
 
+    void MyStruct_takes_mut(diplomat::capi::MyStruct* self, diplomat::capi::MyStruct* o);
+
+    void MyStruct_takes_const(const diplomat::capi::MyStruct* self, diplomat::capi::MyStruct* o);
+
     uint8_t MyStruct_into_a(diplomat::capi::MyStruct self);
 
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
@@ -37,6 +41,23 @@ namespace capi {
 inline MyStruct MyStruct::new_() {
   auto result = diplomat::capi::MyStruct_new();
   return MyStruct::FromFFI(result);
+}
+
+inline void MyStruct::takes_mut(MyStruct& o) {
+  auto thisDiplomatRefClone = this->AsFFI();
+  auto oDiplomatRefClone = o.AsFFI();
+  diplomat::capi::MyStruct_takes_mut(&thisDiplomatRefClone,
+    &oDiplomatRefClone);
+  *this = MyStruct::FromFFI(thisDiplomatRefClone);
+  o = MyStruct::FromFFI(oDiplomatRefClone);
+}
+
+inline void MyStruct::takes_const(MyStruct& o) const {
+  auto thisDiplomatRefClone = this->AsFFI();
+  auto oDiplomatRefClone = o.AsFFI();
+  diplomat::capi::MyStruct_takes_const(&thisDiplomatRefClone,
+    &oDiplomatRefClone);
+  o = MyStruct::FromFFI(oDiplomatRefClone);
 }
 
 inline uint8_t MyStruct::into_a() const {
