@@ -1727,6 +1727,268 @@ impl<'ast> LoweringContext<'ast> {
         .map(|r_ty| (r_ty, return_ltl.finish()))
     }
 
+    // TODO: Merging this with lower_out_type somehow would be great.
+    fn lower_callback_out_type(&mut self, ty : &ast::TypeName, ltl: &mut impl LifetimeLowerer, in_path: &ast::Path, in_result_option: bool) -> Result<Type<InputOnly>, ()> {
+        match ty {
+            ast::TypeName::Primitive(prim) => {
+                Ok(Type::Primitive(PrimitiveType::from_ast(*prim)))
+            }
+            ast::TypeName::Ordering => {
+                Ok(Type::Primitive(PrimitiveType::Ordering))
+            }
+            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                match path.resolve(in_path, self.env) {
+                    ast::CustomType::Struct(strct) => {
+                        if !in_result_option && strct.fields.is_empty() {
+                            self.errors.push(LoweringError::Other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
+                            return Err(());
+                        }
+                        let lifetimes =
+                            ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
+
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+                            Ok(Type::Struct(
+                                StructPath::new(lifetimes, tcx_id, None),
+                            ))
+                        } else {
+                            unreachable!("struct `{}` wasn't found in the set of structs.", strct.name);
+                        }
+                    }
+                    ast::CustomType::Opaque(_) => {
+                        self.errors.push(LoweringError::Other(format!(
+                            "Opaque passed by value in input: {path}"
+                        )));
+                        Err(())
+                    }
+                    ast::CustomType::Enum(enm) => {
+                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
+                            "can't find enum in lookup map, which contains all enums from env",
+                        );
+
+                        Ok(Type::Enum(EnumPath::new(tcx_id)))
+                    }
+                }
+            }
+            ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
+                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                    match path.resolve(in_path, self.env) {
+                        ast::CustomType::Opaque(opaque) => {
+                            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes,
+                                &opaque.lifetimes,
+                                ref_ty.is_self(),
+                            );
+                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
+
+                            Ok(Type::Opaque(OpaquePath::new(
+                                lifetimes,
+                                Optional(false),
+                                borrow,
+                                tcx_id,
+                            )))
+                        }
+                        _ => {
+                            self.errors.push(LoweringError::Other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}")));
+                            Err(())
+                        }
+                    }
+                }
+                _ => {
+                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {in_path:?}")));
+                    Err(())
+                }
+            },
+            ast::TypeName::Box(..) => {
+                self.errors.push(LoweringError::Other(
+                    "Diplomat callbacks do not support returning Box<T>, only references.".into()
+                ));
+                Err(())
+            },
+            ast::TypeName::Option(opt_ty, stdlib) => match opt_ty.as_ref() {
+                ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
+                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                        match path.resolve(in_path, self.env) {
+                            ast::CustomType::Opaque(opaque) => {
+                                if *stdlib == ast::StdlibOrDiplomat::Diplomat {
+                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    return Err(());
+                                }
+                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes,
+                                    &opaque.lifetimes,
+                                    ref_ty.is_self(),
+                                );
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                                "can't find opaque in lookup map, which contains all opaques from env",
+                            );
+
+                                Ok(Type::Opaque(OpaquePath::new(
+                                    lifetimes,
+                                    Optional(true),
+                                    borrow,
+                                    tcx_id,
+                                )))
+                            }
+                            _ => {
+                                self.errors.push(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                                Err(())
+                            }
+                        }
+                    }
+                    _ => {
+                        self.errors.push(LoweringError::Other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                        Err(())
+                    }
+                },
+                ast::TypeName::Box(..) => {    
+                    self.errors.push(LoweringError::Other(
+                        "Diplomat callbacks do not support returning Box<T>, only references.".into()
+                    ));
+                    Err(())
+                },
+                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                    match path.resolve(in_path, self.env) {
+                        ast::CustomType::Opaque(_) => {
+                            self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                            Err(())
+                        }
+                        _ => {
+                            if *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                                self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                return Err(());
+                            }
+                            if !self.attr_validator.attrs_supported().option {
+                                self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
+                            }
+                            let inner =
+                                self.lower_callback_out_type(opt_ty, ltl, in_path, true)?;
+                            Ok(Type::DiplomatOption(Box::new(inner)))
+                        }
+                    }
+                }
+                ast::TypeName::Primitive(prim) => {
+                    if *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                        self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                        return Err(());
+                    }
+                    if !self.attr_validator.attrs_supported().option {
+                        self.errors.push(LoweringError::Other(
+                            "Options of structs/enums/primitives not supported by this backend"
+                                .into(),
+                        ));
+                    }
+                    Ok(Type::DiplomatOption(Box::new(Type::Primitive(
+                        PrimitiveType::from_ast(*prim),
+                    ))))
+                }
+                _ => {
+                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
+                    Err(())
+                }
+            },
+            ast::TypeName::Result(_, _, _) => {
+                self.errors.push(LoweringError::Other(
+                    "Results can only appear as the top-level return type of methods".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::Write => {
+                self.errors.push(LoweringError::Other(
+                    "DiplomatWrite can only appear as the last parameter of a method".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::PrimitiveSlice(None, _, _stdlib)
+            | ast::TypeName::StrReference(None, _, _stdlib) => {
+                self.errors.push(LoweringError::Other(
+                    "Owned slices cannot be returned".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(Type::Slice(
+                Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
+            )),
+            ast::TypeName::StrSlice(.., _stdlib) => {
+                self.errors.push(LoweringError::Other(
+                    "String slices can only be an input type".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
+                Ok(Type::Slice(Slice::Primitive(
+                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                    PrimitiveType::from_ast(*prim),
+                )))
+            }
+            ast::TypeName::CustomTypeSlice(ltmt, type_name) => {
+                let new_lifetime = ltmt
+                    .as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
+
+                if let Some(b) = new_lifetime {
+                    if let super::MaybeStatic::Static = b.lifetime {
+                        if !self.attr_validator.attrs_supported().static_slices {
+                            self.errors.push(LoweringError::Other(
+                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                            ));
+                        }
+                    }
+                }
+
+                match &type_name.as_ref() {
+                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
+                        ast::CustomType::Struct(..) => {
+                            let inner = self.lower_callback_out_type(
+                                type_name,
+                                ltl,
+                                in_path,
+                                in_result_option,
+                            )?;
+                            match inner {
+                                Type::Struct(st) => {
+                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        _ => {
+                            self.errors.push(LoweringError::Other(
+                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
+                                ));
+                            Err(())
+                        }
+                    },
+                    _ => {
+                        self.errors.push(LoweringError::Other(format!(
+                            "Cannot make a slice from type {type_name}"
+                        )));
+                        Err(())
+                    }
+                }
+            }
+            ast::TypeName::Unit => {
+                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                Err(())
+            }
+            ast::TypeName::Function(..) => {
+                self.errors.push(LoweringError::Other(
+                    "Function types can only be an input type".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::ImplTrait(_) => {
+                self.errors.push(LoweringError::Other(
+                    "Trait impls can only be an input type".into(),
+                ));
+                Err(())
+            }
+        }
+    }
+
     fn lower_callback_return_type(
         &mut self,
         return_type: Option<&ast::TypeName>,
@@ -1738,12 +2000,12 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(ty, ltl, false, in_path)
+                        .lower_callback_out_type(ty, ltl, in_path, false)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
-                    ty => self.lower_type(ty, ltl, false, in_path).map(Some),
+                    ty => self.lower_callback_out_type(ty, ltl, in_path, false).map(Some),
                 };
 
                 match (ok_ty, err_ty) {
@@ -1751,11 +2013,25 @@ impl<'ast> LoweringContext<'ast> {
                     _ => Err(()),
                 }
             }
-            ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
-                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+            ty @ ast::TypeName::Option(value_ty, stdlib) => match &**value_ty {
+                ast::TypeName::Box(t) | ast::TypeName::Reference(_, _, t) => {
+                    match &**t {
+                        ast::TypeName::Named(t) | ast::TypeName::SelfType(t) => {
+                            let ty = t.resolve(&t.path, self.env);
+                            if let ast::CustomType::Opaque(..) = ty {
+                                if *stdlib == ast::StdlibOrDiplomat::Diplomat {
+                                    self.errors.push(LoweringError::Other("found DiplomatOption<T>, where T is opaque. Please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    return Err(());
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                    self
                     .lower_type(ty, ltl, false, in_path)
                     .map(SuccessType::OutType)
-                    .map(ReturnType::Infallible),
+                    .map(ReturnType::Infallible)
+                }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => self
                     .lower_type(value_ty, ltl, false, in_path)
