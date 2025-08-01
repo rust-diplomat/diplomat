@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     }
     {
         o.test_diplomat_result([]() {
-            return diplomat::result<uint32_t, uint32_t>(diplomat::Err(10));
+            return diplomat::result<size_t, size_t>(diplomat::Err<size_t>(10));
         });
     }
     auto a = Opaque::from_str("This is a test value.").ok().value();
