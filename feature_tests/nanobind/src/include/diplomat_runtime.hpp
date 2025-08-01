@@ -156,6 +156,7 @@ template<class T, class E>
 class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
+
 public:
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
@@ -220,6 +221,64 @@ public:
     } else {
       return result<T2, E>(Ok<T2>(std::move(t)));
     }
+  }
+  
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    if (is_ok) {
+      return {
+        .ok = std::get<Ok<T>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    } else  {
+      return {
+        .err = std::get<Err<E>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    }
+  }
+
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    if (is_ok) {
+      return {
+        .ok = std::get<Ok<T>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    } else  {
+      return {
+        .is_ok = is_ok
+      };
+    }
+  }
+
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    if (is_ok) {
+      return {
+        .is_ok = is_ok
+      };
+    } else  {
+      return {
+        .err = std::get<Err<E>>(this->val).inner,
+        .is_ok = is_ok
+      };
+    }
+  }
+  
+  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && std::is_same_v<U, std::monostate>, std::nullptr_t> = nullptr>
+  T2 to_ffi() {
+    auto is_ok = this->is_ok();
+
+    return {
+      .is_ok = is_ok
+    };
   }
 };
 
@@ -353,6 +412,43 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     static Ret c_run_callback(const void *cb, replace_fn_t<Args>... args) {
         return (*reinterpret_cast<const function_t *>(cb))(replace<Args>(args)...);
     }
+    
+    template<typename T, typename E, typename T2>
+    static T2 c_run_callback_result(const void *cb, replace_fn_t<Args>... args) {
+      result<T, E> out = c_run_callback(cb, args...);
+      return out.template to_ffi<T2>();
+    }
+    
+    // For DiplomatOption<>
+    template<typename T, typename T2, typename std::enable_if_t<!std::is_same_v<T, std::monostate>, std::nullptr_t> = nullptr>
+    static T2 c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
+      std::optional<T> out = c_run_callback(cb, args...);
+
+      bool is_ok = out.has_value();
+
+      if (is_ok) {
+        return {
+          .ok = out.value(),
+          .is_ok = is_ok
+        };
+      } else {
+        return {
+          .is_ok = is_ok
+        };
+      }
+    }
+    
+    template<typename T, typename T2, typename std::enable_if_t<std::is_same_v<T, std::monostate>, std::nullptr_t> = nullptr>
+    static T2 c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
+      std::optional<std::monostate> out = c_run_callback(cb, args...);
+
+      bool is_ok = out.has_value();
+      return {
+        .is_ok = is_ok
+      };
+    }
+
+    // TODO: Option<> for opaques
 
     static void c_delete(const void *cb) {
         delete reinterpret_cast<const function_t *>(cb);

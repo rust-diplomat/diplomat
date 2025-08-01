@@ -40,6 +40,45 @@ mod ffi {
         pub fn test_slice_cb_arg(arg: &[u8], f: impl Fn(&[u8])) {
             f(arg);
         }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_result_output(t: impl Fn() -> Result<(), ()>) {
+            assert_eq!(t(), Ok(()));
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_result_usize_output(t: impl Fn() -> Result<usize, ()>) {
+            assert_eq!(t(), Ok(0));
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_option_output(t: impl Fn() -> Option<()>) {
+            assert_eq!(t(), None);
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_diplomat_option_output(t: impl Fn() -> DiplomatOption<u32>) {
+            let out = t();
+            assert_eq!(out.into_option(), Some(0));
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_option_opaque<'a>(
+            t: impl Fn() -> Option<&'a crate::structs::ffi::Opaque>,
+            w: &mut DiplomatWrite,
+        ) {
+            let op = t();
+
+            assert!(op.is_some());
+            let a = op.unwrap();
+            a.get_debug_str(w);
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_diplomat_result(t: impl Fn() -> DiplomatResult<usize, usize>) {
+            let out = t();
+            assert_eq!(out.as_ref().err().cloned(), Some(10));
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]

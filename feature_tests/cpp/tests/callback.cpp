@@ -3,6 +3,7 @@
 #include "../include/CallbackHolder.hpp"
 #include "../include/MutableCallbackHolder.hpp"
 #include "../include/MyString.hpp"
+#include "../include/Opaque.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -75,5 +76,40 @@ int main(int argc, char *argv[])
             op.set_str("split");
         }, *opaque);
         simple_assert_eq("opaque cb arg", opaque->borrow(), "split");
+    }
+
+    {
+        o.test_result_output([]() {
+            std::monostate ok;
+            return diplomat::result<std::monostate, std::monostate>(diplomat::Ok(ok));
+        });
+    }
+    {
+        o.test_result_usize_output([]() {
+            return diplomat::result<size_t, std::monostate>(diplomat::Ok<size_t>(0));
+        });
+    }
+    {
+        o.test_option_output([]() {
+            return std::optional<std::monostate>(std::nullopt);
+        });
+    }
+    {
+        o.test_diplomat_option_output([]() {
+            return std::optional<uint32_t>(0);
+        });
+    }
+    {
+        o.test_diplomat_result([]() {
+            return diplomat::result<size_t, size_t>(diplomat::Err<size_t>(10));
+        });
+    }
+    auto a = Opaque::from_str("This is a test value.").ok().value();
+    auto ptr = a.get();
+    {
+        auto str = o.test_option_opaque([ptr]() {
+            return ptr;
+        });
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
 }
