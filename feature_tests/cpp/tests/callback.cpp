@@ -99,6 +99,11 @@ int main(int argc, char *argv[])
             return std::optional<uint32_t>(0);
         });
     }
+    {
+        o.test_diplomat_result([]() {
+            return diplomat::result<uint32_t, uint32_t>(diplomat::Err(10));
+        });
+    }
     auto a = Opaque::from_str("This is a test value.").ok().value();
     auto ptr = a.get();
     {

@@ -58,6 +58,8 @@ struct CallbackWrapper {
   template<typename W>
   inline static void test_option_opaque_write(std::function<const Opaque*()> t, W& writeable_output);
 
+  inline static void test_diplomat_result(std::function<diplomat::result<size_t, size_t>()> t);
+
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };

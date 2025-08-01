@@ -93,6 +93,13 @@ namespace capi {
         const diplomat::capi::Opaque* (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_option_opaque_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result {union {size_t ok; size_t err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_diplomat_result_t;
 
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -117,6 +124,8 @@ namespace capi {
     void CallbackWrapper_test_diplomat_option_output(DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t t_cb_wrap);
 
     void CallbackWrapper_test_option_opaque(DiplomatCallback_CallbackWrapper_test_option_opaque_t t_cb_wrap, diplomat::capi::DiplomatWrite* write);
+
+    void CallbackWrapper_test_diplomat_result(DiplomatCallback_CallbackWrapper_test_diplomat_result_t t_cb_wrap);
 
     } // extern "C"
 } // namespace capi
@@ -187,6 +196,10 @@ inline void CallbackWrapper::test_option_opaque_write(std::function<const Opaque
   diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
   diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
     &write);
+}
+
+inline void CallbackWrapper::test_diplomat_result(std::function<diplomat::result<size_t, size_t>()> t) {
+  diplomat::capi::CallbackWrapper_test_diplomat_result({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_result<size_t, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 
