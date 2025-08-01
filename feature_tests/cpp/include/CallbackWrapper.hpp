@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "CallbackTestingStruct.hpp"
 #include "MyString.hpp"
+#include "Opaque.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -80,6 +81,11 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_option_output_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_option_output_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_option_opaque_t {
+        const void* data;
+        const diplomat::capi::Opaque* (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_option_opaque_t;
 
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -100,6 +106,8 @@ namespace capi {
     void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
 
     void CallbackWrapper_test_option_output(DiplomatCallback_CallbackWrapper_test_option_output_t t_cb_wrap);
+
+    void CallbackWrapper_test_option_opaque(DiplomatCallback_CallbackWrapper_test_option_opaque_t t_cb_wrap, diplomat::capi::DiplomatWrite* write);
 
     } // extern "C"
 } // namespace capi
@@ -152,6 +160,20 @@ inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::re
 
 inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
   diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_diplomat_option<std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, diplomat::fn_traits(t).c_delete});
+}
+
+inline std::string CallbackWrapper::test_option_opaque(std::function<const Opaque*()> t) {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
+    &write);
+  return output;
+}
+template<typename W>
+inline void CallbackWrapper::test_option_opaque_write(std::function<const Opaque*()> t, W& writeable) {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
+    &write);
 }
 
 
