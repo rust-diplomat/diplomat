@@ -56,7 +56,10 @@ mod ffi {
             assert_eq!(t(), None);
         }
 
-        pub fn test_option_opaque<'a>(t : impl Fn() -> Option<&'a crate::structs::ffi::Opaque>, w : &mut DiplomatWrite) {
+        pub fn test_option_opaque<'a>(
+            t: impl Fn() -> Option<&'a crate::structs::ffi::Opaque>,
+            w: &mut DiplomatWrite,
+        ) {
             let op = t();
 
             assert!(op.is_some());
