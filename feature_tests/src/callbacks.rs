@@ -57,7 +57,7 @@ mod ffi {
         }
 
         #[diplomat::attr(kotlin, disable)]
-        pub fn test_diplomat_option_output<'a>(t: impl Fn() -> DiplomatOption<u32>) {
+        pub fn test_diplomat_option_output(t: impl Fn() -> DiplomatOption<u32>) {
             let out = t();
             assert_eq!(out.into_option(), Some(0));
         }
