@@ -53,7 +53,15 @@ mod ffi {
 
         #[diplomat::attr(kotlin, disable)]
         pub fn test_option_output(t: impl Fn() -> Option<()>) {
-            assert_eq!(t(), Some(()));
+            assert_eq!(t(), None);
+        }
+
+        pub fn test_option_opaque<'a>(t : impl Fn() -> Option<&'a crate::structs::ffi::Opaque>, w : &mut DiplomatWrite) {
+            let op = t();
+
+            assert!(op.is_some());
+            let a = op.unwrap();
+            a.get_debug_str(w);
         }
     }
 

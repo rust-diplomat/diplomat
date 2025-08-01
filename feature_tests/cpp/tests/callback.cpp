@@ -3,6 +3,7 @@
 #include "../include/CallbackHolder.hpp"
 #include "../include/MutableCallbackHolder.hpp"
 #include "../include/MyString.hpp"
+#include "../include/Opaque.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -90,7 +91,14 @@ int main(int argc, char *argv[])
     }
     {
         o.test_option_output([]() {
-            return std::optional(std::monostate());
+            return std::optional<std::monostate>(std::nullopt);
+        });
+    }
+    auto a = Opaque::from_str("This is a test value.").ok().value();
+    auto ptr = a.get();
+    {
+        o.test_option_opaque([ptr]() {
+            return ptr;
         });
     }
 }
