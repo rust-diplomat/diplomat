@@ -726,9 +726,6 @@ impl TypeName {
             TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
                 TypeName::Result(ok.clone(), err.clone(), StdlibOrDiplomat::Diplomat)
             }
-            TypeName::Option(ok, StdlibOrDiplomat::Stdlib) => {
-                TypeName::Option(ok.clone(), StdlibOrDiplomat::Diplomat)
-            }
             _ => self.clone(),
         }
         .to_syn()
