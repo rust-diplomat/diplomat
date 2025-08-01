@@ -52,6 +52,8 @@ struct CallbackWrapper {
 
   inline static void test_option_output(std::function<std::optional<std::monostate>()> t);
 
+  inline static void test_diplomat_option_output(std::function<std::optional<uint32_t>()> t);
+
   inline static std::string test_option_opaque(std::function<const Opaque*()> t);
   template<typename W>
   inline static void test_option_opaque_write(std::function<const Opaque*()> t, W& writeable_output);

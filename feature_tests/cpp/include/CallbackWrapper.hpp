@@ -81,6 +81,13 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_option_output_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_option_output_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result {union {uint32_t ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t;
     typedef struct DiplomatCallback_CallbackWrapper_test_option_opaque_t {
         const void* data;
         const diplomat::capi::Opaque* (*run_callback)(const void*);
@@ -106,6 +113,8 @@ namespace capi {
     void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
 
     void CallbackWrapper_test_option_output(DiplomatCallback_CallbackWrapper_test_option_output_t t_cb_wrap);
+
+    void CallbackWrapper_test_diplomat_option_output(DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t t_cb_wrap);
 
     void CallbackWrapper_test_option_opaque(DiplomatCallback_CallbackWrapper_test_option_opaque_t t_cb_wrap, diplomat::capi::DiplomatWrite* write);
 
@@ -160,6 +169,10 @@ inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::re
 
 inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
   diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_diplomat_option<std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_diplomat_option_output(std::function<std::optional<uint32_t>()> t) {
+  diplomat::capi::CallbackWrapper_test_diplomat_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).c_run_callback_diplomat_option<uint32_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline std::string CallbackWrapper::test_option_opaque(std::function<const Opaque*()> t) {

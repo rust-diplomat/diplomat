@@ -56,6 +56,11 @@ mod ffi {
             assert_eq!(t(), None);
         }
 
+        pub fn test_diplomat_option_output<'a>(t: impl Fn() -> DiplomatOption<u32>) {
+            let out = t();
+            assert_eq!(out.into_option(), Some(0));
+        }
+
         pub fn test_option_opaque<'a>(
             t: impl Fn() -> Option<&'a crate::structs::ffi::Opaque>,
             w: &mut DiplomatWrite,
