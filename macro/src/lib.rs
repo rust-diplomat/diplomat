@@ -39,14 +39,13 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
     }
 }
 
-fn callback_return_conversion(
-    ty : &ast::TypeName
-) -> TokenStream {
+fn callback_return_conversion(ty: &ast::TypeName) -> TokenStream {
     match ty {
-        ast::TypeName::Result(.., StdlibOrDiplomat::Stdlib) | ast::TypeName::Option(.., StdlibOrDiplomat::Stdlib) => {
+        ast::TypeName::Result(.., StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::Option(.., StdlibOrDiplomat::Stdlib) => {
             quote! { .into() }
         }
-        _ => TokenStream::new()
+        _ => TokenStream::new(),
     }
 }
 

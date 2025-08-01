@@ -729,8 +729,9 @@ impl TypeName {
             TypeName::Option(ok, StdlibOrDiplomat::Stdlib) => {
                 TypeName::Option(ok.clone(), StdlibOrDiplomat::Diplomat)
             }
-            _ => self.clone()
-        }.to_syn()
+            _ => self.clone(),
+        }
+        .to_syn()
     }
 
     /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
