@@ -110,6 +110,6 @@ int main(int argc, char *argv[])
         auto str = o.test_option_opaque([ptr]() {
             return ptr;
         });
-        simple_assert_eq("Test opaque string passing", str, "This is a test value.");
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
 }
