@@ -106,7 +106,7 @@ fn param_conversion(
                 cb_param_list.push(param_ident);
             }
             let cb_ret_type = out_type.callback_ret_to_syn();
-            let maybe_conversion = callback_return_conversion(&out_type);
+            let maybe_conversion = callback_return_conversion(out_type);
 
             let mutability = match mutability {
                 ast::Mutability::Immutable => quote!(const),
