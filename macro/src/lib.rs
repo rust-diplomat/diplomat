@@ -39,6 +39,17 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
     }
 }
 
+fn callback_return_conversion(
+    ty : &ast::TypeName
+) -> TokenStream {
+    match ty {
+        ast::TypeName::Result(.., StdlibOrDiplomat::Stdlib) | ast::TypeName::Option(.., StdlibOrDiplomat::Stdlib) => {
+            quote! { .into() }
+        }
+        _ => TokenStream::new()
+    }
+}
+
 fn param_conversion(
     name: &ast::Ident,
     param_type: &ast::TypeName,
@@ -95,8 +106,8 @@ fn param_conversion(
                 cb_params_and_types_list.push(quote!(#param_ident: #orig_type));
                 cb_param_list.push(param_ident);
             }
-
-            let (cb_ret_type, maybe_into) = gen_return_type(Some(&out_type));
+            let cb_ret_type = out_type.callback_ret_to_syn();
+            let maybe_conversion = callback_return_conversion(&out_type);
 
             let mutability = match mutability {
                 ast::Mutability::Immutable => quote!(const),
@@ -106,8 +117,8 @@ fn param_conversion(
                 let #cb_wrap_ident = move | #(#cb_params_and_types_list,)* | unsafe {
                     #(#all_params_conversion)*
                     let _ = &#cb_wrap_ident; // Force the lambda to capture the full object, see https://doc.rust-lang.org/edition-guide/rust-2021/disjoint-capture-in-closures.html
-                    std::mem::transmute::<unsafe extern "C" fn (*mut c_void, ...) #cb_ret_type, unsafe extern "C" fn (*#mutability c_void, #(#cb_arg_type_list,)*) #cb_ret_type>
-                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*) #maybe_into
+                    std::mem::transmute::<unsafe extern "C" fn (*mut c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*#mutability c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
+                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*) #maybe_conversion
                 };
             };
             Some(parse2(tokens).unwrap())
@@ -231,59 +242,6 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
     )
 }
 
-fn gen_return_type(return_type : Option<&ast::TypeName>) -> (TokenStream, TokenStream) {
-    if let Some(return_type) = return_type {
-        if let ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) = return_type {
-            let ok = ok.to_syn();
-            let err = err.to_syn();
-            (
-                quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
-                quote! { .into() },
-            )
-        } else if let ast::TypeName::StrReference(_, _, StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
-        {
-            let return_type_syn = return_type.ffi_safe_version().to_syn();
-            (quote! { -> #return_type_syn }, quote! { .into() })
-        } else if let ast::TypeName::Ordering = return_type {
-            let return_type_syn = return_type.to_syn();
-            (quote! { -> #return_type_syn }, quote! { as i8 })
-        } else if let ast::TypeName::Option(ty, is_std_option) = return_type {
-            match ty.as_ref() {
-                // pass by reference, Option becomes null
-                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
-                    let return_type_syn = return_type.to_syn();
-                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
-                        quote! {}
-                    } else {
-                        quote! {.into()}
-                    };
-                    (quote! { -> #return_type_syn }, conversion)
-                }
-                // anything else goes through DiplomatResult
-                _ => {
-                    let ty = ty.to_syn();
-                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
-                        quote! { .ok_or(()).into() }
-                    } else {
-                        quote! {}
-                    };
-                    (
-                        quote! { -> diplomat_runtime::DiplomatResult<#ty, ()> },
-                        conversion,
-                    )
-                }
-            }
-        } else {
-            let return_type_syn = return_type.to_syn();
-            (quote! { -> #return_type_syn }, quote! {})
-        }
-    } else {
-        (quote! {}, quote! {})
-    }
-}
-
 fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
@@ -338,7 +296,56 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         quote! { #self_ident::#method_ident }
     };
 
-    let (return_tokens, maybe_into) = gen_return_type(m.return_type.as_ref());
+    let (return_tokens, maybe_into) = if let Some(return_type) = &m.return_type {
+        if let ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) = return_type {
+            let ok = ok.to_syn();
+            let err = err.to_syn();
+            (
+                quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
+                quote! { .into() },
+            )
+        } else if let ast::TypeName::StrReference(_, _, StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
+        {
+            let return_type_syn = return_type.ffi_safe_version().to_syn();
+            (quote! { -> #return_type_syn }, quote! { .into() })
+        } else if let ast::TypeName::Ordering = return_type {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! { as i8 })
+        } else if let ast::TypeName::Option(ty, is_std_option) = return_type {
+            match ty.as_ref() {
+                // pass by reference, Option becomes null
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
+                    let return_type_syn = return_type.to_syn();
+                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
+                        quote! {}
+                    } else {
+                        quote! {.into()}
+                    };
+                    (quote! { -> #return_type_syn }, conversion)
+                }
+                // anything else goes through DiplomatResult
+                _ => {
+                    let ty = ty.to_syn();
+                    let conversion = if *is_std_option == StdlibOrDiplomat::Stdlib {
+                        quote! { .ok_or(()).into() }
+                    } else {
+                        quote! {}
+                    };
+                    (
+                        quote! { -> diplomat_runtime::DiplomatResult<#ty, ()> },
+                        conversion,
+                    )
+                }
+            }
+        } else {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! {})
+        }
+    } else {
+        (quote! {}, quote! {})
+    };
 
     let write_flushes = m
         .params
