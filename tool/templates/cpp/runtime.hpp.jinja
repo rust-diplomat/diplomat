@@ -394,7 +394,13 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       };
     }
 
-    // TODO: Option<> for opaques
+    // All we need to do is just convert one pointer to another, while keeping the arguments the same:
+    template<typename T>
+    static T c_run_callback_diplomat_opaque(const void* cb, replace_fn_t<Args>... args) {
+      T out = fn_traits<std::function<T(Args...)>>::c_run_callback(cb, args...);
+
+      return out;
+    }
 
     static void c_delete(const void *cb) {
         delete reinterpret_cast<const function_t *>(cb);

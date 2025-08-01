@@ -766,6 +766,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
                         format!("diplomat::fn_traits({cpp_name}).c_run_callback_diplomat_option<{type_name}, {return_type}>")
                     }
+                    ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
+                        let opaque_type = format!("diplomat::capi::{}", self.c.formatter.fmt_type_name(o.tcx_id.into()));
+                        let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
+                        format!("diplomat::fn_traits({cpp_name}).template c_run_callback_diplomat_opaque<{ptr_ty}>")
+                    },
                     _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
