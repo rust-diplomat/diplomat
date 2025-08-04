@@ -143,29 +143,13 @@ namespace nanobind::detail
             // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
             auto caster = make_caster<T>();
             if (caster.from_python(src, local_flags, cleanup)) {
-                diplomat::Ok<T> out;
-
-                if constexpr(has_ok) {
-                    out = diplomat::Ok<T>(caster.value);
-                } else {
-                    out = diplomat::Ok<T>();
-                }
-
-                value = diplomat::result<T, E>(out); 
+                value = diplomat::Ok<T>(caster.operator cast_t<T>());
                 return true;
             } else {
                 auto err_caster = make_caster<E>();
                 uint8_t err_local_flags = flags_for_local_caster<E>(flags);
                 if (err_caster.from_python(src, err_local_flags, cleanup)) {
-                    diplomat::Err<T> out;
-                    
-                    if constexpr(has_err) {
-                        out = diplomat::Err<E>(caster.value);
-                    } else {
-                        out = diplomat::Err<E>();
-                    }
-
-                    value = diplomat::result<T, E>(out);
+                    value = diplomat::Err<E>(err_caster.operator cast_t<E>());
                     return true;
                 }
             }
