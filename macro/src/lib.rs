@@ -105,7 +105,7 @@ fn param_conversion(
                 cb_params_and_types_list.push(quote!(#param_ident: #orig_type));
                 cb_param_list.push(param_ident);
             }
-            let cb_ret_type = out_type.callback_ret_to_syn();
+            let cb_ret_type = out_type.ffi_safe_version().to_syn();
             let maybe_conversion = callback_return_conversion(out_type);
 
             let mutability = match mutability {

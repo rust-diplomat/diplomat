@@ -623,6 +623,9 @@ impl TypeName {
                     StdlibOrDiplomat::Diplomat,
                 ),
             },
+            TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
+                TypeName::Result(ok.clone(), err.clone(), StdlibOrDiplomat::Diplomat)
+            }
             _ => self.clone(),
         }
     }
@@ -708,7 +711,7 @@ impl TypeName {
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
             TypeName::Function(_input_types, output_type, _mutability) => {
                 // Convert the return type to something FFI-friendly:
-                let output_type = output_type.callback_ret_to_syn();
+                let output_type = output_type.ffi_safe_version().to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
@@ -719,16 +722,6 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => #trait_name)
             }
         }
-    }
-
-    pub fn callback_ret_to_syn(&self) -> syn::Type {
-        match self {
-            TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
-                TypeName::Result(ok.clone(), err.clone(), StdlibOrDiplomat::Diplomat)
-            }
-            _ => self.clone(),
-        }
-        .to_syn()
     }
 
     /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
