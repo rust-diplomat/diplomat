@@ -424,7 +424,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 returns_utf8_err = true;
             }
 
-            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name, Some(method.abi_name.to_string()));
+            let conversion = self.gen_cpp_to_c_for_type(
+                &param.ty,
+                param_name,
+                Some(method.abi_name.to_string()),
+            );
             // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
             // Then we need to add some pre- and post- function call conversions to:
             // 1. Create `varNameDiplomatRefClone` as the converted FFI friendly struct.

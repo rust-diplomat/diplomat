@@ -1897,7 +1897,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            _ => self.lower_type(ty, ltl, false, in_path)
+            _ => self.lower_type(ty, ltl, false, in_path),
         }
     }
 
@@ -1917,9 +1917,7 @@ impl<'ast> LoweringContext<'ast> {
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
-                    ty => self
-                        .lower_callback_out_type(ty, ltl, in_path)
-                        .map(Some),
+                    ty => self.lower_callback_out_type(ty, ltl, in_path).map(Some),
                 };
 
                 match (ok_ty, err_ty) {
