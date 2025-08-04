@@ -390,32 +390,22 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     }
 
     // For DiplomatOption<>
-    template<typename T, typename T2, typename std::enable_if_t<!std::is_same_v<T, std::monostate>, std::nullptr_t> = nullptr>
+    template<typename T, typename T2>
     static T2 c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
-      std::optional<T> out = c_run_callback(cb, args...);
+      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
 
-      bool is_ok = out.has_value();
+      std::optional<T> ret = c_run_callback(cb, args...);
 
-      if (is_ok) {
-        return {
-          .ok = out.value(),
-          .is_ok = is_ok
-        };
-      } else {
-        return {
-          .is_ok = is_ok
-        };
+      bool is_ok = ret.has_value();
+
+      T2 out;
+      out.is_ok = is_ok;
+
+      if constexpr(has_ok) {
+        if (is_ok) {
+          out.ok = ret.value();
+        }
       }
-    }
-
-    template<typename T, typename T2, typename std::enable_if_t<std::is_same_v<T, std::monostate>, std::nullptr_t> = nullptr>
-    static T2 c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
-      std::optional<std::monostate> out = c_run_callback(cb, args...);
-
-      bool is_ok = out.has_value();
-      return {
-        .is_ok = is_ok
-      };
     }
 
     // All we need to do is just convert one pointer to another, while keeping the arguments the same:
