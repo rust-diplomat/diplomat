@@ -175,7 +175,7 @@ protected:
           out.ok = std::get<Ok<T>>(this->val).inner;
         }
       }
-      
+
       if constexpr(has_err) {
         if (!is_ok) {
           out.err = std::get<Err<E>>(this->val).inner;
