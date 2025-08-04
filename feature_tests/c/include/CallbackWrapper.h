@@ -9,6 +9,7 @@
 
 #include "CallbackTestingStruct.d.h"
 #include "MyString.d.h"
+#include "Opaque.d.h"
 
 #include "CallbackWrapper.d.h"
 
@@ -77,6 +78,25 @@ typedef struct DiplomatCallback_CallbackWrapper_test_option_output_t {
     DiplomatCallback_CallbackWrapper_test_option_output_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_option_output_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result {union {uint32_t ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_option_opaque_t {
+    const void* data;
+    const Opaque* (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_option_opaque_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result {union {size_t ok; size_t err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_diplomat_result_t;
 
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -97,6 +117,12 @@ void CallbackWrapper_test_result_output(DiplomatCallback_CallbackWrapper_test_re
 void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
 
 void CallbackWrapper_test_option_output(DiplomatCallback_CallbackWrapper_test_option_output_t t_cb_wrap);
+
+void CallbackWrapper_test_diplomat_option_output(DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t t_cb_wrap);
+
+void CallbackWrapper_test_option_opaque(DiplomatCallback_CallbackWrapper_test_option_opaque_t t_cb_wrap, DiplomatWrite* write);
+
+void CallbackWrapper_test_diplomat_result(DiplomatCallback_CallbackWrapper_test_diplomat_result_t t_cb_wrap);
 
 
 
