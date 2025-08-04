@@ -167,27 +167,18 @@ protected:
       constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
       constexpr bool has_err = !std::is_same_v<E, std::monostate>;
 
-      if (is_ok) {
-        if constexpr(has_ok) {
-          return {
-            .ok = std::get<Ok<T>>(this->val).inner,
-            .is_ok = is_ok
-          };
-        } else {
-          return {
-            .is_ok = is_ok
-          };
+      T2 out;
+      out.is_ok = is_ok;
+
+      if constexpr (has_ok) {
+        if (is_ok) {
+          out.ok = std::get<Ok<T>>(this->val).inner;
         }
-      } else {
-        if constexpr(has_err) {
-          return {
-            .err = std::get<Err<E>>(this->val).inner,
-            .is_ok = is_ok
-          };
-        } else {
-          return {
-            .is_ok = is_ok
-          };
+      }
+      
+      if constexpr(has_err) {
+        if (!is_ok) {
+          out.err = std::get<Err<E>>(this->val).inner;
         }
       }
     }
