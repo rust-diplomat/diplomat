@@ -137,9 +137,6 @@ namespace nanobind::detail
         bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept  {
             uint8_t local_flags = flags_for_local_caster<T>(flags);
 
-            constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
-            constexpr bool has_err = !std::is_same_v<E, std::monostate>;
-
             // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
             auto caster = make_caster<T>();
             if (caster.from_python(src, local_flags, cleanup)) {
