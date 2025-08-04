@@ -159,62 +159,37 @@ class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
 protected:
-    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+
+    template<typename T2>
     T2 to_ffi() {
       auto is_ok = this->is_ok();
+
+      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
+      constexpr bool has_err = !std::is_same_v<E, std::monostate>;
 
       if (is_ok) {
-        return {
-          .ok = std::get<Ok<T>>(this->val).inner,
-          .is_ok = is_ok
-        };
-      } else  {
-        return {
-          .err = std::get<Err<E>>(this->val).inner,
-          .is_ok = is_ok
-        };
+        if constexpr(has_ok) {
+          return {
+            .ok = std::get<Ok<T>>(this->val).inner,
+            .is_ok = is_ok
+          };
+        } else {
+          return {
+            .is_ok = is_ok
+          };
+        }
+      } else {
+        if constexpr(has_err) {
+          return {
+            .err = std::get<Err<E>>(this->val).inner,
+            .is_ok = is_ok
+          };
+        } else {
+          return {
+            .is_ok = is_ok
+          };
+        }
       }
-    }
-
-    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
-    T2 to_ffi() {
-      auto is_ok = this->is_ok();
-
-      if (is_ok) {
-        return {
-          .ok = std::get<Ok<T>>(this->val).inner,
-          .is_ok = is_ok
-        };
-      } else  {
-        return {
-          .is_ok = is_ok
-        };
-      }
-    }
-
-    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
-    T2 to_ffi() {
-      auto is_ok = this->is_ok();
-
-      if (is_ok) {
-        return {
-          .is_ok = is_ok
-        };
-      } else  {
-        return {
-          .err = std::get<Err<E>>(this->val).inner,
-          .is_ok = is_ok
-        };
-      }
-    }
-
-    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && std::is_same_v<U, std::monostate>, std::nullptr_t> = nullptr>
-    T2 to_ffi() {
-      auto is_ok = this->is_ok();
-
-      return {
-        .is_ok = is_ok
-      };
     }
 
 public:
