@@ -853,7 +853,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
                         let opaque_type = format!("diplomat::capi::{}", self.c.formatter.fmt_type_name(o.tcx_id.into()));
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
-                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "template c_run_callback_diplomat_opaque", vec![&ptr_ty])
                     },
                     _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
                 };
