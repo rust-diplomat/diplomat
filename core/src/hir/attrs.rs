@@ -1063,7 +1063,6 @@ impl BackendAttrSupport {
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
-            "fallible_trait_callbacks" => Some(self.fallible_constructors),
             _ => None,
         }
     }
