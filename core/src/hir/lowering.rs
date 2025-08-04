@@ -1733,45 +1733,8 @@ impl<'ast> LoweringContext<'ast> {
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-        in_result_option: bool,
     ) -> Result<Type<InputOnly>, ()> {
         match ty {
-            ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
-            ast::TypeName::Ordering => Ok(Type::Primitive(PrimitiveType::Ordering)),
-            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                match path.resolve(in_path, self.env) {
-                    ast::CustomType::Struct(strct) => {
-                        if !in_result_option && strct.fields.is_empty() {
-                            self.errors.push(LoweringError::Other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
-                            return Err(());
-                        }
-                        let lifetimes =
-                            ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
-
-                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                            Ok(Type::Struct(StructPath::new(lifetimes, tcx_id, None)))
-                        } else {
-                            unreachable!(
-                                "struct `{}` wasn't found in the set of structs.",
-                                strct.name
-                            );
-                        }
-                    }
-                    ast::CustomType::Opaque(_) => {
-                        self.errors.push(LoweringError::Other(format!(
-                            "Opaque passed by value in input: {path}"
-                        )));
-                        Err(())
-                    }
-                    ast::CustomType::Enum(enm) => {
-                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
-                            "can't find enum in lookup map, which contains all enums from env",
-                        );
-
-                        Ok(Type::Enum(EnumPath::new(tcx_id)))
-                    }
-                }
-            }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
@@ -1868,7 +1831,7 @@ impl<'ast> LoweringContext<'ast> {
                             if !self.attr_validator.attrs_supported().option {
                                 self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
-                            let inner = self.lower_callback_out_type(opt_ty, ltl, in_path, true)?;
+                            let inner = self.lower_callback_out_type(opt_ty, ltl, in_path)?;
                             Ok(Type::DiplomatOption(Box::new(inner)))
                         }
                     }
@@ -1912,67 +1875,11 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(Type::Slice(Slice::Str(
-                Some(ltl.lower_lifetime(l)),
-                *encoding,
-            ))),
             ast::TypeName::StrSlice(.., _stdlib) => {
                 self.errors.push(LoweringError::Other(
                     "String slices can only be an input type".into(),
                 ));
                 Err(())
-            }
-            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
-                Ok(Type::Slice(Slice::Primitive(
-                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
-                    PrimitiveType::from_ast(*prim),
-                )))
-            }
-            ast::TypeName::CustomTypeSlice(ltmt, type_name) => {
-                let new_lifetime = ltmt
-                    .as_ref()
-                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
-
-                if let Some(b) = new_lifetime {
-                    if let super::MaybeStatic::Static = b.lifetime {
-                        if !self.attr_validator.attrs_supported().static_slices {
-                            self.errors.push(LoweringError::Other(
-                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
-                            ));
-                        }
-                    }
-                }
-
-                match &type_name.as_ref() {
-                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
-                        ast::CustomType::Struct(..) => {
-                            let inner = self.lower_callback_out_type(
-                                type_name,
-                                ltl,
-                                in_path,
-                                in_result_option,
-                            )?;
-                            match inner {
-                                Type::Struct(st) => {
-                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => {
-                            self.errors.push(LoweringError::Other(
-                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
-                                ));
-                            Err(())
-                        }
-                    },
-                    _ => {
-                        self.errors.push(LoweringError::Other(format!(
-                            "Cannot make a slice from type {type_name}"
-                        )));
-                        Err(())
-                    }
-                }
             }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
@@ -1990,6 +1897,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
+            _ => self.lower_type(ty, ltl, false, in_path)
         }
     }
 
@@ -2004,13 +1912,13 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_callback_out_type(ty, ltl, in_path, false)
+                        .lower_callback_out_type(ty, ltl, in_path)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_callback_out_type(ty, ltl, in_path, false)
+                        .lower_callback_out_type(ty, ltl, in_path)
                         .map(Some),
                 };
 
