@@ -855,7 +855,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
                     },
-                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback").into()
+                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
