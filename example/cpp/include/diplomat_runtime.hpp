@@ -152,12 +152,75 @@ template<class T> struct Err {
   Err& operator=(Err&&) noexcept = default;
 };
 
+template <typename T> struct fn_traits;
+
 template<class T, class E>
 class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
+protected:
+    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+    T2 to_ffi() {
+      auto is_ok = this->is_ok();
+
+      if (is_ok) {
+        return {
+          .ok = std::get<Ok<T>>(this->val).inner,
+          .is_ok = is_ok
+        };
+      } else  {
+        return {
+          .err = std::get<Err<E>>(this->val).inner,
+          .is_ok = is_ok
+        };
+      }
+    }
+
+    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+    T2 to_ffi() {
+      auto is_ok = this->is_ok();
+
+      if (is_ok) {
+        return {
+          .ok = std::get<Ok<T>>(this->val).inner,
+          .is_ok = is_ok
+        };
+      } else  {
+        return {
+          .is_ok = is_ok
+        };
+      }
+    }
+
+    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
+    T2 to_ffi() {
+      auto is_ok = this->is_ok();
+
+      if (is_ok) {
+        return {
+          .is_ok = is_ok
+        };
+      } else  {
+        return {
+          .err = std::get<Err<E>>(this->val).inner,
+          .is_ok = is_ok
+        };
+      }
+    }
+
+    template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && std::is_same_v<U, std::monostate>, std::nullptr_t> = nullptr>
+    T2 to_ffi() {
+      auto is_ok = this->is_ok();
+
+      return {
+        .is_ok = is_ok
+      };
+    }
 
 public:
+  template<typename Trait>
+  friend struct fn_traits;
+
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
   result() = default;
@@ -221,64 +284,6 @@ public:
     } else {
       return result<T2, E>(Ok<T2>(std::move(t)));
     }
-  }
-
-  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
-  T2 to_ffi() {
-    auto is_ok = this->is_ok();
-
-    if (is_ok) {
-      return {
-        .ok = std::get<Ok<T>>(this->val).inner,
-        .is_ok = is_ok
-      };
-    } else  {
-      return {
-        .err = std::get<Err<E>>(this->val).inner,
-        .is_ok = is_ok
-      };
-    }
-  }
-
-  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<!std::is_same_v<U, std::monostate> && std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
-  T2 to_ffi() {
-    auto is_ok = this->is_ok();
-
-    if (is_ok) {
-      return {
-        .ok = std::get<Ok<T>>(this->val).inner,
-        .is_ok = is_ok
-      };
-    } else  {
-      return {
-        .is_ok = is_ok
-      };
-    }
-  }
-
-  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && !std::is_same_v<V, std::monostate>, std::nullptr_t> = nullptr>
-  T2 to_ffi() {
-    auto is_ok = this->is_ok();
-
-    if (is_ok) {
-      return {
-        .is_ok = is_ok
-      };
-    } else  {
-      return {
-        .err = std::get<Err<E>>(this->val).inner,
-        .is_ok = is_ok
-      };
-    }
-  }
-
-  template<typename T2, typename U = T, typename V = E, typename std::enable_if_t<std::is_same_v<U, std::monostate> && std::is_same_v<U, std::monostate>, std::nullptr_t> = nullptr>
-  T2 to_ffi() {
-    auto is_ok = this->is_ok();
-
-    return {
-      .is_ok = is_ok
-    };
   }
 };
 
@@ -383,7 +388,6 @@ using diplomat_c_span_convert_t = typename diplomat_c_span_convert<T>::type;
 template<typename T>
 using replace_fn_t = diplomat_c_span_convert_t<replace_string_view_t<as_ffi_t<T>>>;
 
-template <typename T> struct fn_traits;
 template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Args...)>> {
     using fn_ptr_t = Ret(Args...);
     using function_t = std::function<fn_ptr_t>;
