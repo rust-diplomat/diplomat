@@ -181,6 +181,7 @@ protected:
           out.err = std::get<Err<E>>(this->val).inner;
         }
       }
+      return out;
     }
 
 public:
@@ -406,6 +407,7 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
           out.ok = ret.value();
         }
       }
+      return out;
     }
 
     // All we need to do is just convert one pointer to another, while keeping the arguments the same:
