@@ -205,6 +205,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         self.c.fmt_identifier(name)
     }
+
+    pub fn fmt_c_api_callback_ret<'a>(&self, method_name : String, cpp_name : &'a str) -> Cow<'a, str> {
+        format!("diplomat::capi::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+    }
 }
 
 #[cfg(test)]

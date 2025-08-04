@@ -829,7 +829,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             None => "std::monostate".into(),
                         };
 
-                        let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
+                        let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
 
                         format!("diplomat::fn_traits({cpp_name}).c_run_callback_result<{ok_type_name}, {err_type_name}, {return_type}>")
                     },
@@ -843,7 +843,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             _ => unreachable!("unknown AST/HIR variant"),
                         };
 
-                        let return_type = format!("diplomat::capi::DiplomatCallback_{}_{cpp_name}_result", method_abi_name.unwrap());
+                        let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
                         format!("diplomat::fn_traits({cpp_name}).c_run_callback_diplomat_option<{type_name}, {return_type}>")
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
