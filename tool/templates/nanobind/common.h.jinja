@@ -129,6 +129,30 @@ namespace nanobind::detail
 
             return nullptr;
 		}
+        
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { return value; }
+
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept  {
+            uint8_t local_flags = flags_for_local_caster<T>(flags);
+
+            // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
+            auto caster = make_caster<T>();
+            if (caster.from_python(src, local_flags, cleanup)) {
+                value = diplomat::result<T, E>(diplomat::Ok(caster.value));
+                return true;
+            } else {
+                auto err_caster = make_caster<E>();
+                uint8_t err_local_flags = flags_for_local_caster<E>(flags);
+                if (err_caster.from_python(src)) {
+                    value = diplomat::result<T, E>(diplomat::Err(caster.value));
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
 	};
