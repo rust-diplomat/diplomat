@@ -831,7 +831,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
                         let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
 
-                        format!("diplomat::fn_traits({cpp_name}).c_run_callback_result<{ok_type_name}, {err_type_name}, {return_type}>")
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
                     },
                     ReturnType::Nullable(ref success) => {
                         let type_name = match success {
@@ -844,14 +844,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         };
 
                         let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
-                        format!("diplomat::fn_traits({cpp_name}).c_run_callback_diplomat_option<{type_name}, {return_type}>")
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
                         let opaque_type = format!("diplomat::capi::{}", self.c.formatter.fmt_type_name(o.tcx_id.into()));
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
-                        format!("diplomat::fn_traits({cpp_name}).template c_run_callback_diplomat_opaque<{ptr_ty}>")
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
                     },
-                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
+                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback").into()
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }

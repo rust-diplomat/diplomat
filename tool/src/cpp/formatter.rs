@@ -209,6 +209,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_c_api_callback_ret<'a>(&self, method_name : String, cpp_name : &'a str) -> Cow<'a, str> {
         format!("diplomat::capi::DiplomatCallback_{method_name}_{cpp_name}_result").into()
     }
+
+    pub fn fmt_run_callback_converter<'a>(&self, cpp_name : &'a str, conversion_func : &'a str, types : Vec<&'a str>) -> String {
+        format!("diplomat::fn_traits({cpp_name}).{conversion_func}<{}>", types.join(", "))
+    }
 }
 
 #[cfg(test)]
