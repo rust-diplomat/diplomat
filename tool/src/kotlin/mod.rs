@@ -1702,7 +1702,10 @@ returnVal.option() ?: return null
                 SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
                 _ => panic!("Unsupported success type {success:?}"),
             },
-            _ => panic!("Unsupported return type {:?}. Results and Options are not supported.", method.output),
+            _ => panic!(
+                "Unsupported return type {:?}. Results and Options are not supported.",
+                method.output
+            ),
         };
         TraitMethodInfo {
             name: method_name,
@@ -1712,7 +1715,10 @@ returnVal.option() ?: return null
                     SuccessType::Unit => "Unit".into(),
                     _ => panic!("Unsupported success type {success:?}"),
                 },
-                _ => panic!("Unsupported return type {:?}. Results and Options are not supported.", method.output),
+                _ => panic!(
+                    "Unsupported return type {:?}. Results and Options are not supported.",
+                    method.output
+                ),
             },
             native_output_type,
             return_modification,

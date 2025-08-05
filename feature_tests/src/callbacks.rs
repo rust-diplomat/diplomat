@@ -79,7 +79,7 @@ mod ffi {
             let out = t();
             assert_eq!(out.as_ref().err().cloned(), Some(10));
         }
-        
+
         #[diplomat::attr(kotlin, disable)]
         pub fn test_result_opaque<'a>(
             t: impl Fn() -> Result<&'a crate::structs::ffi::Opaque, ()>,
@@ -94,7 +94,7 @@ mod ffi {
 
         #[diplomat::attr(kotlin, disable)]
         pub fn test_inner_conversion(
-            t: impl Fn() -> Result<crate::structs::ffi::MyStructContainingAnOption, usize>
+            t: impl Fn() -> Result<crate::structs::ffi::MyStructContainingAnOption, usize>,
         ) {
             let out = t();
             let out = out.expect("Could not get struct out.");
