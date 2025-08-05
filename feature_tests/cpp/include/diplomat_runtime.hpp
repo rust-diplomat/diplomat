@@ -160,7 +160,7 @@ protected:
     std::variant<Ok<T>, Err<E>> val;
 public:
   template <typename T_>
-  friend class fn_traits;
+  friend struct fn_traits;
 
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
