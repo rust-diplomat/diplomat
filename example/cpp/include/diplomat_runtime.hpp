@@ -359,7 +359,12 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       if constexpr(std::is_same_v<T, std::string_view>)   {
           return {val.data(), val.size()};
       } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
-        return { val.data(), val.size() };
+        // Can we convert straight away to our slice type, or (in the case of ABI compatible structs), do we have to do a reinterpret cast?
+        if constexpr(std::is_same_v<decltype(std::declval<T>().data()), decltype(replace_fn_t<T>::data)>) {
+          return replace_fn_t<T> { val.data(), val.size() };
+        } else {
+          return replace_fn_t<T> { reinterpret_cast<decltype(replace_fn_t<T>::data)>(val.data()), val.size() };
+        }
       } else if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
         return val.AsFFI();
       } else {
