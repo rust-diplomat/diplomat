@@ -5,6 +5,7 @@
 #include "../include/MyString.hpp"
 #include "../include/Opaque.hpp"
 #include "../include/MyStructContainingAnOption.hpp"
+#include "../include/PrimitiveStructVec.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -127,19 +128,19 @@ int main(int argc, char *argv[])
     }
     {
         o.test_str_conversion([]() {
-            const char* string = "Slice conversion test string";
-            return string;
+            return diplomat::Ok<std::string_view>("Slice conversion test string");
         });
     }
     
-    auto floatVec = std::vector<double>{ 1f, 2f, 3f, 4f };
+    auto floatVec = std::vector<double>{ 1.f, 2.f, 3.f, 4.f };
     {
-        o.test_slice_conversion([]() {
-            return diplomat::span<const double>({floatVec.data(), floatVec.size()});
+        o.test_slice_conversion([floatVec]() {
+            return diplomat::Ok(diplomat::span<const double>({floatVec.data(), floatVec.size()}));
         });
     }
     
     auto primitive_vec = PrimitiveStructVec::new_();
+    auto primitive_vec_ptr = primitive_vec.get();
     primitive_vec->push({
             .x = 1.0f,
             .a = true,
@@ -159,8 +160,8 @@ int main(int argc, char *argv[])
     primitive_vec->push({.x = -1.0f});
 
     {
-        o.test_struct_slice_conversion([]() {
-            return primitive_vec->as_slice_mut();
+        o.test_struct_slice_conversion([primitive_vec_ptr]() {
+            return diplomat::Ok(primitive_vec_ptr->as_slice());
         });
     }
 }
