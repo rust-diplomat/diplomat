@@ -137,7 +137,7 @@ namespace nanobind::detail
         using Cast = Value;
         operator Value() { 
             if (is_ok) {
-                return diplomat::Ok<T>(ok_val.value());
+                return diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
             } else {
                 return diplomat::Err<E>(err_val.value());
             }
