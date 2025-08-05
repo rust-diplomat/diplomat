@@ -473,7 +473,7 @@ pub mod ffi {
     pub struct PrimitiveStruct {
         x: f32,
         a: bool,
-        b: DiplomatChar,
+        pub(crate) b: DiplomatChar,
         c: i64,
         d: isize,
         e: DiplomatByte,

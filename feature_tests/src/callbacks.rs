@@ -101,6 +101,31 @@ mod ffi {
             assert!(out.a.is_ok && out.b.is_ok);
             assert_eq!(out.a.into_option().unwrap().into_a(), 42);
         }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_str_conversion<'a>(
+            t: impl Fn() -> Result<DiplomatStrSlice<'a>, ()> 
+        ) {
+            let str = t().expect("Could not get string.");
+            let str = String::from_utf8(str.to_vec()).unwrap();
+            assert_eq!(str, "Slice conversion test string");
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_slice_conversion<'a>(
+            t: impl Fn() -> Result<&'a [f64], ()> 
+        ) {
+            let sl = t().expect("Could not get f64 slice.");
+            assert_eq!(sl[1], 2.0);
+        }
+        
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_struct_slice_conversion<'a>(
+            t: impl Fn() -> Result<&'a [crate::structs::ffi::PrimitiveStruct], ()> 
+        ) {
+            let sl = t().expect("Could not get &[PrimitiveStruct].");
+            assert_eq!(sl[1].b, 'f' as u32);
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
