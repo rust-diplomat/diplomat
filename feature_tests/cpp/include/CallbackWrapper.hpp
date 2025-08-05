@@ -15,6 +15,7 @@
 #include "MyString.hpp"
 #include "MyStructContainingAnOption.hpp"
 #include "Opaque.hpp"
+#include "PrimitiveStruct.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -115,6 +116,27 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_inner_conversion_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t_result {union {diplomat::capi::DiplomatStringView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_str_conversion_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_str_conversion_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_str_conversion_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result {union {diplomat::capi::DiplomatF64View ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_slice_conversion_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {diplomat::capi::DiplomatPrimitiveStructView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t;
 
     int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -145,6 +167,12 @@ namespace capi {
     void CallbackWrapper_test_result_opaque(DiplomatCallback_CallbackWrapper_test_result_opaque_t t_cb_wrap, diplomat::capi::DiplomatWrite* write);
 
     void CallbackWrapper_test_inner_conversion(DiplomatCallback_CallbackWrapper_test_inner_conversion_t t_cb_wrap);
+
+    void CallbackWrapper_test_str_conversion(DiplomatCallback_CallbackWrapper_test_str_conversion_t t_cb_wrap);
+
+    void CallbackWrapper_test_slice_conversion(DiplomatCallback_CallbackWrapper_test_slice_conversion_t t_cb_wrap);
+
+    void CallbackWrapper_test_struct_slice_conversion(DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t t_cb_wrap);
 
     } // extern "C"
 } // namespace capi
@@ -237,6 +265,18 @@ inline void CallbackWrapper::test_result_opaque_write(std::function<diplomat::re
 
 inline void CallbackWrapper::test_inner_conversion(std::function<diplomat::result<MyStructContainingAnOption, size_t>()> t) {
   diplomat::capi::CallbackWrapper_test_inner_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<MyStructContainingAnOption, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_str_conversion(std::function<diplomat::result<std::string_view, std::monostate>()> t) {
+  diplomat::capi::CallbackWrapper_test_str_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::string_view, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_str_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_slice_conversion(std::function<diplomat::result<diplomat::span<const double>, std::monostate>()> t) {
+  diplomat::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const double>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+}
+
+inline void CallbackWrapper::test_struct_slice_conversion(std::function<diplomat::result<diplomat::span<const PrimitiveStruct>, std::monostate>()> t) {
+  diplomat::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const PrimitiveStruct>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 

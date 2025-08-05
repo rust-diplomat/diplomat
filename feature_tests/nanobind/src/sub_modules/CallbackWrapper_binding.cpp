@@ -23,6 +23,9 @@ void add_CallbackWrapper_binding(nb::handle mod) {
     	.def_static("test_result_output", &CallbackWrapper::test_result_output, "t"_a)
     	.def_static("test_result_usize_output", &CallbackWrapper::test_result_usize_output, "t"_a)
     	.def_static("test_slice_cb_arg", &CallbackWrapper::test_slice_cb_arg, "arg"_a, "f"_a)
-    	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a);
+    	.def_static("test_slice_conversion", &CallbackWrapper::test_slice_conversion, "t"_a)
+    	.def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a)
+    	.def_static("test_str_conversion", &CallbackWrapper::test_str_conversion, "t"_a)
+    	.def_static("test_struct_slice_conversion", &CallbackWrapper::test_struct_slice_conversion, "t"_a);
 }
 

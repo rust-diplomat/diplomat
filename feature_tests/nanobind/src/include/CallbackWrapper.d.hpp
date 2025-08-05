@@ -17,6 +17,7 @@ namespace diplomat::capi { struct Opaque; }
 class Opaque;
 struct CallbackTestingStruct;
 struct MyStructContainingAnOption;
+struct PrimitiveStruct;
 
 
 namespace diplomat {
@@ -66,6 +67,12 @@ struct CallbackWrapper {
   inline static void test_result_opaque_write(std::function<diplomat::result<const Opaque&, std::monostate>()> t, W& writeable_output);
 
   inline static void test_inner_conversion(std::function<diplomat::result<MyStructContainingAnOption, size_t>()> t);
+
+  inline static void test_str_conversion(std::function<diplomat::result<std::string_view, std::monostate>()> t);
+
+  inline static void test_slice_conversion(std::function<diplomat::result<diplomat::span<const double>, std::monostate>()> t);
+
+  inline static void test_struct_slice_conversion(std::function<diplomat::result<diplomat::span<const PrimitiveStruct>, std::monostate>()> t);
 
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
