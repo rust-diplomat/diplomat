@@ -156,37 +156,11 @@ template <typename T> struct fn_traits;
 
 template<class T, class E>
 class result {
-private:
-    std::variant<Ok<T>, Err<E>> val;
 protected:
-
-    template<typename T2>
-    T2 to_ffi() {
-      auto is_ok = this->is_ok();
-
-      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
-      constexpr bool has_err = !std::is_same_v<E, std::monostate>;
-
-      T2 out;
-      out.is_ok = is_ok;
-
-      if constexpr (has_ok) {
-        if (is_ok) {
-          out.ok = std::get<Ok<T>>(this->val).inner;
-        }
-      }
-
-      if constexpr(has_err) {
-        if (!is_ok) {
-          out.err = std::get<Err<E>>(this->val).inner;
-        }
-      }
-      return out;
-    }
-
+    std::variant<Ok<T>, Err<E>> val;
 public:
-  template<typename Trait>
-  friend struct fn_traits;
+  template <typename T_>
+  friend class fn_traits;
 
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
@@ -380,31 +354,61 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       }
     }
 
+    template<typename T>
+    static as_ffi_t<T> replace_ret(T val) {
+      if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
+        return val.AsFFI();
+      } else {
+        return val;
+      }
+    }
+
     static Ret c_run_callback(const void *cb, replace_fn_t<Args>... args) {
         return (*reinterpret_cast<const function_t *>(cb))(replace<Args>(args)...);
     }
 
-    template<typename T, typename E, typename T2>
-    static T2 c_run_callback_result(const void *cb, replace_fn_t<Args>... args) {
-      result<T, E> out = c_run_callback(cb, args...);
-      return out.template to_ffi<T2>();
+    template<typename T, typename E, typename TOut>
+    static TOut c_run_callback_result(const void *cb, replace_fn_t<Args>... args) {
+      result<T, E> res = c_run_callback(cb, args...);
+
+      auto is_ok = res.is_ok();
+
+      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
+      constexpr bool has_err = !std::is_same_v<E, std::monostate>;
+
+      TOut out;
+      out.is_ok = is_ok;
+
+      if constexpr (has_ok) {
+        if (is_ok) {
+          out.ok = replace_ret<T>(std::get<Ok<T>>(res.val).inner);
+        }
+      }
+
+      if constexpr(has_err) {
+        if (!is_ok) {
+          out.err = replace_ret<E>(std::get<Err<E>>(res.val).inner);
+        }
+      }
+
+      return out;
     }
 
     // For DiplomatOption<>
-    template<typename T, typename T2>
-    static T2 c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
+    template<typename T, typename TOut>
+    static TOut c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
       constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
 
       std::optional<T> ret = c_run_callback(cb, args...);
 
       bool is_ok = ret.has_value();
 
-      T2 out;
+      TOut out;
       out.is_ok = is_ok;
 
       if constexpr(has_ok) {
         if (is_ok) {
-          out.ok = ret.value();
+          out.ok = replace_ret<T>(ret.value());
         }
       }
       return out;
