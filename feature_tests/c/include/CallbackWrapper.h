@@ -9,6 +9,7 @@
 
 #include "CallbackTestingStruct.d.h"
 #include "MyString.d.h"
+#include "MyStructContainingAnOption.d.h"
 #include "Opaque.d.h"
 
 #include "CallbackWrapper.d.h"
@@ -97,6 +98,20 @@ typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t {
     DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_diplomat_result_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t_result {union {const Opaque* ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_opaque_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_result_opaque_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_result_opaque_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result {union {MyStructContainingAnOption ok; size_t err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_inner_conversion_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_inner_conversion_t;
 
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -123,6 +138,10 @@ void CallbackWrapper_test_diplomat_option_output(DiplomatCallback_CallbackWrappe
 void CallbackWrapper_test_option_opaque(DiplomatCallback_CallbackWrapper_test_option_opaque_t t_cb_wrap, DiplomatWrite* write);
 
 void CallbackWrapper_test_diplomat_result(DiplomatCallback_CallbackWrapper_test_diplomat_result_t t_cb_wrap);
+
+void CallbackWrapper_test_result_opaque(DiplomatCallback_CallbackWrapper_test_result_opaque_t t_cb_wrap, DiplomatWrite* write);
+
+void CallbackWrapper_test_inner_conversion(DiplomatCallback_CallbackWrapper_test_inner_conversion_t t_cb_wrap);
 
 
 
