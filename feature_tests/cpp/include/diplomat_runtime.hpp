@@ -359,7 +359,7 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       if constexpr(std::is_same_v<T, std::string_view>)   {
           return {val.data(), val.size()};
       } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
-        return { val.data(), val.size() };
+        return replace_fn_t<T> { val.data(), val.size() };
       } else if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
         return val.AsFFI();
       } else {
