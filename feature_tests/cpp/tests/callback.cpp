@@ -125,4 +125,42 @@ int main(int argc, char *argv[])
             return diplomat::Ok(st);
         });
     }
+    {
+        o.test_str_conversion([]() {
+            const char* string = "Slice conversion test string";
+            return string;
+        });
+    }
+    
+    auto floatVec = std::vector<double>{ 1f, 2f, 3f, 4f };
+    {
+        o.test_slice_conversion([]() {
+            return diplomat::span<const double>({floatVec.data(), floatVec.size()});
+        });
+    }
+    
+    auto primitive_vec = PrimitiveStructVec::new_();
+    primitive_vec->push({
+            .x = 1.0f,
+            .a = true,
+            .b = 'a',
+            .c = 0,
+            .d = 0,
+            .e = 0
+        });
+    primitive_vec->push({
+        .x = 2.0f,
+        .a = false,
+        .b = 'f',
+        .c = 0,
+        .d = 0,
+        .e = 0
+    });
+    primitive_vec->push({.x = -1.0f});
+
+    {
+        o.test_struct_slice_conversion([]() {
+            return primitive_vec->as_slice_mut();
+        });
+    }
 }
