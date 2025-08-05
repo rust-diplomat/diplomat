@@ -303,6 +303,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            is_sliceable: bool,
             docs: &'a str,
         }
 
@@ -316,6 +317,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            is_sliceable: def.attrs.abi_compatible,
             docs: &self.formatter.fmt_docs(&def.docs),
         }
         .render_into(self.decl_header)
