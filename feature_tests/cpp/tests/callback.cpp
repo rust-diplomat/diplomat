@@ -131,14 +131,14 @@ int main(int argc, char *argv[])
             return diplomat::Ok<std::string_view>("Slice conversion test string");
         });
     }
-    
+
     auto floatVec = std::vector<double>{ 1.f, 2.f, 3.f, 4.f };
     {
         o.test_slice_conversion([floatVec]() {
             return diplomat::Ok(diplomat::span<const double>({floatVec.data(), floatVec.size()}));
         });
     }
-    
+
     auto primitive_vec = PrimitiveStructVec::new_();
     auto primitive_vec_ptr = primitive_vec.get();
     primitive_vec->push({
