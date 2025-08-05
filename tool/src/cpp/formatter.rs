@@ -225,6 +225,32 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_callback_out_type(&self, ty: &hir::Type<hir::InputOnly>) -> String {
         match ty {
             hir::Type::Primitive(ref p) => self.fmt_primitive_as_c(*p).into(),
+            hir::Type::Slice(ref sl) => match sl {
+                hir::Slice::Primitive(b, ty) => self.fmt_borrowed_slice(&self.fmt_primitive_as_c(*ty), b.map(|b| b.mutability).unwrap_or(hir::Mutability::Immutable)).into(),
+                hir::Slice::Str(_, encoding) => self.fmt_borrowed_str(*encoding).into(),
+                hir::Slice::Strs(encoding) => format!("diplomat::span<const {}>", self.fmt_borrowed_str(*encoding)),
+                hir::Slice::Struct(b, st_ty) => {
+                    let id = hir::StructPathLike::id(st_ty);
+                    let type_name = self.fmt_type_name(id);
+                    
+                    let ident = if let Some(borrow) = st_ty.owner {
+                        let mutability = borrow.mutability;
+                        match (hir::OpaqueOwner::is_owned(&borrow), false) {
+                            // unique_ptr is nullable
+                            (true, _) => self.fmt_owned(&type_name),
+                            (false, true) => self.fmt_optional_borrowed(&type_name, mutability),
+                            (false, false) => self.fmt_borrowed(&type_name, mutability),
+                        }
+                        .into_owned()
+                        .into()
+                    } else {
+                        type_name
+                    };
+
+                    self.fmt_borrowed_slice(&ident, b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable)).into()
+                }
+                _ => panic!("Unrecognized slice type {sl:?}")
+            }
             _ => {
                 let ident = self.fmt_type_name(ty.id().unwrap());
                 if ty.is_immutably_borrowed() {
