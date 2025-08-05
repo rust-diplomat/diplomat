@@ -1177,7 +1177,7 @@ returnVal.option() ?: return null
                             SuccessType::Unit => ("Unit".into(), "".into()),
                             _ => panic!("Unsupported success type {success:?}"),
                         },
-                        _ => panic!("Unsupported return type {output:?}"),
+                        _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                     };
 
                     self.callback_params.push(CallbackParamInfo {
@@ -1189,7 +1189,7 @@ returnVal.option() ?: return null
                                 SuccessType::Unit => "Unit".into(),
                                 _ => panic!("Unsupported success type {success:?}"),
                             },
-                            _ => panic!("Unsupported return type {output:?}"),
+                            _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
@@ -1702,7 +1702,7 @@ returnVal.option() ?: return null
                 SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
                 _ => panic!("Unsupported success type {success:?}"),
             },
-            _ => panic!("Unsupported return type {:?}", method.output),
+            _ => panic!("Unsupported return type {:?}. Results and Options are not supported.", method.output),
         };
         TraitMethodInfo {
             name: method_name,
@@ -1712,7 +1712,7 @@ returnVal.option() ?: return null
                     SuccessType::Unit => "Unit".into(),
                     _ => panic!("Unsupported success type {success:?}"),
                 },
-                _ => panic!("Unsupported return type {:?}", method.output),
+                _ => panic!("Unsupported return type {:?}. Results and Options are not supported.", method.output),
             },
             native_output_type,
             return_modification,
