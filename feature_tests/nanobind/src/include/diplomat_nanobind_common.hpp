@@ -104,7 +104,10 @@ namespace nanobind::detail
 	{
         using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
 		using Value = diplomat::result<T, E>;
-		Value value;
+        // Can't store result<T, E> directly since T& will create compiler errors.
+		std::optional<U> ok_val;
+        std::optional<E> err_val;
+        bool is_ok;
 		Py_ssize_t size;
         using Caster = make_caster<U>;
 		static constexpr auto Name = Caster::Name;
@@ -132,21 +135,33 @@ namespace nanobind::detail
         
         template <typename T_>
         using Cast = Value;
-        operator Value() { return value; }
+        operator Value() { 
+            if (is_ok) {
+                return diplomat::Ok<T>(ok_val.value());
+            } else {
+                return diplomat::Err<E>(err_val.value());
+            }
+        }
 
         bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept  {
-            uint8_t local_flags = flags_for_local_caster<T>(flags);
+            uint8_t local_flags = flags_for_local_caster<U>(flags);
 
             // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
             auto caster = make_caster<T>();
             if (caster.from_python(src, local_flags, cleanup)) {
-                value = diplomat::Ok<T>(caster.operator cast_t<T>());
+                is_ok = true;
+                if constexpr(std::is_reference_v<T>) {
+                    ok_val = std::optional(std::reference_wrapper(caster.operator cast_t<T>()));
+                } else {
+                    ok_val = std::optional(caster.operator cast_t<T>());
+                }
                 return true;
             } else {
                 auto err_caster = make_caster<E>();
                 uint8_t err_local_flags = flags_for_local_caster<E>(flags);
                 if (err_caster.from_python(src, err_local_flags, cleanup)) {
-                    value = diplomat::Err<E>(err_caster.operator cast_t<E>());
+                    is_ok = false;
+                    err_val = std::optional(err_caster.operator cast_t<E>());
                     return true;
                 }
             }
