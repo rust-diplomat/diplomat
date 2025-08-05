@@ -355,8 +355,12 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     }
 
     template<typename T>
-    static as_ffi_t<T> replace_ret(T val) {
-      if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
+    static replace_fn_t<T> replace_ret(T val) {
+      if constexpr(std::is_same_v<T, std::string_view>)   {
+          return {val.data(), val.size()};
+      } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
+        return { val.data(), val.size() };
+      } else if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
         return val.AsFFI();
       } else {
         return val;
