@@ -221,7 +221,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         types: Vec<&'a str>,
     ) -> String {
         format!(
-            "diplomat::fn_traits({cpp_name}).{conversion_func}<{}>",
+            "diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
             types.join(", ")
         )
     }
