@@ -226,13 +226,21 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         match ty {
             hir::Type::Primitive(ref p) => self.fmt_primitive_as_c(*p).into(),
             hir::Type::Slice(ref sl) => match sl {
-                hir::Slice::Primitive(b, ty) => self.fmt_borrowed_slice(&self.fmt_primitive_as_c(*ty), b.map(|b| b.mutability).unwrap_or(hir::Mutability::Immutable)).into(),
+                hir::Slice::Primitive(b, ty) => self
+                    .fmt_borrowed_slice(
+                        &self.fmt_primitive_as_c(*ty),
+                        b.map(|b| b.mutability)
+                            .unwrap_or(hir::Mutability::Immutable),
+                    )
+                    .into(),
                 hir::Slice::Str(_, encoding) => self.fmt_borrowed_str(*encoding).into(),
-                hir::Slice::Strs(encoding) => format!("diplomat::span<const {}>", self.fmt_borrowed_str(*encoding)),
+                hir::Slice::Strs(encoding) => {
+                    format!("diplomat::span<const {}>", self.fmt_borrowed_str(*encoding))
+                }
                 hir::Slice::Struct(b, st_ty) => {
                     let id = hir::StructPathLike::id(st_ty);
                     let type_name = self.fmt_type_name(id);
-                    
+
                     let ident = if let Some(borrow) = st_ty.owner {
                         let mutability = borrow.mutability;
                         match (hir::OpaqueOwner::is_owned(&borrow), false) {
@@ -247,10 +255,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                         type_name
                     };
 
-                    self.fmt_borrowed_slice(&ident, b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable)).into()
+                    self.fmt_borrowed_slice(
+                        &ident,
+                        b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                    )
+                    .into()
                 }
-                _ => panic!("Unrecognized slice type {sl:?}")
-            }
+                _ => panic!("Unrecognized slice type {sl:?}"),
+            },
             _ => {
                 let ident = self.fmt_type_name(ty.id().unwrap());
                 if ty.is_immutably_borrowed() {
