@@ -91,6 +91,16 @@ mod ffi {
             let a = op.unwrap();
             a.get_debug_str(w);
         }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_inner_conversion(
+            t: impl Fn() -> Result<crate::structs::ffi::MyStructContainingAnOption, usize>
+        ) {
+            let out = t();
+            let out = out.expect("Could not get struct out.");
+            assert!(out.a.is_ok && out.b.is_ok);
+            assert_eq!(out.a.into_option().unwrap().into_a(), 42);
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]

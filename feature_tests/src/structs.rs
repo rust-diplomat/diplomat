@@ -65,8 +65,8 @@ pub mod ffi {
     // Not supported in kotlin
     #[diplomat::attr(kotlin, disable)]
     pub struct MyStructContainingAnOption {
-        a: DiplomatOption<MyStruct>,
-        b: DiplomatOption<DefaultEnum>,
+        pub(crate) a: DiplomatOption<MyStruct>,
+        pub(crate) b: DiplomatOption<DefaultEnum>,
     }
 
     #[diplomat::attr(auto, error)]

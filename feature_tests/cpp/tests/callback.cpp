@@ -4,6 +4,7 @@
 #include "../include/MutableCallbackHolder.hpp"
 #include "../include/MyString.hpp"
 #include "../include/Opaque.hpp"
+#include "../include/MyStructContainingAnOption.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -80,13 +81,12 @@ int main(int argc, char *argv[])
 
     {
         o.test_result_output([]() {
-            std::monostate ok;
-            return diplomat::result<std::monostate, std::monostate>(diplomat::Ok(ok));
+            return diplomat::Ok<std::monostate>();
         });
     }
     {
         o.test_result_usize_output([]() {
-            return diplomat::result<size_t, std::monostate>(diplomat::Ok<size_t>(0));
+            return diplomat::Ok<size_t>(0);
         });
     }
     {
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     }
     {
         o.test_diplomat_result([]() {
-            return diplomat::result<size_t, size_t>(diplomat::Err<size_t>(10));
+            return diplomat::Err<size_t>(10);
         });
     }
     auto a = Opaque::from_str("This is a test value.").ok().value();
@@ -117,5 +117,12 @@ int main(int argc, char *argv[])
             return ptr;
         });
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
+    }
+    {
+        o.test_inner_conversion([]() {
+            auto st = MyStructContainingAnOption::filled();
+            st.a->a = 42;
+            return diplomat::Ok(st);
+        });
     }
 }
