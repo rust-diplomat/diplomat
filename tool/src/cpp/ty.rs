@@ -815,21 +815,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Callback(ref c) => {
                 let run_callback = match c.get_output_type().unwrap() {
                     ReturnType::Fallible(ref ok, ref err) => {
-                        // TODO: Make this into a function.
-                        let ok_type_name = match ok {
-                            SuccessType::Unit => "std::monostate".into(),
-                            SuccessType::OutType(o) => match o {
-                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
-                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
-                            }
-                            _ => unreachable!("unknown AST/HIR variant"),
-                        };
+                        let ok_type_name = self.formatter.fmt_callback_success_type(ok);
 
                         let err_type_name = match err {
-                            Some(o) => match o {
-                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
-                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
-                            }
+                            Some(o) => self.formatter.fmt_callback_out_type(o),
                             None => "std::monostate".into(),
                         };
 
@@ -838,14 +827,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
                     },
                     ReturnType::Nullable(ref success) => {
-                        let type_name = match success {
-                            SuccessType::Unit => "std::monostate".into(),
-                            SuccessType::OutType(o) => match o {
-                                Type::Primitive(ref p) => self.formatter.fmt_primitive_as_c(*p).into(),
-                                _ => self.formatter.fmt_type_name(o.id().unwrap()).to_string(),
-                            }
-                            _ => unreachable!("unknown AST/HIR variant"),
-                        };
+                        let type_name = self.formatter.fmt_callback_success_type(success);
 
                         let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])

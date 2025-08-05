@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     }
     {
         auto str = o.test_result_opaque([ptr]() {
-            return ptr;
+            return diplomat::Ok<const Opaque&>(*ptr);
         });
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }

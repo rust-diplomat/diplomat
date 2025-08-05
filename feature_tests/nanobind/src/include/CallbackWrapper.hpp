@@ -224,14 +224,14 @@ inline void CallbackWrapper::test_diplomat_result(std::function<diplomat::result
 inline std::string CallbackWrapper::test_result_opaque(std::function<diplomat::result<const Opaque&, std::monostate>()> t) {
   std::string output;
   diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<Opaque, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
+  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
     &write);
   return output;
 }
 template<typename W>
 inline void CallbackWrapper::test_result_opaque_write(std::function<diplomat::result<const Opaque&, std::monostate>()> t, W& writeable) {
   diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<Opaque, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
+  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
     &write);
 }
 

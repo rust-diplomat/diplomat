@@ -214,6 +214,30 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         format!("diplomat::capi::DiplomatCallback_{method_name}_{cpp_name}_result").into()
     }
 
+    pub fn fmt_callback_success_type(&self, success : &hir::SuccessType<hir::InputOnly>) -> String {
+        match success {
+            hir::SuccessType::Unit => "std::monostate".into(),
+            hir::SuccessType::OutType(o) => self.fmt_callback_out_type(o),
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    pub fn fmt_callback_out_type(&self, ty : &hir::Type<hir::InputOnly>) -> String {
+        match ty {
+            hir::Type::Primitive(ref p) => self.fmt_primitive_as_c(*p).into(),
+            _ => {
+                let ident = self.fmt_type_name(ty.id().unwrap());
+                if ty.is_immutably_borrowed() {
+                    self.fmt_borrowed(&ident, hir::Mutability::Immutable).to_string()
+                } else if ty.is_mutably_borrowed() {
+                    self.fmt_borrowed(&ident, hir::Mutability::Mutable).to_string()
+                } else {
+                    ident.to_string()
+                }
+            },
+        }
+    }
+
     pub fn fmt_run_callback_converter<'a>(
         &self,
         cpp_name: &'a str,
