@@ -79,6 +79,18 @@ mod ffi {
             let out = t();
             assert_eq!(out.as_ref().err().cloned(), Some(10));
         }
+        
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_result_opaque<'a>(
+            t: impl Fn() -> Result<&'a crate::structs::ffi::Opaque, ()>,
+            w: &mut DiplomatWrite,
+        ) {
+            let op = t();
+
+            assert!(op.is_ok());
+            let a = op.unwrap();
+            a.get_debug_str(w);
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
