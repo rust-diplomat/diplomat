@@ -31,7 +31,8 @@ def test_fill_lifetimes():
     c = f[0]
     gc.collect()
     
-    # Not sure why this works, but this fools the GC into collecting the inner data for f above (even though we still need a reference):
+    # Not sure why this works, but this fools the GC into collecting the inner data for f above (even though we still need a reference).
+    # We need to check against a string since that takes up more memory than the other fields.
     for i in range(0, 10000):
         f = somelib.OpaqueThinVec([120, 2], [.1, .2], "This is adifferent test")
     gc.collect()
