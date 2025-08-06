@@ -11,7 +11,7 @@ def test_lifetimes():
 
     assert a.as_returning().bytes == "fananna"
 
-    it = somelib.OpaqueThinVec([1,2,3,4], [.1, .2, .3, .4])
+    it = somelib.OpaqueThinVec([1,2,3,4], [.1, .2, .3, .4], "")
     for i, o in enumerate(it):
         assert o.a == i+1, "Iteraton over thin vec didn't work"
 
@@ -24,3 +24,16 @@ def test_lifetimes():
     
     del a
     assert b.a == 1
+
+def test_fill_lifetimes():
+    
+    f = somelib.OpaqueThinVec([120, 2], [.1, .2], "This is a test")
+    c = f[0]
+    gc.collect()
+    
+    # Not sure why this works, but this fools the GC into collecting the inner data for f above (even though we still need a reference):
+    for i in range(0, 10000):
+        f = somelib.OpaqueThinVec([120, 2], [.1, .2], "This is adifferent test")
+    gc.collect()
+
+    assert c.c == "This is a test"

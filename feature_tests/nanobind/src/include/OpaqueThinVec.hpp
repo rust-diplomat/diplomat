@@ -20,7 +20,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::OpaqueThinVec* OpaqueThinVec_create(diplomat::capi::DiplomatI32View a, diplomat::capi::DiplomatF32View b);
+    diplomat::capi::OpaqueThinVec* OpaqueThinVec_create(diplomat::capi::DiplomatI32View a, diplomat::capi::DiplomatF32View b, diplomat::capi::DiplomatStringView c);
 
     diplomat::capi::OpaqueThinIter* OpaqueThinVec_iter(const diplomat::capi::OpaqueThinVec* self);
 
@@ -36,9 +36,10 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<OpaqueThinVec> OpaqueThinVec::create(diplomat::span<const int32_t> a, diplomat::span<const float> b) {
+inline std::unique_ptr<OpaqueThinVec> OpaqueThinVec::create(diplomat::span<const int32_t> a, diplomat::span<const float> b, std::string_view c) {
   auto result = diplomat::capi::OpaqueThinVec_create({a.data(), a.size()},
-    {b.data(), b.size()});
+    {b.data(), b.size()},
+    {c.data(), c.size()});
   return std::unique_ptr<OpaqueThinVec>(OpaqueThinVec::FromFFI(result));
 }
 
