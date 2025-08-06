@@ -352,11 +352,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = Vec::new();
 
-        let self_borrow = if let Some(s) = &method.param_self {
-            Some(visitor.visit_param(&s.ty.clone().into(), "self"))
-        } else {
-            None
-        };
+        let self_borrow = method.param_self.as_ref().map(|s| visitor.visit_param(&s.ty.clone().into(), "self"));
 
         if let Some(b) = self_borrow.as_ref() {
             param_borrows.push(b.clone());
