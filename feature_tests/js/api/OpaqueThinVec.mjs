@@ -37,13 +37,14 @@ export class OpaqueThinVec {
     }
 
 
-    #defaultConstructor(a, b) {
+    #defaultConstructor(a, b, c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const aSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, a, "i32")));
         const bSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, b, "f32")));
+        const cSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, c)));
 
-        const result = wasm.OpaqueThinVec_create(aSlice.ptr, bSlice.ptr);
+        const result = wasm.OpaqueThinVec_create(aSlice.ptr, bSlice.ptr, cSlice.ptr);
 
         try {
             return new OpaqueThinVec(diplomatRuntime.internalConstructor, result, []);
@@ -112,7 +113,7 @@ export class OpaqueThinVec {
         }
     }
 
-    constructor(a, b) {
+    constructor(a, b, c) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));
         } else if (arguments[0] === diplomatRuntime.internalConstructor) {
