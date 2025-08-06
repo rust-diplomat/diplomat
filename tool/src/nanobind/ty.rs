@@ -349,10 +349,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
 
-
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = Vec::new();
-        
+
         let self_borrow = if let Some(s) = &method.param_self {
             Some(visitor.visit_param(&s.ty.clone().into(), "self"))
         } else {
@@ -421,8 +420,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             //  Because `rv_policy` is only applied to unknown types (i.e., newly created references), then we can apply `reference_internal` to any of the cases above, without worrying about unnecessarily increasing the reference count for when we return `self` (since `self` is an already known type to Nanobind).
             let str = match self_borrow.as_ref() {
                 // For non-borrowed &self however, we can just return a standard reference that has no attachment to &self:
-                Some(hir::borrowing_param::ParamBorrowInfo::NotBorrowed) | None => "nb::rv_policy::reference",
-                _ => "nb::rv_policy::reference_internal"
+                Some(hir::borrowing_param::ParamBorrowInfo::NotBorrowed) | None => {
+                    "nb::rv_policy::reference"
+                }
+                _ => "nb::rv_policy::reference_internal",
             };
             lifetime_args.push(str.to_owned());
         }
