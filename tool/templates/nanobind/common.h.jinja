@@ -103,10 +103,11 @@ namespace nanobind::detail
 	struct type_caster<diplomat::result<T, E>>
 	{
         using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
+        using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
 		using Value = diplomat::result<T, E>;
         // Can't store result<T, E> directly since T& will create compiler errors.
 		std::optional<U> ok_val;
-        std::optional<E> err_val;
+        std::optional<V> err_val;
         bool is_ok;
 		Py_ssize_t size;
         using Caster = make_caster<U>;
@@ -139,7 +140,7 @@ namespace nanobind::detail
             if (is_ok) {
                 return diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
             } else {
-                return diplomat::Err<E>(err_val.value());
+                return diplomat::Err<E>(forward_like_<V>(err_val.value()));
             }
         }
 
@@ -161,7 +162,11 @@ namespace nanobind::detail
                 uint8_t err_local_flags = flags_for_local_caster<E>(flags);
                 if (err_caster.from_python(src, err_local_flags, cleanup)) {
                     is_ok = false;
-                    err_val = std::optional(err_caster.operator cast_t<E>());
+                    if constexpr(std::is_reference_v<E>) {
+                        err_val = std::optional(std::reference_wrapper(err_caster.operator cast_t<E>()));
+                    } else {
+                        err_val = std::optional(err_caster.operator cast_t<E>());
+                    }
                     return true;
                 }
             }
