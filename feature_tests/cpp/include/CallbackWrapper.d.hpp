@@ -74,6 +74,10 @@ struct CallbackWrapper {
 
   inline static void test_struct_slice_conversion(std::function<diplomat::result<diplomat::span<const PrimitiveStruct>, std::monostate>()> t);
 
+  inline static std::string test_opaque_result_error(std::function<diplomat::result<std::monostate, const Opaque&>()> t);
+  template<typename W>
+  inline static void test_opaque_result_error_write(std::function<diplomat::result<std::monostate, const Opaque&>()> t, W& writeable_output);
+
   inline diplomat::capi::CallbackWrapper AsFFI() const;
   inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };

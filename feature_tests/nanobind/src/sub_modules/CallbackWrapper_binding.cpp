@@ -17,6 +17,7 @@ void add_CallbackWrapper_binding(nb::handle mod) {
     	.def_static("test_multiple_cb_args", &CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
     	.def_static("test_no_args", &CallbackWrapper::test_no_args, "h"_a)
     	.def_static("test_opaque_cb_arg", &CallbackWrapper::test_opaque_cb_arg, "cb"_a, "a"_a)
+    	.def_static("test_opaque_result_error", &CallbackWrapper::test_opaque_result_error, "t"_a)
     	.def_static("test_option_opaque", &CallbackWrapper::test_option_opaque, "t"_a)
     	.def_static("test_option_output", &CallbackWrapper::test_option_output, "t"_a)
     	.def_static("test_result_opaque", &CallbackWrapper::test_result_opaque, "t"_a)

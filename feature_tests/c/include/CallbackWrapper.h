@@ -134,6 +134,13 @@ typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
     DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result {union { const Opaque* err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_opaque_result_error_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_opaque_result_error_t;
 
 int32_t CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_f f_cb_wrap, int32_t x);
 
@@ -170,6 +177,8 @@ void CallbackWrapper_test_str_conversion(DiplomatCallback_CallbackWrapper_test_s
 void CallbackWrapper_test_slice_conversion(DiplomatCallback_CallbackWrapper_test_slice_conversion_t t_cb_wrap);
 
 void CallbackWrapper_test_struct_slice_conversion(DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t t_cb_wrap);
+
+void CallbackWrapper_test_opaque_result_error(DiplomatCallback_CallbackWrapper_test_opaque_result_error_t t_cb_wrap, DiplomatWrite* write);
 
 
 

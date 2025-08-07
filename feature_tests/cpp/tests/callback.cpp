@@ -120,6 +120,12 @@ int main(int argc, char *argv[])
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
     {
+        auto str = o.test_result_opaque_error([ptr]() {
+            return diplomat::Err<const Opaque&>(*ptr);
+        });
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
+    }
+    {
         o.test_inner_conversion([]() {
             auto st = MyStructContainingAnOption::filled();
             st.a->a = 42;

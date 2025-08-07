@@ -122,6 +122,18 @@ mod ffi {
             let sl = t().expect("Could not get &[PrimitiveStruct].");
             assert_eq!(sl[1].b, 'f' as u32);
         }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_opaque_result_error<'a>(
+            t: impl Fn() -> Result<(), &'a crate::structs::ffi::Opaque>,
+            w: &mut DiplomatWrite,
+        ) {
+            let op = t();
+
+            assert!(op.is_err());
+            let a = op.unwrap_err();
+            a.get_debug_str(w);
+        }
     }
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
