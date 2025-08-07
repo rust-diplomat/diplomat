@@ -63,6 +63,11 @@ pub mod ffi {
             Box::new(AttrOpaque1)
         }
 
+        #[diplomat::attr(any(not(supports=callbacks), kotlin), disable)]
+        pub fn test_namespaced_callback(_t : impl Fn() -> Result<(), ()>) {
+            todo!()
+        }
+
         impl_mac!(mac_test, hello, {
             println!("Hello world!");
             10
