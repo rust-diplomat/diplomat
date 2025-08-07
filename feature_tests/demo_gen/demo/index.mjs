@@ -278,10 +278,10 @@ let termini = Object.assign({
     },
 
     "OpaqueThinVec.len": {
-        func: (selfA, selfB) => new somelib.OpaqueThinVec(selfA, selfB).len(),
+        func: (selfA, selfB, selfC) => new somelib.OpaqueThinVec(selfA, selfB, selfC).len(),
         // For avoiding webpacking minifying issues:
         funcName: "OpaqueThinVec.len",
-        expr: (selfA, selfB) => "new somelib.OpaqueThinVec(selfA, selfB).len()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
+        expr: (selfA, selfB, selfC) => "new somelib.OpaqueThinVec(selfA, selfB, selfC).len()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2'),
         parameters: [
             
             {
@@ -294,6 +294,12 @@ let termini = Object.assign({
                 name: "self_b",
                 type: "Array<number>",
                 typeUse: "Array<number>"
+            },
+            
+            {
+                name: "self_c",
+                type: "string",
+                typeUse: "string"
             }
             
         ]

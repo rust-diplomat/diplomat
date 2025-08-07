@@ -22,6 +22,8 @@ namespace capi {
 
     float OpaqueThin_b(const diplomat::capi::OpaqueThin* self);
 
+    void OpaqueThin_c(const diplomat::capi::OpaqueThin* self, diplomat::capi::DiplomatWrite* write);
+
     void OpaqueThin_destroy(OpaqueThin* self);
 
     } // extern "C"
@@ -36,6 +38,20 @@ inline int32_t OpaqueThin::a() const {
 inline float OpaqueThin::b() const {
   auto result = diplomat::capi::OpaqueThin_b(this->AsFFI());
   return result;
+}
+
+inline std::string OpaqueThin::c() const {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::OpaqueThin_c(this->AsFFI(),
+    &write);
+  return output;
+}
+template<typename W>
+inline void OpaqueThin::c_write(W& writeable) const {
+  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+  diplomat::capi::OpaqueThin_c(this->AsFFI(),
+    &write);
 }
 
 inline const diplomat::capi::OpaqueThin* OpaqueThin::AsFFI() const {
