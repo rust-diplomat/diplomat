@@ -208,10 +208,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_c_api_callback_ret<'a>(
         &self,
+        namespace : Option<String>,
         method_name: String,
         cpp_name: &'a str,
     ) -> Cow<'a, str> {
-        format!("diplomat::capi::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+        let ns = namespace.unwrap_or("diplomat".to_string());
+        format!("{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
     }
 
     pub fn fmt_callback_success_type(&self, success: &hir::SuccessType<hir::InputOnly>) -> String {

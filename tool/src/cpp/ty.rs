@@ -262,6 +262,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.formatter.fmt_c_type_name(id);
 
+        let namespace = def.attrs.namespace.clone();
+
         let c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
 
@@ -276,7 +278,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_cpp_to_c_for_field("", field))
+            .map(|field| self.gen_cpp_to_c_for_field("", field, namespace.clone()))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
@@ -314,7 +316,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ctype: &ctype,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
-            namespace: def.attrs.namespace.as_deref(),
+            namespace: namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
             is_sliceable: def.attrs.abi_compatible,
@@ -412,6 +414,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut param_validations = Vec::new();
         let mut returns_utf8_err = false;
 
+        let namespace = self.c.tcx.resolve_type(id).attrs().namespace.clone();
+
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             let param_name = decls.var_name.clone();
@@ -430,6 +434,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 &param.ty,
                 param_name,
                 Some(method.abi_name.to_string()),
+                namespace.clone(),
             );
             // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
             // Then we need to add some pre- and post- function call conversions to:
@@ -748,10 +753,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         &self,
         cpp_struct_access: &str,
         field: &'a hir::StructField<P>,
+        namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None);
+        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace);
 
         NamedExpression {
             var_name,
@@ -768,6 +774,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
         method_abi_name: Option<String>,
+        namespace: Option<String>,
     ) -> Cow<'a, str> {
         match *ty {
             Type::Primitive(..) => cpp_name.clone(),
@@ -810,7 +817,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
-                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name);
+                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name, namespace);
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
@@ -824,14 +831,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                             None => "std::monostate".into(),
                         };
 
-                        let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
+                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
 
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
                     },
                     ReturnType::Nullable(ref success) => {
                         let type_name = self.formatter.fmt_callback_success_type(success);
 
-                        let return_type = self.formatter.fmt_c_api_callback_ret(method_abi_name.unwrap(), &cpp_name);
+                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
