@@ -208,7 +208,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_c_api_callback_ret<'a>(
         &self,
-        namespace : Option<String>,
+        namespace: Option<String>,
         method_name: String,
         cpp_name: &'a str,
     ) -> Cow<'a, str> {

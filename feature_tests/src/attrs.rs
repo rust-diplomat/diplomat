@@ -64,7 +64,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(any(not(supports=callbacks), kotlin), disable)]
-        pub fn test_namespaced_callback(_t : impl Fn() -> Result<(), ()>) {
+        pub fn test_namespaced_callback(_t: impl Fn() -> Result<(), ()>) {
             todo!()
         }
 

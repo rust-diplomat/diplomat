@@ -757,7 +757,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace);
+        let expression =
+            self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace);
 
         NamedExpression {
             var_name,
