@@ -141,7 +141,7 @@ pub mod ffi {
         #[diplomat::attr(auto, indexer)]
         pub fn get(&self, i: usize) -> Result<f64, ()> {
             if let Some(i) = self.0.get(i) {
-                Ok(i.clone())
+                Ok(*i)
             } else {
                 Err(())
             }
