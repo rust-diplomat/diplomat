@@ -1,5 +1,8 @@
 import somelib
 import somelib.somelib
+
+import pytest
+
 def test_slices():
     sl = somelib.Float64Vec.new([.1, .2, .3]).asSlice
     b = somelib.Float64Vec.new([.1, .2, .3]).borrow()
@@ -11,3 +14,6 @@ def test_slices():
     assert s == "hello"
     assert b == "banannas"
     assert s is not b
+    
+    with pytest.raises(IndexError):
+        sl[4]
