@@ -1,6 +1,8 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "BorrowedFields.hpp"
+#include "BorrowedFieldsWithBounds.hpp"
 #include "Foo.hpp"
 
 

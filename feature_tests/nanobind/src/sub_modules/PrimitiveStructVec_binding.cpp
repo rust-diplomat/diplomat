@@ -1,7 +1,9 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "PrimitiveStruct.hpp"
 #include "PrimitiveStructVec.hpp"
+#include "ns/RenamedStructWithAttrs.hpp"
 
 
 void add_PrimitiveStructVec_binding(nb::handle mod) {
