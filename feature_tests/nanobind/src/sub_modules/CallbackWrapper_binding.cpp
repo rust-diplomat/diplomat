@@ -2,6 +2,7 @@
 
 
 #include "CallbackWrapper.hpp"
+#include "MyString.hpp"
 
 
 void add_CallbackWrapper_binding(nb::handle mod) {

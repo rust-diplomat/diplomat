@@ -20,6 +20,8 @@ namespace capi {
 
     ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make(int32_t x, int32_t y);
 
+    ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make_overload(float x, float y);
+
     int32_t namespace_OpaqueArithmetic_x(const ns::capi::RenamedOpaqueArithmetic* self);
 
     int32_t namespace_OpaqueArithmetic_y(const ns::capi::RenamedOpaqueArithmetic* self);
@@ -48,6 +50,12 @@ namespace capi {
 
 inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::make(int32_t x, int32_t y) {
   auto result = ns::capi::namespace_OpaqueArithmetic_make(x,
+    y);
+  return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
+}
+
+inline std::unique_ptr<ns::RenamedOpaqueArithmetic> ns::RenamedOpaqueArithmetic::make(float x, float y) {
+  auto result = ns::capi::namespace_OpaqueArithmetic_make_overload(x,
     y);
   return std::unique_ptr<ns::RenamedOpaqueArithmetic>(ns::RenamedOpaqueArithmetic::FromFFI(result));
 }

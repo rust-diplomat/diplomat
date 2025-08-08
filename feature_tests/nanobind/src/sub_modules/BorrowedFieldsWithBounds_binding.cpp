@@ -2,6 +2,7 @@
 
 
 #include "BorrowedFieldsWithBounds.hpp"
+#include "Foo.hpp"
 
 
 void add_BorrowedFieldsWithBounds_binding(nb::handle mod) {

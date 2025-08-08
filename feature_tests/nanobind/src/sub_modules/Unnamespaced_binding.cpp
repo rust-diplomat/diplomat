@@ -2,6 +2,8 @@
 
 
 #include "Unnamespaced.hpp"
+#include "ns/AttrOpaque1Renamed.hpp"
+#include "ns/RenamedAttrEnum.hpp"
 
 
 void add_Unnamespaced_binding(nb::handle mod) {

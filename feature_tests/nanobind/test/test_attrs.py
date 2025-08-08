@@ -43,3 +43,6 @@ def test_attrs():
     assert c >= a, "greater or equal"
     assert a < c, "less"
     assert c > a, "greater"
+
+    assert somelib.ns.RenamedOpaqueArithmetic.make(0, 1).x() == 0
+    assert somelib.ns.RenamedOpaqueArithmetic.make(0.5, 1.0).x() == 2

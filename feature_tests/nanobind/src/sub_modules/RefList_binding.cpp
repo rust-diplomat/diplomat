@@ -2,6 +2,7 @@
 
 
 #include "RefList.hpp"
+#include "RefListParameter.hpp"
 
 
 void add_RefList_binding(nb::handle mod) {

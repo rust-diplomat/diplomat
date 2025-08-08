@@ -2,6 +2,7 @@
 
 
 #include "One.hpp"
+#include "Two.hpp"
 
 
 void add_One_binding(nb::handle mod) {

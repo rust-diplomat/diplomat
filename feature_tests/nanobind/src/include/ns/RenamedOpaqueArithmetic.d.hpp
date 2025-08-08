@@ -29,6 +29,8 @@ public:
 
   inline static std::unique_ptr<ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y);
 
+  inline static std::unique_ptr<ns::RenamedOpaqueArithmetic> make(float x, float y);
+
   inline int32_t x() const;
 
   inline int32_t y() const;
