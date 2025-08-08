@@ -750,7 +750,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
-        &self,
+        &mut self,
         cpp_struct_access: &str,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
@@ -771,7 +771,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
-        &self,
+        &mut self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
         method_abi_name: Option<String>,
@@ -825,10 +825,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Callback(ref c) => {
                 let run_callback = match c.get_output_type().unwrap() {
                     ReturnType::Fallible(ref ok, ref err) => {
-                        let ok_type_name = self.formatter.fmt_callback_success_type(ok);
+                        let ok_type_name = match ok {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
 
                         let err_type_name = match err {
-                            Some(o) => self.formatter.fmt_callback_out_type(o),
+                            Some(o) => self.gen_type_name(o),
                             None => "std::monostate".into(),
                         };
 
@@ -837,7 +841,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
                     },
                     ReturnType::Nullable(ref success) => {
-                        let type_name = self.formatter.fmt_callback_success_type(success);
+                        let type_name = match success {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
 
                         let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
