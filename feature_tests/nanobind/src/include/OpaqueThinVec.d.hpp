@@ -26,7 +26,7 @@ namespace capi {
 class OpaqueThinVec {
 public:
 
-  inline static std::unique_ptr<OpaqueThinVec> create(diplomat::span<const int32_t> a, diplomat::span<const float> b);
+  inline static std::unique_ptr<OpaqueThinVec> create(diplomat::span<const int32_t> a, diplomat::span<const float> b, std::string_view c);
 
   inline std::unique_ptr<OpaqueThinIter> iter() const;
   inline diplomat::next_to_iter_helper<OpaqueThinIter> begin() const;

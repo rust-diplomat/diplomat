@@ -12,10 +12,9 @@ void add_OpaqueThinVec_binding(nb::handle mod) {
     
     nb::class_<OpaqueThinVec>(mod, "OpaqueThinVec", nb::type_slots(OpaqueThinVec_slots))
     	.def("__len__", &OpaqueThinVec::__len__)
-    	.def(nb::new_(&OpaqueThinVec::create), "a"_a, "b"_a)
+    	.def(nb::new_(&OpaqueThinVec::create), "a"_a, "b"_a, "c"_a)
     	.def_prop_ro("first", &OpaqueThinVec::first)
-    	.def("__getitem__", &OpaqueThinVec::operator[]
-    		, "idx"_a, nb::rv_policy::reference)
+    	.def("__getitem__", &OpaqueThinVec::operator[], "idx"_a, nb::rv_policy::reference_internal)
     	.def("__iter__", &OpaqueThinVec::iter, nb::keep_alive<0, 1>());
 }
 

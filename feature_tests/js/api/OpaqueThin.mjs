@@ -59,6 +59,20 @@ export class OpaqueThin {
         }
     }
 
+    get c() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.OpaqueThin_c(this.ffiValue, write.buffer);
+
+        try {
+            return write.readString8();
+        }
+
+        finally {
+            write.free();
+        }
+    }
+
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
