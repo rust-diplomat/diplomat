@@ -37,9 +37,9 @@
 			{%- if m.method.param_self.is_some() -%}
 				, &{{type_name}}::{{setter_name}}
 			{%- else -%},
-				[](nb::handle {%- for p in m.param_decls.as_ref().unwrap() -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
+				[](nb::handle {%- for p in m.param_decls.params -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
 				  { {{type_name}}::{{setter_name}}(
-					{%- for p in m.param_decls.as_ref().unwrap() -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
+					{%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
 			{%- endif -%}
 			{%- include "method_params.cpp.jinja" %}
 		{%- endif -%})
@@ -48,17 +48,17 @@
 			(nb::new_(&{{- type_name}}::{{ m.cpp_method_name -}})
 		{%- else -%} {#- nanobind's nb::init<> only works for *actual* constructors -#}
 			("__init__", []({{ type_name }}* self
-			{%- for p in m.param_decls.as_ref().unwrap() -%}
+			{%- for p in m.param_decls.params -%}
 			, {{p.type_name}} {{p.var_name}}
 			{%- endfor -%}
 			{%- match m.method.output -%}
 			{%- when hir::ReturnType::Infallible(_) -%}
-				){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
+				){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
 												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
 												{%- endfor -%}
 			); }
 			{%- when hir::ReturnType::Fallible(_, _) -%}
-				){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
+				){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
 												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
 												{%- endfor -%} );
 				if(tmp.is_ok()) {
@@ -81,6 +81,18 @@
 		{%~ endif -%}
 	{%- endmatch -%}
 {%- else -%}
-		("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}}
+		("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
+		nb::overload_cast<{% for p in m.param_decls.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(
+			{%- endif -%}
+		&{{- type_name }}::{{ m.cpp_method_name -}}
 		{%- include "method_params.cpp.jinja" -%})
+		{%- if m.overloads.len() > 0 %} ) {%- endif -%}
+{%- endif -%}
+{%- if m.overloads.len() > 0 %}
+	{%- for o in m.overloads %}
+	.{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(&{{- type_name}}::{{ m.cpp_method_name -}}
+		{%- include "method_params.cpp.jinja" -%}
+	))
+	{%- endfor -%}
+
 {%- endif -%}

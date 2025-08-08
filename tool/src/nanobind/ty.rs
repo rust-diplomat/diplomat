@@ -15,6 +15,11 @@ struct NamedType<'a> {
     type_name: Cow<'a, str>,
 }
 
+#[derive(Clone)]
+struct ParamInfo<'a> {
+    params : Vec<NamedType<'a>>
+}
+
 /// Everything needed for rendering a method.
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
@@ -29,11 +34,13 @@ struct MethodInfo<'a> {
     prop_name: Option<Cow<'a, str>>,
     // If this is a property, this is the associated setter's c++ method name
     setter_name: Option<Cow<'a, str>>,
-    // In the *rare* event that they're required, the C++ names & types of the function params
-    param_decls: Option<Vec<NamedType<'a>>>,
+    /// The C++ names & types of the function params.
+    /// Always required in case of overloading, and a few special methods.
+    param_decls: ParamInfo<'a>,
     // The lifetime annotation required for the method, if any. May be keep_alive<...> or reference_internal
     // Everything else is handled by the automatic behavior depending on return type.
     lifetime_args: Option<Cow<'a, str>>,
+    overloads : Vec<ParamInfo<'a>>,
 }
 
 /// Context for generating a particular type's impl
@@ -256,6 +263,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
                                 e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
+                            None => {
+                                e.overloads.push(info.param_decls.clone());
+                            }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
                         };
                     })
@@ -323,28 +333,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             def_qualifiers.extend(["static"]);
         }
 
-        let param_decls = {
-            if matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
-            ) && !matches!(
-                // and even then, only when the type isn't opaque
-                id,
-                TypeId::Opaque(_)
-            ) {
-                Some(
-                    method
-                        .params
-                        .iter()
-                        .map(|p| NamedType {
-                            var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                            type_name: self.gen_type_name(&p.ty),
-                        })
-                        .collect(),
-                )
-            } else {
-                None
-            }
+        let param_decls = ParamInfo { params: method
+            .params
+            .iter()
+            .map(|p| NamedType {
+                var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                type_name: self.gen_type_name(&p.ty),
+            })
+            .collect()
         };
 
         let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
@@ -440,6 +436,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             } else {
                 Some(lifetime_args.join(", ").into())
             },
+            overloads: vec![],
         })
     }
 
@@ -454,6 +451,34 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         NamedType {
             var_name,
             type_name,
+        }
+    }
+
+    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
+        let id = st.id();
+        let type_name = self.formatter.cxx.fmt_type_name(id);
+
+        let def = self.c2.tcx.resolve_type(id);
+        if def.attrs().disable {
+            self.errors
+                .push_error(format!("Found usage of disabled type {type_name}"))
+        }
+
+        self
+            .includes
+            .insert(self.formatter.cxx.fmt_impl_header_path(id));
+        if let Some(borrow) = st.owner() {
+            let mutability = borrow.mutability;
+            match (borrow.is_owned(), false) {
+                // unique_ptr is nullable
+                (true, _) => self.formatter.cxx.fmt_owned(&type_name),
+                (false, true) => self.formatter.cxx.fmt_optional_borrowed(&type_name, mutability),
+                (false, false) => self.formatter.cxx.fmt_borrowed(&type_name, mutability),
+            }
+            .into_owned()
+            .into()
+        } else {
+            type_name
         }
     }
 
@@ -530,6 +555,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 self.formatter.cxx.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Slice(hir::Slice::Struct(b, ref st)) => {
+                let st_name = self.gen_struct_name::<P>(st);
+                let ret = self.formatter.cxx.fmt_borrowed_slice(
+                    &st_name,
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
+                ret.into_owned().into()
+            }
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
