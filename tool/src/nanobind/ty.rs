@@ -17,7 +17,7 @@ struct NamedType<'a> {
 
 #[derive(Clone)]
 struct ParamInfo<'a> {
-    params : Vec<NamedType<'a>>
+    params: Vec<NamedType<'a>>,
 }
 
 /// Everything needed for rendering a method.
@@ -40,7 +40,7 @@ struct MethodInfo<'a> {
     // The lifetime annotation required for the method, if any. May be keep_alive<...> or reference_internal
     // Everything else is handled by the automatic behavior depending on return type.
     lifetime_args: Option<Cow<'a, str>>,
-    overloads : Vec<ParamInfo<'a>>,
+    overloads: Vec<ParamInfo<'a>>,
 }
 
 /// Context for generating a particular type's impl
@@ -333,14 +333,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             def_qualifiers.extend(["static"]);
         }
 
-        let param_decls = ParamInfo { params: method
-            .params
-            .iter()
-            .map(|p| NamedType {
-                var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                type_name: self.gen_type_name(&p.ty),
-            })
-            .collect()
+        let param_decls = ParamInfo {
+            params: method
+                .params
+                .iter()
+                .map(|p| NamedType {
+                    var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                    type_name: self.gen_type_name(&p.ty),
+                })
+                .collect(),
         };
 
         let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
@@ -464,15 +465,17 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 .push_error(format!("Found usage of disabled type {type_name}"))
         }
 
-        self
-            .includes
+        self.includes
             .insert(self.formatter.cxx.fmt_impl_header_path(id));
         if let Some(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
                 // unique_ptr is nullable
                 (true, _) => self.formatter.cxx.fmt_owned(&type_name),
-                (false, true) => self.formatter.cxx.fmt_optional_borrowed(&type_name, mutability),
+                (false, true) => self
+                    .formatter
+                    .cxx
+                    .fmt_optional_borrowed(&type_name, mutability),
                 (false, false) => self.formatter.cxx.fmt_borrowed(&type_name, mutability),
             }
             .into_owned()
