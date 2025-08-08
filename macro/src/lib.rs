@@ -97,7 +97,7 @@ fn param_conversion(
             }
 
             let (ret_type, conversion) = if !out_type.is_ffi_safe() {
-                (out_type.ffi_safe_version(), quote!{ .into() })
+                (out_type.ffi_safe_version(), quote! { .into() })
             } else {
                 (*out_type.clone(), TokenStream::new())
             };
