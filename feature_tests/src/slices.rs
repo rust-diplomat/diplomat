@@ -127,8 +127,9 @@ pub mod ffi {
         }
     }
 
-    
+    // For testing throwing IndexError:
     #[diplomat::opaque]
+    #[diplomat::attr(not(nanobind), disable)]
     struct Float64VecError(Vec<f64>);
 
     impl Float64VecError {
