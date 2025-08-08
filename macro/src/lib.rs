@@ -39,16 +39,6 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
     }
 }
 
-fn callback_return_conversion(ty: &ast::TypeName) -> TokenStream {
-    match ty {
-        ast::TypeName::Result(.., StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::Option(.., StdlibOrDiplomat::Stdlib) => {
-            quote! { .into() }
-        }
-        _ => TokenStream::new(),
-    }
-}
-
 fn param_conversion(
     name: &ast::Ident,
     param_type: &ast::TypeName,
@@ -105,8 +95,14 @@ fn param_conversion(
                 cb_params_and_types_list.push(quote!(#param_ident: #orig_type));
                 cb_param_list.push(param_ident);
             }
-            let cb_ret_type = out_type.ffi_safe_version().to_syn();
-            let maybe_conversion = callback_return_conversion(out_type);
+
+            let (ret_type, conversion) = if !out_type.is_ffi_safe() {
+                (out_type.ffi_safe_version(), quote!{ .into() })
+            } else {
+                (*out_type.clone(), TokenStream::new())
+            };
+
+            let cb_ret_type = ret_type.to_syn();
 
             let mutability = match mutability {
                 ast::Mutability::Immutable => quote!(const),
@@ -117,7 +113,7 @@ fn param_conversion(
                     #(#all_params_conversion)*
                     let _ = &#cb_wrap_ident; // Force the lambda to capture the full object, see https://doc.rust-lang.org/edition-guide/rust-2021/disjoint-capture-in-closures.html
                     std::mem::transmute::<unsafe extern "C" fn (*mut c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*#mutability c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
-                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*) #maybe_conversion
+                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*) #conversion
                 };
             };
             Some(parse2(tokens).unwrap())
