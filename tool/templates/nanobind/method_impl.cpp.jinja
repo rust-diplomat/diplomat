@@ -93,7 +93,7 @@
 		}
 		{%- when crate::hir::ReturnType::Infallible(..) -%}
 		&{{- type_name }}::operator[]
-		{% endmatch -%}
+		{%- endmatch -%}
 
 		{%- include "method_params.cpp.jinja" %})
 	{%- when _ -%}
