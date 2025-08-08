@@ -14,6 +14,10 @@ def test_slices():
     assert s == "hello"
     assert b == "banannas"
     assert s is not b
+
+    c = somelib.Float64Vec.new([.1, .2, .3])
+    d = somelib.Float64VecError.new([.1, .2, .3])
     
     with pytest.raises(IndexError):
-        sl[4]
+        c[4]
+        d[4]
