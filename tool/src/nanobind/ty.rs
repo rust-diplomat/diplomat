@@ -324,7 +324,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         }
 
         let param_decls = {
-            if matches!(method.attrs.special_method, Some(hir::SpecialMethod::Indexer)) || (matches!(
+            if matches!(
+                method.attrs.special_method,
+                Some(hir::SpecialMethod::Indexer)
+            ) || (matches!(
                 method.attrs.special_method,
                 Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
             ) && !matches!(
