@@ -85,14 +85,13 @@
 		nb::overload_cast<{% for p in m.param_decls.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(
 			{%- endif -%}
 		&{{- type_name }}::{{ m.cpp_method_name -}}
-		{%- include "method_params.cpp.jinja" -%})
 		{%- if m.overloads.len() > 0 %} ) {%- endif -%}
+		{%- include "method_params.cpp.jinja" -%})
 {%- endif -%}
 {%- if m.overloads.len() > 0 %}
 	{%- for o in m.overloads %}
-	.{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(&{{- type_name}}::{{ m.cpp_method_name -}}
-		{%- include "method_params.cpp.jinja" -%}
-	))
+	.{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(&{{- type_name}}::{{ m.cpp_method_name -}})
+		{%- include "method_params.cpp.jinja" -%})
 	{%- endfor -%}
 
 {%- endif -%}
