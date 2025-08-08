@@ -211,6 +211,11 @@ pub mod ffi {
             Box::new(Self { x, y })
         }
 
+        #[diplomat::attr(*, rename="make")]
+        pub fn make_overload(x : f32, y : f32) -> Box<Self> {
+            Box::new(Self { x : x as i32, y: y as i32 })
+        }
+
         pub fn x(&self) -> i32 {
             self.x
         }
