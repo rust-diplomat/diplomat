@@ -19,8 +19,17 @@
 namespace ns {
 namespace capi {
     extern "C" {
+    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result { bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
+
+    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
+        const void* data;
+        DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t;
 
     ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
+
+    void namespace_AttrOpaque1_test_namespaced_callback(DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t _t_cb_wrap);
 
     int32_t namespace_AttrOpaque1_mac_test(void);
 
@@ -43,6 +52,10 @@ namespace capi {
 inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_not_new() {
   auto result = ns::capi::namespace_AttrOpaque1_new();
   return std::unique_ptr<ns::AttrOpaque1Renamed>(ns::AttrOpaque1Renamed::FromFFI(result));
+}
+
+inline void ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<diplomat::result<std::monostate, std::monostate>()> _t) {
+  ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, std::monostate, ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, diplomat::fn_traits(_t).c_delete});
 }
 
 inline int32_t ns::AttrOpaque1Renamed::mac_test() {

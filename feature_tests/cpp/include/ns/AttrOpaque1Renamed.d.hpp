@@ -32,6 +32,8 @@ public:
 
   inline static std::unique_ptr<ns::AttrOpaque1Renamed> totally_not_new();
 
+  inline static void test_namespaced_callback(std::function<diplomat::result<std::monostate, std::monostate>()> _t);
+
   inline static int32_t mac_test();
 
   inline static int32_t hello();

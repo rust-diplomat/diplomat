@@ -205,6 +205,28 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         self.c.fmt_identifier(name)
     }
+
+    pub fn fmt_c_api_callback_ret<'a>(
+        &self,
+        namespace: Option<String>,
+        method_name: String,
+        cpp_name: &'a str,
+    ) -> Cow<'a, str> {
+        let ns = namespace.unwrap_or("diplomat".to_string());
+        format!("{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+    }
+
+    pub fn fmt_run_callback_converter<'a>(
+        &self,
+        cpp_name: &'a str,
+        conversion_func: &'a str,
+        types: Vec<&'a str>,
+    ) -> String {
+        format!(
+            "diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
+            types.join(", ")
+        )
+    }
 }
 
 #[cfg(test)]
