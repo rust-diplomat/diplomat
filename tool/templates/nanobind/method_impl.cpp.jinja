@@ -72,7 +72,29 @@
 		{%- endif -%}
 		{%- include "method_params.cpp.jinja" %})
 	{%- when crate::hir::SpecialMethod::Indexer -%}
-		("__getitem__", &{{- type_name }}::operator[]
+		("__getitem__", {% match m.method.output -%}
+		{%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
+		[]({{type_name}}* self, {{m.param_decls.as_ref().unwrap()[0].type_name}} index) {
+			auto out = self->operator[] (index);
+			{%- if let crate::hir::ReturnType::Nullable(..) = m.method.output %}
+			if (!out.has_value()) {
+				throw nb::index_error("Could not get index.");
+			} {% else -%} if (!out.is_ok()) {
+				auto errorPyV = nb::cast(std::move(std::move(out).err().value()));
+				if (errorPyV.is_valid())
+				{
+					throw nb::index_error(nb::str(errorPyV).c_str());
+				} else {
+					throw nb::index_error("Indexing error. Could not convert error type to string.");
+				}
+			} {% endif -%} else {
+				return out;
+			}
+		}
+		{%- when crate::hir::ReturnType::Infallible(..) -%}
+		&{{- type_name }}::operator[]
+		{%- endmatch -%}
+
 		{%- include "method_params.cpp.jinja" %})
 	{%- when _ -%}
 		("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}} 

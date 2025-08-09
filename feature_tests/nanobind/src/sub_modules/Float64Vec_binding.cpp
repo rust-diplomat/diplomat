@@ -14,7 +14,14 @@ void add_Float64Vec_binding(nb::handle mod) {
     	.def_prop_ro("asSlice", &Float64Vec::as_slice)
     	.def("borrow", &Float64Vec::borrow)
     	.def("fill_slice", &Float64Vec::fill_slice, "v"_a)
-    	.def("__getitem__", &Float64Vec::operator[], "i"_a)
+    	.def("__getitem__", [](Float64Vec* self, size_t index) {
+    			auto out = self->operator[] (index);
+    			if (!out.has_value()) {
+    				throw nb::index_error("Could not get index.");
+    			} else {
+    				return out;
+    			}
+    		}, "i"_a)
     	.def_static("new", &Float64Vec::new_, "v"_a)
     	.def_static("new_bool", &Float64Vec::new_bool, "v"_a ) // unsupported special method NamedConstructor(Some("bool"))
     	.def_static("new_f64_be_bytes", &Float64Vec::new_f64_be_bytes, "v"_a ) // unsupported special method NamedConstructor(Some("f64BeBytes"))
