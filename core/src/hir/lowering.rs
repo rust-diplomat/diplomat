@@ -73,6 +73,14 @@ pub struct ErrorStore<'tree> {
 
 pub type ErrorAndContext = (ErrorContext, LoweringError);
 
+/// Where a type was found
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+enum TypeLoweringContext {
+    Struct,
+    Callback,
+    Method,
+}
+
 impl<'tree> ErrorStore<'tree> {
     /// Push an error to the error store
     pub fn push(&mut self, error: LoweringError) {
@@ -325,7 +333,7 @@ impl<'ast> LoweringContext<'ast> {
                 let ty = self.lower_type::<Everywhere>(
                     ty,
                     &mut &ast_struct.lifetimes,
-                    false,
+                    TypeLoweringContext::Struct,
                     item.in_path,
                 );
 
@@ -507,7 +515,7 @@ impl<'ast> LoweringContext<'ast> {
                         ty,
                         &mut &ast_out_struct.lifetimes,
                         item.in_path,
-                        true,
+                        TypeLoweringContext::Struct,
                         false,
                     );
 
@@ -689,7 +697,7 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
-        in_struct: bool,
+        context: TypeLoweringContext,
         in_path: &ast::Path,
     ) -> Result<Type<P>, ()> {
         match ty {
@@ -864,20 +872,24 @@ impl<'ast> LoweringContext<'ast> {
                                 Err(())
                             }
                             _ => {
-                                if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                                if context == TypeLoweringContext::Struct
+                                    && *stdlib == ast::StdlibOrDiplomat::Stdlib
+                                {
                                     self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
                                     return Err(());
                                 }
                                 if !self.attr_validator.attrs_supported().option {
                                     self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
-                                let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
+                                let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
                                 Ok(Type::DiplomatOption(Box::new(inner)))
                             }
                         }
                     }
                     ast::TypeName::Primitive(prim) => {
-                        if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                        if context == TypeLoweringContext::Struct
+                            && *stdlib == ast::StdlibOrDiplomat::Stdlib
+                        {
                             self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
                             return Err(());
                         }
@@ -895,7 +907,7 @@ impl<'ast> LoweringContext<'ast> {
                         Box::new(Type::Slice(Slice::Strs(*encoding))),
                     )),
                     ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
-                        let inner = self.lower_type(opt_ty, ltl, in_struct, in_path)?;
+                        let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
                     ast::TypeName::Box(box_ty) => {
@@ -990,7 +1002,7 @@ impl<'ast> LoweringContext<'ast> {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
                         ast::CustomType::Struct(..) => {
-                            let inner = self.lower_type::<P>(type_name, ltl, in_struct, in_path)?;
+                            let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
                             match inner {
                                 Type::Struct(st) => {
                                     Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
@@ -1019,7 +1031,7 @@ impl<'ast> LoweringContext<'ast> {
                         "Callback arguments are not supported by this backend".into(),
                     ));
                 }
-                if in_struct {
+                if context == TypeLoweringContext::Struct {
                     self.errors.push(LoweringError::Other(
                         "Callbacks currently unsupported in structs".into(),
                     ));
@@ -1061,7 +1073,7 @@ impl<'ast> LoweringContext<'ast> {
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-        in_struct: bool,
+        context: TypeLoweringContext,
         in_result_option: bool,
     ) -> Result<OutType, ()> {
         match ty {
@@ -1069,7 +1081,7 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(OutType::Primitive(PrimitiveType::from_ast(*prim)))
             }
             ast::TypeName::Ordering => {
-                if in_struct {
+                if context == TypeLoweringContext::Struct {
                     self.errors.push(LoweringError::Other(
                         "Found cmp::Ordering in struct field, it is only allowed in return types"
                             .to_string(),
@@ -1260,21 +1272,24 @@ impl<'ast> LoweringContext<'ast> {
                             Err(())
                         }
                         _ => {
-                            if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                            if context == TypeLoweringContext::Struct
+                                && *stdlib == ast::StdlibOrDiplomat::Stdlib
+                            {
                                 self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
                                 return Err(());
                             }
                             if !self.attr_validator.attrs_supported().option {
                                 self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
-                            let inner =
-                                self.lower_out_type(opt_ty, ltl, in_path, in_struct, true)?;
+                            let inner = self.lower_out_type(opt_ty, ltl, in_path, context, true)?;
                             Ok(Type::DiplomatOption(Box::new(inner)))
                         }
                     }
                 }
                 ast::TypeName::Primitive(prim) => {
-                    if in_struct && *stdlib == ast::StdlibOrDiplomat::Stdlib {
+                    if context == TypeLoweringContext::Struct
+                        && *stdlib == ast::StdlibOrDiplomat::Stdlib
+                    {
                         self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
                         return Err(());
                     }
@@ -1349,7 +1364,7 @@ impl<'ast> LoweringContext<'ast> {
                                 type_name,
                                 ltl,
                                 in_path,
-                                in_struct,
+                                context,
                                 in_result_option,
                             )?;
                             match inner {
@@ -1583,7 +1598,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, false, in_path);
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method, in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -1633,7 +1648,10 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<CallbackParam, ()> {
         let ty = self.lower_out_type(
-            ty, ltl, in_path, false, /* in_struct */
+            ty,
+            ltl,
+            in_path,
+            TypeLoweringContext::Callback,
             false, /* in_result_option */
         )?;
 
@@ -1693,13 +1711,25 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self
-                        .lower_out_type(ty, &mut return_ltl, in_path, false, true)
+                        .lower_out_type(
+                            ty,
+                            &mut return_ltl,
+                            in_path,
+                            TypeLoweringContext::Method,
+                            true,
+                        )
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_out_type(ty, &mut return_ltl, in_path, false, true)
+                        .lower_out_type(
+                            ty,
+                            &mut return_ltl,
+                            in_path,
+                            TypeLoweringContext::Method,
+                            true,
+                        )
                         .map(Some),
                 };
 
@@ -1710,18 +1740,36 @@ impl<'ast> LoweringContext<'ast> {
             }
             ty @ ast::TypeName::Option(value_ty, _stdlib) => match &**value_ty {
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
-                    .lower_out_type(ty, &mut return_ltl, in_path, false, true)
+                    .lower_out_type(
+                        ty,
+                        &mut return_ltl,
+                        in_path,
+                        TypeLoweringContext::Method,
+                        true,
+                    )
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(write_or_unit)),
                 _ => self
-                    .lower_out_type(value_ty, &mut return_ltl, in_path, false, true)
+                    .lower_out_type(
+                        value_ty,
+                        &mut return_ltl,
+                        in_path,
+                        TypeLoweringContext::Method,
+                        true,
+                    )
                     .map(SuccessType::OutType)
                     .map(ReturnType::Nullable),
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(write_or_unit)),
             ty => self
-                .lower_out_type(ty, &mut return_ltl, in_path, false, false)
+                .lower_out_type(
+                    ty,
+                    &mut return_ltl,
+                    in_path,
+                    TypeLoweringContext::Method,
+                    false,
+                )
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
         .map(|r_ty| (r_ty, return_ltl.finish()))
@@ -1897,7 +1945,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            _ => self.lower_type(ty, ltl, false, in_path),
+            _ => self.lower_type(ty, ltl, TypeLoweringContext::Callback, in_path),
         }
     }
 
@@ -1939,19 +1987,19 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(ty, ltl, false, in_path)
+                    self.lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
                         .map(SuccessType::OutType)
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => self
-                    .lower_type(value_ty, ltl, false, in_path)
+                    .lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Nullable),
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(ty, ltl, false, in_path)
+                .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }
