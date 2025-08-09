@@ -47,4 +47,15 @@ struct ScalarPairWithPadding {
 };
 
 
+namespace diplomat {
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ScalarPairWithPadding>>>> {
+    using type = capi::DiplomatScalarPairWithPaddingView;
+  };
+
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ScalarPairWithPadding>>>> {
+    using type = capi::DiplomatScalarPairWithPaddingViewMut;
+};
+}
 #endif // ScalarPairWithPadding_D_HPP

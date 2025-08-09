@@ -59,4 +59,15 @@ struct CyclicStructA {
 };
 
 
+namespace diplomat {
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructA>>>> {
+    using type = capi::DiplomatCyclicStructAView;
+  };
+
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructA>>>> {
+    using type = capi::DiplomatCyclicStructAViewMut;
+};
+}
 #endif // CyclicStructA_D_HPP

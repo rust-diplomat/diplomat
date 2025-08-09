@@ -623,6 +623,9 @@ impl TypeName {
                     StdlibOrDiplomat::Diplomat,
                 ),
             },
+            TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
+                TypeName::Result(ok.clone(), err.clone(), StdlibOrDiplomat::Diplomat)
+            }
             _ => self.clone(),
         }
     }
@@ -707,7 +710,8 @@ impl TypeName {
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
             TypeName::Function(_input_types, output_type, _mutability) => {
-                let output_type = output_type.to_syn();
+                // Convert the return type to something FFI-friendly:
+                let output_type = output_type.ffi_safe_version().to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
