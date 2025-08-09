@@ -636,10 +636,13 @@ impl Attrs {
                                         }
 
                                         if p.owner
-                                            .map(|b| b.mutability != Mutability::Immutable)
+                                            .as_borrowed()
+                                            .map(|o| !o.mutability.is_immutable())
                                             .unwrap_or(false)
-                                            || p.owner
-                                                .map(|b| b.mutability != Mutability::Immutable)
+                                            || p2
+                                                .owner
+                                                .as_borrowed()
+                                                .map(|o| !o.mutability.is_immutable())
                                                 .unwrap_or(false)
                                         {
                                             errors.push(LoweringError::Other(

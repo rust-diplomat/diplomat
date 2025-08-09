@@ -3,8 +3,8 @@
 use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
-    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
-    OutStructDef, StructDef, TraitDef, TypeDef,
+    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeOwn, MaybeStatic,
+    OpaqueDef, OutStructDef, StructDef, TraitDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
@@ -390,7 +390,7 @@ impl TypeContext {
                     attrs: _attrs,
                 }) = &method.param_self
                 {
-                    if let Some(b) = s.owner {
+                    if let MaybeOwn::Borrow(b) = s.owner {
                         if let MaybeStatic::NonStatic(ns) = b.lifetime {
                             struct_ref_lifetimes.insert(ns);
                         }
@@ -399,7 +399,7 @@ impl TypeContext {
 
                 for param in &method.params {
                     if let super::Type::Struct(ref st) = &param.ty {
-                        if let Some(b) = st.owner {
+                        if let MaybeOwn::Borrow(b) = st.owner {
                             if let MaybeStatic::NonStatic(ns) = b.lifetime {
                                 struct_ref_lifetimes.insert(ns);
                             }
