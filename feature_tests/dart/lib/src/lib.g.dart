@@ -58,6 +58,8 @@ part 'RenamedNested2.g.dart';
 part 'RenamedOpaqueIterable.g.dart';
 part 'RenamedOpaqueIterator.g.dart';
 part 'RenamedStructWithAttrs.g.dart';
+part 'RenamedTestMacroStruct.g.dart';
+part 'RenamedTestOpaque.g.dart';
 part 'RenamedVectorTest.g.dart';
 part 'ResultOpaque.g.dart';
 part 'StructWithSlices.g.dart';
