@@ -19,7 +19,7 @@ pub mod ffi {
 
     #[diplomat::macro_rules]
     macro_rules! create_vec {
-        ($vec_name:ident, $ty:ident) => {
+        ($vec_name:ident contains "hello"; [$ty:ident]) => {
             #[diplomat::opaque]
             pub struct $vec_name(Vec<$ty>);
 
@@ -47,7 +47,7 @@ pub mod ffi {
         };
     }
 
-    create_vec!(VectorTest, f64);
+    create_vec!(VectorTest contains "hello"; [f64]);
 
     #[derive(Clone)]
     #[diplomat::opaque]
@@ -311,4 +311,42 @@ pub mod ffi {
             5
         }
     }
+
+    #[diplomat::macro_rules]
+    macro_rules! macro_frag_spec_test {
+        (BLOCK $b:block [EXPR $e:expr, IDENT $i:ident] LT $lt:lifetime literal $l:literal <=> $m:meta $p:path; $t:tt $ty:ty, $vis:vis, $it:item) => {
+            struct $i {
+                a: usize,
+            }
+
+            $it
+
+            use $p;
+            impl $i {
+                #[allow(clippy::extra_unused_lifetimes)]
+                $vis fn test_func<$lt>(w : &mut DiplomatWrite) -> usize {
+                    let a = $e;
+                    write!(w, $l).unwrap();
+                    a
+                }
+
+                #[$m]
+                $vis fn test_meta() -> $i {
+                    $b
+                    $i { a: 0 }
+                }
+            }
+
+            #[diplomat::opaque]
+            struct TestOpaque($ty);
+
+            impl TestOpaque $t
+        };
+    }
+
+    macro_frag_spec_test! {BLOCK {
+        println!("Hello world");
+    } [EXPR 0, IDENT TestMacroStruct] LT 'a literal "Testing" <=> diplomat::attr(auto, constructor) std::fmt::Write; {
+        fn hello() {}
+    } f64, pub, const IT:usize = 0;}
 }
