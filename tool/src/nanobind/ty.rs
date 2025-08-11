@@ -326,12 +326,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let param_decls = {
             if matches!(
                 method.attrs.special_method,
+                Some(hir::SpecialMethod::Indexer)
+            ) || (matches!(
+                method.attrs.special_method,
                 Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
             ) && !matches!(
                 // and even then, only when the type isn't opaque
                 id,
                 TypeId::Opaque(_)
-            ) {
+            )) {
                 Some(
                     method
                         .params
@@ -350,11 +353,17 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
 
         // Collect all the relevant borrowed params, with self in position 1 if present
-        let mut param_borrows = method
+        let mut param_borrows = Vec::new();
+
+        let self_borrow = method
             .param_self
-            .iter()
-            .map(|s| visitor.visit_param(&s.ty.clone().into(), "self"))
-            .collect::<Vec<_>>();
+            .as_ref()
+            .map(|s| visitor.visit_param(&s.ty.clone().into(), "self"));
+
+        if let Some(b) = self_borrow.as_ref() {
+            param_borrows.push(b.clone());
+        };
+
         // Must be a separate call *after* collect to avoid double-borrowing visitor
         param_borrows.extend(
             method
@@ -376,7 +385,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         // Only returned values that are either created on return or return addresses previously unknown
         // to nanobind require additional annotation with keep_alive per: https://nanobind.readthedocs.io/en/latest/api_core.html#_CPPv4N8nanobind9rv_policyE
-        // For any return of a reference to an existing object, nanobind is smart enough to locate it's python wrapper object & correctly increment it's refcount
+        // For any return of a reference to an existing object, nanobind is smart enough to locate its python wrapper object & correctly increment its refcount
         // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
         if matches!(
             method.attrs.special_method,
@@ -409,7 +418,16 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         // This won't make a difference for methods that return a reference to an already created value.
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
         {
-            lifetime_args.push("nb::rv_policy::reference".to_owned());
+            // For any type -> `Type<'a>`, as long as our self reference `&'a self` has the same lifetime (`'a`), we can assume that `&'a`` self has some kind of ownership of the returned type.
+            //  Because `rv_policy` is only applied to unknown types (i.e., newly created references), then we can apply `reference_internal` to any of the cases above, without worrying about unnecessarily increasing the reference count for when we return `self` (since `self` is an already known type to Nanobind).
+            let str = match self_borrow.as_ref() {
+                // For non-borrowed &self however, we can just return a standard reference that has no attachment to &self:
+                Some(hir::borrowing_param::ParamBorrowInfo::NotBorrowed) | None => {
+                    "nb::rv_policy::reference"
+                }
+                _ => "nb::rv_policy::reference_internal",
+            };
+            lifetime_args.push(str.to_owned());
         }
 
         Some(MethodInfo {
@@ -504,10 +522,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.cxx.fmt_primitive_as_c(p);
-                let ret = self.formatter.cxx.fmt_borrowed_slice(
-                    &ret,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.cxx.fmt_borrowed_slice(&ret, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(

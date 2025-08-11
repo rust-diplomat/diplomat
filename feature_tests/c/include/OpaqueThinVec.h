@@ -17,7 +17,7 @@
 
 
 
-OpaqueThinVec* OpaqueThinVec_create(DiplomatI32View a, DiplomatF32View b);
+OpaqueThinVec* OpaqueThinVec_create(DiplomatI32View a, DiplomatF32View b, DiplomatStringView c);
 
 OpaqueThinIter* OpaqueThinVec_iter(const OpaqueThinVec* self);
 

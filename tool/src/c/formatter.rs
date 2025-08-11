@@ -1,8 +1,8 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, DocsTypeReferenceSyntax, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition,
-    TypeContext, TypeId,
+    self, DocsTypeReferenceSyntax, DocsUrlGenerator, MaybeOwn, StringEncoding, SymbolId, TraitId,
+    TyPosition, TypeContext, TypeId,
 };
 use std::borrow::Cow;
 use std::sync::LazyLock;
@@ -103,7 +103,7 @@ impl<'tcx> CFormatter<'tcx> {
             hir::Type::Slice(hir::Slice::Primitive(borrow, prim)) => {
                 let prim = self.fmt_primitive_name_for_derived_type(*prim);
                 let mtb = match borrow {
-                    Some(borrow) if borrow.mutability.is_immutable() => "",
+                    MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
                     _ => "Mut",
                 };
                 self.diplomat_namespace(format!("Option{prim}View{mtb}").into()).to_string()
@@ -242,12 +242,12 @@ impl<'tcx> CFormatter<'tcx> {
     /// Get the primitive type as a C type
     pub fn fmt_primitive_slice_name(
         &self,
-        borrow: Option<hir::Borrow>,
+        borrow: MaybeOwn,
         prim: hir::PrimitiveType,
     ) -> Cow<'tcx, str> {
         let prim = self.fmt_primitive_name_for_derived_type(prim);
         let mtb = match borrow {
-            Some(borrow) if borrow.mutability.is_immutable() => "",
+            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
@@ -255,7 +255,7 @@ impl<'tcx> CFormatter<'tcx> {
 
     pub fn fmt_struct_slice_name<P: TyPosition>(
         &self,
-        borrow: Option<hir::Borrow>,
+        borrow: MaybeOwn,
         st_ty: &P::StructPath,
     ) -> Cow<'tcx, str> {
         let st_id = hir::StructPathLike::id(st_ty);
@@ -266,7 +266,7 @@ impl<'tcx> CFormatter<'tcx> {
         let ns = def.attrs().namespace.clone();
 
         let mtb = match borrow {
-            Some(borrow) if borrow.mutability.is_immutable() => "",
+            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
 

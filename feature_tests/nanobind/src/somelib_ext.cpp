@@ -41,6 +41,7 @@ void add_ResultOpaque_binding(nb::handle);
 void add_RefList_binding(nb::handle);
 void add_RefListParameter_binding(nb::handle);
 void add_Float64Vec_binding(nb::handle);
+void add_Float64VecError_binding(nb::handle);
 void add_MyString_binding(nb::handle);
 void add_MyOpaqueEnum_binding(nb::handle);
 void add_Opaque_binding(nb::handle);
@@ -173,6 +174,7 @@ NB_MODULE(somelib, somelib_mod)
     add_RefList_binding(somelib_mod);
     add_RefListParameter_binding(somelib_mod);
     add_Float64Vec_binding(somelib_mod);
+    add_Float64VecError_binding(somelib_mod);
     add_MyString_binding(somelib_mod);
     add_MyOpaqueEnum_binding(somelib_mod);
     add_Opaque_binding(somelib_mod);

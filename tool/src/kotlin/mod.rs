@@ -339,7 +339,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                     .into()
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(MaybeOwn::Own, _)) => {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
@@ -623,11 +623,11 @@ return string{return_type_modifier}"#
                 }
                 _ => todo!(),
             },
-            Slice::Primitive(Some(_), prim_ty) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
-            Slice::Primitive(None, prim_ty) => {
+            Slice::Primitive(MaybeOwn::Own, prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
@@ -985,7 +985,7 @@ returnVal.option() ?: return null
             Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
             Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
             Slice::Str(None, _) => ("moveUtf8".into(), true),
-            Slice::Primitive(Some(_), _) => ("borrow".into(), true),
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow".into(), true),
             Slice::Primitive(_, _) => ("move".into(), true),
             Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
             Slice::Strs(_) => ("borrowUtf8s".into(), true),
@@ -1016,7 +1016,7 @@ returnVal.option() ?: return null
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Str(_, _) => None,
-            Slice::Primitive(Some(_), _) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Primitive(_, _) => None,

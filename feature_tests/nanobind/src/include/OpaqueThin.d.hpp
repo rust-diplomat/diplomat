@@ -25,6 +25,10 @@ public:
 
   inline float b() const;
 
+  inline std::string c() const;
+  template<typename W>
+  inline void c_write(W& writeable_output) const;
+
   inline const diplomat::capi::OpaqueThin* AsFFI() const;
   inline diplomat::capi::OpaqueThin* AsFFI();
   inline static const OpaqueThin* FromFFI(const diplomat::capi::OpaqueThin* ptr);

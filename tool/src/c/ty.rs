@@ -3,8 +3,8 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, OpaqueOwner, StructPathLike, SymbolId, TraitIdGetter,
-    TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, ReturnableStructDef,
+    StructPathLike, SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -532,7 +532,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 let header_path = self.formatter.fmt_decl_header_path(st_id.into());
                 header.includes.insert(header_path);
 
-                if let Some(borrow) = st.owner() {
+                if let MaybeOwn::Borrow(borrow) = st.owner() {
                     let mt = borrow.mutability;
                     self.formatter.fmt_ptr(&ty_name, mt).into_owned().into()
                 } else {
