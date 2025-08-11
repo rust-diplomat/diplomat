@@ -145,14 +145,18 @@ pub(crate) fn run<'cx>(
                 errors: &errors,
                 impl_header: &mut header,
                 decl_header: &mut unused_header,
-                generating_struct_fields: false
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             submodules: &mut submodules,
             generating_struct_fields: false,
         };
 
-        context.cpp2.impl_header.includes.insert(cpp_impl_path.clone());
+        context
+            .cpp2
+            .impl_header
+            .includes
+            .insert(cpp_impl_path.clone());
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
 
@@ -295,7 +299,7 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext { 
+            cpp2: crate::cpp::TyGenContext {
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
@@ -389,7 +393,7 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext { 
+            cpp2: crate::cpp::TyGenContext {
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
@@ -403,7 +407,7 @@ mod test {
                 errors: &errors,
                 impl_header: &mut header,
                 decl_header: &mut unused_header,
-                generating_struct_fields: false,                
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             generating_struct_fields: false,
@@ -481,7 +485,7 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext { 
+            cpp2: crate::cpp::TyGenContext {
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
@@ -495,7 +499,7 @@ mod test {
                 errors: &errors,
                 impl_header: &mut header,
                 decl_header: &mut unused_header,
-                generating_struct_fields: false
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             generating_struct_fields: false,
