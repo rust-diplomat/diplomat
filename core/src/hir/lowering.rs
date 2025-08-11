@@ -511,15 +511,21 @@ impl<'ast> LoweringContext<'ast> {
             Some((last, remaining)) if last.is_write() => (remaining, true),
             _ => (&ast_function.item.params[..], false),
         };
-        let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
-
-        let (return_type, lifetime_env) = self.lower_return_type(ast_function.item.output_type.as_ref(), takes_write, return_ltl, ast_function.in_path)?;
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_function.item.attrs,
             &ast_function.ty_parent_attrs,
             &mut self.errors,
         );
+
+        let (params, return_type, lifetime_env) = if attrs.disable {
+            let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
+
+            let (return_type, lifetime_env) = self.lower_return_type(ast_function.item.output_type.as_ref(), takes_write, return_ltl, ast_function.in_path)?;
+            (params, return_type, lifetime_env)
+        } else {
+            (Vec::new(), ReturnType::Infallible(SuccessType::Unit), LifetimeEnv::new(smallvec::SmallVec::new(), 0))
+        };
         
 
         let def = Method {
