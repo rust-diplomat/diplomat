@@ -339,7 +339,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                     .into()
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(MaybeOwn::Own, _)) => {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
@@ -623,11 +623,11 @@ return string{return_type_modifier}"#
                 }
                 _ => todo!(),
             },
-            Slice::Primitive(Some(_), prim_ty) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
-            Slice::Primitive(None, prim_ty) => {
+            Slice::Primitive(MaybeOwn::Own, prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
@@ -985,7 +985,7 @@ returnVal.option() ?: return null
             Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
             Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
             Slice::Str(None, _) => ("moveUtf8".into(), true),
-            Slice::Primitive(Some(_), _) => ("borrow".into(), true),
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow".into(), true),
             Slice::Primitive(_, _) => ("move".into(), true),
             Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
             Slice::Strs(_) => ("borrowUtf8s".into(), true),
@@ -1016,7 +1016,7 @@ returnVal.option() ?: return null
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Str(_, _) => None,
-            Slice::Primitive(Some(_), _) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Primitive(_, _) => None,
@@ -1163,25 +1163,33 @@ returnVal.option() ?: return null
                             _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                         })
                         .unzip();
-                    let (native_output_type, return_modification) = match **output {
-                        Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
-                            match ty {
-                                Type::Enum(..) => ".toNative()",
-                                Type::Struct(..) => ".nativeStruct",
-                                _ => "",
-                            }
-                            .into(),
-                        ),
-                        None => ("Unit".into(), "".into()),
+                    let (native_output_type, return_modification) = match &**output {
+                        ReturnType::Infallible(success) => match success {
+                            SuccessType::OutType(ty) => (
+                                self.gen_native_type_name(ty, None).into(),
+                                match ty {
+                                    Type::Enum(..) => ".toNative()",
+                                    Type::Struct(..) => ".nativeStruct",
+                                    _ => "",
+                                }
+                                .into(),
+                            ),
+                            SuccessType::Unit => ("Unit".into(), "".into()),
+                            _ => panic!("Unsupported success type {success:?}"),
+                        },
+                        _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                     };
 
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
-                        output_type: match **output {
-                            Some(ref ty) => self.gen_type_name(ty, None).into(),
-                            None => "Unit".into(),
+                        output_type: match &**output {
+                            ReturnType::Infallible(success) => match success {
+                                SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                                SuccessType::Unit => "Unit".into(),
+                                _ => panic!("Unsupported success type {success:?}"),
+                            },
+                            _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
@@ -1673,28 +1681,44 @@ returnVal.option() ?: return null
                     + (if !cur.is_empty() { ", " } else { "" })
                     + &format!("{in_name}: {in_ty}")
             });
-        let (native_output_type, return_modification, return_cast) = match *method.output {
-            Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
-                match ty {
-                    Type::Enum(..) => ".toNative()",
-                    Type::Struct(..) => ".nativeStruct",
-                    _ => "",
-                }
-                .into(),
-                match ty {
-                    Type::Primitive(prim) => self.formatter.fmt_unsigned_primitive_ffi_cast(prim),
-                    _ => "",
-                }
-                .into(),
+        let (native_output_type, return_modification, return_cast) = match &*method.output {
+            ReturnType::Infallible(success) => match success {
+                SuccessType::OutType(ty) => (
+                    self.gen_native_type_name(ty, None).into(),
+                    match ty {
+                        Type::Enum(..) => ".toNative()",
+                        Type::Struct(..) => ".nativeStruct",
+                        _ => "",
+                    }
+                    .into(),
+                    match ty {
+                        Type::Primitive(prim) => {
+                            self.formatter.fmt_unsigned_primitive_ffi_cast(prim)
+                        }
+                        _ => "",
+                    }
+                    .into(),
+                ),
+                SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
+                _ => panic!("Unsupported success type {success:?}"),
+            },
+            _ => panic!(
+                "Unsupported return type {:?}. Results and Options are not supported.",
+                method.output
             ),
-            None => ("Unit".into(), "".into(), "".into()),
         };
         TraitMethodInfo {
             name: method_name,
-            output_type: match *method.output {
-                Some(ref ty) => self.gen_type_name(ty, None).into(),
-                None => "Unit".into(),
+            output_type: match &*method.output {
+                ReturnType::Infallible(success) => match success {
+                    SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                    SuccessType::Unit => "Unit".into(),
+                    _ => panic!("Unsupported success type {success:?}"),
+                },
+                _ => panic!(
+                    "Unsupported return type {:?}. Results and Options are not supported.",
+                    method.output
+                ),
             },
             native_output_type,
             return_modification,
@@ -2003,9 +2027,13 @@ returnVal.option() ?: return null
                     .map(|param| self.gen_type_name(&param.ty, None).into())
                     .collect::<Vec<String>>()
                     .join(", ");
-                let out_type_string: String = match **output {
-                    Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
-                    None => "Unit".into(),
+                let out_type_string: String = match &**output {
+                    ReturnType::Infallible(success) => match success {
+                        SuccessType::OutType(out_ty) => self.gen_type_name(out_ty, None).into(),
+                        SuccessType::Unit => "Unit".into(),
+                        _ => panic!("Unsupported success type {success:?}"),
+                    },
+                    _ => panic!("Unsupported return type {output:?}"),
                 };
                 format!("({in_type_string})->{out_type_string}").into()
             }

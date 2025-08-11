@@ -103,8 +103,12 @@ namespace nanobind::detail
 	struct type_caster<diplomat::result<T, E>>
 	{
         using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
+        using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
 		using Value = diplomat::result<T, E>;
-		Value value;
+        // Can't store result<T, E> directly since T& will create compiler errors.
+		std::optional<U> ok_val;
+        std::optional<V> err_val;
+        bool is_ok;
 		Py_ssize_t size;
         using Caster = make_caster<U>;
 		static constexpr auto Name = Caster::Name;
@@ -129,6 +133,46 @@ namespace nanobind::detail
 
             return nullptr;
 		}
+        
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { 
+            if (is_ok) {
+                return diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
+            } else {
+                return diplomat::Err<E>(forward_like_<V>(err_val.value()));
+            }
+        }
+
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept  {
+            uint8_t local_flags = flags_for_local_caster<U>(flags);
+
+            // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
+            auto caster = make_caster<T>();
+            if (caster.from_python(src, local_flags, cleanup)) {
+                is_ok = true;
+                if constexpr(std::is_reference_v<T>) {
+                    ok_val = std::optional(std::reference_wrapper(caster.operator cast_t<T>()));
+                } else {
+                    ok_val = std::optional(caster.operator cast_t<T>());
+                }
+                return true;
+            } else {
+                auto err_caster = make_caster<E>();
+                uint8_t err_local_flags = flags_for_local_caster<E>(flags);
+                if (err_caster.from_python(src, err_local_flags, cleanup)) {
+                    is_ok = false;
+                    if constexpr(std::is_reference_v<E>) {
+                        err_val = std::optional(std::reference_wrapper(err_caster.operator cast_t<E>()));
+                    } else {
+                        err_val = std::optional(err_caster.operator cast_t<E>());
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
 	};

@@ -59,4 +59,15 @@ struct BigStructWithStuff {
 };
 
 
+namespace diplomat {
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const BigStructWithStuff>>>> {
+    using type = capi::DiplomatBigStructWithStuffView;
+  };
+
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<BigStructWithStuff>>>> {
+    using type = capi::DiplomatBigStructWithStuffViewMut;
+};
+}
 #endif // BigStructWithStuff_D_HPP

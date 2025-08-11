@@ -4,6 +4,7 @@
 {% if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {% endif -%}
+
 {% if !docs.is_empty() -%}
 /**
  {{~ docs|prefix_trimmed(" * ")}}
@@ -30,3 +31,17 @@ struct {{type_name_unnamespaced}} {
 {% if namespace.is_some() -%}
 } // namespace
 {%-endif%}
+
+{%- if is_sliceable %}
+namespace diplomat {
+	template<typename T>
+	struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const {{type_name}}>>>> {
+		using type = {% if let Some(ns) = namespace -%} {{ns}}:: {%- endif -%} capi::Diplomat{{type_name_unnamespaced}}View;
+	};
+
+	template<typename T>
+	struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<{{type_name}}>>>> {
+		using type = {% if let Some(ns) = namespace -%} {{ns}}:: {%- endif -%} capi::Diplomat{{type_name_unnamespaced}}ViewMut;
+};
+}
+{%- endif %}

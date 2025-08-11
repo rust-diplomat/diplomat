@@ -636,10 +636,13 @@ impl Attrs {
                                         }
 
                                         if p.owner
-                                            .map(|b| b.mutability != Mutability::Immutable)
+                                            .as_borrowed()
+                                            .map(|o| !o.mutability.is_immutable())
                                             .unwrap_or(false)
-                                            || p.owner
-                                                .map(|b| b.mutability != Mutability::Immutable)
+                                            || p2
+                                                .owner
+                                                .as_borrowed()
+                                                .map(|o| !o.mutability.is_immutable())
                                                 .unwrap_or(false)
                                         {
                                             errors.push(LoweringError::Other(
@@ -1062,6 +1065,7 @@ impl BackendAttrSupport {
             "traits_are_send" => Some(self.traits_are_send),
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
+            "struct_refs" => Some(self.struct_refs),
             _ => None,
         }
     }

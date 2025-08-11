@@ -54,4 +54,15 @@ struct PrimitiveStruct {
 };
 
 
+namespace diplomat {
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const PrimitiveStruct>>>> {
+    using type = capi::DiplomatPrimitiveStructView;
+  };
+
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<PrimitiveStruct>>>> {
+    using type = capi::DiplomatPrimitiveStructViewMut;
+};
+}
 #endif // PrimitiveStruct_D_HPP

@@ -41,6 +41,7 @@ void add_ResultOpaque_binding(nb::handle);
 void add_RefList_binding(nb::handle);
 void add_RefListParameter_binding(nb::handle);
 void add_Float64Vec_binding(nb::handle);
+void add_Float64VecError_binding(nb::handle);
 void add_MyString_binding(nb::handle);
 void add_MyOpaqueEnum_binding(nb::handle);
 void add_Opaque_binding(nb::handle);
@@ -63,6 +64,7 @@ void add_Nested_binding(nb::handle);
 
 namespace ns {
 void add_RenamedStructWithAttrs_binding(nb::handle);
+void add_RenamedTestMacroStruct_binding(nb::handle);
 void add_AttrOpaque1Renamed_binding(nb::handle);
 void add_RenamedAttrOpaque2_binding(nb::handle);
 void add_RenamedComparable_binding(nb::handle);
@@ -72,6 +74,7 @@ void add_RenamedMyIterator_binding(nb::handle);
 void add_RenamedOpaqueArithmetic_binding(nb::handle);
 void add_RenamedOpaqueIterable_binding(nb::handle);
 void add_RenamedOpaqueIterator_binding(nb::handle);
+void add_RenamedTestOpaque_binding(nb::handle);
 void add_RenamedVectorTest_binding(nb::handle);
 void add_RenamedAttrEnum_binding(nb::handle);
 }
@@ -173,6 +176,7 @@ NB_MODULE(somelib, somelib_mod)
     add_RefList_binding(somelib_mod);
     add_RefListParameter_binding(somelib_mod);
     add_Float64Vec_binding(somelib_mod);
+    add_Float64VecError_binding(somelib_mod);
     add_MyString_binding(somelib_mod);
     add_MyOpaqueEnum_binding(somelib_mod);
     add_Opaque_binding(somelib_mod);
@@ -191,6 +195,7 @@ NB_MODULE(somelib, somelib_mod)
     nested::ns2::add_Nested_binding(somelib_nested_ns2_mod);
     
     ns::add_RenamedStructWithAttrs_binding(somelib_ns_mod);
+    ns::add_RenamedTestMacroStruct_binding(somelib_ns_mod);
     ns::add_AttrOpaque1Renamed_binding(somelib_ns_mod);
     ns::add_RenamedAttrOpaque2_binding(somelib_ns_mod);
     ns::add_RenamedComparable_binding(somelib_ns_mod);
@@ -200,6 +205,7 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_RenamedOpaqueArithmetic_binding(somelib_ns_mod);
     ns::add_RenamedOpaqueIterable_binding(somelib_ns_mod);
     ns::add_RenamedOpaqueIterator_binding(somelib_ns_mod);
+    ns::add_RenamedTestOpaque_binding(somelib_ns_mod);
     ns::add_RenamedVectorTest_binding(somelib_ns_mod);
     ns::add_RenamedAttrEnum_binding(somelib_ns_mod);
     

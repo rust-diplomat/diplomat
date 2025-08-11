@@ -7,8 +7,8 @@ use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
-    Type, TypeDef, TypeId,
+    self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 
@@ -262,6 +262,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.formatter.fmt_c_type_name(id);
 
+        let namespace = def.attrs.namespace.clone();
+
         let c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
 
@@ -276,7 +278,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_cpp_to_c_for_field("", field))
+            .map(|field| self.gen_cpp_to_c_for_field("", field, namespace.clone()))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
@@ -303,6 +305,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
+            is_sliceable: bool,
             docs: &'a str,
         }
 
@@ -313,9 +316,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ctype: &ctype,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
-            namespace: def.attrs.namespace.as_deref(),
+            namespace: namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
+            is_sliceable: def.attrs.abi_compatible,
             docs: &self.formatter.fmt_docs(&def.docs),
         }
         .render_into(self.decl_header)
@@ -386,11 +390,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             } = param_self
             {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if s.owner.is_some() && !attrs.abi_compatible {
+                if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions
                         .push(format!("auto thisDiplomatRefClone = {conversion};"));
 
-                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                    if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "*this = {}::FromFFI(thisDiplomatRefClone);",
                             self.formatter.fmt_type_name(s.id())
@@ -410,6 +414,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut param_validations = Vec::new();
         let mut returns_utf8_err = false;
 
+        let namespace = self.c.tcx.resolve_type(id).attrs().namespace.clone();
+
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             let param_name = decls.var_name.clone();
@@ -424,7 +430,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 returns_utf8_err = true;
             }
 
-            let conversion = self.gen_cpp_to_c_for_type(&param.ty, param_name);
+            let conversion = self.gen_cpp_to_c_for_type(
+                &param.ty,
+                param_name,
+                Some(method.abi_name.to_string()),
+                namespace.clone(),
+            );
             // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
             // Then we need to add some pre- and post- function call conversions to:
             // 1. Create `varNameDiplomatRefClone` as the converted FFI friendly struct.
@@ -436,13 +447,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             } = param
             {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if s.owner.is_some() && !attrs.abi_compatible {
+                if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions.push(format!(
                         "auto {}DiplomatRefClone = {};",
                         param.name, conversion
                     ));
 
-                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                    if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "{} = {}::FromFFI({}DiplomatRefClone);",
                             param.name,
@@ -623,10 +634,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.fmt_primitive_as_c(p);
-                let ret = self.formatter.fmt_borrowed_slice(
-                    &ret,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.fmt_borrowed_slice(&ret, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
@@ -636,10 +644,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let st_name = self.gen_struct_name::<P>(st_ty);
-                let ret = self.formatter.fmt_borrowed_slice(
-                    &st_name,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
@@ -671,7 +676,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         self.impl_header
             .includes
             .insert(self.formatter.fmt_impl_header_path(id));
-        if let Some(borrow) = st.owner() {
+        if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
                 // unique_ptr is nullable
@@ -687,12 +692,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
-        let return_type = cb
-            .get_output_type()
-            .unwrap()
-            .as_ref()
-            .map(|t| self.gen_type_name(t))
-            .unwrap_or("void".into());
+        let t = cb.get_output_type().unwrap();
+
+        let return_type = self.gen_cpp_return_type_name(t, false);
+
         let params_types = cb
             .get_inputs()
             .unwrap()
@@ -710,25 +713,25 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if attrs.abi_compatible && s.owner.is_some() {
-                    let b = s.owner.unwrap();
-                    let c_name = self.formatter.namespace_c_name(
-                        s.id(),
-                        &self.formatter.fmt_type_name_unnamespaced(s.id()),
-                    );
+                if attrs.abi_compatible {
+                    if let MaybeOwn::Borrow(b) = s.owner {
+                        let c_name = self.formatter.namespace_c_name(
+                            s.id(),
+                            &self.formatter.fmt_type_name_unnamespaced(s.id()),
+                        );
 
-                    match b.mutability {
-                        Mutability::Immutable => {
-                            format!("reinterpret_cast<const {c_name}*>(this)")
+                        return match b.mutability {
+                            Mutability::Immutable => {
+                                format!("reinterpret_cast<const {c_name}*>(this)")
+                            }
+                            Mutability::Mutable => {
+                                format!("reinterpret_cast<{c_name}*>(this)")
+                            }
                         }
-                        Mutability::Mutable => {
-                            format!("reinterpret_cast<{c_name}*>(this)")
-                        }
+                        .into();
                     }
-                    .into()
-                } else {
-                    "this->AsFFI()".into()
                 }
+                "this->AsFFI()".into()
             }
             SelfType::Enum(..) => "this->AsFFI()".into(),
             _ => unreachable!("unknown AST/HIR variant"),
@@ -741,13 +744,15 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
-        &self,
+        &mut self,
         cpp_struct_access: &str,
         field: &'a hir::StructField<P>,
+        namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression = self.gen_cpp_to_c_for_type(&field.ty, field_getter.into());
+        let expression =
+            self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace);
 
         NamedExpression {
             var_name,
@@ -760,9 +765,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
-        &self,
+        &mut self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
+        method_abi_name: Option<String>,
+        namespace: Option<String>,
     ) -> Cow<'a, str> {
         match *ty {
             Type::Primitive(..) => cpp_name.clone(),
@@ -778,20 +785,20 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     _ => unreachable!()
                 };
 
-                if attrs.abi_compatible && s.owner().is_some() {
-                    let borrow = s.owner().unwrap();
-                    let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
-                    match borrow.mutability {
-                        Mutability::Immutable => {
-                            format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
-                        },
-                        Mutability::Mutable => {
-                            format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
-                        }
-                    }.into()
-                } else {
-                    format!("{cpp_name}.AsFFI()").into()
+                if attrs.abi_compatible {
+                    if let MaybeOwn::Borrow(borrow) = s.owner() {
+                        let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        return match borrow.mutability {
+                            Mutability::Immutable => {
+                                format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
+                            },
+                            Mutability::Mutable => {
+                                format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
+                            }
+                        }.into();
+                    }
                 }
+                format!("{cpp_name}.AsFFI()").into()
             },
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
@@ -799,18 +806,52 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
-                if b.map(|b| b.mutability).unwrap_or(Mutability::Mutable).is_mutable() { "" } else { "const " },
+                if b.mutability().is_mutable() { "" } else { "const " },
                 self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
-                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into());
+                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name, namespace);
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
-            Type::Callback(..) => {
-                format!("{{new decltype({cpp_name})(std::move({cpp_name})), diplomat::fn_traits({cpp_name}).c_run_callback, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+            Type::Callback(ref c) => {
+                let run_callback = match c.get_output_type().unwrap() {
+                    ReturnType::Fallible(ref ok, ref err) => {
+                        let ok_type_name = match ok {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+
+                        let err_type_name = match err {
+                            Some(o) => self.gen_type_name(o),
+                            None => "std::monostate".into(),
+                        };
+
+                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
+
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
+                    },
+                    ReturnType::Nullable(ref success) => {
+                        let type_name = match success {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+
+                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
+                    }
+                    ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
+                        let opaque_type = format!("diplomat::capi::{}", self.c.formatter.fmt_type_name(o.tcx_id.into()));
+                        let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
+                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
+                    },
+                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
+                };
+                format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -820,9 +861,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// is_generic_write is whether we are generating the method that returns a string or
     /// operates on a Writeable
-    fn gen_cpp_return_type_name(
+    fn gen_cpp_return_type_name<P: hir::TyPosition>(
         &mut self,
-        result_ty: &ReturnType,
+        result_ty: &ReturnType<P>,
         is_generic_write: bool,
     ) -> Cow<'ccx, str> {
         match *result_ty {
@@ -939,14 +980,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let prim_name = self.formatter.fmt_primitive_as_c(p);
-                let span = self.formatter.fmt_borrowed_slice(
-                    &prim_name,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let span = self
+                    .formatter
+                    .fmt_borrowed_slice(&prim_name, b.mutability());
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
-                let mt = b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable);
+                let mt = b.mutability();
                 let st_name = self.formatter.fmt_type_name(st_ty.id());
                 let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
                 format!(

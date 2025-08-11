@@ -9,7 +9,10 @@ mod ffi {
         fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
+        #[diplomat::attr(kotlin, disable)]
+        fn test_result_output(&self) -> Result<u32, ()>;
     }
+
     #[diplomat::attr(not(supports = "traits"), disable)]
     pub struct TraitWrapper {
         cant_be_empty: bool,
@@ -24,6 +27,11 @@ mod ffi {
         pub fn test_trait_with_struct(t: impl TesterTrait) -> i32 {
             let arg = TraitTestingStruct { x: 1, y: 5 };
             t.test_struct_trait_fn(arg)
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_result_output(t: impl TesterTrait) {
+            assert_eq!(t.test_result_output(), Ok(0));
         }
     }
 }
