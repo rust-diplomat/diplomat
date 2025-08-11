@@ -192,6 +192,7 @@ where
 
 #[derive(Debug)]
 #[non_exhaustive]
+/// A site where a macro is used (i.e., `example!(...)`)
 /// Constructed in [`MacroUse::parse`] (called by [`MacroDef::evaluate`]) when a previously defined macro is used. We use the definition of [`MacroDef`] to then construct the args in the used macro.
 pub struct MacroUse {
     /// The arguments $argname:MacroFragSpec passed to the macro. Indexed by `argname`. Used for substitution during [`MacroDef::evaluate`].
@@ -379,7 +380,8 @@ impl MacroUse {
 }
 
 #[derive(Debug)]
-/// Used for determining how to parse [`MacroUse`]. This covers everything inside of the brackets for a macro's definition (i.e., example!(...), everything inside of `...` is parsed as a MacroMatch.
+/// A token representing part of a macro's arguments.
+/// Used for determining how to parse [`MacroUse`].
 /// First constructed with [`MacroMatcher::parse`] inside of [`MacroDef::parse`]. Then, we compare with [`MacroUse::parse_macro_matcher`].
 pub enum MacroMatch {
     /// A token, excluding $ or delimeters. See https://doc.rust-lang.org/reference/tokens.html#grammar-Token
@@ -445,6 +447,7 @@ impl Parse for MacroMatch {
 }
 
 #[derive(Debug)]
+/// Represents any given macro definition's arguments, and information on how to parse them for use.
 /// A MacroMatcher is a delimited list of [`MacroMatch`]es. When you call the macro `example!(...)`, the macro matcher is the parentheses delimited tokens: `(...)`.
 /// Used to compare a [`MacroDef`] against a [`MacroUse`] when parsing arguments.
 pub struct MacroMatcher {
