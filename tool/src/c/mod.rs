@@ -150,10 +150,11 @@ pub(crate) fn run<'tcx>(
             context.gen_free_function(f, &mut header, &mut impl_template);
         }
 
-        impl_template.render_into(&mut header).unwrap();
+        if impl_template.methods.len() > 0 {
+            impl_template.render_into(&mut header).unwrap();
+            files.add_file("diplomat_free_functions.h".into(), header.to_string());
+        }
     }
-
-    files.add_file("diplomat_free_functions.h".into(), header.to_string());
 
     (files, errors)
 }
