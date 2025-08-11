@@ -3,7 +3,7 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, ReturnableStructDef,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner,
     StructPathLike, SymbolId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
