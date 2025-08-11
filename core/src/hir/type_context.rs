@@ -1312,7 +1312,9 @@ mod tests {
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
         attr_validator.support.callbacks = true;
-        let config = super::LoweringConfig {unsafe_references_in_callbacks: true};
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
         match hir::TypeContext::from_syn(&parsed, config, attr_validator) {
             Ok(_context) => (),
             Err(e) => {
