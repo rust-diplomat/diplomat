@@ -469,7 +469,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             .insert(self.formatter.cxx.fmt_impl_header_path(id));
         if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
-            self.formatter.cxx.fmt_borrowed(&type_name, mutability).into_owned().into()
+            self.formatter
+                .cxx
+                .fmt_borrowed(&type_name, mutability)
+                .into_owned()
+                .into()
         } else {
             type_name
         }
@@ -547,10 +551,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st)) => {
                 let st_name = self.gen_struct_name::<P>(st);
-                let ret = self.formatter.cxx.fmt_borrowed_slice(
-                    &st_name,
-                    b.mutability(),
-                );
+                let ret = self
+                    .formatter
+                    .cxx
+                    .fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
             Type::DiplomatOption(ref inner) => {
