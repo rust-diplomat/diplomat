@@ -45,22 +45,22 @@ struct OpaqueTemplate<'a> {
 
 #[derive(Template)]
 #[template(path = "c/impl.h.jinja", escape = "none")]
-struct ImplTemplate<'a> {
-    methods: Vec<MethodTemplate<'a>>,
-    cb_structs_and_defs: Vec<CallbackAndStructDef>,
-    is_for_cpp: bool,
-    ty_name: Cow<'a, str>,
-    dtor_name: Option<&'a str>,
+pub(super) struct ImplTemplate<'a> {
+    pub(super) methods: Vec<MethodTemplate<'a>>,
+    pub(super) cb_structs_and_defs: Vec<CallbackAndStructDef>,
+    pub(super) is_for_cpp: bool,
+    pub(super) ty_name: Option<Cow<'a, str>>,
+    pub(super) dtor_name: Option<&'a str>,
 }
 
-struct MethodTemplate<'a> {
+pub(super) struct MethodTemplate<'a> {
     return_ty: Cow<'a, str>,
     params: String,
     abi_name: &'a str,
 }
 
 #[derive(Clone)]
-struct CallbackAndStructDef {
+pub(super) struct CallbackAndStructDef {
     name: String,
     params_types: String,
     return_type: String,
@@ -225,7 +225,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             None
         };
         ImplTemplate {
-            ty_name,
+            ty_name: Some(ty_name),
             methods,
             cb_structs_and_defs,
             dtor_name,
@@ -244,6 +244,17 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         impl_header.includes.remove(self.decl_header_path);
 
         impl_header
+    }
+    
+    pub(super) fn gen_free_function(&self, func : &'tcx hir::Method, header : &mut Header, impl_template : &mut ImplTemplate<'tcx>) {
+        let _guard = self.errors.set_context_method(
+            self.tcx.fmt_symbol_name_diagnostics(self.id),
+            func.name.as_str().into(),
+        );
+            
+        let (method_chunk, callback_defs) = self.gen_method(func, header);
+        impl_template.methods.push(method_chunk);
+        impl_template.cb_structs_and_defs.extend_from_slice(&callback_defs);
     }
 
     fn gen_method(

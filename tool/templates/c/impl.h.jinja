@@ -17,7 +17,7 @@ typedef struct {{ cb_and_struct_def.name }} {
 {%- endfor %}
 {%~ match dtor_name %}
 {% when Some with (dtor_name) ~%}
-void {{ dtor_name }}({{ ty_name }}* self);
+void {{ dtor_name }}({{ ty_name.as_ref().unwrap() }}* self);
 {%~ when None %}
 {%- endmatch %}
 {% if is_for_cpp -%}

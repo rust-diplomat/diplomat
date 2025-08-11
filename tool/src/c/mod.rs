@@ -8,6 +8,7 @@ pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
+use askama::Template;
 use diplomat_core::hir::BackendAttrSupport;
 use diplomat_core::hir::{self, DocsUrlGenerator};
 
@@ -118,6 +119,41 @@ pub(crate) fn run<'tcx>(
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
+
+    // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
+    let mut header = Header::new("diplomat_free_functions.h".into(), false);
+
+    {
+        let mut impl_template = ty::ImplTemplate {
+            methods: Vec::new(),
+            cb_structs_and_defs: Vec::new(),
+            is_for_cpp: false,
+            ty_name: None,
+            dtor_name: None,
+        };
+
+
+        for (id, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
+            }
+            let context = TyGenContext {
+                tcx,
+                formatter: &formatter,
+                errors: &errors,
+                is_for_cpp: false,
+                id: id.into(),
+                decl_header_path: "diplomat_free_functions.d.h".into(),
+                impl_header_path: "diplomat_free_functions.h".into(),
+            };
+
+            context.gen_free_function(f, &mut header, &mut impl_template);
+        }
+
+        impl_template.render_into(&mut header).unwrap();
+    }
+
+    files.add_file("diplomat_free_functions.h".into(), header.to_string());
 
     (files, errors)
 }
