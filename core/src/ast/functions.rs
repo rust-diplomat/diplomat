@@ -20,6 +20,9 @@ pub struct Function {
 impl Function {
     pub(crate) fn from_syn(f : &ItemFn) -> Function {
         let ident : Ident = (&f.sig.ident).into();
+        if f.sig.receiver().is_some() {
+            panic!("Cannot use self parameter in free function {ident:?}")
+        }
 
         let attrs = Attrs::from_attrs(&f.attrs);
 
@@ -61,5 +64,48 @@ impl Function {
             attrs,
             docs: Docs::from_attrs(&f.attrs),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use insta;
+
+    use syn;
+
+    use crate::ast::Function;
+
+    #[test]
+    fn test_free_function() {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func(a : f32, b: f64) {
+
+                }
+            }
+        ));
+    }
+
+    #[test]
+    fn test_free_function_output() {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func(a : SomeType) -> Option<()> {
+
+                }
+            }
+        ));
+    }
+
+    
+    #[test]
+    fn test_free_function_lifetimes() {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func<'a>(a : &'a SomeType) -> Option<&'a SomeType> {
+
+                }
+            }
+        ));
     }
 }
