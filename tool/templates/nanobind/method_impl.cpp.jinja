@@ -74,7 +74,7 @@
 	{%- when crate::hir::SpecialMethod::Indexer -%}
 		("__getitem__", {% match m.method.output -%}
 		{%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
-		[]({{type_name}}* self, {{m.param_decls.as_ref().unwrap()[0].type_name}} index) {
+		[]({{type_name}}* self, {{m.param_decls.params[0].type_name}} index) {
 			auto out = self->operator[] (index);
 			{%- if let crate::hir::ReturnType::Nullable(..) = m.method.output %}
 			if (!out.has_value()) {

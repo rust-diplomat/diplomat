@@ -467,19 +467,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         self.includes
             .insert(self.formatter.cxx.fmt_impl_header_path(id));
-        if let Some(borrow) = st.owner() {
+        if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
-            match (borrow.is_owned(), false) {
-                // unique_ptr is nullable
-                (true, _) => self.formatter.cxx.fmt_owned(&type_name),
-                (false, true) => self
-                    .formatter
-                    .cxx
-                    .fmt_optional_borrowed(&type_name, mutability),
-                (false, false) => self.formatter.cxx.fmt_borrowed(&type_name, mutability),
-            }
-            .into_owned()
-            .into()
+            self.formatter.cxx.fmt_borrowed(&type_name, mutability).into_owned().into()
         } else {
             type_name
         }
@@ -559,7 +549,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 let st_name = self.gen_struct_name::<P>(st);
                 let ret = self.formatter.cxx.fmt_borrowed_slice(
                     &st_name,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                    b.mutability(),
                 );
                 ret.into_owned().into()
             }
