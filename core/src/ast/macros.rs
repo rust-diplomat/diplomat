@@ -380,7 +380,7 @@ impl MacroUse {
 
 #[derive(Debug)]
 /// Used for determining how to parse [`MacroUse`]. This covers everything inside of the brackets for a macro's definition (i.e., example!(...), everything inside of `...` is parsed as a MacroMatch.
-/// First constructed with [`MacroMatcher::parse`] inside of [`MacroDef::parse`]. Then, we compare with [`MacroUse::parse_macro_matcher`]. 
+/// First constructed with [`MacroMatcher::parse`] inside of [`MacroDef::parse`]. Then, we compare with [`MacroUse::parse_macro_matcher`].
 pub enum MacroMatch {
     /// A token, excluding $ or delimeters. See https://doc.rust-lang.org/reference/tokens.html#grammar-Token
     Tokens(TokenStream),
