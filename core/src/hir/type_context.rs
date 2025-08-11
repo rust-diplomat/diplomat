@@ -125,6 +125,10 @@ impl TypeContext {
             .map(|(i, trt)| (TraitId(i), trt))
     }
 
+    pub fn all_free_functions<'tcx>(&'tcx self) -> impl Iterator<Item = (FunctionId, &'tcx Method)> {
+        self.functions.iter().enumerate().map(|(i, f)| (FunctionId(i), f))
+    }
+
     pub fn out_structs(&self) -> &[OutStructDef] {
         &self.out_structs
     }
