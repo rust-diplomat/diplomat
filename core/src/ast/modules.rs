@@ -103,6 +103,7 @@ pub struct Module {
     pub imports: Vec<(Path, Ident)>,
     pub declared_types: BTreeMap<Ident, CustomType>,
     pub declared_traits: BTreeMap<Ident, Trait>,
+    pub declared_functions : BTreeMap<Ident, Function>,
     pub sub_modules: Vec<Module>,
     pub attrs: Attrs,
 }
@@ -335,6 +336,12 @@ impl Module {
             }
         });
 
+        self.declared_functions.iter().for_each(|(k, f)| {
+            if mod_symbols.insert(k.clone(), ModSymbol::Function(f.clone())).is_some() {
+                panic!("Two functions were declared with the same name, this needs to be implemented (key: {k})")
+            }
+        });
+
         let path_to_self = in_path.sub_path(self.name.clone());
         self.sub_modules.iter().for_each(|m| {
             m.insert_all_types(path_to_self.clone(), out);
@@ -379,6 +386,7 @@ impl Module {
             imports: mst.imports,
             declared_types: mst.custom_types_by_name,
             declared_traits: mst.custom_traits_by_name,
+            declared_functions: mst.functions_by_name,
             sub_modules: mst.sub_modules,
             attrs: mod_attrs,
         }

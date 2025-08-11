@@ -11,7 +11,7 @@ use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
     OpaqueType, Path, RustLink, Struct, Trait,
 };
-use crate::Env;
+use crate::{ast::Function, Env};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
@@ -96,6 +96,8 @@ pub enum ModSymbol {
     CustomType(CustomType),
     /// A trait
     Trait(Trait),
+    /// A function
+    Function(Function),
 }
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
@@ -201,6 +203,9 @@ impl PathType {
                     }
                     Some(ModSymbol::Trait(trt)) => {
                         panic!("Found trait {} but expected a type", trt.name);
+                    }
+                    Some(ModSymbol::Function(f)) => {
+                        panic!("Found function {} but expected a type", f.name);
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",

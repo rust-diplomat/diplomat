@@ -9,6 +9,7 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
+use crate::hir::Method;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -24,6 +25,7 @@ pub struct TypeContext {
     opaques: Vec<OpaqueDef>,
     enums: Vec<EnumDef>,
     traits: Vec<TraitDef>,
+    functions: Vec<Method>,
 }
 
 /// Additional features/config to support while lowering
@@ -54,6 +56,10 @@ pub struct EnumId(usize);
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TraitId(usize);
 
+/// Key used to index into a [`TypeContext`] representing a function.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunctionId(usize);
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum TypeId {
@@ -68,6 +74,7 @@ pub enum TypeId {
 pub enum SymbolId {
     TypeId(TypeId),
     TraitId(TraitId),
+    FunctionId(FunctionId),
 }
 
 enum Param<'a> {
@@ -179,6 +186,10 @@ impl TypeContext {
         self.traits.index(id.0)
     }
 
+    pub fn resolve_function(&self, id: FunctionId) -> &Method {
+        self.functions.index(id.0)
+    }
+
     /// Resolve and format a named type for use in diagnostics
     /// (don't apply rename rules and such)
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<str> {
@@ -189,6 +200,7 @@ impl TypeContext {
         match id {
             SymbolId::TypeId(id) => self.fmt_type_name_diagnostics(id),
             SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),
+            SymbolId::FunctionId(id) => self.resolve_function(id).name.as_str().into(),
         }
     }
 
@@ -219,6 +231,7 @@ impl TypeContext {
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
         let mut ast_enums = SmallVec::<[_; 16]>::new();
         let mut ast_traits = SmallVec::<[_; 16]>::new();
+        let mut ast_functions = SmallVec::<[_; 16]>::new();
 
         let mut errors = ErrorStore::default();
 
@@ -291,6 +304,16 @@ impl TypeContext {
                             id: TraitId(ast_traits.len()).into(),
                         };
                         ast_traits.push(item)
+                    },
+                    ast::ModSymbol::Function(f) => {
+                        let item = ItemAndInfo {
+                            item: f,
+                            in_path: path,
+                            ty_parent_attrs: ty_attrs.clone(),
+                            method_parent_attrs: method_attrs.clone(),
+                            id: FunctionId(ast_functions.len()).into(),
+                        };
+                        ast_functions.push(item)
                     }
                     _ => {}
                 }
@@ -319,15 +342,17 @@ impl TypeContext {
         let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
         let enums = ctx.lower_all_enums(ast_enums.into_iter());
         let traits = ctx.lower_all_traits(ast_traits.into_iter()).unwrap();
+        let functions = ctx.lower_all_functions(ast_functions.into_iter());
 
-        match (out_structs, structs, opaques, enums) {
-            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {
+        match (out_structs, structs, opaques, enums, functions) {
+            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums), Ok(functions)) => {
                 let res = Self {
                     out_structs,
                     structs,
                     opaques,
                     enums,
                     traits,
+                    functions,
                 };
 
                 if !ctx.errors.is_empty() {
@@ -713,6 +738,12 @@ impl From<TypeId> for SymbolId {
 impl From<TraitId> for SymbolId {
     fn from(x: TraitId) -> Self {
         SymbolId::TraitId(x)
+    }
+}
+
+impl From<FunctionId> for SymbolId {
+    fn from(x: FunctionId) -> Self {
+        SymbolId::FunctionId(x)
     }
 }
 

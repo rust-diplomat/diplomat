@@ -227,6 +227,7 @@ pub enum AttributeContext<'a, 'b> {
     Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
+    Function(&'a Method),
     Module,
     Param,
     SelfParam,
