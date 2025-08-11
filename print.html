@@ -791,10 +791,10 @@ mod ffi {
 <p>Diplomat has support for generating bindings with macro_rules!, with quite a few caveats:</p>
 <ol>
 <li>Any <code>macro_rules</code> definitions that you wish Diplomat to evaluate must use the <code>#[diplomat::macro_rules]</code> attribute.</li>
-<li>Macros can only contain a single arm.
+<li>Macros can only contain a single arm. The arm can contain any syntax as defined , with three exceptions:
 <ul>
-<li>The arm can only contain a sequence of comma separated matchers. I.e., <code>$matcher:expr, $matcher:ident, ...</code> etc.</li>
-<li>Note that the current implementation of the matcher parser pays no mind to fragment specifiers of the matcher. More robust parsing is TBD.</li>
+<li>The <code>pat</code> and <code>stmt</code> MacroFragSpecs are currently forbidden.</li>
+<li>The <code>$(MacroMatch+) MacroRepSep? MacroRepOp</code> pattern is currently forbidden.</li>
 </ul>
 </li>
 <li>Macros can exist only in <code>#[diplomat::bridge] mod ... { ... }</code> blocks or <code>impl</code> blocks.</li>
