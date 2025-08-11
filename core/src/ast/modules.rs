@@ -509,6 +509,11 @@ mod tests {
                                 unimplemented!()
                             }
                         }
+
+                        pub fn test_function() {}
+                        pub fn other_test_function(x : i32) -> NonOpaqueStruct {
+                            unimplemented!();
+                        }
                     }
                 },
                 true
