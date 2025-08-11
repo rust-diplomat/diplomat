@@ -159,12 +159,12 @@ impl Parse for MacroIdent {
 
 /// Hack to read information from the TokenTree while saving the rest to be later copied into a buffer.
 /// Will attempt to read `T`, and on a success all of the unread tokens after the stream will be written to `remaining`.
-struct MaybeParse<T: Parse> {
+struct ParsePartial<T: Parse> {
     item: T,
     remaining: TokenStream,
 }
 
-impl<T: Parse> Parse for MaybeParse<T> {
+impl<T: Parse> Parse for ParsePartial<T> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let item = input.parse::<T>()?;
         let remaining = input.parse()?;
@@ -172,7 +172,7 @@ impl<T: Parse> Parse for MaybeParse<T> {
     }
 }
 
-impl<T: Parse> MaybeParse<T>
+impl<T: Parse> ParsePartial<T>
 where
     MacroFrag: From<T>,
 {
@@ -181,7 +181,7 @@ where
         cursor: &Cursor,
         args: &mut HashMap<Ident, MacroFrag>,
     ) -> syn::Result<TokenBuffer> {
-        let out = syn::parse2::<MaybeParse<T>>(cursor.token_stream())?;
+        let out = syn::parse2::<ParsePartial<T>>(cursor.token_stream())?;
 
         args.insert(i.ident.clone(), MacroFrag::from(out.item));
 
@@ -236,27 +236,27 @@ impl MacroUse {
                         }
                     }
                     "expr" => {
-                        buf = MaybeParse::<syn::Expr>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Expr>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "ident" => {
-                        buf = MaybeParse::<syn::Ident>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Ident>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "item" => {
-                        buf = MaybeParse::<syn::Item>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Item>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "lifetime" => {
-                        buf = MaybeParse::<syn::Lifetime>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Lifetime>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "literal" => {
-                        buf = MaybeParse::<syn::Lit>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Lit>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "meta" => {
-                        buf = MaybeParse::<syn::Meta>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Meta>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "pat" => {
@@ -266,7 +266,7 @@ impl MacroUse {
                         ));
                     }
                     "path" => {
-                        buf = MaybeParse::<syn::Path>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Path>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "stmt" => {
@@ -284,11 +284,11 @@ impl MacroUse {
                         c = next;
                     }
                     "ty" => {
-                        buf = MaybeParse::<syn::Type>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Type>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     "vis" => {
-                        buf = MaybeParse::<syn::Visibility>::try_parse(i, &c, args)?;
+                        buf = ParsePartial::<syn::Visibility>::try_parse(i, &c, args)?;
                         c = buf.begin();
                     }
                     _ => {
