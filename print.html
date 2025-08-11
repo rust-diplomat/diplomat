@@ -627,7 +627,27 @@ mod ffi {
 <pre><code class="language-cpp">  static diplomat::result&lt;std::unique_ptr&lt;Thingy&gt;, std::monostate&gt; try_create(const std::string_view string);
 </code></pre>
 <p><code>diplomat::result</code> is a type that can be found in the generated <a href="https://github.com/rust-diplomat/diplomat/blob/main/tool/src/cpp/runtime.hpp"><code>diplomat_runtime.hpp</code></a> file. The most basic APIs are <code>.is_ok()</code> and <code>.is_err()</code>, returning <code>bool</code>s, and <code>.ok()</code> and <code>.err()</code> returning <code>std::option</code>s. There are further APIs for constructing and manipulating these that can be found in the header file.</p>
-<p>On the JS side it will continue to return the <code>Thingy</code> class but it will <code>throw</code> the error (as an empty object in this case) in case of an error.</p>
+<p>On backends that do not support <code>Result</code>, they will instead throw an error (i.e., Python/Nanobind and JS).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h1>
+<p>Diplomat has limited, experimental support for exposing and working with callbacks. See <a href="https://github.com/rust-diplomat/diplomat/issues/146">tracking issue</a>
+Currently these are only supported in the C++, kotlin, and nanobind backends.</p>
+<p>Functions taking callbacks as parameters take the form</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+impl MyType{
+    pub fn acceptsCallback(&amp;self, impl Fn())
+}
+<span class="boring">}</span></code></pre></pre>
+<p>or</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl MyType{
+    pub fn acceptsCallback(&amp;self, impl FnMut())
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The callback's parameters &amp; return types may be limited depending on the target language for now. Additional traits are not supported, however <code>+ 'static</code> may be given, which allows for moving the trait object into a <code>Box&lt;dyn Fn()&gt;</code>.</p>
+<p>Some backends may support callbacks accepting [mutable] references to opaque types as parameters, but lifetime parsing for these is not yet supported by any backend. Only anonymous lifetimes are allowed as a result, meaning that no such parameter may be guaranteed to live longer than a single invocation of the callback.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="returning-strings-writeables"><a class="header" href="#returning-strings-writeables">Returning strings: Writeables</a></h1>
 <p>Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports <a href="https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatWriteable.html"><code>DiplomatWriteable</code></a>, a type with a <code>Write</code> implementation which can be used to write to appropriate string types on the other side.</p>
 <p>For example, if we want to have methods that philosophically return a <code>String</code> or a <code>Result&lt;String&gt;</code>, we can do the following:</p>
@@ -1759,7 +1779,7 @@ for how to use them</p>
 <li>Feature tests: <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
 <li>Example: <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
 </ul>
-<h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
+<h3 id="callbacks-1"><a class="header" href="#callbacks-1">Callbacks</a></h3>
 <p>The kotlin backend supports passing kotlin functions and closures as callbacks to native code. To do this you need to add the
 enable the <code>jvm-callback-support</code> feature when you add  the diplomat runtime to your project. For examples on how to use them
 look in the <code>feature_tests</code> directory of the diplomat project. This is a bit conceptually different to the rest of diplomat
