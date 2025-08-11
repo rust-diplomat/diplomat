@@ -1,6 +1,7 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "CallbackTestingStruct.hpp"
 #include "CallbackWrapper.hpp"
 #include "MyString.hpp"
 
