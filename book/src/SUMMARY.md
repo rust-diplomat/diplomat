@@ -9,6 +9,7 @@
     - [Structs and enums](./structs.md)
     - [Options](./option.md)
     - [Results](./result.md)
+    - [Callbacks](./callbacks.md)
     - [Returning Strings: Writeable](./writeable.md)
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)

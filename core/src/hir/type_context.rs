@@ -536,7 +536,19 @@ impl TypeContext {
                 self.validate_ty(errors, &p.ty);
             }
 
-            if let Some(ref o) = *m.output {
+            let success = match &*m.output {
+                hir::ReturnType::Infallible(success) | hir::ReturnType::Nullable(success) => {
+                    success
+                }
+                hir::ReturnType::Fallible(success, fallible) => {
+                    if let Some(f) = fallible {
+                        self.validate_ty(errors, f);
+                    }
+                    success
+                }
+            };
+
+            if let hir::SuccessType::OutType(o) = success {
                 self.validate_ty(errors, o);
             }
         }
@@ -1228,6 +1240,82 @@ mod tests {
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
         match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+    #[test]
+    fn test_callback_borrowing_fails() {
+        // We may end up supporting this in the future, but
+        // we want to test that it is currently forbidden
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               #[diplomat::opaque]
+               pub struct Foo(u8);
+
+               impl Foo {
+                   pub fn apply_callback(&self, cb: impl FnMut(&Foo) -> &Foo) {}
+               }
+           }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.callbacks = true;
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+    #[test]
+    fn test_callback_borrowing_fails_with_unsafe_borrows() {
+        // We may end up supporting this in the future, but
+        // we want to test that it is currently forbidden
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               #[diplomat::opaque]
+               pub struct Foo(u8);
+
+               pub struct Bar {
+                x: u8,
+               }
+
+               impl Foo {
+                   // This is OK
+                   pub fn apply_allowed_callback(&self, cb: impl FnMut(&Foo) -> &Foo) {}
+                   // This is not
+                   pub fn apply_callback_owned_slice(&self, cb: impl FnMut(&Foo) -> Box<str>) {}
+                   // Nor is this
+                   pub fn apply_callback_borrowed_struct(&self, cb: impl FnMut(&Foo) -> &Bar) {}
+               }
+           }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.callbacks = true;
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {

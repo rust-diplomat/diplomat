@@ -60,6 +60,11 @@ def test_callback():
     assert out == 7, "test_str_cb_arg output"
     print("END")
 
+    op_ret = somelib.Opaque.from_str("Testing!")
+    def cb5():
+        return op_ret
+    assert o.test_opaque_result_error(cb5) == "\"Testing!\""
+
             
     cb = lambda a: 100 - a
     holder = somelib.CallbackHolder(cb)

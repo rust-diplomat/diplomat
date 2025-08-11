@@ -67,6 +67,7 @@ mod ffi {
                     diplomat_runtime::DiplomatUtf8StrSlice,
                 ) -> (),
             >(f.run_callback)(f.data, arg0, arg1)
+                .into()
         };
         Wrapper::test_multiarg_void_callback(f)
     }
@@ -82,6 +83,7 @@ mod ffi {
                     diplomat_runtime::DiplomatSlice<u8>,
                 ) -> (),
             >(g.run_callback)(g.data, arg0)
+                .into()
         };
         Wrapper::test_mod_array(g)
     }
@@ -93,6 +95,7 @@ mod ffi {
                 unsafe extern "C" fn(*mut c_void, ...) -> (),
                 unsafe extern "C" fn(*const c_void) -> (),
             >(h.run_callback)(h.data)
+                .into()
         };
         Wrapper::test_no_args(h)
     }

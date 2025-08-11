@@ -1163,25 +1163,33 @@ returnVal.option() ?: return null
                             _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                         })
                         .unzip();
-                    let (native_output_type, return_modification) = match **output {
-                        Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
-                            match ty {
-                                Type::Enum(..) => ".toNative()",
-                                Type::Struct(..) => ".nativeStruct",
-                                _ => "",
-                            }
-                            .into(),
-                        ),
-                        None => ("Unit".into(), "".into()),
+                    let (native_output_type, return_modification) = match &**output {
+                        ReturnType::Infallible(success) => match success {
+                            SuccessType::OutType(ty) => (
+                                self.gen_native_type_name(ty, None).into(),
+                                match ty {
+                                    Type::Enum(..) => ".toNative()",
+                                    Type::Struct(..) => ".nativeStruct",
+                                    _ => "",
+                                }
+                                .into(),
+                            ),
+                            SuccessType::Unit => ("Unit".into(), "".into()),
+                            _ => panic!("Unsupported success type {success:?}"),
+                        },
+                        _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                     };
 
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
-                        output_type: match **output {
-                            Some(ref ty) => self.gen_type_name(ty, None).into(),
-                            None => "Unit".into(),
+                        output_type: match &**output {
+                            ReturnType::Infallible(success) => match success {
+                                SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                                SuccessType::Unit => "Unit".into(),
+                                _ => panic!("Unsupported success type {success:?}"),
+                            },
+                            _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
@@ -1673,28 +1681,44 @@ returnVal.option() ?: return null
                     + (if !cur.is_empty() { ", " } else { "" })
                     + &format!("{in_name}: {in_ty}")
             });
-        let (native_output_type, return_modification, return_cast) = match *method.output {
-            Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
-                match ty {
-                    Type::Enum(..) => ".toNative()",
-                    Type::Struct(..) => ".nativeStruct",
-                    _ => "",
-                }
-                .into(),
-                match ty {
-                    Type::Primitive(prim) => self.formatter.fmt_unsigned_primitive_ffi_cast(prim),
-                    _ => "",
-                }
-                .into(),
+        let (native_output_type, return_modification, return_cast) = match &*method.output {
+            ReturnType::Infallible(success) => match success {
+                SuccessType::OutType(ty) => (
+                    self.gen_native_type_name(ty, None).into(),
+                    match ty {
+                        Type::Enum(..) => ".toNative()",
+                        Type::Struct(..) => ".nativeStruct",
+                        _ => "",
+                    }
+                    .into(),
+                    match ty {
+                        Type::Primitive(prim) => {
+                            self.formatter.fmt_unsigned_primitive_ffi_cast(prim)
+                        }
+                        _ => "",
+                    }
+                    .into(),
+                ),
+                SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
+                _ => panic!("Unsupported success type {success:?}"),
+            },
+            _ => panic!(
+                "Unsupported return type {:?}. Results and Options are not supported.",
+                method.output
             ),
-            None => ("Unit".into(), "".into(), "".into()),
         };
         TraitMethodInfo {
             name: method_name,
-            output_type: match *method.output {
-                Some(ref ty) => self.gen_type_name(ty, None).into(),
-                None => "Unit".into(),
+            output_type: match &*method.output {
+                ReturnType::Infallible(success) => match success {
+                    SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                    SuccessType::Unit => "Unit".into(),
+                    _ => panic!("Unsupported success type {success:?}"),
+                },
+                _ => panic!(
+                    "Unsupported return type {:?}. Results and Options are not supported.",
+                    method.output
+                ),
             },
             native_output_type,
             return_modification,
@@ -2003,9 +2027,13 @@ returnVal.option() ?: return null
                     .map(|param| self.gen_type_name(&param.ty, None).into())
                     .collect::<Vec<String>>()
                     .join(", ");
-                let out_type_string: String = match **output {
-                    Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
-                    None => "Unit".into(),
+                let out_type_string: String = match &**output {
+                    ReturnType::Infallible(success) => match success {
+                        SuccessType::OutType(out_ty) => self.gen_type_name(out_ty, None).into(),
+                        SuccessType::Unit => "Unit".into(),
+                        _ => panic!("Unsupported success type {success:?}"),
+                    },
+                    _ => panic!("Unsupported return type {output:?}"),
                 };
                 format!("({in_type_string})->{out_type_string}").into()
             }

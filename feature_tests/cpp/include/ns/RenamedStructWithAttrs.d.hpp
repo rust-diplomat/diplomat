@@ -51,4 +51,15 @@ struct RenamedStructWithAttrs {
 };
 
 } // namespace
+namespace diplomat {
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ns::RenamedStructWithAttrs>>>> {
+    using type = ns::capi::DiplomatRenamedStructWithAttrsView;
+  };
+
+  template<typename T>
+  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ns::RenamedStructWithAttrs>>>> {
+    using type = ns::capi::DiplomatRenamedStructWithAttrsViewMut;
+};
+}
 #endif // ns_RenamedStructWithAttrs_D_HPP

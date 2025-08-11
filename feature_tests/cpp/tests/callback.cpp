@@ -3,6 +3,9 @@
 #include "../include/CallbackHolder.hpp"
 #include "../include/MutableCallbackHolder.hpp"
 #include "../include/MyString.hpp"
+#include "../include/Opaque.hpp"
+#include "../include/MyStructContainingAnOption.hpp"
+#include "../include/PrimitiveStructVec.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[])
@@ -75,5 +78,96 @@ int main(int argc, char *argv[])
             op.set_str("split");
         }, *opaque);
         simple_assert_eq("opaque cb arg", opaque->borrow(), "split");
+    }
+
+    {
+        o.test_result_output([]() {
+            return diplomat::Ok<std::monostate>();
+        });
+    }
+    {
+        o.test_result_usize_output([]() {
+            return diplomat::Ok<size_t>(0);
+        });
+    }
+    {
+        o.test_option_output([]() {
+            return std::optional<std::monostate>(std::nullopt);
+        });
+    }
+    {
+        o.test_diplomat_option_output([]() {
+            return std::optional<uint32_t>(0);
+        });
+    }
+    {
+        o.test_diplomat_result([]() {
+            return diplomat::Err<size_t>(10);
+        });
+    }
+    auto a = Opaque::from_str("This is a test value.").ok().value();
+    auto ptr = a.get();
+    {
+        auto str = o.test_option_opaque([ptr]() {
+            return ptr;
+        });
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
+    }
+    {
+        auto str = o.test_result_opaque([ptr]() {
+            return diplomat::Ok<const Opaque&>(*ptr);
+        });
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
+    }
+    {
+        auto str = o.test_opaque_result_error([ptr]() {
+            return diplomat::Err<const Opaque&>(*ptr);
+        });
+        simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
+    }
+    {
+        o.test_inner_conversion([]() {
+            auto st = MyStructContainingAnOption::filled();
+            st.a->a = 42;
+            return diplomat::Ok(st);
+        });
+    }
+    {
+        o.test_str_conversion([]() {
+            return diplomat::Ok<std::string_view>("Slice conversion test string");
+        });
+    }
+
+    auto floatVec = std::vector<double>{ 1.f, 2.f, 3.f, 4.f };
+    {
+        o.test_slice_conversion([floatVec]() {
+            return diplomat::Ok(diplomat::span<const double>({floatVec.data(), floatVec.size()}));
+        });
+    }
+
+    auto primitive_vec = PrimitiveStructVec::new_();
+    auto primitive_vec_ptr = primitive_vec.get();
+    primitive_vec->push({
+            .x = 1.0f,
+            .a = true,
+            .b = 'a',
+            .c = 0,
+            .d = 0,
+            .e = 0
+        });
+    primitive_vec->push({
+        .x = 2.0f,
+        .a = false,
+        .b = 'f',
+        .c = 0,
+        .d = 0,
+        .e = 0
+    });
+    primitive_vec->push({.x = -1.0f});
+
+    {
+        o.test_struct_slice_conversion([primitive_vec_ptr]() {
+            return diplomat::Ok(primitive_vec_ptr->as_slice());
+        });
     }
 }

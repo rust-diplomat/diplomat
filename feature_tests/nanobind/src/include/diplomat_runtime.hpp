@@ -152,11 +152,16 @@ template<class T> struct Err {
   Err& operator=(Err&&) noexcept = default;
 };
 
+template <typename T> struct fn_traits;
+
 template<class T, class E>
 class result {
-private:
+protected:
     std::variant<Ok<T>, Err<E>> val;
 public:
+  template <typename T_>
+  friend struct fn_traits;
+
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
   result() = default;
@@ -324,7 +329,6 @@ using diplomat_c_span_convert_t = typename diplomat_c_span_convert<T>::type;
 template<typename T>
 using replace_fn_t = diplomat_c_span_convert_t<replace_string_view_t<as_ffi_t<T>>>;
 
-template <typename T> struct fn_traits;
 template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Args...)>> {
     using fn_ptr_t = Ret(Args...);
     using function_t = std::function<fn_ptr_t>;
@@ -350,8 +354,81 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       }
     }
 
+    template<typename T>
+    static replace_fn_t<T> replace_ret(T val) {
+      if constexpr(std::is_same_v<T, std::string_view>)   {
+          return {val.data(), val.size()};
+      } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
+        // Can we convert straight away to our slice type, or (in the case of ABI compatible structs), do we have to do a reinterpret cast?
+        if constexpr(std::is_same_v<decltype(std::declval<T>().data()), decltype(replace_fn_t<T>::data)>) {
+          return replace_fn_t<T> { val.data(), val.size() };
+        } else {
+          return replace_fn_t<T> { reinterpret_cast<decltype(replace_fn_t<T>::data)>(val.data()), val.size() };
+        }
+      } else if constexpr(!std::is_same_v<T, as_ffi_t<T>>) {
+        return val.AsFFI();
+      } else {
+        return val;
+      }
+    }
+
     static Ret c_run_callback(const void *cb, replace_fn_t<Args>... args) {
         return (*reinterpret_cast<const function_t *>(cb))(replace<Args>(args)...);
+    }
+
+    template<typename T, typename E, typename TOut>
+    static TOut c_run_callback_result(const void *cb, replace_fn_t<Args>... args) {
+      result<T, E> res = c_run_callback(cb, args...);
+
+      auto is_ok = res.is_ok();
+
+      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
+      constexpr bool has_err = !std::is_same_v<E, std::monostate>;
+
+      TOut out;
+      out.is_ok = is_ok;
+
+      if constexpr (has_ok) {
+        if (is_ok) {
+          out.ok = replace_ret<T>(std::get<Ok<T>>(res.val).inner);
+        }
+      }
+
+      if constexpr(has_err) {
+        if (!is_ok) {
+          out.err = replace_ret<E>(std::get<Err<E>>(res.val).inner);
+        }
+      }
+
+      return out;
+    }
+
+    // For DiplomatOption<>
+    template<typename T, typename TOut>
+    static TOut c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
+      constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
+
+      std::optional<T> ret = c_run_callback(cb, args...);
+
+      bool is_ok = ret.has_value();
+
+      TOut out;
+      out.is_ok = is_ok;
+
+      if constexpr(has_ok) {
+        if (is_ok) {
+          out.ok = replace_ret<T>(ret.value());
+        }
+      }
+      return out;
+    }
+
+    // All we need to do is just convert one pointer to another, while keeping the arguments the same:
+    template<typename T>
+    static T c_run_callback_diplomat_opaque(const void* cb, replace_fn_t<Args>... args) {
+      Ret out = c_run_callback(cb, args...);
+
+      return out->AsFFI();
     }
 
     static void c_delete(const void *cb) {
