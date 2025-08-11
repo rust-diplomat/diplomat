@@ -871,6 +871,9 @@ mod tests {
                     pub fn use_out_as_in(&self, out: OutStruct) {}
                 }
 
+                pub fn free_function(foo : &Opaque) {}
+                pub fn other_free_function() -> Box<Opaque> {}
+
             }
         }
     }
