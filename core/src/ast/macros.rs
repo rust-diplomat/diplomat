@@ -192,7 +192,9 @@ where
 
 #[derive(Debug)]
 #[non_exhaustive]
+/// Constructed in [`MacroUse::parse`] (called by [`MacroDef::evaluate`]) when a previously defined macro is used. We use the definition of [`MacroDef`] to then construct the args in the used macro.
 pub struct MacroUse {
+    /// The arguments $argname:MacroFragSpec passed to the macro. Indexed by `argname`. Used for substitution during [`MacroDef::evaluate`].
     args: HashMap<Ident, MacroFrag>,
 }
 
