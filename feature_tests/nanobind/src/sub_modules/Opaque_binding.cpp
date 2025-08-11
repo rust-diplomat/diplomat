@@ -1,6 +1,7 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "MyStruct.hpp"
 #include "Opaque.hpp"
 
 

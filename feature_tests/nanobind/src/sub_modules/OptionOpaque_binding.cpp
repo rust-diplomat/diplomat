@@ -1,6 +1,8 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "OptionEnum.hpp"
+#include "OptionInputStruct.hpp"
 #include "OptionOpaque.hpp"
 
 
