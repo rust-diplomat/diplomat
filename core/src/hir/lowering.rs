@@ -702,7 +702,11 @@ impl<'ast> LoweringContext<'ast> {
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
 
-                        Ok(Type::Struct(StructPath::new(lifetimes, tcx_id, None)))
+                        Ok(Type::Struct(StructPath::new(
+                            lifetimes,
+                            tcx_id,
+                            MaybeOwn::Own,
+                        )))
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
                         Err(())
@@ -778,7 +782,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Ok(Type::Struct(StructPath::new(
                                     lifetimes,
                                     tcx_id,
-                                    Some(borrow),
+                                    MaybeOwn::Borrow(borrow),
                                 )))
                             } else {
                                 self.errors.push(LoweringError::Other("found &T in input where T is a struct. The backend must support struct_refs.".to_string()));
@@ -939,7 +943,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
 
                 Ok(Type::Slice(Slice::Primitive(
-                    new_lifetime,
+                    new_lifetime.into(),
                     PrimitiveType::from_ast(*prim),
                 )))
             }
@@ -983,7 +987,7 @@ impl<'ast> LoweringContext<'ast> {
                             let inner = self.lower_type::<P>(type_name, ltl, in_struct, in_path)?;
                             match inner {
                                 Type::Struct(st) => {
-                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
+                                    Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                                 }
                                 _ => unreachable!(),
                             }
@@ -1079,11 +1083,11 @@ impl<'ast> LoweringContext<'ast> {
 
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::Struct(
-                                StructPath::new(lifetimes, tcx_id, None),
+                                StructPath::new(lifetimes, tcx_id, MaybeOwn::Own),
                             )))
                         } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::OutStruct(
-                                OutStructPath::new(lifetimes, tcx_id, None),
+                                OutStructPath::new(lifetimes, tcx_id, MaybeOwn::Own),
                             )))
                         } else {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
@@ -1311,7 +1315,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
                 Ok(OutType::Slice(Slice::Primitive(
-                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                    MaybeOwn::Borrow(Borrow::new(ltl.lower_lifetime(lt), *m)),
                     PrimitiveType::from_ast(*prim),
                 )))
             }
@@ -1342,7 +1346,7 @@ impl<'ast> LoweringContext<'ast> {
                             )?;
                             match inner {
                                 Type::Struct(st) => {
-                                    Ok(Type::Slice(Slice::Struct(new_lifetime, st)))
+                                    Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                                 }
                                 _ => unreachable!(),
                             }
@@ -1399,13 +1403,13 @@ impl<'ast> LoweringContext<'ast> {
                             let (borrow_lt, param_ltl) = self_param_ltl.lower_self_ref(lt);
                             let borrow = Borrow::new(borrow_lt, *mt);
 
-                            (Some(borrow), param_ltl)
+                            (MaybeOwn::Borrow(borrow), param_ltl)
                         } else {
                             self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed. Backend must support struct_refs.")));
                             return Err(());
                         }
                     } else {
-                        (None, self_param_ltl.no_self_ref())
+                        (MaybeOwn::Own, self_param_ltl.no_self_ref())
                     };
 
                     let attrs = self.attr_validator.attr_from_ast(

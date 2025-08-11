@@ -7,8 +7,8 @@ use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
-    Type, TypeDef, TypeId,
+    self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 
@@ -386,11 +386,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             } = param_self
             {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if s.owner.is_some() && !attrs.abi_compatible {
+                if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions
                         .push(format!("auto thisDiplomatRefClone = {conversion};"));
 
-                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                    if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "*this = {}::FromFFI(thisDiplomatRefClone);",
                             self.formatter.fmt_type_name(s.id())
@@ -436,13 +436,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             } = param
             {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if s.owner.is_some() && !attrs.abi_compatible {
+                if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions.push(format!(
                         "auto {}DiplomatRefClone = {};",
                         param.name, conversion
                     ));
 
-                    if s.owner.is_some_and(|o| o.mutability.is_mutable()) {
+                    if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "{} = {}::FromFFI({}DiplomatRefClone);",
                             param.name,
@@ -623,10 +623,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.fmt_primitive_as_c(p);
-                let ret = self.formatter.fmt_borrowed_slice(
-                    &ret,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.fmt_borrowed_slice(&ret, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
@@ -636,10 +633,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let st_name = self.gen_struct_name::<P>(st_ty);
-                let ret = self.formatter.fmt_borrowed_slice(
-                    &st_name,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
@@ -671,7 +665,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         self.impl_header
             .includes
             .insert(self.formatter.fmt_impl_header_path(id));
-        if let Some(borrow) = st.owner() {
+        if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
                 // unique_ptr is nullable
@@ -710,25 +704,25 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
                 let attrs = &s.resolve(self.c.tcx).attrs;
-                if attrs.abi_compatible && s.owner.is_some() {
-                    let b = s.owner.unwrap();
-                    let c_name = self.formatter.namespace_c_name(
-                        s.id(),
-                        &self.formatter.fmt_type_name_unnamespaced(s.id()),
-                    );
+                if attrs.abi_compatible {
+                    if let MaybeOwn::Borrow(b) = s.owner {
+                        let c_name = self.formatter.namespace_c_name(
+                            s.id(),
+                            &self.formatter.fmt_type_name_unnamespaced(s.id()),
+                        );
 
-                    match b.mutability {
-                        Mutability::Immutable => {
-                            format!("reinterpret_cast<const {c_name}*>(this)")
+                        return match b.mutability {
+                            Mutability::Immutable => {
+                                format!("reinterpret_cast<const {c_name}*>(this)")
+                            }
+                            Mutability::Mutable => {
+                                format!("reinterpret_cast<{c_name}*>(this)")
+                            }
                         }
-                        Mutability::Mutable => {
-                            format!("reinterpret_cast<{c_name}*>(this)")
-                        }
+                        .into();
                     }
-                    .into()
-                } else {
-                    "this->AsFFI()".into()
                 }
+                "this->AsFFI()".into()
             }
             SelfType::Enum(..) => "this->AsFFI()".into(),
             _ => unreachable!("unknown AST/HIR variant"),
@@ -778,20 +772,20 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     _ => unreachable!()
                 };
 
-                if attrs.abi_compatible && s.owner().is_some() {
-                    let borrow = s.owner().unwrap();
-                    let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
-                    match borrow.mutability {
-                        Mutability::Immutable => {
-                            format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
-                        },
-                        Mutability::Mutable => {
-                            format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
-                        }
-                    }.into()
-                } else {
-                    format!("{cpp_name}.AsFFI()").into()
+                if attrs.abi_compatible {
+                    if let MaybeOwn::Borrow(borrow) = s.owner() {
+                        let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        return match borrow.mutability {
+                            Mutability::Immutable => {
+                                format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
+                            },
+                            Mutability::Mutable => {
+                                format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
+                            }
+                        }.into();
+                    }
                 }
+                format!("{cpp_name}.AsFFI()").into()
             },
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
@@ -799,7 +793,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
-                if b.map(|b| b.mutability).unwrap_or(Mutability::Mutable).is_mutable() { "" } else { "const " },
+                if b.mutability().is_mutable() { "" } else { "const " },
                 self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
@@ -939,14 +933,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let prim_name = self.formatter.fmt_primitive_as_c(p);
-                let span = self.formatter.fmt_borrowed_slice(
-                    &prim_name,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let span = self
+                    .formatter
+                    .fmt_borrowed_slice(&prim_name, b.mutability());
                 format!("{span}({var_name}.data, {var_name}.len)").into()
             }
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
-                let mt = b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable);
+                let mt = b.mutability();
                 let st_name = self.formatter.fmt_type_name(st_ty.id());
                 let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
                 format!(

@@ -547,10 +547,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.cxx.fmt_primitive_as_c(p);
-                let ret = self.formatter.cxx.fmt_borrowed_slice(
-                    &ret,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.cxx.fmt_borrowed_slice(&ret, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
