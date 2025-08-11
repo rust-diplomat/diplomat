@@ -9,6 +9,7 @@ use super::{
     AttrInheritContext, Attrs, CustomType, Enum, Ident, Macros, Method, ModSymbol, Mutability,
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
+use crate::ast::Function;
 use crate::environment::*;
 
 /// Custom Diplomat attribute that can be placed on a struct definition.
@@ -111,6 +112,7 @@ pub struct Module {
 struct ModuleBuilder {
     custom_types_by_name: BTreeMap<Ident, CustomType>,
     custom_traits_by_name: BTreeMap<Ident, Trait>,
+    functions_by_name : BTreeMap<Ident, Function>,
     sub_modules: Vec<Module>,
     imports: Vec<(Path, Ident)>,
     analyze_types: bool,
@@ -283,6 +285,12 @@ impl ModuleBuilder {
                     }
                 }
             }
+            Item::Fn(f) => {
+                if self.analyze_types {
+                    let out = Function::from_syn(f);
+                    self.functions_by_name.insert(out.name.clone(), out);
+                }
+            }
             _ => {}
         }
     }
@@ -342,6 +350,7 @@ impl Module {
         let mut mst = ModuleBuilder {
             custom_types_by_name: BTreeMap::new(),
             custom_traits_by_name: BTreeMap::new(),
+            functions_by_name: BTreeMap::new(),
             sub_modules: Vec::new(),
             imports: Vec::new(),
             analyze_types: force_analyze

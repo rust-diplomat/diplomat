@@ -30,6 +30,9 @@ pub use types::{
     StringEncoding, TypeName,
 };
 
+mod functions;
+pub use functions::Function;
+
 pub(crate) mod lifetimes;
 pub use lifetimes::{Lifetime, LifetimeEnv, LifetimeTransitivity, NamedLifetime};
 

@@ -339,6 +339,20 @@ impl From<&syn::TraitBound> for PathType {
     }
 }
 
+impl From<&syn::Signature> for PathType {
+    fn from(other: &syn::Signature) -> Self {
+        let lifetimes = other.generics.params.iter().map(|generic_arg| match generic_arg { 
+            syn::GenericParam::Lifetime(lt) => (&lt.lifetime).into(), 
+            _ => panic!("generic type arguments are unsupported {other:?}"),
+        }).collect();
+
+        Self {
+            path: Path::empty().sub_path((&other.ident).into()),
+            lifetimes,
+        }
+    }
+}
+
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
         PathType::new(other)
