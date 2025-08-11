@@ -503,7 +503,7 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         ast_function : ItemAndInfo<'ast, ast::Function>,
     ) -> Result<Method, ()> {
-        self.errors.set_subitem(ast_function.item.name.as_str());
+        self.errors.set_item(ast_function.item.name.as_str());
         let name = ast_function.item.name.clone();
         let param_ltl = SelfParamLifetimeLowerer::no_self_ref(SelfParamLifetimeLowerer::new(&ast_function.item.lifetimes, self)?);
         
