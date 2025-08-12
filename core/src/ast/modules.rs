@@ -288,8 +288,19 @@ impl ModuleBuilder {
             }
             Item::Fn(f) => {
                 if self.analyze_types {
-                    let out = Function::from_syn(f);
-                    self.functions_by_name.insert(out.name.clone(), out);
+                    let is_public = matches!(f.vis, Visibility::Public(_));
+                    let has_diplomat_attrs = f.attrs.iter().any(|a| {
+                        a.path().segments.iter().next().unwrap().ident == "diplomat"
+                    });
+                    assert!(
+                        is_public || !has_diplomat_attrs,
+                        "Non-public function with diplomat attrs found: {}",
+                        f.sig.ident
+                    ); 
+                    if is_public {
+                        let out = Function::from_syn(f);
+                        self.functions_by_name.insert(out.name.clone(), out);
+                    }
                 }
             }
             _ => {}

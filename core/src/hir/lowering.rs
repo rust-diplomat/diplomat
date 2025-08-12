@@ -518,7 +518,7 @@ impl<'ast> LoweringContext<'ast> {
             &mut self.errors,
         );
 
-        let (params, return_type, lifetime_env) = if attrs.disable {
+        let (params, return_type, lifetime_env) = if !attrs.disable {
             let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
 
             let (return_type, lifetime_env) = self.lower_return_type(ast_function.item.output_type.as_ref(), takes_write, return_ltl, ast_function.in_path)?;
