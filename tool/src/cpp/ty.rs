@@ -356,7 +356,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(op_id));
+                    .insert(self.formatter.fmt_impl_header_path(op_id.into()));
                 ret
             }
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
@@ -375,11 +375,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 if self.generating_struct_fields {
                     self.decl_header
                         .includes
-                        .insert(self.formatter.fmt_decl_header_path(id));
+                        .insert(self.formatter.fmt_decl_header_path(id.into()));
                 }
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(id));
+                    .insert(self.formatter.fmt_impl_header_path(id.into()));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
@@ -422,11 +422,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         if self.generating_struct_fields {
             self.decl_header
                 .includes
-                .insert(self.formatter.fmt_decl_header_path(id));
+                .insert(self.formatter.fmt_decl_header_path(id.into()));
         }
         self.impl_header
             .includes
-            .insert(self.formatter.fmt_impl_header_path(id));
+            .insert(self.formatter.fmt_impl_header_path(id.into()));
         if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {

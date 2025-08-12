@@ -87,13 +87,15 @@ impl<'tcx> ImplGenContext<'tcx> {
         #[derive(Template)]
         #[template(path = "cpp/impl_block_function.h.jinja", escape = "none")]
         struct FunctionImpl<'a> {
-            m : MethodInfo<'a>
+            m : MethodInfo<'a>,
+            namespace : Option<String>,
         }
 
         if let Some(m) = info {
             
             let impl_bl = FunctionImpl {
-                m
+                m,
+                namespace: func.attrs.namespace.clone()
             };
             self.impl_template.methods.push(impl_bl.to_string());
         }

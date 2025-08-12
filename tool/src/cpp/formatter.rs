@@ -67,32 +67,64 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                let namespaced = if let Some(ns) = &resolved.attrs.namespace {
+                    format!("_{}", ns.replace("::", "_"))
+                } else {
+                    "".into()
+                };
+                (format!("diplomat{namespaced}_functions"), resolved.attrs.namespace.clone())
+            },
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.into(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}")
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.d.hpp")
+            format!("{ns}/{name}.d.hpp")
         } else {
-            format!("{type_name}.d.hpp")
+            format!("{name}.d.hpp")
         }
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                let namespaced = if let Some(ns) = &resolved.attrs.namespace {
+                    format!("_{}", ns.replace("::", "_"))
+                } else {
+                    "".into()
+                };
+                (format!("diplomat{namespaced}_functions"), resolved.attrs.namespace.clone())
+            },
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.into(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}")
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.hpp")
+            format!("{ns}/{name}.hpp")
         } else {
-            format!("{type_name}.hpp")
+            format!("{name}.hpp")
         }
     }
 

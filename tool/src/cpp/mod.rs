@@ -67,9 +67,9 @@ pub(crate) fn run<'tcx>(
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id);
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone());
-        let impl_header_path = formatter.fmt_impl_header_path(id);
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone());
 
         let mut context = TyGenContext {
@@ -122,11 +122,13 @@ pub(crate) fn run<'tcx>(
                 continue;
             }
 
-            let (key, impl_header_path)  = if let Some(ns) = &f.attrs.namespace {
-                (ns.clone(), format!("diplomat_{ns}_functions.hpp"))
+            let key  = if let Some(ns) = &f.attrs.namespace {
+                ns.clone()
             } else {
-                ("".into(), "diplomat_functions.hpp".into())
+                "".into()
             };
+            
+            let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
             let context = if let Some(v) = func_contexts.get_mut(&key) {
                 v

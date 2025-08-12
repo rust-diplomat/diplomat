@@ -106,8 +106,8 @@ pub(crate) fn run<'cx>(
             continue;
         }
 
-        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id);
-        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id);
+        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id.into());
+        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id.into());
         let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
         let mut includes = BTreeSet::default();
@@ -247,8 +247,8 @@ mod test {
         let mut root_module = crate::nanobind::root_module::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
         let mut includes = BTreeSet::new();
@@ -318,8 +318,8 @@ mod test {
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
         let mut includes = BTreeSet::new();
@@ -388,8 +388,8 @@ mod test {
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
         let mut includes = BTreeSet::new();
