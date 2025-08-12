@@ -29,9 +29,9 @@ pub struct Attrs {
     pub namespace: Option<String>,
     /// For changing the directory of a namespaced item, if you want the directory to be different from the namespace
     /// (for backends that support it). None is equivalent to the root directory.
-    /// 
+    ///
     /// This attribute is inherited to types (and is not allowed elsewhere)
-    pub dir : Option<String>,
+    pub dir: Option<String>,
     /// Rename this item/method/variant
     ///
     /// This attribute is inherited except through methods and variants (and is not allowed on variants)
@@ -363,16 +363,14 @@ impl Attrs {
                             }
                         },
                         "dir" => match StandardAttribute::from_meta(&attr.meta) {
-                            Ok(StandardAttribute::String(s)) if s.is_empty() => {
-                                this.dir = None
-                            }
+                            Ok(StandardAttribute::String(s)) if s.is_empty() => this.dir = None,
                             Ok(StandardAttribute::String(s)) => this.dir = Some(s),
                             Ok(_) | Err(_) => {
                                 errors.push(LoweringError::Other(
                                     "`dir` must have a single string parameter".to_string(),
                                 ));
                             }
-                        }
+                        },
                         "error" => {
                             this.custom_errors = true;
                         }
@@ -921,7 +919,10 @@ impl Attrs {
             None
         };
 
-        let dir = if matches!(context, AttrInheritContext::Module | AttrInheritContext::Type) {
+        let dir = if matches!(
+            context,
+            AttrInheritContext::Module | AttrInheritContext::Type
+        ) {
             self.dir.clone()
         } else {
             None
