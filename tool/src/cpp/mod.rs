@@ -136,7 +136,12 @@ pub(crate) fn run<'tcx>(
             } else {
                 func_contexts.insert(
                     key.clone(),
-                    ImplGenContext::new(impl_header_path.clone(), decl_header_path.clone(), true),
+                    ImplGenContext::new(
+                        impl_header_path.clone(),
+                        decl_header_path.clone(),
+                        f.attrs.namespace.clone(),
+                        true,
+                    ),
                 );
                 func_contexts.get_mut(&key).unwrap()
             };

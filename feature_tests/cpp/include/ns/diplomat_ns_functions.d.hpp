@@ -12,12 +12,13 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace ns {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
+namespace ns {
 
 
 
@@ -26,5 +27,5 @@ inline static int32_t Renamedfree_func_test(int32_t x);
 
 
 
-
+} // namespace
 #endif // ns_diplomat_ns_functions_D_HPP

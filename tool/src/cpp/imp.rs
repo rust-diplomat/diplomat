@@ -78,7 +78,12 @@ pub struct ImplGenContext<'tcx> {
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub fn new(impl_header_path: String, decl_header_path: String, is_for_cpp: bool) -> Self {
+    pub fn new(
+        impl_header_path: String,
+        decl_header_path: String,
+        namespace: Option<String>,
+        is_for_cpp: bool,
+    ) -> Self {
         let decl_c_header = crate::c::Header::new(decl_header_path.clone(), is_for_cpp);
         ImplGenContext {
             c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp),
@@ -87,6 +92,7 @@ impl<'tcx> ImplGenContext<'tcx> {
             impl_template: ImplTemplate::default(),
             decl_template: DeclTemplate {
                 c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
+                namespace,
                 ..Default::default()
             },
         }
