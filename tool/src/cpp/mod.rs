@@ -173,6 +173,7 @@ pub(crate) fn run<'tcx>(
         }
 
         for (_, ctx) in func_contexts.iter_mut() {
+            ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
             ctx.render().unwrap();
             files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
             files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());

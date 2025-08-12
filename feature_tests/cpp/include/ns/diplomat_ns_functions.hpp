@@ -1,6 +1,8 @@
 #ifndef ns_diplomat_ns_functions_HPP
 #define ns_diplomat_ns_functions_HPP
 
+#include "diplomat_ns_functions.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -14,7 +16,11 @@
 
 namespace diplomat {
 namespace capi {
+    extern "C" {
 
+    int32_t free_func_test(int32_t x);
+
+    } // extern "C"
 } // namespace capi
 } // namespace
 

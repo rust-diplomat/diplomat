@@ -14,11 +14,7 @@
 
 namespace diplomat {
 namespace capi {
-    extern "C" {
 
-    int32_t free_func_test(int32_t x);
-
-    } // extern "C"
 } // namespace capi
 } // namespace
 

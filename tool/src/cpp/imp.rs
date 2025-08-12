@@ -129,7 +129,7 @@ impl<'tcx> ImplGenContext<'tcx> {
 
     pub fn render(&mut self) -> Result<(), askama::Error> {
         self.c
-            .render_into(None, None, &mut self.decl_template.c_header)
+            .render_into(None, None, &mut self.impl_template.c_header)
             .unwrap();
         self.impl_template.render_into(&mut self.impl_header)?;
         self.decl_template.render_into(&mut self.decl_header)?;

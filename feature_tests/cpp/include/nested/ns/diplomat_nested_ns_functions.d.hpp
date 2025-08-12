@@ -14,11 +14,7 @@
 
 namespace diplomat {
 namespace capi {
-    extern "C" {
 
-    bool nested_ns_fn(bool x);
-
-    } // extern "C"
 } // namespace capi
 } // namespace
 
