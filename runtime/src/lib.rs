@@ -23,6 +23,8 @@ pub use callback::DiplomatCallback;
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
 
+pub mod rust_interop;
+
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;
 
