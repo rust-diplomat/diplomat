@@ -139,8 +139,8 @@ pub(crate) fn run<'tcx>(
                 errors: &errors,
                 is_for_cpp: false,
                 id: id.into(),
-                decl_header_path: "diplomat_free_functions.d.h".into(),
-                impl_header_path: "diplomat_free_functions.h".into(),
+                decl_header_path: "diplomat_free_functions.d.h",
+                impl_header_path: "diplomat_free_functions.h",
             };
 
             impl_context.gen_method(f, &context);
