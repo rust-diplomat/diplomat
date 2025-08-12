@@ -15,7 +15,7 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
 	}
 }
 
-{%- for m in methods %}
+{%- for m in methods -%}
 
 {% include "method_impl.h.jinja" %}
 {%- endfor %}

@@ -1,8 +1,11 @@
 mod formatter;
 mod header;
 mod ty;
+mod imp;
 
-use crate::{ErrorStore, FileMap};
+use std::collections::BTreeMap;
+
+use crate::{cpp::imp::ImplGenContext, ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use ty::TyGenContext;
 
@@ -109,6 +112,57 @@ pub(crate) fn run<'tcx>(
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
+    }
+
+    {
+        let mut func_contexts = BTreeMap::new();
+
+        for (id, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
+            }
+
+            let (key, impl_header_path)  = if let Some(ns) = &f.attrs.namespace {
+                (ns.clone(), format!("diplomat_{ns}_functions.hpp"))
+            } else {
+                ("".into(), "diplomat_functions.hpp".into())
+            };
+
+            let context = if let Some(v) = func_contexts.get_mut(&key) {
+                v
+            } else {
+                func_contexts.insert(key.clone(), ImplGenContext::new(impl_header_path.clone(), true));
+                func_contexts.get_mut(&key).unwrap()
+            };
+
+            let mut unused_header = header::Header::new("".into());
+            let mut impl_header_clone = header::Header::new("".into());
+
+            let mut ty_context = TyGenContext {
+                formatter: &formatter,
+                errors: &errors,
+                c: crate::c::TyGenContext {
+                    tcx: &tcx,
+                    formatter: &formatter.c,
+                    errors: &errors,
+                    is_for_cpp: true,
+                    id: id.into(),
+                    decl_header_path: "".into(),
+                    impl_header_path: &impl_header_path
+                },
+                impl_header: &mut impl_header_clone,
+                decl_header: &mut unused_header,
+                generating_struct_fields: false,
+            };
+
+            context.generate_function(id, f, &mut ty_context);
+            context.header.includes.append(&mut impl_header_clone.includes);
+        }
+
+        for (_, ctx) in func_contexts.iter_mut() {
+            ctx.render().unwrap();
+            files.add_file(ctx.header.path.clone(), ctx.header.to_string());
+        }
     }
 
     (files, errors)

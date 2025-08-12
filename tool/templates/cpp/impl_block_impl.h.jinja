@@ -1,0 +1,11 @@
+{% if let Some(ns) = namespace -%}
+namespace {{ns}} {
+{% endif %}
+
+{% for m in methods %}
+	{{m}}
+{% endfor %}
+
+{% if namespace.is_some() -%}
+} // namespace
+{%-endif%}

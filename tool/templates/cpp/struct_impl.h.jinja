@@ -1,11 +1,11 @@
-{% include "c_include.h.jinja" %}
+{% include "c_include.h.jinja" -%}
 
 {% for m in methods -%}
-{% include "method_impl.h.jinja" %}
+{%- include "method_impl.h.jinja" -%}
 
-{% endfor ~%}
+{% endfor %}
 
-{%- if !cpp_to_c_fields.is_empty() %}
+{% if !cpp_to_c_fields.is_empty() %}
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return {{ctype}} {
 {%- for field in cpp_to_c_fields %}

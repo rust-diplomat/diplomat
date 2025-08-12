@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, SpecialMethod, StringEncoding, TypeContext, TypeId,
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId
 };
 use std::borrow::Cow;
 
@@ -34,6 +34,22 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .attrs()
             .rename
             .apply(resolved.name().as_str().into())
+    }
+
+    pub fn fmt_symbol_name(&self, id : SymbolId) -> Cow<'tcx, str> {
+        match id {
+            SymbolId::TypeId(ty) => self.fmt_type_name(ty),
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                let name = resolved.attrs.rename.apply(resolved.name.as_str().into());
+                if let Some(ns) = &resolved.attrs.namespace {
+                    format!("{ns}::{name}").into()
+                } else {
+                    name
+                }
+            }
+            _ => panic!("Unsupported SymbolId: {id:?}")
+        }
     }
 
     /// Resolve and format a named type for use in code
@@ -187,9 +203,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_name(&self, ty: TypeId, name: &str) -> String {
-        let resolved = self.c.tcx().resolve_type(ty);
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn namespace_c_name(&self, ty: SymbolId, name: &str) -> String {
+        let ns = match ty {
+            SymbolId::FunctionId(f) => { &self.c.tcx().resolve_function(f).attrs.namespace }
+            SymbolId::TypeId(ty) => { &self.c.tcx().resolve_type(ty).attrs().namespace }
+            _ => panic!("Unsupported SymbolId")
+        };
+        if let Some(ref ns) = ns {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
             format!("diplomat::{CAPI_NAMESPACE}::{name}")

@@ -1,0 +1,9 @@
+{% extends "method_impl_base.h.jinja" %}
+{% block domain %}
+{% if !m.docs.is_empty() -%}
+/**
+{{~ m.docs|prefix_trimmed("	 * ")}}
+    */
+{% endif -%}
+{%- endblock -%}
+{% block special_methods %}{% endblock %}
