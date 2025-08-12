@@ -37,6 +37,7 @@ Method {
             attrs: Attrs {
                 disable: false,
                 namespace: None,
+                dir: None,
                 rename: RenameAttr {
                     pattern: None,
                 },
@@ -94,6 +95,7 @@ Method {
             attrs: Attrs {
                 disable: false,
                 namespace: None,
+                dir: None,
                 rename: RenameAttr {
                     pattern: None,
                 },
@@ -124,6 +126,7 @@ Method {
     attrs: Attrs {
         disable: false,
         namespace: None,
+        dir: None,
         rename: RenameAttr {
             pattern: None,
         },
