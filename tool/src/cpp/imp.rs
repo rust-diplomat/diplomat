@@ -123,15 +123,14 @@ impl<'tcx> ImplGenContext<'tcx> {
             let decl_bl = FunctionDecl { m };
             self.decl_template.methods.push(decl_bl.to_string());
 
-            // FIXME: This will get really gross when you add multiple methods, and will lead to duplications:
             self.c.gen_method(func, &context.c);
-            self.c
-                .render_into(None, None, &mut self.decl_template.c_header)
-                .unwrap();
         }
     }
 
     pub fn render(&mut self) -> Result<(), askama::Error> {
+        self.c
+            .render_into(None, None, &mut self.decl_template.c_header)
+            .unwrap();
         self.impl_template.render_into(&mut self.impl_header)?;
         self.decl_template.render_into(&mut self.decl_header)?;
         Ok(())
