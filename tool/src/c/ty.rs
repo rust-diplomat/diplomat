@@ -177,9 +177,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
-        let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+        let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
         
-        let mut impl_context = ImplGenContext::new(&mut impl_header, self.is_for_cpp);
+        let mut impl_context = ImplGenContext::new(impl_header, self.is_for_cpp);
+
         for method in ty.methods() {
             if method.attrs.disable {
                 // Skip method if disabled
@@ -202,6 +203,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
         impl_context.render(Some(ty_name), dtor_name).unwrap();
 
+        let impl_header = &mut impl_context.header;
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
         // In some cases like generating decls for `self` parameters,
@@ -211,7 +213,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         impl_header.includes.remove(self.impl_header_path);
         impl_header.includes.remove(self.decl_header_path);
 
-        impl_header
+        impl_context.header
     }
 
     fn gen_result_ty_struct<P: hir::TyPosition>(

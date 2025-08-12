@@ -7,8 +7,8 @@ pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
+pub use self::imp::ImplGenContext;
 
-use crate::c::imp::ImplGenContext;
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::BackendAttrSupport;
 use diplomat_core::hir::{self, DocsUrlGenerator};
@@ -122,9 +122,9 @@ pub(crate) fn run<'tcx>(
     // loop over traits too
 
     // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
-    let mut header = Header::new("diplomat_free_functions.h".into(), false);
+    let header = Header::new("diplomat_free_functions.h".into(), false);
 
-    let mut impl_context = ImplGenContext::new(&mut header, false);
+    let mut impl_context = ImplGenContext::new(header, false);
 
     {
         let mut should_render = false;
@@ -148,7 +148,7 @@ pub(crate) fn run<'tcx>(
 
         if should_render {
             impl_context.render(None, None).unwrap();
-            files.add_file("diplomat_free_functions.h".into(), header.to_string());
+            files.add_file("diplomat_free_functions.h".into(), impl_context.header.to_string());
         }
     }
 

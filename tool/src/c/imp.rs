@@ -32,12 +32,12 @@ pub(super) struct MethodTemplate {
 }
 
 pub struct ImplGenContext<'tcx> {
-    header : &'tcx mut Header,
+    pub header : Header,
     template : ImplTemplate<'tcx>,
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub fn new(header : &'tcx mut Header, is_for_cpp : bool) -> Self {
+    pub fn new(header : Header, is_for_cpp : bool) -> Self {
         ImplGenContext { header,
             template: ImplTemplate { 
                 methods: Vec::new(), cb_structs_and_defs: Vec::new(), 
@@ -48,7 +48,8 @@ impl<'tcx> ImplGenContext<'tcx> {
         self.template.ty_name = ty_name;
         self.template.dtor_name = dtor_name;
 
-        self.template.render_into(self.header)
+        self.template.render_into(&mut self.header)?;
+        Ok(())
     }
 
     pub(super) fn gen_method(
@@ -68,7 +69,7 @@ impl<'tcx> ImplGenContext<'tcx> {
             param_decls.push(context.gen_ty_decl(
                 &self_ty,
                 "self",
-                self.header,
+                &mut self.header,
                 Some(abi_name.clone()),
                 &mut cb_structs_and_defs,
             ))
@@ -78,7 +79,7 @@ impl<'tcx> ImplGenContext<'tcx> {
             param_decls.push(context.gen_ty_decl(
                 &param.ty,
                 param.name.as_str(),
-                self.header,
+                &mut self.header,
                 Some(abi_name.clone()),
                 &mut cb_structs_and_defs,
             ));
@@ -93,7 +94,7 @@ impl<'tcx> ImplGenContext<'tcx> {
                 ));
                 "void".into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => context.gen_ty_name(o, self.header),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => context.gen_ty_name(o, &mut self.header),
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
@@ -113,7 +114,7 @@ impl<'tcx> ImplGenContext<'tcx> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                context.gen_result_ty(&method_name, ok_ty, err, self.header).into()
+                context.gen_result_ty(&method_name, ok_ty, err, &mut self.header).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
