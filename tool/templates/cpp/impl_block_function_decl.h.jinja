@@ -1,0 +1,10 @@
+{% extends "method_decl_base.h.jinja" %}
+{% block pre_func %}
+{% if !m.docs.is_empty() -%}
+/**
+{{~ m.docs|prefix_trimmed("	 * ")}}
+    */
+{% endif -%}
+{% endblock %}
+{% block post_func %}
+{% endblock %}

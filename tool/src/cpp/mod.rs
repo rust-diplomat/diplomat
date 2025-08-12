@@ -129,15 +129,16 @@ pub(crate) fn run<'tcx>(
             };
             
             let impl_header_path = formatter.fmt_impl_header_path(id.into());
+            let decl_header_path = formatter.fmt_decl_header_path(id.into());
 
             let context = if let Some(v) = func_contexts.get_mut(&key) {
                 v
             } else {
-                func_contexts.insert(key.clone(), ImplGenContext::new(impl_header_path.clone(), true));
+                func_contexts.insert(key.clone(), ImplGenContext::new(impl_header_path.clone(), decl_header_path.clone(), true));
                 func_contexts.get_mut(&key).unwrap()
             };
 
-            let mut unused_header = header::Header::new("".into());
+            let mut decl_header_clone = header::Header::new("".into());
             let mut impl_header_clone = header::Header::new("".into());
 
             let mut ty_context = TyGenContext {
@@ -153,17 +154,19 @@ pub(crate) fn run<'tcx>(
                     impl_header_path: &impl_header_path
                 },
                 impl_header: &mut impl_header_clone,
-                decl_header: &mut unused_header,
+                decl_header: &mut decl_header_clone,
                 generating_struct_fields: false,
             };
 
             context.generate_function(id, f, &mut ty_context);
-            context.header.includes.append(&mut impl_header_clone.includes);
+            context.impl_header.includes.append(&mut impl_header_clone.includes);
+            context.decl_header.includes.append(&mut decl_header_clone.includes);
         }
 
         for (_, ctx) in func_contexts.iter_mut() {
             ctx.render().unwrap();
-            files.add_file(ctx.header.path.clone(), ctx.header.to_string());
+            files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
+            files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
         }
     }
 

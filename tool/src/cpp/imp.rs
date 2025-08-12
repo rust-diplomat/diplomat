@@ -58,27 +58,32 @@ pub(super) struct MethodInfo<'a> {
 struct ImplTemplate {
     namespace: Option<String>,
     methods : Vec<String>,
+    c_header : C2Header,
 }
 
 #[derive(Template, Default)]
 #[template(path = "cpp/impl_block_decl.h.jinja", escape = "none")]
-struct DeclTemplate<'a> {
+struct DeclTemplate {
     namespace : Option<String>,
-    methods : Vec<MethodInfo<'a>>,
+    methods : Vec<String>,
     c_header : C2Header,
 }
 
 pub struct ImplGenContext<'tcx> {
-    pub header : Header,
+    pub impl_header : Header,
+    pub decl_header : Header,
     c : crate::c::ImplGenContext<'tcx>,
     impl_template : ImplTemplate,
-    decl_template : DeclTemplate<'tcx>,
+    decl_template : DeclTemplate,
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub fn new(header_path : String, is_for_cpp : bool) -> Self {
-        let c_header = crate::c::Header::new(header_path.clone(), is_for_cpp);
-        ImplGenContext { c: crate::c::ImplGenContext::new(c_header, is_for_cpp), header: Header::new(header_path), impl_template: ImplTemplate::default(), decl_template: DeclTemplate::default() }
+    pub fn new(impl_header_path : String, decl_header_path : String, is_for_cpp : bool) -> Self {
+        let decl_c_header = crate::c::Header::new(decl_header_path.clone(), is_for_cpp);
+        ImplGenContext { c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp), impl_header: Header::new(impl_header_path), decl_header: Header::new(decl_header_path.clone()), impl_template: ImplTemplate::default(), decl_template: DeclTemplate {
+            c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
+            ..Default::default()
+        } }
     }
 
     pub fn generate_function<'b>(&mut self, func_id : FunctionId, func : &'tcx hir::Method, context : &mut TyGenContext<'b, 'tcx, '_>) {
@@ -87,22 +92,38 @@ impl<'tcx> ImplGenContext<'tcx> {
         #[derive(Template)]
         #[template(path = "cpp/impl_block_function.h.jinja", escape = "none")]
         struct FunctionImpl<'a> {
-            m : MethodInfo<'a>,
+            m : &'a MethodInfo<'a>,
             namespace : Option<String>,
         }
 
-        if let Some(m) = info {
+        #[derive(Template)]
+        #[template(path = "cpp/impl_block_function_decl.h.jinja", escape = "none")]
+        struct FunctionDecl<'a> {
+            m : &'a MethodInfo<'a>,
+        }
+
+        if let Some(m) = &info {
             
             let impl_bl = FunctionImpl {
                 m,
                 namespace: func.attrs.namespace.clone()
             };
             self.impl_template.methods.push(impl_bl.to_string());
+
+            let decl_bl = FunctionDecl {
+                m,
+            };
+            self.decl_template.methods.push(decl_bl.to_string());
+
+            // FIXME: This will get really gross when you add multiple methods, and will lead to duplications:
+            self.c.gen_method(func, &context.c);
+            self.c.render_into(None, None, &mut self.decl_template.c_header).unwrap();
         }
     }
 
     pub fn render(&mut self) -> Result<(), askama::Error> {
-        self.impl_template.render_into(&mut self.header)?;
+        self.impl_template.render_into(&mut self.impl_header)?;
+        self.decl_template.render_into(&mut self.decl_header)?;
         Ok(())
     }
 

@@ -37,14 +37,14 @@ pub struct ImplGenContext<'tcx> {
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub fn new(header : Header, is_for_cpp : bool) -> Self {
+    pub(crate) fn new(header : Header, is_for_cpp : bool) -> Self {
         ImplGenContext { header,
             template: ImplTemplate { 
                 methods: Vec::new(), cb_structs_and_defs: Vec::new(), 
                 is_for_cpp, ty_name: None, dtor_name: None } }
     }
 
-    pub fn render(&mut self, ty_name : Option<Cow<'tcx, str>>, dtor_name : Option<&'tcx str>) -> Result<(), askama::Error> {
+    pub(crate) fn render(&mut self, ty_name : Option<Cow<'tcx, str>>, dtor_name : Option<&'tcx str>) -> Result<(), askama::Error> {
         self.template.ty_name = ty_name;
         self.template.dtor_name = dtor_name;
 
@@ -52,7 +52,15 @@ impl<'tcx> ImplGenContext<'tcx> {
         Ok(())
     }
 
-    pub(super) fn gen_method(
+    pub (crate) fn render_into(&mut self, ty_name : Option<Cow<'tcx, str>>, dtor_name : Option<&'tcx str>, header : &mut Header) -> Result<(), askama::Error> {
+        self.template.ty_name = ty_name;
+        self.template.dtor_name = dtor_name;
+
+        self.template.render_into(header)?;
+        Ok(())
+    }
+
+    pub(crate) fn gen_method(
         &mut self,
         method: &'tcx hir::Method,
         context : &TyGenContext,
