@@ -1,14 +1,15 @@
 mod formatter;
 mod header;
 mod ty;
+mod imp;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
 
+use crate::c::imp::ImplGenContext;
 use crate::{ErrorStore, FileMap};
-use askama::Template;
 use diplomat_core::hir::BackendAttrSupport;
 use diplomat_core::hir::{self, DocsUrlGenerator};
 
@@ -123,20 +124,15 @@ pub(crate) fn run<'tcx>(
     // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
     let mut header = Header::new("diplomat_free_functions.h".into(), false);
 
+    let mut impl_context = ImplGenContext::new(&mut header, false);
+
     {
-        let mut impl_template = ty::ImplTemplate {
-            methods: Vec::new(),
-            cb_structs_and_defs: Vec::new(),
-            is_for_cpp: false,
-            ty_name: None,
-            dtor_name: None,
-        };
-
-
+        let mut should_render = false;
         for (id, f) in tcx.all_free_functions() {
             if f.attrs.disable {
                 continue;
             }
+            should_render = true;
             let context = TyGenContext {
                 tcx,
                 formatter: &formatter,
@@ -147,11 +143,11 @@ pub(crate) fn run<'tcx>(
                 impl_header_path: "diplomat_free_functions.h".into(),
             };
 
-            context.gen_free_function(f, &mut header, &mut impl_template);
+            impl_context.gen_method(f, &context);
         }
 
-        if impl_template.methods.len() > 0 {
-            impl_template.render_into(&mut header).unwrap();
+        if should_render {
+            impl_context.render(None, None).unwrap();
             files.add_file("diplomat_free_functions.h".into(), header.to_string());
         }
     }
