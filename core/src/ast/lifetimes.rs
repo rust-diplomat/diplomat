@@ -183,7 +183,7 @@ impl LifetimeEnv {
     }
 
     pub fn from_function_item(
-        f : &syn::ItemFn,
+        f: &syn::ItemFn,
         params: &[Param],
         return_type: Option<&TypeName>,
     ) -> Self {

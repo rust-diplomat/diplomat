@@ -1,7 +1,7 @@
 mod formatter;
 mod header;
-mod ty;
 mod imp;
+mod ty;
 
 use std::collections::BTreeMap;
 
@@ -122,19 +122,22 @@ pub(crate) fn run<'tcx>(
                 continue;
             }
 
-            let key  = if let Some(ns) = &f.attrs.namespace {
+            let key = if let Some(ns) = &f.attrs.namespace {
                 ns.clone()
             } else {
                 "".into()
             };
-            
+
             let impl_header_path = formatter.fmt_impl_header_path(id.into());
             let decl_header_path = formatter.fmt_decl_header_path(id.into());
 
             let context = if let Some(v) = func_contexts.get_mut(&key) {
                 v
             } else {
-                func_contexts.insert(key.clone(), ImplGenContext::new(impl_header_path.clone(), decl_header_path.clone(), true));
+                func_contexts.insert(
+                    key.clone(),
+                    ImplGenContext::new(impl_header_path.clone(), decl_header_path.clone(), true),
+                );
                 func_contexts.get_mut(&key).unwrap()
             };
 
@@ -151,7 +154,7 @@ pub(crate) fn run<'tcx>(
                     is_for_cpp: true,
                     id: id.into(),
                     decl_header_path: "".into(),
-                    impl_header_path: &impl_header_path
+                    impl_header_path: &impl_header_path,
                 },
                 impl_header: &mut impl_header_clone,
                 decl_header: &mut decl_header_clone,
@@ -159,8 +162,14 @@ pub(crate) fn run<'tcx>(
             };
 
             context.generate_function(id, f, &mut ty_context);
-            context.impl_header.includes.append(&mut impl_header_clone.includes);
-            context.decl_header.includes.append(&mut decl_header_clone.includes);
+            context
+                .impl_header
+                .includes
+                .append(&mut impl_header_clone.includes);
+            context
+                .decl_header
+                .includes
+                .append(&mut decl_header_clone.includes);
         }
 
         for (_, ctx) in func_contexts.iter_mut() {

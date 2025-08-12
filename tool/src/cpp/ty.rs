@@ -312,7 +312,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
-    pub(super) fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
+    pub(super) fn gen_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a>
     where
         'ccx: 'a,
     {

@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId,
 };
 use std::borrow::Cow;
 
@@ -36,7 +36,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .apply(resolved.name().as_str().into())
     }
 
-    pub fn fmt_symbol_name(&self, id : SymbolId) -> Cow<'tcx, str> {
+    pub fn fmt_symbol_name(&self, id: SymbolId) -> Cow<'tcx, str> {
         match id {
             SymbolId::TypeId(ty) => self.fmt_type_name(ty),
             SymbolId::FunctionId(f) => {
@@ -48,7 +48,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                     name
                 }
             }
-            _ => panic!("Unsupported SymbolId: {id:?}")
+            _ => panic!("Unsupported SymbolId: {id:?}"),
         }
     }
 
@@ -76,8 +76,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                 } else {
                     "".into()
                 };
-                (format!("diplomat{namespaced}_functions"), resolved.attrs.namespace.clone())
-            },
+                (
+                    format!("diplomat{namespaced}_functions"),
+                    resolved.attrs.namespace.clone(),
+                )
+            }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
                 let type_name = resolved
@@ -86,7 +89,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                     .apply(resolved.name().as_str().into());
                 (type_name.into(), resolved.attrs().namespace.clone())
             }
-            _ => panic!("Unsupported SymbolId {id:?}")
+            _ => panic!("Unsupported SymbolId {id:?}"),
         };
 
         if let Some(ref ns) = namespace {
@@ -107,8 +110,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                 } else {
                     "".into()
                 };
-                (format!("diplomat{namespaced}_functions"), resolved.attrs.namespace.clone())
-            },
+                (
+                    format!("diplomat{namespaced}_functions"),
+                    resolved.attrs.namespace.clone(),
+                )
+            }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
                 let type_name = resolved
@@ -117,7 +123,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
                     .apply(resolved.name().as_str().into());
                 (type_name.into(), resolved.attrs().namespace.clone())
             }
-            _ => panic!("Unsupported SymbolId {id:?}")
+            _ => panic!("Unsupported SymbolId {id:?}"),
         };
 
         if let Some(ref ns) = namespace {
@@ -237,9 +243,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn namespace_c_name(&self, ty: SymbolId, name: &str) -> String {
         let ns = match ty {
-            SymbolId::FunctionId(f) => { &self.c.tcx().resolve_function(f).attrs.namespace }
-            SymbolId::TypeId(ty) => { &self.c.tcx().resolve_type(ty).attrs().namespace }
-            _ => panic!("Unsupported SymbolId")
+            SymbolId::FunctionId(f) => &self.c.tcx().resolve_function(f).attrs.namespace,
+            SymbolId::TypeId(ty) => &self.c.tcx().resolve_type(ty).attrs().namespace,
+            _ => panic!("Unsupported SymbolId"),
         };
         if let Some(ref ns) = ns {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")

@@ -5,7 +5,6 @@ use diplomat_core::hir;
 
 use crate::c::{Header, TyGenContext};
 
-
 #[derive(Template)]
 #[template(path = "c/impl.h.jinja", escape = "none")]
 pub(super) struct ImplTemplate<'a> {
@@ -15,7 +14,6 @@ pub(super) struct ImplTemplate<'a> {
     pub(super) ty_name: Option<Cow<'a, str>>,
     pub(super) dtor_name: Option<&'a str>,
 }
-
 
 #[derive(Clone)]
 pub(super) struct CallbackAndStructDef {
@@ -32,19 +30,29 @@ pub(super) struct MethodTemplate {
 }
 
 pub struct ImplGenContext<'tcx> {
-    pub header : Header,
-    template : ImplTemplate<'tcx>,
+    pub header: Header,
+    template: ImplTemplate<'tcx>,
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub(crate) fn new(header : Header, is_for_cpp : bool) -> Self {
-        ImplGenContext { header,
-            template: ImplTemplate { 
-                methods: Vec::new(), cb_structs_and_defs: Vec::new(), 
-                is_for_cpp, ty_name: None, dtor_name: None } }
+    pub(crate) fn new(header: Header, is_for_cpp: bool) -> Self {
+        ImplGenContext {
+            header,
+            template: ImplTemplate {
+                methods: Vec::new(),
+                cb_structs_and_defs: Vec::new(),
+                is_for_cpp,
+                ty_name: None,
+                dtor_name: None,
+            },
+        }
     }
 
-    pub(crate) fn render(&mut self, ty_name : Option<Cow<'tcx, str>>, dtor_name : Option<&'tcx str>) -> Result<(), askama::Error> {
+    pub(crate) fn render(
+        &mut self,
+        ty_name: Option<Cow<'tcx, str>>,
+        dtor_name: Option<&'tcx str>,
+    ) -> Result<(), askama::Error> {
         self.template.ty_name = ty_name;
         self.template.dtor_name = dtor_name;
 
@@ -52,7 +60,12 @@ impl<'tcx> ImplGenContext<'tcx> {
         Ok(())
     }
 
-    pub (crate) fn render_into(&mut self, ty_name : Option<Cow<'tcx, str>>, dtor_name : Option<&'tcx str>, header : &mut Header) -> Result<(), askama::Error> {
+    pub(crate) fn render_into(
+        &mut self,
+        ty_name: Option<Cow<'tcx, str>>,
+        dtor_name: Option<&'tcx str>,
+        header: &mut Header,
+    ) -> Result<(), askama::Error> {
         self.template.ty_name = ty_name;
         self.template.dtor_name = dtor_name;
 
@@ -60,11 +73,7 @@ impl<'tcx> ImplGenContext<'tcx> {
         Ok(())
     }
 
-    pub(crate) fn gen_method(
-        &mut self,
-        method: &'tcx hir::Method,
-        context : &TyGenContext,
-    ) {
+    pub(crate) fn gen_method(&mut self, method: &'tcx hir::Method, context: &TyGenContext) {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let abi_name = method.abi_name.to_string();
         // Right now these are the same, but we may eventually support renaming
@@ -102,7 +111,9 @@ impl<'tcx> ImplGenContext<'tcx> {
                 ));
                 "void".into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => context.gen_ty_name(o, &mut self.header),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                context.gen_ty_name(o, &mut self.header)
+            }
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
@@ -122,7 +133,9 @@ impl<'tcx> ImplGenContext<'tcx> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                context.gen_result_ty(&method_name, ok_ty, err, &mut self.header).into()
+                context
+                    .gen_result_ty(&method_name, ok_ty, err, &mut self.header)
+                    .into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
@@ -139,8 +152,13 @@ impl<'tcx> ImplGenContext<'tcx> {
             "void".to_owned()
         };
 
-        
-        self.template.methods.push(MethodTemplate { abi_name, return_ty: return_ty.to_string(), params });
-        self.template.cb_structs_and_defs.extend_from_slice(&cb_structs_and_defs);
+        self.template.methods.push(MethodTemplate {
+            abi_name,
+            return_ty: return_ty.to_string(),
+            params,
+        });
+        self.template
+            .cb_structs_and_defs
+            .extend_from_slice(&cb_structs_and_defs);
     }
 }

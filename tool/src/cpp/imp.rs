@@ -3,9 +3,9 @@ use std::borrow::Cow;
 use askama::Template;
 use diplomat_core::hir::{self, FunctionId, SelfType, StructPathLike, SymbolId, Type};
 
-use crate::cpp::{header::Header, ty::NamedType, TyGenContext};
-use crate::c::CAPI_NAMESPACE;
 use crate::c::Header as C2Header;
+use crate::c::CAPI_NAMESPACE;
+use crate::cpp::{header::Header, ty::NamedType, TyGenContext};
 use crate::filters;
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -57,67 +57,77 @@ pub(super) struct MethodInfo<'a> {
 #[template(path = "cpp/impl_block_impl.h.jinja", escape = "none")]
 struct ImplTemplate {
     namespace: Option<String>,
-    methods : Vec<String>,
-    c_header : C2Header,
+    methods: Vec<String>,
+    c_header: C2Header,
 }
 
 #[derive(Template, Default)]
 #[template(path = "cpp/impl_block_decl.h.jinja", escape = "none")]
 struct DeclTemplate {
-    namespace : Option<String>,
-    methods : Vec<String>,
-    c_header : C2Header,
+    namespace: Option<String>,
+    methods: Vec<String>,
+    c_header: C2Header,
 }
 
 pub struct ImplGenContext<'tcx> {
-    pub impl_header : Header,
-    pub decl_header : Header,
-    c : crate::c::ImplGenContext<'tcx>,
-    impl_template : ImplTemplate,
-    decl_template : DeclTemplate,
+    pub impl_header: Header,
+    pub decl_header: Header,
+    c: crate::c::ImplGenContext<'tcx>,
+    impl_template: ImplTemplate,
+    decl_template: DeclTemplate,
 }
 
 impl<'tcx> ImplGenContext<'tcx> {
-    pub fn new(impl_header_path : String, decl_header_path : String, is_for_cpp : bool) -> Self {
+    pub fn new(impl_header_path: String, decl_header_path: String, is_for_cpp: bool) -> Self {
         let decl_c_header = crate::c::Header::new(decl_header_path.clone(), is_for_cpp);
-        ImplGenContext { c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp), impl_header: Header::new(impl_header_path), decl_header: Header::new(decl_header_path.clone()), impl_template: ImplTemplate::default(), decl_template: DeclTemplate {
-            c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
-            ..Default::default()
-        } }
+        ImplGenContext {
+            c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp),
+            impl_header: Header::new(impl_header_path),
+            decl_header: Header::new(decl_header_path.clone()),
+            impl_template: ImplTemplate::default(),
+            decl_template: DeclTemplate {
+                c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
+                ..Default::default()
+            },
+        }
     }
 
-    pub fn generate_function<'b>(&mut self, func_id : FunctionId, func : &'tcx hir::Method, context : &mut TyGenContext<'b, 'tcx, '_>) {
+    pub fn generate_function<'b>(
+        &mut self,
+        func_id: FunctionId,
+        func: &'tcx hir::Method,
+        context: &mut TyGenContext<'b, 'tcx, '_>,
+    ) {
         let info = Self::gen_method_info(func_id.into(), func, context);
 
         #[derive(Template)]
         #[template(path = "cpp/impl_block_function.h.jinja", escape = "none")]
         struct FunctionImpl<'a> {
-            m : &'a MethodInfo<'a>,
-            namespace : Option<String>,
+            m: &'a MethodInfo<'a>,
+            namespace: Option<String>,
         }
 
         #[derive(Template)]
         #[template(path = "cpp/impl_block_function_decl.h.jinja", escape = "none")]
         struct FunctionDecl<'a> {
-            m : &'a MethodInfo<'a>,
+            m: &'a MethodInfo<'a>,
         }
 
         if let Some(m) = &info {
-            
             let impl_bl = FunctionImpl {
                 m,
-                namespace: func.attrs.namespace.clone()
+                namespace: func.attrs.namespace.clone(),
             };
             self.impl_template.methods.push(impl_bl.to_string());
 
-            let decl_bl = FunctionDecl {
-                m,
-            };
+            let decl_bl = FunctionDecl { m };
             self.decl_template.methods.push(decl_bl.to_string());
 
             // FIXME: This will get really gross when you add multiple methods, and will lead to duplications:
             self.c.gen_method(func, &context.c);
-            self.c.render_into(None, None, &mut self.decl_template.c_header).unwrap();
+            self.c
+                .render_into(None, None, &mut self.decl_template.c_header)
+                .unwrap();
         }
     }
 
@@ -127,7 +137,11 @@ impl<'tcx> ImplGenContext<'tcx> {
         Ok(())
     }
 
-    pub(super) fn gen_method_info<'a, 'b>(id : SymbolId, method : &'a hir::Method, context : &mut TyGenContext<'b, 'a, '_>) -> Option<MethodInfo<'b>> {
+    pub(super) fn gen_method_info<'a, 'b>(
+        id: SymbolId,
+        method: &'a hir::Method,
+        context: &mut TyGenContext<'b, 'a, '_>,
+    ) -> Option<MethodInfo<'b>> {
         if method.attrs.disable {
             return None;
         }
@@ -186,7 +200,7 @@ impl<'tcx> ImplGenContext<'tcx> {
         let namespace = match id {
             SymbolId::FunctionId(f) => context.c.tcx.resolve_function(f).attrs.namespace.clone(),
             SymbolId::TypeId(ty) => context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
-            _ => panic!("Unsupported SymbolId: {id:?}")
+            _ => panic!("Unsupported SymbolId: {id:?}"),
         };
 
         for param in method.params.iter() {

@@ -851,7 +851,9 @@ impl Attrs {
         if *custom_errors
             && !matches!(
                 context,
-                AttributeContext::Type(..) | AttributeContext::Trait(..) | AttributeContext::Function(..)
+                AttributeContext::Type(..)
+                    | AttributeContext::Trait(..)
+                    | AttributeContext::Function(..)
             )
         {
             errors.push(LoweringError::Other(

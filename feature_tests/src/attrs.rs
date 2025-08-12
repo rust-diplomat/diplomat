@@ -350,10 +350,12 @@ pub mod ffi {
         fn hello() {}
     } f64, pub, const IT:usize = 0;}
 
-    pub fn free_func_test(x : i32) -> i32 {
+    pub fn free_func_test(x: i32) -> i32 {
         x + 5
     }
-    
+
     #[diplomat::attr(auto, namespace = "nested::ns")]
-    pub fn nested_ns_fn(x : bool) -> bool { !x }
+    pub fn nested_ns_fn(x: bool) -> bool {
+        !x
+    }
 }

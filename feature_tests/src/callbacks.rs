@@ -178,7 +178,7 @@ mod ffi {
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
     #[diplomat::attr(kotlin, disable)]
-    pub fn free_callback_holder(f : impl Fn() -> Result<(), ()>) {
+    pub fn free_callback_holder(f: impl Fn() -> Result<(), ()>) {
         assert_eq!(f(), Ok(()))
     }
 }

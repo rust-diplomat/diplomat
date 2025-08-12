@@ -178,7 +178,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
-        
+
         let mut impl_context = ImplGenContext::new(impl_header, self.is_for_cpp);
 
         for method in ty.methods() {

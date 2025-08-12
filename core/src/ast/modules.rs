@@ -103,7 +103,7 @@ pub struct Module {
     pub imports: Vec<(Path, Ident)>,
     pub declared_types: BTreeMap<Ident, CustomType>,
     pub declared_traits: BTreeMap<Ident, Trait>,
-    pub declared_functions : BTreeMap<Ident, Function>,
+    pub declared_functions: BTreeMap<Ident, Function>,
     pub sub_modules: Vec<Module>,
     pub attrs: Attrs,
 }
@@ -113,7 +113,7 @@ pub struct Module {
 struct ModuleBuilder {
     custom_types_by_name: BTreeMap<Ident, CustomType>,
     custom_traits_by_name: BTreeMap<Ident, Trait>,
-    functions_by_name : BTreeMap<Ident, Function>,
+    functions_by_name: BTreeMap<Ident, Function>,
     sub_modules: Vec<Module>,
     imports: Vec<(Path, Ident)>,
     analyze_types: bool,
@@ -289,14 +289,15 @@ impl ModuleBuilder {
             Item::Fn(f) => {
                 if self.analyze_types {
                     let is_public = matches!(f.vis, Visibility::Public(_));
-                    let has_diplomat_attrs = f.attrs.iter().any(|a| {
-                        a.path().segments.iter().next().unwrap().ident == "diplomat"
-                    });
+                    let has_diplomat_attrs = f
+                        .attrs
+                        .iter()
+                        .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
                     assert!(
                         is_public || !has_diplomat_attrs,
                         "Non-public function with diplomat attrs found: {}",
                         f.sig.ident
-                    ); 
+                    );
                     if is_public {
                         let out = Function::from_syn(f);
                         self.functions_by_name.insert(out.name.clone(), out);
