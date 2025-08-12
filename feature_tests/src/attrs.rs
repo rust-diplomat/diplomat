@@ -349,4 +349,9 @@ pub mod ffi {
     } [EXPR 0, IDENT TestMacroStruct] LT 'a literal "Testing" <=> diplomat::attr(auto, constructor) std::fmt::Write; {
         fn hello() {}
     } f64, pub, const IT:usize = 0;}
+
+    #[diplomat::attr(not(supports=namespacing), disable)]
+    #[diplomat::attr(supports=namespacing, dir="test_directory")]
+    #[diplomat::opaque]
+    pub struct DifferentDirectory(f32);
 }

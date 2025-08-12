@@ -68,6 +68,7 @@ void add_RenamedTestMacroStruct_binding(nb::handle);
 void add_AttrOpaque1Renamed_binding(nb::handle);
 void add_RenamedAttrOpaque2_binding(nb::handle);
 void add_RenamedComparable_binding(nb::handle);
+void add_RenamedDifferentDirectory_binding(nb::handle);
 void add_RenamedMyIndexer_binding(nb::handle);
 void add_RenamedMyIterable_binding(nb::handle);
 void add_RenamedMyIterator_binding(nb::handle);
@@ -199,6 +200,7 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_AttrOpaque1Renamed_binding(somelib_ns_mod);
     ns::add_RenamedAttrOpaque2_binding(somelib_ns_mod);
     ns::add_RenamedComparable_binding(somelib_ns_mod);
+    ns::add_RenamedDifferentDirectory_binding(somelib_ns_mod);
     ns::add_RenamedMyIndexer_binding(somelib_ns_mod);
     ns::add_RenamedMyIterable_binding(somelib_ns_mod);
     ns::add_RenamedMyIterator_binding(somelib_ns_mod);
