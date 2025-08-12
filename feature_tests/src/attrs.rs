@@ -349,4 +349,8 @@ pub mod ffi {
     } [EXPR 0, IDENT TestMacroStruct] LT 'a literal "Testing" <=> diplomat::attr(auto, constructor) std::fmt::Write; {
         fn hello() {}
     } f64, pub, const IT:usize = 0;}
+
+    pub fn free_func_test(x : i32) -> i32 {
+        x + 5
+    }
 }
