@@ -54,14 +54,14 @@ pub(super) struct MethodInfo<'a> {
 }
 
 #[derive(Template, Default)]
-#[template(path = "cpp/impl_block_impl.h.jinja")]
+#[template(path = "cpp/impl_block_impl.h.jinja", escape = "none")]
 struct ImplTemplate {
     namespace: Option<String>,
     methods : Vec<String>,
 }
 
 #[derive(Template, Default)]
-#[template(path = "cpp/impl_block_decl.h.jinja")]
+#[template(path = "cpp/impl_block_decl.h.jinja", escape = "none")]
 struct DeclTemplate<'a> {
     namespace : Option<String>,
     methods : Vec<MethodInfo<'a>>,
@@ -85,7 +85,7 @@ impl<'tcx> ImplGenContext<'tcx> {
         let info = Self::gen_method_info(func_id.into(), func, context);
 
         #[derive(Template)]
-        #[template(path = "cpp/impl_block_function.h.jinja")]
+        #[template(path = "cpp/impl_block_function.h.jinja", escape = "none")]
         struct FunctionImpl<'a> {
             m : MethodInfo<'a>
         }
