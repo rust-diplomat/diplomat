@@ -25,7 +25,7 @@ namespace capi {
 } // namespace
 
 
-  
+
 
 inline bool nested::ns::Renamednested_ns_fn(bool x) {
   auto result = nested::ns::capi::namespace_nested_ns_fn(x);

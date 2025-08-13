@@ -25,7 +25,7 @@ namespace capi {
 } // namespace
 
 
-  
+
 
 inline int32_t ns::Renamedfree_func_test(int32_t x) {
   auto result = ns::capi::namespace_free_func_test(x);
