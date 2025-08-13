@@ -242,32 +242,37 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
     gen_custom_function(
-        Some(self_ident),
-        method_ident,
-        extern_ident,
-        m.self_param.as_ref(),
-        &m.params,
-        m.return_type.as_ref(),
-        &m.lifetime_env,
-        &m.attrs,
+        FuncGen {
+            self_ident: Some(self_ident),
+            func_ident: method_ident,
+            extern_ident,
+            self_param: m.self_param.as_ref(),
+            params: &m.params,
+            return_type: m.return_type.as_ref(),
+            lifetime_env: &m.lifetime_env,
+            attrs: 
+            &m.attrs,
+        }
     )
 }
 
-fn gen_custom_function(
-    self_ident: Option<Ident>,
-    method_ident: Ident,
-    extern_ident: Ident,
-    self_param: Option<&crate::ast::SelfParam>,
-    params: &[crate::ast::Param],
-    return_type: Option<&crate::ast::TypeName>,
-    lifetime_env: &crate::ast::LifetimeEnv,
-    attrs: &crate::ast::Attrs,
-) -> Item {
+struct FuncGen<'a> {
+    self_ident : Option<Ident>,
+    func_ident : Ident,
+    extern_ident : Ident,
+    self_param : Option<&'a crate::ast::SelfParam>,
+    params: &'a [crate::ast::Param],
+    return_type: Option<&'a crate::ast::TypeName>,
+    lifetime_env: &'a crate::ast::LifetimeEnv,
+    attrs: &'a crate::ast::Attrs
+}
+
+fn gen_custom_function(func_info : FuncGen) -> Item {
     let mut all_params = vec![];
 
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
-    params.iter().for_each(|p| {
+    func_info.params.iter().for_each(|p| {
         let ty = param_ty(&p.ty);
         let name = &p.name;
         all_params_names.push(name);
@@ -285,7 +290,7 @@ fn gen_custom_function(
         subpat: None,
     });
 
-    if let Some(self_param) = self_param {
+    if let Some(self_param) = func_info.self_param {
         all_params.insert(
             0,
             FnArg::Typed(PatType {
@@ -298,7 +303,7 @@ fn gen_custom_function(
     }
 
     let lifetimes = {
-        let lifetime_env = lifetime_env;
+        let lifetime_env = func_info.lifetime_env;
         if lifetime_env.is_empty() {
             quote! {}
         } else {
@@ -306,15 +311,17 @@ fn gen_custom_function(
         }
     };
 
-    let method_invocation = if self_param.is_some() {
-        quote! { #this_ident.#method_ident }
-    } else if let Some(self_ident) = self_ident {
-        quote! { #self_ident::#method_ident }
+    let func_ident = func_info.func_ident;
+
+    let method_invocation = if func_info.self_param.is_some() {
+        quote! { #this_ident.#func_ident }
+    } else if let Some(self_ident) = func_info.self_ident {
+        quote! { #self_ident::#func_ident }
     } else {
-        quote! { #method_ident }
+        quote! { #func_ident }
     };
 
-    let (return_tokens, maybe_into) = if let Some(return_type) = return_type {
+    let (return_tokens, maybe_into) = if let Some(return_type) = func_info.return_type {
         if let ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) = return_type {
             let ok = ok.to_syn();
             let err = err.to_syn();
@@ -365,7 +372,7 @@ fn gen_custom_function(
         (quote! {}, quote! {})
     };
 
-    let write_flushes = params
+    let write_flushes = func_info.params
         .iter()
         .filter(|p| p.is_write())
         .map(|p| {
@@ -374,7 +381,9 @@ fn gen_custom_function(
         })
         .collect::<Vec<_>>();
 
-    let cfg = cfgs_to_stream(&attrs.cfg);
+    let extern_ident = func_info.extern_ident;
+
+    let cfg = cfgs_to_stream(&func_info.attrs.cfg);
     if write_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
@@ -621,17 +630,19 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
     }
 
     for func in module.declared_functions.values() {
-        let method_ident = Ident::new(func.name.as_str(), Span::call_site());
+        let func_ident = Ident::new(func.name.as_str(), Span::call_site());
         let extern_ident = Ident::new(func.abi_name.as_str(), Span::call_site());
         new_contents.push(gen_custom_function(
-            None,
-            method_ident,
-            extern_ident,
-            None,
-            &func.params,
-            func.output_type.as_ref(),
-            &func.lifetimes,
-            &func.attrs,
+            FuncGen {
+                self_ident: None,
+                func_ident,
+                extern_ident,
+                self_param: None,
+                params: &func.params,
+                return_type: func.output_type.as_ref(),
+                lifetime_env: &func.lifetimes,
+                attrs: &func.attrs,
+            }
         ))
     }
 
