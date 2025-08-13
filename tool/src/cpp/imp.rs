@@ -321,11 +321,12 @@ impl<'tcx> ImplGenContext<'tcx> {
             });
         }
 
-        let pre_qualifiers = if method.param_self.is_none() && !matches!(id, SymbolId::FunctionId(..)) {
-            vec!["static".into()]
-        } else {
-            vec![]
-        };
+        let pre_qualifiers =
+            if method.param_self.is_none() && !matches!(id, SymbolId::FunctionId(..)) {
+                vec!["static".into()]
+            } else {
+                vec![]
+            };
 
         let post_qualifiers = match &method.param_self {
             Some(param_self)

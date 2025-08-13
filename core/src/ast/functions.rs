@@ -17,7 +17,7 @@ pub struct Function {
 }
 
 impl Function {
-    pub(crate) fn from_syn(f: &ItemFn, parent_attrs : &Attrs) -> Function {
+    pub(crate) fn from_syn(f: &ItemFn, parent_attrs: &Attrs) -> Function {
         let ident: Ident = (&f.sig.ident).into();
         if f.sig.receiver().is_some() {
             panic!("Cannot use self parameter in free function {ident:?}")
@@ -32,10 +32,7 @@ impl Function {
             attrs.abi_rename.apply(ident.as_str().into()).to_string()
         };
 
-        let extern_ident = syn::Ident::new(
-            &concat_func_ident,
-            f.sig.ident.span(),
-        );
+        let extern_ident = syn::Ident::new(&concat_func_ident, f.sig.ident.span());
 
         let path_type = PathType::from(&f.sig);
 
@@ -81,28 +78,37 @@ mod tests {
 
     #[test]
     fn test_free_function() {
-        insta::assert_yaml_snapshot!(Function::from_syn(&syn::parse_quote! {
-            fn some_func(a : f32, b: f64) {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func(a : f32, b: f64) {
 
-            }
-        }, &Attrs::default()));
+                }
+            },
+            &Attrs::default()
+        ));
     }
 
     #[test]
     fn test_free_function_output() {
-        insta::assert_yaml_snapshot!(Function::from_syn(&syn::parse_quote! {
-            fn some_func(a : SomeType) -> Option<()> {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func(a : SomeType) -> Option<()> {
 
-            }
-        }, &Attrs::default()));
+                }
+            },
+            &Attrs::default()
+        ));
     }
 
     #[test]
     fn test_free_function_lifetimes() {
-        insta::assert_yaml_snapshot!(Function::from_syn(&syn::parse_quote! {
-            fn some_func<'a>(a : &'a SomeType) -> Option<&'a SomeType> {
+        insta::assert_yaml_snapshot!(Function::from_syn(
+            &syn::parse_quote! {
+                fn some_func<'a>(a : &'a SomeType) -> Option<&'a SomeType> {
 
-            }
-        }, &Attrs::default()));
+                }
+            },
+            &Attrs::default()
+        ));
     }
 }

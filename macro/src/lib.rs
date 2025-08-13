@@ -241,11 +241,28 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
-    gen_custom_function(Some(self_ident), method_ident, extern_ident, m.self_param.as_ref(), &m.params, m.return_type.as_ref(), &m.lifetime_env, &m.attrs)
+    gen_custom_function(
+        Some(self_ident),
+        method_ident,
+        extern_ident,
+        m.self_param.as_ref(),
+        &m.params,
+        m.return_type.as_ref(),
+        &m.lifetime_env,
+        &m.attrs,
+    )
 }
 
-fn gen_custom_function(self_ident : Option<Ident>, method_ident : Ident, extern_ident : Ident, self_param : Option<&crate::ast::SelfParam>, params : &[crate::ast::Param], return_type : Option<&crate::ast::TypeName>, lifetime_env : &crate::ast::LifetimeEnv, attrs : &crate::ast::Attrs) -> Item {
-
+fn gen_custom_function(
+    self_ident: Option<Ident>,
+    method_ident: Ident,
+    extern_ident: Ident,
+    self_param: Option<&crate::ast::SelfParam>,
+    params: &[crate::ast::Param],
+    return_type: Option<&crate::ast::TypeName>,
+    lifetime_env: &crate::ast::LifetimeEnv,
+    attrs: &crate::ast::Attrs,
+) -> Item {
     let mut all_params = vec![];
 
     let mut all_params_conversion = vec![];
@@ -608,7 +625,16 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
     for func in module.declared_functions.values() {
         let method_ident = Ident::new(func.name.as_str(), Span::call_site());
         let extern_ident = Ident::new(func.abi_name.as_str(), Span::call_site());
-        new_contents.push(gen_custom_function(None, method_ident, extern_ident, None, &func.params, func.output_type.as_ref(), &func.lifetimes, &func.attrs))
+        new_contents.push(gen_custom_function(
+            None,
+            method_ident,
+            extern_ident,
+            None,
+            &func.params,
+            func.output_type.as_ref(),
+            &func.lifetimes,
+            &func.attrs,
+        ))
     }
 
     ItemMod {
