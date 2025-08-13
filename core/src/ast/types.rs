@@ -96,7 +96,7 @@ pub enum ModSymbol {
     CustomType(CustomType),
     /// A trait
     Trait(Trait),
-    /// A function
+    /// A free function not associated with any type.
     Function(Function),
 }
 

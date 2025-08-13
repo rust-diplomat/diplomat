@@ -55,6 +55,7 @@ pub(super) struct MethodInfo<'a> {
 
 #[derive(Template, Default)]
 #[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
+/// Header for the implementation of a block of functions.
 struct ImplTemplate {
     namespace: Option<String>,
     methods: Vec<String>,
@@ -63,12 +64,15 @@ struct ImplTemplate {
 
 #[derive(Template, Default)]
 #[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
+/// Header for the definition of a block of function.s
 struct DeclTemplate {
     namespace: Option<String>,
     methods: Vec<String>,
     c_header: C2Header,
 }
 
+/// Helper for rendering function block information to [`Header`]s
+/// Used either for creating blocks of functions that belong to structs, or for free functions that belong to no structs. 
 pub struct FuncGenContext<'tcx> {
     pub impl_header: Header,
     pub decl_header: Header,
@@ -101,6 +105,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         }
     }
 
+    /// Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
     pub fn generate_function<'b>(
         &mut self,
         func_id: FunctionId,

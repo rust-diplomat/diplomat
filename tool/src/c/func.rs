@@ -6,8 +6,9 @@ use diplomat_core::hir;
 use crate::c::{Header, TyGenContext};
 
 #[derive(Template)]
-#[template(path = "c/impl.h.jinja", escape = "none")]
-pub(super) struct ImplTemplate<'a> {
+#[template(path = "c/func_block.h.jinja", escape = "none")]
+/// Represents a block of functions. Can belong to a method, or just a list of free functions.
+pub(super) struct FuncBlockTemplate<'a> {
     pub(super) methods: Vec<MethodTemplate>,
     pub(super) cb_structs_and_defs: Vec<CallbackAndStructDef>,
     pub(super) is_for_cpp: bool,
@@ -16,6 +17,7 @@ pub(super) struct ImplTemplate<'a> {
 }
 
 #[derive(Clone)]
+/// Information for constructing a C struct required for callback return informatioon.
 pub(super) struct CallbackAndStructDef {
     pub(super) name: String,
     pub(super) params_types: String,
@@ -23,22 +25,26 @@ pub(super) struct CallbackAndStructDef {
     pub(super) return_struct: Option<String>,
 }
 
+/// The C representation of a Rust method.
+/// Created for [`FuncBlockTemplate`] to use in generation.
 pub(super) struct MethodTemplate {
     return_ty: String,
     params: String,
     abi_name: String,
 }
 
+/// Helper for creating and rendering to a [`FuncBlockTemplate`].
+/// Used either for creating functions that belong to structs, or for free functions that belong to no structs. 
 pub struct FuncGenContext<'tcx> {
     pub header: Header,
-    template: ImplTemplate<'tcx>,
+    template: FuncBlockTemplate<'tcx>,
 }
 
 impl<'tcx> FuncGenContext<'tcx> {
     pub(crate) fn new(header: Header, is_for_cpp: bool) -> Self {
         FuncGenContext {
             header,
-            template: ImplTemplate {
+            template: FuncBlockTemplate {
                 methods: Vec::new(),
                 cb_structs_and_defs: Vec::new(),
                 is_for_cpp,
