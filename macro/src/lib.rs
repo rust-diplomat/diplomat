@@ -241,12 +241,16 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
+    gen_custom_function(Some(self_ident), method_ident, extern_ident, m.self_param.as_ref(), &m.params, m.return_type.as_ref(), &m.lifetime_env, &m.attrs)
+}
+
+fn gen_custom_function(self_ident : Option<Ident>, method_ident : Ident, extern_ident : Ident, self_param : Option<&crate::ast::SelfParam>, params : &[crate::ast::Param], return_type : Option<&crate::ast::TypeName>, lifetime_env : &crate::ast::LifetimeEnv, attrs : &crate::ast::Attrs) -> Item {
 
     let mut all_params = vec![];
 
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
-    m.params.iter().for_each(|p| {
+    params.iter().for_each(|p| {
         let ty = param_ty(&p.ty);
         let name = &p.name;
         all_params_names.push(name);
@@ -264,7 +268,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         subpat: None,
     });
 
-    if let Some(self_param) = &m.self_param {
+    if let Some(self_param) = self_param {
         all_params.insert(
             0,
             FnArg::Typed(PatType {
@@ -277,7 +281,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     }
 
     let lifetimes = {
-        let lifetime_env = &m.lifetime_env;
+        let lifetime_env = lifetime_env;
         if lifetime_env.is_empty() {
             quote! {}
         } else {
@@ -285,13 +289,17 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         }
     };
 
-    let method_invocation = if m.self_param.is_some() {
+    let method_invocation = if self_param.is_some() {
         quote! { #this_ident.#method_ident }
     } else {
-        quote! { #self_ident::#method_ident }
+        if let Some(self_ident) = self_ident {
+            quote! { #self_ident::#method_ident }
+        } else {
+            quote! { #method_ident }
+        }
     };
 
-    let (return_tokens, maybe_into) = if let Some(return_type) = &m.return_type {
+    let (return_tokens, maybe_into) = if let Some(return_type) = return_type {
         if let ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) = return_type {
             let ok = ok.to_syn();
             let err = err.to_syn();
@@ -342,8 +350,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         (quote! {}, quote! {})
     };
 
-    let write_flushes = m
-        .params
+    let write_flushes = params
         .iter()
         .filter(|p| p.is_write())
         .map(|p| {
@@ -352,7 +359,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = cfgs_to_stream(&m.attrs.cfg);
+    let cfg = cfgs_to_stream(&attrs.cfg);
     if write_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
@@ -596,6 +603,12 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 }
             }
         })
+    }
+
+    for func in module.declared_functions.values() {
+        let method_ident = Ident::new(func.name.as_str(), Span::call_site());
+        let extern_ident = Ident::new(func.abi_name.as_str(), Span::call_site());
+        new_contents.push(gen_custom_function(None, method_ident, extern_ident, None, &func.params, func.output_type.as_ref(), &func.lifetimes, &func.attrs))
     }
 
     ItemMod {

@@ -17,16 +17,23 @@ pub struct Function {
 }
 
 impl Function {
-    pub(crate) fn from_syn(f: &ItemFn) -> Function {
+    pub(crate) fn from_syn(f: &ItemFn, parent_attrs : &Attrs) -> Function {
         let ident: Ident = (&f.sig.ident).into();
         if f.sig.receiver().is_some() {
             panic!("Cannot use self parameter in free function {ident:?}")
         }
 
-        let attrs = Attrs::from_attrs(&f.attrs);
+        let mut attrs = parent_attrs.clone();
+        attrs.add_attrs(&f.attrs);
+
+        let concat_func_ident = if attrs.abi_rename.is_empty() {
+            format!("diplomat_external_{ident}")
+        } else {
+            attrs.abi_rename.apply(ident.as_str().into()).to_string()
+        };
 
         let extern_ident = syn::Ident::new(
-            &attrs.abi_rename.apply(ident.to_string().into()),
+            &concat_func_ident,
             f.sig.ident.span(),
         );
 
@@ -70,7 +77,7 @@ mod tests {
 
     use syn;
 
-    use crate::ast::Function;
+    use crate::ast::{Attrs, Function};
 
     #[test]
     fn test_free_function() {
@@ -78,7 +85,7 @@ mod tests {
             fn some_func(a : f32, b: f64) {
 
             }
-        }));
+        }, &Attrs::default()));
     }
 
     #[test]
@@ -87,7 +94,7 @@ mod tests {
             fn some_func(a : SomeType) -> Option<()> {
 
             }
-        }));
+        }, &Attrs::default()));
     }
 
     #[test]
@@ -96,6 +103,6 @@ mod tests {
             fn some_func<'a>(a : &'a SomeType) -> Option<&'a SomeType> {
 
             }
-        }));
+        }, &Attrs::default()));
     }
 }

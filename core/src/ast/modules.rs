@@ -299,7 +299,9 @@ impl ModuleBuilder {
                         f.sig.ident
                     );
                     if is_public {
-                        let out = Function::from_syn(f);
+                        let parent_attrs =
+                            self.impl_parent_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
+                        let out = Function::from_syn(f, &parent_attrs);
                         self.functions_by_name.insert(out.name.clone(), out);
                     }
                 }
