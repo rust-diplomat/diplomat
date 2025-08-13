@@ -1003,6 +1003,8 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
+    /// Whether the language supports generating functions not associated with any type.
+    pub free_functions : bool,
 }
 
 impl BackendAttrSupport {
@@ -1038,6 +1040,7 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
+            free_functions: true,
         }
     }
 
@@ -1069,6 +1072,7 @@ impl BackendAttrSupport {
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
+            "free_functions" => Some(self.free_functions),
             _ => None,
         }
     }
@@ -1211,6 +1215,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
+                free_functions,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1242,6 +1247,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
+                "free_functions" => free_functions,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1632,6 +1638,26 @@ mod tests {
                         todo!()
                     }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_free_functions() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub fn out();
+            }
+        }
+    }
+
+    #[test]
+    fn test_free_functions_unsupported() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub fn out();
             }
         }
     }
