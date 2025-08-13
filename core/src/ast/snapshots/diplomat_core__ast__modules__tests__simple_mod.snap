@@ -128,7 +128,7 @@ declared_traits: {}
 declared_functions:
   other_test_function:
     name: other_test_function
-    abi_name: other_test_function
+    abi_name: diplomat_external_other_test_function
     params:
       - name: x
         ty:
@@ -147,7 +147,7 @@ declared_functions:
       - []
   test_function:
     name: test_function
-    abi_name: test_function
+    abi_name: diplomat_external_test_function
     params: []
     output_type: ~
     lifetimes: {}
