@@ -22,7 +22,7 @@ namespace capi {
 
 
     
-inline static void free_callback_holder(std::function<diplomat::result<std::monostate, std::monostate>()> f);
+inline void free_callback_holder(std::function<diplomat::result<std::monostate, std::monostate>()> f);
 
 
 

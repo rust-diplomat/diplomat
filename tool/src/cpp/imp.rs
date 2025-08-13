@@ -321,7 +321,7 @@ impl<'tcx> ImplGenContext<'tcx> {
             });
         }
 
-        let pre_qualifiers = if method.param_self.is_none() {
+        let pre_qualifiers = if method.param_self.is_none() && !matches!(id, SymbolId::FunctionId(..)) {
             vec!["static".into()]
         } else {
             vec![]
