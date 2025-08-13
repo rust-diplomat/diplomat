@@ -69,15 +69,15 @@ struct DeclTemplate {
     c_header: C2Header,
 }
 
-pub struct ImplGenContext<'tcx> {
+pub struct FuncGenContext<'tcx> {
     pub impl_header: Header,
     pub decl_header: Header,
-    c: crate::c::ImplGenContext<'tcx>,
+    c: crate::c::FuncGenContext<'tcx>,
     impl_template: ImplTemplate,
     decl_template: DeclTemplate,
 }
 
-impl<'tcx> ImplGenContext<'tcx> {
+impl<'tcx> FuncGenContext<'tcx> {
     pub fn new(
         impl_header_path: String,
         decl_header_path: String,
@@ -85,8 +85,8 @@ impl<'tcx> ImplGenContext<'tcx> {
         is_for_cpp: bool,
     ) -> Self {
         let decl_c_header = crate::c::Header::new(decl_header_path.clone(), is_for_cpp);
-        ImplGenContext {
-            c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp),
+        FuncGenContext {
+            c: crate::c::FuncGenContext::new(decl_c_header, is_for_cpp),
             impl_header: Header::new(impl_header_path),
             decl_header: Header::new(decl_header_path.clone()),
             impl_template: ImplTemplate {

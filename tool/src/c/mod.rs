@@ -1,12 +1,12 @@
 mod formatter;
 mod header;
-mod imp;
+mod func;
 mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
-pub use self::imp::ImplGenContext;
+pub use self::func::FuncGenContext;
 pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
@@ -124,7 +124,7 @@ pub(crate) fn run<'tcx>(
     // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
     let header = Header::new("diplomat_free_functions.h".into(), false);
 
-    let mut impl_context = ImplGenContext::new(header, false);
+    let mut impl_context = FuncGenContext::new(header, false);
 
     {
         let mut should_render = false;

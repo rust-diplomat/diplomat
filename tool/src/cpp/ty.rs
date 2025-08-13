@@ -2,8 +2,8 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
-use crate::cpp::imp::ImplGenContext;
-use crate::cpp::imp::MethodInfo;
+use crate::cpp::func::FuncGenContext;
+use crate::cpp::func::MethodInfo;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
@@ -57,7 +57,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| ImplGenContext::gen_method_info(id.into(), method, self))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         let mut found_default: Option<&hir::EnumVariant> = None;
@@ -156,7 +156,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| ImplGenContext::gen_method_info(id.into(), method, self))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -247,7 +247,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = def
             .methods
             .iter()
-            .flat_map(|method| ImplGenContext::gen_method_info(id.into(), method, self))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         #[derive(Template)]

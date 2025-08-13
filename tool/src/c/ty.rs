@@ -1,6 +1,6 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use crate::c::imp::{CallbackAndStructDef, ImplGenContext};
+use crate::c::func::{CallbackAndStructDef, FuncGenContext};
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
@@ -179,7 +179,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
 
-        let mut impl_context = ImplGenContext::new(impl_header, self.is_for_cpp);
+        let mut impl_context = FuncGenContext::new(impl_header, self.is_for_cpp);
 
         for method in ty.methods() {
             if method.attrs.disable {

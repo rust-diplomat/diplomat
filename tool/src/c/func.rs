@@ -29,14 +29,14 @@ pub(super) struct MethodTemplate {
     abi_name: String,
 }
 
-pub struct ImplGenContext<'tcx> {
+pub struct FuncGenContext<'tcx> {
     pub header: Header,
     template: ImplTemplate<'tcx>,
 }
 
-impl<'tcx> ImplGenContext<'tcx> {
+impl<'tcx> FuncGenContext<'tcx> {
     pub(crate) fn new(header: Header, is_for_cpp: bool) -> Self {
-        ImplGenContext {
+        FuncGenContext {
             header,
             template: ImplTemplate {
                 methods: Vec::new(),

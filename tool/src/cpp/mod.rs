@@ -1,11 +1,11 @@
 mod formatter;
 mod header;
-mod imp;
+mod func;
 mod ty;
 
 use std::collections::BTreeMap;
 
-use crate::{cpp::imp::ImplGenContext, ErrorStore, FileMap};
+use crate::{cpp::func::FuncGenContext, ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use ty::TyGenContext;
 
@@ -136,7 +136,7 @@ pub(crate) fn run<'tcx>(
             } else {
                 func_contexts.insert(
                     key.clone(),
-                    ImplGenContext::new(
+                    FuncGenContext::new(
                         impl_header_path.clone(),
                         decl_header_path.clone(),
                         f.attrs.namespace.clone(),
