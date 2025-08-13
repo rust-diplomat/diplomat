@@ -308,12 +308,10 @@ fn gen_custom_function(
 
     let method_invocation = if self_param.is_some() {
         quote! { #this_ident.#method_ident }
+    } else if let Some(self_ident) = self_ident {
+        quote! { #self_ident::#method_ident }
     } else {
-        if let Some(self_ident) = self_ident {
-            quote! { #self_ident::#method_ident }
-        } else {
-            quote! { #method_ident }
-        }
+        quote! { #method_ident }
     };
 
     let (return_tokens, maybe_into) = if let Some(return_type) = return_type {
