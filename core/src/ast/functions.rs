@@ -4,6 +4,7 @@ use syn::ItemFn;
 use crate::ast::{Attrs, Docs, Ident, LifetimeEnv, Param, PathType, TypeName};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Function {
     pub name: Ident,
     pub abi_name: Ident,
