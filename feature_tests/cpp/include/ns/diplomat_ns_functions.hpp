@@ -14,7 +14,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace ns {
 namespace capi {
     extern "C" {
 

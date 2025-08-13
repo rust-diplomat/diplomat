@@ -89,7 +89,10 @@ impl<'tcx> ImplGenContext<'tcx> {
             c: crate::c::ImplGenContext::new(decl_c_header, is_for_cpp),
             impl_header: Header::new(impl_header_path),
             decl_header: Header::new(decl_header_path.clone()),
-            impl_template: ImplTemplate::default(),
+            impl_template: ImplTemplate {
+                namespace: namespace.clone(),
+                ..Default::default()
+            },
             decl_template: DeclTemplate {
                 c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
                 namespace,
