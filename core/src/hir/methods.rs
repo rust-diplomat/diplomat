@@ -17,6 +17,8 @@ pub mod borrowing_field;
 pub mod borrowing_param;
 
 /// A method exposed to Diplomat.
+/// Used for representing both free functions ([`crate::ast::Function`]) and struct methods ([`crate::ast::Method`]).
+/// The only difference between a free function and a struct method in this struct is that [`Self::param_self`] will always be `None` for a free function. 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Method {
