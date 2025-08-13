@@ -1004,7 +1004,7 @@ pub struct BackendAttrSupport {
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
     /// Whether the language supports generating functions not associated with any type.
-    pub free_functions : bool,
+    pub free_functions: bool,
 }
 
 impl BackendAttrSupport {
