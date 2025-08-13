@@ -3,7 +3,7 @@ inline {##}
 {{- return_ty }} {##}
 {%- block domain -%}{%- endblock -%}{{ method_name -}}
 (
-	{%- include "param_decls_list.h.jinja" %}
+	{%- include "cpp/function_defs/param_decls_list.h.jinja" %}
 	{%- if is_generic_writeable %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable{% endif -%}
 ) {##}
 {%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}

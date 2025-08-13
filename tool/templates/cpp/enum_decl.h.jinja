@@ -31,7 +31,7 @@ public:
 	{{~ m.docs|prefix_trimmed("	 * ")}}
 	 */
 	{% endif -%}
-	{% include "method_decl.h.jinja" %}
+	{% include "function_defs/method_decl.h.jinja" %}
 	{%- endfor %}
 
 	inline {{ctype}} AsFFI() const;
