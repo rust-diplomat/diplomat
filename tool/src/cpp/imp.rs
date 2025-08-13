@@ -110,14 +110,20 @@ impl<'tcx> ImplGenContext<'tcx> {
         let info = Self::gen_method_info(func_id.into(), func, context);
 
         #[derive(Template)]
-        #[template(path = "cpp/function_defs/func_block_function.h.jinja", escape = "none")]
+        #[template(
+            path = "cpp/function_defs/func_block_function.h.jinja",
+            escape = "none"
+        )]
         struct FunctionImpl<'a> {
             m: &'a MethodInfo<'a>,
             namespace: Option<String>,
         }
 
         #[derive(Template)]
-        #[template(path = "cpp/function_defs/func_block_function_decl.h.jinja", escape = "none")]
+        #[template(
+            path = "cpp/function_defs/func_block_function_decl.h.jinja",
+            escape = "none"
+        )]
         struct FunctionDecl<'a> {
             m: &'a MethodInfo<'a>,
         }
