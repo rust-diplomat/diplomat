@@ -1,12 +1,12 @@
 mod formatter;
-mod header;
 mod func;
+mod header;
 mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
-pub(crate) use self::header::Header;
 pub use self::func::FuncGenContext;
+pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};

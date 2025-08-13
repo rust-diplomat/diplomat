@@ -72,7 +72,7 @@ struct DeclTemplate {
 }
 
 /// Helper for rendering function block information to [`Header`]s
-/// Used either for creating blocks of functions that belong to structs, or for free functions that belong to no structs. 
+/// Used either for creating blocks of functions that belong to structs, or for free functions that belong to no structs.
 pub struct FuncGenContext<'tcx> {
     pub impl_header: Header,
     pub decl_header: Header,

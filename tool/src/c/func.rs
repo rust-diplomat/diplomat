@@ -34,7 +34,7 @@ pub(super) struct MethodTemplate {
 }
 
 /// Helper for creating and rendering to a [`FuncBlockTemplate`].
-/// Used either for creating functions that belong to structs, or for free functions that belong to no structs. 
+/// Used either for creating functions that belong to structs, or for free functions that belong to no structs.
 pub struct FuncGenContext<'tcx> {
     pub header: Header,
     template: FuncBlockTemplate<'tcx>,

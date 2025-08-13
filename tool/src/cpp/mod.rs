@@ -1,6 +1,6 @@
 mod formatter;
-mod header;
 mod func;
+mod header;
 mod ty;
 
 use std::collections::BTreeMap;
