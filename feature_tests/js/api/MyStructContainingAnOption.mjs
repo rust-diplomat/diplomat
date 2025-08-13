@@ -80,7 +80,7 @@ export class MyStructContainingAnOption {
         appendArrayMap
     ) {
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {}));
-        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 40, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array));
+        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 40, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, new DefaultEnum(jsValue).ffiValue, Int32Array));
     }
 
     // This struct contains borrowed fields, so this takes in a list of

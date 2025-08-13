@@ -55,7 +55,7 @@ export class FixedDecimalFormatter {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale instanceof Locale ? locale.ffiValue : typeError('locale', 'Locale'), provider instanceof DataProvider ? provider.ffiValue : typeError('provider', 'DataProvider'), FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -79,7 +79,7 @@ export class FixedDecimalFormatter {
     formatWrite(value) {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
+    wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value instanceof FixedDecimal ? value.ffiValue : typeError('value', 'FixedDecimal'), write.buffer);
 
         try {
             return write.readString8();
