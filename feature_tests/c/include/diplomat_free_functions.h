@@ -22,6 +22,8 @@ typedef struct DiplomatCallback_free_callback_holder_f {
 
 int32_t free_func_test(int32_t x);
 
+bool nested_ns_fn(bool x);
+
 void free_callback_holder(DiplomatCallback_free_callback_holder_f f_cb_wrap);
 
 
