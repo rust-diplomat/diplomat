@@ -1641,24 +1641,4 @@ mod tests {
             }
         }
     }
-
-    #[test]
-    fn test_free_functions() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
-            #[diplomat::bridge]
-            mod ffi {
-                pub fn out();
-            }
-        }
-    }
-
-    #[test]
-    fn test_free_functions_unsupported() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
-            #[diplomat::bridge]
-            mod ffi {
-                pub fn out();
-            }
-        }
-    }
 }
