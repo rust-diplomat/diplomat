@@ -219,7 +219,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_unsized_conversion(&self, prim: PrimitiveType, optional: bool) -> Cow<str> {
+    pub fn fmt_unsized_conversion(&self, prim: PrimitiveType, optional: bool) -> Cow<'_, str> {
         let optional_conversion = if optional { "?" } else { "" };
         match prim {
             PrimitiveType::Bool => format!("{optional_conversion} > 0").into(),
@@ -238,7 +238,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_primitive_error_type(&self, prim: PrimitiveType) -> Cow<str> {
+    pub fn fmt_primitive_error_type(&self, prim: PrimitiveType) -> Cow<'_, str> {
         match prim {
             PrimitiveType::Bool => "BoolError".into(),
             PrimitiveType::Int(IntType::U8) => "UByteError".into(),
