@@ -1113,22 +1113,22 @@ impl TypeName {
             }
             syn::Type::Array(arr) => {
                 let len = match &arr.len {
-                    syn::Expr::Lit(syn::ExprLit { attrs: _, lit: syn::Lit::Int(i)}) => {
-                        i.base10_parse::<usize>().expect("Expected usize integer.")
-                    },
-                    _ => unreachable!("Expected a literal integer expression for array length in {arr:?}")
+                    syn::Expr::Lit(syn::ExprLit {
+                        attrs: _,
+                        lit: syn::Lit::Int(i),
+                    }) => i.base10_parse::<usize>().expect("Expected usize integer."),
+                    _ => unreachable!(
+                        "Expected a literal integer expression for array length in {arr:?}"
+                    ),
                 };
-                
+
                 if let syn::Type::Path(p) = &*arr.elem {
                     if let Some(primitive) = p
                         .path
                         .get_ident()
                         .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
                     {
-                        return TypeName::PrimitiveArray(
-                            primitive,
-                            len
-                        );
+                        return TypeName::PrimitiveArray(primitive, len);
                     }
                 }
                 panic!("Unsupported array type {:?}", arr.to_token_stream());
