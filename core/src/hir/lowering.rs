@@ -987,6 +987,9 @@ impl<'ast> LoweringContext<'ast> {
                 )))
             }
             ast::TypeName::PrimitiveArray(ty, size) => {
+                if !self.attr_validator.attrs_supported().arrays {
+                    panic!("Arrays not supported in this backend. Try using #[diplomat::attr(not(supports = arrays), disable)].")
+                }
                 Ok(Type::Array(Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)), *size))
             }
             ast::TypeName::CustomTypeSlice(lm, type_name) => {
