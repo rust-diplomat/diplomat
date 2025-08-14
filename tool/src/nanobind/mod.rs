@@ -110,24 +110,6 @@ pub(crate) fn run<'cx>(
         let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id);
         let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
-        let mut header = crate::cpp::Header {
-            path: cpp_decl_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
-
-        let mut unused_header = crate::cpp::Header {
-            path: cpp_impl_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
-
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -143,8 +125,8 @@ pub(crate) fn run<'cx>(
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                impl_header: &mut header,
-                decl_header: &mut unused_header,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
             },
             root_module: &mut root_module,
@@ -221,7 +203,7 @@ pub(crate) fn run<'cx>(
 mod test {
     use diplomat_core::hir::{self, TypeDef};
     use quote::quote;
-    use std::collections::{BTreeMap, BTreeSet};
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_opaque_gen() {
@@ -278,23 +260,6 @@ mod test {
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = BTreeMap::new();
-        let mut header = crate::cpp::Header {
-            path: decl_header_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
-
-        let mut unused_header = crate::cpp::Header {
-            path: impl_file_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
 
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
@@ -311,8 +276,8 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                impl_header: &mut header,
-                decl_header: &mut unused_header,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
             },
             root_module: &mut root_module,
@@ -372,23 +337,6 @@ mod test {
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = BTreeMap::new();
-        let mut header = crate::cpp::Header {
-            path: decl_header_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
-
-        let mut unused_header = crate::cpp::Header {
-            path: impl_file_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
 
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
@@ -405,8 +353,8 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                impl_header: &mut header,
-                decl_header: &mut unused_header,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
             },
             root_module: &mut root_module,
@@ -465,23 +413,7 @@ mod test {
         let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
 
         let mut submodules = BTreeMap::new();
-        let mut header = crate::cpp::Header {
-            path: decl_header_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
 
-        let mut unused_header = crate::cpp::Header {
-            path: impl_file_path.clone(),
-            includes: BTreeSet::new(),
-            decl_include: None,
-            body: "".into(),
-            indent_str: "",
-            forwards: BTreeMap::new(),
-        };
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
@@ -497,8 +429,8 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                impl_header: &mut header,
-                decl_header: &mut unused_header,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
             },
             root_module: &mut root_module,
