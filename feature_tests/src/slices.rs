@@ -107,6 +107,10 @@ pub mod ffi {
             &self.0
         }
 
+        pub fn get_array(&self) -> [f64; 3] {
+            [0., 1., 2.]
+        }
+
         pub fn fill_slice(&self, v: &mut [f64]) {
             v.copy_from_slice(&self.0)
         }

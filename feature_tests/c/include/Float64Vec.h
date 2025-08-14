@@ -11,6 +11,7 @@
 #include "Float64Vec.d.h"
 
 typedef bool BoolArray_3[3];
+typedef double F64Array_3[3];
 typedef int32_t I32Array_12[12];
 
 
@@ -34,6 +35,8 @@ Float64Vec* Float64Vec_new_usize(DiplomatUsizeView v);
 Float64Vec* Float64Vec_new_f64_be_bytes(DiplomatU8View v);
 
 DiplomatF64View Float64Vec_as_slice(const Float64Vec* self);
+
+F64Array_3 Float64Vec_get_array(const Float64Vec* self);
 
 void Float64Vec_fill_slice(const Float64Vec* self, DiplomatF64ViewMut v);
 
