@@ -451,6 +451,8 @@ pub enum TypeName {
         PrimitiveType,
         StdlibOrDiplomat,
     ),
+    /// A `[T; usize]` type, where `T` is a primitive.
+    PrimitiveArray(PrimitiveType, usize),
     /// `&[DiplomatStrSlice]`, etc. Equivalent to `&[&str]`
     ///
     /// If StdlibOrDiplomat::Stdlib, it's specified as `&[&DiplomatFoo]`, if StdlibOrDiplomat::Diplomat it's specified
@@ -576,7 +578,7 @@ impl TypeName {
     pub fn is_ffi_safe(&self) -> bool {
         match self {
             TypeName::Primitive(..) | TypeName::Named(_) | TypeName::SelfType(_) | TypeName::Reference(..) |
-            TypeName::Box(..) |
+            TypeName::Box(..) | TypeName::PrimitiveArray(..) |
             // can only be passed across the FFI boundary; callbacks and traits are input-only
             TypeName::Function(..) | TypeName::ImplTrait(..) |
             // These are specified using FFI-safe diplomat_runtime types
@@ -697,6 +699,10 @@ impl TypeName {
                 } else {
                     primitive.get_diplomat_slice_type(ltmt)
                 }
+            }
+            TypeName::PrimitiveArray(ty, count) => {
+                let syn_ty = ty.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => [#syn_ty; #count])
             }
             TypeName::CustomTypeSlice(ltmt, type_name) => {
                 let inner = type_name.to_syn();
@@ -1105,6 +1111,28 @@ impl TypeName {
                 }
                 ret_type.expect("No valid traits found")
             }
+            syn::Type::Array(arr) => {
+                let len = match &arr.len {
+                    syn::Expr::Lit(syn::ExprLit { attrs: _, lit: syn::Lit::Int(i)}) => {
+                        i.base10_parse::<usize>().expect("Expected usize integer.")
+                    },
+                    _ => unreachable!("Expected a literal integer expression for array length in {arr:?}")
+                };
+                
+                if let syn::Type::Path(p) = &*arr.elem {
+                    if let Some(primitive) = p
+                        .path
+                        .get_ident()
+                        .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
+                    {
+                        return TypeName::PrimitiveArray(
+                            primitive,
+                            len
+                        );
+                    }
+                }
+                panic!("Unsupported array type {:?}", arr.to_token_stream());
+            }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
@@ -1315,6 +1343,7 @@ impl fmt::Display for TypeName {
                 write!(f, "DiplomatSlice{maybemut}<{lt}{typ}>")
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
+            TypeName::PrimitiveArray(ty, size) => write!(f, "[{ty}; {size}]"),
             TypeName::CustomTypeSlice(Some((lifetime, mutability)), type_name) => {
                 write!(f, "{}[{type_name}]", ReferenceDisplay(lifetime, mutability))
             }

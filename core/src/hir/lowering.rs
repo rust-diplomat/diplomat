@@ -986,6 +986,9 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
+            ast::TypeName::PrimitiveArray(ty, size) => {
+                Ok(Type::Array(Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)), *size))
+            }
             ast::TypeName::CustomTypeSlice(lm, type_name) => {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
@@ -1348,6 +1351,9 @@ impl<'ast> LoweringContext<'ast> {
                     "Owned slices cannot be returned".into(),
                 ));
                 Err(())
+            }
+            ast::TypeName::PrimitiveArray(ty, size) => {
+                Ok(OutType::Array(Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)), *size))
             }
             ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(OutType::Slice(
                 Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
