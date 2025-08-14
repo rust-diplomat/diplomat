@@ -41,6 +41,7 @@ mod ffi {
             f(arg);
         }
 
+        #[diplomat::attr(not(supports = arrays), disable)]
         pub fn test_array_cb_arg(arg: [u8; 2], f : impl Fn([u8; 2]) -> [u8; 2]) -> [u8; 2]  {
             f(arg)
         }
