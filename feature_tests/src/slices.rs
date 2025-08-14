@@ -108,11 +108,6 @@ pub mod ffi {
             &self.0
         }
 
-        #[diplomat::attr(not(supports = arrays), disable)]
-        pub fn get_array(&self) -> [f64; 3] {
-            [0., 1., 2.]
-        }
-
         pub fn fill_slice(&self, v: &mut [f64]) {
             v.copy_from_slice(&self.0)
         }

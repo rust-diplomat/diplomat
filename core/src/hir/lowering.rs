@@ -1358,7 +1358,14 @@ impl<'ast> LoweringContext<'ast> {
                 Err(())
             }
             ast::TypeName::PrimitiveArray(ty, size) => {
-                Ok(OutType::Array(Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)), *size))
+                if let TypeLoweringContext::Callback = context {
+                    Ok(OutType::Array(Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)), *size))
+                } else {
+                    self.errors.push(LoweringError::Other(
+                        "Owned arrays cannot be returned".into(),
+                    ));
+                    Err(())
+                }
             }
             ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(OutType::Slice(
                 Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
