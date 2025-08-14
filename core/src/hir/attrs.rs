@@ -1001,7 +1001,7 @@ pub struct BackendAttrSupport {
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
     /// Whether or not the language supports [T; usize] fixed-size arrays
-    pub arrays : bool,
+    pub arrays: bool,
 }
 
 impl BackendAttrSupport {

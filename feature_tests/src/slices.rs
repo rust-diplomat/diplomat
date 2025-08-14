@@ -62,9 +62,13 @@ pub mod ffi {
         pub fn new_bool(v: &[bool]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
-        
+
         #[diplomat::attr(not(supports = arrays), disable)]
-        pub fn new_bool_arr(v : [bool; 3], _other : [bool ; 3], _other_other : [i32; 12]) -> Box<Float64Vec> {
+        pub fn new_bool_arr(
+            v: [bool; 3],
+            _other: [bool; 3],
+            _other_other: [i32; 12],
+        ) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
 
