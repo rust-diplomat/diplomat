@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub(super) enum Forward {
+pub(crate) enum Forward {
     Class(String),
     #[allow(dead_code)]
     Struct(String),
@@ -26,7 +26,7 @@ struct HeaderTemplate<'a> {
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
-pub(super) struct Header {
+pub(crate) struct Header {
     /// The path name used for the header file (for example Foo.h)
     pub path: String,
     /// A list of includes

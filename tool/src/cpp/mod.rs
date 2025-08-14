@@ -2,9 +2,11 @@ mod formatter;
 mod header;
 mod ty;
 
+pub(crate) use header::Header;
+
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-use ty::TyGenContext;
+pub(crate) use ty::TyGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 

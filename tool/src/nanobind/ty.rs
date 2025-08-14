@@ -1,8 +1,8 @@
 use super::root_module::RootModule;
 use super::PyFormatter;
-use crate::{c::TyGenContext as C2TyGenContext, hir, ErrorStore};
+use crate::{cpp::TyGenContext as Cpp2TyGenContext, hir, ErrorStore};
 use askama::Template;
-use diplomat_core::hir::{OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
+use diplomat_core::hir::{TyPosition, Type, TypeId};
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -49,10 +49,9 @@ struct MethodInfo<'a> {
 pub(super) struct TyGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
-    pub c2: C2TyGenContext<'cx, 'tcx>,
+    pub cpp2: Cpp2TyGenContext<'cx, 'tcx, 'cx>,
     pub root_module: &'cx mut RootModule<'tcx>,
     pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
-    pub includes: &'cx mut BTreeSet<String>,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
 }
@@ -297,7 +296,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             return None;
         }
         let _guard = self.errors.set_context_method(
-            self.c2.tcx.fmt_type_name_diagnostics(id),
+            self.cpp2.c.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
         let cpp_method_name = self.formatter.cxx.fmt_method_name(method);
@@ -339,12 +338,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 .iter()
                 .map(|p| NamedType {
                     var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                    type_name: self.gen_type_name(&p.ty),
+                    type_name: self.cpp2.gen_type_name(&p.ty),
                 })
                 .collect(),
         };
 
-        let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
+        let mut visitor = method.borrowing_param_visitor(self.cpp2.c.tcx, false);
 
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = Vec::new();
@@ -447,121 +446,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         'ccx: 'a,
     {
         let var_name = self.formatter.cxx.fmt_param_name(var_name);
-        let type_name = self.gen_type_name(ty);
+        let type_name = self.cpp2.gen_type_name(ty);
 
         NamedType {
             var_name,
             type_name,
-        }
-    }
-
-    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
-        let id = st.id();
-        let type_name = self.formatter.cxx.fmt_type_name(id);
-
-        let def = self.c2.tcx.resolve_type(id);
-        if def.attrs().disable {
-            self.errors
-                .push_error(format!("Found usage of disabled type {type_name}"))
-        }
-
-        self.includes
-            .insert(self.formatter.cxx.fmt_impl_header_path(id));
-        if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
-            let mutability = borrow.mutability;
-            self.formatter
-                .cxx
-                .fmt_borrowed(&type_name, mutability)
-                .into_owned()
-                .into()
-        } else {
-            type_name
-        }
-    }
-
-    /// Generates Python code for referencing a particular type.
-    ///
-    /// This function adds the necessary type imports to the decl and impl files.
-    fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
-        match *ty {
-            Type::Primitive(prim) => self.formatter.cxx.fmt_primitive_as_c(prim),
-            Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.cxx.fmt_type_name(op_id);
-                let def = self.c2.tcx.resolve_type(op_id);
-
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-                let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = match (op.owner.is_owned(), op.is_optional()) {
-                    // unique_ptr is nullable
-                    (true, _) => self.formatter.cxx.fmt_owned(&type_name),
-                    (false, true) => self
-                        .formatter
-                        .cxx
-                        .fmt_optional_borrowed(&type_name, mutability),
-                    (false, false) => self.formatter.cxx.fmt_borrowed(&type_name, mutability),
-                };
-                let ret = ret.into_owned().into();
-
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id));
-                ret
-            }
-            Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.c2.tcx.resolve_type(id);
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
-                type_name
-            }
-            Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.c2.tcx.resolve_type(id);
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
-                type_name
-            }
-            Type::Slice(hir::Slice::Str(_, encoding)) => {
-                self.formatter.cxx.fmt_borrowed_str(encoding)
-            }
-            Type::Slice(hir::Slice::Primitive(b, p)) => {
-                let ret = self.formatter.cxx.fmt_primitive_as_c(p);
-                let ret = self.formatter.cxx.fmt_borrowed_slice(&ret, b.mutability());
-                ret.into_owned().into()
-            }
-            Type::Slice(hir::Slice::Strs(encoding)) => format!(
-                "diplomat::span<const {}>",
-                self.formatter.cxx.fmt_borrowed_str(encoding)
-            )
-            .into(),
-            Type::Slice(hir::Slice::Struct(b, ref st)) => {
-                let st_name = self.gen_struct_name::<P>(st);
-                let ret = self
-                    .formatter
-                    .cxx
-                    .fmt_borrowed_slice(&st_name, b.mutability());
-                ret.into_owned().into()
-            }
-            Type::DiplomatOption(ref inner) => {
-                format!("std::optional<{}>", self.gen_type_name(inner)).into()
-            }
-            Type::Callback(..) => "".into(),
-            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 }
