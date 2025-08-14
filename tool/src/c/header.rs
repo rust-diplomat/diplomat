@@ -29,6 +29,8 @@ pub struct Header {
     pub includes: BTreeSet<String>,
     /// The decl file corresponding to this impl file. Empty if this is not an impl file.
     pub decl_include: Option<String>,
+    /// For defining arrays with `typedef` (since writing `type var[size]` would require a major refactor of many backends).
+    pub arr_typedefs : BTreeSet<String>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -52,6 +54,7 @@ impl Header {
             path,
             includes: BTreeSet::new(),
             decl_include: None,
+            arr_typedefs: BTreeSet::new(),
             body: String::new(),
             indent_str: "  ",
             is_for_cpp,
@@ -76,6 +79,7 @@ impl fmt::Write for Header {
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
     decl_include: Option<&'a String>,
+    arr_typedefs : &'a BTreeSet<String>,
     includes: &'a BTreeSet<String>,
     body: Cow<'a, str>,
     is_for_cpp: bool,
@@ -96,6 +100,7 @@ impl fmt::Display for Header {
             header_guard: header_guard.into(),
             includes: &self.includes,
             decl_include: self.decl_include.as_ref(),
+            arr_typedefs: &self.arr_typedefs,
             body,
             is_for_cpp: self.is_for_cpp,
         }

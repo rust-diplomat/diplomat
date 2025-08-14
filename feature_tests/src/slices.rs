@@ -63,7 +63,7 @@ pub mod ffi {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
         
-        pub fn new_bool_arr(v : [bool; 3]) -> Box<Float64Vec> {
+        pub fn new_bool_arr(v : [bool; 3], _other : [bool ; 3], _other_other : [i32; 12]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
 

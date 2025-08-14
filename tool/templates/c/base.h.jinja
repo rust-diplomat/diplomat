@@ -13,6 +13,10 @@
 namespace capi {
 {%- endif %}
 
+{%- for typedef in arr_typedefs -%}
+{{typedef}}
+{% endfor %}
+
 
 {{ body }}
 
