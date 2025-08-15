@@ -992,10 +992,7 @@ impl<'ast> LoweringContext<'ast> {
                             "Arrays not supported in this backend. Try using #[diplomat::attr(not(supports = arrays), disable)].".into()
                         ));
                 }
-                Ok(Type::Array(
-                    PrimitiveType::from_ast(*ty),
-                    *size,
-                ))
+                Ok(Type::Array(PrimitiveType::from_ast(*ty), *size))
             }
             ast::TypeName::CustomTypeSlice(lm, type_name) => {
                 match type_name.as_ref() {
@@ -1362,10 +1359,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveArray(ty, size) => {
                 if let TypeLoweringContext::Callback = context {
-                    Ok(OutType::Array(
-                        PrimitiveType::from_ast(*ty),
-                        *size,
-                    ))
+                    Ok(OutType::Array(PrimitiveType::from_ast(*ty), *size))
                 } else {
                     self.errors.push(LoweringError::Other(
                         "Owned arrays cannot be returned".into(),
