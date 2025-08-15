@@ -201,11 +201,11 @@ impl TypeContext {
 
     /// Resolve and format a named type for use in diagnostics
     /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<str> {
+    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'_, str> {
         self.resolve_type(id).name().as_str().into()
     }
 
-    pub fn fmt_symbol_name_diagnostics(&self, id: SymbolId) -> Cow<str> {
+    pub fn fmt_symbol_name_diagnostics(&self, id: SymbolId) -> Cow<'_, str> {
         match id {
             SymbolId::TypeId(id) => self.fmt_type_name_diagnostics(id),
             SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),

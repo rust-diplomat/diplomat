@@ -34,7 +34,7 @@ pub struct LifetimeEnv {
 
 impl LifetimeEnv {
     /// Format a lifetime indexing this env for use in code
-    pub fn fmt_lifetime(&self, lt: impl Borrow<Lifetime>) -> Cow<str> {
+    pub fn fmt_lifetime(&self, lt: impl Borrow<Lifetime>) -> Cow<'_, str> {
         // we use Borrow here so that this can be used in templates where there's autoborrowing
         let lt = *lt.borrow();
         if let Some(lt) = self.nodes.get(lt.0) {

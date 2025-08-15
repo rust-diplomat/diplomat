@@ -30,7 +30,7 @@ pub(super) struct NamedType<'a> {
 }
 
 /// Context for generating a particular type's header
-pub(super) struct TyGenContext<'ccx, 'tcx, 'header> {
+pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub formatter: &'ccx Cpp2Formatter<'tcx>,
     pub errors: &'ccx ErrorStore<'tcx, String>,
     pub c: C2TyGenContext<'ccx, 'tcx>,
@@ -332,7 +332,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Generates C++ code for referencing a particular type.
     ///
     /// This function adds the necessary type imports to the decl and impl files.
-    fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+    pub(crate) fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
