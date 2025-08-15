@@ -588,18 +588,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 header.includes.insert(header_path);
                 ret
             }
-            Type::Array(ref ty, size) => {
-                let (out_ty, c_ty_name) = match ty {
-                    hir::Slice::Primitive(_, p) => (
-                        format!(
-                            "{}Array_{size}",
-                            self.formatter.fmt_primitive_name_for_derived_type(*p)
-                        )
-                        .into(),
-                        self.formatter.fmt_primitive_as_c(*p),
-                    ),
-                    _ => unreachable!("Unsupported array type {ty:?}"),
-                };
+            Type::Array(ref p, size) => {
+                let out_ty = format!(
+                    "{}Array_{size}",
+                    self.formatter.fmt_primitive_name_for_derived_type(*p)
+                )
+                .into();
+                let c_ty_name = self.formatter.fmt_primitive_as_c(*p);
                 // We use a BTreeSet, even though the C compiler won't complain about duplicates
                 // (if someone includes other header files, for instance.):
                 header

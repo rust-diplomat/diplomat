@@ -24,8 +24,8 @@ pub enum Type<P: TyPosition = Everywhere> {
     ImplTrait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice<P>),
-    /// A slice of a fixed size.
-    Array(Slice<P>, usize),
+    /// A primitive array of a fixed size.
+    Array(PrimitiveType, usize),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
     /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
     ///
