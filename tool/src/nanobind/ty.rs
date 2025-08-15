@@ -3,7 +3,7 @@ use super::PyFormatter;
 use crate::{cpp::TyGenContext as Cpp2TyGenContext, hir, ErrorStore};
 use askama::Template;
 use diplomat_core::hir::OpaqueOwner;
-use diplomat_core::hir::{TyPosition, Type, TypeId, StructPathLike};
+use diplomat_core::hir::{StructPathLike, TyPosition, Type, TypeId};
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -465,7 +465,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 .push_error(format!("Found usage of disabled type {type_name}"))
         }
 
-        self.cpp2.impl_header.includes
+        self.cpp2
+            .impl_header
+            .includes
             .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
         if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
@@ -506,7 +508,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 };
                 let ret = ret.into_owned().into();
 
-                self.cpp2.impl_header.includes
+                self.cpp2
+                    .impl_header
+                    .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(op_id.into()));
                 ret
             }
@@ -519,7 +523,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.cpp2.impl_header.includes
+                self.cpp2
+                    .impl_header
+                    .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
                 type_name
             }
@@ -532,7 +538,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.cpp2.impl_header.includes
+                self.cpp2
+                    .impl_header
+                    .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
                 type_name
             }

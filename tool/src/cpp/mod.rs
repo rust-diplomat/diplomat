@@ -3,8 +3,8 @@ mod func;
 mod header;
 mod ty;
 
-use std::collections::BTreeMap;
 pub(crate) use header::Header;
+use std::collections::BTreeMap;
 
 use crate::{cpp::func::FuncGenContext, ErrorStore, FileMap};
 
