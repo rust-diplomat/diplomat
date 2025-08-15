@@ -1,0 +1,5 @@
+{% extends "method_impl_base.h.jinja" %}
+{% block domain -%}
+{%- if let Some(ns) = namespace -%}{{ns}}::{%- endif -%}
+{%- endblock -%}
+{% block special_methods %}{% endblock %}

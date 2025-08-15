@@ -199,6 +199,13 @@ impl<'ast> LoweringContext<'ast> {
         self.lower_all(ast_defs, Self::lower_trait)
     }
 
+    pub(super) fn lower_all_functions(
+        &mut self,
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Function>>,
+    ) -> Result<Vec<Method>, ()> {
+        self.lower_all(ast_defs, Self::lower_function)
+    }
+
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
         let ast_enum = item.item;
         self.errors.set_item(ast_enum.name.as_str());
@@ -490,6 +497,64 @@ impl<'ast> LoweringContext<'ast> {
             attrs: Some(attrs),
             docs: Some(ast_trait_method.docs.clone()),
         })
+    }
+
+    fn lower_function(
+        &mut self,
+        ast_function: ItemAndInfo<'ast, ast::Function>,
+    ) -> Result<Method, ()> {
+        self.errors.set_item(ast_function.item.name.as_str());
+        let name = ast_function.item.name.clone();
+        let param_ltl = SelfParamLifetimeLowerer::no_self_ref(SelfParamLifetimeLowerer::new(
+            &ast_function.item.lifetimes,
+            self,
+        )?);
+
+        let (ast_params, takes_write) = match ast_function.item.params.split_last() {
+            Some((last, remaining)) if last.is_write() => (remaining, true),
+            _ => (&ast_function.item.params[..], false),
+        };
+
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_function.item.attrs,
+            &ast_function.ty_parent_attrs,
+            &mut self.errors,
+        );
+
+        let (params, return_type, lifetime_env) = if !attrs.disable {
+            let (params, return_ltl) =
+                self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
+
+            let (return_type, lifetime_env) = self.lower_return_type(
+                ast_function.item.output_type.as_ref(),
+                takes_write,
+                return_ltl,
+                ast_function.in_path,
+            )?;
+            (params, return_type, lifetime_env)
+        } else {
+            (
+                Vec::new(),
+                ReturnType::Infallible(SuccessType::Unit),
+                LifetimeEnv::new(smallvec::SmallVec::new(), 0),
+            )
+        };
+
+        let def = Method {
+            docs: ast_function.item.docs.clone(),
+            name: self.lower_ident(&name, "function name")?,
+            abi_name: self.lower_ident(&ast_function.item.abi_name, "function abi name")?,
+            lifetime_env,
+            param_self: None,
+            params,
+            output: return_type,
+            attrs: attrs.clone(),
+        };
+
+        self.attr_validator
+            .validate(&attrs, AttributeContext::Function(&def), &mut self.errors);
+
+        Ok(def)
     }
 
     fn lower_out_struct(
