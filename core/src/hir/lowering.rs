@@ -993,7 +993,7 @@ impl<'ast> LoweringContext<'ast> {
                         ));
                 }
                 Ok(Type::Array(
-                    Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)),
+                    PrimitiveType::from_ast(*ty),
                     *size,
                 ))
             }
@@ -1363,7 +1363,7 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::PrimitiveArray(ty, size) => {
                 if let TypeLoweringContext::Callback = context {
                     Ok(OutType::Array(
-                        Slice::Primitive(MaybeOwn::Own, PrimitiveType::from_ast(*ty)),
+                        PrimitiveType::from_ast(*ty),
                         *size,
                     ))
                 } else {
