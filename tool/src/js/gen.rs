@@ -230,7 +230,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> (Vec<FieldInfo<P>>, Layout) {
+    ) -> (Vec<FieldInfo<'_, P>>, Layout) {
         let struct_field_info =
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
 
@@ -428,7 +428,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         &self,
         type_id: TypeId,
         method: &'tcx Method,
-    ) -> Option<MethodInfo> {
+    ) -> Option<MethodInfo<'_>> {
         if method.attrs.disable {
             return None;
         }
@@ -624,7 +624,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_special_method(
         &self,
         special_method_presence: &SpecialMethodPresence,
-    ) -> SpecialMethodInfo {
+    ) -> SpecialMethodInfo<'_> {
         let mut iterator = None;
 
         if let Some(ref val) = special_method_presence.iterator {
@@ -765,7 +765,7 @@ impl Ord for ImportInfo<'_> {
 
 impl PartialOrd for ImportInfo<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.import_type.cmp(&other.import_type))
+        Some(self.cmp(other))
     }
 }
 

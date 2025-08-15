@@ -496,9 +496,7 @@ impl RenderTerminusContext<'_, '_> {
     fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
         let param_self = method.param_self.as_ref();
 
-        if param_self.is_some() {
-            let s = param_self.unwrap();
-
+        if let Some(s) = param_self {
             let ty: Type = s.ty.clone().into();
 
             let self_param =
