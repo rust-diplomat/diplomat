@@ -1368,4 +1368,16 @@ mod tests {
         };
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
+
+    
+    #[test]
+    fn test_free_function_fails() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                fn hidden_func();
+                pub fn free_func();
+            }
+        }
+    }
 }
