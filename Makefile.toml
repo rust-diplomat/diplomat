@@ -539,16 +539,14 @@ category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests"]
 [tasks.build-example-wasm]
-# Can be set to stable once the -Zwasm-c-abi=spec option is the default on stable
-toolchain = "nightly"
+toolchain = "stable"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
 
 [tasks.build-feature-wasm]
-# Can be set to stable once the -Zwasm-c-abi=spec option is the default on stable
-toolchain = "nightly"
+toolchain = "stable"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
