@@ -520,7 +520,7 @@ impl<'ast> LoweringContext<'ast> {
             &ast_function.ty_parent_attrs,
             &mut self.errors,
         );
-        
+
         if !attrs.disable && !self.attr_validator.attrs_supported().free_functions {
             self.errors.push(LoweringError::Other(
                 format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::attr(not(supports = free_functions), disable)].", ast_function.item.name.as_str())
