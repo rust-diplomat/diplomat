@@ -1379,5 +1379,4 @@ mod tests {
         };
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
-
 }
