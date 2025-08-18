@@ -1,5 +1,6 @@
 use super::formatter::CFormatter;
 use super::header::Header;
+use crate::c::func::{CallbackAndStructDef, FuncGenContext};
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
@@ -41,30 +42,6 @@ struct TraitTemplate<'a> {
 struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
     is_for_cpp: bool,
-}
-
-#[derive(Template)]
-#[template(path = "c/impl.h.jinja", escape = "none")]
-struct ImplTemplate<'a> {
-    methods: Vec<MethodTemplate<'a>>,
-    cb_structs_and_defs: Vec<CallbackAndStructDef>,
-    is_for_cpp: bool,
-    ty_name: Cow<'a, str>,
-    dtor_name: Option<&'a str>,
-}
-
-struct MethodTemplate<'a> {
-    return_ty: Cow<'a, str>,
-    params: String,
-    abi_name: &'a str,
-}
-
-#[derive(Clone)]
-struct CallbackAndStructDef {
-    name: String,
-    params_types: String,
-    return_type: String,
-    return_struct: Option<String>,
 }
 
 /// The context used for generating a particular type
@@ -200,9 +177,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
-        let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
-        let mut methods = vec![];
-        let mut cb_structs_and_defs = vec![];
+        let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+
+        let mut impl_context = FuncGenContext::new(impl_header, self.is_for_cpp);
+
         for method in ty.methods() {
             if method.attrs.disable {
                 // Skip method if disabled
@@ -212,9 +190,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 self.tcx.fmt_symbol_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
-            let (method_chunk, callback_defs) = self.gen_method(method, &mut impl_header);
-            methods.push(method_chunk);
-            cb_structs_and_defs.extend_from_slice(&callback_defs);
+            impl_context.gen_method(method, self);
         }
 
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
@@ -224,16 +200,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         } else {
             None
         };
-        ImplTemplate {
-            ty_name,
-            methods,
-            cb_structs_and_defs,
-            dtor_name,
-            is_for_cpp: self.is_for_cpp,
-        }
-        .render_into(&mut impl_header)
-        .unwrap();
 
+        impl_context.render(Some(ty_name), dtor_name).unwrap();
+
+        let impl_header = &mut impl_context.header;
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
         // In some cases like generating decls for `self` parameters,
@@ -243,96 +213,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         impl_header.includes.remove(self.impl_header_path);
         impl_header.includes.remove(self.decl_header_path);
 
-        impl_header
-    }
-
-    fn gen_method(
-        &self,
-        method: &'tcx hir::Method,
-        header: &mut Header,
-    ) -> (MethodTemplate<'tcx>, Vec<CallbackAndStructDef>) {
-        use diplomat_core::hir::{ReturnType, SuccessType};
-        let abi_name = method.abi_name.as_str();
-        // Right now these are the same, but we may eventually support renaming
-        // and should be sure to use method_name when naming the result type
-        let method_name = abi_name;
-        let mut param_decls = Vec::new();
-        let mut cb_structs_and_defs = vec![];
-        if let Some(ref self_ty) = method.param_self {
-            let self_ty = self_ty.ty.clone().into();
-            param_decls.push(self.gen_ty_decl(
-                &self_ty,
-                "self",
-                header,
-                Some(abi_name.into()),
-                &mut cb_structs_and_defs,
-            ))
-        }
-
-        for param in &method.params {
-            param_decls.push(self.gen_ty_decl(
-                &param.ty,
-                param.name.as_str(),
-                header,
-                Some(abi_name.into()),
-                &mut cb_structs_and_defs,
-            ));
-        }
-
-        let return_ty: Cow<str> = match method.output {
-            ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-            ReturnType::Infallible(SuccessType::Write) => {
-                param_decls.push((
-                    format!("{}*", self.formatter.fmt_write_name()).into(),
-                    "write".into(),
-                ));
-                "void".into()
-            }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
-            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
-                // Result<T, ()> and Option<T> are the same on the ABI
-                let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
-                    Some(e)
-                } else {
-                    None
-                };
-                let ok_ty = match ok {
-                    SuccessType::Write => {
-                        param_decls.push((
-                            format!("{}*", self.formatter.fmt_write_name()).into(),
-                            "write".into(),
-                        ));
-                        None
-                    }
-                    SuccessType::Unit => None,
-                    SuccessType::OutType(o) => Some(o),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                self.gen_result_ty(method_name, ok_ty, err, header).into()
-            }
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
-
-        use itertools::Itertools;
-        let params = if !param_decls.is_empty() {
-            param_decls
-                .into_iter()
-                .map(|(ty, name)| {
-                    format!("{ty} {name}", name = self.formatter.fmt_identifier(name))
-                })
-                .join(", ")
-        } else {
-            "void".to_owned()
-        };
-
-        (
-            MethodTemplate {
-                abi_name,
-                return_ty,
-                params,
-            },
-            cb_structs_and_defs,
-        )
+        impl_context.header
     }
 
     fn gen_result_ty_struct<P: hir::TyPosition>(
@@ -386,7 +267,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result")
     }
 
-    fn gen_result_ty<P: hir::TyPosition>(
+    pub(super) fn gen_result_ty<P: hir::TyPosition>(
         &self,
         fn_name: &str,
         ok_ty: Option<&hir::Type<P>>,
@@ -402,7 +283,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     /// Generates a decl for a given type, returned as (type, name)
-    fn gen_ty_decl<'a, P: TyPosition>(
+    pub(super) fn gen_ty_decl<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         ident: &'a str,

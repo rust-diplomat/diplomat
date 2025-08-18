@@ -9,6 +9,7 @@ use super::{
     AttrInheritContext, Attrs, CustomType, Enum, Ident, Macros, Method, ModSymbol, Mutability,
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
+use crate::ast::Function;
 use crate::environment::*;
 
 /// Custom Diplomat attribute that can be placed on a struct definition.
@@ -102,6 +103,7 @@ pub struct Module {
     pub imports: Vec<(Path, Ident)>,
     pub declared_types: BTreeMap<Ident, CustomType>,
     pub declared_traits: BTreeMap<Ident, Trait>,
+    pub declared_functions: BTreeMap<Ident, Function>,
     pub sub_modules: Vec<Module>,
     pub attrs: Attrs,
 }
@@ -111,6 +113,7 @@ pub struct Module {
 struct ModuleBuilder {
     custom_types_by_name: BTreeMap<Ident, CustomType>,
     custom_traits_by_name: BTreeMap<Ident, Trait>,
+    functions_by_name: BTreeMap<Ident, Function>,
     sub_modules: Vec<Module>,
     imports: Vec<(Path, Ident)>,
     analyze_types: bool,
@@ -283,6 +286,27 @@ impl ModuleBuilder {
                     }
                 }
             }
+            Item::Fn(f) => {
+                if self.analyze_types {
+                    let is_public = matches!(f.vis, Visibility::Public(_));
+                    let has_diplomat_attrs = f
+                        .attrs
+                        .iter()
+                        .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
+                    assert!(
+                        is_public || !has_diplomat_attrs,
+                        "Non-public function with diplomat attrs found: {}",
+                        f.sig.ident
+                    );
+                    if is_public {
+                        let parent_attrs = self
+                            .impl_parent_attrs
+                            .attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
+                        let out = Function::from_syn(f, &parent_attrs);
+                        self.functions_by_name.insert(out.name.clone(), out);
+                    }
+                }
+            }
             _ => {}
         }
     }
@@ -327,6 +351,12 @@ impl Module {
             }
         });
 
+        self.declared_functions.iter().for_each(|(k, f)| {
+            if mod_symbols.insert(k.clone(), ModSymbol::Function(f.clone())).is_some() {
+                panic!("Two functions were declared with the same name, this needs to be implemented (key: {k})")
+            }
+        });
+
         let path_to_self = in_path.sub_path(self.name.clone());
         self.sub_modules.iter().for_each(|m| {
             m.insert_all_types(path_to_self.clone(), out);
@@ -342,6 +372,7 @@ impl Module {
         let mut mst = ModuleBuilder {
             custom_types_by_name: BTreeMap::new(),
             custom_traits_by_name: BTreeMap::new(),
+            functions_by_name: BTreeMap::new(),
             sub_modules: Vec::new(),
             imports: Vec::new(),
             analyze_types: force_analyze
@@ -370,6 +401,7 @@ impl Module {
             imports: mst.imports,
             declared_types: mst.custom_types_by_name,
             declared_traits: mst.custom_traits_by_name,
+            declared_functions: mst.functions_by_name,
             sub_modules: mst.sub_modules,
             attrs: mod_attrs,
         }
@@ -491,6 +523,11 @@ mod tests {
                             pub fn get_string(&self) -> String {
                                 unimplemented!()
                             }
+                        }
+
+                        pub fn test_function() {}
+                        pub fn other_test_function(x : i32) -> NonOpaqueStruct {
+                            unimplemented!();
                         }
                     }
                 },
