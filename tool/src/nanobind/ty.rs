@@ -3,7 +3,7 @@ use super::PyFormatter;
 use crate::{cpp::TyGenContext as Cpp2TyGenContext, hir, ErrorStore};
 use askama::Template;
 use diplomat_core::hir::OpaqueOwner;
-use diplomat_core::hir::{StructPathLike, TyPosition, Type, TypeId};
+use diplomat_core::hir::{TyPosition, Type, TypeId};
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
