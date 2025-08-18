@@ -504,12 +504,6 @@ impl<'ast> LoweringContext<'ast> {
         ast_function: ItemAndInfo<'ast, ast::Function>,
     ) -> Result<Method, ()> {
         self.errors.set_item(ast_function.item.name.as_str());
-        if !self.attr_validator.attrs_supported().free_functions {
-            self.errors.push(LoweringError::Other(
-                format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::attr(not(supports = free_functions), disable)].", ast_function.item.name.as_str())
-            ));
-            return Err(());
-        }
         let name = ast_function.item.name.clone();
         let param_ltl = SelfParamLifetimeLowerer::no_self_ref(SelfParamLifetimeLowerer::new(
             &ast_function.item.lifetimes,
@@ -526,6 +520,13 @@ impl<'ast> LoweringContext<'ast> {
             &ast_function.ty_parent_attrs,
             &mut self.errors,
         );
+        
+        if !attrs.disable && !self.attr_validator.attrs_supported().free_functions {
+            self.errors.push(LoweringError::Other(
+                format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::attr(not(supports = free_functions), disable)].", ast_function.item.name.as_str())
+            ));
+            return Err(());
+        }
 
         let (params, return_type, lifetime_env) = if !attrs.disable {
             let (params, return_ltl) =
