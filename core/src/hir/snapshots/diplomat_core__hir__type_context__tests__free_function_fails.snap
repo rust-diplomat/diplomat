@@ -1,0 +1,5 @@
+---
+source: core/src/hir/type_context.rs
+expression: output
+---
+Lowering error in ffi: Could not lower public function free_func, backend does not support free functions. Try #[diplomat::attr(not(supports = free_functions), disable)].
