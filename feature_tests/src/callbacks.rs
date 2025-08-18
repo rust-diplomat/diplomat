@@ -176,8 +176,7 @@ mod ffi {
 
     fn hidden_internal() {}
 
-    #[diplomat::attr(not(any(supports = "callbacks", supports="free_functions")), disable)]
-    #[diplomat::attr(kotlin, disable)]
+    #[diplomat::attr(any(not(supports = "callbacks"), not(supports="free_functions")), disable)]
     pub fn free_callback_holder(f: impl Fn() -> Result<(), ()>) {
         assert_eq!(f(), Ok(()))
     }
