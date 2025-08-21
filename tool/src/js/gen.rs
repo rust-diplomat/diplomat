@@ -165,7 +165,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             type_name: &self.type_name,
             typescript,
 
-            doc_str: self.formatter.fmt_docs(&enum_def.docs),
+            doc_str: self.formatter.fmt_docs(&enum_def.docs, enum_def.attrs.deprecated.as_deref()),
             is_contiguous,
 
             methods,
@@ -211,7 +211,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &opaque_def.lifetimes,
             destructor,
 
-            doc_str: self.formatter.fmt_docs(&opaque_def.docs),
+            doc_str: self.formatter.fmt_docs(&opaque_def.docs, opaque_def.attrs.deprecated.as_deref()),
 
             methods,
 
@@ -410,7 +410,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     hir::Type::Primitive(..)
                 ),
 
-            doc_str: self.formatter.fmt_docs(&struct_def.docs),
+            doc_str: self.formatter.fmt_docs(&struct_def.docs, struct_def.attrs.deprecated.as_deref()),
 
             show_default_ctor: !typescript && !struct_def.fields.is_empty(),
 
@@ -446,7 +446,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             abi_name,
             method_output_is_ffi_unit: method.output.is_ffi_unit(),
             needs_cleanup: false,
-            doc_str: self.formatter.fmt_docs(&method.docs),
+            doc_str: self.formatter.fmt_docs(&method.docs, method.attrs.deprecated.as_deref()),
             ..Default::default()
         };
 

@@ -8,6 +8,9 @@ namespace {{ns}} {
 {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
+{% if let Some(deprecated) = deprecated -%}
+[[deprecated("{{ deprecated }}")]]
+{% endif -%}
 class {{type_name_unnamespaced}} {
 public:
 	enum Value {
@@ -25,13 +28,7 @@ public:
 	explicit operator bool() const = delete; 
 
 	{%- for m in methods %}
-
-	{% if !m.docs.is_empty() -%}
-	/**
-	{{~ m.docs|prefix_trimmed("	 * ")}}
-	 */
-	{% endif -%}
-	{% include "method_decl.h.jinja" %}
+{% include "method_decl.h.jinja" %}
 	{%- endfor %}
 
 	inline {{ctype}} AsFFI() const;

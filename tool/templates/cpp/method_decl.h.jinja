@@ -1,5 +1,13 @@
-{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) -%}
-inline {##}
+{%- if !m.docs.is_empty() %}
+  /**
+  {{~ m.docs|prefix_trimmed("	 * ")}}
+   */
+{%- endif %}
+{%- if let Some(deprecated) = m.deprecated %}
+  [[deprecated("{{ deprecated }}")]]
+{%- endif %}
+{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) %}
+  inline {##}
 {%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
 {{ m.return_ty }} {##}
 {{- m.method_name -}}
@@ -25,8 +33,8 @@ inline {##}
 {%- when Some(hir::SpecialMethod::Add) | Some(hir::SpecialMethod::Sub) | Some(hir::SpecialMethod::Mul) | Some(hir::SpecialMethod::Div) -%}
 {%- if !is_self_opaque -%}
 {%- let op_str = m.method.attrs.special_method.as_ref().unwrap().operator_str().unwrap() -%}
-{%- let param_var = m.param_decls[0] ~%}
-{##}  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
+{%- let param_var = m.param_decls[0] %}
+  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
 {%- endif -%}
 
 {%- when Some(hir::SpecialMethod::Iterable) -%}

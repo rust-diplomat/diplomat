@@ -70,6 +70,7 @@ struct MethodInfo<'a> {
     /// If the method returns a writeable, the info for that
     writeable_info: Option<MethodWriteableInfo<'a>>,
     docs: String,
+    deprecated: Option<&'a str>,
 }
 
 /// Context for generating a particular type's header
@@ -142,6 +143,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
             docs: &'a str,
+            deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
         }
 
@@ -155,6 +157,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs),
+            deprecated: ty.attrs.deprecated.as_deref(),
             default_variant,
         }
         .render_into(self.decl_header)
@@ -214,6 +217,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &'a str,
             c_header: C2Header,
             docs: &'a str,
+            deprecated: Option<&'a str>,
         }
 
         DeclTemplate {
@@ -226,6 +230,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs),
+            deprecated: ty.attrs.deprecated.as_deref()
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -307,6 +312,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             c_header: C2Header,
             is_sliceable: bool,
             docs: &'a str,
+            deprecated: Option<&'a str>,
         }
 
         DeclTemplate {
@@ -321,6 +327,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             c_header,
             is_sliceable: def.attrs.abi_compatible,
             docs: &self.formatter.fmt_docs(&def.docs),
+            deprecated: def.attrs.deprecated.as_deref()
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -557,6 +564,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             c_to_cpp_return_expression,
             writeable_info,
             docs: self.formatter.fmt_docs(&method.docs),
+            deprecated: method.attrs.deprecated.as_deref(),
         })
     }
 

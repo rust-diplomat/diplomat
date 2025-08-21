@@ -23,6 +23,8 @@ pub struct Attrs {
     ///
     /// This attribute is always inherited except to variants
     pub disable: bool,
+    /// Mark this item deprecated in FFI.
+    pub deprecated: Option<String>,
     /// An optional namespace. None is equivalent to the root namespace.
     ///
     /// This attribute is inherited to types (and is not allowed elsewhere)
@@ -257,6 +259,8 @@ impl Attrs {
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
 
+        this.deprecated = ast.deprecated.clone();
+
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
         for attr in &ast.attrs {
@@ -481,6 +485,7 @@ impl Attrs {
         // use an exhaustive destructure so new attributes are handled
         let Attrs {
             disable,
+            deprecated: _deprecated,
             namespace,
             rename,
             abi_rename,
@@ -892,6 +897,7 @@ impl Attrs {
 
         Attrs {
             disable,
+            deprecated: None,
             rename,
             namespace,
             // Should not inherit from enums to their variants
