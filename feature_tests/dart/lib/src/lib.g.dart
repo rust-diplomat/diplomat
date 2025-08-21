@@ -50,6 +50,7 @@ part 'RefListParameter.g.dart';
 part 'RenamedAttrEnum.g.dart';
 part 'RenamedAttrOpaque2.g.dart';
 part 'RenamedComparable.g.dart';
+part 'RenamedDeprecated.g.dart';
 part 'RenamedMyIndexer.g.dart';
 part 'RenamedMyIterable.g.dart';
 part 'RenamedMyIterator.g.dart';

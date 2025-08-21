@@ -312,6 +312,9 @@ pub mod ffi {
         }
     }
 
+    #[deprecated(note = "use Foo")]
+    pub struct Deprecated;
+
     #[diplomat::macro_rules]
     macro_rules! macro_frag_spec_test {
         (BLOCK $b:block [EXPR $e:expr, IDENT $i:ident] LT $lt:lifetime literal $l:literal <=> $m:meta $p:path; $t:tt $ty:ty, $vis:vis, $it:item) => {

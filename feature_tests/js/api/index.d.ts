@@ -2,6 +2,8 @@
 export { codepoint } from './diplomat-runtime';
 
 
+export { RenamedDeprecated } from "./RenamedDeprecated"
+
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
 export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"

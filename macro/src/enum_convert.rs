@@ -67,6 +67,7 @@ pub fn gen_enum_convert(attr: EnumConvertAttribute, input: ItemEnum) -> proc_mac
         from_arms.push(quote!(_ => unreachable!(#error)))
     }
     quote! {
+        #[allow(deprecated)]
         impl From<#other_name> for #this_name {
             fn from(other: #other_name) -> Self {
                 match other {
@@ -74,6 +75,7 @@ pub fn gen_enum_convert(attr: EnumConvertAttribute, input: ItemEnum) -> proc_mac
                 }
             }
         }
+        #[allow(deprecated)]
         impl From<#this_name> for #other_name {
             fn from(this: #this_name) -> Self {
                 match this {
