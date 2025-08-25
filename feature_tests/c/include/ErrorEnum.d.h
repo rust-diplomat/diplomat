@@ -10,14 +10,11 @@
 
 
 
-
 typedef enum ErrorEnum {
   ErrorEnum_Foo = 0,
   ErrorEnum_Bar = 1,
 } ErrorEnum;
 
 typedef struct ErrorEnum_option {union { ErrorEnum ok; }; bool is_ok; } ErrorEnum_option;
-
-
 
 #endif // ErrorEnum_D_H

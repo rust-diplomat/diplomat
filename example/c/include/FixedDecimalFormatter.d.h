@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct FixedDecimalFormatter FixedDecimalFormatter;
-
-
 
 
 #endif // FixedDecimalFormatter_D_H

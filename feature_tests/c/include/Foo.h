@@ -18,7 +18,6 @@
 
 
 
-
 Foo* Foo_new(DiplomatStringView x);
 
 Bar* Foo_get_bar(const Foo* self);
@@ -32,8 +31,6 @@ Foo* Foo_extract_from_fields(BorrowedFields fields);
 Foo* Foo_extract_from_bounds(BorrowedFieldsWithBounds bounds, DiplomatStringView another_string);
 
 void Foo_destroy(Foo* self);
-
-
 
 
 

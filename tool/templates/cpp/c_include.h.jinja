@@ -1,4 +1,7 @@
-{% if let Some(ns) = namespace -%}
+{% for typedef in c_header.arr_typedefs -%}
+{{typedef}}
+{% endfor -%}
+{%- if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {% else -%}
 namespace diplomat {

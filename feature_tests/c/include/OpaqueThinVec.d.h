@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OpaqueThinVec OpaqueThinVec;
-
-
 
 
 #endif // OpaqueThinVec_D_H

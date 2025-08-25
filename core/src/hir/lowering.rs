@@ -986,6 +986,14 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
+            ast::TypeName::PrimitiveArray(ty, size) => {
+                if !self.attr_validator.attrs_supported().arrays {
+                    self.errors.push(LoweringError::Other(
+                            "Arrays not supported in this backend. Try using #[diplomat::attr(not(supports = arrays), disable)].".into()
+                        ));
+                }
+                Ok(Type::Array(PrimitiveType::from_ast(*ty), *size))
+            }
             ast::TypeName::CustomTypeSlice(lm, type_name) => {
                 match type_name.as_ref() {
                     ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
@@ -1348,6 +1356,16 @@ impl<'ast> LoweringContext<'ast> {
                     "Owned slices cannot be returned".into(),
                 ));
                 Err(())
+            }
+            ast::TypeName::PrimitiveArray(ty, size) => {
+                if let TypeLoweringContext::Callback = context {
+                    Ok(OutType::Array(PrimitiveType::from_ast(*ty), *size))
+                } else {
+                    self.errors.push(LoweringError::Other(
+                        "Owned arrays cannot be returned".into(),
+                    ));
+                    Err(())
+                }
             }
             ast::TypeName::StrReference(Some(l), encoding, _stdlib) => Ok(OutType::Slice(
                 Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),

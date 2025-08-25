@@ -10,7 +10,6 @@
 
 
 
-
 typedef enum AttrEnum {
   AttrEnum_A = 0,
   AttrEnum_B = 1,
@@ -18,7 +17,5 @@ typedef enum AttrEnum {
 } AttrEnum;
 
 typedef struct AttrEnum_option {union { AttrEnum ok; }; bool is_ok; } AttrEnum_option;
-
-
 
 #endif // AttrEnum_D_H

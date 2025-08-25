@@ -9,7 +9,9 @@
 
 
 #include "Float64Vec.d.h"
-
+typedef bool BoolArray_3[3];
+typedef double F64Array_2[2];
+typedef int32_t I32Array_12[12];
 
 
 
@@ -18,6 +20,8 @@
 Float64Vec* Float64Vec_new(DiplomatF64View v);
 
 Float64Vec* Float64Vec_new_bool(DiplomatBoolView v);
+
+Float64Vec* Float64Vec_new_int_arr(I32Array_12 v, BoolArray_3 _other, F64Array_2 _other_other);
 
 Float64Vec* Float64Vec_new_i16(DiplomatI16View v);
 
@@ -43,8 +47,6 @@ typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64V
 Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
 
 void Float64Vec_destroy(Float64Vec* self);
-
-
 
 
 

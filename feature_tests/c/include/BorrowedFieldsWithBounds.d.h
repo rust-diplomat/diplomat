@@ -10,7 +10,6 @@
 
 
 
-
 typedef struct BorrowedFieldsWithBounds {
   DiplomatString16View field_a;
   DiplomatStringView field_b;
@@ -18,7 +17,5 @@ typedef struct BorrowedFieldsWithBounds {
 } BorrowedFieldsWithBounds;
 
 typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds ok; }; bool is_ok; } BorrowedFieldsWithBounds_option;
-
-
 
 #endif // BorrowedFieldsWithBounds_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OpaqueThinIter OpaqueThinIter;
-
-
 
 
 #endif // OpaqueThinIter_D_H

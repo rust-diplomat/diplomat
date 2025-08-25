@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct MyString MyString;
-
-
 
 
 #endif // MyString_D_H

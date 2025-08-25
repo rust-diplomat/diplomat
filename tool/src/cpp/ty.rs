@@ -94,8 +94,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let type_name = self.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.formatter.fmt_c_type_name(id);
-        let c_header = self.c.gen_enum_def(ty);
+        let mut c_header = self.c.gen_enum_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
+        c_header.arr_typedefs = c_impl_header.arr_typedefs.clone();
 
         let methods = ty
             .methods
@@ -193,8 +194,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             .formatter
             .namespace_c_name(id, ty.dtor_abi_name.as_str());
 
-        let c_header = self.c.gen_opaque_def(ty);
+        let mut c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
+        c_header.arr_typedefs = c_impl_header.arr_typedefs.clone();
 
         let methods = ty
             .methods
@@ -264,8 +266,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         let namespace = def.attrs.namespace.clone();
 
-        let c_header = self.c.gen_struct_def(def);
+        let mut c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
+        c_header.arr_typedefs = c_impl_header.arr_typedefs.clone();
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -651,6 +654,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
+            Type::Array(ref p, size) => {
+                let out_ty = self.formatter.c.fmt_primitive_array_name(*p, size);
+                out_ty
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -772,7 +779,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         namespace: Option<String>,
     ) -> Cow<'a, str> {
         match *ty {
-            Type::Primitive(..) => cpp_name.clone(),
+            Type::Primitive(..) | Type::Array(..) => cpp_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => {
                 format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
             }

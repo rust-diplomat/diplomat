@@ -10,7 +10,6 @@
 
 
 
-
 typedef struct StructWithAttrs {
   bool a;
   uint32_t b;
@@ -26,8 +25,6 @@ typedef struct DiplomatStructWithAttrsViewMut {
   StructWithAttrs* data;
   size_t len;
 } DiplomatStructWithAttrsViewMut;
-
-
 
 
 #endif // StructWithAttrs_D_H

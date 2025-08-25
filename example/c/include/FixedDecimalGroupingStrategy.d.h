@@ -10,7 +10,6 @@
 
 
 
-
 typedef enum FixedDecimalGroupingStrategy {
   FixedDecimalGroupingStrategy_Auto = 0,
   FixedDecimalGroupingStrategy_Never = 1,
@@ -19,7 +18,5 @@ typedef enum FixedDecimalGroupingStrategy {
 } FixedDecimalGroupingStrategy;
 
 typedef struct FixedDecimalGroupingStrategy_option {union { FixedDecimalGroupingStrategy ok; }; bool is_ok; } FixedDecimalGroupingStrategy_option;
-
-
 
 #endif // FixedDecimalGroupingStrategy_D_H

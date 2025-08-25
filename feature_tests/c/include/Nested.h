@@ -14,10 +14,7 @@
 
 
 
-
 void namespace_Nested_destroy(Nested* self);
-
-
 
 
 

@@ -16,7 +16,6 @@
 
 
 
-
 Opaque* Opaque_new(void);
 
 Opaque* Opaque_try_from_utf8(DiplomatStringView input);
@@ -34,8 +33,6 @@ ImportedStruct Opaque_returns_imported(void);
 int8_t Opaque_cmp(void);
 
 void Opaque_destroy(Opaque* self);
-
-
 
 
 

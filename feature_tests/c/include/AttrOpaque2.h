@@ -14,10 +14,7 @@
 
 
 
-
 void namespace_AttrOpaque2_destroy(AttrOpaque2* self);
-
-
 
 
 

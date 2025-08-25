@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OpaqueThin OpaqueThin;
-
-
 
 
 #endif // OpaqueThin_D_H

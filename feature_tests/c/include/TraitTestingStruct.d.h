@@ -10,14 +10,11 @@
 
 
 
-
 typedef struct TraitTestingStruct {
   int32_t x;
   int32_t y;
 } TraitTestingStruct;
 
 typedef struct TraitTestingStruct_option {union { TraitTestingStruct ok; }; bool is_ok; } TraitTestingStruct_option;
-
-
 
 #endif // TraitTestingStruct_D_H
