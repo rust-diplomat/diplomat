@@ -64,12 +64,14 @@ pub mod ffi {
         }
 
         #[diplomat::attr(not(supports = arrays), disable)]
-        pub fn new_bool_arr(
-            v: [i32; 12],
-            _other: [bool; 3],
-            _other_other: [f64; 2],
+        pub fn new_int_arr(
+            v: &[i32; 12],
+            _other: &[bool; 3],
+            _other_other: &[f64; 2],
         ) -> Box<Float64Vec> {
-            Box::new(Self(v.iter().map(|&x| x.into()).collect()))
+            Box::new(Self(v.iter().map(|x| { 
+                (*x).into()
+        }).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "i16")]

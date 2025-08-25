@@ -702,7 +702,7 @@ impl TypeName {
             }
             TypeName::PrimitiveArray(ty, count) => {
                 let syn_ty = ty.to_ident();
-                syn::parse_quote_spanned!(Span::call_site() => [#syn_ty; #count])
+                syn::parse_quote_spanned!(Span::call_site() => &[#syn_ty; #count])
             }
             TypeName::CustomTypeSlice(ltmt, type_name) => {
                 let inner = type_name.to_syn();
@@ -774,6 +774,30 @@ impl TypeName {
                         );
                     }
                 }
+                
+                if let syn::Type::Array(arr) =  &*r.elem {
+                    let len = match &arr.len {
+                        syn::Expr::Lit(syn::ExprLit {
+                            attrs: _,
+                            lit: syn::Lit::Int(i),
+                        }) => i.base10_parse::<usize>().expect("Expected usize integer."),
+                        _ => unreachable!(
+                            "Expected a literal integer expression for array length in {arr:?}"
+                        ),
+                    };
+
+                    if let syn::Type::Path(p) = &*arr.elem {
+                        if let Some(primitive) = p
+                            .path
+                            .get_ident()
+                            .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
+                        {
+                            return TypeName::PrimitiveArray(primitive, len);
+                        }
+                    }
+                    panic!("Unsupported array type {:?}", arr.to_token_stream());
+                }
+                
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
                         if let Some(primitive) = p
@@ -1111,27 +1135,8 @@ impl TypeName {
                 }
                 ret_type.expect("No valid traits found")
             }
-            syn::Type::Array(arr) => {
-                let len = match &arr.len {
-                    syn::Expr::Lit(syn::ExprLit {
-                        attrs: _,
-                        lit: syn::Lit::Int(i),
-                    }) => i.base10_parse::<usize>().expect("Expected usize integer."),
-                    _ => unreachable!(
-                        "Expected a literal integer expression for array length in {arr:?}"
-                    ),
-                };
-
-                if let syn::Type::Path(p) = &*arr.elem {
-                    if let Some(primitive) = p
-                        .path
-                        .get_ident()
-                        .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
-                    {
-                        return TypeName::PrimitiveArray(primitive, len);
-                    }
-                }
-                panic!("Unsupported array type {:?}", arr.to_token_stream());
+            syn::Type::Array(a) => {
+                panic!("Array {0} must be behind a reference (&{0})", a.to_token_stream());
             }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
@@ -1343,7 +1348,7 @@ impl fmt::Display for TypeName {
                 write!(f, "DiplomatSlice{maybemut}<{lt}{typ}>")
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
-            TypeName::PrimitiveArray(ty, size) => write!(f, "[{ty}; {size}]"),
+            TypeName::PrimitiveArray(ty, size) => write!(f, "&[{ty}; {size}]"),
             TypeName::CustomTypeSlice(Some((lifetime, mutability)), type_name) => {
                 write!(f, "{}[{type_name}]", ReferenceDisplay(lifetime, mutability))
             }
