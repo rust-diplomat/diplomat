@@ -14,7 +14,6 @@
 
 
 
-
 VectorTest* namespace_VectorTest_new(void);
 
 size_t namespace_VectorTest_len(const VectorTest* self);
@@ -25,8 +24,6 @@ namespace_VectorTest_get_result namespace_VectorTest_get(const VectorTest* self,
 void namespace_VectorTest_push(VectorTest* self, double value);
 
 void namespace_VectorTest_destroy(VectorTest* self);
-
-
 
 
 

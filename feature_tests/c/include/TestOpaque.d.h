@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct TestOpaque TestOpaque;
-
-
 
 
 #endif // TestOpaque_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct VectorTest VectorTest;
-
-
 
 
 #endif // VectorTest_D_H

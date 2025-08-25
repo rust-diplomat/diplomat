@@ -10,14 +10,11 @@
 
 
 
-
 typedef enum DefaultEnum {
   DefaultEnum_A = 0,
   DefaultEnum_B = 1,
 } DefaultEnum;
 
 typedef struct DefaultEnum_option {union { DefaultEnum ok; }; bool is_ok; } DefaultEnum_option;
-
-
 
 #endif // DefaultEnum_D_H

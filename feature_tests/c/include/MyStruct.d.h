@@ -11,7 +11,6 @@
 
 
 
-
 typedef struct MyStruct {
   uint8_t a;
   bool b;
@@ -23,7 +22,5 @@ typedef struct MyStruct {
 } MyStruct;
 
 typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
-
-
 
 #endif // MyStruct_D_H

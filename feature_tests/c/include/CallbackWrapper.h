@@ -14,7 +14,6 @@
 #include "PrimitiveStruct.d.h"
 
 #include "CallbackWrapper.d.h"
-
 typedef uint8_t U8Array_2[2];
 
 
@@ -187,8 +186,6 @@ void CallbackWrapper_test_slice_conversion(DiplomatCallback_CallbackWrapper_test
 void CallbackWrapper_test_struct_slice_conversion(DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t t_cb_wrap);
 
 void CallbackWrapper_test_opaque_result_error(DiplomatCallback_CallbackWrapper_test_opaque_result_error_t t_cb_wrap, DiplomatWrite* write);
-
-
 
 
 

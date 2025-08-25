@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OpaqueMutexedString OpaqueMutexedString;
-
-
 
 
 #endif // OpaqueMutexedString_D_H

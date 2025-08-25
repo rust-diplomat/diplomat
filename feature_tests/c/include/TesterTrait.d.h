@@ -12,7 +12,6 @@
 
 
 
-
 typedef struct test_result_output_result {union {uint32_t ok; }; bool is_ok;} test_result_output_result;
 typedef struct TesterTrait_VTable {
     void (*destructor)(const void*);
@@ -34,8 +33,6 @@ static void general_destructor(const void* data) {
 
 const size_t TesterTrait_DATA_SIZE = 0;
 const size_t TesterTrait_DATA_ALIGNMENT = 0;
-
-
 
 
 #endif // TesterTrait_D_H

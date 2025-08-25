@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OptionOpaqueChar OptionOpaqueChar;
-
-
 
 
 #endif // OptionOpaqueChar_D_H

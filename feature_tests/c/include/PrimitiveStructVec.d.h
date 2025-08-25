@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct PrimitiveStructVec PrimitiveStructVec;
-
-
 
 
 #endif // PrimitiveStructVec_D_H

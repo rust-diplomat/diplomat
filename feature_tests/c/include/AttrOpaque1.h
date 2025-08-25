@@ -15,7 +15,6 @@
 
 
 
-
 typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result { bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
 
 typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
@@ -41,8 +40,6 @@ void namespace_AttrOpaque1_use_unnamespaced(const AttrOpaque1* self, const Unnam
 void namespace_AttrOpaque1_use_namespaced(const AttrOpaque1* self, AttrEnum _n);
 
 void namespace_AttrOpaque1_destroy(AttrOpaque1* self);
-
-
 
 
 

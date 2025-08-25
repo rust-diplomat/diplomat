@@ -12,7 +12,6 @@
 
 
 
-
 typedef struct OptionStruct {
   OptionOpaque* a;
   OptionOpaqueChar* b;
@@ -21,7 +20,5 @@ typedef struct OptionStruct {
 } OptionStruct;
 
 typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
-
-
 
 #endif // OptionStruct_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct MyOpaqueEnum MyOpaqueEnum;
-
-
 
 
 #endif // MyOpaqueEnum_D_H

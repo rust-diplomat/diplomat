@@ -10,7 +10,6 @@
 
 
 
-
 typedef enum UnimportedEnum {
   UnimportedEnum_A = 0,
   UnimportedEnum_B = 1,
@@ -18,7 +17,5 @@ typedef enum UnimportedEnum {
 } UnimportedEnum;
 
 typedef struct UnimportedEnum_option {union { UnimportedEnum ok; }; bool is_ok; } UnimportedEnum_option;
-
-
 
 #endif // UnimportedEnum_D_H

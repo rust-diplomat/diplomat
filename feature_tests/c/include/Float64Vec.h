@@ -9,7 +9,6 @@
 
 
 #include "Float64Vec.d.h"
-
 typedef bool BoolArray_3[3];
 typedef int32_t I32Array_12[12];
 
@@ -47,8 +46,6 @@ typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64V
 Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
 
 void Float64Vec_destroy(Float64Vec* self);
-
-
 
 
 

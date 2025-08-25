@@ -14,7 +14,6 @@
 
 
 
-
 MyString* MyString_new(DiplomatStringView v);
 
 MyString* MyString_new_unsafe(DiplomatStringView v);
@@ -34,8 +33,6 @@ void MyString_string_transform(DiplomatStringView foo, DiplomatWrite* write);
 DiplomatStringView MyString_borrow(const MyString* self);
 
 void MyString_destroy(MyString* self);
-
-
 
 
 

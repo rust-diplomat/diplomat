@@ -11,7 +11,6 @@
 
 
 
-
 typedef struct BigStructWithStuff {
   uint8_t first;
   uint16_t second;
@@ -30,8 +29,6 @@ typedef struct DiplomatBigStructWithStuffViewMut {
   BigStructWithStuff* data;
   size_t len;
 } DiplomatBigStructWithStuffViewMut;
-
-
 
 
 #endif // BigStructWithStuff_D_H

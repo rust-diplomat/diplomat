@@ -10,7 +10,6 @@
 
 
 
-
 typedef enum MyEnum {
   MyEnum_A = -2,
   MyEnum_B = -1,
@@ -21,7 +20,5 @@ typedef enum MyEnum {
 } MyEnum;
 
 typedef struct MyEnum_option {union { MyEnum ok; }; bool is_ok; } MyEnum_option;
-
-
 
 #endif // MyEnum_D_H

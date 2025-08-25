@@ -10,7 +10,6 @@
 
 
 
-
 typedef struct PrimitiveStruct {
   float x;
   bool a;
@@ -30,8 +29,6 @@ typedef struct DiplomatPrimitiveStructViewMut {
   PrimitiveStruct* data;
   size_t len;
 } DiplomatPrimitiveStructViewMut;
-
-
 
 
 #endif // PrimitiveStruct_D_H

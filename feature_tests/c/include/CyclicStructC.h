@@ -14,12 +14,9 @@
 
 
 
-
 CyclicStructC CyclicStructC_takes_nested_parameters(CyclicStructC c);
 
 void CyclicStructC_cyclic_out(CyclicStructC self, DiplomatWrite* write);
-
-
 
 
 

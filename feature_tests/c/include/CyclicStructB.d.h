@@ -10,7 +10,6 @@
 
 
 
-
 typedef struct CyclicStructB {
   uint8_t field;
 } CyclicStructB;
@@ -25,8 +24,6 @@ typedef struct DiplomatCyclicStructBViewMut {
   CyclicStructB* data;
   size_t len;
 } DiplomatCyclicStructBViewMut;
-
-
 
 
 #endif // CyclicStructB_D_H

@@ -15,13 +15,10 @@
 
 
 
-
 CyclicStructA CyclicStructB_get_a(void);
 
 typedef struct CyclicStructB_get_a_option_result {union {CyclicStructA ok; }; bool is_ok;} CyclicStructB_get_a_option_result;
 CyclicStructB_get_a_option_result CyclicStructB_get_a_option(void);
-
-
 
 
 

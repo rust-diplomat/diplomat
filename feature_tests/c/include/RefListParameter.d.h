@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct RefListParameter RefListParameter;
-
-
 
 
 #endif // RefListParameter_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct MutableCallbackHolder MutableCallbackHolder;
-
-
 
 
 #endif // MutableCallbackHolder_D_H

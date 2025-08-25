@@ -14,12 +14,9 @@
 
 
 
-
 size_t namespace_TestMacroStruct_test_func(void);
 
 TestMacroStruct namespace_TestMacroStruct_test_meta(void);
-
-
 
 
 

@@ -15,7 +15,6 @@
 
 
 
-
 One* One_transitivity(const One* hold, const One* nohold);
 
 One* One_cycle(const Two* hold, const One* nohold);
@@ -39,8 +38,6 @@ One* One_implicit_bounds(const One* explicit_hold, const One* implicit_hold, con
 One* One_implicit_bounds_deep(const One* explicit_, const One* implicit_1, const One* implicit_2, const One* nohold);
 
 void One_destroy(One* self);
-
-
 
 
 

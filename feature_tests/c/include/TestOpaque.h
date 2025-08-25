@@ -14,10 +14,7 @@
 
 
 
-
 void namespace_TestOpaque_destroy(TestOpaque* self);
-
-
 
 
 

@@ -10,7 +10,6 @@
 
 
 
-
 typedef struct ScalarPairWithPadding {
   uint8_t first;
   uint32_t second;
@@ -26,8 +25,6 @@ typedef struct DiplomatScalarPairWithPaddingViewMut {
   ScalarPairWithPadding* data;
   size_t len;
 } DiplomatScalarPairWithPaddingViewMut;
-
-
 
 
 #endif // ScalarPairWithPadding_D_H

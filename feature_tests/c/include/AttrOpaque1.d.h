@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct AttrOpaque1 AttrOpaque1;
-
-
 
 
 #endif // AttrOpaque1_D_H

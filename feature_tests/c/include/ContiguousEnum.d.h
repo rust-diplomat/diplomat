@@ -10,7 +10,6 @@
 
 
 
-
 typedef enum ContiguousEnum {
   ContiguousEnum_C = 0,
   ContiguousEnum_D = 1,
@@ -19,7 +18,5 @@ typedef enum ContiguousEnum {
 } ContiguousEnum;
 
 typedef struct ContiguousEnum_option {union { ContiguousEnum ok; }; bool is_ok; } ContiguousEnum_option;
-
-
 
 #endif // ContiguousEnum_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct Float64Vec Float64Vec;
-
-
 
 
 #endif // Float64Vec_D_H

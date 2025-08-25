@@ -11,7 +11,6 @@
 
 
 
-
 typedef struct OptionInputStruct {
   OptionU8 a;
   OptionChar b;
@@ -19,7 +18,5 @@ typedef struct OptionInputStruct {
 } OptionInputStruct;
 
 typedef struct OptionInputStruct_option {union { OptionInputStruct ok; }; bool is_ok; } OptionInputStruct_option;
-
-
 
 #endif // OptionInputStruct_D_H

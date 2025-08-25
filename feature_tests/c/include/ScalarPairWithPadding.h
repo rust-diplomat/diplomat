@@ -14,10 +14,7 @@
 
 
 
-
 void ScalarPairWithPadding_assert_value(ScalarPairWithPadding self);
-
-
 
 
 
