@@ -4,7 +4,7 @@ use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
     self, DocsUrlGenerator, SpecialMethod, StringEncoding, TypeContext, TypeId,
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 /// This type mediates all formatting
 ///
@@ -165,8 +165,16 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         "std::string".into()
     }
 
-    pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        self.c.fmt_docs(docs)
+    pub fn fmt_docs(&self, docs: &hir::Docs, attrs: &hir::Attrs) -> String {
+        let mut docs = self.c.fmt_docs(docs);
+        if let Some(deprecated) = attrs.deprecated.as_ref() {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            let _ = writeln!(&mut docs, "\\deprecated {deprecated}");
+        }
+        docs
     }
 
     /// Format a method

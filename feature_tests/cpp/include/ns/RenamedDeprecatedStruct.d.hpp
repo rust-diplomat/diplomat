@@ -20,6 +20,9 @@ namespace capi {
 
 
 namespace ns {
+/**
+ * \deprecated use Foo
+ */
 struct [[deprecated("use Foo")]] RenamedDeprecatedStruct {
 
 };

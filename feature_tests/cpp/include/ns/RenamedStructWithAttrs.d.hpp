@@ -46,6 +46,9 @@ struct RenamedStructWithAttrs {
 
   inline uint32_t c() const;
 
+  /**
+   * \deprecated use Foo
+   */
   [[deprecated("use Foo")]]
   inline void deprecated() const;
 

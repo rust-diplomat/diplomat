@@ -156,7 +156,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
-            docs: &self.formatter.fmt_docs(&ty.docs),
+            docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
             default_variant,
         }
@@ -229,7 +229,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
-            docs: &self.formatter.fmt_docs(&ty.docs),
+            docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
         }
         .render_into(self.decl_header)
@@ -326,7 +326,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
             is_sliceable: def.attrs.abi_compatible,
-            docs: &self.formatter.fmt_docs(&def.docs),
+            docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
         }
         .render_into(self.decl_header)
@@ -563,7 +563,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             cpp_to_c_params,
             c_to_cpp_return_expression,
             writeable_info,
-            docs: self.formatter.fmt_docs(&method.docs),
+            docs: self.formatter.fmt_docs(&method.docs, &method.attrs),
             deprecated: method.attrs.deprecated.as_deref(),
         })
     }

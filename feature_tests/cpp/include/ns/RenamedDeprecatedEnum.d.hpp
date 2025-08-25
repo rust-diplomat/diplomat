@@ -23,6 +23,9 @@ namespace capi {
 } // namespace
 
 namespace ns {
+/**
+ * \deprecated use Foo
+ */
 [[deprecated("use Foo")]]
 class RenamedDeprecatedEnum {
 public:
