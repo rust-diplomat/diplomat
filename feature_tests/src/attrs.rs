@@ -319,7 +319,9 @@ pub mod ffi {
     pub struct DeprecatedStruct;
 
     #[deprecated(note = "use Foo")]
-    pub enum DeprecatedEnum { A }
+    pub enum DeprecatedEnum {
+        A,
+    }
 
     #[diplomat::opaque]
     #[deprecated(note = "use Foo")]
