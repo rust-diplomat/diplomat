@@ -253,6 +253,18 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
+    pub fn fmt_primitive_array_name(
+        &self,
+        prim : hir::PrimitiveType,
+        size: usize,
+    ) -> Cow<'tcx, str> {
+        format!(
+            "{}Array_{size}",
+            self.fmt_primitive_name_for_derived_type(prim)
+        )
+        .into()
+    }
+
     pub fn fmt_struct_slice_name<P: TyPosition>(
         &self,
         borrow: MaybeOwn,

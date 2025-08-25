@@ -589,14 +589,10 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 ret
             }
             Type::Array(ref p, size) => {
-                let out_ty = format!(
-                    "{}Array_{size}",
-                    self.formatter.fmt_primitive_name_for_derived_type(*p)
-                )
-                .into();
-                let c_ty_name = self.formatter.fmt_primitive_as_c(*p);
                 // We use a BTreeSet, even though the C compiler won't complain about duplicates
                 // (if someone includes other header files, for instance.):
+                let out_ty = self.formatter.fmt_primitive_array_name(*p, size);
+                let c_ty_name = self.formatter.fmt_primitive_as_c(*p);
                 header
                     .arr_typedefs
                     .insert(format!("typedef {c_ty_name} {out_ty}[{size}];"));
