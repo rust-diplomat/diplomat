@@ -310,7 +310,22 @@ pub mod ffi {
         pub fn c(self) -> u32 {
             5
         }
+
+        #[deprecated(note = "use Foo")]
+        pub fn deprecated(self) {}
     }
+
+    #[deprecated(note = "use Foo")]
+    pub struct DeprecatedStruct;
+
+    #[deprecated(note = "use Foo")]
+    pub enum DeprecatedEnum {
+        A,
+    }
+
+    #[diplomat::opaque]
+    #[deprecated(note = "use Foo")]
+    pub struct DeprecatedOpaque;
 
     #[diplomat::macro_rules]
     macro_rules! macro_frag_spec_test {
