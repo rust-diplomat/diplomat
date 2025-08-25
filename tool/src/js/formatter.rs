@@ -101,8 +101,8 @@ impl<'tcx> JSFormatter<'tcx> {
 
     /// Just creates `/** */` doc strings.
     pub fn fmt_docs(&self, docs: &Docs, deprecated: Option<&str>) -> String {
-        let mut docs =
-        docs.to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
+        let mut docs = docs
+            .to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
             .trim()
             .to_string();
         if let Some(deprecated) = deprecated {

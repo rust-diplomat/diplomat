@@ -186,7 +186,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             fmt: &'a DartFormatter<'a>,
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
-            deprecated: Option< &'a  str>,
+            deprecated: Option<&'a str>,
             docs: String,
             is_contiguous: bool,
             special: SpecialMethodGenInfo<'a>,
