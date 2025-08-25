@@ -10,10 +10,7 @@ namespace {{ns}} {
  {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-{% if let Some(deprecated) = deprecated -%}
-[[deprecated("{{ deprecated }}")]]
-{% endif -%}
-struct {{type_name_unnamespaced}} {
+struct {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 {%- for field in fields %}
 	{{field.type_name}} {{field.var_name}};
 {%- endfor %}

@@ -23,8 +23,10 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Bar_destroy<'b, 'a: 'b>(this: Box<Bar<'b, 'a>>) {}
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_new<'a>(
         x: diplomat_runtime::DiplomatUtf8StrSlice<'a>,
     ) -> Box<Foo<'a>> {
@@ -32,13 +34,16 @@ mod ffi {
         Foo::new(x)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_get_bar<'a: 'b, 'b>(this: &'b Foo<'a>) -> Box<Bar<'b, 'a>> {
         this.get_bar()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_get_baz<'a: 'b, 'b>(this: &'b Foo<'a>) -> Baz<'b, 'a> {
         this.get_baz()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_destroy<'a>(this: Box<Foo<'a>>) {}
 }

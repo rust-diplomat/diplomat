@@ -20,8 +20,7 @@ namespace capi {
 
 
 namespace ns {
-[[deprecated("use Foo")]]
-struct RenamedDeprecated {
+struct [[deprecated("use Foo")]] RenamedDeprecated {
 
 };
 
