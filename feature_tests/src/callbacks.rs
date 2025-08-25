@@ -42,7 +42,7 @@ mod ffi {
         }
 
         #[diplomat::attr(not(supports = arrays), disable)]
-        pub fn test_array_cb_arg(arg: [u8; 2], f: impl Fn([u8; 2])) {
+        pub fn test_array_cb_arg(arg: &[u8; 2], f: impl Fn(&[u8; 2])) {
             f(arg);
         }
 
