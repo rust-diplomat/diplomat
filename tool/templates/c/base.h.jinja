@@ -9,9 +9,6 @@
         #include "{{ include }}"
     {%~ when None %}
 {%- endmatch %}
-{% if is_for_cpp -%}
-namespace capi {
-{%- endif %}
 
 {%- for typedef in arr_typedefs -%}
 {{typedef}}
@@ -19,9 +16,5 @@ namespace capi {
 
 
 {{ body }}
-
-{% if is_for_cpp -%}
-} // namespace capi
-{%- endif %}
 
 #endif // {{ header_guard }}
