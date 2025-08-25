@@ -26,8 +26,7 @@ namespace ns {
 /**
  * \deprecated use Foo
  */
-[[deprecated("use Foo")]]
-class RenamedDeprecatedEnum {
+class [[deprecated("use Foo")]] RenamedDeprecatedEnum {
 public:
   enum Value {
     A = 0,

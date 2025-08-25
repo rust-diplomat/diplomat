@@ -22,8 +22,7 @@ namespace ns {
 /**
  * \deprecated use Foo
  */
-[[deprecated("use Foo")]]
-class RenamedDeprecatedOpaque {
+class [[deprecated("use Foo")]] RenamedDeprecatedOpaque {
 public:
 
   inline const ns::capi::RenamedDeprecatedOpaque* AsFFI() const;

@@ -15,10 +15,7 @@ namespace {{ns}} {
  {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-{% if let Some(deprecated) = deprecated -%}
-[[deprecated("{{ deprecated }}")]]
-{% endif -%}
-class {{type_name_unnamespaced}} {
+class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
 {% for m in methods -%}
 {% include "method_decl.h.jinja" %}
