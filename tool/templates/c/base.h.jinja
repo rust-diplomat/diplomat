@@ -8,7 +8,7 @@
     {% when Some with (include) ~%}
         #include "{{ include }}"
     {%~ when None %}
-{%- endmatch %}
+{%- endmatch %} {#- TODO: At some point this whole block should be included in c_include.h.jinja somehow. Maybe as a macro? #}
 
 {%- for typedef in arr_typedefs -%}
 {{typedef}}
