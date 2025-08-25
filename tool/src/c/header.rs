@@ -82,7 +82,6 @@ struct HeaderTemplate<'a> {
     arr_typedefs: &'a BTreeSet<String>,
     includes: &'a BTreeSet<String>,
     body: Cow<'a, str>,
-    is_for_cpp: bool,
 }
 
 impl fmt::Display for Header {
@@ -102,7 +101,6 @@ impl fmt::Display for Header {
             decl_include: self.decl_include.as_ref(),
             arr_typedefs: &self.arr_typedefs,
             body,
-            is_for_cpp: self.is_for_cpp,
         }
         .render_into(f)
         .unwrap();
