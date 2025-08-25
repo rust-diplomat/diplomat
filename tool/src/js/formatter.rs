@@ -4,8 +4,8 @@
 use std::{borrow::Cow, fmt::Write};
 
 use diplomat_core::hir::{
-    self, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, SpecialMethod, TypeContext,
-    TypeId,
+    self, Attrs, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, SpecialMethod,
+    TypeContext, TypeId,
 };
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
@@ -100,12 +100,12 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     /// Just creates `/** */` doc strings.
-    pub fn fmt_docs(&self, docs: &Docs, deprecated: Option<&str>) -> String {
+    pub fn fmt_docs(&self, docs: &Docs, attrs: &Attrs) -> String {
         let mut docs = docs
             .to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
             .trim()
             .to_string();
-        if let Some(deprecated) = deprecated {
+        if let Some(deprecated) = attrs.deprecated.as_ref() {
             if !docs.is_empty() {
                 docs.push('\n');
                 docs.push('\n');
