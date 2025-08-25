@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct Locale Locale;
-
-
 
 
 #endif // Locale_D_H
