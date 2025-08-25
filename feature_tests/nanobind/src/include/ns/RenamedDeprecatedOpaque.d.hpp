@@ -19,8 +19,10 @@ namespace capi {
 } // namespace
 
 namespace ns {
-[[deprecated("use Foo")]]
-class RenamedDeprecatedOpaque {
+/**
+ * \deprecated use Foo
+ */
+class [[deprecated("use Foo")]] RenamedDeprecatedOpaque {
 public:
 
   inline const ns::capi::RenamedDeprecatedOpaque* AsFFI() const;

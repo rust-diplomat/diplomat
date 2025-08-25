@@ -23,8 +23,10 @@ namespace capi {
 } // namespace
 
 namespace ns {
-[[deprecated("use Foo")]]
-class RenamedDeprecatedEnum {
+/**
+ * \deprecated use Foo
+ */
+class [[deprecated("use Foo")]] RenamedDeprecatedEnum {
 public:
   enum Value {
     A = 0,
