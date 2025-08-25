@@ -36,6 +36,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -93,6 +94,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -123,6 +125,7 @@ Method {
     ),
     attrs: Attrs {
         disable: false,
+        deprecated: None,
         namespace: None,
         rename: RenameAttr {
             pattern: None,
