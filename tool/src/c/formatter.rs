@@ -255,7 +255,7 @@ impl<'tcx> CFormatter<'tcx> {
 
     pub fn fmt_primitive_array_name(
         &self,
-        prim : hir::PrimitiveType,
+        prim: hir::PrimitiveType,
         size: usize,
     ) -> Cow<'tcx, str> {
         format!(

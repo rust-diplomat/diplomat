@@ -774,8 +774,8 @@ impl TypeName {
                         );
                     }
                 }
-                
-                if let syn::Type::Array(arr) =  &*r.elem {
+
+                if let syn::Type::Array(arr) = &*r.elem {
                     let len = match &arr.len {
                         syn::Expr::Lit(syn::ExprLit {
                             attrs: _,
@@ -797,7 +797,7 @@ impl TypeName {
                     }
                     panic!("Unsupported array type {:?}", arr.to_token_stream());
                 }
-                
+
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
                         if let Some(primitive) = p
@@ -1136,7 +1136,10 @@ impl TypeName {
                 ret_type.expect("No valid traits found")
             }
             syn::Type::Array(a) => {
-                panic!("Array {0} must be behind a reference (&{0})", a.to_token_stream());
+                panic!(
+                    "Array {0} must be behind a reference (&{0})",
+                    a.to_token_stream()
+                );
             }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
