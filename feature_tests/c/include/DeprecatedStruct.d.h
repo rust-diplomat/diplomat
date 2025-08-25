@@ -1,5 +1,5 @@
-#ifndef Deprecated_D_H
-#define Deprecated_D_H
+#ifndef DeprecatedStruct_D_H
+#define DeprecatedStruct_D_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -17,4 +17,4 @@
 
 
 
-#endif // Deprecated_D_H
+#endif // DeprecatedStruct_D_H

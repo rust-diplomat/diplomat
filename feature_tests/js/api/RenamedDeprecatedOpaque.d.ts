@@ -6,6 +6,10 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 /**
  * @deprecated use Foo
  */
-export class RenamedDeprecated {
+export class RenamedDeprecatedOpaque {
+    /** @internal */
+    get ffiValue(): pointer;
+    /** @internal */
+    constructor();
 
 }

@@ -1,5 +1,5 @@
-#ifndef Deprecated_H
-#define Deprecated_H
+#ifndef DeprecatedStruct_H
+#define DeprecatedStruct_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -8,7 +8,7 @@
 #include "diplomat_runtime.h"
 
 
-#include "Deprecated.d.h"
+#include "DeprecatedStruct.d.h"
 
 
 
@@ -19,4 +19,4 @@
 
 
 
-#endif // Deprecated_H
+#endif // DeprecatedStruct_H

@@ -134,6 +134,22 @@ export class RenamedStructWithAttrs {
         }
     }
 
+    /**
+     * @deprecated use Foo
+     */
+    deprecated() {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+    wasm.namespace_StructWithAttrs_deprecated(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
+
+        try {}
+
+        finally {
+            functionCleanupArena.free();
+
+        }
+    }
+
     constructor(a, b) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 /**
  * @deprecated use Foo
  */
-export class RenamedDeprecated {
+export class RenamedDeprecatedStruct {
 
 
 }

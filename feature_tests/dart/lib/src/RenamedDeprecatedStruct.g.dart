@@ -4,14 +4,14 @@
 part of 'lib.g.dart';
 
 @core.Deprecated('use Foo')
-final class RenamedDeprecated {
+final class RenamedDeprecatedStruct {
 
-  RenamedDeprecated();
+  RenamedDeprecatedStruct();
 
 
   @override
   bool operator ==(Object other) =>
-      other is RenamedDeprecated;
+      other is RenamedDeprecatedStruct;
 
   @override
   int get hashCode => 0;

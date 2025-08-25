@@ -1,6 +1,6 @@
 
 
-export { RenamedDeprecated } from "./RenamedDeprecated.mjs"
+export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
 
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
@@ -45,6 +45,8 @@ export { OptionStruct } from "./OptionStruct.mjs"
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
+
+export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque.mjs"
 
 export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
 
@@ -103,6 +105,8 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
 export { Utf16Wrap } from "./Utf16Wrap.mjs"
 
 export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
+
+export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum.mjs"
 
 export { UnimportedEnum } from "./UnimportedEnum.mjs"
 

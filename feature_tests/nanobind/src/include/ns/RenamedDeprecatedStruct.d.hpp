@@ -1,7 +1,5 @@
-#ifndef ns_RenamedDeprecated_HPP
-#define ns_RenamedDeprecated_HPP
-
-#include "RenamedDeprecated.d.hpp"
+#ifndef ns_RenamedDeprecatedStruct_D_HPP
+#define ns_RenamedDeprecatedStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -16,13 +14,15 @@
 
 namespace ns {
 namespace capi {
-    extern "C" {
 
-    } // extern "C"
 } // namespace capi
 } // namespace
 
 
+namespace ns {
+struct [[deprecated("use Foo")]] RenamedDeprecatedStruct {
 
+};
 
-#endif // ns_RenamedDeprecated_HPP
+} // namespace
+#endif // ns_RenamedDeprecatedStruct_D_HPP

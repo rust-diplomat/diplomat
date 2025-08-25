@@ -2,7 +2,7 @@
 export { codepoint } from './diplomat-runtime';
 
 
-export { RenamedDeprecated } from "./RenamedDeprecated"
+export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct"
 
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
@@ -47,6 +47,8 @@ export { OptionStruct } from "./OptionStruct"
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
+
+export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque"
 
 export { RenamedMyIterable } from "./RenamedMyIterable"
 
@@ -105,6 +107,8 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString"
 export { Utf16Wrap } from "./Utf16Wrap"
 
 export { RenamedAttrEnum } from "./RenamedAttrEnum"
+
+export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum"
 
 export { UnimportedEnum } from "./UnimportedEnum"
 

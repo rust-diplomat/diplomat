@@ -20,6 +20,8 @@ namespace_StructWithAttrs_new_fallible_result namespace_StructWithAttrs_new_fall
 
 uint32_t namespace_StructWithAttrs_c(StructWithAttrs self);
 
+void namespace_StructWithAttrs_deprecated(StructWithAttrs self);
+
 
 
 
