@@ -13,6 +13,7 @@
 
 
 typedef bool BoolArray_3[3];
+typedef double F64Array_2[2];
 typedef int32_t I32Array_12[12];
 namespace diplomat {
 namespace capi {
@@ -27,7 +28,7 @@ public:
 
   inline static std::unique_ptr<Float64Vec> new_bool(diplomat::span<const bool> v);
 
-  inline static std::unique_ptr<Float64Vec> new_bool_arr(BoolArray_3 v, BoolArray_3 _other, I32Array_12 _other_other);
+  inline static std::unique_ptr<Float64Vec> new_bool_arr(I32Array_12 v, BoolArray_3 _other, F64Array_2 _other_other);
 
   inline static std::unique_ptr<Float64Vec> new_i16(diplomat::span<const int16_t> v);
 

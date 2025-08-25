@@ -65,11 +65,11 @@ pub mod ffi {
 
         #[diplomat::attr(not(supports = arrays), disable)]
         pub fn new_bool_arr(
-            v: [bool; 3],
+            v: [i32; 12],
             _other: [bool; 3],
-            _other_other: [i32; 12],
+            _other_other: [f64; 2],
         ) -> Box<Float64Vec> {
-            Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
+            Box::new(Self(v.iter().map(|&x| x.into()).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "i16")]
