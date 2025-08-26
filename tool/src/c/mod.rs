@@ -129,7 +129,7 @@ pub(crate) fn run<'tcx>(
 
     {
         let mut should_render = false;
-        for f in tcx.all_free_functions() {
+        for (id, f) in tcx.all_free_functions() {
             if f.attrs.disable {
                 continue;
             }
@@ -139,7 +139,7 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter,
                 errors: &errors,
                 is_for_cpp: false,
-                id: hir::SymbolId::Function,
+                id: id.into(),
                 decl_header_path: "diplomat_free_functions.d.h",
                 impl_header_path: "diplomat_free_functions.h",
             };

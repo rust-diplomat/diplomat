@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use askama::Template;
-use diplomat_core::hir::{self, SelfType, StructPathLike, SymbolId, Type};
+use diplomat_core::hir::{self, FunctionId, SelfType, StructPathLike, SymbolId, Type};
 
 use crate::c::Header as C2Header;
 use crate::c::CAPI_NAMESPACE;
@@ -108,10 +108,11 @@ impl<'tcx> FuncGenContext<'tcx> {
     /// Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
     pub fn generate_function<'b>(
         &mut self,
+        func_id: FunctionId,
         func: &'tcx hir::Method,
         context: &mut TyGenContext<'b, 'tcx, '_>,
     ) {
-        let info = Self::gen_method_info(context.c.id, func, context);
+        let info = Self::gen_method_info(func_id.into(), func, context);
 
         #[derive(Template)]
         #[template(
@@ -163,26 +164,14 @@ impl<'tcx> FuncGenContext<'tcx> {
         if method.attrs.disable {
             return None;
         }
-        let ty = match id {
-            SymbolId::Function => method.name.as_str().into(),
-            _ => context.c.tcx.fmt_symbol_name_diagnostics(id).into()
-        };
         let _guard = context.errors.set_context_method(
-            ty,
+            context.c.tcx.fmt_symbol_name_diagnostics(id),
             method.name.as_str().into(),
         );
         let method_name = context.formatter.fmt_method_name(method);
-
-        let namespace = match id {
-            SymbolId::Function => method.attrs.namespace.clone(),
-            SymbolId::TraitId(tr) => context.c.tcx.resolve_trait(tr).attrs.namespace.clone(),
-            SymbolId::TypeId(ty) => context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
-            _ => panic!("Unsupported Symbol: {id:?}")
-        };
-
         let abi_name = context
             .formatter
-            .namespace_c_name(method.abi_name.as_str(), namespace);
+            .namespace_c_name(id, method.abi_name.as_str());
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -210,7 +199,7 @@ impl<'tcx> FuncGenContext<'tcx> {
                     if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "*this = {}::FromFFI(thisDiplomatRefClone);",
-                            context.formatter.fmt_type_name(s.id().into())
+                            context.formatter.fmt_symbol_name(s.id().into())
                         ));
                     }
                     "&thisDiplomatRefClone".to_string().into()
@@ -228,8 +217,8 @@ impl<'tcx> FuncGenContext<'tcx> {
         let mut returns_utf8_err = false;
 
         let namespace = match id {
-            SymbolId::Function => &method.attrs.namespace,
-            SymbolId::TypeId(ty) => &context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
+            SymbolId::FunctionId(f) => context.c.tcx.resolve_function(f).attrs.namespace.clone(),
+            SymbolId::TypeId(ty) => context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
             _ => panic!("Unsupported SymbolId: {id:?}"),
         };
 
@@ -344,7 +333,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         }
 
         let pre_qualifiers =
-            if method.param_self.is_none() && !matches!(id, SymbolId::Function) {
+            if method.param_self.is_none() && !matches!(id, SymbolId::FunctionId(..)) {
                 vec!["static".into()]
             } else {
                 vec![]
