@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use askama::Template;
-use diplomat_core::hir::{self, FunctionId, SelfType, StructPathLike, SymbolId, Type};
+use diplomat_core::hir::{self, SelfType, StructPathLike, SymbolId, Type};
 
 use crate::c::Header as C2Header;
 use crate::c::CAPI_NAMESPACE;
@@ -108,7 +108,7 @@ impl<'tcx> FuncGenContext<'tcx> {
     /// Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
     pub fn generate_function<'b>(
         &mut self,
-        func_id: FunctionId,
+        func_id: hir::FunctionId,
         func: &'tcx hir::Method,
         context: &mut TyGenContext<'b, 'tcx, '_>,
     ) {
@@ -169,9 +169,11 @@ impl<'tcx> FuncGenContext<'tcx> {
             method.name.as_str().into(),
         );
         let method_name = context.formatter.fmt_method_name(method);
-        let abi_name = context
-            .formatter
-            .namespace_c_name(id, method.abi_name.as_str());
+        let abi_name = match id {
+            SymbolId::FunctionId(..) => context.formatter.namespace_func_name(method),
+            SymbolId::TypeId(ty) => context.formatter.namespace_ty_name(ty, method.abi_name.as_str()),
+            _ => panic!("Unsupported method generation for symbol ID {id:?}")
+        };
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -199,7 +201,7 @@ impl<'tcx> FuncGenContext<'tcx> {
                     if s.owner.mutability().is_mutable() {
                         param_post_conversions.push(format!(
                             "*this = {}::FromFFI(thisDiplomatRefClone);",
-                            context.formatter.fmt_symbol_name(s.id().into())
+                            context.formatter.fmt_type_name(s.id())
                         ));
                     }
                     "&thisDiplomatRefClone".to_string().into()
@@ -217,7 +219,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         let mut returns_utf8_err = false;
 
         let namespace = match id {
-            SymbolId::FunctionId(f) => context.c.tcx.resolve_function(f).attrs.namespace.clone(),
+            SymbolId::FunctionId(..) => method.attrs.namespace.clone(),
             SymbolId::TypeId(ty) => context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
             _ => panic!("Unsupported SymbolId: {id:?}"),
         };

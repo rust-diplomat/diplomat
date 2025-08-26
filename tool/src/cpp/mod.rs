@@ -131,8 +131,8 @@ pub(crate) fn run<'tcx>(
                 "".into()
             };
 
-            let impl_header_path = formatter.fmt_impl_header_path(id.into());
-            let decl_header_path = formatter.fmt_decl_header_path(id.into());
+            let impl_header_path = formatter.fmt_functions_impl_header_path(f);
+            let decl_header_path = formatter.fmt_functions_decl_header_path(f);
 
             let context = if let Some(v) = func_contexts.get_mut(&key) {
                 v

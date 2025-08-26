@@ -148,7 +148,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let ctype = self.formatter.fmt_c_type_name(id);
         let dtor_name = self
             .formatter
-            .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
+            .namespace_ty_name(id, ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
@@ -470,8 +470,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(b) = s.owner {
-                        let c_name = self.formatter.namespace_c_name(
-                            s.id().into(),
+                        let c_name = self.formatter.namespace_ty_name(
+                            s.id(),
                             &self.formatter.fmt_type_name_unnamespaced(s.id()),
                         );
 
@@ -542,7 +542,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
-                        let c_name = self.formatter.namespace_c_name(s.id().into(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        let c_name = self.formatter.namespace_ty_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
                         return match borrow.mutability {
                             Mutability::Immutable => {
                                 format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
@@ -562,7 +562,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_name(st.id().into(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
+                self.formatter.namespace_ty_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
