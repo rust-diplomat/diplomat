@@ -70,7 +70,7 @@ pub enum TypeId {
 pub enum SymbolId {
     TypeId(TypeId),
     TraitId(TraitId),
-    Function
+    Function,
 }
 
 enum Param<'a> {
@@ -121,11 +121,8 @@ impl TypeContext {
             .map(|(i, trt)| (TraitId(i), trt))
     }
 
-    pub fn all_free_functions<'tcx>(
-        &'tcx self,
-    ) -> impl Iterator<Item = &'tcx Method> {
-        self.functions
-            .iter()
+    pub fn all_free_functions<'tcx>(&'tcx self) -> impl Iterator<Item = &'tcx Method> {
+        self.functions.iter()
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -199,7 +196,7 @@ impl TypeContext {
         match id {
             SymbolId::TypeId(id) => self.fmt_type_name_diagnostics(id),
             SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),
-            SymbolId::Function => panic!("Functions not supported.")
+            SymbolId::Function => panic!("Functions not supported."),
         }
     }
 
