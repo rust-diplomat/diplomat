@@ -131,6 +131,8 @@ pub(crate) fn run<'tcx>(
                 "".into()
             };
 
+            let func_name = f.attrs.rename.apply(f.name.as_str().into());
+
             let impl_header_path = formatter.fmt_function_impl_header_path(f);
             let decl_header_path = formatter.fmt_function_decl_header_path(f);
 

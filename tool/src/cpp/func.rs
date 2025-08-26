@@ -165,18 +165,19 @@ impl<'tcx> FuncGenContext<'tcx> {
         }
         let ty = match id {
             SymbolId::Function => method.name.as_str().into(),
-            _ => context.c.tcx.fmt_symbol_name_diagnostics(id).into(),
+            _ => context.c.tcx.fmt_symbol_name_diagnostics(id).into()
         };
-        let _guard = context
-            .errors
-            .set_context_method(ty, method.name.as_str().into());
+        let _guard = context.errors.set_context_method(
+            ty,
+            method.name.as_str().into(),
+        );
         let method_name = context.formatter.fmt_method_name(method);
 
         let namespace = match id {
             SymbolId::Function => method.attrs.namespace.clone(),
             SymbolId::TraitId(tr) => context.c.tcx.resolve_trait(tr).attrs.namespace.clone(),
             SymbolId::TypeId(ty) => context.c.tcx.resolve_type(ty).attrs().namespace.clone(),
-            _ => panic!("Unsupported Symbol: {id:?}"),
+            _ => panic!("Unsupported Symbol: {id:?}")
         };
 
         let abi_name = context
@@ -342,11 +343,12 @@ impl<'tcx> FuncGenContext<'tcx> {
             });
         }
 
-        let pre_qualifiers = if method.param_self.is_none() && !matches!(id, SymbolId::Function) {
-            vec!["static".into()]
-        } else {
-            vec![]
-        };
+        let pre_qualifiers =
+            if method.param_self.is_none() && !matches!(id, SymbolId::Function) {
+                vec!["static".into()]
+            } else {
+                vec![]
+            };
 
         let post_qualifiers = match &method.param_self {
             Some(param_self)
