@@ -120,7 +120,7 @@ pub(crate) fn run<'tcx>(
     {
         let mut func_contexts = BTreeMap::new();
 
-        for (id, f) in tcx.all_free_functions() {
+        for f in tcx.all_free_functions() {
             if f.attrs.disable {
                 continue;
             }
@@ -131,8 +131,10 @@ pub(crate) fn run<'tcx>(
                 "".into()
             };
 
-            let impl_header_path = formatter.fmt_impl_header_path(id.into());
-            let decl_header_path = formatter.fmt_decl_header_path(id.into());
+            let func_name = f.attrs.rename.apply(f.name.as_str().into());
+
+            let impl_header_path = formatter.fmt_function_impl_header_path(f);
+            let decl_header_path = formatter.fmt_function_decl_header_path(f);
 
             let context = if let Some(v) = func_contexts.get_mut(&key) {
                 v
@@ -160,7 +162,7 @@ pub(crate) fn run<'tcx>(
                     formatter: &formatter.c,
                     errors: &errors,
                     is_for_cpp: true,
-                    id: id.into(),
+                    id: hir::SymbolId::Function,
                     decl_header_path: "",
                     impl_header_path: &impl_header_path,
                 },
@@ -169,7 +171,7 @@ pub(crate) fn run<'tcx>(
                 generating_struct_fields: false,
             };
 
-            context.generate_function(id, f, &mut ty_context);
+            context.generate_function(f, &mut ty_context);
             context
                 .impl_header
                 .includes

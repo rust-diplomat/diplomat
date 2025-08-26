@@ -56,10 +56,6 @@ pub struct EnumId(usize);
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TraitId(usize);
 
-/// Key used to index into a [`TypeContext`] representing a function.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FunctionId(usize);
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum TypeId {
@@ -74,7 +70,7 @@ pub enum TypeId {
 pub enum SymbolId {
     TypeId(TypeId),
     TraitId(TraitId),
-    FunctionId(FunctionId),
+    Function
 }
 
 enum Param<'a> {
@@ -127,11 +123,9 @@ impl TypeContext {
 
     pub fn all_free_functions<'tcx>(
         &'tcx self,
-    ) -> impl Iterator<Item = (FunctionId, &'tcx Method)> {
+    ) -> impl Iterator<Item = &'tcx Method> {
         self.functions
             .iter()
-            .enumerate()
-            .map(|(i, f)| (FunctionId(i), f))
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -195,10 +189,6 @@ impl TypeContext {
         self.traits.index(id.0)
     }
 
-    pub fn resolve_function(&self, id: FunctionId) -> &Method {
-        self.functions.index(id.0)
-    }
-
     /// Resolve and format a named type for use in diagnostics
     /// (don't apply rename rules and such)
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'_, str> {
@@ -209,7 +199,7 @@ impl TypeContext {
         match id {
             SymbolId::TypeId(id) => self.fmt_type_name_diagnostics(id),
             SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),
-            SymbolId::FunctionId(id) => self.resolve_function(id).name.as_str().into(),
+            SymbolId::Function => panic!("Functions not supported.")
         }
     }
 
@@ -320,7 +310,7 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: FunctionId(ast_functions.len()).into(),
+                            id: SymbolId::Function,
                         };
                         ast_functions.push(item)
                     }
@@ -747,12 +737,6 @@ impl From<TypeId> for SymbolId {
 impl From<TraitId> for SymbolId {
     fn from(x: TraitId) -> Self {
         SymbolId::TraitId(x)
-    }
-}
-
-impl From<FunctionId> for SymbolId {
-    fn from(x: FunctionId) -> Self {
-        SymbolId::FunctionId(x)
     }
 }
 
