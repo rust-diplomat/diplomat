@@ -171,8 +171,10 @@ impl<'tcx> FuncGenContext<'tcx> {
         let method_name = context.formatter.fmt_method_name(method);
         let abi_name = match id {
             SymbolId::FunctionId(..) => context.formatter.namespace_func_name(method),
-            SymbolId::TypeId(ty) => context.formatter.namespace_ty_name(ty, method.abi_name.as_str()),
-            _ => panic!("Unsupported method generation for symbol ID {id:?}")
+            SymbolId::TypeId(ty) => context
+                .formatter
+                .namespace_ty_name(ty, method.abi_name.as_str()),
+            _ => panic!("Unsupported method generation for symbol ID {id:?}"),
         };
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
