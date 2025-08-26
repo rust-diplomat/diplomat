@@ -1,11 +1,9 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use crate::c::func::{CallbackAndStructDef, FuncGenContext};
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId,
-    TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId, TraitId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -44,23 +42,73 @@ struct OpaqueTemplate<'a> {
     is_for_cpp: bool,
 }
 
+#[derive(Template, Default)]
+#[template(path = "c/func_block.h.jinja", escape = "none")]
+/// Represents a block of functions. Can belong to a method, or just a list of free functions.
+pub struct FuncBlockTemplate<'a> {
+    methods: Vec<MethodTemplate>,
+    cb_structs_and_defs: Vec<CallbackAndStructDef>,
+    is_for_cpp: bool,
+    ty_name: Option<Cow<'a, str>>,
+    dtor_name: Option<&'a str>,
+}
+
+#[derive(Clone)]
+/// Information for constructing a C struct required for callback return informatioon.
+struct CallbackAndStructDef {
+    name: String,
+    params_types: String,
+    return_type: String,
+    return_struct: Option<String>,
+}
+
+/// The C representation of a Rust method.
+/// Created for [`FuncBlockTemplate`] to use in generation.
+struct MethodTemplate {
+    return_ty: String,
+    params: String,
+    abi_name: String,
+}
+
+pub enum GenerationContext {
+    Type(TypeId),
+    Trait(TraitId),
+    FuncBlock,
+}
+
+impl GenerationContext {
+    fn type_id(&self) -> TypeId {
+        match self {
+            GenerationContext::Type(id) => *id,
+            _ => unreachable!()
+        }
+    }
+
+    fn trait_id(&self) -> TraitId {
+        match self {
+            GenerationContext::Trait(tr) => *tr,
+            _ => unreachable!()
+        }
+    }
+}
+
 /// The context used for generating a particular type
 ///
 /// Also used by C++ generation code
-pub struct TyGenContext<'cx, 'tcx> {
+pub struct GenContext<'cx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
-    pub id: SymbolId,
+    pub ctx : GenerationContext,
     pub decl_header_path: &'cx str,
     pub impl_header_path: &'cx str,
 }
 
-impl<'tcx> TyGenContext<'_, 'tcx> {
+impl<'tcx> GenContext<'_, 'tcx> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(self.ctx.type_id());
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -75,7 +123,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(self.ctx.type_id());
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -88,7 +136,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(self.ctx.type_id());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
@@ -115,7 +163,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     pub fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let trt_name = self.formatter.fmt_trait_name(self.id.try_into().unwrap());
+        let trt_name = self.formatter.fmt_trait_name(self.ctx.trait_id());
 
         let mut trait_structs = vec![];
         let mut method_sigs = vec![];
@@ -177,9 +225,22 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     }
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
-        let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+        let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+        
 
-        let mut impl_context = FuncGenContext::new(impl_header, self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(self.ctx.type_id());
+
+        let dtor_name = if let TypeDef::Opaque(opaque) = ty {
+            Some(opaque.dtor_abi_name.as_str())
+        } else {
+            None
+        };
+        
+        let mut func_block_template = FuncBlockTemplate {
+            ty_name: Some(ty_name),
+            dtor_name,
+            ..Default::default()
+        };
 
         for method in ty.methods() {
             if method.attrs.disable {
@@ -187,23 +248,14 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.tcx.fmt_symbol_name_diagnostics(self.id),
+                self.tcx.fmt_symbol_name_diagnostics(self.ctx.type_id().into()),
                 method.name.as_str().into(),
             );
-            impl_context.gen_method(method, self);
+            self.gen_method(method, &mut impl_header, &mut func_block_template);
         }
 
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        func_block_template.render_into(&mut impl_header).unwrap();
 
-        let dtor_name = if let TypeDef::Opaque(opaque) = ty {
-            Some(opaque.dtor_abi_name.as_str())
-        } else {
-            None
-        };
-
-        impl_context.render(Some(ty_name), dtor_name).unwrap();
-
-        let impl_header = &mut impl_context.header;
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
         // In some cases like generating decls for `self` parameters,
@@ -213,7 +265,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         impl_header.includes.remove(self.impl_header_path);
         impl_header.includes.remove(self.decl_header_path);
 
-        impl_context.header
+        impl_header
     }
 
     fn gen_result_ty_struct<P: hir::TyPosition>(
@@ -473,5 +525,94 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         };
 
         ty_name
+    }
+
+    pub fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header, template : &mut FuncBlockTemplate) {
+        use diplomat_core::hir::{ReturnType, SuccessType};
+        let abi_name = method.abi_name.to_string();
+        // Right now these are the same, but we may eventually support renaming
+        // and should be sure to use method_name when naming the result type
+        let method_name = abi_name.clone();
+        let mut param_decls = Vec::new();
+        let mut cb_structs_and_defs = vec![];
+        if let Some(ref self_ty) = method.param_self {
+            let self_ty = self_ty.ty.clone().into();
+            param_decls.push(self.gen_ty_decl(
+                &self_ty,
+                "self",
+                header,
+                Some(abi_name.clone()),
+                &mut cb_structs_and_defs,
+            ))
+        }
+
+        for param in &method.params {
+            param_decls.push(self.gen_ty_decl(
+                &param.ty,
+                param.name.as_str(),
+                header,
+                Some(abi_name.clone()),
+                &mut cb_structs_and_defs,
+            ));
+        }
+
+        let return_ty: Cow<str> = match method.output {
+            ReturnType::Infallible(SuccessType::Unit) => "void".into(),
+            ReturnType::Infallible(SuccessType::Write) => {
+                param_decls.push((
+                    format!("{}*", self.formatter.fmt_write_name()).into(),
+                    "write".into(),
+                ));
+                "void".into()
+            }
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                self.gen_ty_name(o, header)
+            }
+            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                // Result<T, ()> and Option<T> are the same on the ABI
+                let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
+                    Some(e)
+                } else {
+                    None
+                };
+                let ok_ty = match ok {
+                    SuccessType::Write => {
+                        param_decls.push((
+                            format!("{}*", self.formatter.fmt_write_name()).into(),
+                            "write".into(),
+                        ));
+                        None
+                    }
+                    SuccessType::Unit => None,
+                    SuccessType::OutType(o) => Some(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                self
+                    .gen_result_ty(&method_name, ok_ty, err, header)
+                    .into()
+            }
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        use itertools::Itertools;
+        let params = if !param_decls.is_empty() {
+            param_decls
+                .into_iter()
+                .map(|(ty, name)| {
+                    format!("{ty} {name}", name = self.formatter.fmt_identifier(name))
+                })
+                .join(", ")
+        } else {
+            "void".to_owned()
+        };
+
+        template.methods.push(MethodTemplate {
+            abi_name,
+            return_ty: return_ty.to_string(),
+            params,
+        });
+        template
+            .cb_structs_and_defs
+            .extend_from_slice(&cb_structs_and_defs);
     }
 }

@@ -1,15 +1,15 @@
 mod formatter;
-mod func;
 mod header;
 mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
-pub use self::func::FuncGenContext;
 pub(crate) use self::header::Header;
-pub use self::ty::TyGenContext;
+pub use self::ty::GenContext;
 
+use crate::c::ty::{FuncBlockTemplate, GenerationContext};
 use crate::{ErrorStore, FileMap};
+use askama::Template;
 use diplomat_core::hir::BackendAttrSupport;
 use diplomat_core::hir::{self, DocsUrlGenerator};
 
@@ -73,12 +73,12 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
-        let context = TyGenContext {
+        let context = GenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
             is_for_cpp: false,
-            id: id.into(),
+            ctx: GenerationContext::Type(id),
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
@@ -107,12 +107,12 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(trt.name.as_str().into());
-        let context = TyGenContext {
+        let context = GenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
             is_for_cpp: false,
-            id: id.into(),
+            ctx: GenerationContext::Trait(id),
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
@@ -123,9 +123,19 @@ pub(crate) fn run<'tcx>(
     // loop over traits too
 
     // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
-    let header = Header::new("diplomat_free_functions.h".into(), false);
+    let mut header = Header::new("diplomat_free_functions.h".into(), false);
 
-    let mut impl_context = FuncGenContext::new(header, false);
+    let mut impl_context = GenContext {
+        tcx: &tcx,
+        formatter: &formatter,
+        errors: &errors,
+        is_for_cpp: false,
+        ctx: GenerationContext::FuncBlock,
+        decl_header_path: "diplomat_free_functions.d.h",
+        impl_header_path: "diplomat_free_functions.h"
+    };
+
+    let mut template = FuncBlockTemplate::default();
 
     {
         let mut should_render = false;
@@ -134,24 +144,15 @@ pub(crate) fn run<'tcx>(
                 continue;
             }
             should_render = true;
-            let context = TyGenContext {
-                tcx,
-                formatter: &formatter,
-                errors: &errors,
-                is_for_cpp: false,
-                id: id.into(),
-                decl_header_path: "diplomat_free_functions.d.h",
-                impl_header_path: "diplomat_free_functions.h",
-            };
 
-            impl_context.gen_method(f, &context);
+            impl_context.gen_method(f, &mut header, &mut template);
         }
 
         if should_render {
-            impl_context.render(None, None).unwrap();
+            template.render_into(&mut header);
             files.add_file(
                 "diplomat_free_functions.h".into(),
-                impl_context.header.to_string(),
+                header.to_string(),
             );
         }
     }
