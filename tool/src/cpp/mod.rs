@@ -119,7 +119,7 @@ pub(crate) fn run<'tcx>(
     {
         let mut func_contexts = BTreeMap::new();
 
-        for (id, f) in tcx.all_free_functions() {
+        for (_, f) in tcx.all_free_functions() {
             if f.attrs.disable {
                 continue;
             }
@@ -138,7 +138,15 @@ pub(crate) fn run<'tcx>(
             } else {
                 func_contexts.insert(
                     key.clone(),
-                    FuncBlockInfo::default(),
+                    FuncBlockInfo {
+                        impl_header: Header { path: impl_header_path.clone(),
+                            ..Default::default() },
+                        decl_header: Header {
+                            path: decl_header_path.clone(),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
                 );
                 func_contexts.get_mut(&key).unwrap()
             };
