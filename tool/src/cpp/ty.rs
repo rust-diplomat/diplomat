@@ -390,10 +390,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    fn gen_method_info(
-        &mut self,
-        method: &'tcx hir::Method,
-    ) -> Option<MethodInfo<'ccx>> {
+    fn gen_method_info(&mut self, method: &'tcx hir::Method) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
             return None;
         }
@@ -403,12 +400,14 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
                 self.c.tcx.fmt_type_name_diagnostics(ty),
                 method.name.as_str().into(),
             ),
-            _ => panic!("Unsupported generation context: {:?}", self.c.ctx)
+            _ => panic!("Unsupported generation context: {:?}", self.c.ctx),
         };
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = match self.c.ctx {
             GenerationContext::FuncBlock => self.formatter.namespace_func_name(method),
-            _ => self.formatter.namespace_ty_name(self.c.ctx.type_id(), method.abi_name.as_str()),
+            _ => self
+                .formatter
+                .namespace_ty_name(self.c.ctx.type_id(), method.abi_name.as_str()),
         };
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
@@ -456,7 +455,13 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
 
         let namespace = match self.c.ctx {
             GenerationContext::FuncBlock => method.attrs.namespace.clone(),
-            _ => self.c.tcx.resolve_type(self.c.ctx.type_id()).attrs().namespace.clone()
+            _ => self
+                .c
+                .tcx
+                .resolve_type(self.c.ctx.type_id())
+                .attrs()
+                .namespace
+                .clone(),
         };
 
         for param in method.params.iter() {
