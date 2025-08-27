@@ -113,12 +113,12 @@ pub(crate) fn run<'cx>(
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::GenContext {
+                c: crate::c::GenContext {
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
-                    id: id.into(),
+                    ctx : crate::c::GenerationContext::Type(id),
                     decl_header_path: &cpp_decl_path,
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
@@ -264,13 +264,13 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::GenContext {
+                c: crate::c::GenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
+                    ctx: crate::c::GenerationContext::Type(type_id),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -341,13 +341,13 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::GenContext {
+                c: crate::c::GenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
+                    ctx: crate::c::GenerationContext::Type(type_id),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -417,13 +417,13 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::GenContext {
+                c: crate::c::GenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
+                    ctx: crate::c::GenerationContext::Type(type_id),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
