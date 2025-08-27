@@ -22,11 +22,12 @@ public:
 	constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
 	constexpr operator Value() const { return value; }
 	// Prevent usage as boolean value
-	explicit operator bool() const = delete; 
+	explicit operator bool() const = delete;
 
-	{%- for m in methods %}
-	{% include "function_defs/method_decl.h.jinja" %}
-	{%- endfor %}
+{%- for m in methods -%}
+
+{% include "function_defs/method_impl.h.jinja" %}
+{%- endfor %}
 
 	inline {{ctype}} AsFFI() const;
 	inline static {{type_name}} FromFFI({{ctype}} c_enum);

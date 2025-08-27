@@ -45,10 +45,16 @@ public:
   constexpr operator Value() const { return value; }
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
-  
-  inline int8_t into_value() const;
-  
-  inline static MyEnum get_a();
+
+inline int8_t MyEnum::into_value() const {
+  auto result = diplomat::capi::MyEnum_into_value(this->AsFFI());
+  return result;
+}
+
+inline MyEnum MyEnum::get_a() {
+  auto result = diplomat::capi::MyEnum_get_a();
+  return MyEnum::FromFFI(result);
+}
 
   inline diplomat::capi::MyEnum AsFFI() const;
   inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
