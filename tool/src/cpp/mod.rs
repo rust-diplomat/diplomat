@@ -1,15 +1,14 @@
 mod formatter;
-mod func;
 mod header;
 mod ty;
 
 pub(crate) use header::Header;
 use std::collections::BTreeMap;
 
-use crate::{cpp::func::FuncGenContext, ErrorStore, FileMap};
+use crate::{cpp::ty::{FuncBlockInfo, MethodInfo}, ErrorStore, FileMap};
 
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-pub(crate) use ty::TyGenContext;
+pub(crate) use ty::GenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
@@ -75,15 +74,15 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone());
 
-        let mut context = TyGenContext {
+        let mut context = GenContext {
             formatter: &formatter,
             errors: &errors,
-            c: crate::c::TyGenContext {
+            c: crate::c::GenContext {
                 tcx,
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id: id.into(),
+                ctx: crate::c::GenerationContext::Type(id),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },
@@ -134,55 +133,50 @@ pub(crate) fn run<'tcx>(
             let impl_header_path = formatter.fmt_functions_impl_header_path(f);
             let decl_header_path = formatter.fmt_functions_decl_header_path(f);
 
-            let context = if let Some(v) = func_contexts.get_mut(&key) {
+            let info = if let Some(v) = func_contexts.get_mut(&key) {
                 v
             } else {
                 func_contexts.insert(
                     key.clone(),
-                    FuncGenContext::new(
-                        impl_header_path.clone(),
-                        decl_header_path.clone(),
-                        f.attrs.namespace.clone(),
-                        true,
-                    ),
+                    FuncBlockInfo::default(),
                 );
                 func_contexts.get_mut(&key).unwrap()
             };
 
-            let mut decl_header_clone = header::Header::new("".into());
-            let mut impl_header_clone = header::Header::new("".into());
+            let mut impl_header = Header::default();
+            let mut decl_header = Header::default();
 
-            let mut ty_context = TyGenContext {
+            let mut context = GenContext {
                 formatter: &formatter,
                 errors: &errors,
-                c: crate::c::TyGenContext {
+                c: crate::c::GenContext {
                     tcx,
                     formatter: &formatter.c,
                     errors: &errors,
                     is_for_cpp: true,
-                    id: id.into(),
-                    decl_header_path: "",
+                    ctx: crate::c::GenerationContext::FuncBlock,
+                    decl_header_path: &decl_header_path,
                     impl_header_path: &impl_header_path,
                 },
-                impl_header: &mut impl_header_clone,
-                decl_header: &mut decl_header_clone,
+                impl_header: &mut impl_header,
+                decl_header: &mut decl_header,
                 generating_struct_fields: false,
             };
 
-            context.generate_function(id, f, &mut ty_context);
-            context
+            context.generate_function(f, info);
+            info
                 .impl_header
                 .includes
-                .append(&mut impl_header_clone.includes);
-            context
+                .append(&mut impl_header.includes);
+            info
                 .decl_header
                 .includes
-                .append(&mut decl_header_clone.includes);
+                .append(&mut decl_header.includes);
         }
 
         for (_, ctx) in func_contexts.iter_mut() {
             ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
-            ctx.render().unwrap();
+            // ctx.render().unwrap();
             files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
             files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
         }
@@ -200,7 +194,7 @@ mod test {
     use crate::cpp::header;
     use crate::ErrorStore;
 
-    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
+    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, GenContext};
 
     #[test]
     fn test_rename_param() {
@@ -230,15 +224,15 @@ mod test {
             let mut decl_header = header::Header::new("decl_thing".into());
             let mut impl_header = header::Header::new("impl_thing".into());
 
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = GenContext {
                 errors: &error_store,
                 formatter: &formatter,
-                c: crate::c::TyGenContext {
+                c: crate::c::GenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
+                    ctx: crate::c::GenerationContext::Type(id),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },

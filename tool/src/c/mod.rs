@@ -5,9 +5,8 @@ mod ty;
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
-pub use self::ty::GenContext;
+pub use self::ty::{GenContext, GenerationContext, FuncBlockTemplate};
 
-use crate::c::ty::{FuncBlockTemplate, GenerationContext};
 use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::BackendAttrSupport;

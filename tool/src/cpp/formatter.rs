@@ -50,7 +50,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    fn fmt_decl_header_path_namespaced(&self, name: String, namespace: &Option<String>) -> String {
+    fn fmt_decl_header_path_namespaced(&self, name : String, namespace : &Option<String>) -> String{
         if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
             format!("{ns}/{name}.d.hpp")
@@ -59,16 +59,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_functions_decl_header_path(&self, f: &hir::Method) -> String {
+    pub fn fmt_functions_decl_header_path(&self, f : &hir::Method) -> String {
         let namespaced = if let Some(ns) = &f.attrs.namespace {
             format!("_{}", ns.replace("::", "_"))
         } else {
             "".into()
         };
-        self.fmt_decl_header_path_namespaced(
-            format!("diplomat{namespaced}_functions"),
-            &f.attrs.namespace,
-        )
+        self.fmt_decl_header_path_namespaced(format!("diplomat{namespaced}_functions"), &f.attrs.namespace)
     }
 
     /// Resolve and format the name of a type for use in header names
@@ -81,7 +78,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.fmt_decl_header_path_namespaced(type_name.into(), &resolved.attrs().namespace)
     }
 
-    fn fmt_impl_header_path_namespaced(&self, name: String, namespace: &Option<String>) -> String {
+    
+    fn fmt_impl_header_path_namespaced(&self, name : String, namespace : &Option<String>) -> String{
         if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
             format!("{ns}/{name}.hpp")
@@ -90,16 +88,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_functions_impl_header_path(&self, func: &'tcx hir::Method) -> String {
+    pub fn fmt_functions_impl_header_path(&self, func : &'tcx hir::Method) -> String {
         let namespaced = if let Some(ns) = &func.attrs.namespace {
             format!("_{}", ns.replace("::", "_"))
         } else {
             "".into()
         };
-        self.fmt_impl_header_path_namespaced(
-            format!("diplomat{namespaced}_functions"),
-            &func.attrs.namespace,
-        )
+        self.fmt_impl_header_path_namespaced(format!("diplomat{namespaced}_functions"), &func.attrs.namespace)
     }
 
     /// Resolve and format the name of a type for use in header names
@@ -220,19 +215,20 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_name(&self, name: &str, namespace: &Option<String>) -> String {
+    pub fn namespace_c_name(&self, name: &str, namespace : &Option<String>) -> String {
         if let Some(ref ns) = namespace {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
             format!("diplomat::{CAPI_NAMESPACE}::{name}")
         }
     }
+    
 
-    pub fn namespace_func_name(&self, func: &'tcx hir::Method) -> String {
+    pub fn namespace_func_name(&self, func : &'tcx hir::Method) -> String {
         self.namespace_c_name(func.abi_name.as_str(), &func.attrs.namespace)
     }
 
-    pub fn namespace_ty_name(&self, ty: TypeId, name: &str) -> String {
+    pub fn namespace_ty_name(&self, ty : TypeId, name : &str) -> String {
         self.namespace_c_name(name, &self.c.tcx().resolve_type(ty).attrs().namespace)
     }
 

@@ -46,11 +46,11 @@ struct OpaqueTemplate<'a> {
 #[template(path = "c/func_block.h.jinja", escape = "none")]
 /// Represents a block of functions. Can belong to a method, or just a list of free functions.
 pub struct FuncBlockTemplate<'a> {
-    methods: Vec<MethodTemplate>,
-    cb_structs_and_defs: Vec<CallbackAndStructDef>,
-    is_for_cpp: bool,
-    ty_name: Option<Cow<'a, str>>,
-    dtor_name: Option<&'a str>,
+    pub methods: Vec<MethodTemplate>,
+    pub cb_structs_and_defs: Vec<CallbackAndStructDef>,
+    pub is_for_cpp: bool,
+    pub ty_name: Option<Cow<'a, str>>,
+    pub dtor_name: Option<&'a str>,
 }
 
 #[derive(Clone)]
@@ -70,6 +70,7 @@ struct MethodTemplate {
     abi_name: String,
 }
 
+#[derive(Debug)]
 pub enum GenerationContext {
     Type(TypeId),
     Trait(TraitId),
@@ -77,14 +78,14 @@ pub enum GenerationContext {
 }
 
 impl GenerationContext {
-    fn type_id(&self) -> TypeId {
+    pub fn type_id(&self) -> TypeId {
         match self {
             GenerationContext::Type(id) => *id,
             _ => unreachable!()
         }
     }
 
-    fn trait_id(&self) -> TraitId {
+    pub fn trait_id(&self) -> TraitId {
         match self {
             GenerationContext::Trait(tr) => *tr,
             _ => unreachable!()
