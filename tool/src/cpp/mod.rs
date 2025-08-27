@@ -7,7 +7,7 @@ pub(crate) use header::Header;
 use std::collections::BTreeMap;
 
 use crate::{
-    cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo, MethodInfo},
+    cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo},
     ErrorStore, FileMap,
 };
 
@@ -73,9 +73,9 @@ pub(crate) fn run<'tcx>(
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(id);
         let mut decl_header = header::Header::new(decl_header_path.clone());
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let impl_header_path = formatter.fmt_impl_header_path(id);
         let mut impl_header = header::Header::new(impl_header_path.clone());
 
         let mut context = GenContext {

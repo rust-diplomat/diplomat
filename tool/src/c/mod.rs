@@ -124,8 +124,8 @@ pub(crate) fn run<'tcx>(
     // Loop over free functions, put them all in one file (currently this is diplomat_runtime.h):
     let mut header = Header::new("diplomat_free_functions.h".into(), false);
 
-    let mut impl_context = GenContext {
-        tcx: &tcx,
+    let impl_context = GenContext {
+        tcx,
         formatter: &formatter,
         errors: &errors,
         is_for_cpp: false,

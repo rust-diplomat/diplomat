@@ -8,7 +8,6 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::Slice;
-use diplomat_core::hir::SymbolId;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
     TyPosition, Type, TypeDef, TypeId,
@@ -433,7 +432,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
                     .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(op_id.into()));
+                    .insert(self.formatter.fmt_impl_header_path(op_id));
                 ret
             }
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
@@ -452,11 +451,11 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
                 if self.generating_struct_fields {
                     self.decl_header
                         .includes
-                        .insert(self.formatter.fmt_decl_header_path(id.into()));
+                        .insert(self.formatter.fmt_decl_header_path(id));
                 }
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(id.into()));
+                    .insert(self.formatter.fmt_impl_header_path(id));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
@@ -499,11 +498,11 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
         if self.generating_struct_fields {
             self.decl_header
                 .includes
-                .insert(self.formatter.fmt_decl_header_path(id.into()));
+                .insert(self.formatter.fmt_decl_header_path(id));
         }
         self.impl_header
             .includes
-            .insert(self.formatter.fmt_impl_header_path(id.into()));
+            .insert(self.formatter.fmt_impl_header_path(id));
         if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
