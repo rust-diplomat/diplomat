@@ -23,7 +23,8 @@ namespace ns {
 
 
 
-inline int32_t Renamedfree_func_test(int32_t x);
+
+  inline static int32_t Renamedfree_func_test(int32_t x);
 
 
 

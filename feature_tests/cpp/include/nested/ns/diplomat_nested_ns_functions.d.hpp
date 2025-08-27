@@ -23,7 +23,8 @@ namespace nested::ns {
 
 
 
-inline bool Renamednested_ns_fn(bool x);
+
+  inline static bool Renamednested_ns_fn(bool x);
 
 
 

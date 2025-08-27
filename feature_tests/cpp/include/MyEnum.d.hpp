@@ -45,9 +45,9 @@ public:
   constexpr operator Value() const { return value; }
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
-
+  
   inline int8_t into_value() const;
-
+  
   inline static MyEnum get_a();
 
   inline diplomat::capi::MyEnum AsFFI() const;
