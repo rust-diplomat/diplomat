@@ -1,9 +1,9 @@
 use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::FuncBlockTemplate;
+use crate::c::GenContext as C2TyGenContext;
 use crate::c::GenerationContext;
 use crate::c::Header as C2Header;
-use crate::c::GenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
@@ -108,9 +108,9 @@ pub struct FuncBlockDecl {
 pub struct FuncBlockInfo<'a> {
     pub impl_template: FuncBlockImpl,
     pub decl_template: FuncBlockDecl,
-    pub c : FuncBlockTemplate<'a>,
-    pub impl_header : Header,
-    pub decl_header : Header,
+    pub c: FuncBlockTemplate<'a>,
+    pub impl_header: Header,
+    pub decl_header: Header,
 }
 
 impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
@@ -904,11 +904,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
     }
 
     // Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
-    pub fn generate_function<'b>(
-        &mut self,
-        func: &'tcx hir::Method,
-        info : &mut FuncBlockInfo,
-    ) {
+    pub fn generate_function<'b>(&mut self, func: &'tcx hir::Method, info: &mut FuncBlockInfo) {
         let func_info = self.gen_method_info(func);
 
         #[derive(Template)]
@@ -940,34 +936,36 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
             let decl_bl = FunctionDecl { m };
             info.decl_template.methods.push(decl_bl.to_string());
 
-            self.c.gen_method(func, &mut info.impl_template.c_header, &mut info.c);
+            self.c
+                .gen_method(func, &mut info.impl_template.c_header, &mut info.c);
         }
     }
 
-    pub fn gen_method_info(
-        &mut self,
-        method: &'tcx hir::Method,
-    ) -> Option<MethodInfo<'ccx>> {
+    pub fn gen_method_info(&mut self, method: &'tcx hir::Method) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
             return None;
         }
-        
+
         let _guard = match self.c.ctx {
-            GenerationContext::FuncBlock => {
-                self.errors.set_context_ty(method.name.as_str().into())
-            }
-            GenerationContext::Type(ty) => {
-                self.errors.set_context_method(self.c.tcx.fmt_type_name_diagnostics(ty), method.name.as_str().into())
-            }
-            GenerationContext::Trait(..) | _ => panic!("Unsupported method info generation for context {:?}", self.c.ctx)
+            GenerationContext::FuncBlock => self.errors.set_context_ty(method.name.as_str().into()),
+            GenerationContext::Type(ty) => self.errors.set_context_method(
+                self.c.tcx.fmt_type_name_diagnostics(ty),
+                method.name.as_str().into(),
+            ),
+            GenerationContext::Trait(..) | _ => panic!(
+                "Unsupported method info generation for context {:?}",
+                self.c.ctx
+            ),
         };
 
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = match self.c.ctx {
             GenerationContext::FuncBlock => self.formatter.namespace_func_name(method),
-            _ => self.formatter.namespace_ty_name(self.c.ctx.type_id(), method.abi_name.as_str())
+            _ => self
+                .formatter
+                .namespace_ty_name(self.c.ctx.type_id(), method.abi_name.as_str()),
         };
-        
+
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -1014,7 +1012,13 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
 
         let namespace = match self.c.ctx {
             GenerationContext::FuncBlock => method.attrs.namespace.clone(),
-            _ => self.c.tcx.resolve_type(self.c.ctx.type_id()).attrs().namespace.clone()
+            _ => self
+                .c
+                .tcx
+                .resolve_type(self.c.ctx.type_id())
+                .attrs()
+                .namespace
+                .clone(),
         };
 
         for param in method.params.iter() {

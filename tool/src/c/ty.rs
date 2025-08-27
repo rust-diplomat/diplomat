@@ -3,7 +3,8 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitId,
+    TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -81,14 +82,14 @@ impl GenerationContext {
     pub fn type_id(&self) -> TypeId {
         match self {
             GenerationContext::Type(id) => *id,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
     pub fn trait_id(&self) -> TraitId {
         match self {
             GenerationContext::Trait(tr) => *tr,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
@@ -101,7 +102,7 @@ pub struct GenContext<'cx, 'tcx> {
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
-    pub ctx : GenerationContext,
+    pub ctx: GenerationContext,
     pub decl_header_path: &'cx str,
     pub impl_header_path: &'cx str,
 }
@@ -227,7 +228,6 @@ impl<'tcx> GenContext<'_, 'tcx> {
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
-        
 
         let ty_name = self.formatter.fmt_type_name(self.ctx.type_id());
 
@@ -236,7 +236,7 @@ impl<'tcx> GenContext<'_, 'tcx> {
         } else {
             None
         };
-        
+
         let mut func_block_template = FuncBlockTemplate {
             ty_name: Some(ty_name),
             dtor_name,
@@ -250,7 +250,8 @@ impl<'tcx> GenContext<'_, 'tcx> {
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.tcx.fmt_symbol_name_diagnostics(self.ctx.type_id().into()),
+                self.tcx
+                    .fmt_symbol_name_diagnostics(self.ctx.type_id().into()),
                 method.name.as_str().into(),
             );
             self.gen_method(method, &mut impl_header, &mut func_block_template);
@@ -529,7 +530,12 @@ impl<'tcx> GenContext<'_, 'tcx> {
         ty_name
     }
 
-    pub fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header, template : &mut FuncBlockTemplate) {
+    pub fn gen_method(
+        &self,
+        method: &'tcx hir::Method,
+        header: &mut Header,
+        template: &mut FuncBlockTemplate,
+    ) {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let abi_name = method.abi_name.to_string();
         // Right now these are the same, but we may eventually support renaming
@@ -567,9 +573,7 @@ impl<'tcx> GenContext<'_, 'tcx> {
                 ));
                 "void".into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
-                self.gen_ty_name(o, header)
-            }
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
@@ -589,9 +593,7 @@ impl<'tcx> GenContext<'_, 'tcx> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                self
-                    .gen_result_ty(&method_name, ok_ty, err, header)
-                    .into()
+                self.gen_result_ty(&method_name, ok_ty, err, header).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };

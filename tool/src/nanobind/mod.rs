@@ -118,7 +118,7 @@ pub(crate) fn run<'cx>(
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
-                    ctx : crate::c::GenerationContext::Type(id),
+                    ctx: crate::c::GenerationContext::Type(id),
                     decl_header_path: &cpp_decl_path,
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,

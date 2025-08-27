@@ -6,7 +6,10 @@ use askama::Template;
 pub(crate) use header::Header;
 use std::collections::BTreeMap;
 
-use crate::{cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo, MethodInfo}, ErrorStore, FileMap};
+use crate::{
+    cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo, MethodInfo},
+    ErrorStore, FileMap,
+};
 
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use ty::GenContext;
@@ -188,14 +191,8 @@ pub(crate) fn run<'tcx>(
             };
 
             context.generate_function(f, info);
-            info
-                .impl_header
-                .includes
-                .append(&mut impl_header.includes);
-            info
-                .decl_header
-                .includes
-                .append(&mut decl_header.includes);
+            info.impl_header.includes.append(&mut impl_header.includes);
+            info.decl_header.includes.append(&mut decl_header.includes);
         }
 
         for (_, ctx) in func_contexts.iter_mut() {

@@ -5,7 +5,7 @@ mod ty;
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
-pub use self::ty::{GenContext, GenerationContext, FuncBlockTemplate};
+pub use self::ty::{FuncBlockTemplate, GenContext, GenerationContext};
 
 use crate::{ErrorStore, FileMap};
 use askama::Template;
@@ -131,7 +131,7 @@ pub(crate) fn run<'tcx>(
         is_for_cpp: false,
         ctx: GenerationContext::FuncBlock,
         decl_header_path: "diplomat_free_functions.d.h",
-        impl_header_path: "diplomat_free_functions.h"
+        impl_header_path: "diplomat_free_functions.h",
     };
 
     let mut template = FuncBlockTemplate::default();
@@ -149,10 +149,7 @@ pub(crate) fn run<'tcx>(
 
         if should_render {
             template.render_into(&mut header);
-            files.add_file(
-                "diplomat_free_functions.h".into(),
-                header.to_string(),
-            );
+            files.add_file("diplomat_free_functions.h".into(), header.to_string());
         }
     }
 
