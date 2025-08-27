@@ -2,34 +2,7 @@
 {% block pre_func %}{% endblock %}
 
 {% block post_func %}
-{%- if !m.docs.is_empty() %}
-  /**
-  {{~ m.docs|prefix_trimmed("	 * ")}}
-   */
-{%- endif %}
-{%- if let Some(deprecated) = m.deprecated %}
-  [[deprecated("{{ deprecated }}")]]
-{%- endif %}
-{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) %}
-  inline {##}
-{%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
-{{ m.return_ty }} {##}
-{{- m.method_name -}}
-({% include "param_decls_list.h.jinja" %})
-{%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
-
-{#- Extra method definitions for writeables -#}
-{%- if let Some(m_writeable) = m.writeable_info %}
-  template<typename W>
-  inline {##}
-{%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
-{{ m_writeable.return_ty }} {##}
-{{- m_writeable.method_name -}} (
-{%- include "param_decls_list.h.jinja" %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable_output)
-{%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
-
-{%- endif %}
-
+{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) -%}
 
 {#- Extra method definitions for special types -#}
 {%- match m.method.attrs.special_method -%}

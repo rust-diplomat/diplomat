@@ -240,7 +240,7 @@ impl<'tcx> GenContext<'_, 'tcx> {
         let mut func_block_template = FuncBlockTemplate {
             ty_name: Some(ty_name),
             dtor_name,
-            is_for_cpp: true,
+            is_for_cpp: self.is_for_cpp,
             ..Default::default()
         };
 
