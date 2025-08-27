@@ -9,6 +9,7 @@ import com.sun.jna.Structure
 internal interface StructWithAttrsLib: Library {
     fun namespace_StructWithAttrs_new_fallible(a: Boolean, b: FFIUint32): ResultStructWithAttrsNativeUnit
     fun namespace_StructWithAttrs_c(nativeStruct: StructWithAttrsNative): FFIUint32
+    fun namespace_StructWithAttrs_deprecated(nativeStruct: StructWithAttrsNative): Unit
 }
 
 internal class StructWithAttrsNative: Structure(), Structure.ByValue {
@@ -51,6 +52,12 @@ class StructWithAttrs internal constructor (
         
         val returnVal = lib.namespace_StructWithAttrs_c(nativeStruct);
         return (returnVal.toUInt())
+    }
+    
+    fun deprecated(): Unit {
+        
+        val returnVal = lib.namespace_StructWithAttrs_deprecated(nativeStruct);
+        
     }
 
 }

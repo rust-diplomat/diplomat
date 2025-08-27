@@ -186,6 +186,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             fmt: &'a DartFormatter<'a>,
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            deprecated: Option<&'a str>,
             docs: String,
             is_contiguous: bool,
             special: SpecialMethodGenInfo<'a>,
@@ -196,6 +197,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             fmt: self.formatter,
             type_name,
             methods: methods.as_slice(),
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
             special,
@@ -221,6 +223,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
+            deprecated: Option<&'a str>,
             destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -230,6 +233,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             type_name,
             methods: methods.as_slice(),
             destructor: destructor.as_str(),
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -401,6 +405,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             mutable: bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
+            deprecated: Option<&'a str>,
             docs: String,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -412,6 +417,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             mutable,
             fields,
             methods,
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -631,6 +637,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
         Some(MethodInfo {
             method,
+            deprecated: method.attrs.deprecated.as_deref(),
             docs,
             declaration,
             abi_name,
@@ -1358,6 +1365,7 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
+    deprecated: Option<&'a str>,
     /// Docs
     docs: String,
     /// The declaration (everything before the parameter list)

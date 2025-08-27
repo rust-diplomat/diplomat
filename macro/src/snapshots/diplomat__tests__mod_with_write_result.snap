@@ -13,6 +13,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_to_string(
         this: &Foo,
         to: &mut diplomat_runtime::DiplomatWrite,

@@ -15,7 +15,7 @@ namespace {{ns}} {
  {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-class {{type_name_unnamespaced}} {
+class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
 {% for m in methods %}
 	{% if !m.docs.is_empty() -%}

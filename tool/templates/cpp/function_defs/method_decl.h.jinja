@@ -2,7 +2,34 @@
 {% block pre_func %}{% endblock %}
 
 {% block post_func %}
-{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) -%}
+{%- if !m.docs.is_empty() %}
+  /**
+  {{~ m.docs|prefix_trimmed("	 * ")}}
+   */
+{%- endif %}
+{%- if let Some(deprecated) = m.deprecated %}
+  [[deprecated("{{ deprecated }}")]]
+{%- endif %}
+{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) %}
+  inline {##}
+{%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
+{{ m.return_ty }} {##}
+{{- m.method_name -}}
+({% include "param_decls_list.h.jinja" %})
+{%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
+
+{#- Extra method definitions for writeables -#}
+{%- if let Some(m_writeable) = m.writeable_info %}
+  template<typename W>
+  inline {##}
+{%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
+{{ m_writeable.return_ty }} {##}
+{{- m_writeable.method_name -}} (
+{%- include "param_decls_list.h.jinja" %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable_output)
+{%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
+
+{%- endif %}
+
 
 {#- Extra method definitions for special types -#}
 {%- match m.method.attrs.special_method -%}
@@ -10,8 +37,8 @@
 {%- when Some(hir::SpecialMethod::Add) | Some(hir::SpecialMethod::Sub) | Some(hir::SpecialMethod::Mul) | Some(hir::SpecialMethod::Div) -%}
 {%- if !is_self_opaque -%}
 {%- let op_str = m.method.attrs.special_method.as_ref().unwrap().operator_str().unwrap() -%}
-{%- let param_var = m.param_decls[0] ~%}
-{##}  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
+{%- let param_var = m.param_decls[0] %}
+  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
 {%- endif -%}
 
 {%- when Some(hir::SpecialMethod::Iterable) -%}

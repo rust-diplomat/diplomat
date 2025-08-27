@@ -23,6 +23,8 @@ namespace capi {
 
     uint32_t namespace_StructWithAttrs_c(ns::capi::RenamedStructWithAttrs self);
 
+    void namespace_StructWithAttrs_deprecated(ns::capi::RenamedStructWithAttrs self);
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -36,6 +38,10 @@ inline diplomat::result<ns::RenamedStructWithAttrs, std::monostate> ns::RenamedS
 inline uint32_t ns::RenamedStructWithAttrs::c() const {
   auto result = ns::capi::namespace_StructWithAttrs_c(this->AsFFI());
   return result;
+}
+
+inline void ns::RenamedStructWithAttrs::deprecated() const {
+  ns::capi::namespace_StructWithAttrs_deprecated(this->AsFFI());
 }
 
 

@@ -63,11 +63,13 @@ void add_Nested_binding(nb::handle);
 }
 
 namespace ns {
+void add_RenamedDeprecatedStruct_binding(nb::handle);
 void add_RenamedStructWithAttrs_binding(nb::handle);
 void add_RenamedTestMacroStruct_binding(nb::handle);
 void add_AttrOpaque1Renamed_binding(nb::handle);
 void add_RenamedAttrOpaque2_binding(nb::handle);
 void add_RenamedComparable_binding(nb::handle);
+void add_RenamedDeprecatedOpaque_binding(nb::handle);
 void add_RenamedMyIndexer_binding(nb::handle);
 void add_RenamedMyIterable_binding(nb::handle);
 void add_RenamedMyIterator_binding(nb::handle);
@@ -77,6 +79,7 @@ void add_RenamedOpaqueIterator_binding(nb::handle);
 void add_RenamedTestOpaque_binding(nb::handle);
 void add_RenamedVectorTest_binding(nb::handle);
 void add_RenamedAttrEnum_binding(nb::handle);
+void add_RenamedDeprecatedEnum_binding(nb::handle);
 }
 
 
@@ -194,11 +197,13 @@ NB_MODULE(somelib, somelib_mod)
     
     nested::ns2::add_Nested_binding(somelib_nested_ns2_mod);
     
+    ns::add_RenamedDeprecatedStruct_binding(somelib_ns_mod);
     ns::add_RenamedStructWithAttrs_binding(somelib_ns_mod);
     ns::add_RenamedTestMacroStruct_binding(somelib_ns_mod);
     ns::add_AttrOpaque1Renamed_binding(somelib_ns_mod);
     ns::add_RenamedAttrOpaque2_binding(somelib_ns_mod);
     ns::add_RenamedComparable_binding(somelib_ns_mod);
+    ns::add_RenamedDeprecatedOpaque_binding(somelib_ns_mod);
     ns::add_RenamedMyIndexer_binding(somelib_ns_mod);
     ns::add_RenamedMyIterable_binding(somelib_ns_mod);
     ns::add_RenamedMyIterator_binding(somelib_ns_mod);
@@ -208,6 +213,7 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_RenamedTestOpaque_binding(somelib_ns_mod);
     ns::add_RenamedVectorTest_binding(somelib_ns_mod);
     ns::add_RenamedAttrEnum_binding(somelib_ns_mod);
+    ns::add_RenamedDeprecatedEnum_binding(somelib_ns_mod);
     
 	
 }

@@ -46,6 +46,12 @@ struct RenamedStructWithAttrs {
 
   inline uint32_t c() const;
 
+  /**
+   * \deprecated use Foo
+   */
+  [[deprecated("use Foo")]]
+  inline void deprecated() const;
+
   inline ns::capi::RenamedStructWithAttrs AsFFI() const;
   inline static ns::RenamedStructWithAttrs FromFFI(ns::capi::RenamedStructWithAttrs c_struct);
 };

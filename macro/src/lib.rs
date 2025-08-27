@@ -150,6 +150,7 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
     }
     syn::parse_quote!(
         #[repr(C)]
+        #[allow(deprecated)]
         pub struct #custom_trait_vtable_type {
             #(#method_sigs)*
         }
@@ -386,6 +387,7 @@ fn gen_custom_function(func_info: FuncGen) -> Item {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
             #cfg
+            #[allow(deprecated)]
             extern "C" fn #extern_ident #lifetimes(#(#all_params),*) #return_tokens {
                 #(#all_params_conversion)*
                 #method_invocation(#(#all_params_names),*) #maybe_into
@@ -395,6 +397,7 @@ fn gen_custom_function(func_info: FuncGen) -> Item {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
             #cfg
+            #[allow(deprecated)]
             extern "C" fn #extern_ident #lifetimes(#(#all_params),*) #return_tokens {
                 #(#all_params_conversion)*
                 let ret = #method_invocation(#(#all_params_names),*);
@@ -575,6 +578,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             new_contents.push(Item::Fn(syn::parse_quote! {
                 #[no_mangle]
                 #cfg
+                #[allow(deprecated)]
                 extern "C" fn #destroy_ident #lifetime_defs(this: Box<#type_ident #lifetimes>) {}
             }));
         }

@@ -1,6 +1,6 @@
 ---
 source: macro/src/lib.rs
-expression: "pretty_print_code(gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        use\n        diplomat_runtime::{\n            DiplomatStr, DiplomatStr16, DiplomatByte, DiplomatOwnedSlice,\n            DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice,\n            DiplomatOwnedUTF8StrSlice, DiplomatSlice, DiplomatSliceMut,\n            DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice\n        }; struct Foo<'a>\n        {\n            a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c:\n            DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e:\n            DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>,\n        } impl Foo\n        {\n            pub fn\n            make(a: &'a [u8], b: &'a [u16], c: &'a str, d: &'a DiplomatStr, e:\n            &'a DiplomatStr16, f: &'a [DiplomatByte]) -> Self\n            { Foo { a, b, c, d, e, f, } } pub fn\n            make_runtime_types(a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a,\n            u16>, c: DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e:\n            DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>) ->\n            Self\n            {\n                Foo\n                {\n                    a: a.into(), b: b.into(), c: c.into(), d: d.into(), e:\n                    e.into(), f: f.into(),\n                }\n            } pub fn\n            boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d:\n            Box<DiplomatStr>, e: Box<DiplomatStr16>, f: Box<[DiplomatByte]>)\n            -> Self { unimplemented!() } pub fn\n            boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b:\n            DiplomatOwnedSlice<u16>, c: DiplomatOwnedUTF8StrSlice, d:\n            DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f:\n            DiplomatOwnedSlice<DiplomatByte>) -> Self { unimplemented!() } pub\n            fn a(self) -> &[u8] { self.a } pub fn b(self) -> &[u16] { self.b }\n            pub fn c(self) -> &str { self.c } pub fn d(self) -> &DiplomatStr\n            { self.d } pub fn e(self) -> &DiplomatStr16 { self.e } pub fn\n            f(self) -> &[DiplomatByte] { self.f }\n        }\n    }\n}).to_token_stream())"
+expression: "pretty_print_code(gen_bridge(parse_quote!\n{\n    mod ffi\n    {\n        use\n        diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatByte,\n            DiplomatOwnedSlice, DiplomatOwnedStr16Slice,\n            DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice, DiplomatSlice,\n            DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice,\n            DiplomatUtf8StrSlice}; struct Foo<'a>\n        {\n            a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a, u16>, c:\n            DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e:\n            DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>,\n        } impl Foo\n        {\n            pub fn\n            make(a: &'a [u8], b: &'a [u16], c: &'a str, d: &'a DiplomatStr, e:\n            &'a DiplomatStr16, f: &'a [DiplomatByte]) -> Self\n            { Foo { a, b, c, d, e, f, } } pub fn\n            make_runtime_types(a: DiplomatSlice<'a, u8>, b: DiplomatSlice<'a,\n            u16>, c: DiplomatUtf8StrSlice<'a>, d: DiplomatStrSlice<'a>, e:\n            DiplomatStr16Slice<'a>, f: DiplomatSlice<'a, DiplomatByte>) ->\n            Self\n            {\n                Foo\n                {\n                    a: a.into(), b: b.into(), c: c.into(), d: d.into(), e:\n                    e.into(), f: f.into(),\n                }\n            } pub fn\n            boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d:\n            Box<DiplomatStr>, e: Box<DiplomatStr16>, f: Box<[DiplomatByte]>)\n            -> Self { unimplemented!() } pub fn\n            boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b:\n            DiplomatOwnedSlice<u16>, c: DiplomatOwnedUTF8StrSlice, d:\n            DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f:\n            DiplomatOwnedSlice<DiplomatByte>) -> Self { unimplemented!() } pub\n            fn a(self) -> &[u8] { self.a } pub fn b(self) -> &[u16] { self.b }\n            pub fn c(self) -> &str { self.c } pub fn d(self) -> &DiplomatStr\n            { self.d } pub fn e(self) -> &DiplomatStr16 { self.e } pub fn\n            f(self) -> &[DiplomatByte] { self.f }\n        }\n    }\n}).to_token_stream())"
 ---
 mod ffi {
     use diplomat_runtime::{
@@ -88,6 +88,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_make(
         a: diplomat_runtime::DiplomatSlice<'a, u8>,
         b: diplomat_runtime::DiplomatSlice<'a, u16>,
@@ -105,6 +106,7 @@ mod ffi {
         Foo::make(a, b, c, d, e, f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_make_runtime_types(
         a: diplomat_runtime::DiplomatSlice<'a, u8>,
         b: diplomat_runtime::DiplomatSlice<'a, u16>,
@@ -116,6 +118,7 @@ mod ffi {
         Foo::make_runtime_types(a, b, c, d, e, f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_boxes(
         a: diplomat_runtime::DiplomatOwnedSlice<u8>,
         b: diplomat_runtime::DiplomatOwnedSlice<u16>,
@@ -133,6 +136,7 @@ mod ffi {
         Foo::boxes(a, b, c, d, e, f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_boxes_runtime_types(
         a: diplomat_runtime::DiplomatOwnedSlice<u8>,
         b: diplomat_runtime::DiplomatOwnedSlice<u16>,
@@ -144,26 +148,32 @@ mod ffi {
         Foo::boxes_runtime_types(a, b, c, d, e, f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_a(this: Foo) -> diplomat_runtime::DiplomatSlice<u8> {
         this.a().into()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_b(this: Foo) -> diplomat_runtime::DiplomatSlice<u16> {
         this.b().into()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_c(this: Foo) -> diplomat_runtime::DiplomatUtf8StrSlice {
         this.c().into()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_d(this: Foo) -> diplomat_runtime::DiplomatStrSlice {
         this.d().into()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_e(this: Foo) -> diplomat_runtime::DiplomatStr16Slice {
         this.e().into()
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Foo_f(this: Foo) -> diplomat_runtime::DiplomatSlice<DiplomatByte> {
         this.f().into()
     }

@@ -40,6 +40,12 @@ final class RenamedStructWithAttrs {
     return result;
   }
 
+  @core.Deprecated('use Foo')
+  void deprecated() {
+    final temp = _FinalizedArena();
+    _namespace_StructWithAttrs_deprecated(_toFfi(temp.arena));
+  }
+
 
   @override
   bool operator ==(Object other) =>
@@ -58,5 +64,10 @@ final class RenamedStructWithAttrs {
 @ffi.Native<ffi.Uint32 Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')
 // ignore: non_constant_identifier_names
 external int _namespace_StructWithAttrs_c(_RenamedStructWithAttrsFfi self);
+
+@_DiplomatFfiUse('namespace_StructWithAttrs_deprecated')
+@ffi.Native<ffi.Void Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_deprecated')
+// ignore: non_constant_identifier_names
+external void _namespace_StructWithAttrs_deprecated(_RenamedStructWithAttrsFfi self);
 
 // dart format on
