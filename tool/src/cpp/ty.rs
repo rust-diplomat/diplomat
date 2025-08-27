@@ -89,19 +89,19 @@ pub struct MethodInfo<'a> {
 #[derive(Template, Default)]
 #[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
 /// Header for the implementation of a block of functions.
-struct FuncBlockImpl {
-    namespace: Option<String>,
-    methods: Vec<String>,
-    c_header: C2Header,
+pub struct FuncBlockImpl {
+    pub namespace: Option<String>,
+    pub methods: Vec<String>,
+    pub c_header: C2Header,
 }
 
 #[derive(Template, Default)]
 #[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
 /// Header for the definition of a block of function.s
-struct FuncBlockDecl {
-    namespace: Option<String>,
-    methods: Vec<String>,
-    c_header: C2Header,
+pub struct FuncBlockDecl {
+    pub namespace: Option<String>,
+    pub methods: Vec<String>,
+    pub c_header: C2Header,
 }
 
 #[derive(Default)]
@@ -111,7 +111,6 @@ pub struct FuncBlockInfo<'a> {
     pub c : FuncBlockTemplate<'a>,
     pub impl_header : Header,
     pub decl_header : Header,
-    pub c_impl_header : crate::c::Header,
 }
 
 impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
@@ -941,7 +940,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
             let decl_bl = FunctionDecl { m };
             info.decl_template.methods.push(decl_bl.to_string());
 
-            self.c.gen_method(func, &mut info.c_impl_header, &mut info.c);
+            self.c.gen_method(func, &mut info.impl_template.c_header, &mut info.c);
         }
     }
 
@@ -1013,7 +1012,10 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
         let mut param_validations = Vec::new();
         let mut returns_utf8_err = false;
 
-        let namespace = method.attrs.namespace.clone();
+        let namespace = match self.c.ctx {
+            GenerationContext::FuncBlock => method.attrs.namespace.clone(),
+            _ => self.c.tcx.resolve_type(self.c.ctx.type_id()).attrs().namespace.clone()
+        };
 
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());

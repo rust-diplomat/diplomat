@@ -2,10 +2,11 @@ mod formatter;
 mod header;
 mod ty;
 
+use askama::Template;
 pub(crate) use header::Header;
 use std::collections::BTreeMap;
 
-use crate::{cpp::ty::{FuncBlockInfo, MethodInfo}, ErrorStore, FileMap};
+use crate::{cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo, MethodInfo}, ErrorStore, FileMap};
 
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use ty::GenContext;
@@ -139,17 +140,28 @@ pub(crate) fn run<'tcx>(
                 func_contexts.insert(
                     key.clone(),
                     FuncBlockInfo {
-                        impl_header: Header { path: impl_header_path.clone(),
-                            ..Default::default() },
-                        decl_header: Header {
-                            path: decl_header_path.clone(),
+                        impl_header: Header::new(impl_header_path.clone()),
+                        impl_template: FuncBlockImpl {
+                            namespace: f.attrs.namespace.clone(),
+                            c_header: crate::c::Header {
+                                is_for_cpp: true,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        decl_header: Header::new(decl_header_path.clone()),
+                        decl_template: FuncBlockDecl {
+                            namespace: f.attrs.namespace.clone(),
+                            c_header: crate::c::Header {
+                                is_for_cpp: true,
+                                ..Default::default()
+                            },
                             ..Default::default()
                         },
                         c: crate::c::FuncBlockTemplate {
                             is_for_cpp: true,
                             ..Default::default()
                         },
-                        ..Default::default()
                     },
                 );
                 func_contexts.get_mut(&key).unwrap()
@@ -188,7 +200,10 @@ pub(crate) fn run<'tcx>(
 
         for (_, ctx) in func_contexts.iter_mut() {
             ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
-            // ctx.render().unwrap();
+            ctx.c.render_into(&mut ctx.impl_template.c_header).unwrap();
+            ctx.impl_template.render_into(&mut ctx.impl_header).unwrap();
+            ctx.decl_template.render_into(&mut ctx.decl_header).unwrap();
+
             files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
             files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
         }
