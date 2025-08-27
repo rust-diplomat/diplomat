@@ -145,6 +145,10 @@ pub(crate) fn run<'tcx>(
                             path: decl_header_path.clone(),
                             ..Default::default()
                         },
+                        c: crate::c::FuncBlockTemplate {
+                            is_for_cpp: true,
+                            ..Default::default()
+                        },
                         ..Default::default()
                     },
                 );

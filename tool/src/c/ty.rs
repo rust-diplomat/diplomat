@@ -3,7 +3,7 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId, TraitId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitId, TraitIdGetter, TyPosition, Type, TypeDef, TypeId
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -55,7 +55,7 @@ pub struct FuncBlockTemplate<'a> {
 
 #[derive(Clone)]
 /// Information for constructing a C struct required for callback return informatioon.
-struct CallbackAndStructDef {
+pub struct CallbackAndStructDef {
     name: String,
     params_types: String,
     return_type: String,
@@ -64,7 +64,7 @@ struct CallbackAndStructDef {
 
 /// The C representation of a Rust method.
 /// Created for [`FuncBlockTemplate`] to use in generation.
-struct MethodTemplate {
+pub struct MethodTemplate {
     return_ty: String,
     params: String,
     abi_name: String,
@@ -240,6 +240,7 @@ impl<'tcx> GenContext<'_, 'tcx> {
         let mut func_block_template = FuncBlockTemplate {
             ty_name: Some(ty_name),
             dtor_name,
+            is_for_cpp: true,
             ..Default::default()
         };
 
