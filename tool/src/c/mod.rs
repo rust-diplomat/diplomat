@@ -138,7 +138,7 @@ pub(crate) fn run<'tcx>(
 
     {
         let mut should_render = false;
-        for (id, f) in tcx.all_free_functions() {
+        for (_, f) in tcx.all_free_functions() {
             if f.attrs.disable {
                 continue;
             }
@@ -148,7 +148,7 @@ pub(crate) fn run<'tcx>(
         }
 
         if should_render {
-            template.render_into(&mut header);
+            template.render_into(&mut header).unwrap();
             files.add_file("diplomat_free_functions.h".into(), header.to_string());
         }
     }

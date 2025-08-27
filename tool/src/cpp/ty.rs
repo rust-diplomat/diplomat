@@ -903,7 +903,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
     }
 
     // Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
-    pub fn generate_function<'b>(&mut self, func: &'tcx hir::Method, info: &mut FuncBlockInfo) {
+    pub fn generate_function(&mut self, func: &'tcx hir::Method, info: &mut FuncBlockInfo) {
         let func_info = self.gen_method_info(func);
 
         #[derive(Template)]
@@ -951,7 +951,7 @@ impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
                 self.c.tcx.fmt_type_name_diagnostics(ty),
                 method.name.as_str().into(),
             ),
-            GenerationContext::Trait(..) | _ => panic!(
+            _ => panic!(
                 "Unsupported method info generation for context {:?}",
                 self.c.ctx
             ),
