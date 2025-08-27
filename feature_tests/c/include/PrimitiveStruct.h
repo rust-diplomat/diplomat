@@ -14,12 +14,9 @@
 
 
 
-
 void PrimitiveStruct_mutable_slice(DiplomatPrimitiveStructViewMut a);
 
 void PrimitiveStruct_mutable_ref(PrimitiveStruct* self, PrimitiveStruct* a);
-
-
 
 
 

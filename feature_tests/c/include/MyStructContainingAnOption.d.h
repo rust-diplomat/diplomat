@@ -12,14 +12,11 @@
 
 
 
-
 typedef struct MyStructContainingAnOption {
   MyStruct_option a;
   DefaultEnum_option b;
 } MyStructContainingAnOption;
 
 typedef struct MyStructContainingAnOption_option {union { MyStructContainingAnOption ok; }; bool is_ok; } MyStructContainingAnOption_option;
-
-
 
 #endif // MyStructContainingAnOption_D_H

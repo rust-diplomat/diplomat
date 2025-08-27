@@ -16,7 +16,4 @@
 
 
 
-
-
-
 #endif // AttrEnum_H

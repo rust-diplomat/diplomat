@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct OptionString OptionString;
-
-
 
 
 #endif // OptionString_D_H

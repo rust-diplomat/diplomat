@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct CallbackHolder CallbackHolder;
-
-
 
 
 #endif // CallbackHolder_D_H

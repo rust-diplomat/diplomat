@@ -13,7 +13,6 @@
 
 
 
-
 typedef struct DiplomatCallback_MutableCallbackHolder_new_func {
     const void* data;
     int32_t (*run_callback)(const void*, int32_t );
@@ -25,8 +24,6 @@ MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbac
 int32_t MutableCallbackHolder_call(MutableCallbackHolder* self, int32_t a);
 
 void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
-
-
 
 
 

@@ -14,7 +14,6 @@
 
 
 
-
 MyStruct MyStruct_new(void);
 
 void MyStruct_takes_mut(MyStruct* self, MyStruct* o);
@@ -28,8 +27,6 @@ MyStruct_returns_zst_result_result MyStruct_returns_zst_result(void);
 
 typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
 MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
-
-
 
 
 

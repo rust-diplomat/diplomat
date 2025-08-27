@@ -24,6 +24,8 @@ pub enum Type<P: TyPosition = Everywhere> {
     ImplTrait(P::TraitPath),
     Enum(EnumPath),
     Slice(Slice<P>),
+    /// A primitive array of a fixed size.
+    Array(PrimitiveType, usize),
     Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
     /// `DiplomatOption<T>`, for  a primitive, struct, or enum `T`.
     ///
@@ -110,7 +112,7 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
             Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) | Type::ImplTrait(_) => (1, 1),
-            Type::Primitive(_) | Type::Enum(_) => (0, 0),
+            Type::Primitive(_) | Type::Enum(_) | Type::Array(..) => (0, 0),
             Type::DiplomatOption(ty) => ty.field_leaf_lifetime_counts(tcx),
         }
     }

@@ -1006,6 +1006,8 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
+    /// Whether or not the language supports [T; usize] fixed-size arrays
+    pub arrays: bool,
 }
 
 impl BackendAttrSupport {
@@ -1041,6 +1043,7 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
+            arrays: true,
         }
     }
 
@@ -1072,6 +1075,7 @@ impl BackendAttrSupport {
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
+            "arrays" => Some(self.arrays),
             _ => None,
         }
     }
@@ -1214,6 +1218,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
+                arrays,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1245,6 +1250,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
+                "arrays" => arrays,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

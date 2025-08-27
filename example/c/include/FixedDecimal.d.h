@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct FixedDecimal FixedDecimal;
-
-
 
 
 #endif // FixedDecimal_D_H

@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct Two Two;
-
-
 
 
 #endif // Two_D_H

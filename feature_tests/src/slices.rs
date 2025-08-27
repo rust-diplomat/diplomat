@@ -63,6 +63,15 @@ pub mod ffi {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
 
+        #[diplomat::attr(not(supports = arrays), disable)]
+        pub fn new_int_arr(
+            v: &[i32; 12],
+            _other: &[bool; 3],
+            _other_other: &[f64; 2],
+        ) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|x| (*x).into()).collect()))
+        }
+
         #[diplomat::attr(auto, named_constructor = "i16")]
         pub fn new_i16(v: &[i16]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as f64).collect()))

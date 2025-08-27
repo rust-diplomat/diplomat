@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct Nested Nested;
-
-
 
 
 #endif // Nested_D_H

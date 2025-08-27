@@ -11,7 +11,6 @@
 
 
 
-
 typedef struct CyclicStructA {
   CyclicStructB a;
 } CyclicStructA;
@@ -26,8 +25,6 @@ typedef struct DiplomatCyclicStructAViewMut {
   CyclicStructA* data;
   size_t len;
 } DiplomatCyclicStructAViewMut;
-
-
 
 
 #endif // CyclicStructA_D_H

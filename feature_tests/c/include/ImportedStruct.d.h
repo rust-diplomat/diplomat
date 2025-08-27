@@ -11,14 +11,11 @@
 
 
 
-
 typedef struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 } ImportedStruct;
 
 typedef struct ImportedStruct_option {union { ImportedStruct ok; }; bool is_ok; } ImportedStruct_option;
-
-
 
 #endif // ImportedStruct_D_H

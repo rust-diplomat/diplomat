@@ -14,6 +14,9 @@
 #include "diplomat_runtime.hpp"
 
 
+typedef bool BoolArray_3[3];
+typedef double F64Array_2[2];
+typedef int32_t I32Array_12[12];
 namespace diplomat {
 namespace capi {
     extern "C" {
@@ -21,6 +24,8 @@ namespace capi {
     diplomat::capi::Float64Vec* Float64Vec_new(diplomat::capi::DiplomatF64View v);
 
     diplomat::capi::Float64Vec* Float64Vec_new_bool(diplomat::capi::DiplomatBoolView v);
+
+    diplomat::capi::Float64Vec* Float64Vec_new_int_arr(I32Array_12 v, BoolArray_3 _other, F64Array_2 _other_other);
 
     diplomat::capi::Float64Vec* Float64Vec_new_i16(diplomat::capi::DiplomatI16View v);
 
@@ -58,6 +63,13 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double>
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_bool(diplomat::span<const bool> v) {
   auto result = diplomat::capi::Float64Vec_new_bool({v.data(), v.size()});
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_int_arr(I32Array_12 v, BoolArray_3 _other, F64Array_2 _other_other) {
+  auto result = diplomat::capi::Float64Vec_new_int_arr(v,
+    _other,
+    _other_other);
   return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 

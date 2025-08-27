@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct DataProvider DataProvider;
-
-
 
 
 #endif // DataProvider_D_H

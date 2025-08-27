@@ -10,10 +10,7 @@
 
 
 
-
 typedef struct One One;
-
-
 
 
 #endif // One_D_H

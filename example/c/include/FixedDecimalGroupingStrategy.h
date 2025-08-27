@@ -16,7 +16,4 @@
 
 
 
-
-
-
 #endif // FixedDecimalGroupingStrategy_H

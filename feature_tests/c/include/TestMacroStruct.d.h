@@ -10,13 +10,10 @@
 
 
 
-
 typedef struct TestMacroStruct {
   size_t a;
 } TestMacroStruct;
 
 typedef struct TestMacroStruct_option {union { TestMacroStruct ok; }; bool is_ok; } TestMacroStruct_option;
-
-
 
 #endif // TestMacroStruct_D_H

@@ -20,6 +20,7 @@ struct MyStructContainingAnOption;
 struct PrimitiveStruct;
 
 
+typedef uint8_t U8Array_2[2];
 namespace diplomat {
 namespace capi {
     struct CallbackWrapper {
@@ -47,6 +48,8 @@ struct CallbackWrapper {
   inline static void test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a);
 
   inline static void test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f);
+
+  inline static void test_array_cb_arg(U8Array_2 arg, std::function<void(U8Array_2)> f);
 
   inline static void test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t);
 

@@ -11,13 +11,10 @@
 
 
 
-
 typedef struct CyclicStructC {
   CyclicStructA a;
 } CyclicStructC;
 
 typedef struct CyclicStructC_option {union { CyclicStructC ok; }; bool is_ok; } CyclicStructC_option;
-
-
 
 #endif // CyclicStructC_D_H

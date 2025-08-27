@@ -16,7 +16,6 @@
 
 
 
-
 typedef struct ResultOpaque_new_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
 ResultOpaque_new_result ResultOpaque_new(int32_t i);
 
@@ -46,8 +45,6 @@ ResultOpaque* ResultOpaque_takes_str(ResultOpaque* self, DiplomatStringView _v);
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 
 void ResultOpaque_destroy(ResultOpaque* self);
-
-
 
 
 

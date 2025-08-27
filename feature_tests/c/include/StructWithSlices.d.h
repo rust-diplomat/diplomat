@@ -10,14 +10,11 @@
 
 
 
-
 typedef struct StructWithSlices {
   DiplomatStringView first;
   DiplomatU16View second;
 } StructWithSlices;
 
 typedef struct StructWithSlices_option {union { StructWithSlices ok; }; bool is_ok; } StructWithSlices_option;
-
-
 
 #endif // StructWithSlices_D_H
