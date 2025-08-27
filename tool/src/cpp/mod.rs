@@ -2,11 +2,17 @@ mod formatter;
 mod header;
 mod ty;
 
+use askama::Template;
 pub(crate) use header::Header;
+use std::collections::BTreeMap;
 
-use crate::{ErrorStore, FileMap};
+use crate::{
+    cpp::ty::{FuncBlockDecl, FuncBlockImpl, FuncBlockInfo},
+    ErrorStore, FileMap,
+};
+
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-pub(crate) use ty::TyGenContext;
+pub(crate) use ty::GenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
@@ -42,6 +48,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.generate_mocking_interface = false;
     a.abi_compatibles = true;
     a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
@@ -71,15 +78,15 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id);
         let mut impl_header = header::Header::new(impl_header_path.clone());
 
-        let mut context = TyGenContext {
+        let mut context = GenContext {
             formatter: &formatter,
             errors: &errors,
-            c: crate::c::TyGenContext {
+            c: crate::c::GenContext {
                 tcx,
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id: id.into(),
+                ctx: crate::c::GenerationContext::Type(id),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },
@@ -113,6 +120,92 @@ pub(crate) fn run<'tcx>(
         files.add_file(impl_header_path, impl_header.to_string());
     }
 
+    {
+        let mut func_contexts = BTreeMap::new();
+
+        for (_, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
+            }
+
+            let key = if let Some(ns) = &f.attrs.namespace {
+                ns.clone()
+            } else {
+                "".into()
+            };
+
+            let impl_header_path = formatter.fmt_functions_impl_header_path(f);
+            let decl_header_path = formatter.fmt_functions_decl_header_path(f);
+
+            let info = if let Some(v) = func_contexts.get_mut(&key) {
+                v
+            } else {
+                func_contexts.insert(
+                    key.clone(),
+                    FuncBlockInfo {
+                        impl_header: Header::new(impl_header_path.clone()),
+                        impl_template: FuncBlockImpl {
+                            namespace: f.attrs.namespace.clone(),
+                            c_header: crate::c::Header {
+                                is_for_cpp: true,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        decl_header: Header::new(decl_header_path.clone()),
+                        decl_template: FuncBlockDecl {
+                            namespace: f.attrs.namespace.clone(),
+                            c_header: crate::c::Header {
+                                is_for_cpp: true,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        c: crate::c::FuncBlockTemplate {
+                            is_for_cpp: true,
+                            ..Default::default()
+                        },
+                    },
+                );
+                func_contexts.get_mut(&key).unwrap()
+            };
+
+            let mut impl_header = Header::default();
+            let mut decl_header = Header::default();
+
+            let mut context = GenContext {
+                formatter: &formatter,
+                errors: &errors,
+                c: crate::c::GenContext {
+                    tcx,
+                    formatter: &formatter.c,
+                    errors: &errors,
+                    is_for_cpp: true,
+                    ctx: crate::c::GenerationContext::FuncBlock,
+                    decl_header_path: &decl_header_path,
+                    impl_header_path: &impl_header_path,
+                },
+                impl_header: &mut impl_header,
+                decl_header: &mut decl_header,
+                generating_struct_fields: false,
+            };
+
+            context.generate_function(f, info);
+            info.impl_header.includes.append(&mut impl_header.includes);
+            info.decl_header.includes.append(&mut decl_header.includes);
+        }
+
+        for (_, ctx) in func_contexts.iter_mut() {
+            ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
+            ctx.c.render_into(&mut ctx.impl_template.c_header).unwrap();
+            ctx.impl_template.render_into(&mut ctx.impl_header).unwrap();
+            ctx.decl_template.render_into(&mut ctx.decl_header).unwrap();
+
+            files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
+            files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
+        }
+    }
+
     (files, errors)
 }
 
@@ -125,7 +218,7 @@ mod test {
     use crate::cpp::header;
     use crate::ErrorStore;
 
-    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
+    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, GenContext};
 
     #[test]
     fn test_rename_param() {
@@ -155,15 +248,15 @@ mod test {
             let mut decl_header = header::Header::new("decl_thing".into());
             let mut impl_header = header::Header::new("impl_thing".into());
 
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = GenContext {
                 errors: &error_store,
                 formatter: &formatter,
-                c: crate::c::TyGenContext {
+                c: crate::c::GenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
+                    ctx: crate::c::GenerationContext::Type(id),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },

@@ -1,7 +1,9 @@
 use super::header::Header;
 use super::Cpp2Formatter;
+use crate::c::FuncBlockTemplate;
+use crate::c::GenContext as C2TyGenContext;
+use crate::c::GenerationContext;
 use crate::c::Header as C2Header;
-use crate::c::TyGenContext as C2TyGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
@@ -22,9 +24,20 @@ struct NamedExpression<'a> {
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
-struct NamedType<'a> {
-    var_name: Cow<'a, str>,
-    type_name: Cow<'a, str>,
+pub(super) struct NamedType<'a> {
+    pub(super) var_name: Cow<'a, str>,
+    pub(super) type_name: Cow<'a, str>,
+}
+
+/// Context for generating a particular type's header
+pub(crate) struct GenContext<'ccx, 'tcx, 'header> {
+    pub formatter: &'ccx Cpp2Formatter<'tcx>,
+    pub errors: &'ccx ErrorStore<'tcx, String>,
+    pub c: C2TyGenContext<'ccx, 'tcx>,
+    pub impl_header: &'header mut Header,
+    pub decl_header: &'header mut Header,
+    /// Are we currently generating struct fields?
+    pub generating_struct_fields: bool,
 }
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -39,7 +52,7 @@ struct MethodWriteableInfo<'a> {
 }
 
 /// Everything needed for rendering a method.
-struct MethodInfo<'a> {
+pub struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
     /// The C++ return type
@@ -73,18 +86,34 @@ struct MethodInfo<'a> {
     deprecated: Option<&'a str>,
 }
 
-/// Context for generating a particular type's header
-pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
-    pub formatter: &'ccx Cpp2Formatter<'tcx>,
-    pub errors: &'ccx ErrorStore<'tcx, String>,
-    pub c: C2TyGenContext<'ccx, 'tcx>,
-    pub impl_header: &'header mut Header,
-    pub decl_header: &'header mut Header,
-    /// Are we currently generating struct fields?
-    pub generating_struct_fields: bool,
+#[derive(Template, Default)]
+#[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
+/// Header for the implementation of a block of functions.
+pub struct FuncBlockImpl {
+    pub namespace: Option<String>,
+    pub methods: Vec<String>,
+    pub c_header: C2Header,
 }
 
-impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
+#[derive(Template, Default)]
+#[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
+/// Header for the definition of a block of function.s
+pub struct FuncBlockDecl {
+    pub namespace: Option<String>,
+    pub methods: Vec<String>,
+    pub c_header: C2Header,
+}
+
+#[derive(Default)]
+pub struct FuncBlockInfo<'a> {
+    pub impl_template: FuncBlockImpl,
+    pub decl_template: FuncBlockDecl,
+    pub c: FuncBlockTemplate<'a>,
+    pub impl_header: Header,
+    pub decl_header: Header,
+}
+
+impl<'ccx, 'tcx: 'ccx> GenContext<'ccx, 'tcx, '_> {
     /// Adds an enum definition to the current decl and impl headers.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
@@ -101,7 +130,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| self.gen_method_info(method))
             .collect::<Vec<_>>();
 
         let mut found_default: Option<&hir::EnumVariant> = None;
@@ -194,7 +223,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let ctype = self.formatter.fmt_c_type_name(id);
         let dtor_name = self
             .formatter
-            .namespace_c_name(id, ty.dtor_abi_name.as_str());
+            .namespace_ty_name(id, ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
@@ -202,7 +231,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| self.gen_method_info(method))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -295,7 +324,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = def
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| self.gen_method_info(method))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -361,22 +390,25 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    fn gen_method_info(
-        &mut self,
-        id: TypeId,
-        method: &'tcx hir::Method,
-    ) -> Option<MethodInfo<'ccx>> {
+    fn gen_method_info(&mut self, method: &'tcx hir::Method) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
             return None;
         }
-        let _guard = self.errors.set_context_method(
-            self.c.tcx.fmt_type_name_diagnostics(id),
-            method.name.as_str().into(),
-        );
+        let _guard = match self.c.ctx {
+            GenerationContext::FuncBlock => self.errors.set_context_ty(method.name.as_str().into()),
+            GenerationContext::Type(ty) => self.errors.set_context_method(
+                self.c.tcx.fmt_type_name_diagnostics(ty),
+                method.name.as_str().into(),
+            ),
+            _ => panic!("Unsupported generation context: {:?}", self.c.ctx),
+        };
         let method_name = self.formatter.fmt_method_name(method);
-        let abi_name = self
-            .formatter
-            .namespace_c_name(id, method.abi_name.as_str());
+        let abi_name = match self.c.ctx {
+            GenerationContext::FuncBlock => self.formatter.namespace_func_name(method),
+            _ => self
+                .formatter
+                .namespace_ty_name(self.c.ctx.type_id(), method.abi_name.as_str()),
+        };
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -421,7 +453,16 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let mut param_validations = Vec::new();
         let mut returns_utf8_err = false;
 
-        let namespace = self.c.tcx.resolve_type(id).attrs().namespace.clone();
+        let namespace = match self.c.ctx {
+            GenerationContext::FuncBlock => method.attrs.namespace.clone(),
+            _ => self
+                .c
+                .tcx
+                .resolve_type(self.c.ctx.type_id())
+                .attrs()
+                .namespace
+                .clone(),
+        };
 
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
@@ -569,7 +610,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
-    fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
+    pub(super) fn gen_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a>
     where
         'ccx: 'a,
     {
@@ -716,14 +761,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
-    fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
+    pub(super) fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(b) = s.owner {
-                        let c_name = self.formatter.namespace_c_name(
+                        let c_name = self.formatter.namespace_ty_name(
                             s.id(),
                             &self.formatter.fmt_type_name_unnamespaced(s.id()),
                         );
@@ -772,7 +817,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
-    fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
+    pub(super) fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
@@ -795,7 +840,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
-                        let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        let c_name = self.formatter.namespace_ty_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
                         return match borrow.mutability {
                             Mutability::Immutable => {
                                 format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
@@ -815,7 +860,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
+                self.formatter.namespace_ty_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
@@ -869,7 +914,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// is_generic_write is whether we are generating the method that returns a string or
     /// operates on a Writeable
-    fn gen_cpp_return_type_name<P: hir::TyPosition>(
+    pub(super) fn gen_cpp_return_type_name<P: hir::TyPosition>(
         &mut self,
         result_ty: &ReturnType<P>,
         is_generic_write: bool,
@@ -1014,7 +1059,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
     ///
     /// If the type is `SuccessType::Write`, this function assumes that there is a variable named `output` in scope.
-    fn gen_c_to_cpp_for_return_type<'a>(
+    pub(super) fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
         var_name: Cow<'a, str>,
@@ -1080,6 +1125,44 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 Some(format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into())
             }
             _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    // Generate a free function and prepare it for rendering to [`DeclTemplate`] and [`ImplTemplate`].
+    pub fn generate_function(&mut self, func: &'tcx hir::Method, info: &mut FuncBlockInfo) {
+        let func_info = self.gen_method_info(func);
+
+        #[derive(Template)]
+        #[template(
+            path = "cpp/function_defs/func_block_function.h.jinja",
+            escape = "none"
+        )]
+        struct FunctionImpl<'a> {
+            m: &'a MethodInfo<'a>,
+            namespace: Option<String>,
+        }
+
+        #[derive(Template)]
+        #[template(
+            path = "cpp/function_defs/func_block_function_decl.h.jinja",
+            escape = "none"
+        )]
+        struct FunctionDecl<'a> {
+            m: &'a MethodInfo<'a>,
+        }
+
+        if let Some(m) = &func_info {
+            let impl_bl = FunctionImpl {
+                m,
+                namespace: func.attrs.namespace.clone(),
+            };
+            info.impl_template.methods.push(impl_bl.to_string());
+
+            let decl_bl = FunctionDecl { m };
+            info.decl_template.methods.push(decl_bl.to_string());
+
+            self.c
+                .gen_method(func, &mut info.impl_template.c_header, &mut info.c);
         }
     }
 }

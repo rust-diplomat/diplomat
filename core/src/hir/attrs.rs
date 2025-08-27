@@ -229,6 +229,7 @@ pub enum AttributeContext<'a, 'b> {
     Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
     Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
+    Function(&'a Method),
     Module,
     Param,
     SelfParam,
@@ -855,7 +856,9 @@ impl Attrs {
         if *custom_errors
             && !matches!(
                 context,
-                AttributeContext::Type(..) | AttributeContext::Trait(..)
+                AttributeContext::Type(..)
+                    | AttributeContext::Trait(..)
+                    | AttributeContext::Function(..)
             )
         {
             errors.push(LoweringError::Other(
@@ -1006,6 +1009,8 @@ pub struct BackendAttrSupport {
     pub abi_compatibles: bool,
     /// Whether or not the language supports &Struct or &mut Struct
     pub struct_refs: bool,
+    /// Whether the language supports generating functions not associated with any type.
+    pub free_functions: bool,
 }
 
 impl BackendAttrSupport {
@@ -1041,6 +1046,7 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
+            free_functions: true,
         }
     }
 
@@ -1072,6 +1078,7 @@ impl BackendAttrSupport {
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
+            "free_functions" => Some(self.free_functions),
             _ => None,
         }
     }
@@ -1214,6 +1221,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
+                free_functions,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1245,6 +1253,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
+                "free_functions" => free_functions,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

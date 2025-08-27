@@ -37,7 +37,6 @@ public:
   constexpr operator Value() const { return value; }
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
-
   inline static DefaultEnum new_();
 
   inline diplomat::capi::DefaultEnum AsFFI() const;

@@ -173,4 +173,14 @@ mod ffi {
             (self.held)(a)
         }
     }
+
+    fn hidden_internal() {}
+
+    #[diplomat::attr(
+        any(not(supports = "callbacks"), not(supports = "free_functions")),
+        disable
+    )]
+    pub fn free_callback_holder(f: impl Fn() -> Result<(), ()>) {
+        assert_eq!(f(), Ok(()))
+    }
 }
