@@ -67,7 +67,7 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_returns();
             
             val intermediateOption = returnVal.option() ?: return null
-            
+
             val returnStruct = OptionStruct(intermediateOption)
             return returnStruct
                                     

@@ -45,7 +45,7 @@ class CyclicStructB internal constructor (
             val returnVal = lib.CyclicStructB_get_a_option();
             
             val intermediateOption = returnVal.option() ?: return null
-            
+
             val returnStruct = CyclicStructA(intermediateOption)
             return returnStruct
                                     
