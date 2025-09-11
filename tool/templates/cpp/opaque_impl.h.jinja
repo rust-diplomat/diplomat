@@ -8,7 +8,7 @@
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
 
 {% for m in methods -%}
-{% include "method_impl.h.jinja" %}
+{% include "function_defs/method_impl.h.jinja" %}
 
 {% endfor -%}
 

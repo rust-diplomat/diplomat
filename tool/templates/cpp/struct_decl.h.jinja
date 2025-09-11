@@ -15,7 +15,7 @@ struct {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}"
     {{field.type_name}} {{field.var_name}};
 {%- endfor %}
 {% for m in methods -%}
-{% include "method_decl.h.jinja" %}
+    {% include "function_defs/method_decl.h.jinja" %}
 {% endfor %}
 {%- if !fields.is_empty() %}
     inline {{ctype}} AsFFI() const;

@@ -106,8 +106,8 @@ pub(crate) fn run<'cx>(
             continue;
         }
 
-        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id);
-        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id);
+        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id.into());
+        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id.into());
         let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
         let mut context = TyGenContext {

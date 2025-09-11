@@ -18,7 +18,7 @@ namespace {{ns}} {
 class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
 {% for m in methods -%}
-{% include "method_decl.h.jinja" %}
+    {% include "function_defs/method_decl.h.jinja" %}
 {% endfor %}
     inline {{const_cptr}} AsFFI() const;
     inline {{mut_cptr}} AsFFI();

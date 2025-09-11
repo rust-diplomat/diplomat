@@ -2,6 +2,8 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
+use crate::cpp::func::FuncGenContext;
+use crate::cpp::func::MethodInfo;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
@@ -22,55 +24,9 @@ struct NamedExpression<'a> {
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
-struct NamedType<'a> {
-    var_name: Cow<'a, str>,
-    type_name: Cow<'a, str>,
-}
-
-/// We generate a pair of methods for writeables, one which returns a std::string
-/// and one which operates on a WriteTrait
-struct MethodWriteableInfo<'a> {
-    /// The method name. Usually `{}_write()`, but could potentially
-    /// be made customizeable
-    method_name: Cow<'a, str>,
-    /// The return type for the method without the std::string
-    return_ty: Cow<'a, str>,
-    c_to_cpp_return_expression: Option<Cow<'a, str>>,
-}
-
-/// Everything needed for rendering a method.
-struct MethodInfo<'a> {
-    /// HIR of the method being rendered
-    method: &'a hir::Method,
-    /// The C++ return type
-    return_ty: Cow<'a, str>,
-    /// The C++ method name
-    method_name: Cow<'a, str>,
-    /// The C method name
-    abi_name: String,
-    /// Qualifiers for the function that come before the declaration (like "static")
-    pre_qualifiers: Vec<Cow<'a, str>>,
-    /// Qualifiers for the function that come after the declaration (like "const")
-    post_qualifiers: Vec<Cow<'a, str>>,
-    /// Type declarations for the C++ parameters
-    param_decls: Vec<NamedType<'a>>,
-    /// Parameter validations, such as string checks
-    param_validations: Vec<String>,
-    /// Conversion code from C++ to C, used to fill out cpp_to_c_params before a call. Used for converting clones of structs to references.
-    param_pre_conversions: Vec<String>,
-    /// C++ conversion code for each parameter of the C function
-    cpp_to_c_params: Vec<Cow<'a, str>>,
-    /// Conversion code of params from C to C++, grabbing the results of cpp_to_c_params and converting them into something C++ friendly. Used for converting references to clones of structs.
-    param_post_conversions: Vec<String>,
-    /// If the function has a return value, the C++ code for the conversion. Assumes that
-    /// the C function return value is saved to a variable named `result` or that the
-    /// DiplomatWrite, if present, is saved to a variable named `output`.
-    c_to_cpp_return_expression: Option<Cow<'a, str>>,
-
-    /// If the method returns a writeable, the info for that
-    writeable_info: Option<MethodWriteableInfo<'a>>,
-    docs: String,
-    deprecated: Option<&'a str>,
+pub(super) struct NamedType<'a> {
+    pub(super) var_name: Cow<'a, str>,
+    pub(super) type_name: Cow<'a, str>,
 }
 
 /// Context for generating a particular type's header
@@ -101,7 +57,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         let mut found_default: Option<&hir::EnumVariant> = None;
@@ -194,7 +150,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let ctype = self.formatter.fmt_c_type_name(id);
         let dtor_name = self
             .formatter
-            .namespace_c_name(id, ty.dtor_abi_name.as_str());
+            .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
@@ -202,7 +158,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -295,7 +251,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         let methods = def
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method))
+            .flat_map(|method| FuncGenContext::gen_method_info(id.into(), method, self))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -361,215 +317,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    fn gen_method_info(
-        &mut self,
-        id: TypeId,
-        method: &'tcx hir::Method,
-    ) -> Option<MethodInfo<'ccx>> {
-        if method.attrs.disable {
-            return None;
-        }
-        let _guard = self.errors.set_context_method(
-            self.c.tcx.fmt_type_name_diagnostics(id),
-            method.name.as_str().into(),
-        );
-        let method_name = self.formatter.fmt_method_name(method);
-        let abi_name = self
-            .formatter
-            .namespace_c_name(id, method.abi_name.as_str());
-        let mut param_decls = Vec::new();
-        let mut cpp_to_c_params = Vec::new();
-
-        let mut param_pre_conversions = Vec::new();
-        let mut param_post_conversions = Vec::new();
-
-        if let Some(param_self) = method.param_self.as_ref() {
-            // Convert the self parameter as normal:
-            let conversion = self.gen_cpp_to_c_self(&param_self.ty);
-            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
-            // Then we need to add some pre- and post- function call conversions to:
-            // 1. Create `thisDiplomatRefClone` as the converted FFI friendly struct.
-            // 2. Pass in the reference to `thisDiplomatRefClone`
-            // 3. Assign `*this` to the value of `thisDiplomatRefClone`
-            let conversion = if let hir::ParamSelf {
-                ty: SelfType::Struct(ref s),
-                ..
-            } = param_self
-            {
-                let attrs = &s.resolve(self.c.tcx).attrs;
-                if !s.owner.is_owned() && !attrs.abi_compatible {
-                    param_pre_conversions
-                        .push(format!("auto thisDiplomatRefClone = {conversion};"));
-
-                    if s.owner.mutability().is_mutable() {
-                        param_post_conversions.push(format!(
-                            "*this = {}::FromFFI(thisDiplomatRefClone);",
-                            self.formatter.fmt_type_name(s.id())
-                        ));
-                    }
-                    "&thisDiplomatRefClone".to_string().into()
-                } else {
-                    conversion
-                }
-            } else {
-                conversion
-            };
-
-            cpp_to_c_params.push(conversion);
-        }
-
-        let mut param_validations = Vec::new();
-        let mut returns_utf8_err = false;
-
-        let namespace = self.c.tcx.resolve_type(id).attrs().namespace.clone();
-
-        for param in method.params.iter() {
-            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
-            let param_name = decls.var_name.clone();
-            param_decls.push(decls);
-            if matches!(
-                param.ty,
-                Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
-            ) {
-                param_validations.push(format!(
-                    "if (!diplomat::capi::diplomat_is_str({param_name}.data(), {param_name}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>();\n}}",
-                ));
-                returns_utf8_err = true;
-            }
-
-            let conversion = self.gen_cpp_to_c_for_type(
-                &param.ty,
-                param_name,
-                Some(method.abi_name.to_string()),
-                namespace.clone(),
-            );
-            // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
-            // Then we need to add some pre- and post- function call conversions to:
-            // 1. Create `varNameDiplomatRefClone` as the converted FFI friendly struct.
-            // 2. Pass in the reference to `varNameDiplomatRefClone`
-            // 3. Assign `varName` to the value of `varNameDiplomatRefClone`
-            let conversion = if let hir::Param {
-                ty: hir::Type::Struct(ref s),
-                ..
-            } = param
-            {
-                let attrs = &s.resolve(self.c.tcx).attrs;
-                if !s.owner.is_owned() && !attrs.abi_compatible {
-                    param_pre_conversions.push(format!(
-                        "auto {}DiplomatRefClone = {};",
-                        param.name, conversion
-                    ));
-
-                    if s.owner.mutability().is_mutable() {
-                        param_post_conversions.push(format!(
-                            "{} = {}::FromFFI({}DiplomatRefClone);",
-                            param.name,
-                            self.formatter.fmt_type_name(s.id()),
-                            param.name
-                        ));
-                    }
-                    format!("&{}DiplomatRefClone", param.name).into()
-                } else {
-                    conversion
-                }
-            } else {
-                conversion
-            };
-
-            cpp_to_c_params.push(conversion);
-        }
-
-        /// The UTF8 errors are added in by the C++ backend when converting from C++
-        /// types. We wrap them in another layer of diplomat::result.
-        fn wrap_return_ty_and_expr_for_utf8(
-            return_ty: &mut Cow<str>,
-            c_to_cpp_return_expression: &mut Option<Cow<str>>,
-        ) {
-            if let Some(return_expr) = c_to_cpp_return_expression {
-                *c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
-                *return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
-            } else {
-                *c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
-                *return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
-            }
-        }
-
-        let mut return_ty = self.gen_cpp_return_type_name(&method.output, false);
-
-        let mut c_to_cpp_return_expression =
-            self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), false);
-
-        if returns_utf8_err {
-            wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
-        };
-
-        // If the return expression is a std::move, unwrap that, because the linter doesn't like it
-        c_to_cpp_return_expression = c_to_cpp_return_expression.map(|expr| {
-            if expr.starts_with("std::move") {
-                expr["std::move(".len()..(expr.len() - 1)].to_owned().into()
-            } else {
-                expr
-            }
-        });
-
-        // Writeable methods generate a `std::string foo()` and a
-        // `template<typename W> void foo_write(W& writeable)` where `W` is a `WriteTrait`
-        // implementor. The generic method needs its own return type and conversion code.
-        let mut writeable_info = None;
-        if method.output.is_write() {
-            cpp_to_c_params.push("&write".into());
-            let mut return_ty = self.gen_cpp_return_type_name(&method.output, true);
-
-            let mut c_to_cpp_return_expression =
-                self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), true);
-            if returns_utf8_err {
-                wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
-            };
-            writeable_info = Some(MethodWriteableInfo {
-                method_name: format!("{method_name}_write").into(),
-                return_ty,
-                c_to_cpp_return_expression,
-            });
-        }
-
-        let pre_qualifiers = if method.param_self.is_none() {
-            vec!["static".into()]
-        } else {
-            vec![]
-        };
-
-        let post_qualifiers = match &method.param_self {
-            Some(param_self)
-                if param_self.ty.is_immutably_borrowed() || param_self.ty.is_consuming() =>
-            {
-                vec!["const".into()]
-            }
-            Some(_) => vec![],
-            None => vec![],
-        };
-
-        Some(MethodInfo {
-            method,
-            return_ty,
-            method_name,
-            abi_name,
-            pre_qualifiers,
-            post_qualifiers,
-            param_decls,
-            param_pre_conversions,
-            param_validations,
-            param_post_conversions,
-            cpp_to_c_params,
-            c_to_cpp_return_expression,
-            writeable_info,
-            docs: self.formatter.fmt_docs(&method.docs, &method.attrs),
-            deprecated: method.attrs.deprecated.as_deref(),
-        })
-    }
-
     /// Generates C++ code for referencing a particular type with a given name.
-    fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
+    pub(super) fn gen_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a>
     where
         'ccx: 'a,
     {
@@ -613,7 +366,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(op_id));
+                    .insert(self.formatter.fmt_impl_header_path(op_id.into()));
                 ret
             }
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
@@ -632,11 +385,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 if self.generating_struct_fields {
                     self.decl_header
                         .includes
-                        .insert(self.formatter.fmt_decl_header_path(id));
+                        .insert(self.formatter.fmt_decl_header_path(id.into()));
                 }
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(id));
+                    .insert(self.formatter.fmt_impl_header_path(id.into()));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
@@ -679,11 +432,11 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         if self.generating_struct_fields {
             self.decl_header
                 .includes
-                .insert(self.formatter.fmt_decl_header_path(id));
+                .insert(self.formatter.fmt_decl_header_path(id.into()));
         }
         self.impl_header
             .includes
-            .insert(self.formatter.fmt_impl_header_path(id));
+            .insert(self.formatter.fmt_impl_header_path(id.into()));
         if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
@@ -716,7 +469,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     }
 
     /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
-    fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
+    pub(super) fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(ref s) => {
@@ -724,7 +477,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(b) = s.owner {
                         let c_name = self.formatter.namespace_c_name(
-                            s.id(),
+                            s.id().into(),
                             &self.formatter.fmt_type_name_unnamespaced(s.id()),
                         );
 
@@ -772,7 +525,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
-    fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
+    pub(super) fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
@@ -795,7 +548,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
-                        let c_name = self.formatter.namespace_c_name(s.id(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        let c_name = self.formatter.namespace_c_name(s.id().into(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
                         return match borrow.mutability {
                             Mutability::Immutable => {
                                 format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
@@ -815,7 +568,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
+                self.formatter.namespace_c_name(st.id().into(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
@@ -869,7 +622,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// is_generic_write is whether we are generating the method that returns a string or
     /// operates on a Writeable
-    fn gen_cpp_return_type_name<P: hir::TyPosition>(
+    pub(super) fn gen_cpp_return_type_name<P: hir::TyPosition>(
         &mut self,
         result_ty: &ReturnType<P>,
         is_generic_write: bool,
@@ -1014,7 +767,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
     ///
     /// If the type is `SuccessType::Write`, this function assumes that there is a variable named `output` in scope.
-    fn gen_c_to_cpp_for_return_type<'a>(
+    pub(super) fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
         var_name: Cow<'a, str>,
