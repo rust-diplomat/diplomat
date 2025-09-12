@@ -4,7 +4,7 @@
 #include "StructArithmetic.hpp"
 
 
-void add_StructArithmetic_binding(nb::handle mod) {
+void add_StructArithmetic_binding(nb::module_ mod) {
     nb::class_<StructArithmetic>(mod, "StructArithmetic")
         .def_rw("x", &StructArithmetic::x)
         .def_rw("y", &StructArithmetic::y)

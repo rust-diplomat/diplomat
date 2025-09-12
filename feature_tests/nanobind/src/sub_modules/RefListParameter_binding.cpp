@@ -4,7 +4,7 @@
 #include "RefListParameter.hpp"
 
 
-void add_RefListParameter_binding(nb::handle mod) {
+void add_RefListParameter_binding(nb::module_ mod) {
     PyType_Slot RefListParameter_slots[] = {
         {Py_tp_free, (void *)RefListParameter::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

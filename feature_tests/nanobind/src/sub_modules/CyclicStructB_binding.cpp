@@ -5,7 +5,7 @@
 NB_MAKE_OPAQUE(std::vector<CyclicStructB>)
 
 
-void add_CyclicStructB_binding(nb::handle mod) {
+void add_CyclicStructB_binding(nb::module_ mod) {
     
     // Python lists are represented as PyObject**, which runs somewhat counter to any use cases where we want to be able to transparently pass over lists without copying over memory in any ways.
     // bind_vector solves this issue by exposing std::vector<CyclicStructB> as a type that will exist inside of C++, with functions to access its memory from Python.

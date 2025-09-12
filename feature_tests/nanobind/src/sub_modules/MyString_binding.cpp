@@ -4,7 +4,7 @@
 #include "MyString.hpp"
 
 
-void add_MyString_binding(nb::handle mod) {
+void add_MyString_binding(nb::module_ mod) {
     PyType_Slot MyString_slots[] = {
         {Py_tp_free, (void *)MyString::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

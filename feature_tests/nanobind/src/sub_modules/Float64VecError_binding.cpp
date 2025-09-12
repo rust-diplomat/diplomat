@@ -4,7 +4,7 @@
 #include "Float64VecError.hpp"
 
 
-void add_Float64VecError_binding(nb::handle mod) {
+void add_Float64VecError_binding(nb::module_ mod) {
     PyType_Slot Float64VecError_slots[] = {
         {Py_tp_free, (void *)Float64VecError::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

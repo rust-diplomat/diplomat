@@ -4,7 +4,7 @@
 #include "Float64Vec.hpp"
 
 
-void add_Float64Vec_binding(nb::handle mod) {
+void add_Float64Vec_binding(nb::module_ mod) {
     PyType_Slot Float64Vec_slots[] = {
         {Py_tp_free, (void *)Float64Vec::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

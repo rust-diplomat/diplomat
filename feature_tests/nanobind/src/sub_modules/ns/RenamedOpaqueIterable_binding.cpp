@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedOpaqueIterable_binding(nb::handle mod) {
+void add_RenamedOpaqueIterable_binding(nb::module_ mod) {
     PyType_Slot ns_RenamedOpaqueIterable_slots[] = {
         {Py_tp_free, (void *)ns::RenamedOpaqueIterable::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

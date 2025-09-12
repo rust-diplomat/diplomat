@@ -5,7 +5,7 @@
 #include "Opaque.hpp"
 
 
-void add_Opaque_binding(nb::handle mod) {
+void add_Opaque_binding(nb::module_ mod) {
     PyType_Slot Opaque_slots[] = {
         {Py_tp_free, (void *)Opaque::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

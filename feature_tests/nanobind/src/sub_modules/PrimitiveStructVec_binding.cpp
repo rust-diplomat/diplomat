@@ -6,7 +6,7 @@
 #include "ns/RenamedStructWithAttrs.hpp"
 
 
-void add_PrimitiveStructVec_binding(nb::handle mod) {
+void add_PrimitiveStructVec_binding(nb::module_ mod) {
     PyType_Slot PrimitiveStructVec_slots[] = {
         {Py_tp_free, (void *)PrimitiveStructVec::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

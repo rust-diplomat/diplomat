@@ -6,7 +6,7 @@
 #include "MyStructContainingAnOption.hpp"
 
 
-void add_MyStructContainingAnOption_binding(nb::handle mod) {
+void add_MyStructContainingAnOption_binding(nb::module_ mod) {
     nb::class_<MyStructContainingAnOption>(mod, "MyStructContainingAnOption")
         .def_rw("a", &MyStructContainingAnOption::a)
         .def_rw("b", &MyStructContainingAnOption::b)

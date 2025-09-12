@@ -4,7 +4,7 @@
 #include "ContiguousEnum.hpp"
 
 
-void add_ContiguousEnum_binding(nb::handle mod) {
+void add_ContiguousEnum_binding(nb::module_ mod) {
     nb::class_<ContiguousEnum> e_class(mod, "ContiguousEnum");
     
         nb::enum_<ContiguousEnum::Value>(e_class, "ContiguousEnum")

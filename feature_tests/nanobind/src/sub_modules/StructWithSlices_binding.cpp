@@ -4,7 +4,7 @@
 #include "StructWithSlices.hpp"
 
 
-void add_StructWithSlices_binding(nb::handle mod) {
+void add_StructWithSlices_binding(nb::module_ mod) {
     nb::class_<StructWithSlices>(mod, "StructWithSlices")
         .def(nb::init<>())
         .def(nb::init<std::string_view, diplomat::span<const uint16_t>>(), "first"_a.none(),  "second"_a.none())

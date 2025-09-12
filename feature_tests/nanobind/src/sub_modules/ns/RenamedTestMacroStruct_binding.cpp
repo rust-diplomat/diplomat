@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedTestMacroStruct_binding(nb::handle mod) {
+void add_RenamedTestMacroStruct_binding(nb::module_ mod) {
     nb::class_<ns::RenamedTestMacroStruct>(mod, "RenamedTestMacroStruct")
         .def_rw("a", &ns::RenamedTestMacroStruct::a)
         .def_static("test_func", &ns::RenamedTestMacroStruct::test_func)

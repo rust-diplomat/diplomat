@@ -8,7 +8,7 @@
 #include "NestedBorrowedFields.hpp"
 
 
-void add_NestedBorrowedFields_binding(nb::handle mod) {
+void add_NestedBorrowedFields_binding(nb::module_ mod) {
     nb::class_<NestedBorrowedFields>(mod, "NestedBorrowedFields")
         .def(nb::init<>())
         .def(nb::init<BorrowedFields, BorrowedFieldsWithBounds, BorrowedFieldsWithBounds>(), "fields"_a.none(),  "bounds"_a.none(),  "bounds2"_a.none())

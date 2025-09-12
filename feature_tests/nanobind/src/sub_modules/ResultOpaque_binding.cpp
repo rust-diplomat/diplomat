@@ -4,7 +4,7 @@
 #include "ResultOpaque.hpp"
 
 
-void add_ResultOpaque_binding(nb::handle mod) {
+void add_ResultOpaque_binding(nb::module_ mod) {
     PyType_Slot ResultOpaque_slots[] = {
         {Py_tp_free, (void *)ResultOpaque::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

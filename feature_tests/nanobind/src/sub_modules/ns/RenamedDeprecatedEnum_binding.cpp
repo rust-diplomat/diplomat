@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedDeprecatedEnum_binding(nb::handle mod) {
+void add_RenamedDeprecatedEnum_binding(nb::module_ mod) {
     nb::class_<ns::RenamedDeprecatedEnum> e_class(mod, "RenamedDeprecatedEnum");
     
         nb::enum_<ns::RenamedDeprecatedEnum::Value>(e_class, "RenamedDeprecatedEnum")

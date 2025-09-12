@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedMyIndexer_binding(nb::handle mod) {
+void add_RenamedMyIndexer_binding(nb::module_ mod) {
     PyType_Slot ns_RenamedMyIndexer_slots[] = {
         {Py_tp_free, (void *)ns::RenamedMyIndexer::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
