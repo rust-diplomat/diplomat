@@ -1,12 +1,8 @@
 #include "diplomat_nanobind_common.hpp"
 
 
-#include "CallbackTestingStruct.hpp"
 #include "CallbackWrapper.hpp"
 #include "MyString.hpp"
-#include "MyStructContainingAnOption.hpp"
-#include "Opaque.hpp"
-#include "PrimitiveStruct.hpp"
 
 
 void add_CallbackWrapper_binding(nb::handle mod) {
