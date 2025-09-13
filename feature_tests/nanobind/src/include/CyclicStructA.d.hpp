@@ -36,7 +36,7 @@ namespace capi {
 
 
 struct CyclicStructA {
-  CyclicStructB a;
+    CyclicStructB a;
 
   inline static CyclicStructB get_b();
 
@@ -54,20 +54,20 @@ struct CyclicStructA {
   template<typename W>
   inline void getter_out_write(W& writeable_output) const;
 
-  inline diplomat::capi::CyclicStructA AsFFI() const;
-  inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);
+    inline diplomat::capi::CyclicStructA AsFFI() const;
+    inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);
 };
 
 
 namespace diplomat {
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructA>>>> {
-    using type = capi::DiplomatCyclicStructAView;
-  };
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructA>>>> {
+        using type = capi::DiplomatCyclicStructAView;
+    };
 
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructA>>>> {
-    using type = capi::DiplomatCyclicStructAViewMut;
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructA>>>> {
+        using type = capi::DiplomatCyclicStructAViewMut;
 };
 }
 #endif // CyclicStructA_D_HPP

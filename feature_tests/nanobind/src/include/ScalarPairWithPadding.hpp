@@ -25,22 +25,22 @@ namespace capi {
 } // namespace
 
 inline void ScalarPairWithPadding::assert_value() const {
-  diplomat::capi::ScalarPairWithPadding_assert_value(this->AsFFI());
+    diplomat::capi::ScalarPairWithPadding_assert_value(this->AsFFI());
 }
 
 
 inline diplomat::capi::ScalarPairWithPadding ScalarPairWithPadding::AsFFI() const {
-  return diplomat::capi::ScalarPairWithPadding {
-    /* .first = */ first,
-    /* .second = */ second,
-  };
+    return diplomat::capi::ScalarPairWithPadding {
+        /* .first = */ first,
+        /* .second = */ second,
+    };
 }
 
 inline ScalarPairWithPadding ScalarPairWithPadding::FromFFI(diplomat::capi::ScalarPairWithPadding c_struct) {
-  return ScalarPairWithPadding {
-    /* .first = */ c_struct.first,
-    /* .second = */ c_struct.second,
-  };
+    return ScalarPairWithPadding {
+        /* .first = */ c_struct.first,
+        /* .second = */ c_struct.second,
+    };
 }
 
 

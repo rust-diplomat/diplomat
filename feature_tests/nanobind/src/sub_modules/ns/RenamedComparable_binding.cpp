@@ -13,13 +13,13 @@ void add_RenamedComparable_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<ns::RenamedComparable>(mod, "RenamedComparable", nb::type_slots(ns_RenamedComparable_slots))
-    	.def(nb::self == nb::self)
-    		.def(nb::self != nb::self)
-    		.def(nb::self <= nb::self)
-    		.def(nb::self >= nb::self)
-    		.def(nb::self < nb::self)
-    		.def(nb::self > nb::self)
-    	.def_static("new", &ns::RenamedComparable::new_, "int"_a);
+        .def(nb::self == nb::self)
+            .def(nb::self != nb::self)
+            .def(nb::self <= nb::self)
+            .def(nb::self >= nb::self)
+            .def(nb::self < nb::self)
+            .def(nb::self > nb::self)
+        .def_static("new", &ns::RenamedComparable::new_, "int"_a);
 }
 
 

@@ -20,7 +20,7 @@ void add_BigStructWithStuff_binding(nb::handle mod) {
         .def_rw("third", &BigStructWithStuff::third)
         .def_rw("fourth", &BigStructWithStuff::fourth)
         .def_rw("fifth", &BigStructWithStuff::fifth)
-    	.def_static("assert_slice", &BigStructWithStuff::assert_slice, "slice"_a, "second_value"_a)
-    	.def("assert_value", &BigStructWithStuff::assert_value, "extra_val"_a);
+        .def_static("assert_slice", &BigStructWithStuff::assert_slice, "slice"_a, "second_value"_a)
+        .def("assert_value", &BigStructWithStuff::assert_value, "extra_val"_a);
 }
 

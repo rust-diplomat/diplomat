@@ -24,17 +24,17 @@ namespace capi {
 
 
 inline diplomat::capi::CallbackTestingStruct CallbackTestingStruct::AsFFI() const {
-  return diplomat::capi::CallbackTestingStruct {
-    /* .x = */ x,
-    /* .y = */ y,
-  };
+    return diplomat::capi::CallbackTestingStruct {
+        /* .x = */ x,
+        /* .y = */ y,
+    };
 }
 
 inline CallbackTestingStruct CallbackTestingStruct::FromFFI(diplomat::capi::CallbackTestingStruct c_struct) {
-  return CallbackTestingStruct {
-    /* .x = */ c_struct.x,
-    /* .y = */ c_struct.y,
-  };
+    return CallbackTestingStruct {
+        /* .x = */ c_struct.x,
+        /* .y = */ c_struct.y,
+    };
 }
 
 

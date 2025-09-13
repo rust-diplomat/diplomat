@@ -35,26 +35,26 @@ namespace capi {
 
 
 struct CyclicStructB {
-  uint8_t field;
+    uint8_t field;
 
   inline static CyclicStructA get_a();
 
   inline static std::optional<CyclicStructA> get_a_option();
 
-  inline diplomat::capi::CyclicStructB AsFFI() const;
-  inline static CyclicStructB FromFFI(diplomat::capi::CyclicStructB c_struct);
+    inline diplomat::capi::CyclicStructB AsFFI() const;
+    inline static CyclicStructB FromFFI(diplomat::capi::CyclicStructB c_struct);
 };
 
 
 namespace diplomat {
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructB>>>> {
-    using type = capi::DiplomatCyclicStructBView;
-  };
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructB>>>> {
+        using type = capi::DiplomatCyclicStructBView;
+    };
 
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructB>>>> {
-    using type = capi::DiplomatCyclicStructBViewMut;
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructB>>>> {
+        using type = capi::DiplomatCyclicStructBViewMut;
 };
 }
 #endif // CyclicStructB_D_HPP

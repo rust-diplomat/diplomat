@@ -31,18 +31,18 @@ public:
 
   inline void use_namespaced(const ns::AttrOpaque1Renamed& _n) const;
 
-  inline const diplomat::capi::Unnamespaced* AsFFI() const;
-  inline diplomat::capi::Unnamespaced* AsFFI();
-  inline static const Unnamespaced* FromFFI(const diplomat::capi::Unnamespaced* ptr);
-  inline static Unnamespaced* FromFFI(diplomat::capi::Unnamespaced* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::Unnamespaced* AsFFI() const;
+    inline diplomat::capi::Unnamespaced* AsFFI();
+    inline static const Unnamespaced* FromFFI(const diplomat::capi::Unnamespaced* ptr);
+    inline static Unnamespaced* FromFFI(diplomat::capi::Unnamespaced* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Unnamespaced() = delete;
-  Unnamespaced(const Unnamespaced&) = delete;
-  Unnamespaced(Unnamespaced&&) noexcept = delete;
-  Unnamespaced operator=(const Unnamespaced&) = delete;
-  Unnamespaced operator=(Unnamespaced&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Unnamespaced() = delete;
+    Unnamespaced(const Unnamespaced&) = delete;
+    Unnamespaced(Unnamespaced&&) noexcept = delete;
+    Unnamespaced operator=(const Unnamespaced&) = delete;
+    Unnamespaced operator=(Unnamespaced&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

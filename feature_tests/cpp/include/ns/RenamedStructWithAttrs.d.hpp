@@ -39,33 +39,33 @@ namespace capi {
 
 namespace ns {
 struct RenamedStructWithAttrs {
-  bool a;
-  uint32_t b;
+    bool a;
+    uint32_t b;
 
   inline static diplomat::result<ns::RenamedStructWithAttrs, std::monostate> new_fallible(bool a, uint32_t b);
 
   inline uint32_t c() const;
 
   /**
-   * \deprecated use Foo
+     * \deprecated use Foo
    */
   [[deprecated("use Foo")]]
   inline void deprecated() const;
 
-  inline ns::capi::RenamedStructWithAttrs AsFFI() const;
-  inline static ns::RenamedStructWithAttrs FromFFI(ns::capi::RenamedStructWithAttrs c_struct);
+    inline ns::capi::RenamedStructWithAttrs AsFFI() const;
+    inline static ns::RenamedStructWithAttrs FromFFI(ns::capi::RenamedStructWithAttrs c_struct);
 };
 
 } // namespace
 namespace diplomat {
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ns::RenamedStructWithAttrs>>>> {
-    using type = ns::capi::DiplomatRenamedStructWithAttrsView;
-  };
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ns::RenamedStructWithAttrs>>>> {
+        using type = ns::capi::DiplomatRenamedStructWithAttrsView;
+    };
 
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ns::RenamedStructWithAttrs>>>> {
-    using type = ns::capi::DiplomatRenamedStructWithAttrsViewMut;
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ns::RenamedStructWithAttrs>>>> {
+        using type = ns::capi::DiplomatRenamedStructWithAttrsViewMut;
 };
 }
 #endif // ns_RenamedStructWithAttrs_D_HPP

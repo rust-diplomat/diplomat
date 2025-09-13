@@ -25,18 +25,18 @@ public:
 
   inline int32_t call(int32_t a);
 
-  inline const diplomat::capi::MutableCallbackHolder* AsFFI() const;
-  inline diplomat::capi::MutableCallbackHolder* AsFFI();
-  inline static const MutableCallbackHolder* FromFFI(const diplomat::capi::MutableCallbackHolder* ptr);
-  inline static MutableCallbackHolder* FromFFI(diplomat::capi::MutableCallbackHolder* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::MutableCallbackHolder* AsFFI() const;
+    inline diplomat::capi::MutableCallbackHolder* AsFFI();
+    inline static const MutableCallbackHolder* FromFFI(const diplomat::capi::MutableCallbackHolder* ptr);
+    inline static MutableCallbackHolder* FromFFI(diplomat::capi::MutableCallbackHolder* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  MutableCallbackHolder() = delete;
-  MutableCallbackHolder(const MutableCallbackHolder&) = delete;
-  MutableCallbackHolder(MutableCallbackHolder&&) noexcept = delete;
-  MutableCallbackHolder operator=(const MutableCallbackHolder&) = delete;
-  MutableCallbackHolder operator=(MutableCallbackHolder&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    MutableCallbackHolder() = delete;
+    MutableCallbackHolder(const MutableCallbackHolder&) = delete;
+    MutableCallbackHolder(MutableCallbackHolder&&) noexcept = delete;
+    MutableCallbackHolder operator=(const MutableCallbackHolder&) = delete;
+    MutableCallbackHolder operator=(MutableCallbackHolder&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

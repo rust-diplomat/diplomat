@@ -27,23 +27,23 @@ namespace capi {
 
 class ContiguousEnum {
 public:
-  enum Value {
-    C = 0,
-    D = 1,
-    E = 2,
-    F = 3,
-  };
+    enum Value {
+        C = 0,
+        D = 1,
+        E = 2,
+        F = 3,
+    };
 
-  ContiguousEnum(): value(Value::E) {}
+    ContiguousEnum(): value(Value::E) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr ContiguousEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr ContiguousEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline diplomat::capi::ContiguousEnum AsFFI() const;
-  inline static ContiguousEnum FromFFI(diplomat::capi::ContiguousEnum c_enum);
+    inline diplomat::capi::ContiguousEnum AsFFI() const;
+    inline static ContiguousEnum FromFFI(diplomat::capi::ContiguousEnum c_enum);
 private:
     Value value;
 };

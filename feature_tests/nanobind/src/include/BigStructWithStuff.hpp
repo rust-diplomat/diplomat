@@ -28,34 +28,34 @@ namespace capi {
 } // namespace
 
 inline void BigStructWithStuff::assert_value(uint16_t extra_val) const {
-  diplomat::capi::BigStructWithStuff_assert_value(this->AsFFI(),
-    extra_val);
+    diplomat::capi::BigStructWithStuff_assert_value(this->AsFFI(),
+        extra_val);
 }
 
 inline void BigStructWithStuff::assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value) {
-  diplomat::capi::BigStructWithStuff_assert_slice({reinterpret_cast<const diplomat::capi::BigStructWithStuff*>(slice.data()), slice.size()},
-    second_value);
+    diplomat::capi::BigStructWithStuff_assert_slice({reinterpret_cast<const diplomat::capi::BigStructWithStuff*>(slice.data()), slice.size()},
+        second_value);
 }
 
 
 inline diplomat::capi::BigStructWithStuff BigStructWithStuff::AsFFI() const {
-  return diplomat::capi::BigStructWithStuff {
-    /* .first = */ first,
-    /* .second = */ second,
-    /* .third = */ third,
-    /* .fourth = */ fourth.AsFFI(),
-    /* .fifth = */ fifth,
-  };
+    return diplomat::capi::BigStructWithStuff {
+        /* .first = */ first,
+        /* .second = */ second,
+        /* .third = */ third,
+        /* .fourth = */ fourth.AsFFI(),
+        /* .fifth = */ fifth,
+    };
 }
 
 inline BigStructWithStuff BigStructWithStuff::FromFFI(diplomat::capi::BigStructWithStuff c_struct) {
-  return BigStructWithStuff {
-    /* .first = */ c_struct.first,
-    /* .second = */ c_struct.second,
-    /* .third = */ c_struct.third,
-    /* .fourth = */ ScalarPairWithPadding::FromFFI(c_struct.fourth),
-    /* .fifth = */ c_struct.fifth,
-  };
+    return BigStructWithStuff {
+        /* .first = */ c_struct.first,
+        /* .second = */ c_struct.second,
+        /* .third = */ c_struct.third,
+        /* .fourth = */ ScalarPairWithPadding::FromFFI(c_struct.fourth),
+        /* .fifth = */ c_struct.fifth,
+    };
 }
 
 

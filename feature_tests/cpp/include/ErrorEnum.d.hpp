@@ -25,21 +25,21 @@ namespace capi {
 
 class ErrorEnum {
 public:
-  enum Value {
-    Foo = 0,
-    Bar = 1,
-  };
+    enum Value {
+        Foo = 0,
+        Bar = 1,
+    };
 
-  ErrorEnum(): value(Value::Foo) {}
+    ErrorEnum(): value(Value::Foo) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr ErrorEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr ErrorEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline diplomat::capi::ErrorEnum AsFFI() const;
-  inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
+    inline diplomat::capi::ErrorEnum AsFFI() const;
+    inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
 private:
     Value value;
 };

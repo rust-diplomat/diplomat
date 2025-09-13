@@ -28,28 +28,28 @@ namespace capi {
 } // namespace
 
 inline const OpaqueThin* OpaqueThinIter::next() {
-  auto result = diplomat::capi::OpaqueThinIter_next(this->AsFFI());
-  return OpaqueThin::FromFFI(result);
+    auto result = diplomat::capi::OpaqueThinIter_next(this->AsFFI());
+    return OpaqueThin::FromFFI(result);
 }
 
 inline const diplomat::capi::OpaqueThinIter* OpaqueThinIter::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OpaqueThinIter*>(this);
+    return reinterpret_cast<const diplomat::capi::OpaqueThinIter*>(this);
 }
 
 inline diplomat::capi::OpaqueThinIter* OpaqueThinIter::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OpaqueThinIter*>(this);
+    return reinterpret_cast<diplomat::capi::OpaqueThinIter*>(this);
 }
 
 inline const OpaqueThinIter* OpaqueThinIter::FromFFI(const diplomat::capi::OpaqueThinIter* ptr) {
-  return reinterpret_cast<const OpaqueThinIter*>(ptr);
+    return reinterpret_cast<const OpaqueThinIter*>(ptr);
 }
 
 inline OpaqueThinIter* OpaqueThinIter::FromFFI(diplomat::capi::OpaqueThinIter* ptr) {
-  return reinterpret_cast<OpaqueThinIter*>(ptr);
+    return reinterpret_cast<OpaqueThinIter*>(ptr);
 }
 
 inline void OpaqueThinIter::operator delete(void* ptr) {
-  diplomat::capi::OpaqueThinIter_destroy(reinterpret_cast<diplomat::capi::OpaqueThinIter*>(ptr));
+    diplomat::capi::OpaqueThinIter_destroy(reinterpret_cast<diplomat::capi::OpaqueThinIter*>(ptr));
 }
 
 

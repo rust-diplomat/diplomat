@@ -27,30 +27,30 @@ namespace capi {
 } // namespace
 
 inline diplomat::capi::MyEnum MyEnum::AsFFI() const {
-  return static_cast<diplomat::capi::MyEnum>(value);
+    return static_cast<diplomat::capi::MyEnum>(value);
 }
 
 inline MyEnum MyEnum::FromFFI(diplomat::capi::MyEnum c_enum) {
-  switch (c_enum) {
-    case diplomat::capi::MyEnum_A:
-    case diplomat::capi::MyEnum_B:
-    case diplomat::capi::MyEnum_C:
-    case diplomat::capi::MyEnum_D:
-    case diplomat::capi::MyEnum_E:
-    case diplomat::capi::MyEnum_F:
-      return static_cast<MyEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case diplomat::capi::MyEnum_A:
+        case diplomat::capi::MyEnum_B:
+        case diplomat::capi::MyEnum_C:
+        case diplomat::capi::MyEnum_D:
+        case diplomat::capi::MyEnum_E:
+        case diplomat::capi::MyEnum_F:
+            return static_cast<MyEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 
 inline int8_t MyEnum::into_value() const {
-  auto result = diplomat::capi::MyEnum_into_value(this->AsFFI());
-  return result;
+    auto result = diplomat::capi::MyEnum_into_value(this->AsFFI());
+    return result;
 }
 
 inline MyEnum MyEnum::get_a() {
-  auto result = diplomat::capi::MyEnum_get_a();
-  return MyEnum::FromFFI(result);
+    auto result = diplomat::capi::MyEnum_get_a();
+    return MyEnum::FromFFI(result);
 }
 #endif // MyEnum_HPP

@@ -23,15 +23,15 @@ namespace capi {
 } // namespace
 
 inline ns::capi::RenamedDeprecatedEnum ns::RenamedDeprecatedEnum::AsFFI() const {
-  return static_cast<ns::capi::RenamedDeprecatedEnum>(value);
+    return static_cast<ns::capi::RenamedDeprecatedEnum>(value);
 }
 
 inline ns::RenamedDeprecatedEnum ns::RenamedDeprecatedEnum::FromFFI(ns::capi::RenamedDeprecatedEnum c_enum) {
-  switch (c_enum) {
-    case ns::capi::RenamedDeprecatedEnum_A:
-      return static_cast<ns::RenamedDeprecatedEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case ns::capi::RenamedDeprecatedEnum_A:
+            return static_cast<ns::RenamedDeprecatedEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 #endif // ns_RenamedDeprecatedEnum_HPP

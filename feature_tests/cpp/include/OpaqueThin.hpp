@@ -31,47 +31,47 @@ namespace capi {
 } // namespace
 
 inline int32_t OpaqueThin::a() const {
-  auto result = diplomat::capi::OpaqueThin_a(this->AsFFI());
-  return result;
+    auto result = diplomat::capi::OpaqueThin_a(this->AsFFI());
+    return result;
 }
 
 inline float OpaqueThin::b() const {
-  auto result = diplomat::capi::OpaqueThin_b(this->AsFFI());
-  return result;
+    auto result = diplomat::capi::OpaqueThin_b(this->AsFFI());
+    return result;
 }
 
 inline std::string OpaqueThin::c() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::OpaqueThin_c(this->AsFFI(),
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::OpaqueThin_c(this->AsFFI(),
+        &write);
+    return output;
 }
 template<typename W>
 inline void OpaqueThin::c_write(W& writeable) const {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::OpaqueThin_c(this->AsFFI(),
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::OpaqueThin_c(this->AsFFI(),
+        &write);
 }
 
 inline const diplomat::capi::OpaqueThin* OpaqueThin::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OpaqueThin*>(this);
+    return reinterpret_cast<const diplomat::capi::OpaqueThin*>(this);
 }
 
 inline diplomat::capi::OpaqueThin* OpaqueThin::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OpaqueThin*>(this);
+    return reinterpret_cast<diplomat::capi::OpaqueThin*>(this);
 }
 
 inline const OpaqueThin* OpaqueThin::FromFFI(const diplomat::capi::OpaqueThin* ptr) {
-  return reinterpret_cast<const OpaqueThin*>(ptr);
+    return reinterpret_cast<const OpaqueThin*>(ptr);
 }
 
 inline OpaqueThin* OpaqueThin::FromFFI(diplomat::capi::OpaqueThin* ptr) {
-  return reinterpret_cast<OpaqueThin*>(ptr);
+    return reinterpret_cast<OpaqueThin*>(ptr);
 }
 
 inline void OpaqueThin::operator delete(void* ptr) {
-  diplomat::capi::OpaqueThin_destroy(reinterpret_cast<diplomat::capi::OpaqueThin*>(ptr));
+    diplomat::capi::OpaqueThin_destroy(reinterpret_cast<diplomat::capi::OpaqueThin*>(ptr));
 }
 
 

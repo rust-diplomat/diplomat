@@ -22,18 +22,18 @@ namespace ns {
 class RenamedAttrOpaque2 {
 public:
 
-  inline const ns::capi::RenamedAttrOpaque2* AsFFI() const;
-  inline ns::capi::RenamedAttrOpaque2* AsFFI();
-  inline static const ns::RenamedAttrOpaque2* FromFFI(const ns::capi::RenamedAttrOpaque2* ptr);
-  inline static ns::RenamedAttrOpaque2* FromFFI(ns::capi::RenamedAttrOpaque2* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedAttrOpaque2* AsFFI() const;
+    inline ns::capi::RenamedAttrOpaque2* AsFFI();
+    inline static const ns::RenamedAttrOpaque2* FromFFI(const ns::capi::RenamedAttrOpaque2* ptr);
+    inline static ns::RenamedAttrOpaque2* FromFFI(ns::capi::RenamedAttrOpaque2* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedAttrOpaque2() = delete;
-  RenamedAttrOpaque2(const ns::RenamedAttrOpaque2&) = delete;
-  RenamedAttrOpaque2(ns::RenamedAttrOpaque2&&) noexcept = delete;
-  RenamedAttrOpaque2 operator=(const ns::RenamedAttrOpaque2&) = delete;
-  RenamedAttrOpaque2 operator=(ns::RenamedAttrOpaque2&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedAttrOpaque2() = delete;
+    RenamedAttrOpaque2(const ns::RenamedAttrOpaque2&) = delete;
+    RenamedAttrOpaque2(ns::RenamedAttrOpaque2&&) noexcept = delete;
+    RenamedAttrOpaque2 operator=(const ns::RenamedAttrOpaque2&) = delete;
+    RenamedAttrOpaque2 operator=(ns::RenamedAttrOpaque2&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

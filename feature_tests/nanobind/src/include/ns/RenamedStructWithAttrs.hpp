@@ -30,33 +30,33 @@ namespace capi {
 } // namespace
 
 inline diplomat::result<ns::RenamedStructWithAttrs, std::monostate> ns::RenamedStructWithAttrs::new_fallible(bool a, uint32_t b) {
-  auto result = ns::capi::namespace_StructWithAttrs_new_fallible(a,
-    b);
-  return result.is_ok ? diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Ok<ns::RenamedStructWithAttrs>(ns::RenamedStructWithAttrs::FromFFI(result.ok))) : diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Err<std::monostate>());
+    auto result = ns::capi::namespace_StructWithAttrs_new_fallible(a,
+        b);
+    return result.is_ok ? diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Ok<ns::RenamedStructWithAttrs>(ns::RenamedStructWithAttrs::FromFFI(result.ok))) : diplomat::result<ns::RenamedStructWithAttrs, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline uint32_t ns::RenamedStructWithAttrs::c() const {
-  auto result = ns::capi::namespace_StructWithAttrs_c(this->AsFFI());
-  return result;
+    auto result = ns::capi::namespace_StructWithAttrs_c(this->AsFFI());
+    return result;
 }
 
 inline void ns::RenamedStructWithAttrs::deprecated() const {
-  ns::capi::namespace_StructWithAttrs_deprecated(this->AsFFI());
+    ns::capi::namespace_StructWithAttrs_deprecated(this->AsFFI());
 }
 
 
 inline ns::capi::RenamedStructWithAttrs ns::RenamedStructWithAttrs::AsFFI() const {
-  return ns::capi::RenamedStructWithAttrs {
-    /* .a = */ a,
-    /* .b = */ b,
-  };
+    return ns::capi::RenamedStructWithAttrs {
+        /* .a = */ a,
+        /* .b = */ b,
+    };
 }
 
 inline ns::RenamedStructWithAttrs ns::RenamedStructWithAttrs::FromFFI(ns::capi::RenamedStructWithAttrs c_struct) {
-  return ns::RenamedStructWithAttrs {
-    /* .a = */ c_struct.a,
-    /* .b = */ c_struct.b,
-  };
+    return ns::RenamedStructWithAttrs {
+        /* .a = */ c_struct.a,
+        /* .b = */ c_struct.b,
+    };
 }
 
 

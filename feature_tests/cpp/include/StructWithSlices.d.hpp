@@ -25,15 +25,15 @@ namespace capi {
 
 
 struct StructWithSlices {
-  std::string_view first;
-  diplomat::span<const uint16_t> second;
+    std::string_view first;
+    diplomat::span<const uint16_t> second;
 
   inline std::string return_last() const;
   template<typename W>
   inline void return_last_write(W& writeable_output) const;
 
-  inline diplomat::capi::StructWithSlices AsFFI() const;
-  inline static StructWithSlices FromFFI(diplomat::capi::StructWithSlices c_struct);
+    inline diplomat::capi::StructWithSlices AsFFI() const;
+    inline static StructWithSlices FromFFI(diplomat::capi::StructWithSlices c_struct);
 };
 
 

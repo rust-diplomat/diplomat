@@ -32,7 +32,7 @@ namespace capi {
 
 
 struct CallbackWrapper {
-  bool cant_be_empty;
+    bool cant_be_empty;
 
   inline static int32_t test_multi_arg_callback(std::function<int32_t(int32_t)> f, int32_t x);
 
@@ -78,8 +78,8 @@ struct CallbackWrapper {
   template<typename W>
   inline static void test_opaque_result_error_write(std::function<diplomat::result<std::monostate, const Opaque&>()> t, W& writeable_output);
 
-  inline diplomat::capi::CallbackWrapper AsFFI() const;
-  inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
+    inline diplomat::capi::CallbackWrapper AsFFI() const;
+    inline static CallbackWrapper FromFFI(diplomat::capi::CallbackWrapper c_struct);
 };
 
 

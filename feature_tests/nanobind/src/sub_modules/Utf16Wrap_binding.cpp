@@ -11,8 +11,8 @@ void add_Utf16Wrap_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<Utf16Wrap>(mod, "Utf16Wrap", nb::type_slots(Utf16Wrap_slots))
-    	.def("borrow_cont", &Utf16Wrap::borrow_cont)
-    	.def(nb::new_(&Utf16Wrap::from_utf16), "input"_a)
-    	.def("get_debug_str", &Utf16Wrap::get_debug_str);
+        .def("borrow_cont", &Utf16Wrap::borrow_cont)
+        .def(nb::new_(&Utf16Wrap::from_utf16), "input"_a)
+        .def("get_debug_str", &Utf16Wrap::get_debug_str);
 }
 

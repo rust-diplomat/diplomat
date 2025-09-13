@@ -31,33 +31,33 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::RenamedAttrEnum _e) {
-  auto result = diplomat::capi::namespace_Unnamespaced_make(_e.AsFFI());
-  return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
+    auto result = diplomat::capi::namespace_Unnamespaced_make(_e.AsFFI());
+    return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
 }
 
 inline void Unnamespaced::use_namespaced(const ns::AttrOpaque1Renamed& _n) const {
-  diplomat::capi::namespace_Unnamespaced_use_namespaced(this->AsFFI(),
-    _n.AsFFI());
+    diplomat::capi::namespace_Unnamespaced_use_namespaced(this->AsFFI(),
+        _n.AsFFI());
 }
 
 inline const diplomat::capi::Unnamespaced* Unnamespaced::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Unnamespaced*>(this);
+    return reinterpret_cast<const diplomat::capi::Unnamespaced*>(this);
 }
 
 inline diplomat::capi::Unnamespaced* Unnamespaced::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Unnamespaced*>(this);
+    return reinterpret_cast<diplomat::capi::Unnamespaced*>(this);
 }
 
 inline const Unnamespaced* Unnamespaced::FromFFI(const diplomat::capi::Unnamespaced* ptr) {
-  return reinterpret_cast<const Unnamespaced*>(ptr);
+    return reinterpret_cast<const Unnamespaced*>(ptr);
 }
 
 inline Unnamespaced* Unnamespaced::FromFFI(diplomat::capi::Unnamespaced* ptr) {
-  return reinterpret_cast<Unnamespaced*>(ptr);
+    return reinterpret_cast<Unnamespaced*>(ptr);
 }
 
 inline void Unnamespaced::operator delete(void* ptr) {
-  diplomat::capi::namespace_Unnamespaced_destroy(reinterpret_cast<diplomat::capi::Unnamespaced*>(ptr));
+    diplomat::capi::namespace_Unnamespaced_destroy(reinterpret_cast<diplomat::capi::Unnamespaced*>(ptr));
 }
 
 

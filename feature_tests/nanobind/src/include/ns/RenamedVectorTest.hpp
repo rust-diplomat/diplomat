@@ -34,44 +34,44 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<ns::RenamedVectorTest> ns::RenamedVectorTest::new_() {
-  auto result = ns::capi::namespace_VectorTest_new();
-  return std::unique_ptr<ns::RenamedVectorTest>(ns::RenamedVectorTest::FromFFI(result));
+    auto result = ns::capi::namespace_VectorTest_new();
+    return std::unique_ptr<ns::RenamedVectorTest>(ns::RenamedVectorTest::FromFFI(result));
 }
 
 inline size_t ns::RenamedVectorTest::len() const {
-  auto result = ns::capi::namespace_VectorTest_len(this->AsFFI());
-  return result;
+    auto result = ns::capi::namespace_VectorTest_len(this->AsFFI());
+    return result;
 }
 
 inline std::optional<double> ns::RenamedVectorTest::operator[](size_t idx) const {
-  auto result = ns::capi::namespace_VectorTest_get(this->AsFFI(),
-    idx);
-  return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
+    auto result = ns::capi::namespace_VectorTest_get(this->AsFFI(),
+        idx);
+    return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
 }
 
 inline void ns::RenamedVectorTest::push(double value) {
-  ns::capi::namespace_VectorTest_push(this->AsFFI(),
-    value);
+    ns::capi::namespace_VectorTest_push(this->AsFFI(),
+        value);
 }
 
 inline const ns::capi::RenamedVectorTest* ns::RenamedVectorTest::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedVectorTest*>(this);
+    return reinterpret_cast<const ns::capi::RenamedVectorTest*>(this);
 }
 
 inline ns::capi::RenamedVectorTest* ns::RenamedVectorTest::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedVectorTest*>(this);
+    return reinterpret_cast<ns::capi::RenamedVectorTest*>(this);
 }
 
 inline const ns::RenamedVectorTest* ns::RenamedVectorTest::FromFFI(const ns::capi::RenamedVectorTest* ptr) {
-  return reinterpret_cast<const ns::RenamedVectorTest*>(ptr);
+    return reinterpret_cast<const ns::RenamedVectorTest*>(ptr);
 }
 
 inline ns::RenamedVectorTest* ns::RenamedVectorTest::FromFFI(ns::capi::RenamedVectorTest* ptr) {
-  return reinterpret_cast<ns::RenamedVectorTest*>(ptr);
+    return reinterpret_cast<ns::RenamedVectorTest*>(ptr);
 }
 
 inline void ns::RenamedVectorTest::operator delete(void* ptr) {
-  ns::capi::namespace_VectorTest_destroy(reinterpret_cast<ns::capi::RenamedVectorTest*>(ptr));
+    ns::capi::namespace_VectorTest_destroy(reinterpret_cast<ns::capi::RenamedVectorTest*>(ptr));
 }
 
 

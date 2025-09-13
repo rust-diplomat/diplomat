@@ -43,18 +43,18 @@ public:
 
   inline std::string_view borrow() const;
 
-  inline const diplomat::capi::MyString* AsFFI() const;
-  inline diplomat::capi::MyString* AsFFI();
-  inline static const MyString* FromFFI(const diplomat::capi::MyString* ptr);
-  inline static MyString* FromFFI(diplomat::capi::MyString* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::MyString* AsFFI() const;
+    inline diplomat::capi::MyString* AsFFI();
+    inline static const MyString* FromFFI(const diplomat::capi::MyString* ptr);
+    inline static MyString* FromFFI(diplomat::capi::MyString* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  MyString() = delete;
-  MyString(const MyString&) = delete;
-  MyString(MyString&&) noexcept = delete;
-  MyString operator=(const MyString&) = delete;
-  MyString operator=(MyString&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    MyString() = delete;
+    MyString(const MyString&) = delete;
+    MyString(MyString&&) noexcept = delete;
+    MyString operator=(const MyString&) = delete;
+    MyString operator=(MyString&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

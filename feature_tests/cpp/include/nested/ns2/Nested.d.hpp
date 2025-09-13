@@ -22,18 +22,18 @@ namespace nested::ns2 {
 class Nested {
 public:
 
-  inline const nested::ns2::capi::Nested* AsFFI() const;
-  inline nested::ns2::capi::Nested* AsFFI();
-  inline static const nested::ns2::Nested* FromFFI(const nested::ns2::capi::Nested* ptr);
-  inline static nested::ns2::Nested* FromFFI(nested::ns2::capi::Nested* ptr);
-  inline static void operator delete(void* ptr);
+    inline const nested::ns2::capi::Nested* AsFFI() const;
+    inline nested::ns2::capi::Nested* AsFFI();
+    inline static const nested::ns2::Nested* FromFFI(const nested::ns2::capi::Nested* ptr);
+    inline static nested::ns2::Nested* FromFFI(nested::ns2::capi::Nested* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Nested() = delete;
-  Nested(const nested::ns2::Nested&) = delete;
-  Nested(nested::ns2::Nested&&) noexcept = delete;
-  Nested operator=(const nested::ns2::Nested&) = delete;
-  Nested operator=(nested::ns2::Nested&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Nested() = delete;
+    Nested(const nested::ns2::Nested&) = delete;
+    Nested(nested::ns2::Nested&&) noexcept = delete;
+    Nested operator=(const nested::ns2::Nested&) = delete;
+    Nested operator=(nested::ns2::Nested&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

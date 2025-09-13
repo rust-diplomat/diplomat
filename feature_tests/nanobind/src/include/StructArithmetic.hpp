@@ -37,24 +37,24 @@ namespace capi {
 } // namespace
 
 inline StructArithmetic StructArithmetic::ORIGIN() {
-  auto result = diplomat::capi::StructArithmetic_ORIGIN();
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_ORIGIN();
+    return StructArithmetic::FromFFI(result);
 }
 
 inline void StructArithmetic::set_origin(StructArithmetic _new_origin) {
-  diplomat::capi::StructArithmetic_set_origin(_new_origin.AsFFI());
+    diplomat::capi::StructArithmetic_set_origin(_new_origin.AsFFI());
 }
 
 inline StructArithmetic StructArithmetic::new_(int32_t x, int32_t y) {
-  auto result = diplomat::capi::StructArithmetic_new(x,
-    y);
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_new(x,
+        y);
+    return StructArithmetic::FromFFI(result);
 }
 
 inline StructArithmetic StructArithmetic::operator+(StructArithmetic o) const {
-  auto result = diplomat::capi::StructArithmetic_add(this->AsFFI(),
-    o.AsFFI());
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_add(this->AsFFI(),
+        o.AsFFI());
+    return StructArithmetic::FromFFI(result);
 }
 inline StructArithmetic& StructArithmetic::operator+=(StructArithmetic o) {
   *this = *this + o;
@@ -62,9 +62,9 @@ inline StructArithmetic& StructArithmetic::operator+=(StructArithmetic o) {
 }
 
 inline StructArithmetic StructArithmetic::operator-(StructArithmetic o) const {
-  auto result = diplomat::capi::StructArithmetic_sub(this->AsFFI(),
-    o.AsFFI());
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_sub(this->AsFFI(),
+        o.AsFFI());
+    return StructArithmetic::FromFFI(result);
 }
 inline StructArithmetic& StructArithmetic::operator-=(StructArithmetic o) {
   *this = *this - o;
@@ -72,9 +72,9 @@ inline StructArithmetic& StructArithmetic::operator-=(StructArithmetic o) {
 }
 
 inline StructArithmetic StructArithmetic::operator*(StructArithmetic o) const {
-  auto result = diplomat::capi::StructArithmetic_mul(this->AsFFI(),
-    o.AsFFI());
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_mul(this->AsFFI(),
+        o.AsFFI());
+    return StructArithmetic::FromFFI(result);
 }
 inline StructArithmetic& StructArithmetic::operator*=(StructArithmetic o) {
   *this = *this * o;
@@ -82,9 +82,9 @@ inline StructArithmetic& StructArithmetic::operator*=(StructArithmetic o) {
 }
 
 inline StructArithmetic StructArithmetic::operator/(StructArithmetic o) const {
-  auto result = diplomat::capi::StructArithmetic_div(this->AsFFI(),
-    o.AsFFI());
-  return StructArithmetic::FromFFI(result);
+    auto result = diplomat::capi::StructArithmetic_div(this->AsFFI(),
+        o.AsFFI());
+    return StructArithmetic::FromFFI(result);
 }
 inline StructArithmetic& StructArithmetic::operator/=(StructArithmetic o) {
   *this = *this / o;
@@ -93,17 +93,17 @@ inline StructArithmetic& StructArithmetic::operator/=(StructArithmetic o) {
 
 
 inline diplomat::capi::StructArithmetic StructArithmetic::AsFFI() const {
-  return diplomat::capi::StructArithmetic {
-    /* .x = */ x,
-    /* .y = */ y,
-  };
+    return diplomat::capi::StructArithmetic {
+        /* .x = */ x,
+        /* .y = */ y,
+    };
 }
 
 inline StructArithmetic StructArithmetic::FromFFI(diplomat::capi::StructArithmetic c_struct) {
-  return StructArithmetic {
-    /* .x = */ c_struct.x,
-    /* .y = */ c_struct.y,
-  };
+    return StructArithmetic {
+        /* .x = */ c_struct.x,
+        /* .y = */ c_struct.y,
+    };
 }
 
 

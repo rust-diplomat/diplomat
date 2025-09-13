@@ -33,48 +33,48 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<OptionString> OptionString::new_(std::string_view diplomat_str) {
-  auto result = diplomat::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
-  return std::unique_ptr<OptionString>(OptionString::FromFFI(result));
+    auto result = diplomat::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
+    return std::unique_ptr<OptionString>(OptionString::FromFFI(result));
 }
 
 inline diplomat::result<std::string, std::monostate> OptionString::write() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  auto result = diplomat::capi::OptionString_write(this->AsFFI(),
-    &write);
-  return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = diplomat::capi::OptionString_write(this->AsFFI(),
+        &write);
+    return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
 template<typename W>
 inline diplomat::result<std::monostate, std::monostate> OptionString::write_write(W& writeable) const {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  auto result = diplomat::capi::OptionString_write(this->AsFFI(),
-    &write);
-  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = diplomat::capi::OptionString_write(this->AsFFI(),
+        &write);
+    return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline std::optional<std::string_view> OptionString::borrow() const {
-  auto result = diplomat::capi::OptionString_borrow(this->AsFFI());
-  return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
+    auto result = diplomat::capi::OptionString_borrow(this->AsFFI());
+    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }
 
 inline const diplomat::capi::OptionString* OptionString::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OptionString*>(this);
+    return reinterpret_cast<const diplomat::capi::OptionString*>(this);
 }
 
 inline diplomat::capi::OptionString* OptionString::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OptionString*>(this);
+    return reinterpret_cast<diplomat::capi::OptionString*>(this);
 }
 
 inline const OptionString* OptionString::FromFFI(const diplomat::capi::OptionString* ptr) {
-  return reinterpret_cast<const OptionString*>(ptr);
+    return reinterpret_cast<const OptionString*>(ptr);
 }
 
 inline OptionString* OptionString::FromFFI(diplomat::capi::OptionString* ptr) {
-  return reinterpret_cast<OptionString*>(ptr);
+    return reinterpret_cast<OptionString*>(ptr);
 }
 
 inline void OptionString::operator delete(void* ptr) {
-  diplomat::capi::OptionString_destroy(reinterpret_cast<diplomat::capi::OptionString*>(ptr));
+    diplomat::capi::OptionString_destroy(reinterpret_cast<diplomat::capi::OptionString*>(ptr));
 }
 
 

@@ -27,26 +27,26 @@ namespace capi {
 } // namespace
 
 inline size_t ns::RenamedTestMacroStruct::test_func() {
-  auto result = ns::capi::namespace_TestMacroStruct_test_func();
-  return result;
+    auto result = ns::capi::namespace_TestMacroStruct_test_func();
+    return result;
 }
 
 inline ns::RenamedTestMacroStruct ns::RenamedTestMacroStruct::test_meta() {
-  auto result = ns::capi::namespace_TestMacroStruct_test_meta();
-  return ns::RenamedTestMacroStruct::FromFFI(result);
+    auto result = ns::capi::namespace_TestMacroStruct_test_meta();
+    return ns::RenamedTestMacroStruct::FromFFI(result);
 }
 
 
 inline ns::capi::RenamedTestMacroStruct ns::RenamedTestMacroStruct::AsFFI() const {
-  return ns::capi::RenamedTestMacroStruct {
-    /* .a = */ a,
-  };
+    return ns::capi::RenamedTestMacroStruct {
+        /* .a = */ a,
+    };
 }
 
 inline ns::RenamedTestMacroStruct ns::RenamedTestMacroStruct::FromFFI(ns::capi::RenamedTestMacroStruct c_struct) {
-  return ns::RenamedTestMacroStruct {
-    /* .a = */ c_struct.a,
-  };
+    return ns::RenamedTestMacroStruct {
+        /* .a = */ c_struct.a,
+    };
 }
 
 

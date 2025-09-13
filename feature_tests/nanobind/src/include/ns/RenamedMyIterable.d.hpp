@@ -37,18 +37,18 @@ public:
 
   inline size_t __len__() const;
 
-  inline const ns::capi::RenamedMyIterable* AsFFI() const;
-  inline ns::capi::RenamedMyIterable* AsFFI();
-  inline static const ns::RenamedMyIterable* FromFFI(const ns::capi::RenamedMyIterable* ptr);
-  inline static ns::RenamedMyIterable* FromFFI(ns::capi::RenamedMyIterable* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedMyIterable* AsFFI() const;
+    inline ns::capi::RenamedMyIterable* AsFFI();
+    inline static const ns::RenamedMyIterable* FromFFI(const ns::capi::RenamedMyIterable* ptr);
+    inline static ns::RenamedMyIterable* FromFFI(ns::capi::RenamedMyIterable* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedMyIterable() = delete;
-  RenamedMyIterable(const ns::RenamedMyIterable&) = delete;
-  RenamedMyIterable(ns::RenamedMyIterable&&) noexcept = delete;
-  RenamedMyIterable operator=(const ns::RenamedMyIterable&) = delete;
-  RenamedMyIterable operator=(ns::RenamedMyIterable&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedMyIterable() = delete;
+    RenamedMyIterable(const ns::RenamedMyIterable&) = delete;
+    RenamedMyIterable(ns::RenamedMyIterable&&) noexcept = delete;
+    RenamedMyIterable operator=(const ns::RenamedMyIterable&) = delete;
+    RenamedMyIterable operator=(ns::RenamedMyIterable&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

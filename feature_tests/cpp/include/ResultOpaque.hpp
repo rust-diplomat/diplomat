@@ -55,77 +55,77 @@ namespace capi {
 } // namespace
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {
-  auto result = diplomat::capi::ResultOpaque_new(i);
-  return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
+    auto result = diplomat::capi::ResultOpaque_new(i);
+    return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
 }
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_foo() {
-  auto result = diplomat::capi::ResultOpaque_new_failing_foo();
-  return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
+    auto result = diplomat::capi::ResultOpaque_new_failing_foo();
+    return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
 }
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_bar() {
-  auto result = diplomat::capi::ResultOpaque_new_failing_bar();
-  return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
+    auto result = diplomat::capi::ResultOpaque_new_failing_bar();
+    return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
 }
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate> ResultOpaque::new_failing_unit() {
-  auto result = diplomat::capi::ResultOpaque_new_failing_unit();
-  return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate>(diplomat::Err<std::monostate>());
+    auto result = diplomat::capi::ResultOpaque_new_failing_unit();
+    return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct> ResultOpaque::new_failing_struct(int32_t i) {
-  auto result = diplomat::capi::ResultOpaque_new_failing_struct(i);
-  return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct>(diplomat::Err<ErrorStruct>(ErrorStruct::FromFFI(result.err)));
+    auto result = diplomat::capi::ResultOpaque_new_failing_struct(i);
+    return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct>(diplomat::Err<ErrorStruct>(ErrorStruct::FromFFI(result.err)));
 }
 
 inline diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_err(int32_t i) {
-  auto result = diplomat::capi::ResultOpaque_new_in_err(i);
-  return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
+    auto result = diplomat::capi::ResultOpaque_new_in_err(i);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
 }
 
 inline diplomat::result<int32_t, std::monostate> ResultOpaque::new_int(int32_t i) {
-  auto result = diplomat::capi::ResultOpaque_new_int(i);
-  return result.is_ok ? diplomat::result<int32_t, std::monostate>(diplomat::Ok<int32_t>(result.ok)) : diplomat::result<int32_t, std::monostate>(diplomat::Err<std::monostate>());
+    auto result = diplomat::capi::ResultOpaque_new_int(i);
+    return result.is_ok ? diplomat::result<int32_t, std::monostate>(diplomat::Ok<int32_t>(result.ok)) : diplomat::result<int32_t, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_enum_err(int32_t i) {
-  auto result = diplomat::capi::ResultOpaque_new_in_enum_err(i);
-  return result.is_ok ? diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Ok<ErrorEnum>(ErrorEnum::FromFFI(result.ok))) : diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
+    auto result = diplomat::capi::ResultOpaque_new_in_enum_err(i);
+    return result.is_ok ? diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Ok<ErrorEnum>(ErrorEnum::FromFFI(result.ok))) : diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
 }
 
 inline diplomat::result<ResultOpaque&, diplomat::Utf8Error> ResultOpaque::takes_str(std::string_view _v) {
-  if (!diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
+    if (!diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
     return diplomat::Err<diplomat::Utf8Error>();
   }
-  auto result = diplomat::capi::ResultOpaque_takes_str(this->AsFFI(),
-    {_v.data(), _v.size()});
-  return diplomat::Ok<ResultOpaque&>(*ResultOpaque::FromFFI(result));
+    auto result = diplomat::capi::ResultOpaque_takes_str(this->AsFFI(),
+        {_v.data(), _v.size()});
+    return diplomat::Ok<ResultOpaque&>(*ResultOpaque::FromFFI(result));
 }
 
 inline void ResultOpaque::assert_integer(int32_t i) const {
-  diplomat::capi::ResultOpaque_assert_integer(this->AsFFI(),
-    i);
+    diplomat::capi::ResultOpaque_assert_integer(this->AsFFI(),
+        i);
 }
 
 inline const diplomat::capi::ResultOpaque* ResultOpaque::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::ResultOpaque*>(this);
+    return reinterpret_cast<const diplomat::capi::ResultOpaque*>(this);
 }
 
 inline diplomat::capi::ResultOpaque* ResultOpaque::AsFFI() {
-  return reinterpret_cast<diplomat::capi::ResultOpaque*>(this);
+    return reinterpret_cast<diplomat::capi::ResultOpaque*>(this);
 }
 
 inline const ResultOpaque* ResultOpaque::FromFFI(const diplomat::capi::ResultOpaque* ptr) {
-  return reinterpret_cast<const ResultOpaque*>(ptr);
+    return reinterpret_cast<const ResultOpaque*>(ptr);
 }
 
 inline ResultOpaque* ResultOpaque::FromFFI(diplomat::capi::ResultOpaque* ptr) {
-  return reinterpret_cast<ResultOpaque*>(ptr);
+    return reinterpret_cast<ResultOpaque*>(ptr);
 }
 
 inline void ResultOpaque::operator delete(void* ptr) {
-  diplomat::capi::ResultOpaque_destroy(reinterpret_cast<diplomat::capi::ResultOpaque*>(ptr));
+    diplomat::capi::ResultOpaque_destroy(reinterpret_cast<diplomat::capi::ResultOpaque*>(ptr));
 }
 
 

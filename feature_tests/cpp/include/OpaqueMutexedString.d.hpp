@@ -42,18 +42,18 @@ public:
 
   inline uint16_t to_unsigned_from_unsigned(uint16_t input) const;
 
-  inline const diplomat::capi::OpaqueMutexedString* AsFFI() const;
-  inline diplomat::capi::OpaqueMutexedString* AsFFI();
-  inline static const OpaqueMutexedString* FromFFI(const diplomat::capi::OpaqueMutexedString* ptr);
-  inline static OpaqueMutexedString* FromFFI(diplomat::capi::OpaqueMutexedString* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::OpaqueMutexedString* AsFFI() const;
+    inline diplomat::capi::OpaqueMutexedString* AsFFI();
+    inline static const OpaqueMutexedString* FromFFI(const diplomat::capi::OpaqueMutexedString* ptr);
+    inline static OpaqueMutexedString* FromFFI(diplomat::capi::OpaqueMutexedString* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OpaqueMutexedString() = delete;
-  OpaqueMutexedString(const OpaqueMutexedString&) = delete;
-  OpaqueMutexedString(OpaqueMutexedString&&) noexcept = delete;
-  OpaqueMutexedString operator=(const OpaqueMutexedString&) = delete;
-  OpaqueMutexedString operator=(OpaqueMutexedString&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OpaqueMutexedString() = delete;
+    OpaqueMutexedString(const OpaqueMutexedString&) = delete;
+    OpaqueMutexedString(OpaqueMutexedString&&) noexcept = delete;
+    OpaqueMutexedString operator=(const OpaqueMutexedString&) = delete;
+    OpaqueMutexedString operator=(OpaqueMutexedString&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -11,8 +11,8 @@ void add_OptionString_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<OptionString>(mod, "OptionString", nb::type_slots(OptionString_slots))
-    	.def("borrow", &OptionString::borrow)
-    	.def_static("new", &OptionString::new_, "diplomat_str"_a)
-    	.def("write", &OptionString::write);
+        .def("borrow", &OptionString::borrow)
+        .def_static("new", &OptionString::new_, "diplomat_str"_a)
+        .def("write", &OptionString::write);
 }
 

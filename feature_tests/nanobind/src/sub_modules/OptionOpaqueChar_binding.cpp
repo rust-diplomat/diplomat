@@ -11,6 +11,6 @@ void add_OptionOpaqueChar_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<OptionOpaqueChar>(mod, "OptionOpaqueChar", nb::type_slots(OptionOpaqueChar_slots))
-    	.def("assert_char", &OptionOpaqueChar::assert_char, "ch"_a);
+        .def("assert_char", &OptionOpaqueChar::assert_char, "ch"_a);
 }
 

@@ -28,20 +28,20 @@ namespace ns {
  */
 class [[deprecated("use Foo")]] RenamedDeprecatedEnum {
 public:
-  enum Value {
-    A = 0,
-  };
+    enum Value {
+        A = 0,
+    };
 
-  RenamedDeprecatedEnum(): value(Value::A) {}
+    RenamedDeprecatedEnum(): value(Value::A) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr RenamedDeprecatedEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr RenamedDeprecatedEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline ns::capi::RenamedDeprecatedEnum AsFFI() const;
-  inline static ns::RenamedDeprecatedEnum FromFFI(ns::capi::RenamedDeprecatedEnum c_enum);
+    inline ns::capi::RenamedDeprecatedEnum AsFFI() const;
+    inline static ns::RenamedDeprecatedEnum FromFFI(ns::capi::RenamedDeprecatedEnum c_enum);
 private:
     Value value;
 };

@@ -35,18 +35,18 @@ public:
 
   inline void push(double value);
 
-  inline const ns::capi::RenamedVectorTest* AsFFI() const;
-  inline ns::capi::RenamedVectorTest* AsFFI();
-  inline static const ns::RenamedVectorTest* FromFFI(const ns::capi::RenamedVectorTest* ptr);
-  inline static ns::RenamedVectorTest* FromFFI(ns::capi::RenamedVectorTest* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedVectorTest* AsFFI() const;
+    inline ns::capi::RenamedVectorTest* AsFFI();
+    inline static const ns::RenamedVectorTest* FromFFI(const ns::capi::RenamedVectorTest* ptr);
+    inline static ns::RenamedVectorTest* FromFFI(ns::capi::RenamedVectorTest* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedVectorTest() = delete;
-  RenamedVectorTest(const ns::RenamedVectorTest&) = delete;
-  RenamedVectorTest(ns::RenamedVectorTest&&) noexcept = delete;
-  RenamedVectorTest operator=(const ns::RenamedVectorTest&) = delete;
-  RenamedVectorTest operator=(ns::RenamedVectorTest&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedVectorTest() = delete;
+    RenamedVectorTest(const ns::RenamedVectorTest&) = delete;
+    RenamedVectorTest(ns::RenamedVectorTest&&) noexcept = delete;
+    RenamedVectorTest operator=(const ns::RenamedVectorTest&) = delete;
+    RenamedVectorTest operator=(ns::RenamedVectorTest&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
