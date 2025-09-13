@@ -100,39 +100,39 @@ namespace nanobind::detail
     };
 
     template <typename T, typename E>
-	struct type_caster<diplomat::result<T, E>>
-	{
+    struct type_caster<diplomat::result<T, E>>
+    {
         using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
         using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
-		using Value = diplomat::result<T, E>;
+        using Value = diplomat::result<T, E>;
         // Can't store result<T, E> directly since T& will create compiler errors.
-		std::optional<U> ok_val;
+        std::optional<U> ok_val;
         std::optional<V> err_val;
         bool is_ok;
-		Py_ssize_t size;
+        Py_ssize_t size;
         using Caster = make_caster<U>;
-		static constexpr auto Name = Caster::Name;
+        static constexpr auto Name = Caster::Name;
 
-		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
-		{
-			if (value.is_ok()) {
+        static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+        {
+            if (value.is_ok()) {
                 return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
-			}
+            }
 
-			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
-			if (errorPyV.is_valid())
-			{
-				PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
-			}
-			else
-			{
-				char error_msg[512];
-				snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
-				PyErr_SetString(PyExc_Exception, error_msg);
-			}
+            auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+            if (errorPyV.is_valid())
+            {
+                PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+            }
+            else
+            {
+                char error_msg[512];
+                snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+                PyErr_SetString(PyExc_Exception, error_msg);
+            }
 
             return nullptr;
-		}
+        }
         
         template <typename T_>
         using Cast = Value;
@@ -175,7 +175,7 @@ namespace nanobind::detail
         }
 
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
-	};
+    };
 
     template <typename T, std::size_t E>
     class type_caster<diplomat::span<T, E>> {

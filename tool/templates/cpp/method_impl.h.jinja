@@ -3,45 +3,45 @@ inline {##}
 {{- return_ty }} {##}
 {{- type_name }}::{{ method_name -}}
 (
-	{%- include "param_decls_list.h.jinja" %}
-	{%- if is_generic_writeable %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable{% endif -%}
+    {%- include "param_decls_list.h.jinja" %}
+    {%- if is_generic_writeable %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable{% endif -%}
 ) {##}
 {%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
 {
-	{%- for validation in m.param_validations %}
-	{{ validation.replace('\n', "\n  ") }}
-	{%- endfor -%}
-	{%- if m.method.output.is_write() %}
-	{%- if is_generic_writeable %}
-	diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-	{%- else %}
-	std::string output;
-	diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-	{%- endif %}
-	{%- endif %}
-	{% if !m.method.output.is_ffi_unit() -%}
-	auto result = {##}
-	{%- endif -%}
+    {%- for validation in m.param_validations %}
+    {{ validation.replace('\n', "\n  ") }}
+    {%- endfor -%}
+    {%- if m.method.output.is_write() %}
+    {%- if is_generic_writeable %}
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    {%- else %}
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    {%- endif %}
+    {%- endif %}
+    {% if !m.method.output.is_ffi_unit() -%}
+    auto result = {##}
+    {%- endif -%}
 
-	{%- for p in m.param_pre_conversions -%}
-	{{p}}
-	{% endfor -%}
+    {%- for p in m.param_pre_conversions -%}
+    {{p}}
+    {% endfor -%}
 
-	{{ m.abi_name }}(
-		{%- for param in m.cpp_to_c_params %}
-		{%- if !loop.first %},
-		{% endif -%}
-		{{ param }}
-		{%- endfor -%}
-	);
+    {{ m.abi_name }}(
+        {%- for param in m.cpp_to_c_params %}
+        {%- if !loop.first %},
+        {% endif -%}
+        {{ param }}
+        {%- endfor -%}
+    );
 
-	{%- for p in m.param_post_conversions %}
-	{{p}}
-	{%- endfor -%}
+    {%- for p in m.param_post_conversions %}
+    {{p}}
+    {%- endfor -%}
 
-	{%- if let Some(statement) = c_to_cpp_return_expression %}
-	return {{ statement }};
-	{%- endif %}
+    {%- if let Some(statement) = c_to_cpp_return_expression %}
+    return {{ statement }};
+    {%- endif %}
 }
 {%- endmacro %}
 
@@ -68,32 +68,32 @@ inline {{ m.return_ty }}& {{type_name}}::{{m.method_name -}}=({{ param_var.type_
 {%- when Some(hir::SpecialMethod::Iterable) %}
 {% let helper_type = m.return_ty.replace("std::unique_ptr", "diplomat::next_to_iter_helper") %}
 inline {{helper_type}} {{- type_name }}::begin() const {
-	return iter();
+    return iter();
 }
 
 {%- when Some(hir::SpecialMethod::Comparison) %}
 inline bool {{type_name}}::operator==(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) == 0;
+    return this->{{m.method_name}}(other) == 0;
 }
 
 inline bool {{type_name}}::operator!=(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) != 0;
+    return this->{{m.method_name}}(other) != 0;
 }
 
 inline bool {{type_name}}::operator<=(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) <= 0;
+    return this->{{m.method_name}}(other) <= 0;
 }
 
 inline bool {{type_name}}::operator>=(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) >= 0;
+    return this->{{m.method_name}}(other) >= 0;
 }
 
 inline bool {{type_name}}::operator<(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) < 0;
+    return this->{{m.method_name}}(other) < 0;
 }
 
 inline bool {{type_name}}::operator>(const {{type_name}}& other) const {
-	return this->{{m.method_name}}(other) > 0;
+    return this->{{m.method_name}}(other) > 0;
 }
 
 {%- when _ -%}

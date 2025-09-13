@@ -10,26 +10,26 @@ namespace {{ns}} {
 {% endif -%}
 class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
-	enum Value {
-		{%- for enum_variant in ty.variants %}
-		{{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
-		{%- endfor %}
-	};
+    enum Value {
+        {%- for enum_variant in ty.variants %}
+        {{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
+        {%- endfor %}
+    };
 
-	{{type_name_unnamespaced}}(): value(Value::{{default_variant}}) {}
+    {{type_name_unnamespaced}}(): value(Value::{{default_variant}}) {}
 
-	// Implicit conversions between enum and ::Value
-	constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
-	constexpr operator Value() const { return value; }
-	// Prevent usage as boolean value
-	explicit operator bool() const = delete; 
+    // Implicit conversions between enum and ::Value
+    constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete; 
 
-	{%- for m in methods %}
+    {%- for m in methods %}
 {% include "method_decl.h.jinja" %}
-	{%- endfor %}
+    {%- endfor %}
 
-	inline {{ctype}} AsFFI() const;
-	inline static {{type_name}} FromFFI({{ctype}} c_enum);
+    inline {{ctype}} AsFFI() const;
+    inline static {{type_name}} FromFFI({{ctype}} c_enum);
 private:
     Value value;
 };

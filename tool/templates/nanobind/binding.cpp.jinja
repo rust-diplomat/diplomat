@@ -14,7 +14,7 @@ namespace {{namespace}}{
 void add_{{unqualified_type}}_binding(nb::handle mod) {
     {%- for line in body.lines() %}
     {{ line }}
-	{%- endfor %}
+    {%- endfor %}
 }
 
 {% if !namespace.is_empty() %}
