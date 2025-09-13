@@ -25,8 +25,8 @@ namespace capi {
 
 
 struct StructArithmetic {
-  int32_t x;
-  int32_t y;
+    int32_t x;
+    int32_t y;
 
   inline static StructArithmetic ORIGIN();
 
@@ -46,8 +46,8 @@ struct StructArithmetic {
   inline StructArithmetic operator/(StructArithmetic o) const;
   inline StructArithmetic& operator/=(StructArithmetic o);
 
-  inline diplomat::capi::StructArithmetic AsFFI() const;
-  inline static StructArithmetic FromFFI(diplomat::capi::StructArithmetic c_struct);
+    inline diplomat::capi::StructArithmetic AsFFI() const;
+    inline static StructArithmetic FromFFI(diplomat::capi::StructArithmetic c_struct);
 };
 
 

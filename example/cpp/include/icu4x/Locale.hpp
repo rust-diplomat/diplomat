@@ -27,28 +27,28 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<icu4x::Locale> icu4x::Locale::new_(std::string_view name) {
-  auto result = icu4x::capi::icu4x_Locale_new_mv1({name.data(), name.size()});
-  return std::unique_ptr<icu4x::Locale>(icu4x::Locale::FromFFI(result));
+    auto result = icu4x::capi::icu4x_Locale_new_mv1({name.data(), name.size()});
+    return std::unique_ptr<icu4x::Locale>(icu4x::Locale::FromFFI(result));
 }
 
 inline const icu4x::capi::Locale* icu4x::Locale::AsFFI() const {
-  return reinterpret_cast<const icu4x::capi::Locale*>(this);
+    return reinterpret_cast<const icu4x::capi::Locale*>(this);
 }
 
 inline icu4x::capi::Locale* icu4x::Locale::AsFFI() {
-  return reinterpret_cast<icu4x::capi::Locale*>(this);
+    return reinterpret_cast<icu4x::capi::Locale*>(this);
 }
 
 inline const icu4x::Locale* icu4x::Locale::FromFFI(const icu4x::capi::Locale* ptr) {
-  return reinterpret_cast<const icu4x::Locale*>(ptr);
+    return reinterpret_cast<const icu4x::Locale*>(ptr);
 }
 
 inline icu4x::Locale* icu4x::Locale::FromFFI(icu4x::capi::Locale* ptr) {
-  return reinterpret_cast<icu4x::Locale*>(ptr);
+    return reinterpret_cast<icu4x::Locale*>(ptr);
 }
 
 inline void icu4x::Locale::operator delete(void* ptr) {
-  icu4x::capi::icu4x_Locale_destroy_mv1(reinterpret_cast<icu4x::capi::Locale*>(ptr));
+    icu4x::capi::icu4x_Locale_destroy_mv1(reinterpret_cast<icu4x::capi::Locale*>(ptr));
 }
 
 

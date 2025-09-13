@@ -25,18 +25,18 @@ namespace ns {
 class [[deprecated("use Foo")]] RenamedDeprecatedOpaque {
 public:
 
-  inline const ns::capi::RenamedDeprecatedOpaque* AsFFI() const;
-  inline ns::capi::RenamedDeprecatedOpaque* AsFFI();
-  inline static const ns::RenamedDeprecatedOpaque* FromFFI(const ns::capi::RenamedDeprecatedOpaque* ptr);
-  inline static ns::RenamedDeprecatedOpaque* FromFFI(ns::capi::RenamedDeprecatedOpaque* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedDeprecatedOpaque* AsFFI() const;
+    inline ns::capi::RenamedDeprecatedOpaque* AsFFI();
+    inline static const ns::RenamedDeprecatedOpaque* FromFFI(const ns::capi::RenamedDeprecatedOpaque* ptr);
+    inline static ns::RenamedDeprecatedOpaque* FromFFI(ns::capi::RenamedDeprecatedOpaque* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedDeprecatedOpaque() = delete;
-  RenamedDeprecatedOpaque(const ns::RenamedDeprecatedOpaque&) = delete;
-  RenamedDeprecatedOpaque(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
-  RenamedDeprecatedOpaque operator=(const ns::RenamedDeprecatedOpaque&) = delete;
-  RenamedDeprecatedOpaque operator=(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedDeprecatedOpaque() = delete;
+    RenamedDeprecatedOpaque(const ns::RenamedDeprecatedOpaque&) = delete;
+    RenamedDeprecatedOpaque(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
+    RenamedDeprecatedOpaque operator=(const ns::RenamedDeprecatedOpaque&) = delete;
+    RenamedDeprecatedOpaque operator=(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

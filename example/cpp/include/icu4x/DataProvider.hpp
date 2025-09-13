@@ -30,33 +30,33 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<icu4x::DataProvider> icu4x::DataProvider::new_static() {
-  auto result = icu4x::capi::icu4x_DataProvider_new_static_mv1();
-  return std::unique_ptr<icu4x::DataProvider>(icu4x::DataProvider::FromFFI(result));
+    auto result = icu4x::capi::icu4x_DataProvider_new_static_mv1();
+    return std::unique_ptr<icu4x::DataProvider>(icu4x::DataProvider::FromFFI(result));
 }
 
 inline diplomat::result<std::monostate, std::monostate> icu4x::DataProvider::returns_result() {
-  auto result = icu4x::capi::icu4x_DataProvider_returns_result_mv1();
-  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+    auto result = icu4x::capi::icu4x_DataProvider_returns_result_mv1();
+    return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline const icu4x::capi::DataProvider* icu4x::DataProvider::AsFFI() const {
-  return reinterpret_cast<const icu4x::capi::DataProvider*>(this);
+    return reinterpret_cast<const icu4x::capi::DataProvider*>(this);
 }
 
 inline icu4x::capi::DataProvider* icu4x::DataProvider::AsFFI() {
-  return reinterpret_cast<icu4x::capi::DataProvider*>(this);
+    return reinterpret_cast<icu4x::capi::DataProvider*>(this);
 }
 
 inline const icu4x::DataProvider* icu4x::DataProvider::FromFFI(const icu4x::capi::DataProvider* ptr) {
-  return reinterpret_cast<const icu4x::DataProvider*>(ptr);
+    return reinterpret_cast<const icu4x::DataProvider*>(ptr);
 }
 
 inline icu4x::DataProvider* icu4x::DataProvider::FromFFI(icu4x::capi::DataProvider* ptr) {
-  return reinterpret_cast<icu4x::DataProvider*>(ptr);
+    return reinterpret_cast<icu4x::DataProvider*>(ptr);
 }
 
 inline void icu4x::DataProvider::operator delete(void* ptr) {
-  icu4x::capi::icu4x_DataProvider_destroy_mv1(reinterpret_cast<icu4x::capi::DataProvider*>(ptr));
+    icu4x::capi::icu4x_DataProvider_destroy_mv1(reinterpret_cast<icu4x::capi::DataProvider*>(ptr));
 }
 
 

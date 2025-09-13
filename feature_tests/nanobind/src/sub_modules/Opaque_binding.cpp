@@ -12,13 +12,13 @@ void add_Opaque_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<Opaque>(mod, "Opaque", nb::type_slots(Opaque_slots))
-    	.def("assert_struct", &Opaque::assert_struct, "s"_a)
-    	.def_static("cmp", &Opaque::cmp)
-    	.def_static("from_str", &Opaque::from_str, "input"_a)
-    	.def("get_debug_str", &Opaque::get_debug_str)
-    	.def(nb::new_(&Opaque::new_))
-    	.def_static("returns_imported", &Opaque::returns_imported)
-    	.def_static("returns_usize", &Opaque::returns_usize)
-    	.def_static("try_from_utf8", &Opaque::try_from_utf8, "input"_a);
+        .def("assert_struct", &Opaque::assert_struct, "s"_a)
+        .def_static("cmp", &Opaque::cmp)
+        .def_static("from_str", &Opaque::from_str, "input"_a)
+        .def("get_debug_str", &Opaque::get_debug_str)
+        .def(nb::new_(&Opaque::new_))
+        .def_static("returns_imported", &Opaque::returns_imported)
+        .def_static("returns_usize", &Opaque::returns_usize)
+        .def_static("try_from_utf8", &Opaque::try_from_utf8, "input"_a);
 }
 

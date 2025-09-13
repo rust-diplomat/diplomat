@@ -28,35 +28,35 @@ namespace capi {
 } // namespace
 
 inline CyclicStructC CyclicStructC::takes_nested_parameters(CyclicStructC c) {
-  auto result = diplomat::capi::CyclicStructC_takes_nested_parameters(c.AsFFI());
-  return CyclicStructC::FromFFI(result);
+    auto result = diplomat::capi::CyclicStructC_takes_nested_parameters(c.AsFFI());
+    return CyclicStructC::FromFFI(result);
 }
 
 inline std::string CyclicStructC::cyclic_out() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
+        &write);
+    return output;
 }
 template<typename W>
 inline void CyclicStructC::cyclic_out_write(W& writeable) const {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
+        &write);
 }
 
 
 inline diplomat::capi::CyclicStructC CyclicStructC::AsFFI() const {
-  return diplomat::capi::CyclicStructC {
-    /* .a = */ a.AsFFI(),
-  };
+    return diplomat::capi::CyclicStructC {
+        /* .a = */ a.AsFFI(),
+    };
 }
 
 inline CyclicStructC CyclicStructC::FromFFI(diplomat::capi::CyclicStructC c_struct) {
-  return CyclicStructC {
-    /* .a = */ CyclicStructA::FromFFI(c_struct.a),
-  };
+    return CyclicStructC {
+        /* .a = */ CyclicStructA::FromFFI(c_struct.a),
+    };
 }
 
 

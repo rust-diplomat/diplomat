@@ -25,17 +25,17 @@ namespace capi {
 
 
 inline diplomat::capi::ImportedStruct ImportedStruct::AsFFI() const {
-  return diplomat::capi::ImportedStruct {
-    /* .foo = */ foo.AsFFI(),
-    /* .count = */ count,
-  };
+    return diplomat::capi::ImportedStruct {
+        /* .foo = */ foo.AsFFI(),
+        /* .count = */ count,
+    };
 }
 
 inline ImportedStruct ImportedStruct::FromFFI(diplomat::capi::ImportedStruct c_struct) {
-  return ImportedStruct {
-    /* .foo = */ UnimportedEnum::FromFFI(c_struct.foo),
-    /* .count = */ c_struct.count,
-  };
+    return ImportedStruct {
+        /* .foo = */ UnimportedEnum::FromFFI(c_struct.foo),
+        /* .count = */ c_struct.count,
+    };
 }
 
 

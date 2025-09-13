@@ -31,18 +31,18 @@ public:
   inline diplomat::next_to_iter_helper<ns::RenamedOpaqueIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
-  inline const ns::capi::RenamedOpaqueIterable* AsFFI() const;
-  inline ns::capi::RenamedOpaqueIterable* AsFFI();
-  inline static const ns::RenamedOpaqueIterable* FromFFI(const ns::capi::RenamedOpaqueIterable* ptr);
-  inline static ns::RenamedOpaqueIterable* FromFFI(ns::capi::RenamedOpaqueIterable* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedOpaqueIterable* AsFFI() const;
+    inline ns::capi::RenamedOpaqueIterable* AsFFI();
+    inline static const ns::RenamedOpaqueIterable* FromFFI(const ns::capi::RenamedOpaqueIterable* ptr);
+    inline static ns::RenamedOpaqueIterable* FromFFI(ns::capi::RenamedOpaqueIterable* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedOpaqueIterable() = delete;
-  RenamedOpaqueIterable(const ns::RenamedOpaqueIterable&) = delete;
-  RenamedOpaqueIterable(ns::RenamedOpaqueIterable&&) noexcept = delete;
-  RenamedOpaqueIterable operator=(const ns::RenamedOpaqueIterable&) = delete;
-  RenamedOpaqueIterable operator=(ns::RenamedOpaqueIterable&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedOpaqueIterable() = delete;
+    RenamedOpaqueIterable(const ns::RenamedOpaqueIterable&) = delete;
+    RenamedOpaqueIterable(ns::RenamedOpaqueIterable&&) noexcept = delete;
+    RenamedOpaqueIterable operator=(const ns::RenamedOpaqueIterable&) = delete;
+    RenamedOpaqueIterable operator=(ns::RenamedOpaqueIterable&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

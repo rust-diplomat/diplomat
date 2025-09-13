@@ -12,7 +12,7 @@ void add_RefList_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<RefList>(mod, "RefList", nb::type_slots(RefList_slots))
-    	.def_static("node", &RefList::node, "data"_a, nb::keep_alive<0, 1>() ) // unsupported special method NamedConstructor(None)
+        .def_static("node", &RefList::node, "data"_a, nb::keep_alive<0, 1>() ) // unsupported special method NamedConstructor(None)
     ;
 }
 

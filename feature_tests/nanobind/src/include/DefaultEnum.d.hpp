@@ -25,23 +25,23 @@ namespace capi {
 
 class DefaultEnum {
 public:
-  enum Value {
-    A = 0,
-    B = 1,
-  };
+    enum Value {
+        A = 0,
+        B = 1,
+    };
 
-  DefaultEnum(): value(Value::A) {}
+    DefaultEnum(): value(Value::A) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr DefaultEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr DefaultEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
   inline static DefaultEnum new_();
 
-  inline diplomat::capi::DefaultEnum AsFFI() const;
-  inline static DefaultEnum FromFFI(diplomat::capi::DefaultEnum c_enum);
+    inline diplomat::capi::DefaultEnum AsFFI() const;
+    inline static DefaultEnum FromFFI(diplomat::capi::DefaultEnum c_enum);
 private:
     Value value;
 };

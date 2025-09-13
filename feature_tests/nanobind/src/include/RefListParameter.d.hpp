@@ -21,18 +21,18 @@ namespace capi {
 class RefListParameter {
 public:
 
-  inline const diplomat::capi::RefListParameter* AsFFI() const;
-  inline diplomat::capi::RefListParameter* AsFFI();
-  inline static const RefListParameter* FromFFI(const diplomat::capi::RefListParameter* ptr);
-  inline static RefListParameter* FromFFI(diplomat::capi::RefListParameter* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::RefListParameter* AsFFI() const;
+    inline diplomat::capi::RefListParameter* AsFFI();
+    inline static const RefListParameter* FromFFI(const diplomat::capi::RefListParameter* ptr);
+    inline static RefListParameter* FromFFI(diplomat::capi::RefListParameter* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RefListParameter() = delete;
-  RefListParameter(const RefListParameter&) = delete;
-  RefListParameter(RefListParameter&&) noexcept = delete;
-  RefListParameter operator=(const RefListParameter&) = delete;
-  RefListParameter operator=(RefListParameter&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RefListParameter() = delete;
+    RefListParameter(const RefListParameter&) = delete;
+    RefListParameter(RefListParameter&&) noexcept = delete;
+    RefListParameter operator=(const RefListParameter&) = delete;
+    RefListParameter operator=(RefListParameter&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

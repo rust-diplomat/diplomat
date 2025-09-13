@@ -4,15 +4,15 @@ expression: enum_gen
 ---
 nb::class_<mylib::SpeedSetting> e_class(mod, "SpeedSetting");
 
-	nb::enum_<mylib::SpeedSetting::Value>(e_class, "SpeedSetting")
-		.value("Fast", mylib::SpeedSetting::Fast)
-		.value("Medium", mylib::SpeedSetting::Medium)
-		.value("Slow", mylib::SpeedSetting::Slow)
-		.export_values();
+    nb::enum_<mylib::SpeedSetting::Value>(e_class, "SpeedSetting")
+        .value("Fast", mylib::SpeedSetting::Fast)
+        .value("Medium", mylib::SpeedSetting::Medium)
+        .value("Slow", mylib::SpeedSetting::Slow)
+        .export_values();
 
-	e_class
-		.def(nb::init_implicit<mylib::SpeedSetting::Value>())
-		.def(nb::self == mylib::SpeedSetting::Value())
-		.def("__repr__", [](const mylib::SpeedSetting& self){
-			return nb::str(nb::cast(mylib::SpeedSetting::Value(self)));
-		});
+    e_class
+        .def(nb::init_implicit<mylib::SpeedSetting::Value>())
+        .def(nb::self == mylib::SpeedSetting::Value())
+        .def("__repr__", [](const mylib::SpeedSetting& self){
+            return nb::str(nb::cast(mylib::SpeedSetting::Value(self)));
+        });

@@ -43,75 +43,75 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
-  auto result = diplomat::capi::Opaque_new();
-  return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
+    auto result = diplomat::capi::Opaque_new();
+    return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
 }
 
 inline std::unique_ptr<Opaque> Opaque::try_from_utf8(std::string_view input) {
-  auto result = diplomat::capi::Opaque_try_from_utf8({input.data(), input.size()});
-  return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
+    auto result = diplomat::capi::Opaque_try_from_utf8({input.data(), input.size()});
+    return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
 }
 
 inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::from_str(std::string_view input) {
-  if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
+    if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
     return diplomat::Err<diplomat::Utf8Error>();
   }
-  auto result = diplomat::capi::Opaque_from_str({input.data(), input.size()});
-  return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));
+    auto result = diplomat::capi::Opaque_from_str({input.data(), input.size()});
+    return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));
 }
 
 inline std::string Opaque::get_debug_str() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
+        &write);
+    return output;
 }
 template<typename W>
 inline void Opaque::get_debug_str_write(W& writeable) const {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
+        &write);
 }
 
 inline void Opaque::assert_struct(MyStruct s) const {
-  diplomat::capi::Opaque_assert_struct(this->AsFFI(),
-    s.AsFFI());
+    diplomat::capi::Opaque_assert_struct(this->AsFFI(),
+        s.AsFFI());
 }
 
 inline size_t Opaque::returns_usize() {
-  auto result = diplomat::capi::Opaque_returns_usize();
-  return result;
+    auto result = diplomat::capi::Opaque_returns_usize();
+    return result;
 }
 
 inline ImportedStruct Opaque::returns_imported() {
-  auto result = diplomat::capi::Opaque_returns_imported();
-  return ImportedStruct::FromFFI(result);
+    auto result = diplomat::capi::Opaque_returns_imported();
+    return ImportedStruct::FromFFI(result);
 }
 
 inline int8_t Opaque::cmp() {
-  auto result = diplomat::capi::Opaque_cmp();
-  return result;
+    auto result = diplomat::capi::Opaque_cmp();
+    return result;
 }
 
 inline const diplomat::capi::Opaque* Opaque::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Opaque*>(this);
+    return reinterpret_cast<const diplomat::capi::Opaque*>(this);
 }
 
 inline diplomat::capi::Opaque* Opaque::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Opaque*>(this);
+    return reinterpret_cast<diplomat::capi::Opaque*>(this);
 }
 
 inline const Opaque* Opaque::FromFFI(const diplomat::capi::Opaque* ptr) {
-  return reinterpret_cast<const Opaque*>(ptr);
+    return reinterpret_cast<const Opaque*>(ptr);
 }
 
 inline Opaque* Opaque::FromFFI(diplomat::capi::Opaque* ptr) {
-  return reinterpret_cast<Opaque*>(ptr);
+    return reinterpret_cast<Opaque*>(ptr);
 }
 
 inline void Opaque::operator delete(void* ptr) {
-  diplomat::capi::Opaque_destroy(reinterpret_cast<diplomat::capi::Opaque*>(ptr));
+    diplomat::capi::Opaque_destroy(reinterpret_cast<diplomat::capi::Opaque*>(ptr));
 }
 
 

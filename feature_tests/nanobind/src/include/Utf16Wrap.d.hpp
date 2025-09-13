@@ -29,18 +29,18 @@ public:
 
   inline std::u16string_view borrow_cont() const;
 
-  inline const diplomat::capi::Utf16Wrap* AsFFI() const;
-  inline diplomat::capi::Utf16Wrap* AsFFI();
-  inline static const Utf16Wrap* FromFFI(const diplomat::capi::Utf16Wrap* ptr);
-  inline static Utf16Wrap* FromFFI(diplomat::capi::Utf16Wrap* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::Utf16Wrap* AsFFI() const;
+    inline diplomat::capi::Utf16Wrap* AsFFI();
+    inline static const Utf16Wrap* FromFFI(const diplomat::capi::Utf16Wrap* ptr);
+    inline static Utf16Wrap* FromFFI(diplomat::capi::Utf16Wrap* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Utf16Wrap() = delete;
-  Utf16Wrap(const Utf16Wrap&) = delete;
-  Utf16Wrap(Utf16Wrap&&) noexcept = delete;
-  Utf16Wrap operator=(const Utf16Wrap&) = delete;
-  Utf16Wrap operator=(Utf16Wrap&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Utf16Wrap() = delete;
+    Utf16Wrap(const Utf16Wrap&) = delete;
+    Utf16Wrap(Utf16Wrap&&) noexcept = delete;
+    Utf16Wrap operator=(const Utf16Wrap&) = delete;
+    Utf16Wrap operator=(Utf16Wrap&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

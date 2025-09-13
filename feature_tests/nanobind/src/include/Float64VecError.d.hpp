@@ -25,18 +25,18 @@ public:
 
   inline diplomat::result<double, std::monostate> operator[](size_t i) const;
 
-  inline const diplomat::capi::Float64VecError* AsFFI() const;
-  inline diplomat::capi::Float64VecError* AsFFI();
-  inline static const Float64VecError* FromFFI(const diplomat::capi::Float64VecError* ptr);
-  inline static Float64VecError* FromFFI(diplomat::capi::Float64VecError* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::Float64VecError* AsFFI() const;
+    inline diplomat::capi::Float64VecError* AsFFI();
+    inline static const Float64VecError* FromFFI(const diplomat::capi::Float64VecError* ptr);
+    inline static Float64VecError* FromFFI(diplomat::capi::Float64VecError* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Float64VecError() = delete;
-  Float64VecError(const Float64VecError&) = delete;
-  Float64VecError(Float64VecError&&) noexcept = delete;
-  Float64VecError operator=(const Float64VecError&) = delete;
-  Float64VecError operator=(Float64VecError&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Float64VecError() = delete;
+    Float64VecError(const Float64VecError&) = delete;
+    Float64VecError(Float64VecError&&) noexcept = delete;
+    Float64VecError operator=(const Float64VecError&) = delete;
+    Float64VecError operator=(Float64VecError&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

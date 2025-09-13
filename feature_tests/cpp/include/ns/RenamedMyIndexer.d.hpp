@@ -24,18 +24,18 @@ public:
 
   inline std::optional<std::string_view> operator[](size_t i) const;
 
-  inline const ns::capi::RenamedMyIndexer* AsFFI() const;
-  inline ns::capi::RenamedMyIndexer* AsFFI();
-  inline static const ns::RenamedMyIndexer* FromFFI(const ns::capi::RenamedMyIndexer* ptr);
-  inline static ns::RenamedMyIndexer* FromFFI(ns::capi::RenamedMyIndexer* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedMyIndexer* AsFFI() const;
+    inline ns::capi::RenamedMyIndexer* AsFFI();
+    inline static const ns::RenamedMyIndexer* FromFFI(const ns::capi::RenamedMyIndexer* ptr);
+    inline static ns::RenamedMyIndexer* FromFFI(ns::capi::RenamedMyIndexer* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedMyIndexer() = delete;
-  RenamedMyIndexer(const ns::RenamedMyIndexer&) = delete;
-  RenamedMyIndexer(ns::RenamedMyIndexer&&) noexcept = delete;
-  RenamedMyIndexer operator=(const ns::RenamedMyIndexer&) = delete;
-  RenamedMyIndexer operator=(ns::RenamedMyIndexer&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedMyIndexer() = delete;
+    RenamedMyIndexer(const ns::RenamedMyIndexer&) = delete;
+    RenamedMyIndexer(ns::RenamedMyIndexer&&) noexcept = delete;
+    RenamedMyIndexer operator=(const ns::RenamedMyIndexer&) = delete;
+    RenamedMyIndexer operator=(ns::RenamedMyIndexer&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

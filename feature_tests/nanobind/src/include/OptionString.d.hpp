@@ -29,18 +29,18 @@ public:
 
   inline std::optional<std::string_view> borrow() const;
 
-  inline const diplomat::capi::OptionString* AsFFI() const;
-  inline diplomat::capi::OptionString* AsFFI();
-  inline static const OptionString* FromFFI(const diplomat::capi::OptionString* ptr);
-  inline static OptionString* FromFFI(diplomat::capi::OptionString* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::OptionString* AsFFI() const;
+    inline diplomat::capi::OptionString* AsFFI();
+    inline static const OptionString* FromFFI(const diplomat::capi::OptionString* ptr);
+    inline static OptionString* FromFFI(diplomat::capi::OptionString* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OptionString() = delete;
-  OptionString(const OptionString&) = delete;
-  OptionString(OptionString&&) noexcept = delete;
-  OptionString operator=(const OptionString&) = delete;
-  OptionString operator=(OptionString&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OptionString() = delete;
+    OptionString(const OptionString&) = delete;
+    OptionString(OptionString&&) noexcept = delete;
+    OptionString operator=(const OptionString&) = delete;
+    OptionString operator=(OptionString&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

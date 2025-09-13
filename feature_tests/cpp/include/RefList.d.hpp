@@ -26,18 +26,18 @@ public:
 
   inline static std::unique_ptr<RefList> node(const RefListParameter& data);
 
-  inline const diplomat::capi::RefList* AsFFI() const;
-  inline diplomat::capi::RefList* AsFFI();
-  inline static const RefList* FromFFI(const diplomat::capi::RefList* ptr);
-  inline static RefList* FromFFI(diplomat::capi::RefList* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::RefList* AsFFI() const;
+    inline diplomat::capi::RefList* AsFFI();
+    inline static const RefList* FromFFI(const diplomat::capi::RefList* ptr);
+    inline static RefList* FromFFI(diplomat::capi::RefList* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RefList() = delete;
-  RefList(const RefList&) = delete;
-  RefList(RefList&&) noexcept = delete;
-  RefList operator=(const RefList&) = delete;
-  RefList operator=(RefList&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RefList() = delete;
+    RefList(const RefList&) = delete;
+    RefList(RefList&&) noexcept = delete;
+    RefList operator=(const RefList&) = delete;
+    RefList operator=(RefList&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

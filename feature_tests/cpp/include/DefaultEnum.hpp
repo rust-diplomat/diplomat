@@ -25,21 +25,21 @@ namespace capi {
 } // namespace
 
 inline diplomat::capi::DefaultEnum DefaultEnum::AsFFI() const {
-  return static_cast<diplomat::capi::DefaultEnum>(value);
+    return static_cast<diplomat::capi::DefaultEnum>(value);
 }
 
 inline DefaultEnum DefaultEnum::FromFFI(diplomat::capi::DefaultEnum c_enum) {
-  switch (c_enum) {
-    case diplomat::capi::DefaultEnum_A:
-    case diplomat::capi::DefaultEnum_B:
-      return static_cast<DefaultEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case diplomat::capi::DefaultEnum_A:
+        case diplomat::capi::DefaultEnum_B:
+            return static_cast<DefaultEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 
 inline DefaultEnum DefaultEnum::new_() {
-  auto result = diplomat::capi::DefaultEnum_new();
-  return DefaultEnum::FromFFI(result);
+    auto result = diplomat::capi::DefaultEnum_new();
+    return DefaultEnum::FromFFI(result);
 }
 #endif // DefaultEnum_HPP

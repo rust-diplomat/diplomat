@@ -24,15 +24,15 @@ namespace capi {
 
 
 inline diplomat::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
-  return diplomat::capi::BorrowedFieldsReturning {
-    /* .bytes = */ {bytes.data(), bytes.size()},
-  };
+    return diplomat::capi::BorrowedFieldsReturning {
+        /* .bytes = */ {bytes.data(), bytes.size()},
+    };
 }
 
 inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct) {
-  return BorrowedFieldsReturning {
-    /* .bytes = */ std::string_view(c_struct.bytes.data, c_struct.bytes.len),
-  };
+    return BorrowedFieldsReturning {
+        /* .bytes = */ std::string_view(c_struct.bytes.data, c_struct.bytes.len),
+    };
 }
 
 

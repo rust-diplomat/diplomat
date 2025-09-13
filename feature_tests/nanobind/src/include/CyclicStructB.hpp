@@ -29,26 +29,26 @@ namespace capi {
 } // namespace
 
 inline CyclicStructA CyclicStructB::get_a() {
-  auto result = diplomat::capi::CyclicStructB_get_a();
-  return CyclicStructA::FromFFI(result);
+    auto result = diplomat::capi::CyclicStructB_get_a();
+    return CyclicStructA::FromFFI(result);
 }
 
 inline std::optional<CyclicStructA> CyclicStructB::get_a_option() {
-  auto result = diplomat::capi::CyclicStructB_get_a_option();
-  return result.is_ok ? std::optional<CyclicStructA>(CyclicStructA::FromFFI(result.ok)) : std::nullopt;
+    auto result = diplomat::capi::CyclicStructB_get_a_option();
+    return result.is_ok ? std::optional<CyclicStructA>(CyclicStructA::FromFFI(result.ok)) : std::nullopt;
 }
 
 
 inline diplomat::capi::CyclicStructB CyclicStructB::AsFFI() const {
-  return diplomat::capi::CyclicStructB {
-    /* .field = */ field,
-  };
+    return diplomat::capi::CyclicStructB {
+        /* .field = */ field,
+    };
 }
 
 inline CyclicStructB CyclicStructB::FromFFI(diplomat::capi::CyclicStructB c_struct) {
-  return CyclicStructB {
-    /* .field = */ c_struct.field,
-  };
+    return CyclicStructB {
+        /* .field = */ c_struct.field,
+    };
 }
 
 

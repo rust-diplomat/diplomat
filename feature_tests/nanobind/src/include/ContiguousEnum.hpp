@@ -23,18 +23,18 @@ namespace capi {
 } // namespace
 
 inline diplomat::capi::ContiguousEnum ContiguousEnum::AsFFI() const {
-  return static_cast<diplomat::capi::ContiguousEnum>(value);
+    return static_cast<diplomat::capi::ContiguousEnum>(value);
 }
 
 inline ContiguousEnum ContiguousEnum::FromFFI(diplomat::capi::ContiguousEnum c_enum) {
-  switch (c_enum) {
-    case diplomat::capi::ContiguousEnum_C:
-    case diplomat::capi::ContiguousEnum_D:
-    case diplomat::capi::ContiguousEnum_E:
-    case diplomat::capi::ContiguousEnum_F:
-      return static_cast<ContiguousEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case diplomat::capi::ContiguousEnum_C:
+        case diplomat::capi::ContiguousEnum_D:
+        case diplomat::capi::ContiguousEnum_E:
+        case diplomat::capi::ContiguousEnum_F:
+            return static_cast<ContiguousEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 #endif // ContiguousEnum_HPP

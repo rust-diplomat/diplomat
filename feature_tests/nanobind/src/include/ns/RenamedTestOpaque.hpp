@@ -25,23 +25,23 @@ namespace capi {
 } // namespace
 
 inline const ns::capi::RenamedTestOpaque* ns::RenamedTestOpaque::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedTestOpaque*>(this);
+    return reinterpret_cast<const ns::capi::RenamedTestOpaque*>(this);
 }
 
 inline ns::capi::RenamedTestOpaque* ns::RenamedTestOpaque::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedTestOpaque*>(this);
+    return reinterpret_cast<ns::capi::RenamedTestOpaque*>(this);
 }
 
 inline const ns::RenamedTestOpaque* ns::RenamedTestOpaque::FromFFI(const ns::capi::RenamedTestOpaque* ptr) {
-  return reinterpret_cast<const ns::RenamedTestOpaque*>(ptr);
+    return reinterpret_cast<const ns::RenamedTestOpaque*>(ptr);
 }
 
 inline ns::RenamedTestOpaque* ns::RenamedTestOpaque::FromFFI(ns::capi::RenamedTestOpaque* ptr) {
-  return reinterpret_cast<ns::RenamedTestOpaque*>(ptr);
+    return reinterpret_cast<ns::RenamedTestOpaque*>(ptr);
 }
 
 inline void ns::RenamedTestOpaque::operator delete(void* ptr) {
-  ns::capi::namespace_TestOpaque_destroy(reinterpret_cast<ns::capi::RenamedTestOpaque*>(ptr));
+    ns::capi::namespace_TestOpaque_destroy(reinterpret_cast<ns::capi::RenamedTestOpaque*>(ptr));
 }
 
 

@@ -35,11 +35,11 @@ public:
   inline void get_debug_str_write(W& writeable_output) const;
 
   /**
-   * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
-   *
-   * See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
-   *
-   * Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+     * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+     *
+     * See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+     *
+     * Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
    */
   inline void assert_struct(MyStruct s) const;
 
@@ -49,18 +49,18 @@ public:
 
   inline static int8_t cmp();
 
-  inline const diplomat::capi::Opaque* AsFFI() const;
-  inline diplomat::capi::Opaque* AsFFI();
-  inline static const Opaque* FromFFI(const diplomat::capi::Opaque* ptr);
-  inline static Opaque* FromFFI(diplomat::capi::Opaque* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::Opaque* AsFFI() const;
+    inline diplomat::capi::Opaque* AsFFI();
+    inline static const Opaque* FromFFI(const diplomat::capi::Opaque* ptr);
+    inline static Opaque* FromFFI(diplomat::capi::Opaque* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Opaque() = delete;
-  Opaque(const Opaque&) = delete;
-  Opaque(Opaque&&) noexcept = delete;
-  Opaque operator=(const Opaque&) = delete;
-  Opaque operator=(Opaque&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Opaque() = delete;
+    Opaque(const Opaque&) = delete;
+    Opaque(Opaque&&) noexcept = delete;
+    Opaque operator=(const Opaque&) = delete;
+    Opaque operator=(Opaque&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -29,14 +29,14 @@ namespace capi {
 
 namespace ns {
 struct RenamedTestMacroStruct {
-  size_t a;
+    size_t a;
 
   inline static size_t test_func();
 
   inline static ns::RenamedTestMacroStruct test_meta();
 
-  inline ns::capi::RenamedTestMacroStruct AsFFI() const;
-  inline static ns::RenamedTestMacroStruct FromFFI(ns::capi::RenamedTestMacroStruct c_struct);
+    inline ns::capi::RenamedTestMacroStruct AsFFI() const;
+    inline static ns::RenamedTestMacroStruct FromFFI(ns::capi::RenamedTestMacroStruct c_struct);
 };
 
 } // namespace

@@ -32,13 +32,13 @@ namespace capi {
 
 namespace icu4x {
 struct FixedDecimalFormatterOptions {
-  icu4x::FixedDecimalGroupingStrategy grouping_strategy;
-  bool some_other_config;
+    icu4x::FixedDecimalGroupingStrategy grouping_strategy;
+    bool some_other_config;
 
   inline static icu4x::FixedDecimalFormatterOptions default_();
 
-  inline icu4x::capi::FixedDecimalFormatterOptions AsFFI() const;
-  inline static icu4x::FixedDecimalFormatterOptions FromFFI(icu4x::capi::FixedDecimalFormatterOptions c_struct);
+    inline icu4x::capi::FixedDecimalFormatterOptions AsFFI() const;
+    inline static icu4x::FixedDecimalFormatterOptions FromFFI(icu4x::capi::FixedDecimalFormatterOptions c_struct);
 };
 
 } // namespace

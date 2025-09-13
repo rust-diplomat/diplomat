@@ -13,14 +13,14 @@ void add_RenamedMyIterator_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<ns::RenamedMyIterator>(mod, "RenamedMyIterator", nb::type_slots(ns_RenamedMyIterator_slots))
-    	.def("__next__", [](ns::RenamedMyIterator& self){
-    			auto next = self.next();
-    			if (!next) {
-    				throw nb::stop_iteration();
-    			}
-    			return next_inner_extractor<decltype(next)>::get(std::move(next));
-    		})
-    		.def("__iter__", [](nb::handle self) { return self; });
+        .def("__next__", [](ns::RenamedMyIterator& self){
+                auto next = self.next();
+                if (!next) {
+                    throw nb::stop_iteration();
+                }
+                return next_inner_extractor<decltype(next)>::get(std::move(next));
+            })
+            .def("__iter__", [](nb::handle self) { return self; });
 }
 
 

@@ -30,15 +30,15 @@ namespace capi {
 
 
 struct MyStructContainingAnOption {
-  std::optional<MyStruct> a;
-  std::optional<DefaultEnum> b;
+    std::optional<MyStruct> a;
+    std::optional<DefaultEnum> b;
 
   inline static MyStructContainingAnOption new_();
 
   inline static MyStructContainingAnOption filled();
 
-  inline diplomat::capi::MyStructContainingAnOption AsFFI() const;
-  inline static MyStructContainingAnOption FromFFI(diplomat::capi::MyStructContainingAnOption c_struct);
+    inline diplomat::capi::MyStructContainingAnOption AsFFI() const;
+    inline static MyStructContainingAnOption FromFFI(diplomat::capi::MyStructContainingAnOption c_struct);
 };
 
 

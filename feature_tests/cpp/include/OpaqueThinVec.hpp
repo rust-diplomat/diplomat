@@ -37,55 +37,55 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<OpaqueThinVec> OpaqueThinVec::create(diplomat::span<const int32_t> a, diplomat::span<const float> b, std::string_view c) {
-  auto result = diplomat::capi::OpaqueThinVec_create({a.data(), a.size()},
-    {b.data(), b.size()},
-    {c.data(), c.size()});
-  return std::unique_ptr<OpaqueThinVec>(OpaqueThinVec::FromFFI(result));
+    auto result = diplomat::capi::OpaqueThinVec_create({a.data(), a.size()},
+        {b.data(), b.size()},
+        {c.data(), c.size()});
+    return std::unique_ptr<OpaqueThinVec>(OpaqueThinVec::FromFFI(result));
 }
 
 inline std::unique_ptr<OpaqueThinIter> OpaqueThinVec::iter() const {
-  auto result = diplomat::capi::OpaqueThinVec_iter(this->AsFFI());
-  return std::unique_ptr<OpaqueThinIter>(OpaqueThinIter::FromFFI(result));
+    auto result = diplomat::capi::OpaqueThinVec_iter(this->AsFFI());
+    return std::unique_ptr<OpaqueThinIter>(OpaqueThinIter::FromFFI(result));
 }
 
 inline diplomat::next_to_iter_helper<OpaqueThinIter>OpaqueThinVec::begin() const {
-  return iter();
+    return iter();
 }
 
 inline size_t OpaqueThinVec::len() const {
-  auto result = diplomat::capi::OpaqueThinVec_len(this->AsFFI());
-  return result;
+    auto result = diplomat::capi::OpaqueThinVec_len(this->AsFFI());
+    return result;
 }
 
 inline const OpaqueThin* OpaqueThinVec::operator[](size_t idx) const {
-  auto result = diplomat::capi::OpaqueThinVec_get(this->AsFFI(),
-    idx);
-  return OpaqueThin::FromFFI(result);
+    auto result = diplomat::capi::OpaqueThinVec_get(this->AsFFI(),
+        idx);
+    return OpaqueThin::FromFFI(result);
 }
 
 inline const OpaqueThin* OpaqueThinVec::first() const {
-  auto result = diplomat::capi::OpaqueThinVec_first(this->AsFFI());
-  return OpaqueThin::FromFFI(result);
+    auto result = diplomat::capi::OpaqueThinVec_first(this->AsFFI());
+    return OpaqueThin::FromFFI(result);
 }
 
 inline const diplomat::capi::OpaqueThinVec* OpaqueThinVec::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OpaqueThinVec*>(this);
+    return reinterpret_cast<const diplomat::capi::OpaqueThinVec*>(this);
 }
 
 inline diplomat::capi::OpaqueThinVec* OpaqueThinVec::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OpaqueThinVec*>(this);
+    return reinterpret_cast<diplomat::capi::OpaqueThinVec*>(this);
 }
 
 inline const OpaqueThinVec* OpaqueThinVec::FromFFI(const diplomat::capi::OpaqueThinVec* ptr) {
-  return reinterpret_cast<const OpaqueThinVec*>(ptr);
+    return reinterpret_cast<const OpaqueThinVec*>(ptr);
 }
 
 inline OpaqueThinVec* OpaqueThinVec::FromFFI(diplomat::capi::OpaqueThinVec* ptr) {
-  return reinterpret_cast<OpaqueThinVec*>(ptr);
+    return reinterpret_cast<OpaqueThinVec*>(ptr);
 }
 
 inline void OpaqueThinVec::operator delete(void* ptr) {
-  diplomat::capi::OpaqueThinVec_destroy(reinterpret_cast<diplomat::capi::OpaqueThinVec*>(ptr));
+    diplomat::capi::OpaqueThinVec_destroy(reinterpret_cast<diplomat::capi::OpaqueThinVec*>(ptr));
 }
 
 

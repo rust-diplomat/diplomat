@@ -49,18 +49,18 @@ public:
 
   inline std::optional<double> operator[](size_t i) const;
 
-  inline const diplomat::capi::Float64Vec* AsFFI() const;
-  inline diplomat::capi::Float64Vec* AsFFI();
-  inline static const Float64Vec* FromFFI(const diplomat::capi::Float64Vec* ptr);
-  inline static Float64Vec* FromFFI(diplomat::capi::Float64Vec* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::Float64Vec* AsFFI() const;
+    inline diplomat::capi::Float64Vec* AsFFI();
+    inline static const Float64Vec* FromFFI(const diplomat::capi::Float64Vec* ptr);
+    inline static Float64Vec* FromFFI(diplomat::capi::Float64Vec* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Float64Vec() = delete;
-  Float64Vec(const Float64Vec&) = delete;
-  Float64Vec(Float64Vec&&) noexcept = delete;
-  Float64Vec operator=(const Float64Vec&) = delete;
-  Float64Vec operator=(Float64Vec&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Float64Vec() = delete;
+    Float64Vec(const Float64Vec&) = delete;
+    Float64Vec(Float64Vec&&) noexcept = delete;
+    Float64Vec operator=(const Float64Vec&) = delete;
+    Float64Vec operator=(Float64Vec&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

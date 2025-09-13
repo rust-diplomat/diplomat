@@ -26,22 +26,22 @@ namespace capi {
 
 class UnimportedEnum {
 public:
-  enum Value {
-    A = 0,
-    B = 1,
-    C = 2,
-  };
+    enum Value {
+        A = 0,
+        B = 1,
+        C = 2,
+    };
 
-  UnimportedEnum(): value(Value::A) {}
+    UnimportedEnum(): value(Value::A) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr UnimportedEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr UnimportedEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline diplomat::capi::UnimportedEnum AsFFI() const;
-  inline static UnimportedEnum FromFFI(diplomat::capi::UnimportedEnum c_enum);
+    inline diplomat::capi::UnimportedEnum AsFFI() const;
+    inline static UnimportedEnum FromFFI(diplomat::capi::UnimportedEnum c_enum);
 private:
     Value value;
 };

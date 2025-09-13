@@ -11,7 +11,7 @@ void add_CallbackHolder_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<CallbackHolder>(mod, "CallbackHolder", nb::type_slots(CallbackHolder_slots))
-    	.def("call", &CallbackHolder::call, "a"_a)
-    	.def(nb::new_(&CallbackHolder::new_), "func"_a);
+        .def("call", &CallbackHolder::call, "a"_a)
+        .def(nb::new_(&CallbackHolder::new_), "func"_a);
 }
 

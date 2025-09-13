@@ -44,30 +44,30 @@ namespace capi {
  * Also being used to test CPP backends taking structs with primitive values.
  */
 struct BigStructWithStuff {
-  uint8_t first;
-  uint16_t second;
-  uint16_t third;
-  ScalarPairWithPadding fourth;
-  uint8_t fifth;
+    uint8_t first;
+    uint16_t second;
+    uint16_t third;
+    ScalarPairWithPadding fourth;
+    uint8_t fifth;
 
   inline void assert_value(uint16_t extra_val) const;
 
   inline static void assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value);
 
-  inline diplomat::capi::BigStructWithStuff AsFFI() const;
-  inline static BigStructWithStuff FromFFI(diplomat::capi::BigStructWithStuff c_struct);
+    inline diplomat::capi::BigStructWithStuff AsFFI() const;
+    inline static BigStructWithStuff FromFFI(diplomat::capi::BigStructWithStuff c_struct);
 };
 
 
 namespace diplomat {
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const BigStructWithStuff>>>> {
-    using type = capi::DiplomatBigStructWithStuffView;
-  };
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const BigStructWithStuff>>>> {
+        using type = capi::DiplomatBigStructWithStuffView;
+    };
 
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<BigStructWithStuff>>>> {
-    using type = capi::DiplomatBigStructWithStuffViewMut;
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<BigStructWithStuff>>>> {
+        using type = capi::DiplomatBigStructWithStuffViewMut;
 };
 }
 #endif // BigStructWithStuff_D_HPP

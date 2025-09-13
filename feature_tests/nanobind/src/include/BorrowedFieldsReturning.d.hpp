@@ -24,10 +24,10 @@ namespace capi {
 
 
 struct BorrowedFieldsReturning {
-  std::string_view bytes;
+    std::string_view bytes;
 
-  inline diplomat::capi::BorrowedFieldsReturning AsFFI() const;
-  inline static BorrowedFieldsReturning FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct);
+    inline diplomat::capi::BorrowedFieldsReturning AsFFI() const;
+    inline static BorrowedFieldsReturning FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct);
 };
 
 

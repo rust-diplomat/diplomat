@@ -38,18 +38,18 @@ public:
 
   inline const OpaqueThin* first() const;
 
-  inline const diplomat::capi::OpaqueThinVec* AsFFI() const;
-  inline diplomat::capi::OpaqueThinVec* AsFFI();
-  inline static const OpaqueThinVec* FromFFI(const diplomat::capi::OpaqueThinVec* ptr);
-  inline static OpaqueThinVec* FromFFI(diplomat::capi::OpaqueThinVec* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::OpaqueThinVec* AsFFI() const;
+    inline diplomat::capi::OpaqueThinVec* AsFFI();
+    inline static const OpaqueThinVec* FromFFI(const diplomat::capi::OpaqueThinVec* ptr);
+    inline static OpaqueThinVec* FromFFI(diplomat::capi::OpaqueThinVec* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OpaqueThinVec() = delete;
-  OpaqueThinVec(const OpaqueThinVec&) = delete;
-  OpaqueThinVec(OpaqueThinVec&&) noexcept = delete;
-  OpaqueThinVec operator=(const OpaqueThinVec&) = delete;
-  OpaqueThinVec operator=(OpaqueThinVec&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OpaqueThinVec() = delete;
+    OpaqueThinVec(const OpaqueThinVec&) = delete;
+    OpaqueThinVec(OpaqueThinVec&&) noexcept = delete;
+    OpaqueThinVec operator=(const OpaqueThinVec&) = delete;
+    OpaqueThinVec operator=(OpaqueThinVec&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

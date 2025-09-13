@@ -25,11 +25,11 @@ namespace capi {
 
 
 struct CallbackTestingStruct {
-  int32_t x;
-  int32_t y;
+    int32_t x;
+    int32_t y;
 
-  inline diplomat::capi::CallbackTestingStruct AsFFI() const;
-  inline static CallbackTestingStruct FromFFI(diplomat::capi::CallbackTestingStruct c_struct);
+    inline diplomat::capi::CallbackTestingStruct AsFFI() const;
+    inline static CallbackTestingStruct FromFFI(diplomat::capi::CallbackTestingStruct c_struct);
 };
 
 

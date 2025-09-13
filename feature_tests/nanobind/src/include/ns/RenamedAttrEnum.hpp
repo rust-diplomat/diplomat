@@ -23,17 +23,17 @@ namespace capi {
 } // namespace
 
 inline ns::capi::RenamedAttrEnum ns::RenamedAttrEnum::AsFFI() const {
-  return static_cast<ns::capi::RenamedAttrEnum>(value);
+    return static_cast<ns::capi::RenamedAttrEnum>(value);
 }
 
 inline ns::RenamedAttrEnum ns::RenamedAttrEnum::FromFFI(ns::capi::RenamedAttrEnum c_enum) {
-  switch (c_enum) {
-    case ns::capi::RenamedAttrEnum_A:
-    case ns::capi::RenamedAttrEnum_B:
-    case ns::capi::RenamedAttrEnum_C:
-      return static_cast<ns::RenamedAttrEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case ns::capi::RenamedAttrEnum_A:
+        case ns::capi::RenamedAttrEnum_B:
+        case ns::capi::RenamedAttrEnum_C:
+            return static_cast<ns::RenamedAttrEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 #endif // ns_RenamedAttrEnum_HPP

@@ -32,13 +32,13 @@ namespace capi {
 
 
 struct OptionStruct {
-  std::unique_ptr<OptionOpaque> a;
-  std::unique_ptr<OptionOpaqueChar> b;
-  uint32_t c;
-  std::unique_ptr<OptionOpaque> d;
+    std::unique_ptr<OptionOpaque> a;
+    std::unique_ptr<OptionOpaqueChar> b;
+    uint32_t c;
+    std::unique_ptr<OptionOpaque> d;
 
-  inline diplomat::capi::OptionStruct AsFFI() const;
-  inline static OptionStruct FromFFI(diplomat::capi::OptionStruct c_struct);
+    inline diplomat::capi::OptionStruct AsFFI() const;
+    inline static OptionStruct FromFFI(diplomat::capi::OptionStruct c_struct);
 };
 
 

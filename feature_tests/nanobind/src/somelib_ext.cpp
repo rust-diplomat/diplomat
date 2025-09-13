@@ -123,16 +123,16 @@ struct _Dummy {};
 
 NB_MODULE(somelib, somelib_mod)
 {
-	{
-		nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
-		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
-	}
+    {
+        nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
+        nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
+    }
 
     nb::class_<std::monostate>(somelib_mod, "monostate")
-		.def("__repr__", [](const std::monostate &)
-			 { return ""; })
-		.def("__str__", [](const std::monostate &)
-			 { return ""; });
+        .def("__repr__", [](const std::monostate &)
+             { return ""; })
+        .def("__str__", [](const std::monostate &)
+             { return ""; });
              
 
     // Module declarations
@@ -215,5 +215,5 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_RenamedAttrEnum_binding(somelib_ns_mod);
     ns::add_RenamedDeprecatedEnum_binding(somelib_ns_mod);
     
-	
+    
 }

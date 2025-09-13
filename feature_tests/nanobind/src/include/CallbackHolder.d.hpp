@@ -25,18 +25,18 @@ public:
 
   inline int32_t call(int32_t a) const;
 
-  inline const diplomat::capi::CallbackHolder* AsFFI() const;
-  inline diplomat::capi::CallbackHolder* AsFFI();
-  inline static const CallbackHolder* FromFFI(const diplomat::capi::CallbackHolder* ptr);
-  inline static CallbackHolder* FromFFI(diplomat::capi::CallbackHolder* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::CallbackHolder* AsFFI() const;
+    inline diplomat::capi::CallbackHolder* AsFFI();
+    inline static const CallbackHolder* FromFFI(const diplomat::capi::CallbackHolder* ptr);
+    inline static CallbackHolder* FromFFI(diplomat::capi::CallbackHolder* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  CallbackHolder() = delete;
-  CallbackHolder(const CallbackHolder&) = delete;
-  CallbackHolder(CallbackHolder&&) noexcept = delete;
-  CallbackHolder operator=(const CallbackHolder&) = delete;
-  CallbackHolder operator=(CallbackHolder&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    CallbackHolder() = delete;
+    CallbackHolder(const CallbackHolder&) = delete;
+    CallbackHolder(CallbackHolder&&) noexcept = delete;
+    CallbackHolder operator=(const CallbackHolder&) = delete;
+    CallbackHolder operator=(CallbackHolder&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -50,62 +50,62 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_not_new() {
-  auto result = ns::capi::namespace_AttrOpaque1_new();
-  return std::unique_ptr<ns::AttrOpaque1Renamed>(ns::AttrOpaque1Renamed::FromFFI(result));
+    auto result = ns::capi::namespace_AttrOpaque1_new();
+    return std::unique_ptr<ns::AttrOpaque1Renamed>(ns::AttrOpaque1Renamed::FromFFI(result));
 }
 
 inline void ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<diplomat::result<std::monostate, std::monostate>()> _t) {
-  ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, std::monostate, ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, diplomat::fn_traits(_t).c_delete});
+    ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, std::monostate, ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, diplomat::fn_traits(_t).c_delete});
 }
 
 inline int32_t ns::AttrOpaque1Renamed::mac_test() {
-  auto result = ns::capi::namespace_AttrOpaque1_mac_test();
-  return result;
+    auto result = ns::capi::namespace_AttrOpaque1_mac_test();
+    return result;
 }
 
 inline int32_t ns::AttrOpaque1Renamed::hello() {
-  auto result = ns::capi::namespace_AttrOpaque1_hello();
-  return result;
+    auto result = ns::capi::namespace_AttrOpaque1_hello();
+    return result;
 }
 
 inline uint8_t ns::AttrOpaque1Renamed::method_renamed() const {
-  auto result = ns::capi::namespace_AttrOpaque1_method(this->AsFFI());
-  return result;
+    auto result = ns::capi::namespace_AttrOpaque1_method(this->AsFFI());
+    return result;
 }
 
 inline uint8_t ns::AttrOpaque1Renamed::abirenamed() const {
-  auto result = ns::capi::renamed_on_abi_only(this->AsFFI());
-  return result;
+    auto result = ns::capi::renamed_on_abi_only(this->AsFFI());
+    return result;
 }
 
 inline void ns::AttrOpaque1Renamed::use_unnamespaced(const Unnamespaced& _un) const {
-  ns::capi::namespace_AttrOpaque1_use_unnamespaced(this->AsFFI(),
-    _un.AsFFI());
+    ns::capi::namespace_AttrOpaque1_use_unnamespaced(this->AsFFI(),
+        _un.AsFFI());
 }
 
 inline void ns::AttrOpaque1Renamed::use_namespaced(ns::RenamedAttrEnum _n) const {
-  ns::capi::namespace_AttrOpaque1_use_namespaced(this->AsFFI(),
-    _n.AsFFI());
+    ns::capi::namespace_AttrOpaque1_use_namespaced(this->AsFFI(),
+        _n.AsFFI());
 }
 
 inline const ns::capi::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::AsFFI() const {
-  return reinterpret_cast<const ns::capi::AttrOpaque1Renamed*>(this);
+    return reinterpret_cast<const ns::capi::AttrOpaque1Renamed*>(this);
 }
 
 inline ns::capi::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::AsFFI() {
-  return reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(this);
+    return reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(this);
 }
 
 inline const ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(const ns::capi::AttrOpaque1Renamed* ptr) {
-  return reinterpret_cast<const ns::AttrOpaque1Renamed*>(ptr);
+    return reinterpret_cast<const ns::AttrOpaque1Renamed*>(ptr);
 }
 
 inline ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(ns::capi::AttrOpaque1Renamed* ptr) {
-  return reinterpret_cast<ns::AttrOpaque1Renamed*>(ptr);
+    return reinterpret_cast<ns::AttrOpaque1Renamed*>(ptr);
 }
 
 inline void ns::AttrOpaque1Renamed::operator delete(void* ptr) {
-  ns::capi::namespace_AttrOpaque1_destroy(reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(ptr));
+    ns::capi::namespace_AttrOpaque1_destroy(reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(ptr));
 }
 
 

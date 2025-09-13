@@ -28,28 +28,28 @@ namespace capi {
 } // namespace
 
 inline const Foo& Bar::foo() const {
-  auto result = diplomat::capi::Bar_foo(this->AsFFI());
-  return *Foo::FromFFI(result);
+    auto result = diplomat::capi::Bar_foo(this->AsFFI());
+    return *Foo::FromFFI(result);
 }
 
 inline const diplomat::capi::Bar* Bar::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Bar*>(this);
+    return reinterpret_cast<const diplomat::capi::Bar*>(this);
 }
 
 inline diplomat::capi::Bar* Bar::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Bar*>(this);
+    return reinterpret_cast<diplomat::capi::Bar*>(this);
 }
 
 inline const Bar* Bar::FromFFI(const diplomat::capi::Bar* ptr) {
-  return reinterpret_cast<const Bar*>(ptr);
+    return reinterpret_cast<const Bar*>(ptr);
 }
 
 inline Bar* Bar::FromFFI(diplomat::capi::Bar* ptr) {
-  return reinterpret_cast<Bar*>(ptr);
+    return reinterpret_cast<Bar*>(ptr);
 }
 
 inline void Bar::operator delete(void* ptr) {
-  diplomat::capi::Bar_destroy(reinterpret_cast<diplomat::capi::Bar*>(ptr));
+    diplomat::capi::Bar_destroy(reinterpret_cast<diplomat::capi::Bar*>(ptr));
 }
 
 

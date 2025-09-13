@@ -188,131 +188,131 @@ namespace capi {
 } // namespace
 
 inline int32_t CallbackWrapper::test_multi_arg_callback(std::function<int32_t(int32_t)> f, int32_t x) {
-  auto result = diplomat::capi::CallbackWrapper_test_multi_arg_callback({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
-    x);
-  return result;
+    auto result = diplomat::capi::CallbackWrapper_test_multi_arg_callback({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
+        x);
+    return result;
 }
 
 inline int32_t CallbackWrapper::test_no_args(std::function<void()> h) {
-  auto result = diplomat::capi::CallbackWrapper_test_no_args({new decltype(h)(std::move(h)), diplomat::fn_traits(h).c_run_callback, diplomat::fn_traits(h).c_delete});
-  return result;
+    auto result = diplomat::capi::CallbackWrapper_test_no_args({new decltype(h)(std::move(h)), diplomat::fn_traits(h).c_run_callback, diplomat::fn_traits(h).c_delete});
+    return result;
 }
 
 inline int32_t CallbackWrapper::test_cb_with_struct(std::function<int32_t(CallbackTestingStruct)> f) {
-  auto result = diplomat::capi::CallbackWrapper_test_cb_with_struct({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
-  return result;
+    auto result = diplomat::capi::CallbackWrapper_test_cb_with_struct({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+    return result;
 }
 
 inline int32_t CallbackWrapper::test_multiple_cb_args(std::function<int32_t()> f, std::function<int32_t(int32_t)> g) {
-  auto result = diplomat::capi::CallbackWrapper_test_multiple_cb_args({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
-    {new decltype(g)(std::move(g)), diplomat::fn_traits(g).c_run_callback, diplomat::fn_traits(g).c_delete});
-  return result;
+    auto result = diplomat::capi::CallbackWrapper_test_multiple_cb_args({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete},
+        {new decltype(g)(std::move(g)), diplomat::fn_traits(g).c_run_callback, diplomat::fn_traits(g).c_delete});
+    return result;
 }
 
 inline int32_t CallbackWrapper::test_str_cb_arg(std::function<int32_t(std::string_view)> f) {
-  auto result = diplomat::capi::CallbackWrapper_test_str_cb_arg({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
-  return result;
+    auto result = diplomat::capi::CallbackWrapper_test_str_cb_arg({new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+    return result;
 }
 
 inline void CallbackWrapper::test_opaque_cb_arg(std::function<void(MyString&)> cb, MyString& a) {
-  diplomat::capi::CallbackWrapper_test_opaque_cb_arg({new decltype(cb)(std::move(cb)), diplomat::fn_traits(cb).c_run_callback, diplomat::fn_traits(cb).c_delete},
-    a.AsFFI());
+    diplomat::capi::CallbackWrapper_test_opaque_cb_arg({new decltype(cb)(std::move(cb)), diplomat::fn_traits(cb).c_run_callback, diplomat::fn_traits(cb).c_delete},
+        a.AsFFI());
 }
 
 inline void CallbackWrapper::test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f) {
-  diplomat::capi::CallbackWrapper_test_slice_cb_arg({arg.data(), arg.size()},
-    {new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+    diplomat::capi::CallbackWrapper_test_slice_cb_arg({arg.data(), arg.size()},
+        {new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
 }
 
 inline void CallbackWrapper::test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_result_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_output_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_result_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_result_usize_output(std::function<diplomat::result<size_t, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<size_t, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<size_t, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_option<std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_option<std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_diplomat_option_output(std::function<std::optional<uint32_t>()> t) {
-  diplomat::capi::CallbackWrapper_test_diplomat_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_option<uint32_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_diplomat_option_output({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_option<uint32_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline std::string CallbackWrapper::test_option_opaque(std::function<const Opaque*()> t) {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
+        &write);
+    return output;
 }
 template<typename W>
 inline void CallbackWrapper::test_option_opaque_write(std::function<const Opaque*()> t, W& writeable) {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const diplomat::capi::Opaque*>, diplomat::fn_traits(t).c_delete},
+        &write);
 }
 
 inline void CallbackWrapper::test_diplomat_result(std::function<diplomat::result<size_t, size_t>()> t) {
-  diplomat::capi::CallbackWrapper_test_diplomat_result({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<size_t, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_diplomat_result({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<size_t, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline std::string CallbackWrapper::test_result_opaque(std::function<diplomat::result<const Opaque&, std::monostate>()> t) {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
+        &write);
+    return output;
 }
 template<typename W>
 inline void CallbackWrapper::test_result_opaque_write(std::function<diplomat::result<const Opaque&, std::monostate>()> t, W& writeable) {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<const Opaque&, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, diplomat::fn_traits(t).c_delete},
+        &write);
 }
 
 inline void CallbackWrapper::test_inner_conversion(std::function<diplomat::result<MyStructContainingAnOption, size_t>()> t) {
-  diplomat::capi::CallbackWrapper_test_inner_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<MyStructContainingAnOption, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_inner_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<MyStructContainingAnOption, size_t, diplomat::capi::DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_str_conversion(std::function<diplomat::result<std::string_view, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_str_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::string_view, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_str_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_str_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::string_view, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_str_conversion_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_slice_conversion(std::function<diplomat::result<diplomat::span<const double>, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const double>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const double>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline void CallbackWrapper::test_struct_slice_conversion(std::function<diplomat::result<diplomat::span<const PrimitiveStruct>, std::monostate>()> t) {
-  diplomat::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const PrimitiveStruct>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
+    diplomat::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<diplomat::span<const PrimitiveStruct>, std::monostate, diplomat::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, diplomat::fn_traits(t).c_delete});
 }
 
 inline std::string CallbackWrapper::test_opaque_result_error(std::function<diplomat::result<std::monostate, const Opaque&>()> t) {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const Opaque&, diplomat::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, diplomat::fn_traits(t).c_delete},
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const Opaque&, diplomat::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, diplomat::fn_traits(t).c_delete},
+        &write);
+    return output;
 }
 template<typename W>
 inline void CallbackWrapper::test_opaque_result_error_write(std::function<diplomat::result<std::monostate, const Opaque&>()> t, W& writeable) {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const Opaque&, diplomat::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, diplomat::fn_traits(t).c_delete},
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const Opaque&, diplomat::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, diplomat::fn_traits(t).c_delete},
+        &write);
 }
 
 
 inline diplomat::capi::CallbackWrapper CallbackWrapper::AsFFI() const {
-  return diplomat::capi::CallbackWrapper {
-    /* .cant_be_empty = */ cant_be_empty,
-  };
+    return diplomat::capi::CallbackWrapper {
+        /* .cant_be_empty = */ cant_be_empty,
+    };
 }
 
 inline CallbackWrapper CallbackWrapper::FromFFI(diplomat::capi::CallbackWrapper c_struct) {
-  return CallbackWrapper {
-    /* .cant_be_empty = */ c_struct.cant_be_empty,
-  };
+    return CallbackWrapper {
+        /* .cant_be_empty = */ c_struct.cant_be_empty,
+    };
 }
 
 

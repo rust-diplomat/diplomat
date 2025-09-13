@@ -11,7 +11,7 @@ void add_MyOpaqueEnum_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<MyOpaqueEnum>(mod, "MyOpaqueEnum", nb::type_slots(MyOpaqueEnum_slots))
-    	.def_static("new", &MyOpaqueEnum::new_)
-    	.def("to_string", &MyOpaqueEnum::to_string);
+        .def_static("new", &MyOpaqueEnum::new_)
+        .def("to_string", &MyOpaqueEnum::to_string);
 }
 

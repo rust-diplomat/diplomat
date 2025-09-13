@@ -65,18 +65,18 @@ public:
 
   inline static int64_t accepts_option_primitive(std::optional<diplomat::span<const uint32_t>> arg, uint8_t sentinel);
 
-  inline const diplomat::capi::OptionOpaque* AsFFI() const;
-  inline diplomat::capi::OptionOpaque* AsFFI();
-  inline static const OptionOpaque* FromFFI(const diplomat::capi::OptionOpaque* ptr);
-  inline static OptionOpaque* FromFFI(diplomat::capi::OptionOpaque* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::OptionOpaque* AsFFI() const;
+    inline diplomat::capi::OptionOpaque* AsFFI();
+    inline static const OptionOpaque* FromFFI(const diplomat::capi::OptionOpaque* ptr);
+    inline static OptionOpaque* FromFFI(diplomat::capi::OptionOpaque* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OptionOpaque() = delete;
-  OptionOpaque(const OptionOpaque&) = delete;
-  OptionOpaque(OptionOpaque&&) noexcept = delete;
-  OptionOpaque operator=(const OptionOpaque&) = delete;
-  OptionOpaque operator=(OptionOpaque&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OptionOpaque() = delete;
+    OptionOpaque(const OptionOpaque&) = delete;
+    OptionOpaque(OptionOpaque&&) noexcept = delete;
+    OptionOpaque operator=(const OptionOpaque&) = delete;
+    OptionOpaque operator=(OptionOpaque&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

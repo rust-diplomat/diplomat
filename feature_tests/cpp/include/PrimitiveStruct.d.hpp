@@ -38,31 +38,31 @@ namespace capi {
 
 
 struct PrimitiveStruct {
-  float x;
-  bool a;
-  char32_t b;
-  int64_t c;
-  intptr_t d;
-  uint8_t e;
+    float x;
+    bool a;
+    char32_t b;
+    int64_t c;
+    intptr_t d;
+    uint8_t e;
 
   inline static void mutable_slice(diplomat::span<PrimitiveStruct> a);
 
   inline void mutable_ref(PrimitiveStruct& a);
 
-  inline diplomat::capi::PrimitiveStruct AsFFI() const;
-  inline static PrimitiveStruct FromFFI(diplomat::capi::PrimitiveStruct c_struct);
+    inline diplomat::capi::PrimitiveStruct AsFFI() const;
+    inline static PrimitiveStruct FromFFI(diplomat::capi::PrimitiveStruct c_struct);
 };
 
 
 namespace diplomat {
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const PrimitiveStruct>>>> {
-    using type = capi::DiplomatPrimitiveStructView;
-  };
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const PrimitiveStruct>>>> {
+        using type = capi::DiplomatPrimitiveStructView;
+    };
 
-  template<typename T>
-  struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<PrimitiveStruct>>>> {
-    using type = capi::DiplomatPrimitiveStructViewMut;
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<PrimitiveStruct>>>> {
+        using type = capi::DiplomatPrimitiveStructViewMut;
 };
 }
 #endif // PrimitiveStruct_D_HPP

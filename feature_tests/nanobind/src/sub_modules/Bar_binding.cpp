@@ -11,6 +11,6 @@ void add_Bar_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<Bar>(mod, "Bar", nb::type_slots(Bar_slots))
-    	.def_prop_ro("foo", &Bar::foo);
+        .def_prop_ro("foo", &Bar::foo);
 }
 

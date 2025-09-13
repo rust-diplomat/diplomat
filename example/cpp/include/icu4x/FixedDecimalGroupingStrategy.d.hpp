@@ -28,23 +28,23 @@ namespace capi {
 namespace icu4x {
 class FixedDecimalGroupingStrategy {
 public:
-  enum Value {
-    Auto = 0,
-    Never = 1,
-    Always = 2,
-    Min2 = 3,
-  };
+    enum Value {
+        Auto = 0,
+        Never = 1,
+        Always = 2,
+        Min2 = 3,
+    };
 
-  FixedDecimalGroupingStrategy(): value(Value::Auto) {}
+    FixedDecimalGroupingStrategy(): value(Value::Auto) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr FixedDecimalGroupingStrategy(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr FixedDecimalGroupingStrategy(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline icu4x::capi::FixedDecimalGroupingStrategy AsFFI() const;
-  inline static icu4x::FixedDecimalGroupingStrategy FromFFI(icu4x::capi::FixedDecimalGroupingStrategy c_enum);
+    inline icu4x::capi::FixedDecimalGroupingStrategy AsFFI() const;
+    inline static icu4x::FixedDecimalGroupingStrategy FromFFI(icu4x::capi::FixedDecimalGroupingStrategy c_enum);
 private:
     Value value;
 };

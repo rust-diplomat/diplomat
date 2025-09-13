@@ -13,14 +13,14 @@ void add_RenamedMyIndexer_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<ns::RenamedMyIndexer>(mod, "RenamedMyIndexer", nb::type_slots(ns_RenamedMyIndexer_slots))
-    	.def("__getitem__", [](ns::RenamedMyIndexer* self, size_t index) {
-    			auto out = self->operator[] (index);
-    			if (!out.has_value()) {
-    				throw nb::index_error("Could not get index.");
-    			} else {
-    				return out;
-    			}
-    		}, "i"_a);
+        .def("__getitem__", [](ns::RenamedMyIndexer* self, size_t index) {
+                auto out = self->operator[] (index);
+                if (!out.has_value()) {
+                    throw nb::index_error("Could not get index.");
+                } else {
+                    return out;
+                }
+            }, "i"_a);
 }
 
 

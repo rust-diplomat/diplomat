@@ -29,29 +29,29 @@ namespace capi {
 
 class MyEnum {
 public:
-  enum Value {
-    A = -2,
-    B = -1,
-    C = 0,
-    D = 1,
-    E = 2,
-    F = 3,
-  };
+    enum Value {
+        A = -2,
+        B = -1,
+        C = 0,
+        D = 1,
+        E = 2,
+        F = 3,
+    };
 
-  MyEnum(): value(Value::D) {}
+    MyEnum(): value(Value::D) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr MyEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr MyEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
   inline int8_t into_value() const;
 
   inline static MyEnum get_a();
 
-  inline diplomat::capi::MyEnum AsFFI() const;
-  inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
+    inline diplomat::capi::MyEnum AsFFI() const;
+    inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
 private:
     Value value;
 };
