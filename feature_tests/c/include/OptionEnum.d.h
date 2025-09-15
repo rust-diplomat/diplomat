@@ -14,6 +14,7 @@
 typedef enum OptionEnum {
   OptionEnum_Foo = 0,
   OptionEnum_Bar = 1,
+  OptionEnum_Baz = 2,
 } OptionEnum;
 
 typedef struct OptionEnum_option {union { OptionEnum ok; }; bool is_ok; } OptionEnum_option;

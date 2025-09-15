@@ -10,6 +10,7 @@ void add_OptionEnum_binding(nb::handle mod) {
         nb::enum_<OptionEnum::Value>(e_class, "OptionEnum")
             .value("Foo", OptionEnum::Foo)
             .value("Bar", OptionEnum::Bar)
+            .value("Baz", OptionEnum::Baz)
             .export_values();
     
         e_class

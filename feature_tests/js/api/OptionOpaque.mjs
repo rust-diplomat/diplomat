@@ -277,6 +277,28 @@ export class OptionOpaque {
         }
     }
 
+    static acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.OptionOpaque_accepts_multiple_option_enum(diplomatReceive.buffer, sentinel1, diplomatRuntime.optionToBufferForCalling(wasm, arg1, 4, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), diplomatRuntime.optionToBufferForCalling(wasm, arg2, 4, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), diplomatRuntime.optionToBufferForCalling(wasm, arg3, 4, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), sentinel2);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
+        }
+
+        finally {
+            functionCleanupArena.free();
+
+            diplomatReceive.free();
+        }
+    }
+
     static acceptsOptionInputStruct(arg, sentinel) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

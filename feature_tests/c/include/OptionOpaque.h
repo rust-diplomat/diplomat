@@ -55,6 +55,9 @@ OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(OptionU8 ar
 typedef struct OptionOpaque_accepts_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
 OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(OptionEnum_option arg, uint8_t sentinel);
 
+typedef struct OptionOpaque_accepts_multiple_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_multiple_option_enum_result;
+OptionOpaque_accepts_multiple_option_enum_result OptionOpaque_accepts_multiple_option_enum(uint8_t sentinel1, OptionEnum_option arg1, OptionEnum_option arg2, OptionEnum_option arg3, uint8_t sentinel2);
+
 typedef struct OptionOpaque_accepts_option_input_struct_result {union {OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
 OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(OptionInputStruct_option arg, uint8_t sentinel);
 

@@ -9,7 +9,8 @@ export class OptionEnum {
 
     static #values = new Map([
         ["Foo", 0],
-        ["Bar", 1]
+        ["Bar", 1],
+        ["Baz", 2]
     ]);
 
     static getAllEntries() {
@@ -57,10 +58,12 @@ export class OptionEnum {
     static #objectValues = [
         new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 0),
         new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
+        new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 2),
     ];
 
     static Foo = OptionEnum.#objectValues[0];
     static Bar = OptionEnum.#objectValues[1];
+    static Baz = OptionEnum.#objectValues[2];
 
 
     constructor(value) {
