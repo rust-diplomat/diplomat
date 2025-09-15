@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../include/free_functions.hpp"
-#include "../include/nested/ns/free_nested_ns_functions.hpp"
-#include "../include/ns/free_ns_functions.hpp"
+#include "../include/nested/ns/free_functions.hpp"
+#include "../include/ns/free_functions.hpp"
 #include "assert.hpp"
 
 int main(int argc, char* argv[]) {
