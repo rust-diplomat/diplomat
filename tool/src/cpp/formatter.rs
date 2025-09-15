@@ -71,15 +71,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         let (name, namespace) = match id {
             SymbolId::FunctionId(f) => {
                 let resolved = self.c.tcx().resolve_function(f);
-                let namespaced = if let Some(ns) = &resolved.attrs.namespace {
-                    format!("_{}", ns.replace("::", "_"))
-                } else {
-                    "".into()
-                };
-                (
-                    format!("free{namespaced}_functions"),
-                    resolved.attrs.namespace.clone(),
-                )
+                (format!("free_functions"), resolved.attrs.namespace.clone())
             }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
@@ -105,15 +97,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         let (name, namespace) = match id {
             SymbolId::FunctionId(f) => {
                 let resolved = self.c.tcx().resolve_function(f);
-                let namespaced = if let Some(ns) = &resolved.attrs.namespace {
-                    format!("_{}", ns.replace("::", "_"))
-                } else {
-                    "".into()
-                };
-                (
-                    format!("free{namespaced}_functions"),
-                    resolved.attrs.namespace.clone(),
-                )
+                (format!("free_functions"), resolved.attrs.namespace.clone())
             }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
