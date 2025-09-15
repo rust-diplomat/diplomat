@@ -1,7 +1,7 @@
-#ifndef nested_ns_free_nested_ns_functions_HPP
-#define nested_ns_free_nested_ns_functions_HPP
+#ifndef nested_ns_free_functions_HPP
+#define nested_ns_free_functions_HPP
 
-#include "free_nested_ns_functions.d.hpp"
+#include "free_functions.d.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -26,8 +26,8 @@ namespace capi {
 
 
 inline bool nested::ns::Renamednested_ns_fn(bool x) {
-  auto result = nested::ns::capi::namespace_nested_ns_fn(x);
-  return result;
+    auto result = nested::ns::capi::namespace_nested_ns_fn(x);
+    return result;
 }
 
-#endif // nested_ns_free_nested_ns_functions_HPP
+#endif // nested_ns_free_functions_HPP

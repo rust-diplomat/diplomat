@@ -1,5 +1,5 @@
-#ifndef ns_free_ns_functions_D_HPP
-#define ns_free_ns_functions_D_HPP
+#ifndef ns_free_functions_D_HPP
+#define ns_free_functions_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -29,4 +29,4 @@ namespace ns {
 
 
 } // namespace
-#endif // ns_free_ns_functions_D_HPP
+#endif // ns_free_functions_D_HPP

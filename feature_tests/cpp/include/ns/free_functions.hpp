@@ -1,7 +1,7 @@
-#ifndef ns_free_ns_functions_HPP
-#define ns_free_ns_functions_HPP
+#ifndef ns_free_functions_HPP
+#define ns_free_functions_HPP
 
-#include "free_ns_functions.d.hpp"
+#include "free_functions.d.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -26,8 +26,8 @@ namespace capi {
 
 
 inline int32_t ns::Renamedfree_func_test(int32_t x) {
-  auto result = ns::capi::namespace_free_func_test(x);
-  return result;
+    auto result = ns::capi::namespace_free_func_test(x);
+    return result;
 }
 
-#endif // ns_free_ns_functions_HPP
+#endif // ns_free_functions_HPP

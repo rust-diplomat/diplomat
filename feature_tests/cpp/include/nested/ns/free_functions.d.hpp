@@ -1,5 +1,5 @@
-#ifndef nested_ns_free_nested_ns_functions_D_HPP
-#define nested_ns_free_nested_ns_functions_D_HPP
+#ifndef nested_ns_free_functions_D_HPP
+#define nested_ns_free_functions_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -29,4 +29,4 @@ namespace nested::ns {
 
 
 } // namespace
-#endif // nested_ns_free_nested_ns_functions_D_HPP
+#endif // nested_ns_free_functions_D_HPP
