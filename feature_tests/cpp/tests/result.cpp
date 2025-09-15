@@ -4,6 +4,12 @@
 #include "../include/ErrorStruct.hpp"
 #include "assert.hpp"
 
+struct NonTrivial{
+    explicit NonTrivial(int i) {}
+    NonTrivial(const NonTrivial&) {}; // non-default, but still callable
+    NonTrivial(NonTrivial&&) = default;
+};
+
 int main(int argc, char *argv[])
 {
     std::unique_ptr<ResultOpaque> r;
@@ -32,4 +38,14 @@ int main(int argc, char *argv[])
 
     auto str_result = r2->takes_str("fish").ok();
     simple_assert_eq("Did not return a chaining value correctly", &str_result.value().get(), r2.get());
+
+    // check r and l value construction
+    auto trivial_lvalue = diplomat::Ok(std::monostate());
+    auto trivial_v = std::monostate();
+    auto trivial_rvalue = diplomat::Ok(trivial_v); //trivial type, implicit copy allowed
+    
+    auto complex_lvalue = diplomat::Ok(NonTrivial(1));
+    auto complex_v = NonTrivial(2);
+    // non-trivial type, copying not allowed
+    //auto complex_rvalue = diplomat::Ok(complex_v); // This is expected to fail compilation
 }
