@@ -129,7 +129,7 @@ template<class T> struct Ok {
 
   // Move constructor always allowed
   Ok(T&& i): inner(std::forward<T>(i)) {}
-  
+
   //  copy constructor allowed only for trivially copyable types
   template<typename X = T, typename = typename std::enable_if<std::is_trivially_copyable<X>::value>::type>
   Ok(const T& i) : inner(i) {}
@@ -144,7 +144,7 @@ template<class T> struct Ok {
 
 template<class T> struct Err {
   T inner;
-  
+
   // Move constructor always allowed
   Err(T&& i): inner(std::forward<T>(i)) {}
 

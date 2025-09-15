@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     auto trivial_lvalue = diplomat::Ok(std::monostate());
     auto trivial_v = std::monostate();
     auto trivial_rvalue = diplomat::Ok(trivial_v); //trivial type, implicit copy allowed
-    
+
     auto complex_lvalue = diplomat::Ok(NonTrivial(1));
     auto complex_v = NonTrivial(2);
     // non-trivial type, copying not allowed
