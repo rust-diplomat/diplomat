@@ -13,6 +13,7 @@ void add_OptionOpaque_binding(nb::handle mod) {
         {0, nullptr}};
     
     nb::class_<OptionOpaque>(mod, "OptionOpaque", nb::type_slots(OptionOpaque_slots))
+        .def_static("accepts_multiple_option_enum", &OptionOpaque::accepts_multiple_option_enum, "sentinel1"_a, "arg1"_a= nb::none(), "arg2"_a= nb::none(), "arg3"_a= nb::none(), "sentinel2"_a)
         .def_static("accepts_option_enum", &OptionOpaque::accepts_option_enum, "arg"_a= nb::none(), "sentinel"_a)
         .def_static("accepts_option_input_struct", &OptionOpaque::accepts_option_input_struct, "arg"_a= nb::none(), "sentinel"_a)
         .def_static("accepts_option_primitive", &OptionOpaque::accepts_option_primitive, "arg"_a= nb::none(), "sentinel"_a)

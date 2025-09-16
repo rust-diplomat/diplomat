@@ -51,3 +51,9 @@ test("DiplomatOption test struct", t => {
     t.is(struct.c.value, OptionEnum.Bar.value);
 
 });
+
+test("DiplomatOption multiple args regression", t => {
+    let maybe = OptionOpaque.acceptsMultipleOptionEnum(123, OptionEnum.Foo, OptionEnum.Bar, OptionEnum.Baz, 200);
+    t.assert(maybe === OptionEnum.Baz);
+
+});

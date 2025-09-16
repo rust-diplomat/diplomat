@@ -61,10 +61,11 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq, Eq)]
     pub enum OptionEnum {
         Foo,
         Bar,
+        Baz,
     }
 
     impl OptionOpaque {
@@ -142,6 +143,22 @@ pub mod ffi {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_multiple_option_enum(
+            sentinel1: u8,
+            arg1: Option<OptionEnum>,
+            arg2: Option<OptionEnum>,
+            arg3: Option<OptionEnum>,
+            sentinel2: u8,
+        ) -> Option<OptionEnum> {
+            assert_eq!(sentinel1, 123);
+            assert_eq!(arg1, Some(OptionEnum::Foo));
+            assert_eq!(arg2, Some(OptionEnum::Bar));
+            assert_eq!(sentinel2, 200);
+            arg3
+        }
+
         #[diplomat::attr(not(supports = option), disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,

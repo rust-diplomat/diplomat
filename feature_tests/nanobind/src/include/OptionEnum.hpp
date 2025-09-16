@@ -30,6 +30,7 @@ inline OptionEnum OptionEnum::FromFFI(diplomat::capi::OptionEnum c_enum) {
     switch (c_enum) {
         case diplomat::capi::OptionEnum_Foo:
         case diplomat::capi::OptionEnum_Bar:
+        case diplomat::capi::OptionEnum_Baz:
             return static_cast<OptionEnum::Value>(c_enum);
         default:
             std::abort();

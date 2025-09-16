@@ -58,6 +58,9 @@ namespace capi {
     typedef struct OptionOpaque_accepts_option_enum_result {union {diplomat::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
     OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(diplomat::capi::OptionEnum_option arg, uint8_t sentinel);
 
+    typedef struct OptionOpaque_accepts_multiple_option_enum_result {union {diplomat::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_multiple_option_enum_result;
+    OptionOpaque_accepts_multiple_option_enum_result OptionOpaque_accepts_multiple_option_enum(uint8_t sentinel1, diplomat::capi::OptionEnum_option arg1, diplomat::capi::OptionEnum_option arg2, diplomat::capi::OptionEnum_option arg3, uint8_t sentinel2);
+
     typedef struct OptionOpaque_accepts_option_input_struct_result {union {diplomat::capi::OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
     OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(diplomat::capi::OptionInputStruct_option arg, uint8_t sentinel);
 
@@ -149,6 +152,15 @@ inline std::optional<uint8_t> OptionOpaque::accepts_option_u8(std::optional<uint
 inline std::optional<OptionEnum> OptionOpaque::accepts_option_enum(std::optional<OptionEnum> arg, uint8_t sentinel) {
     auto result = diplomat::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (diplomat::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
         sentinel);
+    return result.is_ok ? std::optional<OptionEnum>(OptionEnum::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline std::optional<OptionEnum> OptionOpaque::accepts_multiple_option_enum(uint8_t sentinel1, std::optional<OptionEnum> arg1, std::optional<OptionEnum> arg2, std::optional<OptionEnum> arg3, uint8_t sentinel2) {
+    auto result = diplomat::capi::OptionOpaque_accepts_multiple_option_enum(sentinel1,
+        arg1.has_value() ? (diplomat::capi::OptionEnum_option{ { arg1.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
+        arg2.has_value() ? (diplomat::capi::OptionEnum_option{ { arg2.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
+        arg3.has_value() ? (diplomat::capi::OptionEnum_option{ { arg3.value().AsFFI() }, true }) : (diplomat::capi::OptionEnum_option{ {}, false }),
+        sentinel2);
     return result.is_ok ? std::optional<OptionEnum>(OptionEnum::FromFFI(result.ok)) : std::nullopt;
 }
 

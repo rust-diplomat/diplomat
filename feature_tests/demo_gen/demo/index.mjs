@@ -430,11 +430,55 @@ let termini = Object.assign({
                 name: "arg",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar"]
+                values: ["Foo", "Bar", "Baz"]
             },
             
             {
                 name: "sentinel",
+                type: "number",
+                typeUse: "number"
+            }
+            
+        ]
+    },
+
+    "OptionOpaque.acceptsMultipleOptionEnum": {
+        func: (sentinel1, arg1, arg2, arg3, sentinel2) => somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2),
+        // For avoiding webpacking minifying issues:
+        funcName: "OptionOpaque.acceptsMultipleOptionEnum",
+        expr: (sentinel1, arg1, arg2, arg3, sentinel2) => "somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2)".replace(/([\( ])sentinel1([,\) \n])/, '$1' + sentinel1 + '$2').replace(/([\( ])arg1([,\) \n])/, '$1' + arg1 + '$2').replace(/([\( ])arg2([,\) \n])/, '$1' + arg2 + '$2').replace(/([\( ])arg3([,\) \n])/, '$1' + arg3 + '$2').replace(/([\( ])sentinel2([,\) \n])/, '$1' + sentinel2 + '$2'),
+        display: displayOptionalEnum,
+        parameters: [
+            
+            {
+                name: "sentinel1",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "arg1",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "arg2",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "arg3",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "sentinel2",
                 type: "number",
                 typeUse: "number"
             }
