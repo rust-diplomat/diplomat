@@ -25,6 +25,8 @@ public:
 
   inline static std::unique_ptr<Float64Vec> new_bool(diplomat::span<const bool> v);
 
+  inline static std::unique_ptr<Float64Vec> new_int_arr(const std::array<int32_t,12>& v, const std::array<bool,3>& _other, const std::array<double,2>& _other_other);
+
   inline static std::unique_ptr<Float64Vec> new_i16(diplomat::span<const int16_t> v);
 
   inline static std::unique_ptr<Float64Vec> new_u16(diplomat::span<const uint16_t> v);

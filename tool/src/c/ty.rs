@@ -588,6 +588,12 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 header.includes.insert(header_path);
                 ret
             }
+            Type::Array(ref p, size) => {
+                // We use a BTreeSet, even though the C compiler won't complain about duplicates
+                // (if someone includes other header files, for instance.):
+                let out_ty = self.formatter.fmt_primitive_array_name(*p, size);
+                out_ty
+            }
             _ => unreachable!("{}", format!("unknown AST/HIR variant: {:?}", ty)),
         };
 

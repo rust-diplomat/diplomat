@@ -253,6 +253,19 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
+    pub fn fmt_primitive_array_name(
+        &self,
+        prim: hir::PrimitiveType,
+        size: usize,
+    ) -> Cow<'tcx, str> {
+        // C arrays cannot actually be passed directly, and depending on context
+        // int a[4] might be a real array or just a pointer. So, at least for C,
+        // fixed sized arrays are just pointers with comments.
+        // Otherwise, we'd have to use different notation depending on if the type
+        // appeared as a function parameter or inside a struct (like for a callback's state struct)
+        format!("const {}* /*{size}*/", self.fmt_primitive_as_c(prim)).into()
+    }
+
     pub fn fmt_struct_slice_name<P: TyPosition>(
         &self,
         borrow: MaybeOwn,

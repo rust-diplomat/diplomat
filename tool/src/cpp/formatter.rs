@@ -165,6 +165,21 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         "std::string".into()
     }
 
+    pub fn fmt_primitive_array_name(
+        &self,
+        prim: hir::PrimitiveType,
+        size: usize,
+    ) -> Cow<'tcx, str> {
+        // C++ provides us the std::array type, which is bitwise identical to a T[N],
+        // but doesn't have the syntactic drawbacks of the definition meaning different things
+        // depending on context and having the type split across both sides of the identifier.
+        format!(
+            "const std::array<{},{size}>&",
+            self.fmt_primitive_as_c(prim)
+        )
+        .into()
+    }
+
     pub fn fmt_docs(&self, docs: &hir::Docs, attrs: &hir::Attrs) -> String {
         let mut docs = self.c.fmt_docs(docs);
         if let Some(deprecated) = attrs.deprecated.as_ref() {

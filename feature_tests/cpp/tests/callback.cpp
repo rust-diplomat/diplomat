@@ -57,6 +57,12 @@ int main(int argc, char *argv[])
         });
     }
     {
+        std::array<uint8_t,2> arr = {1, 2};
+        o.test_array_cb_arg(arr, [](const std::array<uint8_t,2>& a) {
+            simple_assert_eq("test_cb_arr", a[0], 1);
+        });
+    }
+    {
         int copied = 0;
         // TODO: Make C++ reject this by using move_only_function in c++23.
         // We cannot reject this in earlier standards due to a defect in std::function.

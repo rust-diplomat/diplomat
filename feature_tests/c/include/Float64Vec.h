@@ -19,6 +19,8 @@ Float64Vec* Float64Vec_new(DiplomatF64View v);
 
 Float64Vec* Float64Vec_new_bool(DiplomatBoolView v);
 
+Float64Vec* Float64Vec_new_int_arr(const int32_t* /*12*/ v, const bool* /*3*/ _other, const double* /*2*/ _other_other);
+
 Float64Vec* Float64Vec_new_i16(DiplomatI16View v);
 
 Float64Vec* Float64Vec_new_u16(DiplomatU16View v);

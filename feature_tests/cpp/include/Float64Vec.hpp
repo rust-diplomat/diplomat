@@ -22,6 +22,8 @@ namespace capi {
 
     diplomat::capi::Float64Vec* Float64Vec_new_bool(diplomat::capi::DiplomatBoolView v);
 
+    diplomat::capi::Float64Vec* Float64Vec_new_int_arr(const int32_t* /*12*/ v, const bool* /*3*/ _other, const double* /*2*/ _other_other);
+
     diplomat::capi::Float64Vec* Float64Vec_new_i16(diplomat::capi::DiplomatI16View v);
 
     diplomat::capi::Float64Vec* Float64Vec_new_u16(diplomat::capi::DiplomatU16View v);
@@ -58,6 +60,13 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double>
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_bool(diplomat::span<const bool> v) {
     auto result = diplomat::capi::Float64Vec_new_bool({v.data(), v.size()});
+    return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_int_arr(const std::array<int32_t,12>& v, const std::array<bool,3>& _other, const std::array<double,2>& _other_other) {
+    auto result = diplomat::capi::Float64Vec_new_int_arr(v.data(),
+        _other.data(),
+        _other_other.data());
     return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 

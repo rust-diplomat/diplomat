@@ -282,7 +282,6 @@ private:
 #endif // __cplusplus >= 202002L
 
 // Interop between std::function & our C Callback wrapper type
-
 template <typename T, typename = void>
 struct as_ffi {
   using type = T;
@@ -332,9 +331,31 @@ MAKE_SLICE_CONVERTERS(String16, char16_t)
 template<typename T>
 using diplomat_c_span_convert_t = typename diplomat_c_span_convert<T>::type;
 
-/// Replace the argument types from the std::function with the argument types for th function pointer
 template<typename T>
-using replace_fn_t = diplomat_c_span_convert_t<replace_string_view_t<as_ffi_t<T>>>;
+struct is_std_array : std::false_type {};
+
+template<typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : std::true_type {};
+
+template<typename T>
+constexpr bool is_const_std_array_ref_v = std::is_reference_v<T> && is_std_array<std::remove_const_t<std::remove_reference_t<T>>>::value;
+
+template<typename T, typename = void>
+struct diplomat_array_ref_convert {
+  using type = T;
+};
+
+template<typename T>
+struct diplomat_array_ref_convert<T, std::enable_if_t<is_const_std_array_ref_v<T>>> {
+  using type = const typename std::remove_const_t<std::remove_reference_t<T>>::value_type*;
+};
+
+template<typename T>
+using diplomat_array_ref_convert_t = typename diplomat_array_ref_convert<T>::type;
+
+/// Replace the argument types from the std::function with the argument types for the function pointer
+template<typename T>
+using replace_fn_t = diplomat_array_ref_convert_t<diplomat_c_span_convert_t<replace_string_view_t<as_ffi_t<T>>>>;
 
 template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Args...)>> {
     using fn_ptr_t = Ret(Args...);
@@ -345,10 +366,13 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     template<typename T>
     static T replace(replace_fn_t<T> val) {
       if constexpr(std::is_same_v<T, std::string_view>)   {
-          return std::string_view{val.data, val.len};
+        return std::string_view{val.data, val.len};
       } else if constexpr (!std::is_same_v<T, diplomat_c_span_convert_t<T>>) {
         return T{ val.data, val.len };
-      } else if constexpr (!std::is_same_v<T, as_ffi_t<T>>) {
+      } else if constexpr(!std::is_same_v<T, diplomat_array_ref_convert_t<T>>) {
+        return reinterpret_cast<T>(*val);
+      }
+      else if constexpr (!std::is_same_v<T, as_ffi_t<T>>) {
         if constexpr (std::is_lvalue_reference_v<T>) {
           return *std::remove_reference_t<T>::FromFFI(val);
         }

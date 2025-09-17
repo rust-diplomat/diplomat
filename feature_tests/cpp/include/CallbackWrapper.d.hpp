@@ -48,6 +48,8 @@ struct CallbackWrapper {
 
   inline static void test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f);
 
+  inline static void test_array_cb_arg(const std::array<uint8_t,2>& arg, std::function<void(const std::array<uint8_t,2>&)> f);
+
   inline static void test_result_output(std::function<diplomat::result<std::monostate, std::monostate>()> t);
 
   inline static void test_result_usize_output(std::function<diplomat::result<size_t, std::monostate>()> t);

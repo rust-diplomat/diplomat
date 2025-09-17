@@ -62,6 +62,11 @@ namespace capi {
         void (*run_callback)(const void*, diplomat::capi::DiplomatU8View );
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f;
+    typedef struct DiplomatCallback_CallbackWrapper_test_array_cb_arg_f {
+        const void* data;
+        void (*run_callback)(const void*, const uint8_t* /*2*/ );
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_array_cb_arg_f;
     typedef struct DiplomatCallback_CallbackWrapper_test_result_output_t_result { bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_output_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_result_output_t {
@@ -159,6 +164,8 @@ namespace capi {
 
     void CallbackWrapper_test_slice_cb_arg(diplomat::capi::DiplomatU8View arg, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_f f_cb_wrap);
 
+    void CallbackWrapper_test_array_cb_arg(const uint8_t* /*2*/ arg, DiplomatCallback_CallbackWrapper_test_array_cb_arg_f f_cb_wrap);
+
     void CallbackWrapper_test_result_output(DiplomatCallback_CallbackWrapper_test_result_output_t t_cb_wrap);
 
     void CallbackWrapper_test_result_usize_output(DiplomatCallback_CallbackWrapper_test_result_usize_output_t t_cb_wrap);
@@ -221,6 +228,11 @@ inline void CallbackWrapper::test_opaque_cb_arg(std::function<void(MyString&)> c
 
 inline void CallbackWrapper::test_slice_cb_arg(diplomat::span<const uint8_t> arg, std::function<void(diplomat::span<const uint8_t>)> f) {
     diplomat::capi::CallbackWrapper_test_slice_cb_arg({arg.data(), arg.size()},
+        {new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
+}
+
+inline void CallbackWrapper::test_array_cb_arg(const std::array<uint8_t,2>& arg, std::function<void(const std::array<uint8_t,2>&)> f) {
+    diplomat::capi::CallbackWrapper_test_array_cb_arg(arg.data(),
         {new decltype(f)(std::move(f)), diplomat::fn_traits(f).c_run_callback, diplomat::fn_traits(f).c_delete});
 }
 

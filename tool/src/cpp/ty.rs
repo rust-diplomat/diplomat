@@ -659,6 +659,10 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
+            Type::Array(ref p, size) => {
+                let out_ty = self.formatter.fmt_primitive_array_name(*p, size);
+                out_ty
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -818,6 +822,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 self.formatter.namespace_c_name(st.id(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
+            Type::Array(..) => format!("{cpp_name}.data()").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion =
                     self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name, namespace);
@@ -1007,6 +1012,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
                 format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt").into()
             }
+            Type::Array(prim, size) => format!(
+                "reinterpret_cast<std::array<{},{}>*>({var_name})",
+                self.formatter.c.fmt_primitive_as_c(prim),
+                size
+            )
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }

@@ -47,6 +47,13 @@ int main(int argc, char* argv[]) {
     simple_assert_eq("vector indexer", (*vec)[1].value(), 1.6);
     simple_assert_eq("vector indexer", (*vec)[2].has_value(), false);
 
+    std::array<bool, 3> fixed_bool = {true, true, false};
+    std::array<int32_t, 12> fixed_int = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    std::array<double, 2> fixed_float = {0., 0.1};
+    auto vec_from_fixed = Float64Vec::new_int_arr(fixed_int, fixed_bool, fixed_float);
+    simple_assert_eq("bool array", (*vec_from_fixed)[0].value(), 0);
+    simple_assert_eq("bool array", (*vec_from_fixed)[11].value(), 11);
+
 
     auto uintVec = std::vector<uint8_t>{ 1, 2, 3, 4 };
     auto myIterable = ns::RenamedMyIterable::new_(diplomat::span<const uint8_t>{uintVec.data(), uintVec.size()});
