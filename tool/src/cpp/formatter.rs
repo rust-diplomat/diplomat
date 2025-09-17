@@ -17,12 +17,18 @@ use std::{borrow::Cow, fmt::Write};
 /// of C types and methods.
 pub(crate) struct Cpp2Formatter<'tcx> {
     pub c: CFormatter<'tcx>,
+    pub lib_name: Option<String>,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        config: &crate::Config,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
         Self {
             c: CFormatter::new(tcx, true, docs_url_gen),
+            lib_name: config.shared_config.lib_name.clone(),
         }
     }
 

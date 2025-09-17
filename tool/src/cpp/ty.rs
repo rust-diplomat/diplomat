@@ -32,6 +32,8 @@ pub(super) struct NamedType<'a> {
 /// Context for generating a particular type's header
 pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub formatter: &'ccx Cpp2Formatter<'tcx>,
+    #[allow(dead_code)] // Currently unused but could be in the future
+    pub config: &'ccx super::CppConfig,
     pub errors: &'ccx ErrorStore<'tcx, String>,
     pub c: C2TyGenContext<'ccx, 'tcx>,
     pub impl_header: &'header mut Header,

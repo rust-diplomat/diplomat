@@ -14,6 +14,14 @@ pub(crate) use func::FuncGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
+#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CppConfig {}
+
+impl CppConfig {
+    pub fn set(&mut self, key: &str, _value: toml::Value) {
+        panic!("C++ does not support any backend-specific configs, found {key}");
+    }
+}
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -53,10 +61,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
+    config: &crate::Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = Cpp2Formatter::new(tcx, docs_url_gen);
+    let formatter = Cpp2Formatter::new(tcx, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     #[derive(askama::Template)]
@@ -79,6 +88,7 @@ pub(crate) fn run<'tcx>(
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config.cpp_config,
             c: crate::c::TyGenContext {
                 tcx,
                 formatter: &formatter.c,

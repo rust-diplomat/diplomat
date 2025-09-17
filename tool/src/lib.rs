@@ -93,7 +93,7 @@ pub fn gen(
 
     let (files, errors) = match target_language {
         "c" => c::run(&tcx, docs_url_gen),
-        "cpp" => cpp::run(&tcx, docs_url_gen),
+        "cpp" => cpp::run(&tcx, &config, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, config, docs_url_gen),
         "py-nanobind" | "nanobind" => nanobind::run(&tcx, config, docs_url_gen),

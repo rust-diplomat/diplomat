@@ -39,7 +39,9 @@ impl FileType {
 pub struct JsConfig {}
 
 impl JsConfig {
-    pub fn set(&mut self, _key: &str, _value: toml::Value) {}
+    pub fn set(&mut self, key: &str, _value: toml::Value) {
+        panic!("JS does not support any backend-specific configs, found {key}");
+    }
 }
 
 pub(crate) fn attr_support() -> BackendAttrSupport {

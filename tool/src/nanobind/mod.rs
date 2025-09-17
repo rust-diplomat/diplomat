@@ -68,16 +68,18 @@ pub(crate) fn run<'cx>(
     docs: &'cx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
-    let formatter = PyFormatter::new(tcx, docs);
+    let formatter = PyFormatter::new(tcx, &conf, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
         .shared_config
         .lib_name
-        .expect("Nanobind backend requires lib_name to be set in the config");
+        .as_ref()
+        .expect("Nanobind backend requires lib_name to be set in the config")
+        .clone();
 
     // Output the C++ bindings we rely on
-    let (cpp_files, cpp_errors) = cpp::run(tcx, docs);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, &conf, docs);
 
     files.files.borrow_mut().extend(
         cpp_files
@@ -125,6 +127,7 @@ pub(crate) fn run<'cx>(
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
                 },
+                config: &conf.cpp_config,
                 formatter: &formatter.cxx,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
