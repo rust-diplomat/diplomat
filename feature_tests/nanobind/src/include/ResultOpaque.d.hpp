@@ -15,6 +15,8 @@ struct ErrorStruct;
 class ErrorEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct ResultOpaque;

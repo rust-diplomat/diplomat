@@ -18,6 +18,8 @@ struct BorrowedFieldsReturning;
 struct BorrowedFieldsWithBounds;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct Foo;

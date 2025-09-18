@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

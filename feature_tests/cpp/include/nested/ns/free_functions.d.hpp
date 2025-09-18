@@ -1,5 +1,5 @@
-#ifndef nested_ns_free_functions_D_HPP
-#define nested_ns_free_functions_D_HPP
+#ifndef SOMELIB_nested_ns_free_functions_D_HPP
+#define SOMELIB_nested_ns_free_functions_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,15 +12,13 @@
 #include "../../diplomat_runtime.hpp"
 
 
-namespace nested::ns {
+namespace somelib::nested::ns {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
-namespace nested::ns {
-
-
+namespace somelib::nested::ns {
 
 
 
@@ -29,4 +27,4 @@ namespace nested::ns {
 
 
 } // namespace
-#endif // nested_ns_free_functions_D_HPP
+#endif // SOMELIB_nested_ns_free_functions_D_HPP

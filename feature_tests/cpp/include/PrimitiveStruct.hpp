@@ -1,5 +1,5 @@
-#ifndef PrimitiveStruct_HPP
-#define PrimitiveStruct_HPP
+#ifndef SOMELIB_PrimitiveStruct_HPP
+#define SOMELIB_PrimitiveStruct_HPP
 
 #include "PrimitiveStruct.d.hpp"
 
@@ -14,30 +14,30 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    void PrimitiveStruct_mutable_slice(diplomat::capi::DiplomatPrimitiveStructViewMut a);
+    void PrimitiveStruct_mutable_slice(somelib::capi::DiplomatPrimitiveStructViewMut a);
 
-    void PrimitiveStruct_mutable_ref(diplomat::capi::PrimitiveStruct* self, diplomat::capi::PrimitiveStruct* a);
+    void PrimitiveStruct_mutable_ref(somelib::capi::PrimitiveStruct* self, somelib::capi::PrimitiveStruct* a);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline void PrimitiveStruct::mutable_slice(diplomat::span<PrimitiveStruct> a) {
-    diplomat::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<diplomat::capi::PrimitiveStruct*>(a.data()), a.size()});
+inline void somelib::PrimitiveStruct::mutable_slice(somelib::diplomat::span<somelib::PrimitiveStruct> a) {
+    somelib::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<somelib::capi::PrimitiveStruct*>(a.data()), a.size()});
 }
 
-inline void PrimitiveStruct::mutable_ref(PrimitiveStruct& a) {
-    diplomat::capi::PrimitiveStruct_mutable_ref(reinterpret_cast<diplomat::capi::PrimitiveStruct*>(this),
-        reinterpret_cast<diplomat::capi::PrimitiveStruct*>(&a));
+inline void somelib::PrimitiveStruct::mutable_ref(somelib::PrimitiveStruct& a) {
+    somelib::capi::PrimitiveStruct_mutable_ref(reinterpret_cast<somelib::capi::PrimitiveStruct*>(this),
+        reinterpret_cast<somelib::capi::PrimitiveStruct*>(&a));
 }
 
 
-inline diplomat::capi::PrimitiveStruct PrimitiveStruct::AsFFI() const {
-    return diplomat::capi::PrimitiveStruct {
+inline somelib::capi::PrimitiveStruct somelib::PrimitiveStruct::AsFFI() const {
+    return somelib::capi::PrimitiveStruct {
         /* .x = */ x,
         /* .a = */ a,
         /* .b = */ b,
@@ -47,8 +47,8 @@ inline diplomat::capi::PrimitiveStruct PrimitiveStruct::AsFFI() const {
     };
 }
 
-inline PrimitiveStruct PrimitiveStruct::FromFFI(diplomat::capi::PrimitiveStruct c_struct) {
-    return PrimitiveStruct {
+inline somelib::PrimitiveStruct somelib::PrimitiveStruct::FromFFI(somelib::capi::PrimitiveStruct c_struct) {
+    return somelib::PrimitiveStruct {
         /* .x = */ c_struct.x,
         /* .a = */ c_struct.a,
         /* .b = */ c_struct.b,
@@ -59,4 +59,4 @@ inline PrimitiveStruct PrimitiveStruct::FromFFI(diplomat::capi::PrimitiveStruct 
 }
 
 
-#endif // PrimitiveStruct_HPP
+#endif // SOMELIB_PrimitiveStruct_HPP

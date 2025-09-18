@@ -15,6 +15,8 @@ struct ImportedStruct;
 struct MyStruct;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct Opaque;

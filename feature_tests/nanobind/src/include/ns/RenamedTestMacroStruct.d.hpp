@@ -13,7 +13,9 @@
 
 namespace ns {
 struct RenamedTestMacroStruct;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

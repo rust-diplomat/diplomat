@@ -15,6 +15,8 @@
 class OptionEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct OptionInputStruct {

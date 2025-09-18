@@ -1,5 +1,5 @@
-#ifndef OptionEnum_D_HPP
-#define OptionEnum_D_HPP
+#ifndef SOMELIB_OptionEnum_D_HPP
+#define SOMELIB_OptionEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     enum OptionEnum {
       OptionEnum_Foo = 0,
@@ -24,6 +24,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class OptionEnum {
 public:
     enum Value {
@@ -40,11 +41,11 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
 
-    inline diplomat::capi::OptionEnum AsFFI() const;
-    inline static OptionEnum FromFFI(diplomat::capi::OptionEnum c_enum);
+    inline somelib::capi::OptionEnum AsFFI() const;
+    inline static somelib::OptionEnum FromFFI(somelib::capi::OptionEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // OptionEnum_D_HPP
+} // namespace
+#endif // SOMELIB_OptionEnum_D_HPP

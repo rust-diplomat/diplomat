@@ -1,5 +1,5 @@
-#ifndef UnimportedEnum_D_HPP
-#define UnimportedEnum_D_HPP
+#ifndef SOMELIB_UnimportedEnum_D_HPP
+#define SOMELIB_UnimportedEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     enum UnimportedEnum {
       UnimportedEnum_A = 0,
@@ -24,6 +24,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class UnimportedEnum {
 public:
     enum Value {
@@ -40,11 +41,11 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
 
-    inline diplomat::capi::UnimportedEnum AsFFI() const;
-    inline static UnimportedEnum FromFFI(diplomat::capi::UnimportedEnum c_enum);
+    inline somelib::capi::UnimportedEnum AsFFI() const;
+    inline static somelib::UnimportedEnum FromFFI(somelib::capi::UnimportedEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // UnimportedEnum_D_HPP
+} // namespace
+#endif // SOMELIB_UnimportedEnum_D_HPP

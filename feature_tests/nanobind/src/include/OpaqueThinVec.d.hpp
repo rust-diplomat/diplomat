@@ -17,6 +17,8 @@ namespace diplomat::capi { struct OpaqueThinIter; }
 class OpaqueThinIter;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct OpaqueThinVec;

@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct RenamedComparable; }
 class RenamedComparable;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

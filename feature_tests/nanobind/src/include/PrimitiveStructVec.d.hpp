@@ -12,9 +12,13 @@
 #include "diplomat_runtime.hpp"
 
 struct PrimitiveStruct;
+
+
 namespace ns {
 struct RenamedStructWithAttrs;
-}
+} // namespace ns
+
+
 
 
 namespace diplomat {

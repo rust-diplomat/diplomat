@@ -1,5 +1,5 @@
-#ifndef MyEnum_D_HPP
-#define MyEnum_D_HPP
+#ifndef SOMELIB_MyEnum_D_HPP
+#define SOMELIB_MyEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,9 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+class MyEnum;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     enum MyEnum {
       MyEnum_A = -2,
@@ -27,6 +31,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class MyEnum {
 public:
     enum Value {
@@ -48,13 +53,13 @@ public:
 
   inline int8_t into_value() const;
 
-  inline static MyEnum get_a();
+  inline static somelib::MyEnum get_a();
 
-    inline diplomat::capi::MyEnum AsFFI() const;
-    inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
+    inline somelib::capi::MyEnum AsFFI() const;
+    inline static somelib::MyEnum FromFFI(somelib::capi::MyEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // MyEnum_D_HPP
+} // namespace
+#endif // SOMELIB_MyEnum_D_HPP

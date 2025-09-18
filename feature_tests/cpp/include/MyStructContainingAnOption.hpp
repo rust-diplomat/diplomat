@@ -1,5 +1,5 @@
-#ifndef MyStructContainingAnOption_HPP
-#define MyStructContainingAnOption_HPP
+#ifndef SOMELIB_MyStructContainingAnOption_HPP
+#define SOMELIB_MyStructContainingAnOption_HPP
 
 #include "MyStructContainingAnOption.d.hpp"
 
@@ -16,42 +16,42 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption_new(void);
+    somelib::capi::MyStructContainingAnOption MyStructContainingAnOption_new(void);
 
-    diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption_filled(void);
+    somelib::capi::MyStructContainingAnOption MyStructContainingAnOption_filled(void);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline MyStructContainingAnOption MyStructContainingAnOption::new_() {
-    auto result = diplomat::capi::MyStructContainingAnOption_new();
-    return MyStructContainingAnOption::FromFFI(result);
+inline somelib::MyStructContainingAnOption somelib::MyStructContainingAnOption::new_() {
+    auto result = somelib::capi::MyStructContainingAnOption_new();
+    return somelib::MyStructContainingAnOption::FromFFI(result);
 }
 
-inline MyStructContainingAnOption MyStructContainingAnOption::filled() {
-    auto result = diplomat::capi::MyStructContainingAnOption_filled();
-    return MyStructContainingAnOption::FromFFI(result);
+inline somelib::MyStructContainingAnOption somelib::MyStructContainingAnOption::filled() {
+    auto result = somelib::capi::MyStructContainingAnOption_filled();
+    return somelib::MyStructContainingAnOption::FromFFI(result);
 }
 
 
-inline diplomat::capi::MyStructContainingAnOption MyStructContainingAnOption::AsFFI() const {
-    return diplomat::capi::MyStructContainingAnOption {
-        /* .a = */ a.has_value() ? (diplomat::capi::MyStruct_option{ { a.value().AsFFI() }, true }) : (diplomat::capi::MyStruct_option{ {}, false }),
-        /* .b = */ b.has_value() ? (diplomat::capi::DefaultEnum_option{ { b.value().AsFFI() }, true }) : (diplomat::capi::DefaultEnum_option{ {}, false }),
+inline somelib::capi::MyStructContainingAnOption somelib::MyStructContainingAnOption::AsFFI() const {
+    return somelib::capi::MyStructContainingAnOption {
+        /* .a = */ a.has_value() ? (somelib::capi::MyStruct_option{ { a.value().AsFFI() }, true }) : (somelib::capi::MyStruct_option{ {}, false }),
+        /* .b = */ b.has_value() ? (somelib::capi::DefaultEnum_option{ { b.value().AsFFI() }, true }) : (somelib::capi::DefaultEnum_option{ {}, false }),
     };
 }
 
-inline MyStructContainingAnOption MyStructContainingAnOption::FromFFI(diplomat::capi::MyStructContainingAnOption c_struct) {
-    return MyStructContainingAnOption {
-        /* .a = */ c_struct.a.is_ok ? std::optional(MyStruct::FromFFI(c_struct.a.ok)) : std::nullopt,
-        /* .b = */ c_struct.b.is_ok ? std::optional(DefaultEnum::FromFFI(c_struct.b.ok)) : std::nullopt,
+inline somelib::MyStructContainingAnOption somelib::MyStructContainingAnOption::FromFFI(somelib::capi::MyStructContainingAnOption c_struct) {
+    return somelib::MyStructContainingAnOption {
+        /* .a = */ c_struct.a.is_ok ? std::optional(somelib::MyStruct::FromFFI(c_struct.a.ok)) : std::nullopt,
+        /* .b = */ c_struct.b.is_ok ? std::optional(somelib::DefaultEnum::FromFFI(c_struct.b.ok)) : std::nullopt,
     };
 }
 
 
-#endif // MyStructContainingAnOption_HPP
+#endif // SOMELIB_MyStructContainingAnOption_HPP

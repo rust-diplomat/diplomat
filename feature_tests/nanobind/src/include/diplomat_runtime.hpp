@@ -18,6 +18,7 @@
 #include <array>
 #endif
 
+
 namespace diplomat {
 
 namespace capi {

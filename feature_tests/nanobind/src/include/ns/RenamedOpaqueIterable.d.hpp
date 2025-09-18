@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct RenamedOpaqueIterator; }
 class RenamedOpaqueIterator;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

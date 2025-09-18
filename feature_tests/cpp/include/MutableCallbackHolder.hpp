@@ -1,5 +1,5 @@
-#ifndef MutableCallbackHolder_HPP
-#define MutableCallbackHolder_HPP
+#ifndef SOMELIB_MutableCallbackHolder_HPP
+#define SOMELIB_MutableCallbackHolder_HPP
 
 #include "MutableCallbackHolder.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
     typedef struct DiplomatCallback_MutableCallbackHolder_new_func {
@@ -23,9 +23,9 @@ namespace capi {
         void (*destructor)(const void*);
     } DiplomatCallback_MutableCallbackHolder_new_func;
 
-    diplomat::capi::MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_func func_cb_wrap);
+    somelib::capi::MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_func func_cb_wrap);
 
-    int32_t MutableCallbackHolder_call(diplomat::capi::MutableCallbackHolder* self, int32_t a);
+    int32_t MutableCallbackHolder_call(somelib::capi::MutableCallbackHolder* self, int32_t a);
 
     void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
 
@@ -33,36 +33,36 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<MutableCallbackHolder> MutableCallbackHolder::new_(std::function<int32_t(int32_t)> func) {
-    auto result = diplomat::capi::MutableCallbackHolder_new({new decltype(func)(std::move(func)), diplomat::fn_traits(func).c_run_callback, diplomat::fn_traits(func).c_delete});
-    return std::unique_ptr<MutableCallbackHolder>(MutableCallbackHolder::FromFFI(result));
+inline std::unique_ptr<somelib::MutableCallbackHolder> somelib::MutableCallbackHolder::new_(std::function<int32_t(int32_t)> func) {
+    auto result = somelib::capi::MutableCallbackHolder_new({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).c_run_callback, somelib::diplomat::fn_traits(func).c_delete});
+    return std::unique_ptr<somelib::MutableCallbackHolder>(somelib::MutableCallbackHolder::FromFFI(result));
 }
 
-inline int32_t MutableCallbackHolder::call(int32_t a) {
-    auto result = diplomat::capi::MutableCallbackHolder_call(this->AsFFI(),
+inline int32_t somelib::MutableCallbackHolder::call(int32_t a) {
+    auto result = somelib::capi::MutableCallbackHolder_call(this->AsFFI(),
         a);
     return result;
 }
 
-inline const diplomat::capi::MutableCallbackHolder* MutableCallbackHolder::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::MutableCallbackHolder*>(this);
+inline const somelib::capi::MutableCallbackHolder* somelib::MutableCallbackHolder::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::MutableCallbackHolder*>(this);
 }
 
-inline diplomat::capi::MutableCallbackHolder* MutableCallbackHolder::AsFFI() {
-    return reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(this);
+inline somelib::capi::MutableCallbackHolder* somelib::MutableCallbackHolder::AsFFI() {
+    return reinterpret_cast<somelib::capi::MutableCallbackHolder*>(this);
 }
 
-inline const MutableCallbackHolder* MutableCallbackHolder::FromFFI(const diplomat::capi::MutableCallbackHolder* ptr) {
-    return reinterpret_cast<const MutableCallbackHolder*>(ptr);
+inline const somelib::MutableCallbackHolder* somelib::MutableCallbackHolder::FromFFI(const somelib::capi::MutableCallbackHolder* ptr) {
+    return reinterpret_cast<const somelib::MutableCallbackHolder*>(ptr);
 }
 
-inline MutableCallbackHolder* MutableCallbackHolder::FromFFI(diplomat::capi::MutableCallbackHolder* ptr) {
-    return reinterpret_cast<MutableCallbackHolder*>(ptr);
+inline somelib::MutableCallbackHolder* somelib::MutableCallbackHolder::FromFFI(somelib::capi::MutableCallbackHolder* ptr) {
+    return reinterpret_cast<somelib::MutableCallbackHolder*>(ptr);
 }
 
-inline void MutableCallbackHolder::operator delete(void* ptr) {
-    diplomat::capi::MutableCallbackHolder_destroy(reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(ptr));
+inline void somelib::MutableCallbackHolder::operator delete(void* ptr) {
+    somelib::capi::MutableCallbackHolder_destroy(reinterpret_cast<somelib::capi::MutableCallbackHolder*>(ptr));
 }
 
 
-#endif // MutableCallbackHolder_HPP
+#endif // SOMELIB_MutableCallbackHolder_HPP

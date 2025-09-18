@@ -1,5 +1,5 @@
-#ifndef OpaqueThin_HPP
-#define OpaqueThin_HPP
+#ifndef SOMELIB_OpaqueThin_HPP
+#define SOMELIB_OpaqueThin_HPP
 
 #include "OpaqueThin.d.hpp"
 
@@ -14,15 +14,15 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    int32_t OpaqueThin_a(const diplomat::capi::OpaqueThin* self);
+    int32_t OpaqueThin_a(const somelib::capi::OpaqueThin* self);
 
-    float OpaqueThin_b(const diplomat::capi::OpaqueThin* self);
+    float OpaqueThin_b(const somelib::capi::OpaqueThin* self);
 
-    void OpaqueThin_c(const diplomat::capi::OpaqueThin* self, diplomat::capi::DiplomatWrite* write);
+    void OpaqueThin_c(const somelib::capi::OpaqueThin* self, somelib::diplomat::capi::DiplomatWrite* write);
 
     void OpaqueThin_destroy(OpaqueThin* self);
 
@@ -30,49 +30,49 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline int32_t OpaqueThin::a() const {
-    auto result = diplomat::capi::OpaqueThin_a(this->AsFFI());
+inline int32_t somelib::OpaqueThin::a() const {
+    auto result = somelib::capi::OpaqueThin_a(this->AsFFI());
     return result;
 }
 
-inline float OpaqueThin::b() const {
-    auto result = diplomat::capi::OpaqueThin_b(this->AsFFI());
+inline float somelib::OpaqueThin::b() const {
+    auto result = somelib::capi::OpaqueThin_b(this->AsFFI());
     return result;
 }
 
-inline std::string OpaqueThin::c() const {
+inline std::string somelib::OpaqueThin::c() const {
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-    diplomat::capi::OpaqueThin_c(this->AsFFI(),
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::OpaqueThin_c(this->AsFFI(),
         &write);
     return output;
 }
 template<typename W>
-inline void OpaqueThin::c_write(W& writeable) const {
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-    diplomat::capi::OpaqueThin_c(this->AsFFI(),
+inline void somelib::OpaqueThin::c_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::OpaqueThin_c(this->AsFFI(),
         &write);
 }
 
-inline const diplomat::capi::OpaqueThin* OpaqueThin::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::OpaqueThin*>(this);
+inline const somelib::capi::OpaqueThin* somelib::OpaqueThin::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::OpaqueThin*>(this);
 }
 
-inline diplomat::capi::OpaqueThin* OpaqueThin::AsFFI() {
-    return reinterpret_cast<diplomat::capi::OpaqueThin*>(this);
+inline somelib::capi::OpaqueThin* somelib::OpaqueThin::AsFFI() {
+    return reinterpret_cast<somelib::capi::OpaqueThin*>(this);
 }
 
-inline const OpaqueThin* OpaqueThin::FromFFI(const diplomat::capi::OpaqueThin* ptr) {
-    return reinterpret_cast<const OpaqueThin*>(ptr);
+inline const somelib::OpaqueThin* somelib::OpaqueThin::FromFFI(const somelib::capi::OpaqueThin* ptr) {
+    return reinterpret_cast<const somelib::OpaqueThin*>(ptr);
 }
 
-inline OpaqueThin* OpaqueThin::FromFFI(diplomat::capi::OpaqueThin* ptr) {
-    return reinterpret_cast<OpaqueThin*>(ptr);
+inline somelib::OpaqueThin* somelib::OpaqueThin::FromFFI(somelib::capi::OpaqueThin* ptr) {
+    return reinterpret_cast<somelib::OpaqueThin*>(ptr);
 }
 
-inline void OpaqueThin::operator delete(void* ptr) {
-    diplomat::capi::OpaqueThin_destroy(reinterpret_cast<diplomat::capi::OpaqueThin*>(ptr));
+inline void somelib::OpaqueThin::operator delete(void* ptr) {
+    somelib::capi::OpaqueThin_destroy(reinterpret_cast<somelib::capi::OpaqueThin*>(ptr));
 }
 
 
-#endif // OpaqueThin_HPP
+#endif // SOMELIB_OpaqueThin_HPP

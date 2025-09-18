@@ -1,5 +1,5 @@
-#ifndef nested_ns_free_functions_HPP
-#define nested_ns_free_functions_HPP
+#ifndef SOMELIB_nested_ns_free_functions_HPP
+#define SOMELIB_nested_ns_free_functions_HPP
 
 #include "free_functions.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "../../diplomat_runtime.hpp"
 
 
-namespace nested::ns {
+namespace somelib::nested::ns {
 namespace capi {
     extern "C" {
 
@@ -25,9 +25,9 @@ namespace capi {
 } // namespace
 
 
-inline bool nested::ns::Renamednested_ns_fn(bool x) {
-    auto result = nested::ns::capi::namespace_nested_ns_fn(x);
+inline bool somelib::nested::ns::Renamednested_ns_fn(bool x) {
+    auto result = somelib::nested::ns::capi::namespace_nested_ns_fn(x);
     return result;
 }
 
-#endif // nested_ns_free_functions_HPP
+#endif // SOMELIB_nested_ns_free_functions_HPP

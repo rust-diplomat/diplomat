@@ -15,6 +15,8 @@
 struct ScalarPairWithPadding;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct BigStructWithStuff {

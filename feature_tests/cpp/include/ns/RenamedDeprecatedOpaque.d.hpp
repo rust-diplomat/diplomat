@@ -1,5 +1,5 @@
-#ifndef ns_RenamedDeprecatedOpaque_D_HPP
-#define ns_RenamedDeprecatedOpaque_D_HPP
+#ifndef SOMELIB_ns_RenamedDeprecatedOpaque_D_HPP
+#define SOMELIB_ns_RenamedDeprecatedOpaque_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,32 +12,32 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct RenamedDeprecatedOpaque;
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 /**
  * \deprecated use Foo
  */
 class [[deprecated("use Foo")]] RenamedDeprecatedOpaque {
 public:
 
-    inline const ns::capi::RenamedDeprecatedOpaque* AsFFI() const;
-    inline ns::capi::RenamedDeprecatedOpaque* AsFFI();
-    inline static const ns::RenamedDeprecatedOpaque* FromFFI(const ns::capi::RenamedDeprecatedOpaque* ptr);
-    inline static ns::RenamedDeprecatedOpaque* FromFFI(ns::capi::RenamedDeprecatedOpaque* ptr);
+    inline const somelib::ns::capi::RenamedDeprecatedOpaque* AsFFI() const;
+    inline somelib::ns::capi::RenamedDeprecatedOpaque* AsFFI();
+    inline static const somelib::ns::RenamedDeprecatedOpaque* FromFFI(const somelib::ns::capi::RenamedDeprecatedOpaque* ptr);
+    inline static somelib::ns::RenamedDeprecatedOpaque* FromFFI(somelib::ns::capi::RenamedDeprecatedOpaque* ptr);
     inline static void operator delete(void* ptr);
 private:
     RenamedDeprecatedOpaque() = delete;
-    RenamedDeprecatedOpaque(const ns::RenamedDeprecatedOpaque&) = delete;
-    RenamedDeprecatedOpaque(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
-    RenamedDeprecatedOpaque operator=(const ns::RenamedDeprecatedOpaque&) = delete;
-    RenamedDeprecatedOpaque operator=(ns::RenamedDeprecatedOpaque&&) noexcept = delete;
+    RenamedDeprecatedOpaque(const somelib::ns::RenamedDeprecatedOpaque&) = delete;
+    RenamedDeprecatedOpaque(somelib::ns::RenamedDeprecatedOpaque&&) noexcept = delete;
+    RenamedDeprecatedOpaque operator=(const somelib::ns::RenamedDeprecatedOpaque&) = delete;
+    RenamedDeprecatedOpaque operator=(somelib::ns::RenamedDeprecatedOpaque&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
-#endif // ns_RenamedDeprecatedOpaque_D_HPP
+#endif // SOMELIB_ns_RenamedDeprecatedOpaque_D_HPP

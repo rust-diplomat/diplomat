@@ -16,7 +16,9 @@ namespace capi { struct RenamedMyIterable; }
 class RenamedMyIterable;
 namespace capi { struct RenamedMyIterator; }
 class RenamedMyIterator;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

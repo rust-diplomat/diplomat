@@ -1,5 +1,5 @@
-#ifndef ErrorEnum_D_HPP
-#define ErrorEnum_D_HPP
+#ifndef SOMELIB_ErrorEnum_D_HPP
+#define SOMELIB_ErrorEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     enum ErrorEnum {
       ErrorEnum_Foo = 0,
@@ -23,6 +23,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class ErrorEnum {
 public:
     enum Value {
@@ -38,11 +39,11 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
 
-    inline diplomat::capi::ErrorEnum AsFFI() const;
-    inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
+    inline somelib::capi::ErrorEnum AsFFI() const;
+    inline static somelib::ErrorEnum FromFFI(somelib::capi::ErrorEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // ErrorEnum_D_HPP
+} // namespace
+#endif // SOMELIB_ErrorEnum_D_HPP

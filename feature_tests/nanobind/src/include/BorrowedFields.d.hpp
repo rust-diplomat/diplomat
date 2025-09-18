@@ -15,6 +15,8 @@ namespace diplomat::capi { struct Bar; }
 class Bar;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct BorrowedFields {

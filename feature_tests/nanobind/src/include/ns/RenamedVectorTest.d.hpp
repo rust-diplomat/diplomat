@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct RenamedVectorTest; }
 class RenamedVectorTest;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

@@ -17,6 +17,8 @@ struct MyStruct;
 class DefaultEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct MyStructContainingAnOption {
