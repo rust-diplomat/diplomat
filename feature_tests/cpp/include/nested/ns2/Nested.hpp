@@ -1,5 +1,5 @@
-#ifndef nested_ns2_Nested_HPP
-#define nested_ns2_Nested_HPP
+#ifndef SOMELIB_nested_ns2_Nested_HPP
+#define SOMELIB_nested_ns2_Nested_HPP
 
 #include "Nested.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "../../diplomat_runtime.hpp"
 
 
-namespace nested::ns2 {
+namespace somelib::nested::ns2 {
 namespace capi {
     extern "C" {
 
@@ -24,25 +24,25 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const nested::ns2::capi::Nested* nested::ns2::Nested::AsFFI() const {
-    return reinterpret_cast<const nested::ns2::capi::Nested*>(this);
+inline const somelib::nested::ns2::capi::Nested* somelib::nested::ns2::Nested::AsFFI() const {
+    return reinterpret_cast<const somelib::nested::ns2::capi::Nested*>(this);
 }
 
-inline nested::ns2::capi::Nested* nested::ns2::Nested::AsFFI() {
-    return reinterpret_cast<nested::ns2::capi::Nested*>(this);
+inline somelib::nested::ns2::capi::Nested* somelib::nested::ns2::Nested::AsFFI() {
+    return reinterpret_cast<somelib::nested::ns2::capi::Nested*>(this);
 }
 
-inline const nested::ns2::Nested* nested::ns2::Nested::FromFFI(const nested::ns2::capi::Nested* ptr) {
-    return reinterpret_cast<const nested::ns2::Nested*>(ptr);
+inline const somelib::nested::ns2::Nested* somelib::nested::ns2::Nested::FromFFI(const somelib::nested::ns2::capi::Nested* ptr) {
+    return reinterpret_cast<const somelib::nested::ns2::Nested*>(ptr);
 }
 
-inline nested::ns2::Nested* nested::ns2::Nested::FromFFI(nested::ns2::capi::Nested* ptr) {
-    return reinterpret_cast<nested::ns2::Nested*>(ptr);
+inline somelib::nested::ns2::Nested* somelib::nested::ns2::Nested::FromFFI(somelib::nested::ns2::capi::Nested* ptr) {
+    return reinterpret_cast<somelib::nested::ns2::Nested*>(ptr);
 }
 
-inline void nested::ns2::Nested::operator delete(void* ptr) {
-    nested::ns2::capi::namespace_Nested2_destroy(reinterpret_cast<nested::ns2::capi::Nested*>(ptr));
+inline void somelib::nested::ns2::Nested::operator delete(void* ptr) {
+    somelib::nested::ns2::capi::namespace_Nested2_destroy(reinterpret_cast<somelib::nested::ns2::capi::Nested*>(ptr));
 }
 
 
-#endif // nested_ns2_Nested_HPP
+#endif // SOMELIB_nested_ns2_Nested_HPP

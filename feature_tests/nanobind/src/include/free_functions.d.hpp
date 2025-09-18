@@ -21,8 +21,6 @@ namespace capi {
 
 
 
-
-
   inline void free_callback_holder(std::function<diplomat::result<std::monostate, std::monostate>()> f);
 
 

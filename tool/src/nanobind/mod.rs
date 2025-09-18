@@ -68,16 +68,26 @@ pub(crate) fn run<'cx>(
     docs: &'cx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
-    let formatter = PyFormatter::new(tcx, docs);
+
+    let mut config_for_cpp = conf.clone();
+
+    // TODO(https://github.com/rust-diplomat/diplomat/issues/957)
+    // We should pass the original config down, probably, but only once the
+    // nanobind backend is updated to expect lib_name-based namespacing in its C++
+    config_for_cpp.shared_config.lib_name = None;
+
+    let formatter = PyFormatter::new(tcx, &config_for_cpp, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
         .shared_config
         .lib_name
-        .expect("Nanobind backend requires lib_name to be set in the config");
+        .as_ref()
+        .expect("Nanobind backend requires lib_name to be set in the config")
+        .clone();
 
     // Output the C++ bindings we rely on
-    let (cpp_files, cpp_errors) = cpp::run(tcx, docs);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, &config_for_cpp, docs);
 
     files.files.borrow_mut().extend(
         cpp_files
@@ -125,6 +135,7 @@ pub(crate) fn run<'cx>(
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
                 },
+                config: &config_for_cpp.cpp_config,
                 formatter: &formatter.cxx,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
@@ -218,6 +229,7 @@ pub(crate) fn run<'cx>(
                         decl_header_path: "",
                         impl_header_path: "",
                     },
+                    config: &conf.cpp_config,
                     errors: &errors,
                     formatter: &formatter.cxx,
                     impl_header: &mut Header::default(),
@@ -298,6 +310,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -322,7 +335,7 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::root_module::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -347,6 +360,7 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
+                config: &config.cpp_config,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
@@ -375,6 +389,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -399,7 +414,7 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -423,6 +438,7 @@ mod test {
                     impl_header_path: &impl_file_path,
                 },
                 formatter: &formatter.cxx,
+                config: &config.cpp_config,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
@@ -451,6 +467,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -475,7 +492,7 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
@@ -500,6 +517,7 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
+                config: &config.cpp_config,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,

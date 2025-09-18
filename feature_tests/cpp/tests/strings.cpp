@@ -3,6 +3,8 @@
 #include "../include/OptionString.hpp"
 #include "assert.hpp"
 
+using namespace somelib;
+
 int main(int argc, char* argv[]) {
     std::unique_ptr<Opaque> o = Opaque::from_str("hello world").ok().value();
     std::string output = o->get_debug_str();

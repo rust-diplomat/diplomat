@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimalFormatter_D_HPP
-#define icu4x_FixedDecimalFormatter_D_HPP
+#ifndef ICU4X_FixedDecimalFormatter_D_HPP
+#define ICU4X_FixedDecimalFormatter_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,8 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
-
+#include "diplomat_runtime.hpp"
 namespace icu4x {
 namespace capi { struct DataProvider; }
 class DataProvider;
@@ -21,7 +20,8 @@ class FixedDecimalFormatter;
 namespace capi { struct Locale; }
 class Locale;
 struct FixedDecimalFormatterOptions;
-}
+} // namespace icu4x
+
 
 
 namespace icu4x {
@@ -44,7 +44,7 @@ public:
      *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
      */
-  inline static diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
+  inline static icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
 
     /**
      * Formats a {@link FixedDecimal} to a string.
@@ -70,4 +70,4 @@ private:
 };
 
 } // namespace
-#endif // icu4x_FixedDecimalFormatter_D_HPP
+#endif // ICU4X_FixedDecimalFormatter_D_HPP

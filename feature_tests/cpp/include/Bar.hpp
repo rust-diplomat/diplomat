@@ -1,5 +1,5 @@
-#ifndef Bar_HPP
-#define Bar_HPP
+#ifndef SOMELIB_Bar_HPP
+#define SOMELIB_Bar_HPP
 
 #include "Bar.d.hpp"
 
@@ -15,11 +15,11 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    const diplomat::capi::Foo* Bar_foo(const diplomat::capi::Bar* self);
+    const somelib::capi::Foo* Bar_foo(const somelib::capi::Bar* self);
 
     void Bar_destroy(Bar* self);
 
@@ -27,30 +27,30 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const Foo& Bar::foo() const {
-    auto result = diplomat::capi::Bar_foo(this->AsFFI());
-    return *Foo::FromFFI(result);
+inline const somelib::Foo& somelib::Bar::foo() const {
+    auto result = somelib::capi::Bar_foo(this->AsFFI());
+    return *somelib::Foo::FromFFI(result);
 }
 
-inline const diplomat::capi::Bar* Bar::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::Bar*>(this);
+inline const somelib::capi::Bar* somelib::Bar::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::Bar*>(this);
 }
 
-inline diplomat::capi::Bar* Bar::AsFFI() {
-    return reinterpret_cast<diplomat::capi::Bar*>(this);
+inline somelib::capi::Bar* somelib::Bar::AsFFI() {
+    return reinterpret_cast<somelib::capi::Bar*>(this);
 }
 
-inline const Bar* Bar::FromFFI(const diplomat::capi::Bar* ptr) {
-    return reinterpret_cast<const Bar*>(ptr);
+inline const somelib::Bar* somelib::Bar::FromFFI(const somelib::capi::Bar* ptr) {
+    return reinterpret_cast<const somelib::Bar*>(ptr);
 }
 
-inline Bar* Bar::FromFFI(diplomat::capi::Bar* ptr) {
-    return reinterpret_cast<Bar*>(ptr);
+inline somelib::Bar* somelib::Bar::FromFFI(somelib::capi::Bar* ptr) {
+    return reinterpret_cast<somelib::Bar*>(ptr);
 }
 
-inline void Bar::operator delete(void* ptr) {
-    diplomat::capi::Bar_destroy(reinterpret_cast<diplomat::capi::Bar*>(ptr));
+inline void somelib::Bar::operator delete(void* ptr) {
+    somelib::capi::Bar_destroy(reinterpret_cast<somelib::capi::Bar*>(ptr));
 }
 
 
-#endif // Bar_HPP
+#endif // SOMELIB_Bar_HPP

@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimalFormatterOptions_HPP
-#define icu4x_FixedDecimalFormatterOptions_HPP
+#ifndef ICU4X_FixedDecimalFormatterOptions_HPP
+#define ICU4X_FixedDecimalFormatterOptions_HPP
 
 #include "FixedDecimalFormatterOptions.d.hpp"
 
@@ -11,8 +11,8 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
 #include "FixedDecimalGroupingStrategy.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -46,4 +46,4 @@ inline icu4x::FixedDecimalFormatterOptions icu4x::FixedDecimalFormatterOptions::
 }
 
 
-#endif // icu4x_FixedDecimalFormatterOptions_HPP
+#endif // ICU4X_FixedDecimalFormatterOptions_HPP

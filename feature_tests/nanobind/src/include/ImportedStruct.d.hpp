@@ -15,6 +15,8 @@
 class UnimportedEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct ImportedStruct {

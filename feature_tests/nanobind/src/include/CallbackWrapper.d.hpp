@@ -20,6 +20,8 @@ struct MyStructContainingAnOption;
 struct PrimitiveStruct;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct CallbackWrapper {

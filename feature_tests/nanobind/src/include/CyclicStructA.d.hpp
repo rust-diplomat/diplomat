@@ -15,6 +15,8 @@
 struct CyclicStructB;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct CyclicStructA {

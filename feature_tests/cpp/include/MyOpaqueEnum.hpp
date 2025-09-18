@@ -1,5 +1,5 @@
-#ifndef MyOpaqueEnum_HPP
-#define MyOpaqueEnum_HPP
+#ifndef SOMELIB_MyOpaqueEnum_HPP
+#define SOMELIB_MyOpaqueEnum_HPP
 
 #include "MyOpaqueEnum.d.hpp"
 
@@ -14,13 +14,13 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::MyOpaqueEnum* MyOpaqueEnum_new(void);
+    somelib::capi::MyOpaqueEnum* MyOpaqueEnum_new(void);
 
-    void MyOpaqueEnum_to_string(const diplomat::capi::MyOpaqueEnum* self, diplomat::capi::DiplomatWrite* write);
+    void MyOpaqueEnum_to_string(const somelib::capi::MyOpaqueEnum* self, somelib::diplomat::capi::DiplomatWrite* write);
 
     void MyOpaqueEnum_destroy(MyOpaqueEnum* self);
 
@@ -28,44 +28,44 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<MyOpaqueEnum> MyOpaqueEnum::new_() {
-    auto result = diplomat::capi::MyOpaqueEnum_new();
-    return std::unique_ptr<MyOpaqueEnum>(MyOpaqueEnum::FromFFI(result));
+inline std::unique_ptr<somelib::MyOpaqueEnum> somelib::MyOpaqueEnum::new_() {
+    auto result = somelib::capi::MyOpaqueEnum_new();
+    return std::unique_ptr<somelib::MyOpaqueEnum>(somelib::MyOpaqueEnum::FromFFI(result));
 }
 
-inline std::string MyOpaqueEnum::to_string() const {
+inline std::string somelib::MyOpaqueEnum::to_string() const {
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-    diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::MyOpaqueEnum_to_string(this->AsFFI(),
         &write);
     return output;
 }
 template<typename W>
-inline void MyOpaqueEnum::to_string_write(W& writeable) const {
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-    diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
+inline void somelib::MyOpaqueEnum::to_string_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::MyOpaqueEnum_to_string(this->AsFFI(),
         &write);
 }
 
-inline const diplomat::capi::MyOpaqueEnum* MyOpaqueEnum::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::MyOpaqueEnum*>(this);
+inline const somelib::capi::MyOpaqueEnum* somelib::MyOpaqueEnum::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::MyOpaqueEnum*>(this);
 }
 
-inline diplomat::capi::MyOpaqueEnum* MyOpaqueEnum::AsFFI() {
-    return reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(this);
+inline somelib::capi::MyOpaqueEnum* somelib::MyOpaqueEnum::AsFFI() {
+    return reinterpret_cast<somelib::capi::MyOpaqueEnum*>(this);
 }
 
-inline const MyOpaqueEnum* MyOpaqueEnum::FromFFI(const diplomat::capi::MyOpaqueEnum* ptr) {
-    return reinterpret_cast<const MyOpaqueEnum*>(ptr);
+inline const somelib::MyOpaqueEnum* somelib::MyOpaqueEnum::FromFFI(const somelib::capi::MyOpaqueEnum* ptr) {
+    return reinterpret_cast<const somelib::MyOpaqueEnum*>(ptr);
 }
 
-inline MyOpaqueEnum* MyOpaqueEnum::FromFFI(diplomat::capi::MyOpaqueEnum* ptr) {
-    return reinterpret_cast<MyOpaqueEnum*>(ptr);
+inline somelib::MyOpaqueEnum* somelib::MyOpaqueEnum::FromFFI(somelib::capi::MyOpaqueEnum* ptr) {
+    return reinterpret_cast<somelib::MyOpaqueEnum*>(ptr);
 }
 
-inline void MyOpaqueEnum::operator delete(void* ptr) {
-    diplomat::capi::MyOpaqueEnum_destroy(reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(ptr));
+inline void somelib::MyOpaqueEnum::operator delete(void* ptr) {
+    somelib::capi::MyOpaqueEnum_destroy(reinterpret_cast<somelib::capi::MyOpaqueEnum*>(ptr));
 }
 
 
-#endif // MyOpaqueEnum_HPP
+#endif // SOMELIB_MyOpaqueEnum_HPP

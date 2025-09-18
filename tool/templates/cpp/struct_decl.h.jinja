@@ -2,7 +2,9 @@
 
 
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% endif -%}
 
 {% if !docs.is_empty() -%}
@@ -23,20 +25,20 @@ struct {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}"
 {%- endif %}
 };
 
-{% if namespace.is_some() -%}
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
 {%-endif%}
 
 {%- if is_sliceable %}
-namespace diplomat {
+namespace {{fmt.lib_name_ns_prefix}}diplomat {
     template<typename T>
     struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const {{type_name}}>>>> {
-        using type = {% if let Some(ns) = namespace -%} {{ns}}:: {%- endif -%} capi::Diplomat{{type_name_unnamespaced}}View;
+        using type = {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::Diplomat{{type_name_unnamespaced}}View;
     };
 
     template<typename T>
     struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<{{type_name}}>>>> {
-        using type = {% if let Some(ns) = namespace -%} {{ns}}:: {%- endif -%} capi::Diplomat{{type_name_unnamespaced}}ViewMut;
+        using type = {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::Diplomat{{type_name_unnamespaced}}ViewMut;
 };
 }
 {%- endif %}

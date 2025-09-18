@@ -17,6 +17,8 @@ namespace diplomat::capi { struct OptionOpaqueChar; }
 class OptionOpaqueChar;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct OptionStruct {

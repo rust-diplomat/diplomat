@@ -1,5 +1,5 @@
-#ifndef CyclicStructC_HPP
-#define CyclicStructC_HPP
+#ifndef SOMELIB_CyclicStructC_HPP
+#define SOMELIB_CyclicStructC_HPP
 
 #include "CyclicStructC.d.hpp"
 
@@ -15,49 +15,49 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::CyclicStructC CyclicStructC_takes_nested_parameters(diplomat::capi::CyclicStructC c);
+    somelib::capi::CyclicStructC CyclicStructC_takes_nested_parameters(somelib::capi::CyclicStructC c);
 
-    void CyclicStructC_cyclic_out(diplomat::capi::CyclicStructC self, diplomat::capi::DiplomatWrite* write);
+    void CyclicStructC_cyclic_out(somelib::capi::CyclicStructC self, somelib::diplomat::capi::DiplomatWrite* write);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline CyclicStructC CyclicStructC::takes_nested_parameters(CyclicStructC c) {
-    auto result = diplomat::capi::CyclicStructC_takes_nested_parameters(c.AsFFI());
-    return CyclicStructC::FromFFI(result);
+inline somelib::CyclicStructC somelib::CyclicStructC::takes_nested_parameters(somelib::CyclicStructC c) {
+    auto result = somelib::capi::CyclicStructC_takes_nested_parameters(c.AsFFI());
+    return somelib::CyclicStructC::FromFFI(result);
 }
 
-inline std::string CyclicStructC::cyclic_out() const {
+inline std::string somelib::CyclicStructC::cyclic_out() const {
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-    diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::CyclicStructC_cyclic_out(this->AsFFI(),
         &write);
     return output;
 }
 template<typename W>
-inline void CyclicStructC::cyclic_out_write(W& writeable) const {
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-    diplomat::capi::CyclicStructC_cyclic_out(this->AsFFI(),
+inline void somelib::CyclicStructC::cyclic_out_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::CyclicStructC_cyclic_out(this->AsFFI(),
         &write);
 }
 
 
-inline diplomat::capi::CyclicStructC CyclicStructC::AsFFI() const {
-    return diplomat::capi::CyclicStructC {
+inline somelib::capi::CyclicStructC somelib::CyclicStructC::AsFFI() const {
+    return somelib::capi::CyclicStructC {
         /* .a = */ a.AsFFI(),
     };
 }
 
-inline CyclicStructC CyclicStructC::FromFFI(diplomat::capi::CyclicStructC c_struct) {
-    return CyclicStructC {
-        /* .a = */ CyclicStructA::FromFFI(c_struct.a),
+inline somelib::CyclicStructC somelib::CyclicStructC::FromFFI(somelib::capi::CyclicStructC c_struct) {
+    return somelib::CyclicStructC {
+        /* .a = */ somelib::CyclicStructA::FromFFI(c_struct.a),
     };
 }
 
 
-#endif // CyclicStructC_HPP
+#endif // SOMELIB_CyclicStructC_HPP

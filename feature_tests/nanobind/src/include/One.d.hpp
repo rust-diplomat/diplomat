@@ -15,6 +15,8 @@ namespace diplomat::capi { struct Two; }
 class Two;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct One;

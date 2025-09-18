@@ -13,11 +13,15 @@
 
 namespace diplomat::capi { struct Unnamespaced; }
 class Unnamespaced;
+
+
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
 class RenamedAttrEnum;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

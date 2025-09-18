@@ -756,6 +756,30 @@ impl From<FunctionId> for SymbolId {
     }
 }
 
+impl From<StructId> for SymbolId {
+    fn from(x: StructId) -> Self {
+        SymbolId::TypeId(x.into())
+    }
+}
+
+impl From<OutStructId> for SymbolId {
+    fn from(x: OutStructId) -> Self {
+        SymbolId::TypeId(x.into())
+    }
+}
+
+impl From<OpaqueId> for SymbolId {
+    fn from(x: OpaqueId) -> Self {
+        SymbolId::TypeId(x.into())
+    }
+}
+
+impl From<EnumId> for SymbolId {
+    fn from(x: EnumId) -> Self {
+        SymbolId::TypeId(x.into())
+    }
+}
+
 impl TryInto<TypeId> for SymbolId {
     type Error = ();
     fn try_into(self) -> Result<TypeId, Self::Error> {

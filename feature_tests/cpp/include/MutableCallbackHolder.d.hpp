@@ -1,5 +1,5 @@
-#ifndef MutableCallbackHolder_D_HPP
-#define MutableCallbackHolder_D_HPP
+#ifndef SOMELIB_MutableCallbackHolder_D_HPP
+#define SOMELIB_MutableCallbackHolder_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,34 +10,40 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+namespace capi { struct MutableCallbackHolder; }
+class MutableCallbackHolder;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct MutableCallbackHolder;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class MutableCallbackHolder {
 public:
 
-  inline static std::unique_ptr<MutableCallbackHolder> new_(std::function<int32_t(int32_t)> func);
+  inline static std::unique_ptr<somelib::MutableCallbackHolder> new_(std::function<int32_t(int32_t)> func);
 
   inline int32_t call(int32_t a);
 
-    inline const diplomat::capi::MutableCallbackHolder* AsFFI() const;
-    inline diplomat::capi::MutableCallbackHolder* AsFFI();
-    inline static const MutableCallbackHolder* FromFFI(const diplomat::capi::MutableCallbackHolder* ptr);
-    inline static MutableCallbackHolder* FromFFI(diplomat::capi::MutableCallbackHolder* ptr);
+    inline const somelib::capi::MutableCallbackHolder* AsFFI() const;
+    inline somelib::capi::MutableCallbackHolder* AsFFI();
+    inline static const somelib::MutableCallbackHolder* FromFFI(const somelib::capi::MutableCallbackHolder* ptr);
+    inline static somelib::MutableCallbackHolder* FromFFI(somelib::capi::MutableCallbackHolder* ptr);
     inline static void operator delete(void* ptr);
 private:
     MutableCallbackHolder() = delete;
-    MutableCallbackHolder(const MutableCallbackHolder&) = delete;
-    MutableCallbackHolder(MutableCallbackHolder&&) noexcept = delete;
-    MutableCallbackHolder operator=(const MutableCallbackHolder&) = delete;
-    MutableCallbackHolder operator=(MutableCallbackHolder&&) noexcept = delete;
+    MutableCallbackHolder(const somelib::MutableCallbackHolder&) = delete;
+    MutableCallbackHolder(somelib::MutableCallbackHolder&&) noexcept = delete;
+    MutableCallbackHolder operator=(const somelib::MutableCallbackHolder&) = delete;
+    MutableCallbackHolder operator=(somelib::MutableCallbackHolder&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // MutableCallbackHolder_D_HPP
+} // namespace
+#endif // SOMELIB_MutableCallbackHolder_D_HPP

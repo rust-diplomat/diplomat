@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimalGroupingStrategy_HPP
-#define icu4x_FixedDecimalGroupingStrategy_HPP
+#ifndef ICU4X_FixedDecimalGroupingStrategy_HPP
+#define ICU4X_FixedDecimalGroupingStrategy_HPP
 
 #include "FixedDecimalGroupingStrategy.d.hpp"
 
@@ -11,7 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -37,4 +37,4 @@ inline icu4x::FixedDecimalGroupingStrategy icu4x::FixedDecimalGroupingStrategy::
             std::abort();
     }
 }
-#endif // icu4x_FixedDecimalGroupingStrategy_HPP
+#endif // ICU4X_FixedDecimalGroupingStrategy_HPP

@@ -15,6 +15,8 @@ namespace diplomat::capi { struct Foo; }
 class Foo;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct Bar;

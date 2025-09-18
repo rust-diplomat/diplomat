@@ -13,10 +13,10 @@ inline {##}
     {%- endfor -%}
     {%- if m.method.output.is_write() %}
     {%- if is_generic_writeable %}
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteTrait<W>::Construct(writeable);
     {%- else %}
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromString(output);
     {%- endif %}
     {%- endif %}
     {% if !m.method.output.is_ffi_unit() -%}

@@ -10,6 +10,8 @@
 #include "../include/CyclicStructA.hpp"
 #include "assert.hpp"
 
+using namespace somelib;
+
 int main(int argc, char* argv[]) {
 
     static_assert(std::is_same_v<diplomat::as_ffi_t<ns::RenamedOpaqueArithmetic>, ns::capi::RenamedOpaqueArithmetic*>);

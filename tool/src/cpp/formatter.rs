@@ -17,12 +17,25 @@ use std::{borrow::Cow, fmt::Write};
 /// of C types and methods.
 pub(crate) struct Cpp2Formatter<'tcx> {
     pub c: CFormatter<'tcx>,
+    pub lib_name: Option<String>,
+    pub lib_name_ns_prefix: String,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        config: &crate::Config,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
         Self {
-            c: CFormatter::new(tcx, true, docs_url_gen),
+            c: CFormatter::new(tcx, true, config, docs_url_gen),
+            lib_name: config.shared_config.lib_name.clone(),
+            lib_name_ns_prefix: config
+                .shared_config
+                .lib_name
+                .as_ref()
+                .map(|l| format!("{l}::"))
+                .unwrap_or_default(),
         }
     }
 
@@ -59,10 +72,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .attrs()
             .rename
             .apply(resolved.name().as_str().into());
+        let lib_prefix = &self.lib_name_ns_prefix;
         if let Some(ref ns) = resolved.attrs().namespace {
-            format!("{ns}::{name}").into()
+            format!("{lib_prefix}{ns}::{name}").into()
         } else {
-            name
+            format!("{lib_prefix}{name}").into()
         }
     }
 
@@ -189,10 +203,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: This needs to change if an abstraction other than std::span is used
         // TODO: Where is the right place to put `const` here?
+
+        let lib_prefix = &self.lib_name_ns_prefix;
         if mutability.is_mutable() {
-            format!("diplomat::span<{ident}>").into()
+            format!("{lib_prefix}diplomat::span<{ident}>").into()
         } else {
-            format!("diplomat::span<const {ident}>").into()
+            format!("{lib_prefix}diplomat::span<const {ident}>").into()
         }
     }
 
@@ -245,9 +261,16 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             SymbolId::TypeId(ty) => &self.c.tcx().resolve_type(ty).attrs().namespace,
             _ => panic!("Unsupported SymbolId"),
         };
-        if let Some(ref ns) = ns {
+        if let Some(lib_name) = &self.lib_name {
+            if let Some(ref ns) = ns {
+                format!("{lib_name}::{ns}::{CAPI_NAMESPACE}::{name}")
+            } else {
+                format!("{lib_name}::{CAPI_NAMESPACE}::{name}")
+            }
+        } else if let Some(ref ns) = ns {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
+            // When there is no library name, capi stuff gets stuffed under the diplomat namespace
             format!("diplomat::{CAPI_NAMESPACE}::{name}")
         }
     }
@@ -268,8 +291,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         method_name: String,
         cpp_name: &'a str,
     ) -> Cow<'a, str> {
-        let ns = namespace.unwrap_or("diplomat".to_string());
-        format!("{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+        let lib_prefix = &self.lib_name_ns_prefix;
+        if let Some(ns) = namespace {
+            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+        } else {
+            // When there is no library name, capi stuff gets stuffed under the diplomat namespace
+            let prefix = self.lib_name.as_deref().unwrap_or("diplomat");
+            format!("{prefix}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result")
+                .into()
+        }
     }
 
     pub fn fmt_run_callback_converter<'a>(
@@ -278,10 +308,19 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         conversion_func: &'a str,
         types: Vec<&'a str>,
     ) -> String {
+        let lib_prefix = &self.lib_name_ns_prefix;
         format!(
-            "diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
+            "{lib_prefix}diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
             types.join(", ")
         )
+    }
+
+    pub fn lib_prefixed_path<'a>(&self, path: &'a str) -> Cow<'a, str> {
+        if let Some(lib_name) = &self.lib_name {
+            format!("{lib_name}::{path}").into()
+        } else {
+            path.into()
+        }
     }
 }
 

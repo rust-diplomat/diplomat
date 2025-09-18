@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct RenamedOpaqueArithmetic; }
 class RenamedOpaqueArithmetic;
-}
+} // namespace ns
+
+
 
 
 namespace ns {

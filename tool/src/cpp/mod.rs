@@ -14,6 +14,14 @@ pub(crate) use func::FuncGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
+#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CppConfig {}
+
+impl CppConfig {
+    pub fn set(&mut self, key: &str, _value: toml::Value) {
+        panic!("C++ does not support any backend-specific configs, found {key}");
+    }
+}
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -53,17 +61,28 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
+    config: &crate::Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = Cpp2Formatter::new(tcx, docs_url_gen);
+    let formatter = Cpp2Formatter::new(tcx, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     #[derive(askama::Template)]
     #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
-    struct Runtime;
-
-    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
+    struct Runtime<'a> {
+        guard_prefix: &'a str,
+        lib_name: Option<&'a str>,
+    }
+    let lib_name = config.shared_config.lib_name.as_deref();
+    let include_guard_prefix = lib_name
+        .map(|x| format!("{}_", x.to_ascii_uppercase()))
+        .unwrap_or_default();
+    let runtime = Runtime {
+        guard_prefix: &include_guard_prefix,
+        lib_name,
+    };
+    files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -72,13 +91,14 @@ pub(crate) fn run<'tcx>(
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let mut decl_header = header::Header::new(decl_header_path.clone());
+        let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
-        let mut impl_header = header::Header::new(impl_header_path.clone());
+        let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config.cpp_config,
             c: crate::c::TyGenContext {
                 tcx,
                 formatter: &formatter.c,
@@ -144,18 +164,21 @@ pub(crate) fn run<'tcx>(
                         impl_header_path.clone(),
                         decl_header_path.clone(),
                         f.attrs.namespace.clone(),
+                        lib_name,
                         true,
+                        &formatter,
                     ),
                 );
                 func_contexts.get_mut(&key).unwrap()
             };
 
-            let mut decl_header_clone = header::Header::new("".into());
-            let mut impl_header_clone = header::Header::new("".into());
+            let mut decl_header_clone = header::Header::new("".into(), lib_name);
+            let mut impl_header_clone = header::Header::new("".into(), lib_name);
 
             let mut ty_context = TyGenContext {
                 formatter: &formatter,
                 errors: &errors,
+                config: &config.cpp_config,
                 c: crate::c::TyGenContext {
                     tcx,
                     formatter: &formatter.c,
@@ -221,19 +244,21 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
+        let config = crate::Config::default();
         if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
             let docs_gen = Default::default();
-            let formatter = Cpp2Formatter::new(&tcx, &docs_gen);
-            let mut decl_header = header::Header::new("decl_thing".into());
-            let mut impl_header = header::Header::new("impl_thing".into());
+            let formatter = Cpp2Formatter::new(&tcx, &config, &docs_gen);
+            let mut decl_header = header::Header::new("decl_thing".into(), None);
+            let mut impl_header = header::Header::new("impl_thing".into(), None);
 
             let mut ty_gen_cx = TyGenContext {
                 errors: &error_store,
                 formatter: &formatter,
+                config: &config.cpp_config,
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,

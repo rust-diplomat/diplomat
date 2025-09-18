@@ -1,5 +1,5 @@
-#ifndef ScalarPairWithPadding_HPP
-#define ScalarPairWithPadding_HPP
+#ifndef SOMELIB_ScalarPairWithPadding_HPP
+#define SOMELIB_ScalarPairWithPadding_HPP
 
 #include "ScalarPairWithPadding.d.hpp"
 
@@ -14,34 +14,34 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    void ScalarPairWithPadding_assert_value(diplomat::capi::ScalarPairWithPadding self);
+    void ScalarPairWithPadding_assert_value(somelib::capi::ScalarPairWithPadding self);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline void ScalarPairWithPadding::assert_value() const {
-    diplomat::capi::ScalarPairWithPadding_assert_value(this->AsFFI());
+inline void somelib::ScalarPairWithPadding::assert_value() const {
+    somelib::capi::ScalarPairWithPadding_assert_value(this->AsFFI());
 }
 
 
-inline diplomat::capi::ScalarPairWithPadding ScalarPairWithPadding::AsFFI() const {
-    return diplomat::capi::ScalarPairWithPadding {
+inline somelib::capi::ScalarPairWithPadding somelib::ScalarPairWithPadding::AsFFI() const {
+    return somelib::capi::ScalarPairWithPadding {
         /* .first = */ first,
         /* .second = */ second,
     };
 }
 
-inline ScalarPairWithPadding ScalarPairWithPadding::FromFFI(diplomat::capi::ScalarPairWithPadding c_struct) {
-    return ScalarPairWithPadding {
+inline somelib::ScalarPairWithPadding somelib::ScalarPairWithPadding::FromFFI(somelib::capi::ScalarPairWithPadding c_struct) {
+    return somelib::ScalarPairWithPadding {
         /* .first = */ c_struct.first,
         /* .second = */ c_struct.second,
     };
 }
 
 
-#endif // ScalarPairWithPadding_HPP
+#endif // SOMELIB_ScalarPairWithPadding_HPP

@@ -75,5 +75,5 @@ fn generate_js
         out = set "api_legacy"
     end
     
-    generate_generic ${path} js ${api_path}/${out} "--config js.abi=${config}"
+    generate_generic ${path} js ${api_path}/${out}
 end

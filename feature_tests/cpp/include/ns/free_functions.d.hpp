@@ -1,5 +1,5 @@
-#ifndef ns_free_functions_D_HPP
-#define ns_free_functions_D_HPP
+#ifndef SOMELIB_ns_free_functions_D_HPP
+#define SOMELIB_ns_free_functions_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,15 +12,13 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
-namespace ns {
-
-
+namespace somelib::ns {
 
 
 
@@ -29,4 +27,4 @@ namespace ns {
 
 
 } // namespace
-#endif // ns_free_functions_D_HPP
+#endif // SOMELIB_ns_free_functions_D_HPP

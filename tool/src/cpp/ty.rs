@@ -32,10 +32,12 @@ pub(super) struct NamedType<'a> {
 /// Context for generating a particular type's header
 pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub formatter: &'ccx Cpp2Formatter<'tcx>,
+    #[allow(dead_code)] // Currently unused but could be in the future
+    pub config: &'ccx super::CppConfig,
     pub errors: &'ccx ErrorStore<'tcx, String>,
-    pub c: C2TyGenContext<'ccx, 'tcx>,
-    pub impl_header: &'header mut Header,
-    pub decl_header: &'header mut Header,
+    pub c: C2TyGenContext<'ccx, 'tcx, 'header>,
+    pub impl_header: &'header mut Header<'ccx>,
+    pub decl_header: &'header mut Header<'ccx>,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
 }
@@ -258,7 +260,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
-            // fmt: &'a Cpp2Formatter<'a>,
+            fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
             fields: &'a [NamedType<'a>],
@@ -273,7 +275,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         DeclTemplate {
             // ty,
-            // fmt: &self.formatter,
+            fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
             fields: field_decls.as_slice(),
@@ -292,7 +294,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         #[template(path = "cpp/struct_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
-            // fmt: &'a Cpp2Formatter<'a>,
+            fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
             cpp_to_c_fields: &'a [NamedExpression<'a>],
@@ -304,7 +306,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         ImplTemplate {
             // ty,
-            // fmt: &self.formatter,
+            fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
@@ -339,6 +341,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
     ///
     /// This function adds the necessary type imports to the decl and impl files.
     pub(crate) fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+        let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
@@ -399,7 +402,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
-                "diplomat::span<const {}>",
+                "{lib_name_ns_prefix}diplomat::span<const {}>",
                 self.formatter.fmt_borrowed_str(encoding)
             )
             .into(),
@@ -532,6 +535,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         method_abi_name: Option<String>,
         namespace: Option<String>,
     ) -> Cow<'a, str> {
+        let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
             Type::Primitive(..) => cpp_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => {
@@ -564,7 +568,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
                 // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
-                "{{reinterpret_cast<const diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
+                "{{reinterpret_cast<const {lib_name_ns_prefix}diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() { "" } else { "const " },
@@ -606,13 +610,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
-                        let opaque_type = format!("diplomat::capi::{}", self.c.formatter.fmt_type_name(o.tcx_id.into()));
+                        let opaque_type = self.c.formatter.fmt_type_name_maybe_namespaced(o.tcx_id.into());
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
                     },
-                    _ => format!("diplomat::fn_traits({cpp_name}).c_run_callback")
+                    _ => format!("{lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_run_callback")
                 };
-                format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+                format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -627,6 +631,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         result_ty: &ReturnType<P>,
         is_generic_write: bool,
     ) -> Cow<'ccx, str> {
+        let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
             ReturnType::Infallible(SuccessType::Write) if is_generic_write => "void".into(),
@@ -644,7 +649,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     Some(o) => self.gen_type_name(o),
                     None => "std::monostate".into(),
                 };
-                format!("diplomat::result<{ok_type_name}, {err_type_name}>").into()
+                format!("{lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>")
+                    .into()
             }
             ReturnType::Nullable(ref ty) => {
                 let type_name = match ty {
@@ -773,6 +779,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
         var_name: Cow<'a, str>,
         is_generic_write: bool,
     ) -> Option<Cow<'a, str>> {
+        let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
             ReturnType::Infallible(SuccessType::Write) if is_generic_write => None,
@@ -807,7 +814,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
                     None => "".into(),
                 };
                 Some(
-                    format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
+                    format!("{var_name}.is_ok ? {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Ok<{ok_type_name}>({ok_conversion})) : {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Err<{err_type_name}>({err_conversion}))").into()
                 )
             }
             ReturnType::Nullable(ref ty) => {

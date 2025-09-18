@@ -5,7 +5,7 @@ use diplomat_core::hir::{self, FunctionId, SelfType, StructPathLike, SymbolId, T
 
 use crate::c::Header as C2Header;
 use crate::c::CAPI_NAMESPACE;
-use crate::cpp::{header::Header, ty::NamedType, TyGenContext};
+use crate::cpp::{header::Header, ty::NamedType, Cpp2Formatter, TyGenContext};
 use crate::filters;
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -54,54 +54,61 @@ pub(super) struct MethodInfo<'a> {
     pub(super) deprecated: Option<&'a str>,
 }
 
-#[derive(Template, Default)]
+#[derive(Template)]
 #[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
 /// Header for the implementation of a block of functions.
-struct ImplTemplate {
+struct ImplTemplate<'a> {
     namespace: Option<String>,
     methods: Vec<String>,
     c_header: C2Header,
+    fmt: &'a Cpp2Formatter<'a>,
 }
 
-#[derive(Template, Default)]
+#[derive(Template)]
 #[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
 /// Header for the definition of a block of function.s
-struct DeclTemplate {
+struct DeclTemplate<'a> {
     namespace: Option<String>,
     methods: Vec<String>,
     c_header: C2Header,
+    fmt: &'a Cpp2Formatter<'a>,
 }
 
 /// Helper for rendering function block information to [`Header`]s
 /// Used either for creating blocks of functions that belong to structs, or for free functions that belong to no structs.
-pub struct FuncGenContext<'tcx> {
-    pub(super) impl_header: Header,
-    pub(super) decl_header: Header,
+pub struct FuncGenContext<'ccx, 'tcx> {
+    pub(super) impl_header: Header<'ccx>,
+    pub(super) decl_header: Header<'ccx>,
     c: crate::c::FuncGenContext<'tcx>,
-    impl_template: ImplTemplate,
-    decl_template: DeclTemplate,
+    impl_template: ImplTemplate<'ccx>,
+    decl_template: DeclTemplate<'ccx>,
 }
 
-impl<'tcx> FuncGenContext<'tcx> {
+impl<'ccx, 'tcx> FuncGenContext<'ccx, 'tcx> {
     pub fn new(
         impl_header_path: String,
         decl_header_path: String,
         namespace: Option<String>,
+        lib_name: Option<&'ccx str>,
         is_for_cpp: bool,
+        fmt: &'ccx Cpp2Formatter<'tcx>,
     ) -> Self {
         let decl_c_header = crate::c::Header::new(decl_header_path.clone(), is_for_cpp);
         FuncGenContext {
             c: crate::c::FuncGenContext::new(decl_c_header, is_for_cpp),
-            impl_header: Header::new(impl_header_path),
-            decl_header: Header::new(decl_header_path.clone()),
+            impl_header: Header::new(impl_header_path, lib_name),
+            decl_header: Header::new(decl_header_path.clone(), lib_name),
             impl_template: ImplTemplate {
                 namespace: namespace.clone(),
-                ..Default::default()
+                fmt,
+                methods: vec![],
+                c_header: Default::default(),
             },
             decl_template: DeclTemplate {
                 c_header: crate::c::Header::new(decl_header_path.clone(), is_for_cpp),
+                fmt,
                 namespace,
-                ..Default::default()
+                methods: vec![],
             },
         }
     }
@@ -114,6 +121,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         context: &mut TyGenContext<'b, 'tcx, '_>,
     ) {
         let info = Self::gen_method_info(func_id.into(), func, context);
+        let fmt = &context.formatter;
 
         #[derive(Template)]
         #[template(
@@ -122,6 +130,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         )]
         struct FunctionImpl<'a> {
             m: &'a MethodInfo<'a>,
+            fmt: &'a Cpp2Formatter<'a>,
             namespace: Option<String>,
         }
 
@@ -137,6 +146,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         if let Some(m) = &info {
             let impl_bl = FunctionImpl {
                 m,
+                fmt,
                 namespace: func.attrs.namespace.clone(),
             };
             self.impl_template.methods.push(impl_bl.to_string());
@@ -165,6 +175,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         if method.attrs.disable {
             return None;
         }
+        let lib_name_ns_prefix = &context.formatter.lib_name_ns_prefix;
         let _guard = context.errors.set_context_method(
             context.c.tcx.fmt_symbol_name_diagnostics(id),
             method.name.as_str().into(),
@@ -232,7 +243,7 @@ impl<'tcx> FuncGenContext<'tcx> {
                 Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) {
                 param_validations.push(format!(
-                    "if (!diplomat::capi::diplomat_is_str({param_name}.data(), {param_name}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>();\n}}",
+                    "if (!{lib_name_ns_prefix}diplomat::capi::diplomat_is_str({param_name}.data(), {param_name}.size())) {{\n  return {lib_name_ns_prefix}diplomat::Err<{lib_name_ns_prefix}diplomat::Utf8Error>();\n}}",
                 ));
                 returns_utf8_err = true;
             }
@@ -284,14 +295,24 @@ impl<'tcx> FuncGenContext<'tcx> {
         fn wrap_return_ty_and_expr_for_utf8(
             return_ty: &mut Cow<str>,
             c_to_cpp_return_expression: &mut Option<Cow<str>>,
+            fmt: &Cpp2Formatter,
         ) {
+            let lib_name_ns_prefix = &fmt.lib_name_ns_prefix;
             if let Some(return_expr) = c_to_cpp_return_expression {
-                *c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
-                *return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
+                *c_to_cpp_return_expression = Some(
+                    format!("{lib_name_ns_prefix}diplomat::Ok<{return_ty}>({return_expr})").into(),
+                );
+                *return_ty = format!(
+                        "{lib_name_ns_prefix}diplomat::result<{return_ty}, {lib_name_ns_prefix}diplomat::Utf8Error>"
+                    )
+                    .into();
             } else {
-                *c_to_cpp_return_expression = Some("diplomat::Ok<std::monostate>()".into());
-                *return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
+                *c_to_cpp_return_expression =
+                    Some(format!("{lib_name_ns_prefix}diplomat::Ok<std::monostate>()").into());
+                *return_ty = format!(
+                    "{lib_name_ns_prefix}diplomat::result<std::monostate, {lib_name_ns_prefix}diplomat::Utf8Error>"
+                )
+                .into();
             }
         }
 
@@ -301,7 +322,11 @@ impl<'tcx> FuncGenContext<'tcx> {
             context.gen_c_to_cpp_for_return_type(&method.output, "result".into(), false);
 
         if returns_utf8_err {
-            wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
+            wrap_return_ty_and_expr_for_utf8(
+                &mut return_ty,
+                &mut c_to_cpp_return_expression,
+                context.formatter,
+            )
         };
 
         // If the return expression is a std::move, unwrap that, because the linter doesn't like it
@@ -324,7 +349,11 @@ impl<'tcx> FuncGenContext<'tcx> {
             let mut c_to_cpp_return_expression =
                 context.gen_c_to_cpp_for_return_type(&method.output, "result".into(), true);
             if returns_utf8_err {
-                wrap_return_ty_and_expr_for_utf8(&mut return_ty, &mut c_to_cpp_return_expression)
+                wrap_return_ty_and_expr_for_utf8(
+                    &mut return_ty,
+                    &mut c_to_cpp_return_expression,
+                    context.formatter,
+                )
             };
             writeable_info = Some(MethodWriteableInfo {
                 method_name: format!("{method_name}_write").into(),

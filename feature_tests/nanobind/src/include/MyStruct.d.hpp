@@ -16,6 +16,8 @@ struct MyZst;
 class MyEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct MyStruct {

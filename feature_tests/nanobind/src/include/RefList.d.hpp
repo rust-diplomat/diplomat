@@ -15,6 +15,8 @@ namespace diplomat::capi { struct RefListParameter; }
 class RefListParameter;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct RefList;

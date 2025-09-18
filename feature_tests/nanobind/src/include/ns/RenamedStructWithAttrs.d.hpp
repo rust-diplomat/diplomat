@@ -13,7 +13,9 @@
 
 namespace ns {
 struct RenamedStructWithAttrs;
-}
+} // namespace ns
+
+
 
 
 namespace ns {
