@@ -1,6 +1,5 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
-#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     #[diplomat::opaque]
     /// An  Locale, capable of representing strings like `"en-US"`.

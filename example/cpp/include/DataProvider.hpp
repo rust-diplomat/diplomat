@@ -1,5 +1,5 @@
-#ifndef icu4x_DataProvider_HPP
-#define icu4x_DataProvider_HPP
+#ifndef ICU4X_DataProvider_HPP
+#define ICU4X_DataProvider_HPP
 
 #include "DataProvider.d.hpp"
 
@@ -11,7 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -34,9 +34,9 @@ inline std::unique_ptr<icu4x::DataProvider> icu4x::DataProvider::new_static() {
     return std::unique_ptr<icu4x::DataProvider>(icu4x::DataProvider::FromFFI(result));
 }
 
-inline diplomat::result<std::monostate, std::monostate> icu4x::DataProvider::returns_result() {
+inline icu4x::diplomat::result<std::monostate, std::monostate> icu4x::DataProvider::returns_result() {
     auto result = icu4x::capi::icu4x_DataProvider_returns_result_mv1();
-    return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+    return result.is_ok ? icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Ok<std::monostate>()) : icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Err<std::monostate>());
 }
 
 inline const icu4x::capi::DataProvider* icu4x::DataProvider::AsFFI() const {
@@ -60,4 +60,4 @@ inline void icu4x::DataProvider::operator delete(void* ptr) {
 }
 
 
-#endif // icu4x_DataProvider_HPP
+#endif // ICU4X_DataProvider_HPP

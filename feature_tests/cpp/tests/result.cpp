@@ -4,6 +4,8 @@
 #include "../include/ErrorStruct.hpp"
 #include "assert.hpp"
 
+using namespace somelib;
+
 struct NonTrivial{
     explicit NonTrivial(int i) {}
     NonTrivial(const NonTrivial&) {}; // non-default, but still callable

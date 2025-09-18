@@ -275,7 +275,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         DeclTemplate {
             // ty,
-            fmt: &self.formatter,
+            fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
             fields: field_decls.as_slice(),
@@ -306,7 +306,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
 
         ImplTemplate {
             // ty,
-            fmt: &self.formatter,
+            fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),

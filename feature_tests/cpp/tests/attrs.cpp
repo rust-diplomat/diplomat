@@ -10,6 +10,8 @@
 #include "../include/nested/ns2/Nested.hpp"
 #include "../include/Float64Vec.hpp"
 
+using namespace somelib;
+
 #include "assert.hpp"
 
 int main(int argc, char* argv[]) {

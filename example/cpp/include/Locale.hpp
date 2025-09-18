@@ -1,5 +1,5 @@
-#ifndef icu4x_Locale_HPP
-#define icu4x_Locale_HPP
+#ifndef ICU4X_Locale_HPP
+#define ICU4X_Locale_HPP
 
 #include "Locale.d.hpp"
 
@@ -11,14 +11,14 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
 namespace capi {
     extern "C" {
 
-    icu4x::capi::Locale* icu4x_Locale_new_mv1(diplomat::capi::DiplomatStringView name);
+    icu4x::capi::Locale* icu4x_Locale_new_mv1(icu4x::diplomat::capi::DiplomatStringView name);
 
     void icu4x_Locale_destroy_mv1(Locale* self);
 
@@ -52,4 +52,4 @@ inline void icu4x::Locale::operator delete(void* ptr) {
 }
 
 
-#endif // icu4x_Locale_HPP
+#endif // ICU4X_Locale_HPP

@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimalFormatter_HPP
-#define icu4x_FixedDecimalFormatter_HPP
+#ifndef ICU4X_FixedDecimalFormatter_HPP
+#define ICU4X_FixedDecimalFormatter_HPP
 
 #include "FixedDecimalFormatter.d.hpp"
 
@@ -11,11 +11,11 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
 #include "DataProvider.hpp"
 #include "FixedDecimal.hpp"
 #include "FixedDecimalFormatterOptions.hpp"
 #include "Locale.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -25,7 +25,7 @@ namespace capi {
     typedef struct icu4x_FixedDecimalFormatter_try_new_mv1_result {union {icu4x::capi::FixedDecimalFormatter* ok; }; bool is_ok;} icu4x_FixedDecimalFormatter_try_new_mv1_result;
     icu4x_FixedDecimalFormatter_try_new_mv1_result icu4x_FixedDecimalFormatter_try_new_mv1(const icu4x::capi::Locale* locale, const icu4x::capi::DataProvider* provider, icu4x::capi::FixedDecimalFormatterOptions options);
 
-    void icu4x_FixedDecimalFormatter_format_write_mv1(const icu4x::capi::FixedDecimalFormatter* self, const icu4x::capi::FixedDecimal* value, diplomat::capi::DiplomatWrite* write);
+    void icu4x_FixedDecimalFormatter_format_write_mv1(const icu4x::capi::FixedDecimalFormatter* self, const icu4x::capi::FixedDecimal* value, icu4x::diplomat::capi::DiplomatWrite* write);
 
     void icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter* self);
 
@@ -33,16 +33,16 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> icu4x::FixedDecimalFormatter::try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options) {
+inline icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> icu4x::FixedDecimalFormatter::try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options) {
     auto result = icu4x::capi::icu4x_FixedDecimalFormatter_try_new_mv1(locale.AsFFI(),
         provider.AsFFI(),
         options.AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(diplomat::Ok<std::unique_ptr<icu4x::FixedDecimalFormatter>>(std::unique_ptr<icu4x::FixedDecimalFormatter>(icu4x::FixedDecimalFormatter::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(diplomat::Err<std::monostate>());
+    return result.is_ok ? icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(icu4x::diplomat::Ok<std::unique_ptr<icu4x::FixedDecimalFormatter>>(std::unique_ptr<icu4x::FixedDecimalFormatter>(icu4x::FixedDecimalFormatter::FromFFI(result.ok)))) : icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(icu4x::diplomat::Err<std::monostate>());
 }
 
 inline std::string icu4x::FixedDecimalFormatter::format_write(const icu4x::FixedDecimal& value) const {
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    icu4x::diplomat::capi::DiplomatWrite write = icu4x::diplomat::WriteFromString(output);
     icu4x::capi::icu4x_FixedDecimalFormatter_format_write_mv1(this->AsFFI(),
         value.AsFFI(),
         &write);
@@ -50,7 +50,7 @@ inline std::string icu4x::FixedDecimalFormatter::format_write(const icu4x::Fixed
 }
 template<typename W>
 inline void icu4x::FixedDecimalFormatter::format_write_write(const icu4x::FixedDecimal& value, W& writeable) const {
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    icu4x::diplomat::capi::DiplomatWrite write = icu4x::diplomat::WriteTrait<W>::Construct(writeable);
     icu4x::capi::icu4x_FixedDecimalFormatter_format_write_mv1(this->AsFFI(),
         value.AsFFI(),
         &write);
@@ -77,4 +77,4 @@ inline void icu4x::FixedDecimalFormatter::operator delete(void* ptr) {
 }
 
 
-#endif // icu4x_FixedDecimalFormatter_HPP
+#endif // ICU4X_FixedDecimalFormatter_HPP

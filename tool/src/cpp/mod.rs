@@ -244,19 +244,21 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
+        let config = crate::Config::default();
         if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
             let docs_gen = Default::default();
-            let formatter = Cpp2Formatter::new(&tcx, &docs_gen);
-            let mut decl_header = header::Header::new("decl_thing".into());
-            let mut impl_header = header::Header::new("impl_thing".into());
+            let formatter = Cpp2Formatter::new(&tcx, &config, &docs_gen);
+            let mut decl_header = header::Header::new("decl_thing".into(), None);
+            let mut impl_header = header::Header::new("impl_thing".into(), None);
 
             let mut ty_gen_cx = TyGenContext {
                 errors: &error_store,
                 formatter: &formatter,
+                config: &config.cpp_config,
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,

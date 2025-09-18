@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimal_HPP
-#define icu4x_FixedDecimal_HPP
+#ifndef ICU4X_FixedDecimal_HPP
+#define ICU4X_FixedDecimal_HPP
 
 #include "FixedDecimal.d.hpp"
 
@@ -11,7 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -23,7 +23,7 @@ namespace capi {
     void icu4x_FixedDecimal_multiply_pow10_mv1(icu4x::capi::FixedDecimal* self, int16_t power);
 
     typedef struct icu4x_FixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_FixedDecimal_to_string_mv1_result;
-    icu4x_FixedDecimal_to_string_mv1_result icu4x_FixedDecimal_to_string_mv1(const icu4x::capi::FixedDecimal* self, diplomat::capi::DiplomatWrite* write);
+    icu4x_FixedDecimal_to_string_mv1_result icu4x_FixedDecimal_to_string_mv1(const icu4x::capi::FixedDecimal* self, icu4x::diplomat::capi::DiplomatWrite* write);
 
     void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);
 
@@ -41,19 +41,19 @@ inline void icu4x::FixedDecimal::multiply_pow10(int16_t power) {
         power);
 }
 
-inline diplomat::result<std::string, std::monostate> icu4x::FixedDecimal::to_string() const {
+inline icu4x::diplomat::result<std::string, std::monostate> icu4x::FixedDecimal::to_string() const {
     std::string output;
-    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    icu4x::diplomat::capi::DiplomatWrite write = icu4x::diplomat::WriteFromString(output);
     auto result = icu4x::capi::icu4x_FixedDecimal_to_string_mv1(this->AsFFI(),
         &write);
-    return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
+    return result.is_ok ? icu4x::diplomat::result<std::string, std::monostate>(icu4x::diplomat::Ok<std::string>(std::move(output))) : icu4x::diplomat::result<std::string, std::monostate>(icu4x::diplomat::Err<std::monostate>());
 }
 template<typename W>
-inline diplomat::result<std::monostate, std::monostate> icu4x::FixedDecimal::to_string_write(W& writeable) const {
-    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+inline icu4x::diplomat::result<std::monostate, std::monostate> icu4x::FixedDecimal::to_string_write(W& writeable) const {
+    icu4x::diplomat::capi::DiplomatWrite write = icu4x::diplomat::WriteTrait<W>::Construct(writeable);
     auto result = icu4x::capi::icu4x_FixedDecimal_to_string_mv1(this->AsFFI(),
         &write);
-    return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
+    return result.is_ok ? icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Ok<std::monostate>()) : icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Err<std::monostate>());
 }
 
 inline const icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() const {
@@ -77,4 +77,4 @@ inline void icu4x::FixedDecimal::operator delete(void* ptr) {
 }
 
 
-#endif // icu4x_FixedDecimal_HPP
+#endif // ICU4X_FixedDecimal_HPP

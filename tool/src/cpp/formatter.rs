@@ -267,13 +267,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             } else {
                 format!("{lib_name}::{CAPI_NAMESPACE}::{name}")
             }
+        } else if let Some(ref ns) = ns {
+            format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
-            if let Some(ref ns) = ns {
-                format!("{ns}::{CAPI_NAMESPACE}::{name}")
-            } else {
-                // When there is no library name, capi stuff gets stuffed under the diplomat namespace
-                format!("diplomat::{CAPI_NAMESPACE}::{name}")
-            }
+            // When there is no library name, capi stuff gets stuffed under the diplomat namespace
+            format!("diplomat::{CAPI_NAMESPACE}::{name}")
         }
     }
 

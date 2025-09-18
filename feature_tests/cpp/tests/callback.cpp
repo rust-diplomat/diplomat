@@ -8,6 +8,8 @@
 #include "../include/PrimitiveStructVec.hpp"
 #include "assert.hpp"
 
+using namespace somelib;
+
 int main(int argc, char *argv[])
 {
 

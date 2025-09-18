@@ -1,5 +1,5 @@
-#ifndef icu4x_FixedDecimal_D_HPP
-#define icu4x_FixedDecimal_D_HPP
+#ifndef ICU4X_FixedDecimal_D_HPP
+#define ICU4X_FixedDecimal_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,12 +9,12 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "../diplomat_runtime.hpp"
-
+#include "diplomat_runtime.hpp"
 namespace icu4x {
 namespace capi { struct FixedDecimal; }
 class FixedDecimal;
-}
+} // namespace icu4x
+
 
 
 namespace icu4x {
@@ -47,9 +47,9 @@ public:
      *
      * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
      */
-  inline diplomat::result<std::string, std::monostate> to_string() const;
+  inline icu4x::diplomat::result<std::string, std::monostate> to_string() const;
   template<typename W>
-  inline diplomat::result<std::monostate, std::monostate> to_string_write(W& writeable_output) const;
+  inline icu4x::diplomat::result<std::monostate, std::monostate> to_string_write(W& writeable_output) const;
 
     inline const icu4x::capi::FixedDecimal* AsFFI() const;
     inline icu4x::capi::FixedDecimal* AsFFI();
@@ -66,4 +66,4 @@ private:
 };
 
 } // namespace
-#endif // icu4x_FixedDecimal_D_HPP
+#endif // ICU4X_FixedDecimal_D_HPP
