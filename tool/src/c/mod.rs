@@ -122,7 +122,7 @@ pub(crate) fn run<'tcx>(
     }
     // loop over traits too
 
-    if !tcx.all_free_functions().next().is_some() {
+    if tcx.all_free_functions().next().is_some() {
         // Loop over free functions, put them all in one file:
         let header = Header::new("diplomat_free_functions.h".into(), false);
 

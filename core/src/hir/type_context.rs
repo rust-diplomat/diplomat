@@ -790,6 +790,7 @@ mod tests {
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support.option = true;
             attr_validator.support.abi_compatibles = true;
+            attr_validator.support.free_functions = true;
             match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
