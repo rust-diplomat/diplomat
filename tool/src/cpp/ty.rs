@@ -35,9 +35,9 @@ pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     #[allow(dead_code)] // Currently unused but could be in the future
     pub config: &'ccx super::CppConfig,
     pub errors: &'ccx ErrorStore<'tcx, String>,
-    pub c: C2TyGenContext<'ccx, 'tcx>,
-    pub impl_header: &'header mut Header,
-    pub decl_header: &'header mut Header,
+    pub c: C2TyGenContext<'ccx, 'tcx, 'header>,
+    pub impl_header: &'header mut Header<'ccx>,
+    pub decl_header: &'header mut Header<'ccx>,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
 }

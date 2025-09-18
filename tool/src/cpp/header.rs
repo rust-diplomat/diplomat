@@ -26,7 +26,7 @@ struct HeaderTemplate<'a> {
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
-pub(crate) struct Header {
+pub(crate) struct Header<'a> {
     /// The path name used for the header file (for example Foo.h)
     pub path: String,
     /// A list of includes
@@ -64,10 +64,13 @@ pub(crate) struct Header {
     pub body: String,
     /// What string to use for indentation.
     pub indent_str: &'static str,
+
+    /// The name of the library, if any
+    pub lib_name: Option<&'a str>,
 }
 
-impl Header {
-    pub fn new(path: String) -> Self {
+impl<'a> Header<'a> {
+    pub fn new(path: String, lib_name: Option<&'a str>) -> Self {
         Header {
             path,
             includes: BTreeSet::from_iter(["diplomat_runtime.hpp".into()]),
@@ -75,6 +78,7 @@ impl Header {
             forwards: BTreeMap::new(),
             body: String::new(),
             indent_str: "  ",
+            lib_name,
         }
     }
 
@@ -107,7 +111,7 @@ impl Header {
     }
 }
 
-impl fmt::Write for Header {
+impl fmt::Write for Header<'_> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.body.write_str(s)
     }
@@ -119,7 +123,7 @@ impl fmt::Write for Header {
     }
 }
 
-impl fmt::Display for Header {
+impl fmt::Display for Header<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let header_guard = &self
             .path
