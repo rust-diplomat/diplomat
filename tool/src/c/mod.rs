@@ -55,10 +55,11 @@ pub struct Runtime;
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
+    config: &crate::Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = CFormatter::new(tcx, false, docs_url_gen);
+    let formatter = CFormatter::new(tcx, false, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());

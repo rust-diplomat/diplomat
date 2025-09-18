@@ -18,6 +18,7 @@
 #include <array>
 #endif
 
+{% if let Some(lib_name) = lib_name -%} namespace {{lib_name}} { {%- endif ~%}
 namespace diplomat {
 
 namespace capi {
@@ -445,5 +446,6 @@ struct next_to_iter_helper {
 };
 
 } // namespace diplomat
+{%~ if let Some(lib_name) = lib_name -%} } // namespace {{lib_name}} {%- endif ~%}
 
 #endif

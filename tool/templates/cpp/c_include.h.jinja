@@ -1,5 +1,7 @@
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% else -%}
 namespace diplomat {
 {% endif -%}

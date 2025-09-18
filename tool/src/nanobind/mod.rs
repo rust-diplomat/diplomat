@@ -221,6 +221,7 @@ pub(crate) fn run<'cx>(
                         decl_header_path: "",
                         impl_header_path: "",
                     },
+                    config: &conf.cpp_config,
                     errors: &errors,
                     formatter: &formatter.cxx,
                     impl_header: &mut Header::default(),

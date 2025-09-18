@@ -17,6 +17,7 @@ pub(crate) enum Forward {
 #[template(path = "cpp/base.h.jinja", escape = "none")]
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
+    lib_name: Option<&'a str>,
     decl_include: Option<Cow<'a, str>>,
     includes: Vec<Cow<'a, str>>,
     forwards: &'a BTreeMap<Option<String>, BTreeSet<Forward>>,
@@ -65,12 +66,12 @@ pub(crate) struct Header<'a> {
     /// What string to use for indentation.
     pub indent_str: &'static str,
 
-    /// A prefix for the include guard
-    pub include_guard_prefix: &'a str,
+    /// The library name
+    pub lib_name: Option<&'a str>,
 }
 
 impl<'a> Header<'a> {
-    pub fn new(path: String, include_guard_prefix: &'a str) -> Self {
+    pub fn new(path: String, lib_name: Option<&'a str>) -> Self {
         Header {
             path,
             includes: BTreeSet::from_iter(["diplomat_runtime.hpp".into()]),
@@ -78,7 +79,7 @@ impl<'a> Header<'a> {
             forwards: BTreeMap::new(),
             body: String::new(),
             indent_str: "  ",
-            include_guard_prefix,
+            lib_name,
         }
     }
 
@@ -131,7 +132,11 @@ impl fmt::Display for Header<'_> {
             .replace(".hpp", "_HPP")
             .replace("\\", "_")
             .replace("/", "_");
-        let header_guard = format!("{}_{header_guard}", self.include_guard_prefix);
+        let header_guard = if let Some(lib_name) = self.lib_name {
+            format!("{}_{header_guard}", lib_name.to_ascii_uppercase())
+        } else {
+            header_guard
+        };
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
@@ -151,6 +156,7 @@ impl fmt::Display for Header<'_> {
                 .map(|s| path_diff(&self.path, s))
                 .collect(),
             forwards: &self.forwards,
+            lib_name: self.lib_name,
             body,
         }
         .render_into(f)

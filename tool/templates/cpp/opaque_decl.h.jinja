@@ -8,7 +8,9 @@
 {% include "c_include.h.jinja" %}
 
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% endif -%}
 {% if !docs.is_empty() -%}
 /**
@@ -34,6 +36,6 @@ private:
     static void operator delete[](void*, size_t) = delete;
 };
 
-{% if namespace.is_some() -%}
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
 {%-endif%}

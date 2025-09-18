@@ -20,6 +20,8 @@ pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     is_for_cpp: bool,
     docs_url_gen: &'tcx DocsUrlGenerator,
+
+    lib_name: Option<String>,
 }
 
 pub(crate) const CAPI_NAMESPACE: &str = "capi";
@@ -28,11 +30,13 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn new(
         tcx: &'tcx TypeContext,
         is_for_cpp: bool,
+        config: &crate::Config,
         docs_url_gen: &'tcx DocsUrlGenerator,
     ) -> Self {
         Self {
             tcx,
             is_for_cpp,
+            lib_name: config.shared_config.lib_name.clone(),
             docs_url_gen,
         }
     }
@@ -137,12 +141,7 @@ impl<'tcx> CFormatter<'tcx> {
         } else {
             name
         };
-        if self.is_for_cpp {
-            if let Some(ref ns) = attrs.namespace {
-                return format!("{ns}::{CAPI_NAMESPACE}::{name}").into();
-            }
-        }
-        self.diplomat_namespace(name)
+        self.diplomat_namespace_for_custom_type(name, attrs.namespace.as_deref())
     }
 
     /// Resolve and format the name of a type for use in header names: decl version
@@ -263,8 +262,6 @@ impl<'tcx> CFormatter<'tcx> {
 
         let def = self.tcx.resolve_type(st_id);
 
-        let ns = def.attrs().namespace.clone();
-
         let mtb = match borrow {
             MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
@@ -272,13 +269,7 @@ impl<'tcx> CFormatter<'tcx> {
 
         let ty = format!("Diplomat{st_name}View{mtb}");
 
-        if self.is_for_cpp {
-            if let Some(ref ns) = ns {
-                return format!("{ns}::{CAPI_NAMESPACE}::{ty}").into();
-            }
-        }
-
-        self.diplomat_namespace(ty.into())
+        self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
     }
 
     pub(crate) fn fmt_write_name(&self) -> Cow<'tcx, str> {
@@ -362,9 +353,37 @@ impl<'tcx> CFormatter<'tcx> {
         }
     }
 
+    /// Custom types in the capi namespace end up in either diplomat::capi::foo
+    /// or somens::capi::foo (Diplomat avoids polluting the global namespace with a `capi` namespace)
+    pub fn diplomat_namespace_for_custom_type(
+        &self,
+        ty: Cow<'tcx, str>,
+        ns: Option<&'_ str>,
+    ) -> Cow<'tcx, str> {
+        if self.is_for_cpp {
+            if let Some(lib_name) = &self.lib_name {
+                if let Some(ns) = ns {
+                    format!("{lib_name}::{ns}::{CAPI_NAMESPACE}::{ty}").into()
+                } else {
+                    format!("{lib_name}::{CAPI_NAMESPACE}::{ty}").into()
+                }
+            } else {
+                let root = ns.unwrap_or("diplomat");
+                format!("{root}::{CAPI_NAMESPACE}::{ty}").into()
+            }
+        } else {
+            ty
+        }
+    }
+
+    /// For types from diplomat_runtime.h
     fn diplomat_namespace(&self, ty: Cow<'tcx, str>) -> Cow<'tcx, str> {
         if self.is_for_cpp {
-            format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            if let Some(lib_name) = &self.lib_name {
+                format!("{lib_name}::diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            } else {
+                format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            }
         } else {
             ty
         }
