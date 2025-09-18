@@ -70,11 +70,14 @@ pub(crate) fn run<'tcx>(
 
     #[derive(askama::Template)]
     #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
-    struct Runtime;
-
-    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
-
-    let lib_name = config.shared_config.lib_name.as_ref().map(|x| &**x);
+    struct Runtime<'a> {
+        guard_prefix: &'a str
+    }
+    let include_guard_prefix = config.shared_config.lib_name.as_ref().map(|x| format!("{}_", x.to_ascii_uppercase())).unwrap_or_default();
+    let runtime = Runtime {
+        guard_prefix: &include_guard_prefix
+    };
+    files.add_file("diplomat_runtime.hpp".into(),  runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -83,9 +86,9 @@ pub(crate) fn run<'tcx>(
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+        let mut decl_header = header::Header::new(decl_header_path.clone(), &include_guard_prefix);
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
-        let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
+        let mut impl_header = header::Header::new(impl_header_path.clone(), &include_guard_prefix);
 
         let mut context = TyGenContext {
             formatter: &formatter,

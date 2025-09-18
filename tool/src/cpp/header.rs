@@ -65,12 +65,12 @@ pub(crate) struct Header<'a> {
     /// What string to use for indentation.
     pub indent_str: &'static str,
 
-    /// The name of the library, if any
-    pub lib_name: Option<&'a str>,
+    /// A prefix for the include guard
+    pub include_guard_prefix: &'a str,
 }
 
 impl<'a> Header<'a> {
-    pub fn new(path: String, lib_name: Option<&'a str>) -> Self {
+    pub fn new(path: String, include_guard_prefix: &'a str) -> Self {
         Header {
             path,
             includes: BTreeSet::from_iter(["diplomat_runtime.hpp".into()]),
@@ -78,7 +78,7 @@ impl<'a> Header<'a> {
             forwards: BTreeMap::new(),
             body: String::new(),
             indent_str: "  ",
-            lib_name,
+            include_guard_prefix,
         }
     }
 
@@ -125,12 +125,13 @@ impl fmt::Write for Header<'_> {
 
 impl fmt::Display for Header<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let header_guard = &self
+        let header_guard = self
             .path
             .replace(".d.hpp", "_D_HPP")
             .replace(".hpp", "_HPP")
             .replace("\\", "_")
             .replace("/", "_");
+        let header_guard = format!("{}_{header_guard}", self.include_guard_prefix);
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
