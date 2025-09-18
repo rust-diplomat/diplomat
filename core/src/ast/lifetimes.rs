@@ -182,6 +182,22 @@ impl LifetimeEnv {
         this
     }
 
+    pub fn from_function_item(
+        f: &syn::ItemFn,
+        params: &[Param],
+        return_type: Option<&TypeName>,
+    ) -> Self {
+        let mut this = LifetimeEnv::new();
+        this.extend_generics(&f.sig.generics);
+        for param in params {
+            this.extend_implicit_lifetime_bounds(&param.ty, None);
+        }
+        if let Some(return_type) = return_type {
+            this.extend_implicit_lifetime_bounds(return_type, None);
+        }
+        this
+    }
+
     /// Traverse a type, adding any implicit lifetime bounds that arise from
     /// having a reference to an opaque containing a lifetime.
     /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.

@@ -5,7 +5,7 @@
 #include "Two.hpp"
 
 
-void add_One_binding(nb::handle mod) {
+void add_One_binding(nb::module_ mod) {
     PyType_Slot One_slots[] = {
         {Py_tp_free, (void *)One::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

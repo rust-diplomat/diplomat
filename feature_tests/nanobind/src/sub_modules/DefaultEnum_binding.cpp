@@ -4,7 +4,7 @@
 #include "DefaultEnum.hpp"
 
 
-void add_DefaultEnum_binding(nb::handle mod) {
+void add_DefaultEnum_binding(nb::module_ mod) {
     nb::class_<DefaultEnum> e_class(mod, "DefaultEnum");
     
         nb::enum_<DefaultEnum::Value>(e_class, "DefaultEnum")

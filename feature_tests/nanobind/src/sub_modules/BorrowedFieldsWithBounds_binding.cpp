@@ -5,7 +5,7 @@
 #include "Foo.hpp"
 
 
-void add_BorrowedFieldsWithBounds_binding(nb::handle mod) {
+void add_BorrowedFieldsWithBounds_binding(nb::module_ mod) {
     nb::class_<BorrowedFieldsWithBounds>(mod, "BorrowedFieldsWithBounds")
         .def(nb::init<>())
         .def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "field_a"_a.none(),  "field_b"_a.none(),  "field_c"_a.none())

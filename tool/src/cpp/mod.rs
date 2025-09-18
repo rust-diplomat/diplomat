@@ -1,12 +1,16 @@
 mod formatter;
+mod func;
 mod header;
 mod ty;
 
 pub(crate) use header::Header;
+use std::collections::BTreeMap;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use ty::TyGenContext;
+
+pub(crate) use func::FuncGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
@@ -42,6 +46,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.generate_mocking_interface = false;
     a.abi_compatibles = true;
     a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
@@ -66,9 +71,9 @@ pub(crate) fn run<'tcx>(
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id);
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone());
-        let impl_header_path = formatter.fmt_impl_header_path(id);
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone());
 
         let mut context = TyGenContext {
@@ -111,6 +116,77 @@ pub(crate) fn run<'tcx>(
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
+    }
+
+    {
+        let mut func_contexts = BTreeMap::new();
+
+        for (id, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
+            }
+
+            let key = if let Some(ns) = &f.attrs.namespace {
+                ns.clone()
+            } else {
+                "".into()
+            };
+
+            let impl_header_path = formatter.fmt_impl_header_path(id.into());
+            let decl_header_path = formatter.fmt_decl_header_path(id.into());
+
+            let context = if let Some(v) = func_contexts.get_mut(&key) {
+                v
+            } else {
+                func_contexts.insert(
+                    key.clone(),
+                    FuncGenContext::new(
+                        impl_header_path.clone(),
+                        decl_header_path.clone(),
+                        f.attrs.namespace.clone(),
+                        true,
+                    ),
+                );
+                func_contexts.get_mut(&key).unwrap()
+            };
+
+            let mut decl_header_clone = header::Header::new("".into());
+            let mut impl_header_clone = header::Header::new("".into());
+
+            let mut ty_context = TyGenContext {
+                formatter: &formatter,
+                errors: &errors,
+                c: crate::c::TyGenContext {
+                    tcx,
+                    formatter: &formatter.c,
+                    errors: &errors,
+                    is_for_cpp: true,
+                    id: id.into(),
+                    decl_header_path: "",
+                    impl_header_path: &impl_header_path,
+                },
+                impl_header: &mut impl_header_clone,
+                decl_header: &mut decl_header_clone,
+                generating_struct_fields: false,
+            };
+
+            context.generate_function(id, f, &mut ty_context);
+            context
+                .impl_header
+                .includes
+                .append(&mut impl_header_clone.includes);
+            context
+                .decl_header
+                .includes
+                .append(&mut decl_header_clone.includes);
+        }
+
+        for (_, ctx) in func_contexts.iter_mut() {
+            ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
+            ctx.render().unwrap();
+            files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
+            files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
+        }
     }
 
     (files, errors)

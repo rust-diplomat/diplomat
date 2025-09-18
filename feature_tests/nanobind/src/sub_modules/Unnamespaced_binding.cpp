@@ -6,7 +6,7 @@
 #include "ns/RenamedAttrEnum.hpp"
 
 
-void add_Unnamespaced_binding(nb::handle mod) {
+void add_Unnamespaced_binding(nb::module_ mod) {
     PyType_Slot Unnamespaced_slots[] = {
         {Py_tp_free, (void *)Unnamespaced::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

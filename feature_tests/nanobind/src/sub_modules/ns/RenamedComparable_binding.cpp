@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedComparable_binding(nb::handle mod) {
+void add_RenamedComparable_binding(nb::module_ mod) {
     PyType_Slot ns_RenamedComparable_slots[] = {
         {Py_tp_free, (void *)ns::RenamedComparable::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

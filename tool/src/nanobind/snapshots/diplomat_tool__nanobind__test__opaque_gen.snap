@@ -8,7 +8,7 @@ expression: generated
 // Forward declarations for binding add functions
 
 namespace mylib {
-void add_OpaqueStruct_binding(nb::handle);
+void add_OpaqueStruct_binding(nb::module_);
 }
 
 

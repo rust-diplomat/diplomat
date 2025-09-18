@@ -4,7 +4,7 @@
 #include "UnimportedEnum.hpp"
 
 
-void add_UnimportedEnum_binding(nb::handle mod) {
+void add_UnimportedEnum_binding(nb::module_ mod) {
     nb::class_<UnimportedEnum> e_class(mod, "UnimportedEnum");
     
         nb::enum_<UnimportedEnum::Value>(e_class, "UnimportedEnum")

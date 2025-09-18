@@ -5,7 +5,7 @@
 #include "CyclicStructC.hpp"
 
 
-void add_CyclicStructC_binding(nb::handle mod) {
+void add_CyclicStructC_binding(nb::module_ mod) {
     nb::class_<CyclicStructC>(mod, "CyclicStructC")
         .def(nb::init<>())
         .def(nb::init<CyclicStructA>(), "a"_a.none())

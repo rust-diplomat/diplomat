@@ -4,7 +4,7 @@
 #include "OptionString.hpp"
 
 
-void add_OptionString_binding(nb::handle mod) {
+void add_OptionString_binding(nb::module_ mod) {
     PyType_Slot OptionString_slots[] = {
         {Py_tp_free, (void *)OptionString::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

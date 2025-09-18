@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedMyIterator_binding(nb::handle mod) {
+void add_RenamedMyIterator_binding(nb::module_ mod) {
     PyType_Slot ns_RenamedMyIterator_slots[] = {
         {Py_tp_free, (void *)ns::RenamedMyIterator::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

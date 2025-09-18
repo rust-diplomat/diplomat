@@ -4,7 +4,7 @@
 #include "OptionOpaqueChar.hpp"
 
 
-void add_OptionOpaqueChar_binding(nb::handle mod) {
+void add_OptionOpaqueChar_binding(nb::module_ mod) {
     PyType_Slot OptionOpaqueChar_slots[] = {
         {Py_tp_free, (void *)OptionOpaqueChar::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

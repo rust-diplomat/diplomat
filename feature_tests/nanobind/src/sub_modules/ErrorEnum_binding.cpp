@@ -4,7 +4,7 @@
 #include "ErrorEnum.hpp"
 
 
-void add_ErrorEnum_binding(nb::handle mod) {
+void add_ErrorEnum_binding(nb::module_ mod) {
     nb::class_<ErrorEnum> e_class(mod, "ErrorEnum");
     
         nb::enum_<ErrorEnum::Value>(e_class, "ErrorEnum")

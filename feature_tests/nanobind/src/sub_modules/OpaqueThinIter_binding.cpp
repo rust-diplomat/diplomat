@@ -4,7 +4,7 @@
 #include "OpaqueThinIter.hpp"
 
 
-void add_OpaqueThinIter_binding(nb::handle mod) {
+void add_OpaqueThinIter_binding(nb::module_ mod) {
     PyType_Slot OpaqueThinIter_slots[] = {
         {Py_tp_free, (void *)OpaqueThinIter::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

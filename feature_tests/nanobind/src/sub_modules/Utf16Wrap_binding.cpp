@@ -4,7 +4,7 @@
 #include "Utf16Wrap.hpp"
 
 
-void add_Utf16Wrap_binding(nb::handle mod) {
+void add_Utf16Wrap_binding(nb::module_ mod) {
     PyType_Slot Utf16Wrap_slots[] = {
         {Py_tp_free, (void *)Utf16Wrap::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

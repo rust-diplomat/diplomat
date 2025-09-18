@@ -6,7 +6,7 @@
 #include "OptionStruct.hpp"
 
 
-void add_OptionStruct_binding(nb::handle mod) {
+void add_OptionStruct_binding(nb::module_ mod) {
     nb::class_<OptionStruct>(mod, "OptionStruct")
         .def(nb::init<>())
         .def(nb::init<std::unique_ptr<OptionOpaque>, std::unique_ptr<OptionOpaqueChar>, uint32_t, std::unique_ptr<OptionOpaque>>(), "a"_a,  "b"_a,  "c"_a.none(),  "d"_a)

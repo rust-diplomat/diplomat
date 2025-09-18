@@ -4,7 +4,7 @@
 #include "ErrorStruct.hpp"
 
 
-void add_ErrorStruct_binding(nb::handle mod) {
+void add_ErrorStruct_binding(nb::module_ mod) {
     nb::class_<ErrorStruct>(mod, "ErrorStruct")
         .def(nb::init<>())
         .def(nb::init<int32_t, int32_t>(), "i"_a.none(),  "j"_a.none())

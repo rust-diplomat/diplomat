@@ -1,0 +1,21 @@
+    .{{m.def}}
+{%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
+{%- block special_methods -%}{%- endblock -%}
+{%- else -%}
+("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
+nb::overload_cast<{% for p in m.param_decls.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor
+    -%}>(
+    {%- endif -%}
+    &{%- block cpp_method_name -%}{%- endblock -%}
+    {%- if m.overloads.len() > 0 -%} ) {%- endif -%}
+    {%- include "method_params.cpp.jinja" -%})
+    {%- endif -%}
+
+    {%- if m.overloads.len() > 0 %}
+    {%- for o in m.overloads %}
+    .{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last
+        -%}, {% endif %} {%- endfor -%}>(&{%- block cpp_method_name -%}{%- endblock -%})
+        {%- include "method_params.cpp.jinja" -%})
+        {%- endfor -%}
+
+        {%- endif -%}

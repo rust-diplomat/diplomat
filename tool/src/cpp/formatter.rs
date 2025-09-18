@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, SpecialMethod, StringEncoding, TypeContext, TypeId,
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId,
 };
 use std::{borrow::Cow, fmt::Write};
 
@@ -36,6 +36,22 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .apply(resolved.name().as_str().into())
     }
 
+    pub fn fmt_symbol_name(&self, id: SymbolId) -> Cow<'tcx, str> {
+        match id {
+            SymbolId::TypeId(ty) => self.fmt_type_name(ty),
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                let name = resolved.attrs.rename.apply(resolved.name.as_str().into());
+                if let Some(ns) = &resolved.attrs.namespace {
+                    format!("{ns}::{name}").into()
+                } else {
+                    name
+                }
+            }
+            _ => panic!("Unsupported SymbolId: {id:?}"),
+        }
+    }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
@@ -51,32 +67,60 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                (
+                    "free_functions".to_string(),
+                    resolved.attrs.namespace.clone(),
+                )
+            }
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.into(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}"),
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.d.hpp")
+            format!("{ns}/{name}.d.hpp")
         } else {
-            format!("{type_name}.d.hpp")
+            format!("{name}.d.hpp")
         }
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                (
+                    "free_functions".to_string(),
+                    resolved.attrs.namespace.clone(),
+                )
+            }
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.into(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}"),
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.hpp")
+            format!("{ns}/{name}.hpp")
         } else {
-            format!("{type_name}.hpp")
+            format!("{name}.hpp")
         }
     }
 
@@ -195,9 +239,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_name(&self, ty: TypeId, name: &str) -> String {
-        let resolved = self.c.tcx().resolve_type(ty);
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn namespace_c_name(&self, ty: SymbolId, name: &str) -> String {
+        let ns = match ty {
+            SymbolId::FunctionId(f) => &self.c.tcx().resolve_function(f).attrs.namespace,
+            SymbolId::TypeId(ty) => &self.c.tcx().resolve_type(ty).attrs().namespace,
+            _ => panic!("Unsupported SymbolId"),
+        };
+        if let Some(ref ns) = ns {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
             format!("diplomat::{CAPI_NAMESPACE}::{name}")

@@ -524,4 +524,5 @@ TypeContext {
     ],
     enums: [],
     traits: [],
+    functions: [],
 }

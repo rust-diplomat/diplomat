@@ -1,9 +1,11 @@
 mod formatter;
+mod func;
 mod header;
 mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
+pub use self::func::FuncGenContext;
 pub(crate) use self::header::Header;
 pub use self::ty::TyGenContext;
 
@@ -42,6 +44,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.generate_mocking_interface = false;
     a.abi_compatibles = true;
     a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
@@ -118,6 +121,42 @@ pub(crate) fn run<'tcx>(
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
+
+    if tcx.all_free_functions().next().is_some() {
+        // Loop over free functions, put them all in one file:
+        let header = Header::new("diplomat_free_functions.h".into(), false);
+
+        let mut impl_context = FuncGenContext::new(header, false);
+
+        {
+            let mut should_render = false;
+            for (id, f) in tcx.all_free_functions() {
+                if f.attrs.disable {
+                    continue;
+                }
+                should_render = true;
+                let context = TyGenContext {
+                    tcx,
+                    formatter: &formatter,
+                    errors: &errors,
+                    is_for_cpp: false,
+                    id: id.into(),
+                    decl_header_path: "diplomat_free_functions.d.h",
+                    impl_header_path: "diplomat_free_functions.h",
+                };
+
+                impl_context.gen_method(f, &context);
+            }
+
+            if should_render {
+                impl_context.render(None, None).unwrap();
+                files.add_file(
+                    "diplomat_free_functions.h".into(),
+                    impl_context.header.to_string(),
+                );
+            }
+        }
+    }
 
     (files, errors)
 }

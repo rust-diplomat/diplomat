@@ -4,7 +4,7 @@
 #include "MyEnum.hpp"
 
 
-void add_MyEnum_binding(nb::handle mod) {
+void add_MyEnum_binding(nb::module_ mod) {
     nb::class_<MyEnum> e_class(mod, "MyEnum");
     
         nb::enum_<MyEnum::Value>(e_class, "MyEnum")

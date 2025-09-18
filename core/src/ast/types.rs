@@ -11,7 +11,7 @@ use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
     OpaqueType, Path, RustLink, Struct, Trait,
 };
-use crate::Env;
+use crate::{ast::Function, Env};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
@@ -96,6 +96,8 @@ pub enum ModSymbol {
     CustomType(CustomType),
     /// A trait
     Trait(Trait),
+    /// A free function not associated with any type.
+    Function(Function),
 }
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
@@ -201,6 +203,9 @@ impl PathType {
                     }
                     Some(ModSymbol::Trait(trt)) => {
                         panic!("Found trait {} but expected a type", trt.name);
+                    }
+                    Some(ModSymbol::Function(f)) => {
+                        panic!("Found function {} but expected a type", f.name);
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
@@ -334,6 +339,25 @@ impl From<&syn::TraitBound> for PathType {
 
         Self {
             path: Path::from_syn(&other.path),
+            lifetimes,
+        }
+    }
+}
+
+impl From<&syn::Signature> for PathType {
+    fn from(other: &syn::Signature) -> Self {
+        let lifetimes = other
+            .generics
+            .params
+            .iter()
+            .map(|generic_arg| match generic_arg {
+                syn::GenericParam::Lifetime(lt) => (&lt.lifetime).into(),
+                _ => panic!("generic type arguments are unsupported {other:?}"),
+            })
+            .collect();
+
+        Self {
+            path: Path::empty().sub_path((&other.ident).into()),
             lifetimes,
         }
     }

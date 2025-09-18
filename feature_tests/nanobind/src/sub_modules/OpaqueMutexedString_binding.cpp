@@ -4,7 +4,7 @@
 #include "OpaqueMutexedString.hpp"
 
 
-void add_OpaqueMutexedString_binding(nb::handle mod) {
+void add_OpaqueMutexedString_binding(nb::module_ mod) {
     PyType_Slot OpaqueMutexedString_slots[] = {
         {Py_tp_free, (void *)OpaqueMutexedString::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedOpaqueArithmetic_binding(nb::handle mod) {
+void add_RenamedOpaqueArithmetic_binding(nb::module_ mod) {
     PyType_Slot ns_RenamedOpaqueArithmetic_slots[] = {
         {Py_tp_free, (void *)ns::RenamedOpaqueArithmetic::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

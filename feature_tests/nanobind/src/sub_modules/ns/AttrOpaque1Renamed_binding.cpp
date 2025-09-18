@@ -8,7 +8,7 @@
 
 namespace ns{
 
-void add_AttrOpaque1Renamed_binding(nb::handle mod) {
+void add_AttrOpaque1Renamed_binding(nb::module_ mod) {
     PyType_Slot ns_AttrOpaque1Renamed_slots[] = {
         {Py_tp_free, (void *)ns::AttrOpaque1Renamed::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

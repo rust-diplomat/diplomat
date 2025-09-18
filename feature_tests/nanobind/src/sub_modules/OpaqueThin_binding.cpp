@@ -4,7 +4,7 @@
 #include "OpaqueThin.hpp"
 
 
-void add_OpaqueThin_binding(nb::handle mod) {
+void add_OpaqueThin_binding(nb::module_ mod) {
     PyType_Slot OpaqueThin_slots[] = {
         {Py_tp_free, (void *)OpaqueThin::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

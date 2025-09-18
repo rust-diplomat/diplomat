@@ -4,7 +4,7 @@
 #include "CallbackHolder.hpp"
 
 
-void add_CallbackHolder_binding(nb::handle mod) {
+void add_CallbackHolder_binding(nb::module_ mod) {
     PyType_Slot CallbackHolder_slots[] = {
         {Py_tp_free, (void *)CallbackHolder::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

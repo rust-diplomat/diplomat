@@ -6,7 +6,7 @@
 
 namespace ns{
 
-void add_RenamedAttrEnum_binding(nb::handle mod) {
+void add_RenamedAttrEnum_binding(nb::module_ mod) {
     nb::class_<ns::RenamedAttrEnum> e_class(mod, "RenamedAttrEnum");
     
         nb::enum_<ns::RenamedAttrEnum::Value>(e_class, "RenamedAttrEnum")

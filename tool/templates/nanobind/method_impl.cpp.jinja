@@ -1,5 +1,6 @@
-    .{{m.def}}
-{%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
+{%- extends "function_base.cpp.jinja" -%}
+{%- block cpp_method_name -%}{{- type_name }}::{{ m.cpp_method_name -}}{%- endblock -%}
+{%- block special_methods -%}
     {%- match special_method -%}
     {%- when crate::hir::SpecialMethod::Add | crate::hir::SpecialMethod::Sub | 
             crate::hir::SpecialMethod::Mul | crate::hir::SpecialMethod::Div -%}
@@ -102,18 +103,4 @@
         {%- if loop.last ~%}
         {%~ endif -%}
     {%- endmatch -%}
-{%- else -%}
-        ("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
-        nb::overload_cast<{% for p in m.param_decls.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(
-            {%- endif -%}
-        &{{- type_name }}::{{ m.cpp_method_name -}}
-        {%- if m.overloads.len() > 0 -%} ) {%- endif -%}
-        {%- include "method_params.cpp.jinja" -%})
-{%- endif -%}
-{%- if m.overloads.len() > 0 %}
-    {%- for o in m.overloads %}
-    .{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor -%}>(&{{- type_name}}::{{ m.cpp_method_name -}})
-        {%- include "method_params.cpp.jinja" -%})
-    {%- endfor -%}
-
-{%- endif -%}
+{%- endblock -%}

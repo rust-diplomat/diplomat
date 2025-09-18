@@ -1,7 +1,7 @@
 {% include "c_include.h.jinja" %}
 
 {% for m in methods -%}
-{% include "method_impl.h.jinja" %}
+{%- include "function_defs/method_impl.h.jinja" %}
 
 {% endfor ~%}
 

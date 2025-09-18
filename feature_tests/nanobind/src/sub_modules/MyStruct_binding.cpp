@@ -5,7 +5,7 @@
 #include "MyStruct.hpp"
 
 
-void add_MyStruct_binding(nb::handle mod) {
+void add_MyStruct_binding(nb::module_ mod) {
     nb::class_<MyStruct>(mod, "MyStruct")
         .def_rw("a", &MyStruct::a)
         .def_rw("b", &MyStruct::b)
