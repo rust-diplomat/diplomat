@@ -20,11 +20,11 @@ pub(crate) struct PyFormatter<'tcx> {
 impl<'tcx> PyFormatter<'tcx> {
     pub fn new(
         tcx: &'tcx TypeContext,
-        config: &crate::Config,
+        config_for_cpp: &crate::Config,
         docs_url_gen: &'tcx DocsUrlGenerator,
     ) -> Self {
         Self {
-            cxx: Cpp2Formatter::new(tcx, config, docs_url_gen),
+            cxx: Cpp2Formatter::new(tcx, config_for_cpp, docs_url_gen),
         }
     }
 

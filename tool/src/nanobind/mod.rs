@@ -68,7 +68,15 @@ pub(crate) fn run<'cx>(
     docs: &'cx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
-    let formatter = PyFormatter::new(tcx, &conf, docs);
+
+    let mut config_for_cpp = conf.clone();
+
+    // TODO(https://github.com/rust-diplomat/diplomat/issues/957)
+    // We should pass the original config down, probably, but only once the
+    // nanobind backend is updated to expect lib_name-based namespacing in its C++
+    config_for_cpp.shared_config.lib_name = None;
+
+    let formatter = PyFormatter::new(tcx, &config_for_cpp, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
@@ -79,7 +87,7 @@ pub(crate) fn run<'cx>(
         .clone();
 
     // Output the C++ bindings we rely on
-    let (cpp_files, cpp_errors) = cpp::run(tcx, &conf, docs);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, &config_for_cpp, docs);
 
     files.files.borrow_mut().extend(
         cpp_files
@@ -127,7 +135,7 @@ pub(crate) fn run<'cx>(
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
                 },
-                config: &conf.cpp_config,
+                config: &config_for_cpp.cpp_config,
                 formatter: &formatter.cxx,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
