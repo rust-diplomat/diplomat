@@ -42,9 +42,9 @@ public:
 
   inline static std::unique_ptr<somelib::Foo> extract_from_fields(somelib::BorrowedFields fields);
 
-    /**
-     * Test that the extraction logic correctly pins the right fields
-     */
+  /**
+   * Test that the extraction logic correctly pins the right fields
+   */
   inline static std::unique_ptr<somelib::Foo> extract_from_bounds(somelib::BorrowedFieldsWithBounds bounds, std::string_view another_string);
 
     inline const somelib::capi::Foo* AsFFI() const;

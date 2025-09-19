@@ -45,10 +45,10 @@ public:
 
   inline static somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>> new_in_enum_err(int32_t i);
 
-    /**
-     * When we take &str, the return type becomes a Result
-     * Test that this interacts gracefully with returning a reference type
-     */
+  /**
+   * When we take &str, the return type becomes a Result
+   * Test that this interacts gracefully with returning a reference type
+   */
   inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> takes_str(std::string_view _v);
 
   inline void assert_integer(int32_t i) const;

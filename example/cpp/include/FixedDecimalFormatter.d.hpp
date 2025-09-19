@@ -39,18 +39,18 @@ namespace icu4x {
 class FixedDecimalFormatter {
 public:
 
-    /**
-     * Creates a new {@link FixedDecimalFormatter} from locale data.
-     *
-     * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
-     */
+  /**
+   * Creates a new {@link FixedDecimalFormatter} from locale data.
+   *
+   * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
+   */
   inline static icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
 
-    /**
-     * Formats a {@link FixedDecimal} to a string.
-     *
-     * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
-     */
+  /**
+   * Formats a {@link FixedDecimal} to a string.
+   *
+   * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
+   */
   inline std::string format_write(const icu4x::FixedDecimal& value) const;
   template<typename W>
   inline void format_write_write(const icu4x::FixedDecimal& value, W& writeable_output) const;
