@@ -32,14 +32,14 @@ namespace icu4x {
 class DataProvider {
 public:
 
-    /**
-     * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
-     */
+  /**
+   * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
+   */
   inline static std::unique_ptr<icu4x::DataProvider> new_static();
 
-    /**
-     * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
-     */
+  /**
+   * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+   */
   inline static icu4x::diplomat::result<std::monostate, std::monostate> returns_result();
 
     inline const icu4x::capi::DataProvider* AsFFI() const;

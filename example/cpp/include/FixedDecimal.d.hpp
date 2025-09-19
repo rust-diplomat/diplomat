@@ -30,23 +30,23 @@ namespace icu4x {
 class FixedDecimal {
 public:
 
-    /**
-     * Construct an {@link FixedDecimal} from an integer.
-     */
+  /**
+   * Construct an {@link FixedDecimal} from an integer.
+   */
   inline static std::unique_ptr<icu4x::FixedDecimal> new_(int32_t v);
 
-    /**
-     * Multiply the {@link FixedDecimal} by a given power of ten.
-     *
-     * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-     */
+  /**
+   * Multiply the {@link FixedDecimal} by a given power of ten.
+   *
+   * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
+   */
   inline void multiply_pow10(int16_t power);
 
-    /**
-     * Format the {@link FixedDecimal} as a string.
-     *
-     * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-     */
+  /**
+   * Format the {@link FixedDecimal} as a string.
+   *
+   * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
+   */
   inline icu4x::diplomat::result<std::string, std::monostate> to_string() const;
   template<typename W>
   inline icu4x::diplomat::result<std::monostate, std::monostate> to_string_write(W& writeable_output) const;

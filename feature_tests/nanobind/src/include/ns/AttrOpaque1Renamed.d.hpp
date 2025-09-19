@@ -31,9 +31,15 @@ namespace capi {
 } // namespace
 
 namespace ns {
+/**
+ * Some example docs
+ */
 class AttrOpaque1Renamed {
 public:
 
+  /**
+   * More example docs
+   */
   inline static std::unique_ptr<ns::AttrOpaque1Renamed> totally_not_new();
 
   inline static void test_namespaced_callback(std::function<diplomat::result<std::monostate, std::monostate>()> _t);

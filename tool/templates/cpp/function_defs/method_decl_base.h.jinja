@@ -1,8 +1,8 @@
 {%- block pre_func %}{%- endblock -%}
 {% if !m.docs.is_empty() %}
-    /**
-     {{~ m.docs|prefix_trimmed("     * ")}}
-     */
+  /**
+   {{~ m.docs|prefix_trimmed("   * ")}}
+   */
 {%- endif -%}
 {%- if let Some(deprecated) = m.deprecated %}
   [[deprecated("{{ deprecated }}")]]
