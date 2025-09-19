@@ -1,12 +1,19 @@
 //! Types for interfacing with Diplomat FFI APIs from Rust.
+//!
+//! By and large, Diplomat helps you produce a Rust-written library that can be called from other
+//! languages. You write the library in Rust, but interact with the Diplomat-wrapped library
+//! in a non-Rust language.
+//!
+//! However, either for debugging purposes, or for extending the library in custom ways, you may find
+//! yourself wanting to work with the Diplomat-wrapped library from Rust. This module contains
+//! utilities for doing that.
 
 use crate::diplomat_buffer_write_create;
 use crate::diplomat_buffer_write_destroy;
 use crate::DiplomatWrite;
 use core::borrow::Borrow;
 
-/// A [`DiplomatWrite`] backed by a `Vec`, for use in Rust with all of
-/// Rust's safety guarantees.
+/// A [`DiplomatWrite`] backed by a `Vec`, for convenient use in Rust.
 pub struct RustWriteVec {
     /// Safety Invariant: must have been created by diplomat_buffer_write_create()
     ptr: *mut DiplomatWrite,

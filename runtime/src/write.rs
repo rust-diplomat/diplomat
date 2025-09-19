@@ -48,8 +48,12 @@ use core::{fmt, ptr};
 /// }
 /// ```
 ///
-/// As a result, any function that returns a `&mut DiplomatWrite` must be `unsafe`. For an
-/// example, see [`RustWriteVec::borrow_mut`].
+/// As a result, any function that returns an owned `DiplomatWrite` or a `&mut DiplomatWrite`
+/// must be `unsafe`. For an example, see [`RustWriteVec::borrow_mut`].
+///
+/// Diplomat backends guarantee they will only ever hand the same type of `DiplomatWrite` object to Rust
+/// code; this is only something you need to worry about if using [`RustWriteVec`](rust_interop::RustWriteVec),
+/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_simple_write`.
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
@@ -146,6 +150,9 @@ impl fmt::Write for DiplomatWrite {
 ///
 /// Once done, this will append a null terminator to the written string.
 ///
+/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
+/// manually outside of that context. See [`RustWriteVec`](rust_interop::RustWriteVec) if you need this in Rust.
+///
 /// # Safety
 ///
 ///  - `buf` must be a valid pointer to a region of memory that can hold at `buf_size` bytes
@@ -177,6 +184,9 @@ pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) ->
 ///
 /// Use [`diplomat_buffer_write_destroy()`] to free the writable and its underlying buffer.
 /// The pointer is valid until that function is called.
+///
+/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
+/// manually outside of that context. See [`RustWriteVec`](rust_interop::RustWriteVec) if you need this in Rust.
 ///
 /// The grow impl never sets `grow_failed`, although it is possible for it to panic.
 #[no_mangle]
