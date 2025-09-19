@@ -168,7 +168,8 @@ pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
 ///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
-pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut u8 {
+pub extern "C" fn diplomat_buffer_write_get_bytes(this: *mut DiplomatWrite) -> *mut u8 {
+    let this = unsafe { &*this };
     if this.grow_failed {
         core::ptr::null_mut()
     } else {
