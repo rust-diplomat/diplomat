@@ -54,11 +54,13 @@ pub mod ffi {
     // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
     #[diplomat::attr(kotlin, generate_mocking_interface)]
     #[diplomat::attr(not(kotlin), rename = "AttrOpaque1Renamed")]
+    /// Some example docs
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
         #[diplomat::attr(not(kotlin), rename = "totally_not_{0}")]
         #[diplomat::attr(auto, constructor)]
+        /// More example docs
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }

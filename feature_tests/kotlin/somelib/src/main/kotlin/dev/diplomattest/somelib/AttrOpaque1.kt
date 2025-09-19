@@ -21,7 +21,8 @@ internal interface AttrOpaque1Interface {
     fun useUnnamespaced(un: Unnamespaced): Unit
     fun useNamespaced(n: AttrEnum): Unit
 }
-
+/** Some example docs
+*/
 class AttrOpaque1 internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
@@ -40,6 +41,8 @@ class AttrOpaque1 internal constructor (
         internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
         @JvmStatic
         
+        /** More example docs
+        */
         fun new_(): AttrOpaque1 {
             
             val returnVal = lib.namespace_AttrOpaque1_new();

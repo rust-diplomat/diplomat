@@ -3,6 +3,7 @@
 
 part of 'lib.g.dart';
 
+/// Some example docs
 final class AttrOpaque1Renamed implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
@@ -23,6 +24,7 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
   @_DiplomatFfiUse('namespace_AttrOpaque1_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_AttrOpaque1_destroy));
 
+  /// More example docs
   factory AttrOpaque1Renamed() {
     final result = _namespace_AttrOpaque1_new();
     return AttrOpaque1Renamed._fromFfi(result, []);
