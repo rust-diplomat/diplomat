@@ -17,6 +17,7 @@ namespace capi {
     enum OptionEnum {
       OptionEnum_Foo = 0,
       OptionEnum_Bar = 1,
+      OptionEnum_Baz = 2,
     };
 
     typedef struct OptionEnum_option {union { OptionEnum ok; }; bool is_ok; } OptionEnum_option;
@@ -25,21 +26,22 @@ namespace capi {
 
 class OptionEnum {
 public:
-  enum Value {
-    Foo = 0,
-    Bar = 1,
-  };
+    enum Value {
+        Foo = 0,
+        Bar = 1,
+        Baz = 2,
+    };
 
-  OptionEnum(): value(Value::Foo) {}
+    OptionEnum(): value(Value::Foo) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr OptionEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr OptionEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline diplomat::capi::OptionEnum AsFFI() const;
-  inline static OptionEnum FromFFI(diplomat::capi::OptionEnum c_enum);
+    inline diplomat::capi::OptionEnum AsFFI() const;
+    inline static OptionEnum FromFFI(diplomat::capi::OptionEnum c_enum);
 private:
     Value value;
 };

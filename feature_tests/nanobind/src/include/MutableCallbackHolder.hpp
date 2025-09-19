@@ -34,34 +34,34 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<MutableCallbackHolder> MutableCallbackHolder::new_(std::function<int32_t(int32_t)> func) {
-  auto result = diplomat::capi::MutableCallbackHolder_new({new decltype(func)(std::move(func)), diplomat::fn_traits(func).c_run_callback, diplomat::fn_traits(func).c_delete});
-  return std::unique_ptr<MutableCallbackHolder>(MutableCallbackHolder::FromFFI(result));
+    auto result = diplomat::capi::MutableCallbackHolder_new({new decltype(func)(std::move(func)), diplomat::fn_traits(func).c_run_callback, diplomat::fn_traits(func).c_delete});
+    return std::unique_ptr<MutableCallbackHolder>(MutableCallbackHolder::FromFFI(result));
 }
 
 inline int32_t MutableCallbackHolder::call(int32_t a) {
-  auto result = diplomat::capi::MutableCallbackHolder_call(this->AsFFI(),
-    a);
-  return result;
+    auto result = diplomat::capi::MutableCallbackHolder_call(this->AsFFI(),
+        a);
+    return result;
 }
 
 inline const diplomat::capi::MutableCallbackHolder* MutableCallbackHolder::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::MutableCallbackHolder*>(this);
+    return reinterpret_cast<const diplomat::capi::MutableCallbackHolder*>(this);
 }
 
 inline diplomat::capi::MutableCallbackHolder* MutableCallbackHolder::AsFFI() {
-  return reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(this);
+    return reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(this);
 }
 
 inline const MutableCallbackHolder* MutableCallbackHolder::FromFFI(const diplomat::capi::MutableCallbackHolder* ptr) {
-  return reinterpret_cast<const MutableCallbackHolder*>(ptr);
+    return reinterpret_cast<const MutableCallbackHolder*>(ptr);
 }
 
 inline MutableCallbackHolder* MutableCallbackHolder::FromFFI(diplomat::capi::MutableCallbackHolder* ptr) {
-  return reinterpret_cast<MutableCallbackHolder*>(ptr);
+    return reinterpret_cast<MutableCallbackHolder*>(ptr);
 }
 
 inline void MutableCallbackHolder::operator delete(void* ptr) {
-  diplomat::capi::MutableCallbackHolder_destroy(reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(ptr));
+    diplomat::capi::MutableCallbackHolder_destroy(reinterpret_cast<diplomat::capi::MutableCallbackHolder*>(ptr));
 }
 
 

@@ -15,6 +15,8 @@ struct ErrorStruct;
 class ErrorEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct ResultOpaque;
@@ -40,26 +42,26 @@ public:
 
   inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
-  /**
-   * When we take &str, the return type becomes a Result
-   * Test that this interacts gracefully with returning a reference type
-   */
+    /**
+     * When we take &str, the return type becomes a Result
+     * Test that this interacts gracefully with returning a reference type
+     */
   inline diplomat::result<ResultOpaque&, diplomat::Utf8Error> takes_str(std::string_view _v);
 
   inline void assert_integer(int32_t i) const;
 
-  inline const diplomat::capi::ResultOpaque* AsFFI() const;
-  inline diplomat::capi::ResultOpaque* AsFFI();
-  inline static const ResultOpaque* FromFFI(const diplomat::capi::ResultOpaque* ptr);
-  inline static ResultOpaque* FromFFI(diplomat::capi::ResultOpaque* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::ResultOpaque* AsFFI() const;
+    inline diplomat::capi::ResultOpaque* AsFFI();
+    inline static const ResultOpaque* FromFFI(const diplomat::capi::ResultOpaque* ptr);
+    inline static ResultOpaque* FromFFI(diplomat::capi::ResultOpaque* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  ResultOpaque() = delete;
-  ResultOpaque(const ResultOpaque&) = delete;
-  ResultOpaque(ResultOpaque&&) noexcept = delete;
-  ResultOpaque operator=(const ResultOpaque&) = delete;
-  ResultOpaque operator=(ResultOpaque&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    ResultOpaque() = delete;
+    ResultOpaque(const ResultOpaque&) = delete;
+    ResultOpaque(ResultOpaque&&) noexcept = delete;
+    ResultOpaque operator=(const ResultOpaque&) = delete;
+    ResultOpaque operator=(ResultOpaque&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

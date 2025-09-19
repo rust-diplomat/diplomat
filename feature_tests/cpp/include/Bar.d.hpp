@@ -1,5 +1,5 @@
-#ifndef Bar_D_HPP
-#define Bar_D_HPP
+#ifndef SOMELIB_Bar_D_HPP
+#define SOMELIB_Bar_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,35 +10,38 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct Foo; }
+namespace somelib {
+namespace capi { struct Foo; }
 class Foo;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct Bar;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class Bar {
 public:
 
-  inline const Foo& foo() const;
+  inline const somelib::Foo& foo() const;
 
-  inline const diplomat::capi::Bar* AsFFI() const;
-  inline diplomat::capi::Bar* AsFFI();
-  inline static const Bar* FromFFI(const diplomat::capi::Bar* ptr);
-  inline static Bar* FromFFI(diplomat::capi::Bar* ptr);
-  inline static void operator delete(void* ptr);
+    inline const somelib::capi::Bar* AsFFI() const;
+    inline somelib::capi::Bar* AsFFI();
+    inline static const somelib::Bar* FromFFI(const somelib::capi::Bar* ptr);
+    inline static somelib::Bar* FromFFI(somelib::capi::Bar* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  Bar() = delete;
-  Bar(const Bar&) = delete;
-  Bar(Bar&&) noexcept = delete;
-  Bar operator=(const Bar&) = delete;
-  Bar operator=(Bar&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    Bar() = delete;
+    Bar(const somelib::Bar&) = delete;
+    Bar(somelib::Bar&&) noexcept = delete;
+    Bar operator=(const somelib::Bar&) = delete;
+    Bar operator=(somelib::Bar&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // Bar_D_HPP
+} // namespace
+#endif // SOMELIB_Bar_D_HPP

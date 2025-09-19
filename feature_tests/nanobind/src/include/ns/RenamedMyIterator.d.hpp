@@ -24,18 +24,18 @@ public:
 
   inline std::optional<uint8_t> next();
 
-  inline const ns::capi::RenamedMyIterator* AsFFI() const;
-  inline ns::capi::RenamedMyIterator* AsFFI();
-  inline static const ns::RenamedMyIterator* FromFFI(const ns::capi::RenamedMyIterator* ptr);
-  inline static ns::RenamedMyIterator* FromFFI(ns::capi::RenamedMyIterator* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedMyIterator* AsFFI() const;
+    inline ns::capi::RenamedMyIterator* AsFFI();
+    inline static const ns::RenamedMyIterator* FromFFI(const ns::capi::RenamedMyIterator* ptr);
+    inline static ns::RenamedMyIterator* FromFFI(ns::capi::RenamedMyIterator* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedMyIterator() = delete;
-  RenamedMyIterator(const ns::RenamedMyIterator&) = delete;
-  RenamedMyIterator(ns::RenamedMyIterator&&) noexcept = delete;
-  RenamedMyIterator operator=(const ns::RenamedMyIterator&) = delete;
-  RenamedMyIterator operator=(ns::RenamedMyIterator&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedMyIterator() = delete;
+    RenamedMyIterator(const ns::RenamedMyIterator&) = delete;
+    RenamedMyIterator(ns::RenamedMyIterator&&) noexcept = delete;
+    RenamedMyIterator operator=(const ns::RenamedMyIterator&) = delete;
+    RenamedMyIterator operator=(ns::RenamedMyIterator&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

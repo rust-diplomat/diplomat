@@ -171,7 +171,7 @@ class ResultOpaque internal constructor (
     *Test that this interacts gracefully with returning a reference type
     */
     fun takesStr(v: String): ResultOpaque {
-        val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+        val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSlice);
         val selfEdges: List<Any> = listOf(this)

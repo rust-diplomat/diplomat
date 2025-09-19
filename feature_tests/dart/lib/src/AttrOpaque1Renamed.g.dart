@@ -20,11 +20,22 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_AttrOpaque1_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_AttrOpaque1_destroy));
 
   factory AttrOpaque1Renamed() {
     final result = _namespace_AttrOpaque1_new();
     return AttrOpaque1Renamed._fromFfi(result, []);
+  }
+
+  static int macTest() {
+    final result = _namespace_AttrOpaque1_mac_test();
+    return result;
+  }
+
+  static int hello() {
+    final result = _namespace_AttrOpaque1_hello();
+    return result;
   }
 
   int get methodRenamed {
@@ -56,6 +67,16 @@ external void _namespace_AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
+
+@_DiplomatFfiUse('namespace_AttrOpaque1_mac_test')
+@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_mac_test')
+// ignore: non_constant_identifier_names
+external int _namespace_AttrOpaque1_mac_test();
+
+@_DiplomatFfiUse('namespace_AttrOpaque1_hello')
+@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_hello')
+// ignore: non_constant_identifier_names
+external int _namespace_AttrOpaque1_hello();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_method')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')

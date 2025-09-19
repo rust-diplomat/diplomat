@@ -93,7 +93,7 @@ where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
     const IN_OUT_STATUS: InputOrOutput;
-    type CallbackInstantiation: Debug + CallbackInstantiationFunctionality;
+    type CallbackInstantiation: Debug + CallbackInstantiationFunctionality + Clone;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///
@@ -102,13 +102,13 @@ where
     ///
     /// On the other hand, types represented by [`Everywhere`] can only contain
     /// borrowes, so the associated type for that impl is [`Borrow`].
-    type OpaqueOwnership: Debug + OpaqueOwner;
+    type OpaqueOwnership: Debug + OpaqueOwner + Clone;
 
-    type StructId: Debug;
+    type StructId: Debug + Clone;
 
-    type StructPath: Debug + StructPathLike;
+    type StructPath: Debug + StructPathLike + Clone;
 
-    type TraitPath: Debug + TraitIdGetter;
+    type TraitPath: Debug + TraitIdGetter + Clone;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
     fn build_callback(cb: Callback) -> Self::CallbackInstantiation;
@@ -211,6 +211,7 @@ impl TyPosition for InputOnly {
 pub trait StructPathLike {
     fn lifetimes(&self) -> &Lifetimes;
     fn id(&self) -> TypeId;
+    fn owner(&self) -> MaybeOwn;
 
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
@@ -226,6 +227,10 @@ impl StructPathLike for StructPath {
     }
     fn id(&self) -> TypeId {
         self.tcx_id.into()
+    }
+
+    fn owner(&self) -> MaybeOwn {
+        self.owner
     }
 
     fn link_lifetimes<'def, 'tcx>(
@@ -247,6 +252,10 @@ impl StructPathLike for ReturnableStructPath {
             ReturnableStructPath::Struct(p) => p.tcx_id.into(),
             ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
         }
+    }
+
+    fn owner(&self) -> MaybeOwn {
+        MaybeOwn::Own
     }
 
     fn link_lifetimes<'def, 'tcx>(

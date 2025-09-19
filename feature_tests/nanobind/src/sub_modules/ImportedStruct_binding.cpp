@@ -5,7 +5,7 @@
 #include "UnimportedEnum.hpp"
 
 
-void add_ImportedStruct_binding(nb::handle mod) {
+void add_ImportedStruct_binding(nb::module_ mod) {
     nb::class_<ImportedStruct>(mod, "ImportedStruct")
         .def(nb::init<>())
         .def(nb::init<UnimportedEnum, uint8_t>(), "foo"_a.none(),  "count"_a.none())

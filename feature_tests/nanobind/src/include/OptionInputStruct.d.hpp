@@ -15,6 +15,8 @@
 class OptionEnum;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct OptionInputStruct {
@@ -29,12 +31,12 @@ namespace capi {
 
 
 struct OptionInputStruct {
-  std::optional<uint8_t> a;
-  std::optional<char32_t> b;
-  std::optional<OptionEnum> c;
+    std::optional<uint8_t> a;
+    std::optional<char32_t> b;
+    std::optional<OptionEnum> c;
 
-  inline diplomat::capi::OptionInputStruct AsFFI() const;
-  inline static OptionInputStruct FromFFI(diplomat::capi::OptionInputStruct c_struct);
+    inline diplomat::capi::OptionInputStruct AsFFI() const;
+    inline static OptionInputStruct FromFFI(diplomat::capi::OptionInputStruct c_struct);
 };
 
 

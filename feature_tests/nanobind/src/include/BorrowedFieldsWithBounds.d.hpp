@@ -15,6 +15,8 @@ namespace diplomat::capi { struct Foo; }
 class Foo;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct BorrowedFieldsWithBounds {
@@ -29,14 +31,14 @@ namespace capi {
 
 
 struct BorrowedFieldsWithBounds {
-  std::u16string_view field_a;
-  std::string_view field_b;
-  std::string_view field_c;
+    std::u16string_view field_a;
+    std::string_view field_b;
+    std::string_view field_c;
 
   inline static diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z);
 
-  inline diplomat::capi::BorrowedFieldsWithBounds AsFFI() const;
-  inline static BorrowedFieldsWithBounds FromFFI(diplomat::capi::BorrowedFieldsWithBounds c_struct);
+    inline diplomat::capi::BorrowedFieldsWithBounds AsFFI() const;
+    inline static BorrowedFieldsWithBounds FromFFI(diplomat::capi::BorrowedFieldsWithBounds c_struct);
 };
 
 

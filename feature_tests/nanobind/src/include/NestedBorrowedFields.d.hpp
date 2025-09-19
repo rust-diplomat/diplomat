@@ -21,6 +21,8 @@ struct BorrowedFields;
 struct BorrowedFieldsWithBounds;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct NestedBorrowedFields {
@@ -35,14 +37,14 @@ namespace capi {
 
 
 struct NestedBorrowedFields {
-  BorrowedFields fields;
-  BorrowedFieldsWithBounds bounds;
-  BorrowedFieldsWithBounds bounds2;
+    BorrowedFields fields;
+    BorrowedFieldsWithBounds bounds;
+    BorrowedFieldsWithBounds bounds2;
 
   inline static diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z);
 
-  inline diplomat::capi::NestedBorrowedFields AsFFI() const;
-  inline static NestedBorrowedFields FromFFI(diplomat::capi::NestedBorrowedFields c_struct);
+    inline diplomat::capi::NestedBorrowedFields AsFFI() const;
+    inline static NestedBorrowedFields FromFFI(diplomat::capi::NestedBorrowedFields c_struct);
 };
 
 

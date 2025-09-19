@@ -4,7 +4,7 @@
 #include "CallbackTestingStruct.hpp"
 
 
-void add_CallbackTestingStruct_binding(nb::handle mod) {
+void add_CallbackTestingStruct_binding(nb::module_ mod) {
     nb::class_<CallbackTestingStruct>(mod, "CallbackTestingStruct")
         .def(nb::init<>())
         .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())

@@ -20,6 +20,7 @@ final class RenamedMyIndexer implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_MyIndexer_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIndexer_destroy));
 
   String? operator [](int i) {

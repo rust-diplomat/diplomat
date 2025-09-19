@@ -22,6 +22,7 @@ final class RefList implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('RefList_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefList_destroy));
 
   factory RefList.node(RefListParameter data) {

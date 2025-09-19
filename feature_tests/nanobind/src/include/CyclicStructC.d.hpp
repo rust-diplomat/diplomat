@@ -15,6 +15,8 @@
 struct CyclicStructA;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct CyclicStructC {
@@ -27,7 +29,7 @@ namespace capi {
 
 
 struct CyclicStructC {
-  CyclicStructA a;
+    CyclicStructA a;
 
   inline static CyclicStructC takes_nested_parameters(CyclicStructC c);
 
@@ -35,8 +37,8 @@ struct CyclicStructC {
   template<typename W>
   inline void cyclic_out_write(W& writeable_output) const;
 
-  inline diplomat::capi::CyclicStructC AsFFI() const;
-  inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);
+    inline diplomat::capi::CyclicStructC AsFFI() const;
+    inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);
 };
 
 

@@ -25,18 +25,22 @@ public:
 
   inline float b() const;
 
-  inline const diplomat::capi::OpaqueThin* AsFFI() const;
-  inline diplomat::capi::OpaqueThin* AsFFI();
-  inline static const OpaqueThin* FromFFI(const diplomat::capi::OpaqueThin* ptr);
-  inline static OpaqueThin* FromFFI(diplomat::capi::OpaqueThin* ptr);
-  inline static void operator delete(void* ptr);
+  inline std::string c() const;
+  template<typename W>
+  inline void c_write(W& writeable_output) const;
+
+    inline const diplomat::capi::OpaqueThin* AsFFI() const;
+    inline diplomat::capi::OpaqueThin* AsFFI();
+    inline static const OpaqueThin* FromFFI(const diplomat::capi::OpaqueThin* ptr);
+    inline static OpaqueThin* FromFFI(diplomat::capi::OpaqueThin* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OpaqueThin() = delete;
-  OpaqueThin(const OpaqueThin&) = delete;
-  OpaqueThin(OpaqueThin&&) noexcept = delete;
-  OpaqueThin operator=(const OpaqueThin&) = delete;
-  OpaqueThin operator=(OpaqueThin&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OpaqueThin() = delete;
+    OpaqueThin(const OpaqueThin&) = delete;
+    OpaqueThin(OpaqueThin&&) noexcept = delete;
+    OpaqueThin operator=(const OpaqueThin&) = delete;
+    OpaqueThin operator=(OpaqueThin&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

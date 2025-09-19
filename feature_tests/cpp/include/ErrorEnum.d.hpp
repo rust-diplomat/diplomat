@@ -1,5 +1,5 @@
-#ifndef ErrorEnum_D_HPP
-#define ErrorEnum_D_HPP
+#ifndef SOMELIB_ErrorEnum_D_HPP
+#define SOMELIB_ErrorEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     enum ErrorEnum {
       ErrorEnum_Foo = 0,
@@ -23,26 +23,27 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class ErrorEnum {
 public:
-  enum Value {
-    Foo = 0,
-    Bar = 1,
-  };
+    enum Value {
+        Foo = 0,
+        Bar = 1,
+    };
 
-  ErrorEnum(): value(Value::Foo) {}
+    ErrorEnum(): value(Value::Foo) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr ErrorEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr ErrorEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline diplomat::capi::ErrorEnum AsFFI() const;
-  inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
+    inline somelib::capi::ErrorEnum AsFFI() const;
+    inline static somelib::ErrorEnum FromFFI(somelib::capi::ErrorEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // ErrorEnum_D_HPP
+} // namespace
+#endif // SOMELIB_ErrorEnum_D_HPP

@@ -1,39 +1,18 @@
 use super::root_module::RootModule;
 use super::PyFormatter;
-use crate::{c::TyGenContext as C2TyGenContext, hir, ErrorStore};
+use crate::nanobind::func::{FuncGenContext, MethodInfo};
+use crate::{cpp::TyGenContext as Cpp2TyGenContext, hir, ErrorStore};
 use askama::Template;
-use diplomat_core::hir::{OpaqueOwner, StructPathLike, TyPosition, Type, TypeId};
-use itertools::Itertools;
+use diplomat_core::hir::{OpaqueOwner, StructPathLike, SymbolId, TyPosition, Type, TypeId};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 #[derive(Clone)]
-struct NamedType<'a> {
-    var_name: Cow<'a, str>,
-    type_name: Cow<'a, str>,
-}
-
-/// Everything needed for rendering a method.
-struct MethodInfo<'a> {
-    /// HIR of the method being rendered
-    method: &'a hir::Method,
-    /// The python method name
-    method_name: Cow<'a, str>,
-    /// The C++ method name. May differ due to keyword renaming or other constraints.
-    cpp_method_name: Cow<'a, str>,
-    // def statement to use - def, def_static, def_prop_ro, etc
-    def: String,
-    /// The property name, if any
-    prop_name: Option<Cow<'a, str>>,
-    // If this is a property, this is the associated setter's c++ method name
-    setter_name: Option<Cow<'a, str>>,
-    // In the *rare* event that they're required, the C++ names & types of the function params
-    param_decls: Option<Vec<NamedType<'a>>>,
-    // The lifetime annotation required for the method, if any. May be keep_alive<...> or reference_internal
-    // Everything else is handled by the automatic behavior depending on return type.
-    lifetime_args: Option<Cow<'a, str>>,
+pub(super) struct NamedType<'a> {
+    pub(super) var_name: Cow<'a, str>,
+    pub(super) type_name: Cow<'a, str>,
 }
 
 /// Context for generating a particular type's impl
@@ -42,17 +21,16 @@ struct MethodInfo<'a> {
 pub(super) struct TyGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
-    pub c2: C2TyGenContext<'cx, 'tcx>,
+    pub cpp2: Cpp2TyGenContext<'cx, 'tcx, 'cx>,
     pub root_module: &'cx mut RootModule<'tcx>,
     pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
-    pub includes: &'cx mut BTreeSet<String>,
     /// Are we currently generating struct fields?
     pub generating_struct_fields: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     /// Checks for & adds modules with their parents to the root module definition.
-    pub fn gen_modules(&mut self, id: TypeId, _docstring: Option<&str>) {
+    pub fn gen_modules(&mut self, id: SymbolId, _docstring: Option<&str>) {
         let namespaces = self.formatter.fmt_namespaces(id);
 
         let mut parent = self.root_module.module_name.clone();
@@ -107,28 +85,36 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
     }
 
     pub fn add_to_root_module(&mut self, id: TypeId) {
-        self.gen_modules(id, None);
-        self.root_module
-            .fwd_decls
-            .entry(self.formatter.fmt_namespaces(id).join("::"))
-            .or_default()
-            .push(format!(
-                "void {}(nb::handle);",
-                self.formatter.fmt_binding_fn(id, false)
-            ));
+        self.gen_modules(id.into(), None);
+        Self::gen_binding_fn(
+            self.root_module,
+            self.formatter.fmt_namespaces(id.into()),
+            self.formatter.fmt_binding_fn(id, true),
+            self.formatter.fmt_binding_fn(id, false),
+        );
+    }
 
-        let module_namespaces = [self.root_module.module_name.to_string()]
+    pub fn gen_binding_fn(
+        root_module: &mut RootModule,
+        namespaces: impl Iterator<Item = &'tcx str>,
+        binding_fn_name: String,
+        binding_fn_name_unnamespaced: String,
+    ) {
+        let vec = namespaces.collect::<Vec<_>>();
+        root_module
+            .fwd_decls
+            .entry(vec.join("::"))
+            .or_default()
+            .push(format!("void {binding_fn_name_unnamespaced}(nb::module_);"));
+
+        let module_namespaces = [root_module.module_name.to_string()]
             .into_iter()
-            .chain(self.formatter.fmt_namespaces(id).map(|s| s.to_owned()))
+            .chain(vec.iter().map(|s| s.to_string()))
             .collect();
 
-        let entry = self
-            .root_module
-            .module_fns
-            .entry(module_namespaces)
-            .or_default();
+        let entry = root_module.module_fns.entry(module_namespaces).or_default();
 
-        entry.push(self.formatter.fmt_binding_fn(id, true));
+        entry.push(binding_fn_name);
     }
 
     pub fn gen_opaque_def<W: std::fmt::Write + ?Sized>(
@@ -165,6 +151,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         def: &'tcx hir::StructDef<P>,
         id: TypeId,
         out: &mut W,
+        binding_prefix: &mut W,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -179,7 +166,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
         let methods = self.gen_all_method_infos(id, def.methods.iter());
 
-        self.gen_modules(id, None);
+        self.gen_modules(id.into(), None);
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -188,6 +175,12 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
+            is_sliceable: bool,
+        }
+
+        if def.attrs.abi_compatible {
+            write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
+                .expect("Could not write to header.");
         }
 
         ImplTemplate {
@@ -201,6 +194,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                     Some(hir::SpecialMethod::Constructor)
                 )
             }),
+            is_sliceable: def.attrs.abi_compatible,
         }
         .render_into(out)
         .unwrap();
@@ -216,7 +210,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let mut method_infos = BTreeMap::<String, MethodInfo>::new();
 
         for method in methods {
-            if let Some(info) = self.gen_method_info(id, method) {
+            if let Some(info) = FuncGenContext::gen_method_info(id.into(), method, self) {
                 method_infos
                     // Use the property name as the key if present so we can collapse getters & setters
                     .entry(info.prop_name.clone().unwrap_or(info.method_name.clone()).to_string())
@@ -248,6 +242,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
                                 e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
+                            None => {
+                                e.overloads.push(info.param_decls.clone());
+                            }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
                         };
                     })
@@ -270,154 +267,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         method_infos.into_values().collect()
     }
 
-    fn gen_method_info(
-        &mut self,
-        id: TypeId,
-        method: &'tcx hir::Method,
-    ) -> Option<MethodInfo<'ccx>> {
-        if method.attrs.disable {
-            return None;
-        }
-        let _guard = self.errors.set_context_method(
-            self.c2.tcx.fmt_type_name_diagnostics(id),
-            method.name.as_str().into(),
-        );
-        let cpp_method_name = self.formatter.cxx.fmt_method_name(method);
-        let method_name = self.formatter.fmt_method_name(method);
-        let mut setter_name = None;
-
-        let mut def_qualifiers = vec!["def"];
-
-        let mut prop_name = None;
-        if let Some(hir::SpecialMethod::Getter(name)) = &method.attrs.special_method {
-            def_qualifiers.extend(["prop_ro"]);
-            prop_name = Some(
-                name.as_ref()
-                    .map(|v| v.into())
-                    .unwrap_or(method_name.clone()),
-            );
-        } else if let Some(hir::SpecialMethod::Setter(name)) = &method.attrs.special_method {
-            def_qualifiers.extend(["prop_rw"]);
-            setter_name = Some(method_name.clone());
-            prop_name = Some(
-                name.as_ref()
-                    .map(|v| v.into())
-                    .unwrap_or(method_name.clone()),
-            );
-        }
-
-        if method.param_self.is_none()
-            && !matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
-            )
-        {
-            def_qualifiers.extend(["static"]);
-        }
-
-        let param_decls = {
-            if matches!(
-                method.attrs.special_method,
-                Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::Setter(_)) // We only need type info for constructors or certain setters
-            ) && !matches!(
-                // and even then, only when the type isn't opaque
-                id,
-                TypeId::Opaque(_)
-            ) {
-                Some(
-                    method
-                        .params
-                        .iter()
-                        .map(|p| NamedType {
-                            var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                            type_name: self.gen_type_name(&p.ty),
-                        })
-                        .collect(),
-                )
-            } else {
-                None
-            }
-        };
-
-        let mut visitor = method.borrowing_param_visitor(self.c2.tcx, false);
-
-        // Collect all the relevant borrowed params, with self in position 1 if present
-        let mut param_borrows = method
-            .param_self
-            .iter()
-            .map(|s| visitor.visit_param(&s.ty.clone().into(), "self"))
-            .collect::<Vec<_>>();
-        // Must be a separate call *after* collect to avoid double-borrowing visitor
-        param_borrows.extend(
-            method
-                .params
-                .iter()
-                .map(|p| visitor.visit_param(&p.ty, p.name.as_str())),
-        );
-
-        let self_number = if matches!(
-            method.attrs.special_method,
-            Some(hir::SpecialMethod::Constructor)
-        ) {
-            1 // per the docs, constructors don't have "returns", they act on "self"
-        } else {
-            0
-        };
-
-        let mut lifetime_args = vec![];
-
-        // No keep_alive for even borrowed string outputs, the type conversion always involves a copy
-        if !matches!(
-            method.output.success_type(),
-            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Str(..)))
-        ) {
-            lifetime_args.extend(
-                param_borrows
-                    .into_iter()
-                    .enumerate()
-                    .filter_map(|(i, p)| match p {
-                        hir::borrowing_param::ParamBorrowInfo::BorrowedSlice
-                        | hir::borrowing_param::ParamBorrowInfo::Struct(_)
-                        | hir::borrowing_param::ParamBorrowInfo::BorrowedOpaque => {
-                            Some(format!(
-                                "nb::keep_alive<{self_number}, {}>()",
-                                i + 1 + self_number
-                            )) // Keep 0 (the return) alive until the element at P is returned
-                        }
-                        _ => None,
-                    })
-                    .collect::<Vec<_>>(),
-            );
-        }
-
-        if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
-        {
-            lifetime_args.push("nb::rv_policy::reference".to_owned());
-        }
-
-        Some(MethodInfo {
-            method,
-            method_name,
-            cpp_method_name,
-            def: def_qualifiers.join("_"),
-            setter_name,
-            prop_name,
-            param_decls,
-            lifetime_args: if lifetime_args.is_empty() {
-                None
-            } else {
-                Some(lifetime_args.join(", ").into())
-            },
-        })
-    }
-
     /// Generates C++ code for referencing a particular type with a given name.
     fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
     where
         'ccx: 'a,
     {
         let var_name = self.formatter.cxx.fmt_param_name(var_name);
-        let type_name = self.gen_type_name(ty);
+        let type_name = self.cpp2.gen_type_name(ty);
 
         NamedType {
             var_name,
@@ -425,16 +281,42 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         }
     }
 
+    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
+        let id = st.id();
+        let type_name = self.formatter.cxx.fmt_type_name(id);
+
+        let def = self.cpp2.c.tcx.resolve_type(id);
+        if def.attrs().disable {
+            self.errors
+                .push_error(format!("Found usage of disabled type {type_name}"))
+        }
+
+        self.cpp2
+            .impl_header
+            .includes
+            .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
+        if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
+            let mutability = borrow.mutability;
+            self.formatter
+                .cxx
+                .fmt_borrowed(&type_name, mutability)
+                .into_owned()
+                .into()
+        } else {
+            type_name
+        }
+    }
+
     /// Generates Python code for referencing a particular type.
     ///
     /// This function adds the necessary type imports to the decl and impl files.
-    fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+    pub(super) fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.cxx.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.formatter.cxx.fmt_type_name(op_id);
-                let def = self.c2.tcx.resolve_type(op_id);
+                let def = self.cpp2.c.tcx.resolve_type(op_id);
 
                 if def.attrs().disable {
                     self.errors
@@ -452,34 +334,40 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 };
                 let ret = ret.into_owned().into();
 
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id));
+                self.cpp2
+                    .impl_header
+                    .includes
+                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id.into()));
                 ret
             }
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.c2.tcx.resolve_type(id);
+                let def = self.cpp2.c.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
+                self.cpp2
+                    .impl_header
+                    .includes
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
                 type_name
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.c2.tcx.resolve_type(id);
+                let def = self.cpp2.c.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id));
+                self.cpp2
+                    .impl_header
+                    .includes
+                    .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
@@ -487,10 +375,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.cxx.fmt_primitive_as_c(p);
-                let ret = self.formatter.cxx.fmt_borrowed_slice(
-                    &ret,
-                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
-                );
+                let ret = self.formatter.cxx.fmt_borrowed_slice(&ret, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
@@ -498,6 +383,14 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 self.formatter.cxx.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Slice(hir::Slice::Struct(b, ref st)) => {
+                let st_name = self.gen_struct_name::<P>(st);
+                let ret = self
+                    .formatter
+                    .cxx
+                    .fmt_borrowed_slice(&st_name, b.mutability());
+                ret.into_owned().into()
+            }
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }

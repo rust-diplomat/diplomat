@@ -29,42 +29,42 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<MyOpaqueEnum> MyOpaqueEnum::new_() {
-  auto result = diplomat::capi::MyOpaqueEnum_new();
-  return std::unique_ptr<MyOpaqueEnum>(MyOpaqueEnum::FromFFI(result));
+    auto result = diplomat::capi::MyOpaqueEnum_new();
+    return std::unique_ptr<MyOpaqueEnum>(MyOpaqueEnum::FromFFI(result));
 }
 
 inline std::string MyOpaqueEnum::to_string() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
-    &write);
-  return output;
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
+        &write);
+    return output;
 }
 template<typename W>
 inline void MyOpaqueEnum::to_string_write(W& writeable) const {
-  diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-  diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
-    &write);
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    diplomat::capi::MyOpaqueEnum_to_string(this->AsFFI(),
+        &write);
 }
 
 inline const diplomat::capi::MyOpaqueEnum* MyOpaqueEnum::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::MyOpaqueEnum*>(this);
+    return reinterpret_cast<const diplomat::capi::MyOpaqueEnum*>(this);
 }
 
 inline diplomat::capi::MyOpaqueEnum* MyOpaqueEnum::AsFFI() {
-  return reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(this);
+    return reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(this);
 }
 
 inline const MyOpaqueEnum* MyOpaqueEnum::FromFFI(const diplomat::capi::MyOpaqueEnum* ptr) {
-  return reinterpret_cast<const MyOpaqueEnum*>(ptr);
+    return reinterpret_cast<const MyOpaqueEnum*>(ptr);
 }
 
 inline MyOpaqueEnum* MyOpaqueEnum::FromFFI(diplomat::capi::MyOpaqueEnum* ptr) {
-  return reinterpret_cast<MyOpaqueEnum*>(ptr);
+    return reinterpret_cast<MyOpaqueEnum*>(ptr);
 }
 
 inline void MyOpaqueEnum::operator delete(void* ptr) {
-  diplomat::capi::MyOpaqueEnum_destroy(reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(ptr));
+    diplomat::capi::MyOpaqueEnum_destroy(reinterpret_cast<diplomat::capi::MyOpaqueEnum*>(ptr));
 }
 
 

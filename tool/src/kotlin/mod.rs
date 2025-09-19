@@ -55,6 +55,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 pub struct KotlinConfig {
     domain: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
+    scaffold: Option<bool>,
 }
 
 impl KotlinConfig {
@@ -66,7 +67,10 @@ impl KotlinConfig {
                 }
             }
             "use_finalizers_not_cleaners" => {
-                self.use_finalizers_not_cleaners = value.as_bool();
+                self.use_finalizers_not_cleaners = value.as_str().map(|val| val == "true");
+            }
+            "scaffold" => {
+                self.scaffold = value.as_str().map(|val| val == "true");
             }
             _ => {}
         }
@@ -81,6 +85,7 @@ pub(crate) fn run<'tcx>(
     let KotlinConfig {
         domain,
         use_finalizers_not_cleaners,
+        scaffold,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -187,34 +192,36 @@ pub(crate) fn run<'tcx>(
         files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
 
-    #[derive(Template)]
-    #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
-    struct Build<'a> {
-        domain: &'a str,
-        lib_name: &'a str,
-    }
+    if scaffold.unwrap_or(false) {
+        #[derive(Template)]
+        #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
+        struct Build<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+        }
 
-    let build = Build {
-        domain: &domain,
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render build file");
+        let build = Build {
+            domain: &domain,
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render build file");
 
-    files.add_file("build.gradle.kts".to_string(), build);
+        files.add_file("build.gradle.kts".to_string(), build);
 
-    #[derive(Template)]
-    #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
-    struct Settings<'a> {
-        lib_name: &'a str,
-    }
-    let settings = Settings {
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render settings file");
+        #[derive(Template)]
+        #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
+        struct Settings<'a> {
+            lib_name: &'a str,
+        }
+        let settings = Settings {
+            lib_name: &lib_name,
+        }
+        .render()
+        .expect("Failed to render settings file");
 
-    files.add_file("settings.gradle.kts".to_string(), settings);
+        files.add_file("settings.gradle.kts".to_string(), settings);
+    }
     let native_results = ty_gen_cx
         .result_types
         .borrow()
@@ -332,7 +339,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                     .into()
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(MaybeOwn::Own, _)) => {
                 format!("{name}Slice").into()
             }
             Type::Slice(_) => format!("{name}Slice").into(),
@@ -585,9 +592,9 @@ return string{return_type_modifier}"#
         )
     }
 
-    fn gen_slice_return_conversion<'d>(
+    fn gen_slice_return_conversion<'d, P: TyPosition>(
         &'d self,
-        slice_ty: &'d Slice,
+        slice_ty: &'d Slice<P>,
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
@@ -616,11 +623,11 @@ return string{return_type_modifier}"#
                 }
                 _ => todo!(),
             },
-            Slice::Primitive(Some(_), prim_ty) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
-            Slice::Primitive(None, prim_ty) => {
+            Slice::Primitive(MaybeOwn::Own, prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_kt(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
                 Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
@@ -961,10 +968,10 @@ returnVal.option() ?: return null
         }
     }
 
-    fn gen_slice_conversion(
+    fn gen_slice_conversion<P: TyPosition>(
         &self,
         kt_param_name: Cow<'cx, str>,
-        slice_type: Slice,
+        slice_type: Slice<P>,
     ) -> Cow<'cx, str> {
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
@@ -974,11 +981,14 @@ returnVal.option() ?: return null
             closeable: bool,
         }
         let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
-            Slice::Str(_, _) => ("readUtf8".into(), true),
-            Slice::Primitive(_, _) => ("native".into(), true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("readUtf16s".into(), true),
-            Slice::Strs(_) => ("readUtf8s".into(), true),
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16".into(), true),
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
+            Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
+            Slice::Str(None, _) => ("moveUtf8".into(), true),
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow".into(), true),
+            Slice::Primitive(_, _) => ("move".into(), true),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
+            Slice::Strs(_) => ("borrowUtf8s".into(), true),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
@@ -996,13 +1006,17 @@ returnVal.option() ?: return null
         .into()
     }
 
-    fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Option<Cow<'cx, str>> {
+    fn gen_cleanup<P: TyPosition>(
+        &self,
+        param_name: Cow<'cx, str>,
+        slice: Slice<P>,
+    ) -> Option<Cow<'cx, str>> {
         match slice {
             Slice::Str(Some(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Str(_, _) => None,
-            Slice::Primitive(Some(_), _) => {
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => {
                 Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
             }
             Slice::Primitive(_, _) => None,
@@ -1068,14 +1082,17 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), *slice));
+                    slice_conversions
+                        .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
 
                     let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
                         ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), *slice) {
+                            if let Some(cleanup) =
+                                self.gen_cleanup(param_name.clone(), slice.clone())
+                            {
                                 cleanups.push(cleanup)
                             }
                         }
@@ -1110,7 +1127,7 @@ returnVal.option() ?: return null
                     let param_names: Vec<String> = params
                         .iter()
                         .enumerate()
-                        .map(|(index, _)| format!("arg{}", index))
+                        .map(|(index, _)| format!("arg{index}"))
                         .collect();
                     let (native_input_names, native_input_params_and_types): (
                         Vec<String>,
@@ -1124,47 +1141,55 @@ returnVal.option() ?: return null
                                 // named types have a _Native wrapper, this needs to be passed as the "native"
                                 // version of the argument
                                 (
-                                    format!("{}({})", in_ty, in_name),
-                                    format!("{}: {}Native", in_name, in_ty),
+                                    format!("{in_ty}({in_name})"),
+                                    format!("{in_name}: {in_ty}Native"),
                                 )
                             }
                             Type::Slice(Slice::Primitive(_, _)) => {
                                 // slices need to be passed as Slice type
                                 // and only primitive slices are allowed
                                 (
-                                    format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                                    format!("{}: Slice", in_name),
+                                    format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                                    format!("{in_name}: Slice"),
                                 )
                             }
                             Type::Slice(_) => {
                                 panic!("Non-primitive slices are not allowed as callback args")
                             }
                             Type::Opaque(_) => (
-                                format!("{}({}, listOf())", in_ty, in_name),
-                                format!("{}: Pointer", in_name),
+                                format!("{in_ty}({in_name}, listOf())"),
+                                format!("{in_name}: Pointer"),
                             ),
-                            _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                            _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                         })
                         .unzip();
-                    let (native_output_type, return_modification) = match **output {
-                        Some(ref ty) => (
-                            self.gen_native_type_name(ty, None).into(),
-                            match ty {
-                                Type::Enum(..) => ".toNative()",
-                                Type::Struct(..) => ".nativeStruct",
-                                _ => "",
-                            }
-                            .into(),
-                        ),
-                        None => ("Unit".into(), "".into()),
+                    let (native_output_type, return_modification) = match &**output {
+                        ReturnType::Infallible(success) => match success {
+                            SuccessType::OutType(ty) => (
+                                self.gen_native_type_name(ty, None).into(),
+                                match ty {
+                                    Type::Enum(..) => ".toNative()",
+                                    Type::Struct(..) => ".nativeStruct",
+                                    _ => "",
+                                }
+                                .into(),
+                            ),
+                            SuccessType::Unit => ("Unit".into(), "".into()),
+                            _ => panic!("Unsupported success type {success:?}"),
+                        },
+                        _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                     };
 
                     self.callback_params.push(CallbackParamInfo {
                         name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
-                        output_type: match **output {
-                            Some(ref ty) => self.gen_type_name(ty, None).into(),
-                            None => "Unit".into(),
+                        output_type: match &**output {
+                            ReturnType::Infallible(success) => match success {
+                                SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                                SuccessType::Unit => "Unit".into(),
+                                _ => panic!("Unsupported success type {success:?}"),
+                            },
+                            _ => panic!("Unsupported return type {output:?}. Results and Options are not supported."),
                         },
                         native_input_params_and_types: native_input_params_and_types.join(", "),
                         native_input_names: native_input_names.join(", "),
@@ -1610,7 +1635,7 @@ returnVal.option() ?: return null
                 if let Some(param_name) = &param.name {
                     param_name.to_string()
                 } else {
-                    format!("arg{}", index)
+                    format!("arg{index}")
                 }
             })
             .collect();
@@ -1625,25 +1650,25 @@ returnVal.option() ?: return null
                         // named types have a _Native wrapper, this needs to be passed as the "native"
                         // version of the argument
                         (
-                            format!("{}({})", in_ty, in_name),
-                            format!("{}: {}Native", in_name, in_ty),
+                            format!("{in_ty}({in_name})"),
+                            format!("{in_name}: {in_ty}Native"),
                         )
                     }
                     Type::Slice(Slice::Primitive(_, _)) => {
                         // slices need to be passed as Slice type
                         (
-                            format!("PrimitiveArrayTools.get{}({})", in_ty, in_name),
-                            format!("{}: Slice", in_name),
+                            format!("PrimitiveArrayTools.get{in_ty}({in_name})"),
+                            format!("{in_name}: Slice"),
                         )
                     }
                     Type::Slice(_) => {
                         panic!("Non-primitive slices are not allowed as callback args")
                     }
                     Type::Opaque(_) => (
-                        format!("{}({}, listOf())", in_ty, in_name),
-                        format!("{}: Pointer", in_name),
+                        format!("{in_ty}({in_name}, listOf())"),
+                        format!("{in_name}: Pointer"),
                     ),
-                    _ => (in_name.clone(), format!("{}: {}", in_name, in_ty)),
+                    _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                 })
                 .unzip();
         let non_native_params_and_types = method
@@ -1654,30 +1679,46 @@ returnVal.option() ?: return null
             .fold("".to_string(), |cur, ((_, in_ty), in_name)| {
                 cur.clone()
                     + (if !cur.is_empty() { ", " } else { "" })
-                    + &format!("{}: {}", in_name, in_ty)
+                    + &format!("{in_name}: {in_ty}")
             });
-        let (native_output_type, return_modification, return_cast) = match *method.output {
-            Some(ref ty) => (
-                self.gen_native_type_name(ty, None).into(),
-                match ty {
-                    Type::Enum(..) => ".toNative()",
-                    Type::Struct(..) => ".nativeStruct",
-                    _ => "",
-                }
-                .into(),
-                match ty {
-                    Type::Primitive(prim) => self.formatter.fmt_unsigned_primitive_ffi_cast(prim),
-                    _ => "",
-                }
-                .into(),
+        let (native_output_type, return_modification, return_cast) = match &*method.output {
+            ReturnType::Infallible(success) => match success {
+                SuccessType::OutType(ty) => (
+                    self.gen_native_type_name(ty, None).into(),
+                    match ty {
+                        Type::Enum(..) => ".toNative()",
+                        Type::Struct(..) => ".nativeStruct",
+                        _ => "",
+                    }
+                    .into(),
+                    match ty {
+                        Type::Primitive(prim) => {
+                            self.formatter.fmt_unsigned_primitive_ffi_cast(prim)
+                        }
+                        _ => "",
+                    }
+                    .into(),
+                ),
+                SuccessType::Unit => ("Unit".into(), "".into(), "".into()),
+                _ => panic!("Unsupported success type {success:?}"),
+            },
+            _ => panic!(
+                "Unsupported return type {:?}. Results and Options are not supported.",
+                method.output
             ),
-            None => ("Unit".into(), "".into(), "".into()),
         };
         TraitMethodInfo {
             name: method_name,
-            output_type: match *method.output {
-                Some(ref ty) => self.gen_type_name(ty, None).into(),
-                None => "Unit".into(),
+            output_type: match &*method.output {
+                ReturnType::Infallible(success) => match success {
+                    SuccessType::OutType(ty) => self.gen_type_name(ty, None).into(),
+                    SuccessType::Unit => "Unit".into(),
+                    _ => panic!("Unsupported success type {success:?}"),
+                },
+                _ => panic!(
+                    "Unsupported return type {:?}. Results and Options are not supported.",
+                    method.output
+                ),
             },
             native_output_type,
             return_modification,
@@ -1986,11 +2027,15 @@ returnVal.option() ?: return null
                     .map(|param| self.gen_type_name(&param.ty, None).into())
                     .collect::<Vec<String>>()
                     .join(", ");
-                let out_type_string: String = match **output {
-                    Some(ref out_ty) => self.gen_type_name(out_ty, None).into(),
-                    None => "Unit".into(),
+                let out_type_string: String = match &**output {
+                    ReturnType::Infallible(success) => match success {
+                        SuccessType::OutType(out_ty) => self.gen_type_name(out_ty, None).into(),
+                        SuccessType::Unit => "Unit".into(),
+                        _ => panic!("Unsupported success type {success:?}"),
+                    },
+                    _ => panic!("Unsupported return type {output:?}"),
                 };
-                format!("({})->{}", in_type_string, out_type_string).into()
+                format!("({in_type_string})->{out_type_string}").into()
             }
             Type::ImplTrait(trt) => {
                 let trait_id = trt.id();

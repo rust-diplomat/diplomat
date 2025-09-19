@@ -20,11 +20,12 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
     }
   }
 
+  @_DiplomatFfiUse('OpaqueThinVec_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinVec_destroy));
 
-  factory OpaqueThinVec(core.List<int> a, core.List<double> b) {
+  factory OpaqueThinVec(core.List<int> a, core.List<double> b, String c) {
     final temp = _FinalizedArena();
-    final result = _OpaqueThinVec_create(a._int32AllocIn(temp.arena), b._float32AllocIn(temp.arena));
+    final result = _OpaqueThinVec_create(a._int32AllocIn(temp.arena), b._float32AllocIn(temp.arena), c._utf8AllocIn(temp.arena));
     return OpaqueThinVec._fromFfi(result, []);
   }
 
@@ -62,9 +63,9 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
 external void _OpaqueThinVec_destroy(ffi.Pointer<ffi.Void> self);
 
 @_DiplomatFfiUse('OpaqueThinVec_create')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceInt32, _SliceFloat)>(isLeaf: true, symbol: 'OpaqueThinVec_create')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceInt32, _SliceFloat, _SliceUtf8)>(isLeaf: true, symbol: 'OpaqueThinVec_create')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_create(_SliceInt32 a, _SliceFloat b);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_create(_SliceInt32 a, _SliceFloat b, _SliceUtf8 c);
 
 @_DiplomatFfiUse('OpaqueThinVec_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinVec_iter')

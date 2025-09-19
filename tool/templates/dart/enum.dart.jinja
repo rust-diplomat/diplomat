@@ -1,6 +1,9 @@
 {% if !docs.is_empty() -%}
 {{ docs|prefix_trimmed("/// ")}}
 {% endif -%}
+{% if let Some(deprecated) = deprecated -%}
+@core.Deprecated('{{ deprecated }}')
+{% endif -%}
 enum {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
    {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {

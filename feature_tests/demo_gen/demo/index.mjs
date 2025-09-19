@@ -33,6 +33,16 @@ let termini = Object.assign({
         ]
     },
 
+    "RenamedTestMacroStruct.testFunc": {
+        func: () => somelib.RenamedTestMacroStruct.testFunc(),
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedTestMacroStruct.testFunc",
+        expr: () => "somelib.RenamedTestMacroStruct.testFunc()",
+        parameters: [
+            
+        ]
+    },
+
     "CyclicStructA.cyclicOut": {
         func: (selfAField) => somelib.CyclicStructA.fromFields({
             a: somelib.CyclicStructB.fromFields({
@@ -211,6 +221,26 @@ let termini = Object.assign({
         ]
     },
 
+    "AttrOpaque1Renamed.macTest": {
+        func: () => somelib.AttrOpaque1Renamed.macTest(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.macTest",
+        expr: () => "somelib.AttrOpaque1Renamed.macTest()",
+        parameters: [
+            
+        ]
+    },
+
+    "AttrOpaque1Renamed.hello": {
+        func: () => somelib.AttrOpaque1Renamed.hello(),
+        // For avoiding webpacking minifying issues:
+        funcName: "AttrOpaque1Renamed.hello",
+        expr: () => "somelib.AttrOpaque1Renamed.hello()",
+        parameters: [
+            
+        ]
+    },
+
     "AttrOpaque1Renamed.methodRenamed": {
         func: () => new somelib.AttrOpaque1Renamed().methodRenamed,
         // For avoiding webpacking minifying issues:
@@ -231,11 +261,37 @@ let termini = Object.assign({
         ]
     },
 
+    "RenamedVectorTest.len": {
+        func: () => new somelib.RenamedVectorTest().len,
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedVectorTest.len",
+        expr: () => "new somelib.RenamedVectorTest().len",
+        parameters: [
+            
+        ]
+    },
+
+    "RenamedVectorTest.get": {
+        func: (idx) => new somelib.RenamedVectorTest().get(idx),
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedVectorTest.get",
+        expr: (idx) => "new somelib.RenamedVectorTest().get(idx)".replace(/([\( ])idx([,\) \n])/, '$1' + idx + '$2'),
+        parameters: [
+            
+            {
+                name: "idx",
+                type: "number",
+                typeUse: "number"
+            }
+            
+        ]
+    },
+
     "OpaqueThinVec.len": {
-        func: (selfA, selfB) => new somelib.OpaqueThinVec(selfA, selfB).len(),
+        func: (selfA, selfB, selfC) => new somelib.OpaqueThinVec(selfA, selfB, selfC).len(),
         // For avoiding webpacking minifying issues:
         funcName: "OpaqueThinVec.len",
-        expr: (selfA, selfB) => "new somelib.OpaqueThinVec(selfA, selfB).len()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
+        expr: (selfA, selfB, selfC) => "new somelib.OpaqueThinVec(selfA, selfB, selfC).len()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2'),
         parameters: [
             
             {
@@ -248,6 +304,12 @@ let termini = Object.assign({
                 name: "self_b",
                 type: "Array<number>",
                 typeUse: "Array<number>"
+            },
+            
+            {
+                name: "self_c",
+                type: "string",
+                typeUse: "string"
             }
             
         ]
@@ -368,11 +430,55 @@ let termini = Object.assign({
                 name: "arg",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar"]
+                values: ["Foo", "Bar", "Baz"]
             },
             
             {
                 name: "sentinel",
+                type: "number",
+                typeUse: "number"
+            }
+            
+        ]
+    },
+
+    "OptionOpaque.acceptsMultipleOptionEnum": {
+        func: (sentinel1, arg1, arg2, arg3, sentinel2) => somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2),
+        // For avoiding webpacking minifying issues:
+        funcName: "OptionOpaque.acceptsMultipleOptionEnum",
+        expr: (sentinel1, arg1, arg2, arg3, sentinel2) => "somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2)".replace(/([\( ])sentinel1([,\) \n])/, '$1' + sentinel1 + '$2').replace(/([\( ])arg1([,\) \n])/, '$1' + arg1 + '$2').replace(/([\( ])arg2([,\) \n])/, '$1' + arg2 + '$2').replace(/([\( ])arg3([,\) \n])/, '$1' + arg3 + '$2').replace(/([\( ])sentinel2([,\) \n])/, '$1' + sentinel2 + '$2'),
+        display: displayOptionalEnum,
+        parameters: [
+            
+            {
+                name: "sentinel1",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "arg1",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "arg2",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "arg3",
+                type: "OptionEnum",
+                typeUse: "enumerator",
+                values: ["Foo", "Bar", "Baz"]
+            },
+            
+            {
+                name: "sentinel2",
                 type: "number",
                 typeUse: "number"
             }

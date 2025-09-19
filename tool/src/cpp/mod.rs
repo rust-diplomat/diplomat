@@ -1,13 +1,27 @@
 mod formatter;
+mod func;
 mod header;
 mod ty;
 
+pub(crate) use header::Header;
+use std::collections::BTreeMap;
+
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-use ty::TyGenContext;
+pub(crate) use ty::TyGenContext;
+
+pub(crate) use func::FuncGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
+#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CppConfig {}
+
+impl CppConfig {
+    pub fn set(&mut self, key: &str, _value: toml::Value) {
+        panic!("C++ does not support any backend-specific configs, found {key}");
+    }
+}
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -38,23 +52,37 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_send = false;
     a.traits_are_sync = false;
     a.generate_mocking_interface = false;
+    a.abi_compatibles = true;
+    a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
+    config: &crate::Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = Cpp2Formatter::new(tcx, docs_url_gen);
+    let formatter = Cpp2Formatter::new(tcx, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     #[derive(askama::Template)]
     #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
-    struct Runtime;
-
-    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
+    struct Runtime<'a> {
+        guard_prefix: &'a str,
+        lib_name: Option<&'a str>,
+    }
+    let lib_name = config.shared_config.lib_name.as_deref();
+    let include_guard_prefix = lib_name
+        .map(|x| format!("{}_", x.to_ascii_uppercase()))
+        .unwrap_or_default();
+    let runtime = Runtime {
+        guard_prefix: &include_guard_prefix,
+        lib_name,
+    };
+    files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -62,14 +90,15 @@ pub(crate) fn run<'tcx>(
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id);
-        let mut decl_header = header::Header::new(decl_header_path.clone());
-        let impl_header_path = formatter.fmt_impl_header_path(id);
-        let mut impl_header = header::Header::new(impl_header_path.clone());
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config.cpp_config,
             c: crate::c::TyGenContext {
                 tcx,
                 formatter: &formatter.c,
@@ -109,6 +138,80 @@ pub(crate) fn run<'tcx>(
         files.add_file(impl_header_path, impl_header.to_string());
     }
 
+    {
+        let mut func_contexts = BTreeMap::new();
+
+        for (id, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
+            }
+
+            let key = if let Some(ns) = &f.attrs.namespace {
+                ns.clone()
+            } else {
+                "".into()
+            };
+
+            let impl_header_path = formatter.fmt_impl_header_path(id.into());
+            let decl_header_path = formatter.fmt_decl_header_path(id.into());
+
+            let context = if let Some(v) = func_contexts.get_mut(&key) {
+                v
+            } else {
+                func_contexts.insert(
+                    key.clone(),
+                    FuncGenContext::new(
+                        impl_header_path.clone(),
+                        decl_header_path.clone(),
+                        f.attrs.namespace.clone(),
+                        lib_name,
+                        true,
+                        &formatter,
+                    ),
+                );
+                func_contexts.get_mut(&key).unwrap()
+            };
+
+            let mut decl_header_clone = header::Header::new("".into(), lib_name);
+            let mut impl_header_clone = header::Header::new("".into(), lib_name);
+
+            let mut ty_context = TyGenContext {
+                formatter: &formatter,
+                errors: &errors,
+                config: &config.cpp_config,
+                c: crate::c::TyGenContext {
+                    tcx,
+                    formatter: &formatter.c,
+                    errors: &errors,
+                    is_for_cpp: true,
+                    id: id.into(),
+                    decl_header_path: "",
+                    impl_header_path: &impl_header_path,
+                },
+                impl_header: &mut impl_header_clone,
+                decl_header: &mut decl_header_clone,
+                generating_struct_fields: false,
+            };
+
+            context.generate_function(id, f, &mut ty_context);
+            context
+                .impl_header
+                .includes
+                .append(&mut impl_header_clone.includes);
+            context
+                .decl_header
+                .includes
+                .append(&mut decl_header_clone.includes);
+        }
+
+        for (_, ctx) in func_contexts.iter_mut() {
+            ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
+            ctx.render().unwrap();
+            files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
+            files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
+        }
+    }
+
     (files, errors)
 }
 
@@ -141,19 +244,21 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
+        let config = crate::Config::default();
         if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
             let error_store = ErrorStore::default();
             let docs_gen = Default::default();
-            let formatter = Cpp2Formatter::new(&tcx, &docs_gen);
-            let mut decl_header = header::Header::new("decl_thing".into());
-            let mut impl_header = header::Header::new("impl_thing".into());
+            let formatter = Cpp2Formatter::new(&tcx, &config, &docs_gen);
+            let mut decl_header = header::Header::new("decl_thing".into(), None);
+            let mut impl_header = header::Header::new("impl_thing".into(), None);
 
             let mut ty_gen_cx = TyGenContext {
                 errors: &error_store,
                 formatter: &formatter,
+                config: &config.cpp_config,
                 c: crate::c::TyGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,

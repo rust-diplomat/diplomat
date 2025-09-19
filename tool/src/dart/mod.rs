@@ -186,6 +186,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             fmt: &'a DartFormatter<'a>,
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            deprecated: Option<&'a str>,
             docs: String,
             is_contiguous: bool,
             special: SpecialMethodGenInfo<'a>,
@@ -196,6 +197,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             fmt: self.formatter,
             type_name,
             methods: methods.as_slice(),
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
             special,
@@ -221,6 +223,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
+            deprecated: Option<&'a str>,
             destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -230,6 +233,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             type_name,
             methods: methods.as_slice(),
             destructor: destructor.as_str(),
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -275,7 +279,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
                 /// Get the name/initializer of the allocator needed for a particular type
                 fn alloc_name<P: TyPosition>(ty: &hir::StructDef<P>, field_ty: &Type<P>) -> Option<String> {
-                    if let &hir::Type::Slice(slice) = field_ty {
+                    if let hir::Type::Slice(slice) = field_ty {
                         match slice.lifetime() {
                             Some(MaybeStatic::NonStatic(lt)) => {
                                 Some(format!(
@@ -288,7 +292,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                             }
                             _ => None
                         }
-                    } else if let &hir::Type::Struct(..) = field_ty {
+                    } else if let hir::Type::Struct(..) = field_ty {
                         Some("temp".into())
                     } else if let hir::Type::DiplomatOption(inner) = field_ty {
                         alloc_name(ty, inner)
@@ -401,6 +405,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             mutable: bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
+            deprecated: Option<&'a str>,
             docs: String,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -412,6 +417,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
             mutable,
             fields,
             methods,
+            deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -631,6 +637,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
 
         Some(MethodInfo {
             method,
+            deprecated: method.attrs.deprecated.as_deref(),
             docs,
             declaration,
             abi_name,
@@ -798,7 +805,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(s) => self.gen_slice(&s).into(),
+            Type::Slice(ref s) => self.gen_slice(s).into(),
             Type::DiplomatOption(ref inner) => self.gen_result(Some(inner), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -876,15 +883,15 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info, alloc.unwrap())
             }
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
-            Type::Slice(s) => {
-                self.gen_slice(&s);
+            Type::Slice(ref s) => {
+                self.gen_slice(s);
                 let alloc_in = match s {
                     hir::Slice::Primitive(_, hir::PrimitiveType::Byte) => {
                         "asUint8List()._uint8AllocIn"
                     }
-                    hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(p),
-                    hir::Slice::Str(_, encoding) => self.formatter.fmt_str_alloc_in(encoding),
-                    hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_alloc_in(encoding),
+                    hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_alloc_in(*p),
+                    hir::Slice::Str(_, encoding) => self.formatter.fmt_str_alloc_in(*encoding),
+                    hir::Slice::Strs(encoding) => self.formatter.fmt_str_slice_alloc_in(*encoding),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let alloc = if s.lifetime().is_none() {
@@ -1021,7 +1028,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => match slice.lifetime() {
+            Type::Slice(ref slice) => match slice.lifetime() {
                 Some(MaybeStatic::NonStatic(lifetime)) => format!(
                     "{var_name}._toDart({}Edges)",
                     lifetime_env.fmt_lifetime(lifetime)
@@ -1104,7 +1111,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
         }
     }
 
-    fn gen_slice_element_ty(&mut self, slice: &hir::Slice) -> Cow<'cx, str> {
+    fn gen_slice_element_ty<P: TyPosition>(&mut self, slice: &hir::Slice<P>) -> Cow<'cx, str> {
         match slice {
             hir::Slice::Str(_, encoding) => {
                 self.formatter.fmt_string_element_as_ffi(*encoding).into()
@@ -1121,7 +1128,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
     }
 
     /// Generates a Dart helper class for a slice type.
-    fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
+    fn gen_slice<P: TyPosition>(&mut self, slice: &hir::Slice<P>) -> &'static str {
         let slice_ty = self.formatter.fmt_slice_type(slice);
 
         if self.helper_classes.contains_key(slice_ty) {
@@ -1205,7 +1212,7 @@ impl<'cx> TyGenContext<'_, 'cx> {
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U32)) => format!("this[i].clamp(0, {})", u32::MAX).into(),
                         hir::Slice::Primitive(_, hir::PrimitiveType::Int(hir::IntType::U64)) => format!("this[i].clamp(0, {})", u64::MAX).into(),
                         hir::Slice::Strs(e) => {
-                            self.gen_slice(&hir::Slice::Str(None, *e));
+                            self.gen_slice::<P>(&hir::Slice::Str(None, *e));
                             format!("this[i].{}(alloc)", self.formatter.fmt_str_alloc_in(*e)).into()
                         },
                         _ => unreachable!("unknown AST/HIR variant"),
@@ -1358,6 +1365,7 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
+    deprecated: Option<&'a str>,
     /// Docs
     docs: String,
     /// The declaration (everything before the parameter list)

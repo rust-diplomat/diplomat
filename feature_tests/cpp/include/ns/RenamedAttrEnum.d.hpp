@@ -1,5 +1,5 @@
-#ifndef ns_RenamedAttrEnum_D_HPP
-#define ns_RenamedAttrEnum_D_HPP
+#ifndef SOMELIB_ns_RenamedAttrEnum_D_HPP
+#define SOMELIB_ns_RenamedAttrEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     enum RenamedAttrEnum {
       RenamedAttrEnum_A = 0,
@@ -24,28 +24,28 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 class RenamedAttrEnum {
 public:
-  enum Value {
-    A = 0,
-    B = 1,
-    Renamed = 2,
-  };
+    enum Value {
+        A = 0,
+        B = 1,
+        Renamed = 2,
+    };
 
-  RenamedAttrEnum(): value(Value::A) {}
+    RenamedAttrEnum(): value(Value::A) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr RenamedAttrEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr RenamedAttrEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline ns::capi::RenamedAttrEnum AsFFI() const;
-  inline static ns::RenamedAttrEnum FromFFI(ns::capi::RenamedAttrEnum c_enum);
+    inline somelib::ns::capi::RenamedAttrEnum AsFFI() const;
+    inline static somelib::ns::RenamedAttrEnum FromFFI(somelib::ns::capi::RenamedAttrEnum c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // ns_RenamedAttrEnum_D_HPP
+#endif // SOMELIB_ns_RenamedAttrEnum_D_HPP

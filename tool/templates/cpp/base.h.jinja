@@ -2,9 +2,9 @@
 #define {{ header_guard }}
 
 {%~ match decl_include %}
-	{% when Some with (include) ~%}
-		#include "{{ include }}"
-	{%~ when None %}
+    {% when Some with (include) ~%}
+        #include "{{ include }}"
+    {%~ when None %}
 {%- endmatch ~%}
 
 #include <stdio.h>
@@ -21,24 +21,26 @@
 
 {%~ if forwards.len() > 0 %}
 {%- for namespace_forward in forwards %}
+{%- if let Some(lib_name) = lib_name -%} namespace {{lib_name}} { {%- endif~%}
 {%- if let Some(ns) = namespace_forward.0 %}
 namespace {{ns}} {
 {%- endif-%}
 {%- for forward in namespace_forward.1 %}
 {%- match forward %}
-	{%- when Forward::Class with (name) ~%}
-		namespace {% if namespace_forward.0.is_none() -%} diplomat:: {%- endif -%} capi { struct {{name}}; }
+    {%- when Forward::Class with (name) ~%}
+        namespace {% if namespace_forward.0.is_none() && lib_name.is_none() -%} diplomat:: {%- endif -%} capi { struct {{name}}; }
 class {{ name }};
-	{%- when Forward::Struct with (name) ~%}
-		struct {{ name }};
-	{%- when Forward::EnumStruct with (name) ~%}
-		class {{ name }};
+    {%- when Forward::Struct with (name) ~%}
+        struct {{ name }};
+    {%- when Forward::EnumStruct with (name) ~%}
+        class {{ name }};
 {%- endmatch %}
 {%- endfor %}
-{%- if namespace_forward.0.is_some() %}
-}
+{%- if let Some(ns) = namespace_forward.0 %}
+} // namespace {{ns}}
 {%-endif %}
-{%- endfor %}
+{% if let Some(lib_name) = lib_name -%} } // namespace {{lib_name}} {%- endif %}
+{%~ endfor %}
 {% endif %}
 
 {{ body }}

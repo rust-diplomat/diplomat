@@ -1,13 +1,13 @@
-# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args> <optional preserve_subdirectory for copying over>
+# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional additional args> <optional preserve_subdirectory for copying over>
 # If a backend generates a whole project then you can choose to only copy over a certain subdirectory
 # by passing  it as the preserve_subdirectory argument. For example the kotlin backend creates an entire
 # project. To not overwrite project files or committed tests in kotlin you can run
 # ```sh
-# generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
+# generate_generic feature_tests kotlin somelib "-l diplomat-kt-conf.toml" /src/main/kotlin
 # ```
 # which only copies over the contents of `src/main/kotlin` from the tmp folder. Whereas
 # ```sh
-# generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" 
+# generate_generic feature_tests kotlin somelib "-l diplomat-kt-conf.toml" 
 # ```
 # will copy over all project files and delete the old ones including the tests.
 # note: if you make changes to the project file generation, then you should 
@@ -75,5 +75,5 @@ fn generate_js
         out = set "api_legacy"
     end
     
-    generate_generic ${path} js ${api_path}/${out} "--config js.abi=${config}"
+    generate_generic ${path} js ${api_path}/${out}
 end

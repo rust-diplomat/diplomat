@@ -25,23 +25,23 @@ namespace capi {
 } // namespace
 
 inline const diplomat::capi::Two* Two::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Two*>(this);
+    return reinterpret_cast<const diplomat::capi::Two*>(this);
 }
 
 inline diplomat::capi::Two* Two::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Two*>(this);
+    return reinterpret_cast<diplomat::capi::Two*>(this);
 }
 
 inline const Two* Two::FromFFI(const diplomat::capi::Two* ptr) {
-  return reinterpret_cast<const Two*>(ptr);
+    return reinterpret_cast<const Two*>(ptr);
 }
 
 inline Two* Two::FromFFI(diplomat::capi::Two* ptr) {
-  return reinterpret_cast<Two*>(ptr);
+    return reinterpret_cast<Two*>(ptr);
 }
 
 inline void Two::operator delete(void* ptr) {
-  diplomat::capi::Two_destroy(reinterpret_cast<diplomat::capi::Two*>(ptr));
+    diplomat::capi::Two_destroy(reinterpret_cast<diplomat::capi::Two*>(ptr));
 }
 
 

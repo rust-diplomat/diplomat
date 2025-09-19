@@ -22,6 +22,7 @@ final class One implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('One_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_One_destroy));
 
   factory One.transitivity(One hold, One nohold) {

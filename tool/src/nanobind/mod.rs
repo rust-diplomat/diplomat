@@ -1,10 +1,11 @@
 mod formatter;
+mod func;
 mod root_module;
 mod ty;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{Config, ErrorStore, FileMap};
+use crate::{cpp::Header, nanobind::func::FuncGenContext, Config, ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
@@ -49,6 +50,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.callbacks = true;
     a.traits = false;
     a.generate_mocking_interface = false;
+    a.abi_compatibles = true;
+    a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
@@ -64,16 +68,26 @@ pub(crate) fn run<'cx>(
     docs: &'cx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
-    let formatter = PyFormatter::new(tcx, docs);
+
+    let mut config_for_cpp = conf.clone();
+
+    // TODO(https://github.com/rust-diplomat/diplomat/issues/957)
+    // We should pass the original config down, probably, but only once the
+    // nanobind backend is updated to expect lib_name-based namespacing in its C++
+    config_for_cpp.shared_config.lib_name = None;
+
+    let formatter = PyFormatter::new(tcx, &config_for_cpp, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
         .shared_config
         .lib_name
-        .expect("Nanobind backend requires lib_name to be set in the config");
+        .as_ref()
+        .expect("Nanobind backend requires lib_name to be set in the config")
+        .clone();
 
     // Output the C++ bindings we rely on
-    let (cpp_files, cpp_errors) = cpp::run(tcx, docs);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, &config_for_cpp, docs);
 
     files.files.borrow_mut().extend(
         cpp_files
@@ -104,30 +118,40 @@ pub(crate) fn run<'cx>(
             continue;
         }
 
-        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id);
-        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id);
+        let cpp_decl_path = formatter.cxx.fmt_decl_header_path(id.into());
+        let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id.into());
         let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
-        let mut includes = BTreeSet::default();
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            c2: crate::c::TyGenContext {
-                tcx,
-                formatter: &formatter.cxx.c,
+            cpp2: crate::cpp::TyGenContext {
+                c: crate::c::TyGenContext {
+                    tcx,
+                    formatter: &formatter.cxx.c,
+                    errors: &errors,
+                    id: id.into(),
+                    decl_header_path: &cpp_decl_path,
+                    impl_header_path: &cpp_impl_path,
+                    is_for_cpp: false,
+                },
+                config: &config_for_cpp.cpp_config,
+                formatter: &formatter.cxx,
                 errors: &errors,
-                is_for_cpp: false,
-                id: id.into(),
-                decl_header_path: &cpp_decl_path,
-                impl_header_path: &cpp_impl_path,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             submodules: &mut submodules,
-            includes: &mut includes,
             generating_struct_fields: false,
         };
 
-        context.includes.insert(cpp_impl_path.clone());
+        context
+            .cpp2
+            .impl_header
+            .includes
+            .insert(cpp_impl_path.clone());
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
 
@@ -138,25 +162,102 @@ pub(crate) fn run<'cx>(
             namespace: String,
             unqualified_type: String,
             body: String,
+            binding_prefix: String,
         }
 
         let mut body = String::default();
+        let mut binding_prefix = String::default();
         match ty {
             hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
             hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id, &mut body),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &mut body),
+            hir::TypeDef::Struct(s) => {
+                context.gen_struct_def(s, id, &mut body, &mut binding_prefix)
+            }
+            hir::TypeDef::OutStruct(s) => {
+                context.gen_struct_def(s, id, &mut body, &mut binding_prefix)
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
 
         let binding_impl = Binding {
-            includes,
-            namespace: formatter.fmt_namespaces(id).join("::"),
+            includes: context.cpp2.impl_header.includes.clone(),
+            namespace: formatter.fmt_namespaces(id.into()).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
+            binding_prefix,
         };
         files.add_file(binding_impl_path, binding_impl.to_string());
+    }
+
+    let mut func_map = BTreeMap::new();
+    {
+        for (id, func) in tcx.all_free_functions() {
+            let _guard = errors.set_context_ty(func.name.as_str().into());
+            let key = if let Some(ns) = &func.attrs.namespace {
+                ns.clone()
+            } else {
+                "".into()
+            };
+
+            let context = if let Some(v) = func_map.get_mut(&key) {
+                v
+            } else {
+                func_map.insert(
+                    key.clone(),
+                    FuncGenContext::new(
+                        func.attrs.namespace.clone(),
+                        formatter
+                            .fmt_namespaces(id.into())
+                            .map(|n| n.to_string())
+                            .collect(),
+                    ),
+                );
+                func_map.get_mut(&key).unwrap()
+            };
+
+            let mut ty_context = TyGenContext {
+                formatter: &formatter,
+                errors: &errors,
+                cpp2: crate::cpp::TyGenContext {
+                    c: crate::c::TyGenContext {
+                        tcx,
+                        formatter: &formatter.cxx.c,
+                        is_for_cpp: false,
+                        errors: &errors,
+                        id: id.into(),
+                        decl_header_path: "",
+                        impl_header_path: "",
+                    },
+                    config: &conf.cpp_config,
+                    errors: &errors,
+                    formatter: &formatter.cxx,
+                    impl_header: &mut Header::default(),
+                    decl_header: &mut Header::default(),
+                    generating_struct_fields: false,
+                },
+                root_module: &mut root_module,
+                submodules: &mut submodules,
+                generating_struct_fields: false,
+            };
+
+            context.generate_function(id, func, &mut ty_context);
+
+            drop(_guard);
+        }
+    }
+
+    for (_, ctx) in func_map.iter_mut() {
+        let binding_impl_path = if let Some(ns) = &ctx.namespace {
+            format!(
+                "sub_modules/{}/{}_func_bindings.cpp",
+                ns.replace("::", "/"),
+                ns.replace("::", "_")
+            )
+        } else {
+            "sub_modules/diplomat_func_bindings.cpp".into()
+        };
+        files.add_file(binding_impl_path, ctx.render(&mut root_module).unwrap());
     }
 
     // Traverse the module_fns keys list and expand into the list of submodules needing generation.
@@ -185,7 +286,7 @@ pub(crate) fn run<'cx>(
 mod test {
     use diplomat_core::hir::{self, TypeDef};
     use quote::quote;
-    use std::collections::{BTreeMap, BTreeSet};
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_opaque_gen() {
@@ -209,6 +310,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -217,7 +319,7 @@ mod test {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
+                    eprintln!("Lowering error: {err}");
                 }
                 panic!("Failed to create context")
             }
@@ -233,32 +335,39 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::root_module::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
-        let mut includes = BTreeSet::new();
+
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            c2: crate::c::TyGenContext {
-                tcx: &tcx,
-                formatter: &formatter.cxx.c,
+            cpp2: crate::cpp::TyGenContext {
+                c: crate::c::TyGenContext {
+                    tcx: &tcx,
+                    formatter: &formatter.cxx.c,
+                    errors: &errors,
+                    is_for_cpp: false,
+                    id: type_id.into(),
+                    decl_header_path: &decl_header_path,
+                    impl_header_path: &impl_file_path,
+                },
+                formatter: &formatter.cxx,
                 errors: &errors,
-                is_for_cpp: false,
-                id: type_id.into(),
-                decl_header_path: &decl_header_path,
-                impl_header_path: &impl_file_path,
+                config: &config.cpp_config,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
-            includes: &mut includes,
         };
         let mut generated = String::default();
         context.gen_opaque_def(opaque_def, type_id, &mut generated);
@@ -280,6 +389,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -288,7 +398,7 @@ mod test {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
+                    eprintln!("Lowering error: {err}");
                 }
                 panic!("Failed to create context")
             }
@@ -304,32 +414,39 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
-        let mut includes = BTreeSet::new();
+
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            c2: crate::c::TyGenContext {
-                tcx: &tcx,
-                formatter: &formatter.cxx.c,
+            cpp2: crate::cpp::TyGenContext {
+                c: crate::c::TyGenContext {
+                    tcx: &tcx,
+                    formatter: &formatter.cxx.c,
+                    errors: &errors,
+                    is_for_cpp: false,
+                    id: type_id.into(),
+                    decl_header_path: &decl_header_path,
+                    impl_header_path: &impl_file_path,
+                },
+                formatter: &formatter.cxx,
+                config: &config.cpp_config,
                 errors: &errors,
-                is_for_cpp: false,
-                id: type_id.into(),
-                decl_header_path: &decl_header_path,
-                impl_header_path: &impl_file_path,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
-            includes: &mut includes,
         };
         let mut enum_gen = String::new();
         context.gen_enum_def(enum_def, type_id, &mut enum_gen);
@@ -350,6 +467,7 @@ mod test {
             }
         };
         let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
+        let config = crate::Config::default();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
@@ -358,7 +476,7 @@ mod test {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
+                    eprintln!("Lowering error: {err}");
                 }
                 panic!("Failed to create context")
             }
@@ -374,36 +492,44 @@ mod test {
         };
 
         let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &docs_gen);
+        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
         let errors = crate::ErrorStore::default();
         let mut root_module = crate::nanobind::RootModule::new();
         root_module.module_name = std::borrow::Cow::Borrowed("pymod");
 
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id);
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id);
+        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
 
         let mut submodules = BTreeMap::new();
-        let mut includes = BTreeSet::new();
+
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            c2: crate::c::TyGenContext {
-                tcx: &tcx,
-                formatter: &formatter.cxx.c,
+            cpp2: crate::cpp::TyGenContext {
+                c: crate::c::TyGenContext {
+                    tcx: &tcx,
+                    formatter: &formatter.cxx.c,
+                    errors: &errors,
+                    is_for_cpp: false,
+                    id: type_id.into(),
+                    decl_header_path: &decl_header_path,
+                    impl_header_path: &impl_file_path,
+                },
+                formatter: &formatter.cxx,
                 errors: &errors,
-                is_for_cpp: false,
-                id: type_id.into(),
-                decl_header_path: &decl_header_path,
-                impl_header_path: &impl_file_path,
+                config: &config.cpp_config,
+                impl_header: &mut crate::cpp::Header::default(),
+                decl_header: &mut crate::cpp::Header::default(),
+                generating_struct_fields: false,
             },
             root_module: &mut root_module,
             generating_struct_fields: false,
             submodules: &mut submodules,
-            includes: &mut includes,
         };
 
         let mut struct_gen = String::new();
-        context.gen_struct_def(struct_def, type_id, &mut struct_gen);
+        let mut header = String::new();
+        context.gen_struct_def(struct_def, type_id, &mut struct_gen, &mut header);
         insta::assert_snapshot!(struct_gen)
     }
 }

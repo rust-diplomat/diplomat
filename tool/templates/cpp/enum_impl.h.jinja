@@ -1,21 +1,21 @@
 {% include "c_include.h.jinja" %}
 
 inline {{ctype}} {{type_name}}::AsFFI() const {
-	return static_cast<{{ctype}}>(value);
+    return static_cast<{{ctype}}>(value);
 }
 
 inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
-	switch (c_enum) {
+    switch (c_enum) {
 {%- for enum_variant in ty.variants %}
-		case {{fmt.fmt_c_enum_variant(ctype, enum_variant)}}:
+        case {{fmt.fmt_c_enum_variant(ctype, enum_variant)}}:
 {%- endfor %}
-			return static_cast<{{type_name}}::Value>(c_enum);
-		default:
-			std::abort();
-	}
+            return static_cast<{{type_name}}::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 
 {%- for m in methods %}
 
-{% include "method_impl.h.jinja" %}
+{% include "function_defs/method_impl.h.jinja" %}
 {%- endfor %}

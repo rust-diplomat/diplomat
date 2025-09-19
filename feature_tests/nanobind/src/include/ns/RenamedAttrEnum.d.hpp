@@ -27,22 +27,22 @@ namespace capi {
 namespace ns {
 class RenamedAttrEnum {
 public:
-  enum Value {
-    A = 0,
-    B = 1,
-    Renamed = 2,
-  };
+    enum Value {
+        A = 0,
+        B = 1,
+        Renamed = 2,
+    };
 
-  RenamedAttrEnum(): value(Value::A) {}
+    RenamedAttrEnum(): value(Value::A) {}
 
-  // Implicit conversions between enum and ::Value
-  constexpr RenamedAttrEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    // Implicit conversions between enum and ::Value
+    constexpr RenamedAttrEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
-  inline ns::capi::RenamedAttrEnum AsFFI() const;
-  inline static ns::RenamedAttrEnum FromFFI(ns::capi::RenamedAttrEnum c_enum);
+    inline ns::capi::RenamedAttrEnum AsFFI() const;
+    inline static ns::RenamedAttrEnum FromFFI(ns::capi::RenamedAttrEnum c_enum);
 private:
     Value value;
 };

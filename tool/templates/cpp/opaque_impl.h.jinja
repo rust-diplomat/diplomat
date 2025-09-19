@@ -8,28 +8,28 @@
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
 
 {% for m in methods -%}
-{% include "method_impl.h.jinja" %}
+{% include "function_defs/method_impl.h.jinja" %}
 
 {% endfor -%}
 
 inline {{const_cptr}} {{type_name}}::AsFFI() const {
-	return reinterpret_cast<{{const_cptr}}>(this);
+    return reinterpret_cast<{{const_cptr}}>(this);
 }
 
 inline {{mut_cptr}} {{type_name}}::AsFFI() {
-	return reinterpret_cast<{{mut_cptr}}>(this);
+    return reinterpret_cast<{{mut_cptr}}>(this);
 }
 
 inline {{const_ptr}} {{type_name}}::FromFFI({{const_cptr}} ptr) {
-	return reinterpret_cast<{{const_ptr}}>(ptr);
+    return reinterpret_cast<{{const_ptr}}>(ptr);
 }
 
 inline {{mut_ptr}} {{type_name}}::FromFFI({{mut_cptr}} ptr) {
-	return reinterpret_cast<{{mut_ptr}}>(ptr);
+    return reinterpret_cast<{{mut_ptr}}>(ptr);
 }
 
 inline void {{type_name}}::operator delete(void* ptr) {
-	{{dtor_name}}(reinterpret_cast<{{mut_cptr}}>(ptr));
+    {{dtor_name}}(reinterpret_cast<{{mut_cptr}}>(ptr));
 }
 
 

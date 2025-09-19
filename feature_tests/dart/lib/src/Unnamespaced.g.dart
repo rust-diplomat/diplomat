@@ -20,6 +20,7 @@ final class Unnamespaced implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_Unnamespaced_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Unnamespaced_destroy));
 
   factory Unnamespaced.make(RenamedAttrEnum e) {

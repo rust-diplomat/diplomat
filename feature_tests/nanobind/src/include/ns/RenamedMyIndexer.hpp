@@ -28,29 +28,29 @@ namespace capi {
 } // namespace
 
 inline std::optional<std::string_view> ns::RenamedMyIndexer::operator[](size_t i) const {
-  auto result = ns::capi::namespace_MyIndexer_get(this->AsFFI(),
-    i);
-  return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
+    auto result = ns::capi::namespace_MyIndexer_get(this->AsFFI(),
+        i);
+    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }
 
 inline const ns::capi::RenamedMyIndexer* ns::RenamedMyIndexer::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedMyIndexer*>(this);
+    return reinterpret_cast<const ns::capi::RenamedMyIndexer*>(this);
 }
 
 inline ns::capi::RenamedMyIndexer* ns::RenamedMyIndexer::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedMyIndexer*>(this);
+    return reinterpret_cast<ns::capi::RenamedMyIndexer*>(this);
 }
 
 inline const ns::RenamedMyIndexer* ns::RenamedMyIndexer::FromFFI(const ns::capi::RenamedMyIndexer* ptr) {
-  return reinterpret_cast<const ns::RenamedMyIndexer*>(ptr);
+    return reinterpret_cast<const ns::RenamedMyIndexer*>(ptr);
 }
 
 inline ns::RenamedMyIndexer* ns::RenamedMyIndexer::FromFFI(ns::capi::RenamedMyIndexer* ptr) {
-  return reinterpret_cast<ns::RenamedMyIndexer*>(ptr);
+    return reinterpret_cast<ns::RenamedMyIndexer*>(ptr);
 }
 
 inline void ns::RenamedMyIndexer::operator delete(void* ptr) {
-  ns::capi::namespace_MyIndexer_destroy(reinterpret_cast<ns::capi::RenamedMyIndexer*>(ptr));
+    ns::capi::namespace_MyIndexer_destroy(reinterpret_cast<ns::capi::RenamedMyIndexer*>(ptr));
 }
 
 

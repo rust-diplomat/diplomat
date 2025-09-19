@@ -15,6 +15,8 @@ namespace diplomat::capi { struct Two; }
 class Two;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct One;
@@ -46,18 +48,18 @@ public:
 
   inline static std::unique_ptr<One> implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
 
-  inline const diplomat::capi::One* AsFFI() const;
-  inline diplomat::capi::One* AsFFI();
-  inline static const One* FromFFI(const diplomat::capi::One* ptr);
-  inline static One* FromFFI(diplomat::capi::One* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::One* AsFFI() const;
+    inline diplomat::capi::One* AsFFI();
+    inline static const One* FromFFI(const diplomat::capi::One* ptr);
+    inline static One* FromFFI(diplomat::capi::One* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  One() = delete;
-  One(const One&) = delete;
-  One(One&&) noexcept = delete;
-  One operator=(const One&) = delete;
-  One operator=(One&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    One() = delete;
+    One(const One&) = delete;
+    One(One&&) noexcept = delete;
+    One operator=(const One&) = delete;
+    One operator=(One&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

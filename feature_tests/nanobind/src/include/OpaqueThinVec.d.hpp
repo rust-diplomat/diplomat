@@ -17,6 +17,8 @@ namespace diplomat::capi { struct OpaqueThinIter; }
 class OpaqueThinIter;
 
 
+
+
 namespace diplomat {
 namespace capi {
     struct OpaqueThinVec;
@@ -26,7 +28,7 @@ namespace capi {
 class OpaqueThinVec {
 public:
 
-  inline static std::unique_ptr<OpaqueThinVec> create(diplomat::span<const int32_t> a, diplomat::span<const float> b);
+  inline static std::unique_ptr<OpaqueThinVec> create(diplomat::span<const int32_t> a, diplomat::span<const float> b, std::string_view c);
 
   inline std::unique_ptr<OpaqueThinIter> iter() const;
   inline diplomat::next_to_iter_helper<OpaqueThinIter> begin() const;
@@ -38,18 +40,18 @@ public:
 
   inline const OpaqueThin* first() const;
 
-  inline const diplomat::capi::OpaqueThinVec* AsFFI() const;
-  inline diplomat::capi::OpaqueThinVec* AsFFI();
-  inline static const OpaqueThinVec* FromFFI(const diplomat::capi::OpaqueThinVec* ptr);
-  inline static OpaqueThinVec* FromFFI(diplomat::capi::OpaqueThinVec* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::OpaqueThinVec* AsFFI() const;
+    inline diplomat::capi::OpaqueThinVec* AsFFI();
+    inline static const OpaqueThinVec* FromFFI(const diplomat::capi::OpaqueThinVec* ptr);
+    inline static OpaqueThinVec* FromFFI(diplomat::capi::OpaqueThinVec* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OpaqueThinVec() = delete;
-  OpaqueThinVec(const OpaqueThinVec&) = delete;
-  OpaqueThinVec(OpaqueThinVec&&) noexcept = delete;
-  OpaqueThinVec operator=(const OpaqueThinVec&) = delete;
-  OpaqueThinVec operator=(OpaqueThinVec&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OpaqueThinVec() = delete;
+    OpaqueThinVec(const OpaqueThinVec&) = delete;
+    OpaqueThinVec(OpaqueThinVec&&) noexcept = delete;
+    OpaqueThinVec operator=(const OpaqueThinVec&) = delete;
+    OpaqueThinVec operator=(OpaqueThinVec&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

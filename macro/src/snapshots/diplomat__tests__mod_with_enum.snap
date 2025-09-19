@@ -17,6 +17,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Abc_do_something(this: &Abc) {
         this.do_something()
     }

@@ -15,6 +15,7 @@ export class OptionEnum {
 
     static Foo : OptionEnum;
     static Bar : OptionEnum;
+    static Baz : OptionEnum;
 
 
     constructor(value: OptionEnum | string );

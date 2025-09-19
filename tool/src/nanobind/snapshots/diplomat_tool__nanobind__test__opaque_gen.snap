@@ -8,7 +8,7 @@ expression: generated
 // Forward declarations for binding add functions
 
 namespace mylib {
-void add_OpaqueStruct_binding(nb::handle);
+void add_OpaqueStruct_binding(nb::module_);
 }
 
 
@@ -52,21 +52,21 @@ struct _Dummy {};
 
 NB_MODULE(pymod, pymod_mod)
 {
-	{
-		nb::class_<_Dummy> dummy(pymod_mod, "__dummy__");
-		nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
-	}
+    {
+        nb::class_<_Dummy> dummy(pymod_mod, "__dummy__");
+        nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
+    }
 
     nb::class_<std::monostate>(pymod_mod, "monostate")
-		.def("__repr__", [](const std::monostate &)
-			 { return ""; })
-		.def("__str__", [](const std::monostate &)
-			 { return ""; });
+        .def("__repr__", [](const std::monostate &)
+             { return ""; })
+        .def("__str__", [](const std::monostate &)
+             { return ""; });
              
 
     // Module declarations
     // Add bindings
     mylib::add_OpaqueStruct_binding(pymod_mylib_mod);
     
-	
+    
 }

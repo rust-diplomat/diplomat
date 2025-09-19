@@ -27,4 +27,4 @@ On the C++ side, this will generate a method on `Thingy` with the signature
 
 `diplomat::result` is a type that can be found in the generated [`diplomat_runtime.hpp`](https://github.com/rust-diplomat/diplomat/blob/main/tool/src/cpp/runtime.hpp) file. The most basic APIs are `.is_ok()` and `.is_err()`, returning `bool`s, and `.ok()` and `.err()` returning `std::option`s. There are further APIs for constructing and manipulating these that can be found in the header file.
 
-On the JS side it will continue to return the `Thingy` class but it will `throw` the error (as an empty object in this case) in case of an error.
+On backends that do not support `Result`, they will instead throw an error (i.e., Python/Nanobind and JS).

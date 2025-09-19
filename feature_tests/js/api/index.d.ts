@@ -2,7 +2,11 @@
 export { codepoint } from './diplomat-runtime';
 
 
+export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct"
+
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
+
+export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"
 
 export { ImportedStruct, ImportedStruct_obj } from "./ImportedStruct"
 
@@ -32,6 +36,8 @@ export { MyStructContainingAnOption, MyStructContainingAnOption_obj } from "./My
 
 export { MyZst } from "./MyZst"
 
+export { PrimitiveStruct, PrimitiveStruct_obj } from "./PrimitiveStruct"
+
 export { ScalarPairWithPadding, ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
 
 export { StructWithSlices, StructWithSlices_obj } from "./StructWithSlices"
@@ -41,6 +47,8 @@ export { OptionStruct } from "./OptionStruct"
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
+
+export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque"
 
 export { RenamedMyIterable } from "./RenamedMyIterable"
 
@@ -54,7 +62,11 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 
+export { RenamedTestOpaque } from "./RenamedTestOpaque"
+
 export { Unnamespaced } from "./Unnamespaced"
+
+export { RenamedVectorTest } from "./RenamedVectorTest"
 
 export { Bar } from "./Bar"
 
@@ -95,6 +107,8 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString"
 export { Utf16Wrap } from "./Utf16Wrap"
 
 export { RenamedAttrEnum } from "./RenamedAttrEnum"
+
+export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum"
 
 export { UnimportedEnum } from "./UnimportedEnum"
 

@@ -23,16 +23,17 @@ namespace capi {
 } // namespace
 
 inline diplomat::capi::OptionEnum OptionEnum::AsFFI() const {
-  return static_cast<diplomat::capi::OptionEnum>(value);
+    return static_cast<diplomat::capi::OptionEnum>(value);
 }
 
 inline OptionEnum OptionEnum::FromFFI(diplomat::capi::OptionEnum c_enum) {
-  switch (c_enum) {
-    case diplomat::capi::OptionEnum_Foo:
-    case diplomat::capi::OptionEnum_Bar:
-      return static_cast<OptionEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+    switch (c_enum) {
+        case diplomat::capi::OptionEnum_Foo:
+        case diplomat::capi::OptionEnum_Bar:
+        case diplomat::capi::OptionEnum_Baz:
+            return static_cast<OptionEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 #endif // OptionEnum_HPP

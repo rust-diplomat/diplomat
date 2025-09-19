@@ -1,3 +1,4 @@
+# The lib-name is overridden within the code.
 lib-name = "This Will Be Ignored For Testing Purposes (Check src/lib.rs)"
 unsafe_references_in_callbacks = true
 

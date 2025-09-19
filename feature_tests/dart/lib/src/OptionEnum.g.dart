@@ -7,7 +7,9 @@ enum OptionEnum {
 
   foo,
 
-  bar;
+  bar,
+
+  baz;
 
 }
 

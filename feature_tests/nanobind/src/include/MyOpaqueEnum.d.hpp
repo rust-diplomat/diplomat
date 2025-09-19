@@ -27,18 +27,18 @@ public:
   template<typename W>
   inline void to_string_write(W& writeable_output) const;
 
-  inline const diplomat::capi::MyOpaqueEnum* AsFFI() const;
-  inline diplomat::capi::MyOpaqueEnum* AsFFI();
-  inline static const MyOpaqueEnum* FromFFI(const diplomat::capi::MyOpaqueEnum* ptr);
-  inline static MyOpaqueEnum* FromFFI(diplomat::capi::MyOpaqueEnum* ptr);
-  inline static void operator delete(void* ptr);
+    inline const diplomat::capi::MyOpaqueEnum* AsFFI() const;
+    inline diplomat::capi::MyOpaqueEnum* AsFFI();
+    inline static const MyOpaqueEnum* FromFFI(const diplomat::capi::MyOpaqueEnum* ptr);
+    inline static MyOpaqueEnum* FromFFI(diplomat::capi::MyOpaqueEnum* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  MyOpaqueEnum() = delete;
-  MyOpaqueEnum(const MyOpaqueEnum&) = delete;
-  MyOpaqueEnum(MyOpaqueEnum&&) noexcept = delete;
-  MyOpaqueEnum operator=(const MyOpaqueEnum&) = delete;
-  MyOpaqueEnum operator=(MyOpaqueEnum&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    MyOpaqueEnum() = delete;
+    MyOpaqueEnum(const MyOpaqueEnum&) = delete;
+    MyOpaqueEnum(MyOpaqueEnum&&) noexcept = delete;
+    MyOpaqueEnum operator=(const MyOpaqueEnum&) = delete;
+    MyOpaqueEnum operator=(MyOpaqueEnum&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 

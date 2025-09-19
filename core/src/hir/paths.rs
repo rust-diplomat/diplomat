@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetimes, LinkedLifetimes};
 use super::{
-    Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
-    OutputOnly, ReturnableStructDef, StructDef, TraitId, TyPosition, TypeContext,
+    Borrow, EnumDef, EnumId, Everywhere, Mutability, OpaqueDef, OpaqueId, OpaqueOwner,
+    OutStructDef, OutputOnly, ReturnableStructDef, StructDef, TraitId, TyPosition, TypeContext,
 };
 
 /// Path to a struct that may appear as an output.
@@ -21,6 +21,7 @@ pub type OutStructPath = StructPath<OutputOnly>;
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: Lifetimes,
     pub tcx_id: P::StructId,
+    pub owner: MaybeOwn,
 }
 
 #[derive(Debug, Clone)]
@@ -106,9 +107,10 @@ pub struct EnumPath {
     pub tcx_id: EnumId,
 }
 
-/// Determine whether a pointer to an opaque type is owned or borrowed.
+/// Determine whether a type is owned or borrowed.
 ///
-/// Since owned opaques cannot be used as inputs, this only appears in output types.
+/// Ownership in the case of opaques is `Box<Opaque>`, in the case of structs is
+/// `Struct`, and in the case of slices is `Box<[T]>`.
 #[derive(Copy, Clone, Debug)]
 #[allow(clippy::exhaustive_enums)] // only two answers to this question
 pub enum MaybeOwn {
@@ -123,8 +125,27 @@ impl MaybeOwn {
             MaybeOwn::Borrow(borrow) => Some(borrow),
         }
     }
+
+    pub fn is_owned(&self) -> bool {
+        matches!(*self, Self::Own)
+    }
+
+    /// Returns the mutability of this potential-borrow
+    ///
+    /// Owned types are mutable
+    pub fn mutability(&self) -> Mutability {
+        match *self {
+            Self::Own => Mutability::Mutable,
+            Self::Borrow(b) => b.mutability,
+        }
+    }
 }
 
+impl From<Option<Borrow>> for MaybeOwn {
+    fn from(other: Option<Borrow>) -> Self {
+        other.map(Self::Borrow).unwrap_or(Self::Own)
+    }
+}
 impl ReturnableStructPath {
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> ReturnableStructDef<'tcx> {
         match self {
@@ -145,8 +166,12 @@ impl ReturnableStructPath {
 
 impl<P: TyPosition> StructPath<P> {
     /// Returns a new [`EnumPath`].
-    pub(super) fn new(lifetimes: Lifetimes, tcx_id: P::StructId) -> Self {
-        Self { lifetimes, tcx_id }
+    pub(super) fn new(lifetimes: Lifetimes, tcx_id: P::StructId, owner: MaybeOwn) -> Self {
+        Self {
+            lifetimes,
+            tcx_id,
+            owner,
+        }
     }
 }
 impl StructPath {

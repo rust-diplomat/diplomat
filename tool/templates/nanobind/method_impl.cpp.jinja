@@ -1,86 +1,106 @@
-	.{{m.def}}
-{%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
-	{%- match special_method -%}
-	{%- when crate::hir::SpecialMethod::Add | crate::hir::SpecialMethod::Sub | 
-			crate::hir::SpecialMethod::Mul | crate::hir::SpecialMethod::Div -%}
-		(nb::self {{special_method.operator_str().unwrap()}} nb::self)
-	{%- when crate::hir::SpecialMethod::AddAssign | crate::hir::SpecialMethod::SubAssign |
-			crate::hir::SpecialMethod::MulAssign | crate::hir::SpecialMethod::DivAssign -%}
-		(nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none)
-	{%- when crate::hir::SpecialMethod::Comparison -%}
-		(nb::self == nb::self)
-		.def(nb::self != nb::self)
-		.def(nb::self <= nb::self)
-		.def(nb::self >= nb::self)
-		.def(nb::self < nb::self)
-		.def(nb::self > nb::self)
-	{%- when crate::hir::SpecialMethod::Stringifier -%}
-		("__str__", &{{- type_name }}::{{ m.cpp_method_name -}})
-	{%- when crate::hir::SpecialMethod::Iterable -%}
-		("__iter__", &{{- type_name }}::{{ m.cpp_method_name -}}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
-	{%- when crate::hir::SpecialMethod::Iterator -%}
-		("__next__", []({{- type_name }}& self){
-			auto next = self.{{m.cpp_method_name}}();
-			if (!next) {
-				throw nb::stop_iteration();
-			}
-			return next_inner_extractor<decltype(next)>::get(std::move(next));
-		}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
-		.def("__iter__", [](nb::handle self) { return self; })
-	{%- when crate::hir::SpecialMethod::Getter(_) -%}
-		("{{m.prop_name.as_ref().unwrap()}}", 
-		{%- if m.method.param_self.is_some() %} &{{type_name}}::{{m.cpp_method_name}}
-		{%- else %} [](nb::handle) -> decltype({{type_name}}::{{m.cpp_method_name}}()) { return {{type_name}}::{{m.cpp_method_name}}(); }
-		{%- endif -%}
-		{#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
-		{%- if let Some(setter_name) = m.setter_name -%}
-			{%- if m.method.param_self.is_some() -%}
-				, &{{type_name}}::{{setter_name}}
-			{%- else -%},
-				[](nb::handle {%- for p in m.param_decls.as_ref().unwrap() -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
-				  { {{type_name}}::{{setter_name}}(
-					{%- for p in m.param_decls.as_ref().unwrap() -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
-			{%- endif -%}
-			{%- include "method_params.cpp.jinja" %}
-		{%- endif -%})
-	{%- when crate::hir::SpecialMethod::Constructor -%}
-		{%- if is_self_opaque -%}
-			(nb::new_(&{{- type_name}}::{{ m.cpp_method_name -}})
-		{%- else -%} {#- nanobind's nb::init<> only works for *actual* constructors -#}
-			("__init__", []({{ type_name }}* self
-			{%- for p in m.param_decls.as_ref().unwrap() -%}
-			, {{p.type_name}} {{p.var_name}}
-			{%- endfor -%}
-			{%- match m.method.output -%}
-			{%- when hir::ReturnType::Infallible(_) -%}
-				){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
-												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
-												{%- endfor -%}
-			); }
-			{%- when hir::ReturnType::Fallible(_, _) -%}
-				){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.as_ref().unwrap() -%}
-												{%- if !loop.first -%}, {% endif %}{{p.var_name}}
-												{%- endfor -%} );
-				if(tmp.is_ok()) {
-					*self = std::move(tmp).ok().value();
-				} else {
-					nb::cast(tmp); // This will raise a python error with the contents of the error type
-				}}
-			{%- when hir::ReturnType::Nullable(_) -%}
-			static_assert(false, "This is unsupported by diplomat");
-			{%- endmatch -%}
-		{%- endif -%}
-		{%- include "method_params.cpp.jinja" %})
-	{%- when crate::hir::SpecialMethod::Indexer -%}
-		("__getitem__", &{{- type_name }}::operator[]
-		{%- include "method_params.cpp.jinja" %})
-	{%- when _ -%}
-		("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}} 
-		{%- include "method_params.cpp.jinja" %} ) // unsupported special method {{format!("{special_method:?}")}}
-		{%- if loop.last ~%}
-		{%~ endif -%}
-	{%- endmatch -%}
-{%- else -%}
-		("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}}
-		{%- include "method_params.cpp.jinja" -%})
-{%- endif -%}
+{%- extends "function_base.cpp.jinja" -%}
+{%- block cpp_method_name -%}{{- type_name }}::{{ m.cpp_method_name -}}{%- endblock -%}
+{%- block special_methods -%}
+    {%- match special_method -%}
+    {%- when crate::hir::SpecialMethod::Add | crate::hir::SpecialMethod::Sub | 
+            crate::hir::SpecialMethod::Mul | crate::hir::SpecialMethod::Div -%}
+        (nb::self {{special_method.operator_str().unwrap()}} nb::self)
+    {%- when crate::hir::SpecialMethod::AddAssign | crate::hir::SpecialMethod::SubAssign |
+            crate::hir::SpecialMethod::MulAssign | crate::hir::SpecialMethod::DivAssign -%}
+        (nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none)
+    {%- when crate::hir::SpecialMethod::Comparison -%}
+        (nb::self == nb::self)
+        .def(nb::self != nb::self)
+        .def(nb::self <= nb::self)
+        .def(nb::self >= nb::self)
+        .def(nb::self < nb::self)
+        .def(nb::self > nb::self)
+    {%- when crate::hir::SpecialMethod::Stringifier -%}
+        ("__str__", &{{- type_name }}::{{ m.cpp_method_name -}})
+    {%- when crate::hir::SpecialMethod::Iterable -%}
+        ("__iter__", &{{- type_name }}::{{ m.cpp_method_name -}}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
+    {%- when crate::hir::SpecialMethod::Iterator -%}
+        ("__next__", []({{- type_name }}& self){
+            auto next = self.{{m.cpp_method_name}}();
+            if (!next) {
+                throw nb::stop_iteration();
+            }
+            return next_inner_extractor<decltype(next)>::get(std::move(next));
+        }{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
+        .def("__iter__", [](nb::handle self) { return self; })
+    {%- when crate::hir::SpecialMethod::Getter(_) -%}
+        ("{{m.prop_name.as_ref().unwrap()}}", 
+        {%- if m.method.param_self.is_some() %} &{{type_name}}::{{m.cpp_method_name}}
+        {%- else %} [](nb::handle) -> decltype({{type_name}}::{{m.cpp_method_name}}()) { return {{type_name}}::{{m.cpp_method_name}}(); }
+        {%- endif -%}
+        {#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
+        {%- if let Some(setter_name) = m.setter_name -%}
+            {%- if m.method.param_self.is_some() -%}
+                , &{{type_name}}::{{setter_name}}
+            {%- else -%},
+                [](nb::handle {%- for p in m.param_decls.params -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
+                  { {{type_name}}::{{setter_name}}(
+                    {%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
+            {%- endif -%}
+            {%- include "method_params.cpp.jinja" %}
+        {%- endif -%})
+    {%- when crate::hir::SpecialMethod::Constructor -%}
+        {%- if is_self_opaque -%}
+            (nb::new_(&{{- type_name}}::{{ m.cpp_method_name -}})
+        {%- else -%} {#- nanobind's nb::init<> only works for *actual* constructors -#}
+            ("__init__", []({{ type_name }}* self
+            {%- for p in m.param_decls.params -%}
+            , {{p.type_name}} {{p.var_name}}
+            {%- endfor -%}
+            {%- match m.method.output -%}
+            {%- when hir::ReturnType::Infallible(_) -%}
+                ){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
+                                                {%- if !loop.first -%}, {% endif %}{{p.var_name}}
+                                                {%- endfor -%}
+            ); }
+            {%- when hir::ReturnType::Fallible(_, _) -%}
+                ){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
+                                                {%- if !loop.first -%}, {% endif %}{{p.var_name}}
+                                                {%- endfor -%} );
+                if(tmp.is_ok()) {
+                    *self = std::move(tmp).ok().value();
+                } else {
+                    nb::cast(tmp); // This will raise a python error with the contents of the error type
+                }}
+            {%- when hir::ReturnType::Nullable(_) -%}
+            static_assert(false, "This is unsupported by diplomat");
+            {%- endmatch -%}
+        {%- endif -%}
+        {%- include "method_params.cpp.jinja" %})
+    {%- when crate::hir::SpecialMethod::Indexer -%}
+        ("__getitem__", {% match m.method.output -%}
+        {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
+        []({{type_name}}* self, {{m.param_decls.params[0].type_name}} index) {
+            auto out = self->operator[] (index);
+            {%- if let crate::hir::ReturnType::Nullable(..) = m.method.output %}
+            if (!out.has_value()) {
+                throw nb::index_error("Could not get index.");
+            } {% else -%} if (!out.is_ok()) {
+                auto errorPyV = nb::cast(std::move(std::move(out).err().value()));
+                if (errorPyV.is_valid())
+                {
+                    throw nb::index_error(nb::str(errorPyV).c_str());
+                } else {
+                    throw nb::index_error("Indexing error. Could not convert error type to string.");
+                }
+            } {% endif -%} else {
+                return out;
+            }
+        }
+        {%- when crate::hir::ReturnType::Infallible(..) -%}
+        &{{- type_name }}::operator[]
+        {%- endmatch -%}
+
+        {%- include "method_params.cpp.jinja" %})
+    {%- when _ -%}
+        ("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}} 
+        {%- include "method_params.cpp.jinja" %} ) // unsupported special method {{format!("{special_method:?}")}}
+        {%- if loop.last ~%}
+        {%~ endif -%}
+    {%- endmatch -%}
+{%- endblock -%}

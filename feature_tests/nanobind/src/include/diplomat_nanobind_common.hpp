@@ -8,6 +8,7 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/bind_vector.h>
 #include <nanobind/stl/detail/nb_list.h>
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
@@ -81,38 +82,100 @@ namespace nanobind::detail
         }
     };
 
+    template <typename T>
+    struct type_caster<std::reference_wrapper<T>>
+    {
+        using Value = std::reference_wrapper<T>;
+        Value value;
+        Py_ssize_t size;
+        using Caster = make_caster<T>;
+        static constexpr auto Name = Caster::Name;
+
+        static handle from_cpp(std::reference_wrapper<T> value, rv_policy p, cleanup_list *cl) noexcept
+        {
+            return Caster::from_cpp(value.get(), p, cl);
+        }
+
+        NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
+    };
+
     template <typename T, typename E>
-	struct type_caster<diplomat::result<T, E>>
-	{
-		using Value = diplomat::result<T, E>;
-		Value value;
-		Py_ssize_t size;
-		using Caster = make_caster<T>;
-		static constexpr auto Name = Caster::Name;
+    struct type_caster<diplomat::result<T, E>>
+    {
+        using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
+        using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
+        using Value = diplomat::result<T, E>;
+        // Can't store result<T, E> directly since T& will create compiler errors.
+        std::optional<U> ok_val;
+        std::optional<V> err_val;
+        bool is_ok;
+        Py_ssize_t size;
+        using Caster = make_caster<U>;
+        static constexpr auto Name = Caster::Name;
 
-		static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
-		{
-			if (value.is_ok()) {
-				return Caster::from_cpp(forward_like_<T>(std::move(value).ok().value()), p, cl);
-			}
+        static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+        {
+            if (value.is_ok()) {
+                return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+            }
 
-			auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
-			if (errorPyV.is_valid())
-			{
-				PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
-			}
-			else
-			{
-				char error_msg[512];
-				snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
-				PyErr_SetString(PyExc_Exception, error_msg);
-			}
+            auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+            if (errorPyV.is_valid())
+            {
+                PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+            }
+            else
+            {
+                char error_msg[512];
+                snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+                PyErr_SetString(PyExc_Exception, error_msg);
+            }
 
             return nullptr;
-		}
+        }
+        
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { 
+            if (is_ok) {
+                return diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
+            } else {
+                return diplomat::Err<E>(forward_like_<V>(err_val.value()));
+            }
+        }
 
-		NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
-	};
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept  {
+            uint8_t local_flags = flags_for_local_caster<U>(flags);
+
+            // We raise an exception above, but I think it's okay just to check if our conversion succeeds:
+            auto caster = make_caster<T>();
+            if (caster.from_python(src, local_flags, cleanup)) {
+                is_ok = true;
+                if constexpr(std::is_reference_v<T>) {
+                    ok_val = std::optional(std::reference_wrapper(caster.operator cast_t<T>()));
+                } else {
+                    ok_val = std::optional(caster.operator cast_t<T>());
+                }
+                return true;
+            } else {
+                auto err_caster = make_caster<E>();
+                uint8_t err_local_flags = flags_for_local_caster<E>(flags);
+                if (err_caster.from_python(src, err_local_flags, cleanup)) {
+                    is_ok = false;
+                    if constexpr(std::is_reference_v<E>) {
+                        err_val = std::optional(std::reference_wrapper(err_caster.operator cast_t<E>()));
+                    } else {
+                        err_val = std::optional(err_caster.operator cast_t<E>());
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
+    };
 
     template <typename T, std::size_t E>
     class type_caster<diplomat::span<T, E>> {
@@ -149,6 +212,17 @@ namespace nanobind::detail
                     value = diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
                     return true;
                 }
+            }
+
+            // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
+            using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+
+
+            // Are we a bound vector type? If so, we can pass over data directly.
+            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                U* bound_vec = nb::inst_ptr<U>(src);
+                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                return true;
             }
 
             // Attempt to convert a native sequence. We must convert all elements & store

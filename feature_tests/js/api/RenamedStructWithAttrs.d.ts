@@ -20,5 +20,10 @@ export class RenamedStructWithAttrs {
 
     get c(): number;
 
+    /**
+     * @deprecated use Foo
+     */
+    deprecated(): void;
+
     constructor(a: boolean, b: number);
 }

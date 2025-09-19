@@ -16,8 +16,21 @@
 
 
 
+typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result { bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
+
+typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
+    const void* data;
+    DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t;
 
 AttrOpaque1* namespace_AttrOpaque1_new(void);
+
+void namespace_AttrOpaque1_test_namespaced_callback(DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t _t_cb_wrap);
+
+int32_t namespace_AttrOpaque1_mac_test(void);
+
+int32_t namespace_AttrOpaque1_hello(void);
 
 uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
 

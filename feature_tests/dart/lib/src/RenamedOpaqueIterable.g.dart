@@ -20,6 +20,7 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
     }
   }
 
+  @_DiplomatFfiUse('namespace_OpaqueIterable_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterable_destroy));
 
   RenamedOpaqueIterator get iterator {

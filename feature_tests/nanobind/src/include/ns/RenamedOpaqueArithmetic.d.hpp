@@ -14,7 +14,9 @@
 namespace ns {
 namespace capi { struct RenamedOpaqueArithmetic; }
 class RenamedOpaqueArithmetic;
-}
+} // namespace ns
+
+
 
 
 namespace ns {
@@ -28,6 +30,8 @@ class RenamedOpaqueArithmetic {
 public:
 
   inline static std::unique_ptr<ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y);
+
+  inline static std::unique_ptr<ns::RenamedOpaqueArithmetic> make(float x, float y);
 
   inline int32_t x() const;
 
@@ -49,18 +53,18 @@ public:
 
   inline void operator/=(const ns::RenamedOpaqueArithmetic& o);
 
-  inline const ns::capi::RenamedOpaqueArithmetic* AsFFI() const;
-  inline ns::capi::RenamedOpaqueArithmetic* AsFFI();
-  inline static const ns::RenamedOpaqueArithmetic* FromFFI(const ns::capi::RenamedOpaqueArithmetic* ptr);
-  inline static ns::RenamedOpaqueArithmetic* FromFFI(ns::capi::RenamedOpaqueArithmetic* ptr);
-  inline static void operator delete(void* ptr);
+    inline const ns::capi::RenamedOpaqueArithmetic* AsFFI() const;
+    inline ns::capi::RenamedOpaqueArithmetic* AsFFI();
+    inline static const ns::RenamedOpaqueArithmetic* FromFFI(const ns::capi::RenamedOpaqueArithmetic* ptr);
+    inline static ns::RenamedOpaqueArithmetic* FromFFI(ns::capi::RenamedOpaqueArithmetic* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedOpaqueArithmetic() = delete;
-  RenamedOpaqueArithmetic(const ns::RenamedOpaqueArithmetic&) = delete;
-  RenamedOpaqueArithmetic(ns::RenamedOpaqueArithmetic&&) noexcept = delete;
-  RenamedOpaqueArithmetic operator=(const ns::RenamedOpaqueArithmetic&) = delete;
-  RenamedOpaqueArithmetic operator=(ns::RenamedOpaqueArithmetic&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedOpaqueArithmetic() = delete;
+    RenamedOpaqueArithmetic(const ns::RenamedOpaqueArithmetic&) = delete;
+    RenamedOpaqueArithmetic(ns::RenamedOpaqueArithmetic&&) noexcept = delete;
+    RenamedOpaqueArithmetic operator=(const ns::RenamedOpaqueArithmetic&) = delete;
+    RenamedOpaqueArithmetic operator=(ns::RenamedOpaqueArithmetic&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

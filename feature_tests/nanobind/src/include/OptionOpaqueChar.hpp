@@ -27,28 +27,28 @@ namespace capi {
 } // namespace
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
-  diplomat::capi::OptionOpaqueChar_assert_char(this->AsFFI(),
-    ch);
+    diplomat::capi::OptionOpaqueChar_assert_char(this->AsFFI(),
+        ch);
 }
 
 inline const diplomat::capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OptionOpaqueChar*>(this);
+    return reinterpret_cast<const diplomat::capi::OptionOpaqueChar*>(this);
 }
 
 inline diplomat::capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(this);
+    return reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(this);
 }
 
 inline const OptionOpaqueChar* OptionOpaqueChar::FromFFI(const diplomat::capi::OptionOpaqueChar* ptr) {
-  return reinterpret_cast<const OptionOpaqueChar*>(ptr);
+    return reinterpret_cast<const OptionOpaqueChar*>(ptr);
 }
 
 inline OptionOpaqueChar* OptionOpaqueChar::FromFFI(diplomat::capi::OptionOpaqueChar* ptr) {
-  return reinterpret_cast<OptionOpaqueChar*>(ptr);
+    return reinterpret_cast<OptionOpaqueChar*>(ptr);
 }
 
 inline void OptionOpaqueChar::operator delete(void* ptr) {
-  diplomat::capi::OptionOpaqueChar_destroy(reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(ptr));
+    diplomat::capi::OptionOpaqueChar_destroy(reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(ptr));
 }
 
 
