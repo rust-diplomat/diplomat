@@ -2,7 +2,7 @@
 
 //! The [Diplomat](https://rust-diplomat.github.io/diplomat/) runtime crate.
 //!
-//! This crate provides helpers for crates writing `#[diplomat::bridge]` modules.
+//! This crate provides Diplomat-specific types for crates writing `#[diplomat::bridge]` modules.
 //! Include this in any crate that also depends on `diplomat`, since `#[diplomat::bridge]`
 //! will generate code that relies on types from here.
 //!
