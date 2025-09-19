@@ -1,13 +1,13 @@
 mod formatter;
 mod func;
+mod gen;
 mod header;
-mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub use self::func::FuncGenContext;
+pub use self::gen::ItemGenContext;
 pub(crate) use self::header::Header;
-pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::BackendAttrSupport;
@@ -74,7 +74,7 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
-        let context = TyGenContext {
+        let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
@@ -108,7 +108,7 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(trt.name.as_str().into());
-        let context = TyGenContext {
+        let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
@@ -136,7 +136,7 @@ pub(crate) fn run<'tcx>(
                     continue;
                 }
                 should_render = true;
-                let context = TyGenContext {
+                let context = ItemGenContext {
                     tcx,
                     formatter: &formatter,
                     errors: &errors,

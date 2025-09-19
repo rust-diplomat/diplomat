@@ -44,10 +44,10 @@ struct OpaqueTemplate<'a> {
     is_for_cpp: bool,
 }
 
-/// The context used for generating a particular type
+/// The context used for generating a particular type/func
 ///
 /// Also used by C++ generation code
-pub struct TyGenContext<'cx, 'tcx, 'header> {
+pub struct ItemGenContext<'cx, 'tcx, 'header> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
@@ -57,7 +57,7 @@ pub struct TyGenContext<'cx, 'tcx, 'header> {
     pub impl_header_path: &'header str,
 }
 
-impl<'tcx> TyGenContext<'_, 'tcx, '_> {
+impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());

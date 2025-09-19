@@ -99,7 +99,7 @@ pub(crate) fn run<'tcx>(
             formatter: &formatter,
             errors: &errors,
             config: &config.cpp_config,
-            c: crate::c::TyGenContext {
+            c: crate::c::ItemGenContext {
                 tcx,
                 formatter: &formatter.c,
                 errors: &errors,
@@ -179,7 +179,7 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter,
                 errors: &errors,
                 config: &config.cpp_config,
-                c: crate::c::TyGenContext {
+                c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.c,
                     errors: &errors,

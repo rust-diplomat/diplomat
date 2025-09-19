@@ -1,7 +1,7 @@
 use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
-use crate::c::TyGenContext as C2TyGenContext;
+use crate::c::ItemGenContext as CItemGenContext;
 use crate::cpp::func::FuncGenContext;
 use crate::cpp::func::MethodInfo;
 use crate::ErrorStore;
@@ -35,7 +35,7 @@ pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     #[allow(dead_code)] // Currently unused but could be in the future
     pub config: &'ccx super::CppConfig,
     pub errors: &'ccx ErrorStore<'tcx, String>,
-    pub c: C2TyGenContext<'ccx, 'tcx, 'header>,
+    pub c: CItemGenContext<'ccx, 'tcx, 'header>,
     pub impl_header: &'header mut Header<'ccx>,
     pub decl_header: &'header mut Header<'ccx>,
     /// Are we currently generating struct fields?

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use askama::Template;
 use diplomat_core::hir;
 
-use crate::c::{Header, TyGenContext};
+use crate::c::{Header, ItemGenContext};
 
 #[derive(Template)]
 #[template(path = "c/func_block.h.jinja", escape = "none")]
@@ -79,7 +79,7 @@ impl<'tcx> FuncGenContext<'tcx> {
         Ok(())
     }
 
-    pub(crate) fn gen_method(&mut self, method: &'tcx hir::Method, context: &TyGenContext) {
+    pub(crate) fn gen_method(&mut self, method: &'tcx hir::Method, context: &ItemGenContext) {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let abi_name = method.abi_name.to_string();
         // Right now these are the same, but we may eventually support renaming

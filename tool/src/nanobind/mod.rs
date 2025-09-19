@@ -126,7 +126,7 @@ pub(crate) fn run<'cx>(
             formatter: &formatter,
             errors: &errors,
             cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+                c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
@@ -220,7 +220,7 @@ pub(crate) fn run<'cx>(
                 formatter: &formatter,
                 errors: &errors,
                 cpp2: crate::cpp::TyGenContext {
-                    c: crate::c::TyGenContext {
+                    c: crate::c::ItemGenContext {
                         tcx,
                         formatter: &formatter.cxx.c,
                         is_for_cpp: false,
