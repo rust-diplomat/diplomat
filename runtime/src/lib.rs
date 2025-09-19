@@ -8,7 +8,7 @@
 //!
 //! This crate contains a fair number of `DiplomatFoo` types. Some, like
 //! [`DiplomatOption`], are FFI-safe versions of Rust types that can be put in
-//! a struct and passed safely over FFI. Others, like `DiplomatChar`, are simple
+//! a struct and passed safely over FFI. Others, like [`DiplomatChar`], are simple
 //! type aliases that signal to the Diplomat tool that particular semantics are desired
 //! on the C++ side.
 //!
