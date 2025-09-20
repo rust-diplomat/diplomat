@@ -39,7 +39,7 @@ export class Unnamespaced {
 
     static make(e) {
 
-        const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
+        const result = wasm.namespace_Unnamespaced_make(new RenamedAttrEnum(e).ffiValue);
 
         try {
             return new Unnamespaced(diplomatRuntime.internalConstructor, result, []);
@@ -50,7 +50,7 @@ export class Unnamespaced {
     }
 
     useNamespaced(n) {
-    wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
+    wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n instanceof AttrOpaque1Renamed ? n.ffiValue : typeError('n', 'AttrOpaque1Renamed'));
 
         try {}
 

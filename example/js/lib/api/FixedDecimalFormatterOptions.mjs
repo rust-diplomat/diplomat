@@ -78,7 +78,7 @@ export class FixedDecimalFormatterOptions {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#groupingStrategy.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, new FixedDecimalGroupingStrategy(this.#groupingStrategy).ffiValue, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#someOtherConfig, Uint8Array);
     }
 
