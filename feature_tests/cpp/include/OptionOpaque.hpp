@@ -181,7 +181,7 @@ inline size_t somelib::OptionOpaque::accepts_option_str(std::optional<std::strin
     return result;
 }
 
-inline bool somelib::OptionOpaque::accepts_option_str_slice(std::optional<somelib::diplomat::span<const std::string_view>> arg, uint8_t sentinel) {
+inline bool somelib::OptionOpaque::accepts_option_str_slice(std::optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (somelib::diplomat::capi::OptionStringsView{ { {reinterpret_cast<const somelib::diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionStringsView{ {}, false }),
         sentinel);
     return result;

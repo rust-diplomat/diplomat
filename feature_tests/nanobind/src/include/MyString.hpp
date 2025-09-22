@@ -60,7 +60,7 @@ inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {
     return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
-inline std::unique_ptr<MyString> MyString::new_from_first(diplomat::span<const std::string_view> v) {
+inline std::unique_ptr<MyString> MyString::new_from_first(diplomat::span<const diplomat::string_view_for_slice> v) {
     auto result = diplomat::capi::MyString_new_from_first({reinterpret_cast<const diplomat::capi::DiplomatStringView*>(v.data()), v.size()});
     return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }

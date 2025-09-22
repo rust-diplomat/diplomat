@@ -27,7 +27,7 @@ public:
 
   inline static std::unique_ptr<MyString> new_owned(std::string_view v);
 
-  inline static std::unique_ptr<MyString> new_from_first(diplomat::span<const std::string_view> v);
+  inline static std::unique_ptr<MyString> new_from_first(diplomat::span<const diplomat::string_view_for_slice> v);
 
   inline void set_str(std::string_view new_str);
 

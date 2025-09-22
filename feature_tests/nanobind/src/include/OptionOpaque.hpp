@@ -181,7 +181,7 @@ inline size_t OptionOpaque::accepts_option_str(std::optional<std::string_view> a
     return result;
 }
 
-inline bool OptionOpaque::accepts_option_str_slice(std::optional<diplomat::span<const std::string_view>> arg, uint8_t sentinel) {
+inline bool OptionOpaque::accepts_option_str_slice(std::optional<diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel) {
     auto result = diplomat::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (diplomat::capi::OptionStringsView{ { {reinterpret_cast<const diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (diplomat::capi::OptionStringsView{ {}, false }),
         sentinel);
     return result;
