@@ -266,6 +266,26 @@ namespace nanobind::detail
             }
         }
     };
+
+    template <>
+    struct type_caster<diplomat::string_view_for_slice> {
+        NB_TYPE_CASTER(diplomat::string_view_for_slice, const_name("str"))
+
+        bool from_python(handle src, uint8_t, cleanup_list *) noexcept {
+            Py_ssize_t size;
+            const char *str = PyUnicode_AsUTF8AndSize(src.ptr(), &size);
+            if (!str) {
+                PyErr_Clear();
+                return false;
+            }
+            value = diplomat::string_view_for_slice(str, (size_t) size);
+            return true;
+        }
+
+        static handle from_cpp(diplomat::string_view_for_slice value, rv_policy, cleanup_list *) noexcept {
+            return PyUnicode_FromStringAndSize(value.data(), value.size());
+        }
+    };
 }
 
 // Return the inner type from next()

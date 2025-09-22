@@ -185,7 +185,11 @@ pub mod ffi {
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]
         pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>, sentinel: u8) -> bool {
             assert_eq!(sentinel, 123);
-            arg.is_some()
+            if let Some([a, _]) = arg {
+                std::str::from_utf8(a).unwrap_or("").contains("string")
+            } else {
+                false
+            }
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]

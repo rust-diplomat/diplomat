@@ -68,7 +68,7 @@ public:
 
   inline static size_t accepts_option_str(std::optional<std::string_view> arg, uint8_t sentinel);
 
-  inline static bool accepts_option_str_slice(std::optional<somelib::diplomat::span<const std::string_view>> arg, uint8_t sentinel);
+  inline static bool accepts_option_str_slice(std::optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel);
 
   inline static int64_t accepts_option_primitive(std::optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel);
 
