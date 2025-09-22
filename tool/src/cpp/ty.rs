@@ -403,7 +403,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             }
             Type::Slice(hir::Slice::Strs(encoding)) => format!(
                 "{lib_name_ns_prefix}diplomat::span<const {}>",
-                self.formatter.fmt_borrowed_str(encoding)
+                self.formatter.fmt_borrowed_str_in_slice(encoding)
             )
             .into(),
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
@@ -567,7 +567,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx, '_> {
             },
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
             Type::Slice(Slice::Strs(..)) => format!(
-                // Layout of DiplomatStringView and std::string_view are guaranteed to be identical, otherwise this would be terrible
+                // This cast is valid as diplomat::string_view_for_slice is used to ensure correct layout
                 "{{reinterpret_cast<const {lib_name_ns_prefix}diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
