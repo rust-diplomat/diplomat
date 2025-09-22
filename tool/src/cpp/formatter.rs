@@ -223,7 +223,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_borrowed_str_in_slice(&self, encoding: StringEncoding) -> Cow<'static, str> {
         match encoding {
-            StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => "diplomat::string_view_for_slice".into(),
+            StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => {
+                "diplomat::string_view_for_slice".into()
+            }
             StringEncoding::UnvalidatedUtf16 => "diplomat::u16string_view_for_slice".into(),
             _ => unreachable!(),
         }
