@@ -13,7 +13,8 @@ void add_RenamedOpaqueIterable_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<ns::RenamedOpaqueIterable>(mod, "RenamedOpaqueIterable", nb::type_slots(ns_RenamedOpaqueIterable_slots))
-        .def("__iter__", &ns::RenamedOpaqueIterable::iter, nb::keep_alive<0, 1>());
+        .def("__iter__", &ns::RenamedOpaqueIterable::iter, nb::keep_alive<0, 1>())
+        .def(nb::new_(&ns::RenamedOpaqueIterable::new_), "size"_a);
 }
 
 

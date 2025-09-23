@@ -60,6 +60,10 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable.mjs"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
 
+export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable.mjs"
+
+export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator.mjs"
+
 export { RenamedTestOpaque } from "./RenamedTestOpaque.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"

@@ -62,6 +62,10 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 
+export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable"
+
+export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator"
+
 export { RenamedTestOpaque } from "./RenamedTestOpaque"
 
 export { Unnamespaced } from "./Unnamespaced"

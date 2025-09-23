@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
         simple_assert_eq("Iteration dereference", *myIt, 1);
         myIt++;
         simple_assert_eq("Iteration manual increment", *myIt, 2);
- 
+
         auto unitVecCopy = std::vector<uint8_t>();
         for (auto element : *myIterable) {
             unitVecCopy.push_back(element);

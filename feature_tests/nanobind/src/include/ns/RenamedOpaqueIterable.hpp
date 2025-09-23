@@ -19,6 +19,8 @@ namespace ns {
 namespace capi {
     extern "C" {
 
+    ns::capi::RenamedOpaqueIterable* namespace_OpaqueIterable_new(size_t size);
+
     ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const ns::capi::RenamedOpaqueIterable* self);
 
     void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);
@@ -26,6 +28,11 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline std::unique_ptr<ns::RenamedOpaqueIterable> ns::RenamedOpaqueIterable::new_(size_t size) {
+    auto result = ns::capi::namespace_OpaqueIterable_new(size);
+    return std::unique_ptr<ns::RenamedOpaqueIterable>(ns::RenamedOpaqueIterable::FromFFI(result));
+}
 
 inline std::unique_ptr<ns::RenamedOpaqueIterator> ns::RenamedOpaqueIterable::iter() const {
     auto result = ns::capi::namespace_OpaqueIterable_iter(this->AsFFI());
