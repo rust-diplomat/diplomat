@@ -188,7 +188,7 @@ pub(crate) fn run<'tcx>(
             crate::cpp::gen::FuncImplTemplate {
                 namespace: ns.clone(),
                 methods: impls,
-                c_header: c_header,
+                c_header,
                 fmt: &formatter,
             }
             .render_into(&mut free_func_impl_header)

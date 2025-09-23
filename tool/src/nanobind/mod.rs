@@ -1,11 +1,10 @@
 mod formatter;
-mod func;
-mod gen;
+pub(crate) mod gen;
 mod root_module;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{cpp::Header, nanobind::func::FuncGenContext, Config, ErrorStore, FileMap};
+use crate::{cpp::Header, Config, ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
@@ -190,6 +189,14 @@ pub(crate) fn run<'cx>(
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
 
+    #[derive(Default)]
+    struct FuncGenContext {
+        namespace: Option<String>,
+        namespaces: Vec<String>,
+        functions: Vec<String>,
+        includes: BTreeSet<String>,
+    }
+
     let mut func_map = BTreeMap::new();
     {
         for (id, func) in tcx.all_free_functions() {
@@ -205,13 +212,14 @@ pub(crate) fn run<'cx>(
             } else {
                 func_map.insert(
                     key.clone(),
-                    FuncGenContext::new(
-                        func.attrs.namespace.clone(),
-                        formatter
+                    FuncGenContext {
+                        namespace: func.attrs.namespace.clone(),
+                        namespaces: formatter
                             .fmt_namespaces(id.into())
                             .map(|n| n.to_string())
                             .collect(),
-                    ),
+                        ..Default::default()
+                    },
                 );
                 func_map.get_mut(&key).unwrap()
             };
@@ -241,7 +249,7 @@ pub(crate) fn run<'cx>(
                 generating_struct_fields: false,
             };
 
-            context.generate_function(id, func, &mut ty_context);
+            ty_context.gen_function(id, func, &mut context.includes, &mut context.functions);
 
             drop(_guard);
         }
@@ -257,7 +265,47 @@ pub(crate) fn run<'cx>(
         } else {
             "sub_modules/diplomat_func_bindings.cpp".into()
         };
-        files.add_file(binding_impl_path, ctx.render(&mut root_module).unwrap());
+
+        #[derive(Template)]
+        #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
+        struct Binding {
+            includes: BTreeSet<String>,
+            namespace: String,
+            unqualified_type: String,
+            body: String,
+            binding_prefix: String,
+        }
+
+        let no_add_binding_fn_name_unnamespaced = if ctx.namespace.is_some() {
+            format!("{}_func", ctx.namespaces.join("_"))
+        } else {
+            "diplomat_func".into()
+        };
+
+        let binding_fn_name_unnamespaced =
+            format!("add_{no_add_binding_fn_name_unnamespaced}_binding");
+
+        let binding_fn_name = if let Some(ns) = &ctx.namespace {
+            format!("{ns}::{binding_fn_name_unnamespaced}")
+        } else {
+            binding_fn_name_unnamespaced.clone()
+        };
+
+        ItemGenContext::gen_binding_fn(
+            &mut root_module,
+            ctx.namespaces.iter().map(|s| s.as_str()),
+            binding_fn_name,
+            binding_fn_name_unnamespaced,
+        );
+        let b = Binding {
+            includes: ctx.includes.clone(),
+            namespace: ctx.namespace.clone().unwrap_or_default(),
+            unqualified_type: no_add_binding_fn_name_unnamespaced,
+            body: format!("mod\n{};", ctx.functions.join("\n")),
+            binding_prefix: String::new(),
+        };
+
+        files.add_file(binding_impl_path, b.render().unwrap());
     }
 
     // Traverse the module_fns keys list and expand into the list of submodules needing generation.
@@ -348,7 +396,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::ItemGenContext {
+            cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
@@ -427,7 +475,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::ItemGenContext {
+            cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
@@ -505,7 +553,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::ItemGenContext {
+            cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,

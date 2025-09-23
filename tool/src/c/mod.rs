@@ -141,7 +141,7 @@ pub(crate) fn run<'tcx>(
                 is_for_cpp: false,
                 id: id.into(),
                 decl_header_path: "",
-                impl_header_path: impl_header_path,
+                impl_header_path,
             };
             let (method, cbs) = context.gen_method(f, &mut impl_header);
             methods.push(method);

@@ -129,7 +129,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             let ns = ns.replace("::", "/");
             format!("{ns}/free_functions.hpp")
         } else {
-            format!("free_functions.hpp")
+            "free_functions.hpp".to_string()
         }
     }
     /// Format an enum variant.

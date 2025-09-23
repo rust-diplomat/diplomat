@@ -14,7 +14,7 @@ pub(crate) mod formatter;
 use formatter::JSFormatter;
 
 mod gen;
-use gen::{MethodsInfo, ItemGenContext};
+use gen::{ItemGenContext, MethodsInfo};
 use serde::{Deserialize, Serialize};
 mod converter;
 
