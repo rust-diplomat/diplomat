@@ -1,16 +1,14 @@
 mod formatter;
-mod func;
+mod gen;
 mod header;
-mod ty;
 
+use askama::Template;
 pub(crate) use header::Header;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
-pub(crate) use ty::TyGenContext;
-
-pub(crate) use func::FuncGenContext;
+pub(crate) use gen::ItemGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
 
@@ -95,11 +93,11 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
-        let mut context = TyGenContext {
+        let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
             config: &config.cpp_config,
-            c: crate::c::TyGenContext {
+            c: crate::c::ItemGenContext {
                 tcx,
                 formatter: &formatter.c,
                 errors: &errors,
@@ -139,76 +137,75 @@ pub(crate) fn run<'tcx>(
     }
 
     {
-        let mut func_contexts = BTreeMap::new();
-
-        for (id, f) in tcx.all_free_functions() {
-            if f.attrs.disable {
-                continue;
+        // Group free functions by namespace, removing those which are disabled
+        let mut free_func_map = HashMap::<_, Vec<_>>::new();
+        for e in tcx.all_free_functions() {
+            if !e.1.attrs.disable {
+                free_func_map
+                    .entry(e.1.attrs.namespace.clone())
+                    .or_default()
+                    .push(e);
             }
-
-            let key = if let Some(ns) = &f.attrs.namespace {
-                ns.clone()
-            } else {
-                "".into()
-            };
-
-            let impl_header_path = formatter.fmt_impl_header_path(id.into());
-            let decl_header_path = formatter.fmt_decl_header_path(id.into());
-
-            let context = if let Some(v) = func_contexts.get_mut(&key) {
-                v
-            } else {
-                func_contexts.insert(
-                    key.clone(),
-                    FuncGenContext::new(
-                        impl_header_path.clone(),
-                        decl_header_path.clone(),
-                        f.attrs.namespace.clone(),
-                        lib_name,
-                        true,
-                        &formatter,
-                    ),
-                );
-                func_contexts.get_mut(&key).unwrap()
-            };
-
-            let mut decl_header_clone = header::Header::new("".into(), lib_name);
-            let mut impl_header_clone = header::Header::new("".into(), lib_name);
-
-            let mut ty_context = TyGenContext {
-                formatter: &formatter,
-                errors: &errors,
-                config: &config.cpp_config,
-                c: crate::c::TyGenContext {
-                    tcx,
-                    formatter: &formatter.c,
-                    errors: &errors,
-                    is_for_cpp: true,
-                    id: id.into(),
-                    decl_header_path: "",
-                    impl_header_path: &impl_header_path,
-                },
-                impl_header: &mut impl_header_clone,
-                decl_header: &mut decl_header_clone,
-                generating_struct_fields: false,
-            };
-
-            context.generate_function(id, f, &mut ty_context);
-            context
-                .impl_header
-                .includes
-                .append(&mut impl_header_clone.includes);
-            context
-                .decl_header
-                .includes
-                .append(&mut decl_header_clone.includes);
         }
 
-        for (_, ctx) in func_contexts.iter_mut() {
-            ctx.impl_header.decl_include = Some(ctx.decl_header.path.clone());
-            ctx.render().unwrap();
-            files.add_file(ctx.impl_header.path.clone(), ctx.impl_header.to_string());
-            files.add_file(ctx.decl_header.path.clone(), ctx.decl_header.to_string());
+        for (ns, funcs) in free_func_map {
+            let impl_header_path = formatter.fmt_free_function_header_path(ns.clone());
+
+            let mut free_func_impl_header = header::Header::new(impl_header_path.clone(), lib_name);
+            let mut decl_header =
+                header::Header::new(impl_header_path.replace(".h", ".d.h"), lib_name);
+            let mut c_header = crate::c::Header::new(Default::default(), true);
+            let mut c_template = crate::c::gen::FuncBlockTemplate {
+                is_for_cpp: true,
+                ..Default::default()
+            };
+            let (decls, impls) = funcs
+                .into_iter()
+                .filter_map(|(id, func)| {
+                    let mut ty_context = ItemGenContext {
+                        formatter: &formatter,
+                        errors: &errors,
+                        config: &config.cpp_config,
+                        c: crate::c::ItemGenContext {
+                            tcx,
+                            formatter: &formatter.c,
+                            errors: &errors,
+                            is_for_cpp: true,
+                            id: id.into(),
+                            impl_header_path: &impl_header_path,
+                            decl_header_path: "",
+                        },
+                        impl_header: &mut free_func_impl_header,
+                        decl_header: &mut decl_header,
+                        generating_struct_fields: false,
+                    };
+                    ty_context.gen_function(id, func, &mut c_header, &mut c_template)
+                })
+                .unzip();
+
+            c_template.render_into(&mut c_header).unwrap();
+
+            crate::cpp::gen::FuncImplTemplate {
+                namespace: ns.clone(),
+                methods: impls,
+                c_header,
+                fmt: &formatter,
+            }
+            .render_into(&mut free_func_impl_header)
+            .unwrap();
+
+            crate::cpp::gen::FuncDeclTemplate {
+                namespace: ns.clone(),
+                methods: decls,
+                c_header: crate::c::Header::new(Default::default(), true),
+                fmt: &formatter,
+            }
+            .render_into(&mut decl_header)
+            .unwrap();
+
+            free_func_impl_header.decl_include = Some(decl_header.path.clone());
+            files.add_file(impl_header_path, free_func_impl_header.to_string());
+            files.add_file(decl_header.path.clone(), decl_header.to_string());
         }
     }
 
@@ -224,7 +221,7 @@ mod test {
     use crate::cpp::header;
     use crate::ErrorStore;
 
-    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
+    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, ItemGenContext};
 
     #[test]
     fn test_rename_param() {
@@ -255,11 +252,11 @@ mod test {
             let mut decl_header = header::Header::new("decl_thing".into(), None);
             let mut impl_header = header::Header::new("impl_thing".into(), None);
 
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 errors: &error_store,
                 formatter: &formatter,
                 config: &config.cpp_config,
-                c: crate::c::TyGenContext {
+                c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,
                     errors: &error_store,

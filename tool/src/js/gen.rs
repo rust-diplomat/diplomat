@@ -1,4 +1,4 @@
-//! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
+//! Built around the [`ItemGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
 //! See [`converter`] for more conversion specific functions.
 
 use std::alloc::Layout;
@@ -24,7 +24,7 @@ use crate::ErrorStore;
 use super::converter::{JsToCConversionContext, StructBorrowContext};
 
 /// Represents list of imports that our Type is going to use.
-/// Resolved in [`TyGenContext::generate_base`]
+/// Resolved in [`ItemGenContext::generate_base`]
 pub(super) struct Imports<'tcx> {
     pub js: BTreeSet<ImportInfo<'tcx>>,
     pub ts: BTreeSet<ImportInfo<'tcx>>,
@@ -33,18 +33,18 @@ pub(super) struct Imports<'tcx> {
 /// Represents context for generating a Javascript class.
 ///
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
-pub(super) struct TyGenContext<'ctx, 'tcx> {
+pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub type_name: Cow<'tcx, str>,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
-    /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
+    /// Imports, stored as a type name. Imports are fully resolved in [`ItemGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<Imports<'tcx>>,
     #[allow(dead_code)]
     pub config: JsConfig,
 }
 
-impl<'tcx> TyGenContext<'_, 'tcx> {
+impl<'tcx> ItemGenContext<'_, 'tcx> {
     /// Generates the code at the top of every `.d.ts` and `.mjs` file.
     ///
     /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used.
@@ -421,7 +421,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         .unwrap()
     }
 
-    /// Generate required method info for all other [`TyGenContext::generate_*`] calls.
+    /// Generate required method info for all other [`ItemGenContext::generate_*`] calls.
     ///
     /// For re-usability between `.d.ts` and `.mjs` files.
     pub(super) fn generate_method(
@@ -685,7 +685,7 @@ pub(super) struct MethodInfo<'info> {
     pub parameters: Vec<ParamInfo<'info>>,
     /// See [`SliceParam`] for info on how this array is used.
     pub slice_params: Vec<SliceParam<'info>>,
-    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`TyGenContext::gen_js_to_c_for_type`] for more.
+    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`ItemGenContext::gen_js_to_c_for_type`] for more.
     pub param_conversions: Vec<Cow<'info, str>>,
 
     /// The return type, for `.d.ts` files.
@@ -706,7 +706,7 @@ pub(super) struct MethodInfo<'info> {
     doc_str: String,
 }
 
-/// See [`TyGenContext::generate_special_method`].
+/// See [`ItemGenContext::generate_special_method`].
 /// Used in `js_class.js.jinja`
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
@@ -779,7 +779,7 @@ impl Eq for ImportInfo<'_> {}
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`TyGenContext::gen_c_to_js_for_type`] for more.)
+/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`ItemGenContext::gen_c_to_js_for_type`] for more.)
 ///
 /// Modified from dart backend.
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {

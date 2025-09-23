@@ -14,7 +14,7 @@ pub(crate) mod formatter;
 use formatter::JSFormatter;
 
 mod gen;
-use gen::{MethodsInfo, TyGenContext};
+use gen::{ItemGenContext, MethodsInfo};
 use serde::{Deserialize, Serialize};
 mod converter;
 
@@ -113,7 +113,7 @@ pub(crate) fn run<'tcx>(
 
         let type_name = formatter.fmt_type_name(id);
 
-        let context = TyGenContext {
+        let context = ItemGenContext {
             tcx,
             type_name,
             formatter: &formatter,

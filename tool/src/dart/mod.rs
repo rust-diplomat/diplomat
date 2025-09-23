@@ -62,7 +62,7 @@ pub(crate) fn run<'cx>(
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
 
-    let mut context = TyGenContext {
+    let mut context = ItemGenContext {
         tcx,
         errors: &errors,
         helper_classes: &mut helper_classes,
@@ -143,14 +143,14 @@ fn render_class(
     .unwrap()
 }
 
-struct TyGenContext<'a, 'cx> {
+struct ItemGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a DartFormatter<'cx>,
     errors: &'a ErrorStore<'cx, String>,
     helper_classes: &'a mut BTreeMap<String, String>,
 }
 
-impl<'cx> TyGenContext<'_, 'cx> {
+impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen(&mut self, id: TypeId) -> (String, String) {
         let ty = self.tcx.resolve_type(id);
 
