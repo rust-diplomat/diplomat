@@ -1,6 +1,5 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use crate::c::func::{CallbackAndStructDef, FuncGenContext};
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
@@ -42,6 +41,34 @@ struct TraitTemplate<'a> {
 struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
     is_for_cpp: bool,
+}
+
+#[derive(Template, Default)]
+#[template(path = "c/func_block.h.jinja", escape = "none")]
+/// Represents a block of functions. Can belong to a method, or just a list of free functions.
+pub struct FuncBlockTemplate<'a> {
+    pub methods: Vec<MethodTemplate<'a>>,
+    pub cb_structs_and_defs: Vec<CallbackAndStructDef>,
+    pub is_for_cpp: bool,
+    pub ty_name: Option<Cow<'a, str>>,
+    pub dtor_name: Option<&'a str>,
+}
+
+/// The C representation of a Rust method.
+/// Created for [`FuncBlockTemplate`] to use in generation.
+pub struct MethodTemplate<'a> {
+    return_ty: Cow<'a, str>,
+    params: String,
+    abi_name: &'a str,
+}
+
+/// Information for constructing a C struct required for callback return informatioon.
+#[derive(Clone)]
+pub struct CallbackAndStructDef {
+    name: String,
+    params_types: String,
+    return_type: String,
+    return_struct: Option<String>,
 }
 
 /// The context used for generating a particular type/func
@@ -177,9 +204,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
     }
 
     pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
-        let impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
-
-        let mut impl_context = FuncGenContext::new(impl_header, self.is_for_cpp);
+        let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+        let mut methods = vec![];
+        let mut cb_structs_and_defs = vec![];
 
         for method in ty.methods() {
             if method.attrs.disable {
@@ -190,10 +217,12 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 self.tcx.fmt_symbol_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
-            impl_context.gen_method(method, self);
+            let (method_chunk, callback_defs) = self.gen_method(method, &mut impl_header);
+            methods.push(method_chunk);
+            cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = Some(self.formatter.fmt_type_name(self.id.try_into().unwrap()));
 
         let dtor_name = if let TypeDef::Opaque(opaque) = ty {
             Some(opaque.dtor_abi_name.as_str())
@@ -201,9 +230,16 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
             None
         };
 
-        impl_context.render(Some(ty_name), dtor_name).unwrap();
+        FuncBlockTemplate {
+            ty_name,
+            methods,
+            cb_structs_and_defs,
+            dtor_name,
+            is_for_cpp: self.is_for_cpp,
+        }
+        .render_into(&mut impl_header)
+        .unwrap();
 
-        let impl_header = &mut impl_context.header;
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
         // In some cases like generating decls for `self` parameters,
@@ -213,7 +249,96 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         impl_header.includes.remove(self.impl_header_path);
         impl_header.includes.remove(self.decl_header_path);
 
-        impl_context.header
+        impl_header
+    }
+
+    pub fn gen_method(
+        &self,
+        method: &'tcx hir::Method,
+        header: &mut Header,
+    ) -> (MethodTemplate<'tcx>, Vec<CallbackAndStructDef>) {
+        use diplomat_core::hir::{ReturnType, SuccessType};
+        let abi_name = method.abi_name.as_str();
+        // Right now these are the same, but we may eventually support renaming
+        // and should be sure to use method_name when naming the result type
+        let method_name = abi_name;
+        let mut param_decls = Vec::new();
+        let mut cb_structs_and_defs = vec![];
+        if let Some(ref self_ty) = method.param_self {
+            let self_ty = self_ty.ty.clone().into();
+            param_decls.push(self.gen_ty_decl(
+                &self_ty,
+                "self",
+                header,
+                Some(abi_name.into()),
+                &mut cb_structs_and_defs,
+            ))
+        }
+
+        for param in &method.params {
+            param_decls.push(self.gen_ty_decl(
+                &param.ty,
+                param.name.as_str(),
+                header,
+                Some(abi_name.into()),
+                &mut cb_structs_and_defs,
+            ));
+        }
+
+        let return_ty: Cow<str> = match method.output {
+            ReturnType::Infallible(SuccessType::Unit) => "void".into(),
+            ReturnType::Infallible(SuccessType::Write) => {
+                param_decls.push((
+                    format!("{}*", self.formatter.fmt_write_name()).into(),
+                    "write".into(),
+                ));
+                "void".into()
+            }
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
+            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                // Result<T, ()> and Option<T> are the same on the ABI
+                let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
+                    Some(e)
+                } else {
+                    None
+                };
+                let ok_ty = match ok {
+                    SuccessType::Write => {
+                        param_decls.push((
+                            format!("{}*", self.formatter.fmt_write_name()).into(),
+                            "write".into(),
+                        ));
+                        None
+                    }
+                    SuccessType::Unit => None,
+                    SuccessType::OutType(o) => Some(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                self.gen_result_ty(method_name, ok_ty, err, header).into()
+            }
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        use itertools::Itertools;
+        let params = if !param_decls.is_empty() {
+            param_decls
+                .into_iter()
+                .map(|(ty, name)| {
+                    format!("{ty} {name}", name = self.formatter.fmt_identifier(name))
+                })
+                .join(", ")
+        } else {
+            "void".to_owned()
+        };
+
+        (
+            MethodTemplate {
+                abi_name,
+                return_ty,
+                params,
+            },
+            cb_structs_and_defs,
+        )
     }
 
     fn gen_result_ty_struct<P: hir::TyPosition>(

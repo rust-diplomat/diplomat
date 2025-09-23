@@ -125,7 +125,7 @@ pub(crate) fn run<'cx>(
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
+            cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.cxx.c,
@@ -148,7 +148,7 @@ pub(crate) fn run<'cx>(
         };
 
         context
-            .cpp2
+            .cpp
             .impl_header
             .includes
             .insert(cpp_impl_path.clone());
@@ -181,7 +181,7 @@ pub(crate) fn run<'cx>(
         drop(guard);
 
         let binding_impl = Binding {
-            includes: context.cpp2.impl_header.includes.clone(),
+            includes: context.cpp.impl_header.includes.clone(),
             namespace: formatter.fmt_namespaces(id.into()).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
@@ -219,7 +219,7 @@ pub(crate) fn run<'cx>(
             let mut ty_context = TyGenContext {
                 formatter: &formatter,
                 errors: &errors,
-                cpp2: crate::cpp::TyGenContext {
+                cpp: crate::cpp::ItemGenContext {
                     c: crate::c::ItemGenContext {
                         tcx,
                         formatter: &formatter.cxx.c,
@@ -348,8 +348,8 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::ItemGenContext {
+                c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
@@ -427,8 +427,8 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::ItemGenContext {
+                c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
@@ -505,8 +505,8 @@ mod test {
         let mut context = crate::nanobind::TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            cpp2: crate::cpp::TyGenContext {
-                c: crate::c::TyGenContext {
+            cpp2: crate::cpp::ItemGenContext {
+                c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,

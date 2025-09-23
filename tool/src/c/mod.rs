@@ -1,15 +1,14 @@
 mod formatter;
-mod func;
-mod gen;
+pub(crate) mod gen;
 mod header;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
-pub use self::func::FuncGenContext;
 pub use self::gen::ItemGenContext;
 pub(crate) use self::header::Header;
 
 use crate::{ErrorStore, FileMap};
+use askama::Template;
 use diplomat_core::hir::BackendAttrSupport;
 use diplomat_core::hir::{self, DocsUrlGenerator};
 
@@ -125,37 +124,41 @@ pub(crate) fn run<'tcx>(
 
     if tcx.all_free_functions().next().is_some() {
         // Loop over free functions, put them all in one file:
-        let header = Header::new("diplomat_free_functions.h".into(), false);
+        let impl_header_path = "diplomat_free_functions.h";
+        let mut impl_header = Header::new(impl_header_path.into(), false);
 
-        let mut impl_context = FuncGenContext::new(header, false);
+        let mut methods = vec![];
+        let mut cb_structs_and_defs = vec![];
 
-        {
-            let mut should_render = false;
-            for (id, f) in tcx.all_free_functions() {
-                if f.attrs.disable {
-                    continue;
-                }
-                should_render = true;
-                let context = ItemGenContext {
-                    tcx,
-                    formatter: &formatter,
-                    errors: &errors,
-                    is_for_cpp: false,
-                    id: id.into(),
-                    decl_header_path: "diplomat_free_functions.d.h",
-                    impl_header_path: "diplomat_free_functions.h",
-                };
-
-                impl_context.gen_method(f, &context);
+        for (id, f) in tcx.all_free_functions() {
+            if f.attrs.disable {
+                continue;
             }
+            let context = ItemGenContext {
+                tcx,
+                formatter: &formatter,
+                errors: &errors,
+                is_for_cpp: false,
+                id: id.into(),
+                decl_header_path: "",
+                impl_header_path: impl_header_path,
+            };
+            let (method, cbs) = context.gen_method(f, &mut impl_header);
+            methods.push(method);
+            cb_structs_and_defs.extend(cbs);
+        }
 
-            if should_render {
-                impl_context.render(None, None).unwrap();
-                files.add_file(
-                    "diplomat_free_functions.h".into(),
-                    impl_context.header.to_string(),
-                );
-            }
+        if !methods.is_empty() || !cb_structs_and_defs.is_empty() {
+            let funcs = crate::c::gen::FuncBlockTemplate {
+                methods,
+                cb_structs_and_defs,
+                is_for_cpp: false,
+                ty_name: None,
+                dtor_name: None,
+            };
+
+            funcs.render_into(&mut impl_header).unwrap();
+            files.add_file(impl_header.path.clone(), impl_header.to_string());
         }
     }
 

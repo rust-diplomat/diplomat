@@ -130,7 +130,7 @@ impl<'tcx> FuncGenContext {
             return None;
         }
         let _guard = context.errors.set_context_method(
-            context.cpp2.c.tcx.fmt_symbol_name_diagnostics(id),
+            context.cpp.c.tcx.fmt_symbol_name_diagnostics(id),
             method.name.as_str().into(),
         );
         let cpp_method_name = context.formatter.cxx.fmt_method_name(method);
@@ -178,7 +178,7 @@ impl<'tcx> FuncGenContext {
                 .collect(),
         };
 
-        let mut visitor = method.borrowing_param_visitor(context.cpp2.c.tcx, false);
+        let mut visitor = method.borrowing_param_visitor(context.cpp.c.tcx, false);
 
         // Collect all the relevant borrowed params, with self in position 1 if present
         let mut param_borrows = Vec::new();

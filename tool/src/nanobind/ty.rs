@@ -1,7 +1,7 @@
 use super::root_module::RootModule;
 use super::PyFormatter;
 use crate::nanobind::func::{FuncGenContext, MethodInfo};
-use crate::{cpp::TyGenContext as Cpp2TyGenContext, hir, ErrorStore};
+use crate::{cpp::ItemGenContext as CppItemGenContext, hir, ErrorStore};
 use askama::Template;
 use diplomat_core::hir::{OpaqueOwner, StructPathLike, SymbolId, TyPosition, Type, TypeId};
 use std::borrow::Cow;
@@ -21,7 +21,7 @@ pub(super) struct NamedType<'a> {
 pub(super) struct TyGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
-    pub cpp2: Cpp2TyGenContext<'cx, 'tcx, 'cx>,
+    pub cpp: CppItemGenContext<'cx, 'tcx, 'cx>,
     pub root_module: &'cx mut RootModule<'tcx>,
     pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
     /// Are we currently generating struct fields?
@@ -273,7 +273,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         'ccx: 'a,
     {
         let var_name = self.formatter.cxx.fmt_param_name(var_name);
-        let type_name = self.cpp2.gen_type_name(ty);
+        let type_name = self.cpp.gen_type_name(ty);
 
         NamedType {
             var_name,
@@ -285,13 +285,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         let id = st.id();
         let type_name = self.formatter.cxx.fmt_type_name(id);
 
-        let def = self.cpp2.c.tcx.resolve_type(id);
+        let def = self.cpp.c.tcx.resolve_type(id);
         if def.attrs().disable {
             self.errors
                 .push_error(format!("Found usage of disabled type {type_name}"))
         }
 
-        self.cpp2
+        self.cpp
             .impl_header
             .includes
             .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
@@ -316,7 +316,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.formatter.cxx.fmt_type_name(op_id);
-                let def = self.cpp2.c.tcx.resolve_type(op_id);
+                let def = self.cpp.c.tcx.resolve_type(op_id);
 
                 if def.attrs().disable {
                     self.errors
@@ -334,7 +334,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 };
                 let ret = ret.into_owned().into();
 
-                self.cpp2
+                self.cpp
                     .impl_header
                     .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(op_id.into()));
@@ -343,13 +343,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.cpp2.c.tcx.resolve_type(id);
+                let def = self.cpp.c.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.cpp2
+                self.cpp
                     .impl_header
                     .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
@@ -358,13 +358,13 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.cpp2.c.tcx.resolve_type(id);
+                let def = self.cpp.c.tcx.resolve_type(id);
                 if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                self.cpp2
+                self.cpp
                     .impl_header
                     .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));

@@ -83,20 +83,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
         let (name, namespace) = match id {
-            SymbolId::FunctionId(f) => {
-                let resolved = self.c.tcx().resolve_function(f);
-                (
-                    "free_functions".to_string(),
-                    resolved.attrs.namespace.clone(),
-                )
-            }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
                 let type_name = resolved
                     .attrs()
                     .rename
                     .apply(resolved.name().as_str().into());
-                (type_name.into(), resolved.attrs().namespace.clone())
+                (type_name.to_string(), resolved.attrs().namespace.clone())
             }
             _ => panic!("Unsupported SymbolId {id:?}"),
         };
@@ -112,20 +105,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
         let (name, namespace) = match id {
-            SymbolId::FunctionId(f) => {
-                let resolved = self.c.tcx().resolve_function(f);
-                (
-                    "free_functions".to_string(),
-                    resolved.attrs.namespace.clone(),
-                )
-            }
             SymbolId::TypeId(ty) => {
                 let resolved = self.c.tcx().resolve_type(ty);
                 let type_name = resolved
                     .attrs()
                     .rename
                     .apply(resolved.name().as_str().into());
-                (type_name.into(), resolved.attrs().namespace.clone())
+                (type_name.to_string(), resolved.attrs().namespace.clone())
             }
             _ => panic!("Unsupported SymbolId {id:?}"),
         };
@@ -138,6 +124,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
+    pub fn fmt_free_function_header_path(&self, namespace: Option<String>) -> String {
+        if let Some(ns) = namespace {
+            let ns = ns.replace("::", "/");
+            format!("{ns}/free_functions.hpp")
+        } else {
+            format!("free_functions.hpp")
+        }
+    }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         variant.attrs.rename.apply(variant.name.as_str().into())
