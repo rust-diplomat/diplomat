@@ -12,6 +12,8 @@
 #include "../diplomat_runtime.hpp"
 namespace somelib {
 namespace ns {
+namespace capi { struct RenamedOpaqueIterable; }
+class RenamedOpaqueIterable;
 namespace capi { struct RenamedOpaqueIterator; }
 class RenamedOpaqueIterator;
 } // namespace ns
@@ -28,6 +30,8 @@ namespace capi {
 namespace somelib::ns {
 class RenamedOpaqueIterable {
 public:
+
+  inline static std::unique_ptr<somelib::ns::RenamedOpaqueIterable> new_(size_t size);
 
   inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> iter() const;
   inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator> begin() const;

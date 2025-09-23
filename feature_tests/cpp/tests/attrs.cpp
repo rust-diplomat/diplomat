@@ -3,6 +3,8 @@
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
 #include "../include/ns/RenamedAttrEnum.hpp"
 #include "../include/ns/RenamedMyIterable.hpp"
+#include "../include/ns/RenamedOpaqueIterable.hpp"
+#include "../include/ns/RenamedOpaqueRefIterable.hpp"
 #include "../include/ns/RenamedComparable.hpp"
 #include "../include/ns/RenamedVectorTest.hpp"
 #include "../include/Unnamespaced.hpp"
@@ -50,21 +52,45 @@ int main(int argc, char* argv[]) {
     simple_assert_eq("vector indexer", (*vec)[2].has_value(), false);
 
 
-    auto uintVec = std::vector<uint8_t>{ 1, 2, 3, 4 };
-    auto myIterable = ns::RenamedMyIterable::new_(diplomat::span<const uint8_t>{uintVec.data(), uintVec.size()});
-    auto myIt = myIterable->begin();
+    // Iterators returning std::optional types
+    {
+        auto uintVec = std::vector<uint8_t>{ 1, 2, 3, 4 };
+        auto myIterable = ns::RenamedMyIterable::new_(diplomat::span<const uint8_t>{uintVec.data(), uintVec.size()});
+        auto myIt = myIterable->begin();
 
-    simple_assert_eq("Iteration dereference", *myIt, 1);
-    myIt++;
-    simple_assert_eq("Iteration manual increment", *myIt, 2);
+        simple_assert_eq("Iteration dereference", *myIt, 1);
+        myIt++;
+        simple_assert_eq("Iteration manual increment", *myIt, 2);
 
-    auto unitVecCopy = std::vector<uint8_t>();
-    for (auto element : *myIterable) {
-        unitVecCopy.push_back(element);
+        auto unitVecCopy = std::vector<uint8_t>();
+        for (auto element : *myIterable) {
+            unitVecCopy.push_back(element);
+        }
+        simple_assert("For loop iteration", uintVec == unitVecCopy);
+        simple_assert("stl-algorithm iteration failed", std::equal(uintVec.begin(), uintVec.end(), myIterable->begin()));
     }
-    simple_assert("For loop iteration", uintVec == unitVecCopy);
 
-    simple_assert("stl-algorithm iteration failed", std::equal(uintVec.begin(), uintVec.end(), myIterable->begin()));
+    // Iterators returning std::unique_ptr opaque types
+    {
+        auto myOpaqueIterable = ns::RenamedOpaqueIterable::new_(2);
+        size_t count = 0;
+        for (auto& element : *myOpaqueIterable) {
+            simple_assert("Opaque type access", element.method_renamed() == 77);
+            count++;
+        }
+        simple_assert("For loop iteration count", count == 2);
+    }
+
+    // Iterators returning references (pointers internally) to opaque types
+    {
+        auto myOpaqueRefIterable = ns::RenamedOpaqueRefIterable::new_(2);
+        size_t count = 0;
+        for (auto& element : *myOpaqueRefIterable) {
+            simple_assert("Opaque type access", element.method_renamed() == 77);
+            count++;
+        }
+        simple_assert("For loop iteration count", count == 2);
+    }
 
     auto cmpA = ns::RenamedComparable::new_(0);
     auto cmpB = ns::RenamedComparable::new_(0);

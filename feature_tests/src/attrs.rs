@@ -190,6 +190,11 @@ pub mod ffi {
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
     impl OpaqueIterable {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(size: usize) -> Box<Self> {
+            Box::new(Self(vec![AttrOpaque1; size]))
+        }
+
         #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
             Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
@@ -203,6 +208,32 @@ pub mod ffi {
         #[diplomat::attr(auto, iterator)]
         pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {
             self.0.next().map(Box::new)
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueRefIterable(Vec<AttrOpaque1>);
+
+    impl OpaqueRefIterable {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(size: usize) -> Box<Self> {
+            Box::new(Self(vec![AttrOpaque1; size]))
+        }
+
+        #[diplomat::attr(auto, iterable)]
+        pub fn iter<'a>(&'a self) -> Box<OpaqueRefIterator<'a>> {
+            Box::new(OpaqueRefIterator(self.0.iter()))
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueRefIterator<'a>(std::slice::Iter<'a, AttrOpaque1>);
+    impl<'a> OpaqueRefIterator<'a> {
+        #[diplomat::attr(auto, iterator)]
+        pub fn next(&'a mut self) -> Option<&'a AttrOpaque1> {
+            self.0.next()
         }
     }
 

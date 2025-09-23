@@ -78,6 +78,8 @@ void add_RenamedMyIterator_binding(nb::module_);
 void add_RenamedOpaqueArithmetic_binding(nb::module_);
 void add_RenamedOpaqueIterable_binding(nb::module_);
 void add_RenamedOpaqueIterator_binding(nb::module_);
+void add_RenamedOpaqueRefIterable_binding(nb::module_);
+void add_RenamedOpaqueRefIterator_binding(nb::module_);
 void add_RenamedTestOpaque_binding(nb::module_);
 void add_RenamedVectorTest_binding(nb::module_);
 void add_RenamedAttrEnum_binding(nb::module_);
@@ -215,6 +217,8 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_RenamedOpaqueArithmetic_binding(somelib_ns_mod);
     ns::add_RenamedOpaqueIterable_binding(somelib_ns_mod);
     ns::add_RenamedOpaqueIterator_binding(somelib_ns_mod);
+    ns::add_RenamedOpaqueRefIterable_binding(somelib_ns_mod);
+    ns::add_RenamedOpaqueRefIterator_binding(somelib_ns_mod);
     ns::add_RenamedTestOpaque_binding(somelib_ns_mod);
     ns::add_RenamedVectorTest_binding(somelib_ns_mod);
     ns::add_RenamedAttrEnum_binding(somelib_ns_mod);
