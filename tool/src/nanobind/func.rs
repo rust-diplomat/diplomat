@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::BTreeSet};
 use askama::Template;
 use diplomat_core::hir::{self, FunctionId, SymbolId};
 
-use crate::nanobind::{ty::NamedType, RootModule, TyGenContext};
+use crate::nanobind::{gen::NamedType, ItemGenContext, RootModule};
 
 use diplomat_core::hir::Type;
 
@@ -58,7 +58,7 @@ impl<'tcx> FuncGenContext {
         &mut self,
         id: FunctionId,
         func: &'tcx hir::Method,
-        context: &mut TyGenContext<'b, 'tcx>,
+        context: &mut ItemGenContext<'b, 'tcx>,
     ) {
         context.gen_modules(id.into(), None);
         let info = Self::gen_method_info(id.into(), func, context);
@@ -105,7 +105,7 @@ impl<'tcx> FuncGenContext {
             binding_fn_name_unnamespaced.clone()
         };
 
-        TyGenContext::gen_binding_fn(
+        ItemGenContext::gen_binding_fn(
             root_module,
             self.namespaces.iter().map(|s| s.as_str()),
             binding_fn_name,
@@ -124,7 +124,7 @@ impl<'tcx> FuncGenContext {
     pub(super) fn gen_method_info<'a, 'b>(
         id: SymbolId,
         method: &'a hir::Method,
-        context: &mut TyGenContext<'b, 'a>,
+        context: &mut ItemGenContext<'b, 'a>,
     ) -> Option<MethodInfo<'b>> {
         if method.attrs.disable {
             return None;

@@ -221,7 +221,7 @@ mod test {
     use crate::cpp::header;
     use crate::ErrorStore;
 
-    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, TyGenContext};
+    use super::{formatter::test::new_tcx, formatter::Cpp2Formatter, ItemGenContext};
 
     #[test]
     fn test_rename_param() {
@@ -252,11 +252,11 @@ mod test {
             let mut decl_header = header::Header::new("decl_thing".into(), None);
             let mut impl_header = header::Header::new("impl_thing".into(), None);
 
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 errors: &error_store,
                 formatter: &formatter,
                 config: &config.cpp_config,
-                c: crate::c::TyGenContext {
+                c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,
                     errors: &error_store,

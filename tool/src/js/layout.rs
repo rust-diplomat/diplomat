@@ -1,6 +1,6 @@
 //! The corpse of the old AST backend, wearing a fresh coat of paint. AST used to have this  `layout.rs` file for figuring out how types would look in memory.
 //!
-//! Every backend needed this. But now only Javascript does. And we pretty much only use it for structs; WASM sometimes requires us to create an appropriately sized buffer for a struct. It sometimes also requires us to pad method signatures when inserting a flattened structure (see [`super::type_generation::TyGenContext::gen_c_to_js_for_return_type`] or [`super::type_generation::TyGenContext::generate_fields`] for more).
+//! Every backend needed this. But now only Javascript does. And we pretty much only use it for structs; WASM sometimes requires us to create an appropriately sized buffer for a struct. It sometimes also requires us to pad method signatures when inserting a flattened structure (see [`super::type_generation::ItemGenContext::gen_c_to_js_for_return_type`] or [`super::type_generation::ItemGenContext::generate_fields`] for more).
 use std::ops::{Add, AddAssign};
 use std::{alloc::Layout, cmp::max};
 

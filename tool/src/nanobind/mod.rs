@@ -1,7 +1,7 @@
 mod formatter;
 mod func;
+mod gen;
 mod root_module;
-mod ty;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -9,10 +9,10 @@ use crate::{cpp::Header, nanobind::func::FuncGenContext, Config, ErrorStore, Fil
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
+use gen::ItemGenContext;
 use itertools::Itertools;
 use root_module::RootModule;
 use serde::{Deserialize, Serialize};
-use ty::TyGenContext;
 
 use crate::cpp;
 
@@ -122,7 +122,7 @@ pub(crate) fn run<'cx>(
         let cpp_impl_path = formatter.cxx.fmt_impl_header_path(id.into());
         let binding_impl_path = format!("sub_modules/{}", formatter.fmt_binding_impl_path(id));
 
-        let mut context = TyGenContext {
+        let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
             cpp: crate::cpp::ItemGenContext {
@@ -216,7 +216,7 @@ pub(crate) fn run<'cx>(
                 func_map.get_mut(&key).unwrap()
             };
 
-            let mut ty_context = TyGenContext {
+            let mut ty_context = ItemGenContext {
                 formatter: &formatter,
                 errors: &errors,
                 cpp: crate::cpp::ItemGenContext {
@@ -345,7 +345,7 @@ mod test {
 
         let mut submodules = BTreeMap::new();
 
-        let mut context = crate::nanobind::TyGenContext {
+        let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
             cpp2: crate::cpp::ItemGenContext {
@@ -424,7 +424,7 @@ mod test {
 
         let mut submodules = BTreeMap::new();
 
-        let mut context = crate::nanobind::TyGenContext {
+        let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
             cpp2: crate::cpp::ItemGenContext {
@@ -502,7 +502,7 @@ mod test {
 
         let mut submodules = BTreeMap::new();
 
-        let mut context = crate::nanobind::TyGenContext {
+        let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
             cpp2: crate::cpp::ItemGenContext {

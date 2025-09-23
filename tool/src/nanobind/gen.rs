@@ -18,7 +18,7 @@ pub(super) struct NamedType<'a> {
 /// Context for generating a particular type's impl
 /// 'tcx refers to the lifetime of the typecontext
 /// 'cx refers to the lifetime of the context itself
-pub(super) struct TyGenContext<'cx, 'tcx> {
+pub(super) struct ItemGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub cpp: CppItemGenContext<'cx, 'tcx, 'cx>,
@@ -28,7 +28,7 @@ pub(super) struct TyGenContext<'cx, 'tcx> {
     pub generating_struct_fields: bool,
 }
 
-impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
+impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     /// Checks for & adds modules with their parents to the root module definition.
     pub fn gen_modules(&mut self, id: SymbolId, _docstring: Option<&str>) {
         let namespaces = self.formatter.fmt_namespaces(id);

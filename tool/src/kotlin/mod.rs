@@ -102,7 +102,7 @@ pub(crate) fn run<'tcx>(
     let errors = ErrorStore::default();
     let mut callback_params = Vec::new();
 
-    let mut ty_gen_cx = TyGenContext {
+    let mut ty_gen_cx = ItemGenContext {
         tcx,
         errors: &errors,
         result_types: RefCell::new(BTreeSet::new()),
@@ -281,7 +281,7 @@ struct NativeResult<'d> {
     err: TypeForResult<'d>,
 }
 
-struct TyGenContext<'a, 'cx> {
+struct ItemGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a KotlinFormatter<'cx>,
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
@@ -290,7 +290,7 @@ struct TyGenContext<'a, 'cx> {
     callback_params: &'a mut Vec<CallbackParamInfo>,
 }
 
-impl<'cx> TyGenContext<'_, 'cx> {
+impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
@@ -2158,7 +2158,7 @@ mod test {
     use crate::ErrorStore;
 
     use super::formatter::test::new_tcx;
-    use super::{formatter::KotlinFormatter, TyGenContext};
+    use super::{formatter::KotlinFormatter, ItemGenContext};
 
     #[test]
     fn test_enum() {
@@ -2206,7 +2206,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
@@ -2294,7 +2294,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
@@ -2346,7 +2346,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
@@ -2460,7 +2460,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
@@ -2516,7 +2516,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
@@ -2585,7 +2585,7 @@ mod test {
         let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
         let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
         let mut callback_params = Vec::new();
-        let mut ty_gen_cx = TyGenContext {
+        let mut ty_gen_cx = ItemGenContext {
             tcx: &tcx,
             formatter: &formatter,
             result_types: RefCell::new(BTreeSet::new()),
@@ -2636,7 +2636,7 @@ mod test {
                 diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
             let formatter = KotlinFormatter::new(&tcx, None, &docs_generator);
             let mut callback_params = Vec::new();
-            let mut ty_gen_cx = TyGenContext {
+            let mut ty_gen_cx = ItemGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
