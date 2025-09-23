@@ -152,15 +152,13 @@ pub(crate) fn run<'tcx>(
             let impl_header_path = formatter.fmt_free_function_header_path(ns.clone());
 
             let mut free_func_impl_header = header::Header::new(impl_header_path.clone(), lib_name);
-            let mut decl_header =
-                header::Header::new(impl_header_path.replace(".h", ".d.h"), lib_name);
             let mut c_header = crate::c::Header::new(Default::default(), true);
             let mut c_template = crate::c::gen::FuncBlockTemplate {
                 is_for_cpp: true,
                 ..Default::default()
             };
-            let (decls, impls) = funcs
-                .into_iter()
+            let impls = funcs
+                .iter()
                 .filter_map(|(id, func)| {
                     let mut ty_context = ItemGenContext {
                         formatter: &formatter,
@@ -171,41 +169,30 @@ pub(crate) fn run<'tcx>(
                             formatter: &formatter.c,
                             errors: &errors,
                             is_for_cpp: true,
-                            id: id.into(),
+                            id: (*id).into(),
                             impl_header_path: &impl_header_path,
                             decl_header_path: "",
                         },
                         impl_header: &mut free_func_impl_header,
-                        decl_header: &mut decl_header,
+                        decl_header: &mut Header::new(Default::default(), None),
                         generating_struct_fields: false,
                     };
-                    ty_context.gen_function(id, func, &mut c_header, &mut c_template)
+                    ty_context.gen_function(*id, func, &mut c_header, &mut c_template)
                 })
-                .unzip();
+                .collect();
 
             c_template.render_into(&mut c_header).unwrap();
 
             crate::cpp::gen::FuncImplTemplate {
                 namespace: ns.clone(),
                 methods: impls,
-                c_header,
+                c_header: c_header,
                 fmt: &formatter,
             }
             .render_into(&mut free_func_impl_header)
             .unwrap();
 
-            crate::cpp::gen::FuncDeclTemplate {
-                namespace: ns.clone(),
-                methods: decls,
-                c_header: crate::c::Header::new(Default::default(), true),
-                fmt: &formatter,
-            }
-            .render_into(&mut decl_header)
-            .unwrap();
-
-            free_func_impl_header.decl_include = Some(decl_header.path.clone());
             files.add_file(impl_header_path, free_func_impl_header.to_string());
-            files.add_file(decl_header.path.clone(), decl_header.to_string());
         }
     }
 

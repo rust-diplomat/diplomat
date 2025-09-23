@@ -1,8 +1,6 @@
 #ifndef SOMELIB_free_functions_HPP
 #define SOMELIB_free_functions_HPP
 
-#include "free_functions.d.hpp"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -31,9 +29,12 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib {
 
-inline void somelib::free_callback_holder(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> f) {
+inline void free_callback_holder(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> f) {
     somelib::capi::diplomat_external_free_callback_holder({new decltype(f)(std::move(f)), somelib::diplomat::fn_traits(f).template c_run_callback_result<std::monostate, std::monostate, somelib::capi::DiplomatCallback_diplomat_external_free_callback_holder_f_result>, somelib::diplomat::fn_traits(f).c_delete});
 }
+ 
 
+} // namespace
 #endif // SOMELIB_free_functions_HPP

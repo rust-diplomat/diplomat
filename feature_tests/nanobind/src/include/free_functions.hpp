@@ -1,8 +1,6 @@
 #ifndef free_functions_HPP
 #define free_functions_HPP
 
-#include "free_functions.d.hpp"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -35,5 +33,7 @@ namespace capi {
 inline void free_callback_holder(std::function<diplomat::result<std::monostate, std::monostate>()> f) {
     diplomat::capi::diplomat_external_free_callback_holder({new decltype(f)(std::move(f)), diplomat::fn_traits(f).template c_run_callback_result<std::monostate, std::monostate, diplomat::capi::DiplomatCallback_diplomat_external_free_callback_holder_f_result>, diplomat::fn_traits(f).c_delete});
 }
+ 
+
 
 #endif // free_functions_HPP

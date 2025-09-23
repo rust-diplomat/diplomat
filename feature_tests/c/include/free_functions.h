@@ -1,5 +1,5 @@
-#ifndef diplomat_free_functions_H
-#define diplomat_free_functions_H
+#ifndef free_functions_H
+#define free_functions_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -30,4 +30,4 @@ void diplomat_external_free_callback_holder(DiplomatCallback_diplomat_external_f
 
 
 
-#endif // diplomat_free_functions_H
+#endif // free_functions_H

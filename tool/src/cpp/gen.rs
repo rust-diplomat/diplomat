@@ -74,19 +74,9 @@ struct NamedExpression<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
+#[template(path = "cpp/free_functions.h.jinja", escape = "none")]
 /// Header for the implementation of a block of functions.
 pub(crate) struct FuncImplTemplate<'a> {
-    pub namespace: Option<String>,
-    pub methods: Vec<String>,
-    pub c_header: C2Header,
-    pub fmt: &'a Cpp2Formatter<'a>,
-}
-
-#[derive(Template)]
-#[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
-/// Header for the definition of a block of function.s
-pub(crate) struct FuncDeclTemplate<'a> {
     pub namespace: Option<String>,
     pub methods: Vec<String>,
     pub c_header: C2Header,
@@ -391,7 +381,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         func: &'tcx hir::Method,
         c_type_header: &mut crate::c::Header,
         c_func_block: &mut crate::c::gen::FuncBlockTemplate<'tcx>,
-    ) -> Option<(String, String)> {
+    ) -> Option<String> {
         let info = self.gen_method_info(func_id.into(), func)?;
         let fmt = &self.formatter;
 
@@ -403,30 +393,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         struct FunctionImpl<'a> {
             m: &'a MethodInfo<'a>,
             fmt: &'a Cpp2Formatter<'a>,
-            namespace: Option<String>,
         }
 
-        #[derive(Template)]
-        #[template(
-            path = "cpp/function_defs/func_block_function_decl.h.jinja",
-            escape = "none"
-        )]
-        struct FunctionDecl<'a> {
-            m: &'a MethodInfo<'a>,
-        }
-
-        let impl_bl = FunctionImpl {
-            m: &info,
-            fmt,
-            namespace: func.attrs.namespace.clone(),
-        };
-
-        let decl_bl = FunctionDecl { m: &info };
+        let impl_bl = FunctionImpl { m: &info, fmt };
 
         let (c_method, c_callbacks) = self.c.gen_method(func, c_type_header);
         c_func_block.methods.push(c_method);
         c_func_block.cb_structs_and_defs.extend(c_callbacks);
-        Some((decl_bl.to_string(), impl_bl.to_string()))
+        Some(impl_bl.to_string())
     }
 
     pub fn gen_method_info(

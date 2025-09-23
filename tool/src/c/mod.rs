@@ -124,8 +124,8 @@ pub(crate) fn run<'tcx>(
 
     if tcx.all_free_functions().next().is_some() {
         // Loop over free functions, put them all in one file:
-        let impl_header_path = "diplomat_free_functions.h";
-        let mut impl_header = Header::new(impl_header_path.into(), false);
+        let impl_header_path = "free_functions.h".to_string();
+        let mut impl_header = Header::new(impl_header_path.clone(), false);
 
         let mut methods = vec![];
         let mut cb_structs_and_defs = vec![];
@@ -141,7 +141,7 @@ pub(crate) fn run<'tcx>(
                 is_for_cpp: false,
                 id: id.into(),
                 decl_header_path: "",
-                impl_header_path,
+                impl_header_path: &impl_header_path,
             };
             let (method, cbs) = context.gen_method(f, &mut impl_header);
             methods.push(method);

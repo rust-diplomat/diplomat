@@ -1,4 +1,4 @@
-{% include "../c_include.h.jinja" %}
+{% include "c_include.h.jinja" %}
 
 {% if let Some(ns) = namespace -%}
 namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
@@ -8,8 +8,8 @@ namespace {{lib_name}} {
 
 {% for m in methods %}
 {{m}}
-{% endfor %}
+{% endfor %} 
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
-{%-endif%}
+{%- endif -%}
