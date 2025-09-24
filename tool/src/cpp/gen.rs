@@ -110,6 +110,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_header = self.c.gen_enum_def(ty);
         let c_impl_header = self.c.gen_impl(id);
 
+        let _guard = self
+            .errors
+            .set_context_ty(self.c.tcx.fmt_symbol_name_diagnostics(id.into()));
+
         let methods = ty
             .methods
             .iter()
@@ -407,10 +411,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             return None;
         }
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
-        let _guard = self.errors.set_context_ty_and_method(
-            self.c.tcx.fmt_symbol_name_diagnostics(id),
-            method.name.to_string().into(),
-        );
+        let _guard = self
+            .errors
+            .set_context_method(method.name.to_string().into());
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = self
             .formatter

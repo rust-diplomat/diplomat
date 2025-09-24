@@ -178,10 +178,7 @@ pub(crate) fn run<'tcx>(
                     continue;
                 }
 
-                let _guard = errors.set_context_ty_and_method(
-                    ty.name().as_str().into(),
-                    method.name.as_str().into(),
-                );
+                let _guard = errors.set_context_method(method.name.as_str().into());
 
                 let function_name = formatter.fmt_method_name(method);
 

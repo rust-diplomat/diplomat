@@ -208,22 +208,6 @@ impl<'tcx, E> ErrorStore<'tcx, E> {
         ErrorContextGuard(self, old)
     }
 
-    /// Set the context to a named method. Will return a scope guard that will automatically
-    /// clear the context on drop.
-    pub fn set_context_ty_and_method<'a>(
-        &'a self,
-        ty: Cow<'tcx, str>,
-        method: Cow<'tcx, str>,
-    ) -> ErrorContextGuard<'a, 'tcx, E> {
-        let new = ErrorContext {
-            ty,
-            method: Some(method),
-        };
-
-        let old = mem::replace(&mut *self.context.borrow_mut(), new);
-        ErrorContextGuard(self, old)
-    }
-
     pub fn push_error(&self, error: E) {
         self.errors
             .borrow_mut()
