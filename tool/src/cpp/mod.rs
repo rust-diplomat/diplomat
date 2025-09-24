@@ -102,7 +102,6 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id: id.into(),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },
@@ -157,7 +156,7 @@ pub(crate) fn run<'tcx>(
                 is_for_cpp: true,
                 ..Default::default()
             };
-            let impls = funcs
+            let methods = funcs
                 .iter()
                 .filter_map(|(id, func)| {
                     let mut ty_context = ItemGenContext {
@@ -169,7 +168,6 @@ pub(crate) fn run<'tcx>(
                             formatter: &formatter.c,
                             errors: &errors,
                             is_for_cpp: true,
-                            id: (*id).into(),
                             impl_header_path: &impl_header_path,
                             decl_header_path: "",
                         },
@@ -185,9 +183,9 @@ pub(crate) fn run<'tcx>(
 
             crate::cpp::gen::FuncImplTemplate {
                 namespace: ns.clone(),
-                methods: impls,
-                c_header: c_header,
                 fmt: &formatter,
+                methods,
+                c_header,
             }
             .render_into(&mut free_func_impl_header)
             .unwrap();
@@ -248,7 +246,6 @@ mod test {
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },

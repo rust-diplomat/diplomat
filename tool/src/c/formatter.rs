@@ -47,6 +47,10 @@ impl<'tcx> CFormatter<'tcx> {
     /// Resolve and format a named type for use in code (without the namespace)
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
+        self.fmt_type_name_resolved(resolved)
+    }
+
+    pub fn fmt_type_name_resolved(&self, resolved: hir::TypeDef<'tcx>) -> Cow<'tcx, str> {
         let name: Cow<_> = resolved.name().as_str().into();
         let attrs = resolved.attrs();
 
@@ -62,6 +66,10 @@ impl<'tcx> CFormatter<'tcx> {
 
     pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_trait(id);
+        self.fmt_trait_name_resolved(resolved)
+    }
+
+    pub fn fmt_trait_name_resolved(&self, resolved: &'tcx hir::TraitDef) -> Cow<'tcx, str> {
         let name: Cow<_> = resolved.name.as_str().into();
         let attrs = &resolved.attrs;
 

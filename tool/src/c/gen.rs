@@ -3,8 +3,8 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId,
-    TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitIdGetter,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -47,7 +47,7 @@ struct OpaqueTemplate<'a> {
 #[template(path = "c/func_block.h.jinja", escape = "none")]
 /// Represents a block of functions. Can belong to a method, or just a list of free functions.
 pub struct FuncBlockTemplate<'a> {
-    pub methods: Vec<MethodTemplate<'a>>,
+    pub methods: Vec<MethodInfo<'a>>,
     pub cb_structs_and_defs: Vec<CallbackAndStructDef>,
     pub is_for_cpp: bool,
     pub ty_name: Option<Cow<'a, str>>,
@@ -56,7 +56,7 @@ pub struct FuncBlockTemplate<'a> {
 
 /// The C representation of a Rust method.
 /// Created for [`FuncBlockTemplate`] to use in generation.
-pub struct MethodTemplate<'a> {
+pub struct MethodInfo<'a> {
     return_ty: Cow<'a, str>,
     params: String,
     abi_name: &'a str,
@@ -79,7 +79,6 @@ pub struct ItemGenContext<'cx, 'tcx, 'header> {
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
-    pub id: SymbolId,
     pub decl_header_path: &'header str,
     pub impl_header_path: &'header str,
 }
@@ -87,7 +86,7 @@ pub struct ItemGenContext<'cx, 'tcx, 'header> {
 impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name_resolved(def.into());
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -100,9 +99,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
+    pub fn gen_opaque_def(&self, def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name_resolved(def.into());
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -115,7 +114,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
     pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name_resolved(def.into());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
@@ -142,7 +141,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
     pub fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let trt_name = self.formatter.fmt_trait_name(self.id.try_into().unwrap());
+        let trt_name = self.formatter.fmt_trait_name_resolved(def);
 
         let mut trait_structs = vec![];
         let mut method_sigs = vec![];
@@ -203,42 +202,59 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
+    pub fn gen_function_impls(
+        &self,
+        associated_type: Option<hir::TypeDef<'tcx>>,
+        methods_iter: impl Iterator<Item = &'tcx hir::Method>,
+    ) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
+
         let mut methods = vec![];
         let mut cb_structs_and_defs = vec![];
 
-        for method in ty.methods() {
+        for method in methods_iter {
             if method.attrs.disable {
                 // Skip method if disabled
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.tcx.fmt_symbol_name_diagnostics(self.id),
+                associated_type
+                    .map(|ty| ty.name().as_str())
+                    .unwrap_or_default()
+                    .into(),
                 method.name.as_str().into(),
             );
             let (method_chunk, callback_defs) = self.gen_method(method, &mut impl_header);
+
             methods.push(method_chunk);
             cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
-        let ty_name = Some(self.formatter.fmt_type_name(self.id.try_into().unwrap()));
-
-        let dtor_name = if let TypeDef::Opaque(opaque) = ty {
+        let dtor_name = if let Some(TypeDef::Opaque(opaque)) = associated_type {
             Some(opaque.dtor_abi_name.as_str())
         } else {
             None
         };
 
-        FuncBlockTemplate {
-            ty_name,
-            methods,
-            cb_structs_and_defs,
-            dtor_name,
-            is_for_cpp: self.is_for_cpp,
+        if !methods.is_empty() || !cb_structs_and_defs.is_empty() || dtor_name.is_some() {
+            let ty_name = associated_type.map(|ty| self.formatter.fmt_type_name_resolved(ty));
+
+            let funcs = FuncBlockTemplate {
+                methods,
+                cb_structs_and_defs,
+                is_for_cpp: self.is_for_cpp,
+                ty_name,
+                dtor_name,
+            };
+
+            funcs.render_into(&mut impl_header).unwrap();
         }
-        .render_into(&mut impl_header)
-        .unwrap();
+        impl_header
+    }
+
+    // Generate a block of implementations for functions on any given type
+    pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
+        let mut impl_header = self.gen_function_impls(Some(ty), ty.methods().iter());
 
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
 
@@ -256,7 +272,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         &self,
         method: &'tcx hir::Method,
         header: &mut Header,
-    ) -> (MethodTemplate<'tcx>, Vec<CallbackAndStructDef>) {
+    ) -> (MethodInfo<'tcx>, Vec<CallbackAndStructDef>) {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let abi_name = method.abi_name.as_str();
         // Right now these are the same, but we may eventually support renaming
@@ -332,7 +348,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         };
 
         (
-            MethodTemplate {
+            MethodInfo {
                 abi_name,
                 return_ty,
                 params,

@@ -1,0 +1,22 @@
+{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) -%}
+{#- Extra method definitions for special types -#}
+{%- match m.method.attrs.special_method -%}
+{%- when Some(hir::SpecialMethod::Add) | Some(hir::SpecialMethod::Sub) | Some(hir::SpecialMethod::Mul) | Some(hir::SpecialMethod::Div) -%}
+{%- if !is_self_opaque -%} {#- Automatically implement *Assign for non-opaque types that implement the raw versions. -#}
+{%- let param_var = m.param_decls[0] %}
+  inline {{ m.return_ty }}& {{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }});
+{%- endif -%}
+
+{%- when Some(hir::SpecialMethod::Iterable) -%}
+{%- let helper_type = m.return_ty.replace("std::unique_ptr", &fmt.lib_prefixed_path("diplomat::next_to_iter_helper") ) %}
+  inline {{helper_type}} begin() const;
+  inline std::nullopt_t end() const { return std::nullopt; }
+{%- when Some(hir::SpecialMethod::Comparison) %}
+  inline bool operator==(const {{type_name}}& other) const;
+  inline bool operator!=(const {{type_name}}& other) const;
+  inline bool operator<=(const {{type_name}}& other) const;
+  inline bool operator>=(const {{type_name}}& other) const;
+  inline bool operator<(const {{type_name}}& other) const;
+  inline bool operator>(const {{type_name}}& other) const;
+{%- when _ -%}
+{%- endmatch -%}

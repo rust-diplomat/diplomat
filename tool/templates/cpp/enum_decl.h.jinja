@@ -26,7 +26,8 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
     {%~ for m in methods -%}
-    {%- include "function_defs/method_decl.h.jinja" %}
+        {% include "function_defs/method_decl.h.jinja" %}
+        {%- include "function_defs/special_method_decl.h.jinja" %}
     {%~ endfor %}
     inline {{ctype}} AsFFI() const;
     inline static {{type_name}} FromFFI({{ctype}} c_enum);

@@ -21,6 +21,7 @@ class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")
 public:
 {% for m in methods -%}
     {% include "function_defs/method_decl.h.jinja" %}
+    {%- include "function_defs/special_method_decl.h.jinja" %}
 {% endfor %}
     inline {{const_cptr}} AsFFI() const;
     inline {{mut_cptr}} AsFFI();
