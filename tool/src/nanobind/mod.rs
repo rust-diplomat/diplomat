@@ -130,7 +130,6 @@ pub(crate) fn run<'cx>(
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
-                    id: id.into(),
                     decl_header_path: &cpp_decl_path,
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
@@ -198,7 +197,6 @@ pub(crate) fn run<'cx>(
                 tcx,
                 formatter: &formatter.cxx.c,
                 is_for_cpp: false,
-                id: FunctionId::default().into(), // This is a junk value
                 errors: &errors,
                 decl_header_path: "",
                 impl_header_path: "",

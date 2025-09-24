@@ -76,17 +76,16 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
 
-        let decl_header = match ty {
-            hir::TypeDef::Enum(e) => context.gen_enum_def(e),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s),
+        let decl_header = match id {
+            hir::TypeId::Enum(e) => context.gen_enum_def(e),
+            hir::TypeId::Opaque(o) => context.gen_opaque_def(o),
+            hir::TypeId::Struct(s) => context.gen_struct_def::<hir::Everywhere>(s),
+            hir::TypeId::OutStruct(s) => context.gen_struct_def::<hir::OutputOnly>(s),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
@@ -110,36 +109,31 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
 
-        let decl_header = context.gen_trait_def(trt);
+        let decl_header = context.gen_trait_def(id);
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
 
     let impl_header_path = "free_functions.h".to_string();
 
-    if let Some((first_func_id, _)) = tcx.all_free_functions().next() {
-        let context = ItemGenContext {
-            tcx,
-            formatter: &formatter,
-            errors: &errors,
-            id: first_func_id.into(),
-            is_for_cpp: false,
-            decl_header_path: "",
-            impl_header_path: &impl_header_path,
-        };
+    let context = ItemGenContext {
+        tcx,
+        formatter: &formatter,
+        errors: &errors,
+        is_for_cpp: false,
+        decl_header_path: "",
+        impl_header_path: &impl_header_path,
+    };
 
-        let impl_header =
-            context.gen_function_impls(None, tcx.all_free_functions().map(|(_, m)| m));
+    let impl_header = context.gen_function_impls(None, tcx.all_free_functions().map(|(_, m)| m));
 
-        if !impl_header.body.is_empty() {
-            files.add_file(impl_header.path.clone(), impl_header.to_string());
-        }
+    if !impl_header.body.is_empty() {
+        files.add_file(impl_header.path.clone(), impl_header.to_string());
     }
 
     (files, errors)

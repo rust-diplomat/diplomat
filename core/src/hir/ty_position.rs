@@ -104,7 +104,7 @@ where
     /// borrowes, so the associated type for that impl is [`Borrow`].
     type OpaqueOwnership: Debug + OpaqueOwner + Clone;
 
-    type StructId: Debug + Clone;
+    type StructId: Debug + Copy + Into<TypeId>;
 
     type StructPath: Debug + StructPathLike + Clone;
 
@@ -113,6 +113,14 @@ where
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
     fn build_callback(cb: Callback) -> Self::CallbackInstantiation;
     fn build_trait_path(trait_path: TraitPath) -> Self::TraitPath;
+
+    fn resolve_struct(tcx: &TypeContext, id: Self::StructId) -> &StructDef<Self>;
+
+    fn get_fields<'tcx>(
+        def: &'tcx StructDef<Self>,
+    ) -> impl Iterator<Item = &'tcx crate::hir::StructField<Self>> {
+        def.fields.iter()
+    }
 }
 
 /// Directionality of the type
@@ -168,6 +176,10 @@ impl TyPosition for Everywhere {
     fn build_trait_path(_trait_path: TraitPath) -> Self::TraitPath {
         panic!("Traits must be input-only");
     }
+
+    fn resolve_struct(tcx: &TypeContext, id: StructId) -> &StructDef<Self> {
+        tcx.resolve_struct(id)
+    }
 }
 
 impl TyPosition for OutputOnly {
@@ -187,6 +199,9 @@ impl TyPosition for OutputOnly {
     fn build_trait_path(_trait_path: TraitPath) -> Self::TraitPath {
         panic!("Traits must be input-only");
     }
+    fn resolve_struct(tcx: &TypeContext, id: OutStructId) -> &StructDef<Self> {
+        tcx.resolve_out_struct(id)
+    }
 }
 
 impl TyPosition for InputOnly {
@@ -205,6 +220,9 @@ impl TyPosition for InputOnly {
     }
     fn build_trait_path(trait_path: TraitPath) -> Self::TraitPath {
         trait_path
+    }
+    fn resolve_struct(_: &TypeContext, _: StructId) -> &StructDef<Self> {
+        panic!("Type Context does not store InputOnly structdefs");
     }
 }
 

@@ -9,7 +9,6 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
-use crate::hir::Method;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -25,7 +24,7 @@ pub struct TypeContext {
     opaques: Vec<OpaqueDef>,
     enums: Vec<EnumDef>,
     traits: Vec<TraitDef>,
-    functions: Vec<Method>,
+    functions: Vec<hir::Method>,
 }
 
 /// Additional features/config to support while lowering
@@ -127,7 +126,7 @@ impl TypeContext {
 
     pub fn all_free_functions<'tcx>(
         &'tcx self,
-    ) -> impl Iterator<Item = (FunctionId, &'tcx Method)> {
+    ) -> impl Iterator<Item = (FunctionId, &'tcx hir::Method)> {
         self.functions
             .iter()
             .enumerate()
@@ -195,7 +194,7 @@ impl TypeContext {
         self.traits.index(id.0)
     }
 
-    pub fn resolve_function(&self, id: FunctionId) -> &Method {
+    pub fn resolve_function(&self, id: FunctionId) -> &hir::Method {
         self.functions.index(id.0)
     }
 
