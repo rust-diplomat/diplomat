@@ -108,7 +108,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.formatter.fmt_c_type_name(id);
         let c_header = self.c.gen_enum_def(ty);
-        let c_impl_header = self.c.gen_impl(ty.into());
+        let c_impl_header = self.c.gen_impl(id);
 
         let methods = ty
             .methods
@@ -209,7 +209,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
-        let c_impl_header = self.c.gen_impl(ty.into());
+        let c_impl_header = self.c.gen_impl(id);
 
         let methods = ty
             .methods
@@ -282,7 +282,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let namespace = def.attrs.namespace.clone();
 
         let c_header = self.c.gen_struct_def(def);
-        let c_impl_header = self.c.gen_impl(def.into());
+        let c_impl_header = self.c.gen_impl(id);
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -379,8 +379,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         &mut self,
         func_id: hir::FunctionId,
         func: &'tcx hir::Method,
-        c_type_header: &mut crate::c::Header,
-        c_func_block: &mut crate::c::gen::FuncBlockTemplate<'tcx>,
     ) -> Option<String> {
         let info = self.gen_method_info(func_id.into(), func)?;
         let fmt = &self.formatter;
@@ -397,9 +395,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         let impl_bl = FunctionImpl { m: &info, fmt };
 
-        let (c_method, c_callbacks) = self.c.gen_method(func, c_type_header);
-        c_func_block.methods.push(c_method);
-        c_func_block.cb_structs_and_defs.extend(c_callbacks);
         Some(impl_bl.to_string())
     }
 
@@ -412,7 +407,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             return None;
         }
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
-        let _guard = self.errors.set_context_method(
+        let _guard = self.errors.set_context_ty_and_method(
             self.c.tcx.fmt_symbol_name_diagnostics(id),
             method.name.to_string().into(),
         );

@@ -28,7 +28,6 @@ inline bool Renamednested_ns_fn(bool x) {
     auto result = nested::ns::capi::namespace_nested_ns_fn(x);
     return result;
 }
- 
 
 } // namespace
 #endif // nested_ns_free_functions_HPP

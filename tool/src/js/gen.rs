@@ -435,7 +435,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
 
         let mut visitor = method.borrowing_param_visitor(self.tcx, true);
 
-        let _guard = self.errors.set_context_method(
+        let _guard = self.errors.set_context_ty_and_method(
             self.tcx.fmt_type_name_diagnostics(type_id),
             method.name.as_str().into(),
         );

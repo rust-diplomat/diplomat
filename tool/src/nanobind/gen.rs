@@ -434,7 +434,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         if method.attrs.disable {
             return None;
         }
-        let _guard = self.errors.set_context_method(
+        let _guard = self.errors.set_context_ty_and_method(
             self.cpp.c.tcx.fmt_symbol_name_diagnostics(id),
             method.name.as_str().into(),
         );

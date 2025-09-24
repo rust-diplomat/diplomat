@@ -178,8 +178,10 @@ pub(crate) fn run<'tcx>(
                     continue;
                 }
 
-                let _guard = errors
-                    .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
+                let _guard = errors.set_context_ty_and_method(
+                    ty.name().as_str().into(),
+                    method.name.as_str().into(),
+                );
 
                 let function_name = formatter.fmt_method_name(method);
 
@@ -190,9 +192,7 @@ pub(crate) fn run<'tcx>(
                     terminus_info: TerminusInfo {
                         function_name: function_name.clone(),
                         out_params: Vec::new(),
-
                         type_name: type_name.clone(),
-
                         return_val: Default::default(),
                         display_fn: Default::default(),
                     },

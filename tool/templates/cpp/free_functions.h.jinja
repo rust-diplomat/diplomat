@@ -8,7 +8,7 @@ namespace {{lib_name}} {
 
 {% for m in methods %}
 {{m}}
-{% endfor %} 
+{%- endfor ~%}
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace

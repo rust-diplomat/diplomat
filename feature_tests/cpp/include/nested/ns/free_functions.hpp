@@ -28,7 +28,6 @@ inline bool Renamednested_ns_fn(bool x) {
     auto result = somelib::nested::ns::capi::namespace_nested_ns_fn(x);
     return result;
 }
- 
 
 } // namespace
 #endif // SOMELIB_nested_ns_free_functions_HPP
