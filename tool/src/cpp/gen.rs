@@ -8,7 +8,7 @@ use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
-    SymbolId, TyPosition, Type, TypeDef, TypeId,
+    SymbolDef, TyPosition, Type, TypeDef,
 };
 use std::borrow::Cow;
 
@@ -103,21 +103,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
+    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef) {
+        let type_name = self.formatter.fmt_symbol_name(ty.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(ty.into());
+        let ctype = self.formatter.fmt_c_type_name(ty.into());
         let c_header = self.c.gen_enum_def(ty);
-        let c_impl_header = self.c.gen_impl(id);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
-        let _guard = self
-            .errors
-            .set_context_ty(self.c.tcx.fmt_symbol_name_diagnostics(id.into()));
+        let _guard = self.errors.set_context_ty(ty.name.as_str().into());
 
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id.into(), method))
+            .flat_map(|method| self.gen_method_info(ty.into(), method))
             .collect::<Vec<_>>();
 
         let mut found_default: Option<&hir::EnumVariant> = None;
@@ -204,21 +202,21 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
+    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef) {
+        let type_name = self.formatter.fmt_symbol_name(ty.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(ty.into());
+        let ctype = self.formatter.fmt_c_type_name(ty.into());
         let dtor_name = self
             .formatter
-            .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
+            .namespace_c_name(ty.into(), ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
-        let c_impl_header = self.c.gen_impl(id);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id.into(), method))
+            .flat_map(|method| self.gen_method_info(ty.into(), method))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -278,15 +276,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
+    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>) {
+        let type_name = self.formatter.fmt_symbol_name(def.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(def.into());
+        let ctype = self.formatter.fmt_c_type_name(def.into());
 
         let namespace = def.attrs.namespace.clone();
 
         let c_header = self.c.gen_struct_def(def);
-        let c_impl_header = self.c.gen_impl(id);
+        let c_impl_header = self.c.gen_impl(def.into());
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -311,7 +309,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let methods = def
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id.into(), method))
+            .flat_map(|method| self.gen_method_info(def.into(), method))
             .collect::<Vec<_>>();
 
         #[derive(Template)]
@@ -379,7 +377,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
     pub fn gen_method_info(
         &mut self,
-        id: SymbolId,
+        associated_symbol: SymbolDef<'ccx>,
         method: &'ccx hir::Method,
     ) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
@@ -392,7 +390,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = self
             .formatter
-            .namespace_c_name(id, method.abi_name.as_str());
+            .namespace_c_name(associated_symbol.into(), method.abi_name.as_str());
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -416,11 +414,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions
                         .push(format!("auto thisDiplomatRefClone = {conversion};"));
-
                     if s.owner.mutability().is_mutable() {
+                        let s_def = self.c.tcx.resolve_type(s.id());
                         param_post_conversions.push(format!(
                             "*this = {}::FromFFI(thisDiplomatRefClone);",
-                            self.formatter.fmt_symbol_name(s.id().into())
+                            self.formatter.fmt_symbol_name(s_def.into())
                         ));
                     }
                     "&thisDiplomatRefClone".to_string().into()
@@ -436,12 +434,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         let mut param_validations = Vec::new();
         let mut returns_utf8_err = false;
-
-        let namespace = match id {
-            SymbolId::FunctionId(f) => self.c.tcx.resolve_function(f).attrs.namespace.clone(),
-            SymbolId::TypeId(ty) => self.c.tcx.resolve_type(ty).attrs().namespace.clone(),
-            _ => panic!("Unsupported SymbolId: {id:?}"),
-        };
 
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
@@ -461,7 +453,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 &param.ty,
                 param_name,
                 Some(method.abi_name.to_string()),
-                namespace.clone(),
+                associated_symbol.attrs().namespace.clone(),
             );
             // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
             // Then we need to add some pre- and post- function call conversions to:
@@ -481,10 +473,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     ));
 
                     if s.owner.mutability().is_mutable() {
+                        let def = self.c.tcx.resolve_type(s.id());
                         param_post_conversions.push(format!(
                             "{} = {}::FromFFI({}DiplomatRefClone);",
                             param.name,
-                            self.formatter.fmt_type_name(s.id()),
+                            self.formatter.fmt_symbol_name(def.into()),
                             param.name
                         ));
                     }
@@ -572,7 +565,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
 
         let pre_qualifiers =
-            if method.param_self.is_none() && !matches!(id, SymbolId::FunctionId(..)) {
+            if method.param_self.is_none() && !matches!(associated_symbol, SymbolDef::Method(..)) {
                 vec!["static".into()]
             } else {
                 vec![]
@@ -633,12 +626,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
-                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(op_id);
-                let def = self.c.tcx.resolve_type(op_id);
+                let def = self.c.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
+                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(def.into());
 
-                if def.attrs().disable {
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -654,34 +646,33 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 // We don't append a header for this, since we already have a forward.
                 // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
                 self.decl_header
-                    .append_forward(def, &type_name_unnamespaced);
+                    .append_forward(def.into(), &type_name_unnamespaced);
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(op_id.into()));
+                    .insert(self.formatter.fmt_impl_header_path(def.into()));
                 ret
             }
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-                let def = self.c.tcx.resolve_type(id);
-                if def.attrs().disable {
+                let def = self.c.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
+                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
                 self.decl_header
-                    .append_forward(def, &type_name_unnamespaced);
+                    .append_forward(def.into(), &type_name_unnamespaced);
                 if self.generating_struct_fields {
                     self.decl_header
                         .includes
-                        .insert(self.formatter.fmt_decl_header_path(id.into()));
+                        .insert(self.formatter.fmt_decl_header_path(def.into()));
                 }
                 self.impl_header
                     .includes
-                    .insert(self.formatter.fmt_impl_header_path(id.into()));
-                type_name
+                    .insert(self.formatter.fmt_impl_header_path(def.into()));
+                type_name.into()
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
@@ -708,11 +699,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     }
 
     fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
-        let id = st.id();
-        let type_name = self.formatter.fmt_type_name(id);
+        let def = self.c.tcx.resolve_type(st.id());
+        let type_name = self.formatter.fmt_symbol_name(def.into());
 
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let def = self.c.tcx.resolve_type(id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(def);
         if def.attrs().disable {
             self.errors
                 .push_error(format!("Found usage of disabled type {type_name}"))
@@ -723,11 +713,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         if self.generating_struct_fields {
             self.decl_header
                 .includes
-                .insert(self.formatter.fmt_decl_header_path(id.into()));
+                .insert(self.formatter.fmt_decl_header_path(def));
         }
         self.impl_header
             .includes
-            .insert(self.formatter.fmt_impl_header_path(id.into()));
+            .insert(self.formatter.fmt_impl_header_path(def));
         if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
@@ -739,7 +729,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .into_owned()
             .into()
         } else {
-            type_name
+            type_name.into()
         }
     }
 
@@ -767,9 +757,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let attrs = &s.resolve(self.c.tcx).attrs;
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(b) = s.owner {
+                        let def = self.c.tcx.resolve_type(s.id());
                         let c_name = self.formatter.namespace_c_name(
-                            s.id().into(),
-                            &self.formatter.fmt_type_name_unnamespaced(s.id()),
+                            def.into(),
+                            &self.formatter.fmt_type_name_unnamespaced(def),
                         );
 
                         return match b.mutability {
@@ -840,7 +831,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
-                        let c_name = self.formatter.namespace_c_name(s.id().into(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        let def = self.c.tcx.resolve_type(s.id());
+                        let c_name = self.formatter.namespace_c_name(def.into(), &self.formatter.fmt_type_name_unnamespaced(def));
                         return match borrow.mutability {
                             Mutability::Immutable => {
                                 format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
@@ -860,7 +852,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             ).into(),
             Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_name(st.id().into(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
+                { let def = self.c.tcx.resolve_type(st.id());
+                    self.formatter.namespace_c_name(def.into(), &self.formatter.fmt_type_name_unnamespaced(def))
+                }
             ).into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
@@ -898,7 +892,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
-                        let opaque_type = self.c.formatter.fmt_type_name_maybe_namespaced(o.tcx_id.into());
+                        let opaque_def = self.c.tcx.resolve_opaque(o.tcx_id);
+                        let opaque_type = self.c.formatter.fmt_type_name_maybe_namespaced(opaque_def.into());
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
                         self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
                     },
@@ -985,14 +980,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         match *ty {
             Type::Primitive(..) => var_name,
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.c.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
                 // Note: The impl file is imported in gen_type_name().
                 format!("std::unique_ptr<{type_name}>({type_name}::FromFFI({var_name}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.c.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
                 if op.is_owned() {
                     // Note: The impl file is imported in gen_type_name().
                     format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
@@ -1002,8 +997,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 }
             }
             Type::Opaque(ref op) => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.c.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
+
                 // Note: The impl file is imported in gen_type_name().
                 format!("*{type_name}::FromFFI({var_name})").into()
             }
@@ -1014,8 +1010,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     _ => false,
                 };
 
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.c.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_symbol_name(def.into());
                 if is_zst {
                     format!("{type_name} {{}}").into()
                 } else {
@@ -1024,8 +1020,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 }
             }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.c.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.fmt_symbol_name(def.into());
                 // Note: The impl file is imported in gen_type_name().
                 format!("{type_name}::FromFFI({var_name})").into()
             }
@@ -1042,7 +1038,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             }
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let mt = b.mutability();
-                let st_name = self.formatter.fmt_type_name(st_ty.id());
+                let st_def = self.c.tcx.resolve_type(st_ty.id());
+                let st_name = self.formatter.fmt_symbol_name(st_def.into());
                 let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
                 format!(
                     "{span}(reinterpret_cast<{}{st_name}*>({var_name}.data), {var_name}.len)",

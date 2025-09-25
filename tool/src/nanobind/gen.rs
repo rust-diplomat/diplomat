@@ -2,7 +2,7 @@ use super::root_module::RootModule;
 use super::PyFormatter;
 use crate::{cpp::ItemGenContext as CppItemGenContext, hir, ErrorStore};
 use askama::Template;
-use diplomat_core::hir::{OpaqueOwner, StructPathLike, SymbolId, TyPosition, Type, TypeId};
+use diplomat_core::hir::{OpaqueOwner, StructPathLike, SymbolDef, TyPosition, Type};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -57,8 +57,8 @@ pub(super) struct ItemGenContext<'cx, 'tcx> {
 
 impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     /// Checks for & adds modules with their parents to the root module definition.
-    pub fn gen_modules(&mut self, id: SymbolId, _docstring: Option<&str>) {
-        let namespaces = self.formatter.fmt_namespaces(id);
+    pub fn gen_modules(&mut self, ty: SymbolDef<'tcx>, _docstring: Option<&str>) {
+        let namespaces = self.formatter.fmt_namespaces(ty);
 
         let mut parent = self.root_module.module_name.clone();
         for module in namespaces {
@@ -80,11 +80,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     pub fn gen_enum_def<W: std::fmt::Write + ?Sized>(
         &mut self,
         ty: &'tcx hir::EnumDef,
-        id: TypeId,
         out: &mut W,
     ) {
-        let type_name = self.formatter.cxx.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
+        let type_name = self.formatter.cxx.fmt_symbol_name(ty.into());
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(ty.into());
 
         let values = ty
             .variants
@@ -108,15 +107,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         .render_into(out)
         .unwrap();
 
-        self.add_to_root_module(id);
+        self.add_to_root_module(ty.into());
     }
 
-    pub fn add_to_root_module(&mut self, id: TypeId) {
-        self.gen_modules(id.into(), None);
+    pub fn add_to_root_module(&mut self, ty: hir::TypeDef<'tcx>) {
+        self.gen_modules(ty.into(), None);
         Self::gen_binding_fn(
             self.root_module,
-            self.formatter.fmt_namespaces(id.into()),
-            self.formatter.fmt_binding_fn(id),
+            self.formatter.fmt_namespaces(ty.into()),
+            self.formatter.fmt_binding_fn(ty),
         );
     }
 
@@ -149,16 +148,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     pub fn gen_opaque_def<W: std::fmt::Write + ?Sized>(
         &mut self,
         ty: &'tcx hir::OpaqueDef,
-        id: TypeId,
         out: &mut W,
     ) {
-        let _guard = self
-            .errors
-            .set_context_ty(self.cpp.c.tcx.fmt_symbol_name_diagnostics(id.into()));
+        let _guard = self.errors.set_context_ty(ty.name.as_str().into());
 
-        let type_name = self.formatter.cxx.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
-        let methods = self.gen_all_method_infos(id, ty.methods.iter());
+        let type_name = self.formatter.cxx.fmt_symbol_name(ty.into());
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(ty.into());
+        let methods = self.gen_all_method_infos(ty.into(), ty.methods.iter());
 
         #[derive(Template)]
         #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
@@ -175,18 +171,17 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         }
         .render_into(out)
         .unwrap();
-        self.add_to_root_module(id);
+        self.add_to_root_module(ty.into());
     }
 
     pub fn gen_struct_def<P: TyPosition, W: std::fmt::Write + ?Sized>(
         &mut self,
         def: &'tcx hir::StructDef<P>,
-        id: TypeId,
         out: &mut W,
         binding_prefix: &mut W,
     ) {
-        let type_name = self.formatter.cxx.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
+        let type_name = self.formatter.cxx.fmt_symbol_name(def.into());
+        let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(def.into());
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -196,9 +191,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
-        let methods = self.gen_all_method_infos(id, def.methods.iter());
+        let methods = self.gen_all_method_infos(def.into(), def.methods.iter());
 
-        self.gen_modules(id.into(), None);
+        self.gen_modules(def.into(), None);
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -230,19 +225,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         }
         .render_into(out)
         .unwrap();
-        self.add_to_root_module(id);
+        self.add_to_root_module(def.into());
     }
 
     fn gen_all_method_infos(
         &mut self,
-        id: TypeId,
+        associated_symbol: SymbolDef<'tcx>,
         methods: std::slice::Iter<'tcx, hir::Method>,
     ) -> Vec<MethodInfo<'ccx>> {
         // BTree map ensures that the output will be sorted by method name for more consistent codegen output.
         let mut method_infos = BTreeMap::<String, MethodInfo>::new();
 
         for method in methods {
-            if let Some(info) = self.gen_method_info(id.into(), method) {
+            if let Some(info) = self.gen_method_info(associated_symbol, method) {
                 method_infos
                     // Use the property name as the key if present so we can collapse getters & setters
                     .entry(info.prop_name.clone().unwrap_or(info.method_name.clone()).to_string())
@@ -313,11 +308,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         }
     }
 
-    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
-        let id = st.id();
-        let type_name = self.formatter.cxx.fmt_type_name(id);
+    fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'tcx, str> {
+        let def = self.cpp.c.tcx.resolve_type(st.id());
+        let type_name = self.formatter.cxx.fmt_symbol_name(def.into());
 
-        let def = self.cpp.c.tcx.resolve_type(id);
         if def.attrs().disable {
             self.errors
                 .push_error(format!("Found usage of disabled type {type_name}"))
@@ -326,7 +320,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         self.cpp
             .impl_header
             .includes
-            .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
+            .insert(self.formatter.cxx.fmt_impl_header_path(def));
         if let hir::MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             self.formatter
@@ -346,11 +340,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         match *ty {
             Type::Primitive(prim) => self.formatter.cxx.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.cxx.fmt_type_name(op_id);
-                let def = self.cpp.c.tcx.resolve_type(op_id);
+                let def = self.cpp.c.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.cxx.fmt_symbol_name(def.into());
 
-                if def.attrs().disable {
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -369,13 +362,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 self.cpp
                     .impl_header
                     .includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(op_id.into()));
+                    .insert(self.formatter.cxx.fmt_impl_header_path(def.into()));
                 ret
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.cpp.c.tcx.resolve_type(id);
+                let def = self.cpp.c.tcx.resolve_type(st.id());
+                let type_name = self.formatter.cxx.fmt_symbol_name(def.into());
                 if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
@@ -384,14 +376,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 self.cpp
                     .impl_header
                     .includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
-                type_name
+                    .insert(self.formatter.cxx.fmt_impl_header_path(def));
+                type_name.into()
             }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.cxx.fmt_type_name(id);
-                let def = self.cpp.c.tcx.resolve_type(id);
-                if def.attrs().disable {
+                let def = self.cpp.c.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.cxx.fmt_symbol_name(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -399,8 +390,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 self.cpp
                     .impl_header
                     .includes
-                    .insert(self.formatter.cxx.fmt_impl_header_path(id.into()));
-                type_name
+                    .insert(self.formatter.cxx.fmt_impl_header_path(def.into()));
+                type_name.into()
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
                 self.formatter.cxx.fmt_borrowed_str(encoding)
@@ -433,7 +424,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
     pub(super) fn gen_method_info(
         &mut self,
-        id: SymbolId,
+        associated_symbol: SymbolDef<'tcx>,
         method: &'tcx hir::Method,
     ) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
@@ -469,7 +460,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 method.attrs.special_method,
                 Some(hir::SpecialMethod::Constructor) // Constructors weirdly don't use def_static
             )
-            && !matches!(id, hir::SymbolId::FunctionId(..))
+            && !matches!(associated_symbol, hir::SymbolDef::Method(..))
         {
             def_qualifiers.extend(["static"]);
         }

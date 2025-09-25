@@ -63,7 +63,7 @@ pub(crate) fn run<'tcx>(
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = Cpp2Formatter::new(tcx, config, docs_url_gen);
+    let formatter = Cpp2Formatter::new(config, docs_url_gen);
     let errors = ErrorStore::default();
 
     #[derive(askama::Template)]
@@ -87,10 +87,10 @@ pub(crate) fn run<'tcx>(
             // Skip type if disabled
             continue;
         }
-        let type_name_unnamespaced = formatter.fmt_type_name(id);
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let type_name_unnamespaced = formatter.fmt_symbol_name(ty.into());
+        let decl_header_path = formatter.fmt_decl_header_path(ty);
         let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let impl_header_path = formatter.fmt_impl_header_path(ty);
         let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
         let mut context = ItemGenContext {
@@ -114,10 +114,10 @@ pub(crate) fn run<'tcx>(
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
         match ty {
-            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+            hir::TypeDef::Enum(o) => context.gen_enum_def(o),
+            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s),
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
@@ -178,7 +178,7 @@ pub(crate) fn run<'tcx>(
 
             let methods = funcs
                 .into_iter()
-                .filter_map(|(id, func)| ty_context.gen_method_info(id.into(), func))
+                .filter_map(|(_, func)| ty_context.gen_method_info(func.into(), func))
                 .collect();
 
             crate::cpp::gen::FuncImplTemplate {
@@ -233,7 +233,7 @@ mod test {
         {
             let error_store = ErrorStore::default();
             let docs_gen = Default::default();
-            let formatter = Cpp2Formatter::new(&tcx, &config, &docs_gen);
+            let formatter = Cpp2Formatter::new(&config, &docs_gen);
             let mut decl_header = header::Header::new("decl_thing".into(), None);
             let mut impl_header = header::Header::new("impl_thing".into(), None);
 
@@ -255,7 +255,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(opaque_def, id);
+            ty_gen_cx.gen_opaque_def(opaque_def);
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }

@@ -57,7 +57,7 @@ pub(crate) fn run<'tcx>(
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = CFormatter::new(tcx, false, config, docs_url_gen);
+    let formatter = CFormatter::new(false, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
@@ -68,8 +68,8 @@ pub(crate) fn run<'tcx>(
             continue;
         }
 
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(ty.into());
+        let impl_header_path = formatter.fmt_impl_header_path(ty.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
         let context = ItemGenContext {
@@ -90,7 +90,7 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let impl_header = context.gen_impl(id);
+        let impl_header = context.gen_impl(ty);
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -102,8 +102,8 @@ pub(crate) fn run<'tcx>(
             continue;
         }
 
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(trt.into());
+        let impl_header_path = formatter.fmt_impl_header_path(trt.into());
 
         let _guard = errors.set_context_ty(trt.name.as_str().into());
         let context = ItemGenContext {

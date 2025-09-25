@@ -2,7 +2,7 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId,
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolDef, TypeDef,
 };
 use std::{borrow::Cow, fmt::Write};
 
@@ -22,13 +22,9 @@ pub(crate) struct Cpp2Formatter<'tcx> {
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        config: &crate::Config,
-        docs_url_gen: &'tcx DocsUrlGenerator,
-    ) -> Self {
+    pub fn new(config: &crate::Config, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
         Self {
-            c: CFormatter::new(tcx, true, config, docs_url_gen),
+            c: CFormatter::new(true, config, docs_url_gen),
             lib_name: config.shared_config.lib_name.clone(),
             lib_name_ns_prefix: config
                 .shared_config
@@ -40,40 +36,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Resolve and format a named type for use in code (without the namespace)
-    pub fn fmt_type_name_unnamespaced(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
-
-        resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into())
+    pub fn fmt_type_name_unnamespaced(&self, ty: TypeDef<'tcx>) -> Cow<'tcx, str> {
+        ty.attrs().rename.apply(ty.name().as_str().into())
     }
 
-    pub fn fmt_symbol_name(&self, id: SymbolId) -> Cow<'tcx, str> {
-        match id {
-            SymbolId::TypeId(ty) => self.fmt_type_name(ty),
-            SymbolId::FunctionId(f) => {
-                let resolved = self.c.tcx().resolve_function(f);
-                let name = resolved.attrs.rename.apply(resolved.name.as_str().into());
-                if let Some(ns) = &resolved.attrs.namespace {
-                    format!("{ns}::{name}").into()
-                } else {
-                    name
-                }
-            }
-            _ => panic!("Unsupported SymbolId: {id:?}"),
-        }
-    }
-
-    /// Resolve and format a named type for use in code
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
-        let name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
+    /// Resolve and format a named symbol for use in code
+    pub fn fmt_symbol_name(&self, def: SymbolDef<'tcx>) -> Cow<'tcx, str> {
+        let name = def.attrs().rename.apply(def.name().as_str().into());
         let lib_prefix = &self.lib_name_ns_prefix;
-        if let Some(ref ns) = resolved.attrs().namespace {
+        if let Some(ref ns) = def.attrs().namespace {
             format!("{lib_prefix}{ns}::{name}").into()
         } else {
             format!("{lib_prefix}{name}").into()
@@ -81,17 +52,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
-        let (name, namespace) = match id {
-            SymbolId::TypeId(ty) => {
-                let resolved = self.c.tcx().resolve_type(ty);
-                let type_name = resolved
-                    .attrs()
-                    .rename
-                    .apply(resolved.name().as_str().into());
-                (type_name.to_string(), resolved.attrs().namespace.clone())
-            }
-            _ => panic!("Unsupported SymbolId {id:?}"),
+    pub fn fmt_decl_header_path(&self, def: TypeDef) -> String {
+        let (name, namespace) = {
+            let type_name = def.attrs().rename.apply(def.name().as_str().into());
+            (type_name.to_string(), def.attrs().namespace.clone())
         };
 
         if let Some(ref ns) = namespace {
@@ -103,17 +67,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
-        let (name, namespace) = match id {
-            SymbolId::TypeId(ty) => {
-                let resolved = self.c.tcx().resolve_type(ty);
-                let type_name = resolved
-                    .attrs()
-                    .rename
-                    .apply(resolved.name().as_str().into());
-                (type_name.to_string(), resolved.attrs().namespace.clone())
-            }
-            _ => panic!("Unsupported SymbolId {id:?}"),
+    pub fn fmt_impl_header_path(&self, def: TypeDef) -> String {
+        let (name, namespace) = {
+            let type_name = def.attrs().rename.apply(def.name().as_str().into());
+            (type_name.to_string(), def.attrs().namespace.clone())
         };
 
         if let Some(ref ns) = namespace {
@@ -153,8 +110,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.fmt_identifier(ident.into())
     }
 
-    pub fn fmt_c_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_maybe_namespaced(id.into())
+    pub fn fmt_c_type_name(&self, def: hir::TypeDef<'tcx>) -> Cow<'tcx, str> {
+        self.c.fmt_type_name_maybe_namespaced(def.into())
     }
 
     pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
@@ -259,12 +216,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_name(&self, ty: SymbolId, name: &str) -> String {
-        let ns = match ty {
-            SymbolId::FunctionId(f) => &self.c.tcx().resolve_function(f).attrs.namespace,
-            SymbolId::TypeId(ty) => &self.c.tcx().resolve_type(ty).attrs().namespace,
-            _ => panic!("Unsupported SymbolId"),
-        };
+    pub fn namespace_c_name(&self, ty: SymbolDef, name: &str) -> String {
+        let ns = &ty.attrs().namespace;
         if let Some(lib_name) = &self.lib_name {
             if let Some(ref ns) = ns {
                 format!("{lib_name}::{ns}::{CAPI_NAMESPACE}::{name}")
@@ -331,6 +284,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 #[cfg(test)]
 pub mod test {
     use super::*;
+    use crate::hir::TypeContext;
     use proc_macro2::TokenStream;
 
     pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {

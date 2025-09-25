@@ -4,7 +4,7 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
     self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId,
-    TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
+    TraitIdGetter, TyPosition, Type, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -87,7 +87,7 @@ pub struct ItemGenContext<'cx, 'tcx, 'header> {
 impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
     pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_symbol_name(def.into());
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -100,9 +100,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
+    pub fn gen_opaque_def(&self, def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_symbol_name(def.into());
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -115,7 +115,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
     pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_symbol_name(def.into());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
         for field in def.fields.iter() {
@@ -142,7 +142,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
     pub fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let trt_name = self.formatter.fmt_trait_name(self.id.try_into().unwrap());
+        let trt_name = self.formatter.fmt_symbol_name(def.into());
 
         let mut trait_structs = vec![];
         let mut method_sigs = vec![];
@@ -205,7 +205,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
     pub fn gen_function_impls(
         &self,
-        associated_type: Option<hir::TypeId>,
+        associated_type: Option<hir::TypeDef<'tcx>>,
         methods_iter: impl Iterator<Item = &'tcx hir::Method>,
     ) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.to_owned(), self.is_for_cpp);
@@ -223,15 +223,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
             cb_structs_and_defs.extend_from_slice(&callback_defs);
         }
 
-        let dtor_name = if let Some(TypeId::Opaque(opaque_id)) = associated_type {
-            let opaque = self.tcx.resolve_opaque(opaque_id);
+        let dtor_name = if let Some(TypeDef::Opaque(opaque)) = associated_type {
             Some(opaque.dtor_abi_name.as_str())
         } else {
             None
         };
 
         if !methods.is_empty() || !cb_structs_and_defs.is_empty() || dtor_name.is_some() {
-            let ty_name = associated_type.map(|id| self.formatter.fmt_type_name(id));
+            let ty_name = associated_type.map(|def| self.formatter.fmt_symbol_name(def.into()));
 
             let funcs = FuncBlockTemplate {
                 methods,
@@ -247,13 +246,10 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
     }
 
     // Generate a block of implementations for functions on any given type
-    pub fn gen_impl(&self, id: hir::TypeId) -> Header {
-        let ty = self.tcx.resolve_type(id);
-        let _guard = self
-            .errors
-            .set_context_ty(self.tcx.fmt_type_name_diagnostics(id));
+    pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
+        let _guard = self.errors.set_context_ty(ty.name().as_str().into());
 
-        let mut impl_header = self.gen_function_impls(Some(id), ty.methods().iter());
+        let mut impl_header = self.gen_function_impls(Some(ty), ty.methods().iter());
 
         // The decl header will be included as a separate item, ensure it's not one of the general includes
         impl_header.decl_include = Some(self.decl_header_path.to_owned());
@@ -529,9 +525,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         let ty_name = match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
-                let op_id: TypeId = op.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(op_id.into());
-                if self.tcx.resolve_type(op_id).attrs().disable {
+                let def = self.tcx.resolve_opaque(op.tcx_id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
@@ -540,18 +536,18 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 let ret = self.formatter.fmt_ptr(&ty_name, mutability);
                 header
                     .includes
-                    .insert(self.formatter.fmt_decl_header_path(op_id.into()));
+                    .insert(self.formatter.fmt_decl_header_path(def.into()));
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
-                let st_id = st.id();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(st_id.into());
-                if self.tcx.resolve_type(st_id).attrs().disable {
+                let def = self.tcx.resolve_type(st.id());
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(def.into());
+                if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
 
-                let header_path = self.formatter.fmt_decl_header_path(st_id.into());
+                let header_path = self.formatter.fmt_decl_header_path(def.into());
                 header.includes.insert(header_path);
 
                 if let MaybeOwn::Borrow(borrow) = st.owner() {
@@ -562,13 +558,13 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 }
             }
             Type::Enum(ref e) => {
-                let id: TypeId = e.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(id.into());
-                if self.tcx.resolve_type(id).attrs().disable {
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                let header_path = self.formatter.fmt_decl_header_path(id.into());
+                let header_path = self.formatter.fmt_decl_header_path(def.into());
                 header.includes.insert(header_path);
                 ty_name
             }
@@ -577,15 +573,15 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                     self.formatter.fmt_primitive_slice_name(*borrow, *prim)
                 }
                 hir::Slice::Struct(borrow, ref st_ty) => {
-                    let st_id = st_ty.id();
-                    let st_name = self.formatter.fmt_struct_slice_name::<P>(*borrow, st_ty);
+                    let st_def = self.tcx.resolve_type(st_ty.id());
+                    let st_name = self.formatter.fmt_struct_slice_name(*borrow, st_def);
 
-                    if self.tcx.resolve_type(st_id).attrs().disable {
+                    if st_def.attrs().disable {
                         self.errors
                             .push_error(format!("Found usage of disabled type {st_name}"))
                     }
 
-                    let header_path = self.formatter.fmt_decl_header_path(st_id.into());
+                    let header_path = self.formatter.fmt_decl_header_path(st_def.into());
                     header.includes.insert(header_path);
 
                     st_name
@@ -599,14 +595,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 self.formatter.fmt_optional_type_name(s, &inner).into()
             }
             Type::ImplTrait(ref t) => {
-                let t_id = t.id();
-                let trt_name = self.formatter.fmt_type_name_maybe_namespaced(t_id.into());
-                if self.tcx.resolve_trait(t_id).attrs.disable {
+                let t_def = self.tcx.resolve_trait(t.id());
+                let trt_name = self.formatter.fmt_type_name_maybe_namespaced(t_def.into());
+                if t_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled trait {trt_name}"))
                 }
                 let ret = trt_name.clone();
-                let header_path = self.formatter.fmt_decl_header_path(t_id.into());
+                let header_path = self.formatter.fmt_decl_header_path(t_def.into());
                 header.includes.insert(header_path);
                 ret
             }
