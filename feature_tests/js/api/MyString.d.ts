@@ -25,4 +25,4 @@ export class MyString {
     borrow(): string;
 
     constructor(v: string);
-}
+}

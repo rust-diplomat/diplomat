@@ -41,10 +41,10 @@ class NestedBorrowedFields internal constructor (
         @JvmStatic
         
         fun fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields {
-            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.borrowUtf16(dstr16X)
-            val (dstr16ZMem, dstr16ZSlice) = PrimitiveArrayTools.borrowUtf16(dstr16Z)
-            val (utf8StrYMem, utf8StrYSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrY)
-            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrZ)
+            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.borrowUtf16(dstr16X)
+            val (dstr16ZMem, dstr16ZSlice) = PrimitiveArrayTools.borrowUtf16(dstr16Z)
+            val (utf8StrYMem, utf8StrYSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrY)
+            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrZ)
             
             val returnVal = lib.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.handle, foo.handle, dstr16XSlice, dstr16ZSlice, utf8StrYSlice, utf8StrZSlice);
             
@@ -52,8 +52,9 @@ class NestedBorrowedFields internal constructor (
             val yEdges: List<Any?> = listOf(bar) + listOf(utf8StrYMem)
             val zEdges: List<Any?> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)
             val returnStruct = NestedBorrowedFields(returnVal, xEdges, yEdges, zEdges)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
 
 }
+

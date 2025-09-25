@@ -27,4 +27,4 @@ class AttrOpaque2 internal constructor (
         internal val lib: AttrOpaque2Lib = Native.load("somelib", libClass)
     }
 
-}
+}

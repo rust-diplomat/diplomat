@@ -17,3 +17,4 @@ void add_Unnamespaced_binding(nb::module_ mod) {
         .def("use_namespaced", &Unnamespaced::use_namespaced, "_n"_a);
 }
 
+

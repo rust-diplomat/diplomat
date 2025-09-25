@@ -94,4 +94,4 @@ export class BorrowedFieldsReturning {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

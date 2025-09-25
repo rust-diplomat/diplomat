@@ -18,5 +18,7 @@ void add_DefaultEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const DefaultEnum& self){
                 return nb::str(nb::cast(DefaultEnum::Value(self)));
             });
+    
 }
 
+

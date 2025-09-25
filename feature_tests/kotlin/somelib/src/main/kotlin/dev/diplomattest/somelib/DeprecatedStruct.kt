@@ -10,3 +10,4 @@ class DeprecatedStruct internal constructor (
     ) {
 
     }
+

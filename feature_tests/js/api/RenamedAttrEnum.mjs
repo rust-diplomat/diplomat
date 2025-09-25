@@ -69,4 +69,4 @@ export class RenamedAttrEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

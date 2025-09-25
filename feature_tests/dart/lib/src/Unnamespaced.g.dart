@@ -27,11 +27,11 @@ final class Unnamespaced implements ffi.Finalizable {
     final result = _namespace_Unnamespaced_make(e.index);
     return Unnamespaced._fromFfi(result, []);
   }
-
+
   void useNamespaced(AttrOpaque1Renamed n) {
     _namespace_Unnamespaced_use_namespaced(_ffi, n._ffi);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_Unnamespaced_destroy')
@@ -42,11 +42,12 @@ external void _namespace_Unnamespaced_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_Unnamespaced_make')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'namespace_Unnamespaced_make')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_Unnamespaced_make(int e);
+external ffi.Pointer<ffi.Opaque> _namespace_Unnamespaced_make(int e);
 
 @_DiplomatFfiUse('namespace_Unnamespaced_use_namespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_Unnamespaced_use_namespaced')
 // ignore: non_constant_identifier_names
-external void _namespace_Unnamespaced_use_namespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> n);
+external void _namespace_Unnamespaced_use_namespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> n);
 
 // dart format on
+

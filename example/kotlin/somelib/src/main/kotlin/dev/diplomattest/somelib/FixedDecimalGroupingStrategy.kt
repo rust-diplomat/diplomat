@@ -30,4 +30,4 @@ enum class FixedDecimalGroupingStrategy {
             return Auto
         }
     }
-}
+}

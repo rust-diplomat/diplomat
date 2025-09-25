@@ -23,4 +23,4 @@ export class ImportedStruct {
     */
     constructor(structObj: ImportedStruct_obj);
 
-}
+}

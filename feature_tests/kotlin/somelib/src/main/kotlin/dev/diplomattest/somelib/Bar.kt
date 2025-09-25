@@ -37,7 +37,7 @@ class Bar internal constructor (
         val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Foo(handle, selfEdges, aEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
 
-}
+}

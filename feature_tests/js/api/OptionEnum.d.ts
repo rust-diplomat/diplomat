@@ -19,4 +19,4 @@ export class OptionEnum {
 
 
     constructor(value: OptionEnum | string );
-}
+}

@@ -103,4 +103,4 @@ export class ErrorStruct {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

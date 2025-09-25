@@ -47,12 +47,12 @@ enum class MyEnum(val inner: Int) {
             
             val returnVal = lib.MyEnum_get_a();
             return (MyEnum.fromNative(returnVal))
-        }
+        }
     }
     
     fun intoValue(): Byte {
         
         val returnVal = lib.MyEnum_into_value(this.toNative());
         return (returnVal)
-    }
-}
+    }
+}

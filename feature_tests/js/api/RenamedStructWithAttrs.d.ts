@@ -26,4 +26,4 @@ export class RenamedStructWithAttrs {
     deprecated(): void;
 
     constructor(a: boolean, b: number);
-}
+}

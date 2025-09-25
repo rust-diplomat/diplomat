@@ -252,4 +252,4 @@ export class MyStruct {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

@@ -44,11 +44,11 @@ class FixedDecimalFormatter internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = FixedDecimalFormatter(handle, selfEdges)
                 CLEANER.register(returnOpaque, FixedDecimalFormatter.FixedDecimalFormatterCleaner(handle, FixedDecimalFormatter.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 return UnitError().err()
-            }
-        }
+            }
+        }
     }
     
     /** Formats a [FixedDecimal] to a string.
@@ -61,6 +61,6 @@ class FixedDecimalFormatter internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
-}
+}

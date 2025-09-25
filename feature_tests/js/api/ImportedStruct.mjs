@@ -104,4 +104,4 @@ export class ImportedStruct {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

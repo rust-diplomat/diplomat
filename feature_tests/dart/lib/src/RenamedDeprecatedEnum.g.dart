@@ -8,6 +8,7 @@ enum RenamedDeprecatedEnum {
 
   a;
 
-}
+}
 
 // dart format on
+

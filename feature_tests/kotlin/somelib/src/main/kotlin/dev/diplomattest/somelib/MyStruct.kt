@@ -56,8 +56,8 @@ class MyStruct internal constructor (
             val returnVal = lib.MyStruct_new();
             
             val returnStruct = MyStruct(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
         @JvmStatic
         
         fun returnsZstResult(): Result<Unit> {
@@ -67,8 +67,8 @@ class MyStruct internal constructor (
                 return Unit.ok()
             } else {
                 return MyZst().err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun failsZstResult(): Result<Unit> {
@@ -78,14 +78,15 @@ class MyStruct internal constructor (
                 return Unit.ok()
             } else {
                 return MyZst().err()
-            }
-        }
+            }
+        }
     }
     
     fun intoA(): UByte {
         
         val returnVal = lib.MyStruct_into_a(nativeStruct);
         return (returnVal.toUByte())
-    }
+    }
 
 }
+

@@ -40,7 +40,7 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
     final result = _namespace_OpaqueIterator_next(_ffi);
     return result.address == 0 ? null : AttrOpaque1Renamed._fromFfi(result, []);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_OpaqueIterator_destroy')
@@ -51,6 +51,7 @@ external void _namespace_OpaqueIterator_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_OpaqueIterator_next')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_OpaqueIterator_next')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterator_next(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterator_next(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

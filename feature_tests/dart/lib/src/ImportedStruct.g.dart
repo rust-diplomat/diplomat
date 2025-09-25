@@ -46,6 +46,7 @@ final class ImportedStruct {
         foo,
         count,
       ]);
-}
+}
 
 // dart format on
+

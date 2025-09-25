@@ -84,4 +84,4 @@ export class DefaultEnum {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

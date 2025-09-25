@@ -69,4 +69,4 @@ export class UnimportedEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

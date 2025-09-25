@@ -37,7 +37,7 @@ final class StructWithSlices {
     _StructWithSlices_return_last(_toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -63,6 +63,7 @@ final class StructWithSlices {
 @_DiplomatFfiUse('StructWithSlices_return_last')
 @ffi.Native<ffi.Void Function(_StructWithSlicesFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'StructWithSlices_return_last')
 // ignore: non_constant_identifier_names
-external void _StructWithSlices_return_last(_StructWithSlicesFfi self, ffi.Pointer<ffi.Opaque> write);
+external void _StructWithSlices_return_last(_StructWithSlicesFfi self, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on
+

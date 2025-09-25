@@ -36,8 +36,8 @@ class OpaqueRefIterable internal constructor (
             val handle = returnVal 
             val returnOpaque = OpaqueRefIterable(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueRefIterable.OpaqueRefIterableCleaner(handle, OpaqueRefIterable.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     override fun iterator(): OpaqueRefIterator {
@@ -48,7 +48,7 @@ class OpaqueRefIterable internal constructor (
         val handle = returnVal 
         val returnOpaque = OpaqueRefIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, OpaqueRefIterator.OpaqueRefIteratorCleaner(handle, OpaqueRefIterator.lib));
-        return returnOpaque
-    }
+        return returnOpaque
+    }
 
-}
+}

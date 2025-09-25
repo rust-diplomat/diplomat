@@ -165,4 +165,4 @@ export class Opaque {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

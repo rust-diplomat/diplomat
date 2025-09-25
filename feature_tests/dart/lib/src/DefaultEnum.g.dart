@@ -13,12 +13,13 @@ enum DefaultEnum {
     final result = _DefaultEnum_new();
     return DefaultEnum.values[result];
   }
-
+
 }
 
 @_DiplomatFfiUse('DefaultEnum_new')
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'DefaultEnum_new')
 // ignore: non_constant_identifier_names
-external int _DefaultEnum_new();
+external int _DefaultEnum_new();
 
 // dart format on
+

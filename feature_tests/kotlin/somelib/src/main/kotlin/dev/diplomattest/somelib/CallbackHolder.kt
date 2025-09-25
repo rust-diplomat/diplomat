@@ -86,14 +86,14 @@ class CallbackHolder internal constructor (
             val handle = returnVal 
             val returnOpaque = CallbackHolder(handle, selfEdges)
             CLEANER.register(returnOpaque, CallbackHolder.CallbackHolderCleaner(handle, CallbackHolder.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun call(a: Int): Int {
         
         val returnVal = lib.CallbackHolder_call(handle, a);
         return (returnVal)
-    }
+    }
 
-}
+}

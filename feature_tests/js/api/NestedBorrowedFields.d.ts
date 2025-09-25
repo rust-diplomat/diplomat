@@ -33,4 +33,4 @@ export class NestedBorrowedFields {
 
 
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: string, dstr16Z: string, utf8StrY: string, utf8StrZ: string): NestedBorrowedFields;
-}
+}

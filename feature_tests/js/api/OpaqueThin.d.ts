@@ -15,4 +15,4 @@ export class OpaqueThin {
     get b(): number;
 
     get c(): string;
-}
+}

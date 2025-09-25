@@ -43,7 +43,7 @@ final class BorrowedFields {
     final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16._utf16AllocIn(dstr16Arena.arena), utf8Str._utf8AllocIn(utf8StrArena.arena));
     return BorrowedFields._fromFfi(result, xEdges);
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -71,6 +71,7 @@ final class BorrowedFields {
 @_DiplomatFfiUse('BorrowedFields_from_bar_and_strings')
 @ffi.Native<_BorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFields_from_bar_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, _SliceUtf16 dstr16, _SliceUtf8 utf8Str);
+external _BorrowedFieldsFfi _BorrowedFields_from_bar_and_strings(ffi.Pointer<ffi.Opaque> bar, _SliceUtf16 dstr16, _SliceUtf8 utf8Str);
 
 // dart format on
+

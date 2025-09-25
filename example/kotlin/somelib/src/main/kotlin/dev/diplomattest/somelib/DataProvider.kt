@@ -41,8 +41,8 @@ class DataProvider internal constructor (
             val handle = returnVal 
             val returnOpaque = DataProvider(handle, selfEdges)
             CLEANER.register(returnOpaque, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         /** This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
@@ -54,8 +54,8 @@ class DataProvider internal constructor (
                 return Unit.ok()
             } else {
                 return UnitError().err()
-            }
-        }
+            }
+        }
     }
 
-}
+}

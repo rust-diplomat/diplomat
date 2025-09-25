@@ -72,4 +72,4 @@ export class ContiguousEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

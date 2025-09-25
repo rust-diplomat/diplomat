@@ -19,4 +19,4 @@ export class OpaqueThinVec {
     get first(): OpaqueThin | null;
 
     constructor(a: Array<number>, b: Array<number>, c: string);
-}
+}

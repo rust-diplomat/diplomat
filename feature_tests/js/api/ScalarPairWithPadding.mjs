@@ -119,4 +119,4 @@ export class ScalarPairWithPadding {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

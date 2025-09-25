@@ -110,4 +110,4 @@ export class RenamedTestMacroStruct {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

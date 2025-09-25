@@ -43,8 +43,8 @@ class OpaqueMutexedString internal constructor (
             val handle = returnVal 
             val returnOpaque = OpaqueMutexedString(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun borrowOther(other: OpaqueMutexedString): OpaqueMutexedString {
@@ -53,15 +53,15 @@ class OpaqueMutexedString internal constructor (
             val selfEdges: List<Any> = listOf(other)
             val handle = returnVal 
             val returnOpaque = OpaqueMutexedString(handle, selfEdges)
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun change(number: ULong): Unit {
         
         val returnVal = lib.OpaqueMutexedString_change(handle, FFISizet(number));
         
-    }
+    }
     
     fun borrow(): OpaqueMutexedString {
         
@@ -69,8 +69,8 @@ class OpaqueMutexedString internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = OpaqueMutexedString(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString {
         
@@ -78,20 +78,20 @@ class OpaqueMutexedString internal constructor (
         val selfEdges: List<Any> = listOf(this) + listOf(other)
         val handle = returnVal 
         val returnOpaque = OpaqueMutexedString(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun getLenAndAdd(other: ULong): ULong {
         
         val returnVal = lib.OpaqueMutexedString_get_len_and_add(handle, FFISizet(other));
         return (returnVal.toULong())
-    }
+    }
     
     fun dummyStr(): String {
         
         val returnVal = lib.OpaqueMutexedString_dummy_str(handle);
             return PrimitiveArrayTools.getUtf8(returnVal)
-    }
+    }
     
     fun wrapper(): Utf16Wrap {
         
@@ -100,13 +100,13 @@ class OpaqueMutexedString internal constructor (
         val handle = returnVal 
         val returnOpaque = Utf16Wrap(handle, selfEdges)
         CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun toUnsignedFromUnsigned(input: UShort): UShort {
         
         val returnVal = lib.OpaqueMutexedString_to_unsigned_from_unsigned(handle, FFIUint16(input));
         return (returnVal.toUShort())
-    }
+    }
 
-}
+}

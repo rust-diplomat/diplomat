@@ -12,4 +12,4 @@ export class RenamedDeprecatedOpaque {
     /** @internal */
     constructor();
 
-}
+}

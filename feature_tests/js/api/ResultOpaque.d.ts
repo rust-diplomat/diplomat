@@ -33,4 +33,4 @@ export class ResultOpaque {
     assertInteger(i: number): void;
 
     constructor(i: number);
-}
+}

@@ -61,4 +61,4 @@ export class Bar {
     constructor(symbol, ptr, selfEdge, bEdge, aEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

@@ -27,3 +27,4 @@ void add_Float64VecError_binding(nb::module_ mod) {
         .def_static("new", &Float64VecError::new_, "v"_a);
 }
 
+

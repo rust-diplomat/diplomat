@@ -27,14 +27,14 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
     final result = _namespace_OpaqueIterable_new(size);
     return RenamedOpaqueIterable._fromFfi(result, []);
   }
-
+
   RenamedOpaqueIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_OpaqueIterable_iter(_ffi);
     return RenamedOpaqueIterator._fromFfi(result, [], aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_OpaqueIterable_destroy')
@@ -45,11 +45,12 @@ external void _namespace_OpaqueIterable_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_OpaqueIterable_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterable_new(int size);
+external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterable_new(int size);
 
 @_DiplomatFfiUse('namespace_OpaqueIterable_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_iter')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterable_iter(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterable_iter(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

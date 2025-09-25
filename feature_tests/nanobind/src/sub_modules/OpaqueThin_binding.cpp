@@ -16,3 +16,4 @@ void add_OpaqueThin_binding(nb::module_ mod) {
         .def_prop_ro("c", &OpaqueThin::c);
 }
 
+

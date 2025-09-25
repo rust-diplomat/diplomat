@@ -35,4 +35,4 @@ class ErrorEnumError internal constructor(internal val value: ErrorEnum): Except
     }
 
     fun getValue(): ErrorEnum = value
-}
+}

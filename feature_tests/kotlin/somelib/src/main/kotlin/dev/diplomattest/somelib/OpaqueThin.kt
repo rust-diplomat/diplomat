@@ -34,13 +34,13 @@ class OpaqueThin internal constructor (
         
         val returnVal = lib.OpaqueThin_a(handle);
         return (returnVal)
-    }
+    }
     
     fun b(): Float {
         
         val returnVal = lib.OpaqueThin_b(handle);
         return (returnVal)
-    }
+    }
     
     fun c(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
@@ -48,6 +48,6 @@ class OpaqueThin internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
-}
+}

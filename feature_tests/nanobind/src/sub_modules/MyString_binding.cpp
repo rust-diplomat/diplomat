@@ -21,3 +21,4 @@ void add_MyString_binding(nb::module_ mod) {
         .def_static("string_transform", &MyString::string_transform, "foo"_a);
 }
 
+

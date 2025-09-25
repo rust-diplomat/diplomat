@@ -226,4 +226,4 @@ NB_MODULE(somelib, somelib_mod)
     ns::add_ns_func_binding(somelib_ns_mod);
     
     
-}
+}

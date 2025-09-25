@@ -125,4 +125,4 @@ export class FixedDecimalFormatterOptions {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

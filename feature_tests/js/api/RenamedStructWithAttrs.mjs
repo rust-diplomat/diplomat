@@ -159,4 +159,4 @@ export class RenamedStructWithAttrs {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

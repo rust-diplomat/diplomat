@@ -106,4 +106,4 @@ export class MyEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

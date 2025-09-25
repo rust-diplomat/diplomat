@@ -20,4 +20,4 @@ export class ContiguousEnum {
 
 
     constructor(value: ContiguousEnum | string );
-}
+}

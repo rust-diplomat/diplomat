@@ -20,6 +20,7 @@ void add_CyclicStructA_binding(nb::module_ mod) {
         .def("double_cyclic_out", &CyclicStructA::double_cyclic_out, "cyclic_struct_a"_a)
         .def_static("get_b", &CyclicStructA::get_b)
         .def_prop_ro("getter_out", &CyclicStructA::getter_out)
-        .def_static("nested_slice", &CyclicStructA::nested_slice, "sl"_a);
+        .def_static("nested_slice", &CyclicStructA::nested_slice, "sl"_a);
 }
 
+

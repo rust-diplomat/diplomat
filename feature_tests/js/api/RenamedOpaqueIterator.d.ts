@@ -12,4 +12,4 @@ export class RenamedOpaqueIterator {
 
 
     next(): IteratorResult<AttrOpaque1Renamed>;
-}
+}

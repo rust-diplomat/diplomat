@@ -131,4 +131,4 @@ export class StructWithSlices {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

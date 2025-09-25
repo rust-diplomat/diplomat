@@ -16,7 +16,7 @@ let termini = Object.assign({
         })).formatWrite(new somelib.FixedDecimal(valueV)),
         // For avoiding webpacking minifying issues:
         funcName: "FixedDecimalFormatter.formatWrite",
-        expr: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => "somelib.FixedDecimalFormatter.tryNew(new somelib.Locale(selfLocaleName), somelib.DataProvider.newStatic(), somelib.FixedDecimalFormatterOptions.fromFields({\n    groupingStrategy: selfOptionsGroupingStrategy,\n    someOtherConfig: selfOptionsSomeOtherConfig\n})).formatWrite(new somelib.FixedDecimal(valueV))".replace(/([\( ])selfLocaleName([,\) \n])/, '$1' + selfLocaleName + '$2').replace(/([\( ])selfOptionsGroupingStrategy([,\) \n])/, '$1' + selfOptionsGroupingStrategy + '$2').replace(/([\( ])selfOptionsSomeOtherConfig([,\) \n])/, '$1' + selfOptionsSomeOtherConfig + '$2').replace(/([\( ])valueV([,\) \n])/, '$1' + valueV + '$2'),
+        expr: (selfLocaleName, selfOptionsGroupingStrategy, selfOptionsSomeOtherConfig, valueV) => "somelib.FixedDecimalFormatter.tryNew(new somelib.Locale(selfLocaleName), somelib.DataProvider.newStatic(), somelib.FixedDecimalFormatterOptions.fromFields({\n    groupingStrategy: selfOptionsGroupingStrategy,\n    someOtherConfig: selfOptionsSomeOtherConfig\n})).formatWrite(new somelib.FixedDecimal(valueV))".replace(/([\( ])selfLocaleName([,\) \n])/, '$1' + selfLocaleName + '$2').replace(/([\( ])selfOptionsGroupingStrategy([,\) \n])/, '$1' + selfOptionsGroupingStrategy + '$2').replace(/([\( ])selfOptionsSomeOtherConfig([,\) \n])/, '$1' + selfOptionsSomeOtherConfig + '$2').replace(/([\( ])valueV([,\) \n])/, '$1' + valueV + '$2'),
         parameters: [
             
             {

@@ -22,5 +22,7 @@ void add_MyEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const MyEnum& self){
                 return nb::str(nb::cast(MyEnum::Value(self)));
             });
+    
 }
 
+

@@ -123,4 +123,4 @@ export class OptionStruct {
     constructor(structObj, internalConstructor) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

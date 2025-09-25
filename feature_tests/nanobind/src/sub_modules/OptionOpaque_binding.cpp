@@ -36,3 +36,4 @@ void add_OptionOpaque_binding(nb::module_ mod) {
         .def("returns_some_self", &OptionOpaque::returns_some_self, nb::rv_policy::reference_internal);
 }
 
+

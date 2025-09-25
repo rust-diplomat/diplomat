@@ -95,4 +95,4 @@ export class RenamedVectorTest {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

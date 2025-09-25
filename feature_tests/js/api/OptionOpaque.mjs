@@ -339,4 +339,4 @@ export class OptionOpaque {
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

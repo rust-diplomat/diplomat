@@ -27,4 +27,4 @@ class RefListParameter internal constructor (
         internal val lib: RefListParameterLib = Native.load("somelib", libClass)
     }
 
-}
+}

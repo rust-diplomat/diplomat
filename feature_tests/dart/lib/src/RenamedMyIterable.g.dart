@@ -28,14 +28,14 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
     final result = _namespace_MyIterable_new(x._uint8AllocIn(temp.arena));
     return RenamedMyIterable._fromFfi(result, []);
   }
-
+
   RenamedMyIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_MyIterable_iter(_ffi);
     return RenamedMyIterator._fromFfi(result, [], aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_MyIterable_destroy')
@@ -46,11 +46,12 @@ external void _namespace_MyIterable_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_MyIterable_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint8)>(isLeaf: true, symbol: 'namespace_MyIterable_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_new(_SliceUint8 x);
+external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_new(_SliceUint8 x);
 
 @_DiplomatFfiUse('namespace_MyIterable_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterable_iter')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_iter(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _namespace_MyIterable_iter(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

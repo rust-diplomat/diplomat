@@ -99,4 +99,4 @@ export class FixedDecimal {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

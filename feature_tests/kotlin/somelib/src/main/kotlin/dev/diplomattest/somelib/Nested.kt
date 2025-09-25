@@ -27,4 +27,4 @@ class Nested internal constructor (
         internal val lib: NestedLib = Native.load("somelib", libClass)
     }
 
-}
+}

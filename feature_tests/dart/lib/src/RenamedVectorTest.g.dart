@@ -27,12 +27,12 @@ final class RenamedVectorTest implements ffi.Finalizable {
     final result = _namespace_VectorTest_new();
     return RenamedVectorTest._fromFfi(result, []);
   }
-
+
   int get len {
     final result = _namespace_VectorTest_len(_ffi);
     return result;
   }
-
+
   double? operator [](int idx) {
     final result = _namespace_VectorTest_get(_ffi, idx);
     if (!result.isOk) {
@@ -40,11 +40,11 @@ final class RenamedVectorTest implements ffi.Finalizable {
     }
     return result.union.ok;
   }
-
+
   void push(double value) {
     _namespace_VectorTest_push(_ffi, value);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_VectorTest_destroy')
@@ -55,21 +55,22 @@ external void _namespace_VectorTest_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_VectorTest_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_VectorTest_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_VectorTest_new();
+external ffi.Pointer<ffi.Opaque> _namespace_VectorTest_new();
 
 @_DiplomatFfiUse('namespace_VectorTest_len')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_VectorTest_len')
 // ignore: non_constant_identifier_names
-external int _namespace_VectorTest_len(ffi.Pointer<ffi.Opaque> self);
+external int _namespace_VectorTest_len(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('namespace_VectorTest_get')
 @ffi.Native<_ResultDoubleVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_VectorTest_get')
 // ignore: non_constant_identifier_names
-external _ResultDoubleVoid _namespace_VectorTest_get(ffi.Pointer<ffi.Opaque> self, int idx);
+external _ResultDoubleVoid _namespace_VectorTest_get(ffi.Pointer<ffi.Opaque> self, int idx);
 
 @_DiplomatFfiUse('namespace_VectorTest_push')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Double)>(isLeaf: true, symbol: 'namespace_VectorTest_push')
 // ignore: non_constant_identifier_names
-external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double value);
+external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double value);
 
 // dart format on
+

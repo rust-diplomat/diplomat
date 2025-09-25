@@ -28,4 +28,4 @@ export class BorrowedFields {
 
 
     static fromBarAndStrings(bar: Bar, dstr16: string, utf8Str: string): BorrowedFields;
-}
+}

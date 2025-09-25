@@ -15,4 +15,4 @@ export class RenamedVectorTest {
     push(value: number): void;
 
     constructor();
-}
+}

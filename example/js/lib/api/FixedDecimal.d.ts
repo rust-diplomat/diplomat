@@ -29,4 +29,4 @@ export class FixedDecimal {
      * Construct an {@link FixedDecimal} from an integer.
      */
     constructor(v: number);
-}
+}

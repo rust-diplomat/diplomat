@@ -25,4 +25,4 @@ export class CyclicStructC {
     static takesNestedParameters(c: CyclicStructC_obj): CyclicStructC;
 
     cyclicOut(): string;
-}
+}

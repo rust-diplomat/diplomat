@@ -10,6 +10,7 @@ void add_ImportedStruct_binding(nb::module_ mod) {
         .def(nb::init<>())
         .def(nb::init<UnimportedEnum, uint8_t>(), "foo"_a.none(),  "count"_a.none())
         .def_rw("foo", &ImportedStruct::foo)
-        .def_rw("count", &ImportedStruct::count);
+        .def_rw("count", &ImportedStruct::count);
 }
 
+

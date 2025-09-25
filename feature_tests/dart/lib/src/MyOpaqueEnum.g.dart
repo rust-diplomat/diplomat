@@ -27,13 +27,13 @@ final class MyOpaqueEnum implements ffi.Finalizable {
     final result = _MyOpaqueEnum_new();
     return MyOpaqueEnum._fromFfi(result, []);
   }
-
+
   String toString() {
     final write = _Write();
     _MyOpaqueEnum_to_string(_ffi, write._ffi);
     return write.finalize();
   }
-
+
 }
 
 @_DiplomatFfiUse('MyOpaqueEnum_destroy')
@@ -44,11 +44,12 @@ external void _MyOpaqueEnum_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('MyOpaqueEnum_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'MyOpaqueEnum_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyOpaqueEnum_new();
+external ffi.Pointer<ffi.Opaque> _MyOpaqueEnum_new();
 
 @_DiplomatFfiUse('MyOpaqueEnum_to_string')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyOpaqueEnum_to_string')
 // ignore: non_constant_identifier_names
-external void _MyOpaqueEnum_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external void _MyOpaqueEnum_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on
+

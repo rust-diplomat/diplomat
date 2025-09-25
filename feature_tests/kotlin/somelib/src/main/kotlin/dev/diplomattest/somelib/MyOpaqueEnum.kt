@@ -36,8 +36,8 @@ class MyOpaqueEnum internal constructor (
             val handle = returnVal 
             val returnOpaque = MyOpaqueEnum(handle, selfEdges)
             CLEANER.register(returnOpaque, MyOpaqueEnum.MyOpaqueEnumCleaner(handle, MyOpaqueEnum.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun toString_(): String {
@@ -46,6 +46,6 @@ class MyOpaqueEnum internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
-}
+}

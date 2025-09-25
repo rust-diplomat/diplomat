@@ -28,6 +28,7 @@ final class RenamedAttrOpaque2 implements ffi.Finalizable {
 @_DiplomatFfiUse('namespace_AttrOpaque2_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_AttrOpaque2_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque2_destroy(ffi.Pointer<ffi.Void> self);
+external void _namespace_AttrOpaque2_destroy(ffi.Pointer<ffi.Void> self);
 
 // dart format on
+

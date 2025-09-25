@@ -9,4 +9,4 @@ export class RefListParameter {
     /** @internal */
     constructor();
 
-}
+}

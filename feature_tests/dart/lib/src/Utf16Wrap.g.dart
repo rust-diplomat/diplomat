@@ -28,20 +28,20 @@ final class Utf16Wrap implements ffi.Finalizable {
     final result = _Utf16Wrap_from_utf16(input._utf16AllocIn(temp.arena));
     return Utf16Wrap._fromFfi(result, []);
   }
-
+
   String getDebugStr() {
     final write = _Write();
     _Utf16Wrap_get_debug_str(_ffi, write._ffi);
     return write.finalize();
   }
-
+
   String borrowCont() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('Utf16Wrap_destroy')
@@ -52,16 +52,17 @@ external void _Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('Utf16Wrap_from_utf16')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf16)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(_SliceUtf16 input);
+external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(_SliceUtf16 input);
 
 @_DiplomatFfiUse('Utf16Wrap_get_debug_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_get_debug_str')
 // ignore: non_constant_identifier_names
-external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @_DiplomatFfiUse('Utf16Wrap_borrow_cont')
 @ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_borrow_cont')
 // ignore: non_constant_identifier_names
-external _SliceUtf16 _Utf16Wrap_borrow_cont(ffi.Pointer<ffi.Opaque> self);
+external _SliceUtf16 _Utf16Wrap_borrow_cont(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

@@ -77,4 +77,4 @@ export class RenamedMyIterable {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

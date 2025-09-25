@@ -150,4 +150,4 @@ export class BorrowedFields {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

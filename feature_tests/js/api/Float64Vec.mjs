@@ -259,4 +259,4 @@ export class Float64Vec {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

@@ -28,4 +28,4 @@ export class OpaqueMutexedString {
     wrapper(): Utf16Wrap;
 
     toUnsignedFromUnsigned(input: number): number;
-}
+}

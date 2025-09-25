@@ -43,7 +43,7 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
     }
     return result.union.ok;
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_MyIterator_destroy')
@@ -54,6 +54,7 @@ external void _namespace_MyIterator_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_MyIterator_next')
 @ffi.Native<_ResultUint8Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterator_next')
 // ignore: non_constant_identifier_names
-external _ResultUint8Void _namespace_MyIterator_next(ffi.Pointer<ffi.Opaque> self);
+external _ResultUint8Void _namespace_MyIterator_next(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

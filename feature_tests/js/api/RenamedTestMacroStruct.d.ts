@@ -18,4 +18,4 @@ export class RenamedTestMacroStruct {
     static testFunc(): number;
 
     constructor();
-}
+}

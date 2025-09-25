@@ -32,6 +32,6 @@ class OptionOpaqueChar internal constructor (
         
         val returnVal = lib.OptionOpaqueChar_assert_char(handle, ch);
         
-    }
+    }
 
-}
+}

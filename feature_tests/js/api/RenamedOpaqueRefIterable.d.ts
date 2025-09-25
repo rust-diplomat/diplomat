@@ -12,4 +12,4 @@ export class RenamedOpaqueRefIterable {
     [Symbol.iterator](): RenamedOpaqueRefIterator;
 
     constructor(size: number);
-}
+}

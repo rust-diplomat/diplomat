@@ -15,7 +15,7 @@ let termini = Object.assign({
         }).c,
         // For avoiding webpacking minifying issues:
         funcName: "RenamedStructWithAttrs.c",
-        expr: (selfA, selfB) => "somelib.RenamedStructWithAttrs.fromFields({\n    a: selfA,\n    b: selfB\n}).c".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
+        expr: (selfA, selfB) => "somelib.RenamedStructWithAttrs.fromFields({\n    a: selfA,\n    b: selfB\n}).c".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2'),
         parameters: [
             
             {
@@ -51,7 +51,7 @@ let termini = Object.assign({
         }).cyclicOut(),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.cyclicOut",
-        expr: (selfAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).cyclicOut()".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
+        expr: (selfAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).cyclicOut()".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
         parameters: [
             
             {
@@ -75,7 +75,7 @@ let termini = Object.assign({
         })),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.doubleCyclicOut",
-        expr: (selfAField, cyclicStructAAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).doubleCyclicOut(somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: cyclicStructAAField\n})\n}))".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2').replace(/([\( ])cyclicStructAAField([,\) \n])/, '$1' + cyclicStructAAField + '$2'),
+        expr: (selfAField, cyclicStructAAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).doubleCyclicOut(somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: cyclicStructAAField\n})\n}))".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2').replace(/([\( ])cyclicStructAAField([,\) \n])/, '$1' + cyclicStructAAField + '$2'),
         parameters: [
             
             {
@@ -101,7 +101,7 @@ let termini = Object.assign({
         }).getterOut,
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructA.getterOut",
-        expr: (selfAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).getterOut".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
+        expr: (selfAField) => "somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAField\n})\n}).getterOut".replace(/([\( ])selfAField([,\) \n])/, '$1' + selfAField + '$2'),
         parameters: [
             
             {
@@ -123,7 +123,7 @@ let termini = Object.assign({
         }).cyclicOut(),
         // For avoiding webpacking minifying issues:
         funcName: "CyclicStructC.cyclicOut",
-        expr: (selfAAField) => "somelib.CyclicStructC.fromFields({\n    a: somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAAField\n})\n})\n}).cyclicOut()".replace(/([\( ])selfAAField([,\) \n])/, '$1' + selfAAField + '$2'),
+        expr: (selfAAField) => "somelib.CyclicStructC.fromFields({\n    a: somelib.CyclicStructA.fromFields({\n    a: somelib.CyclicStructB.fromFields({\n    field: selfAAField\n})\n})\n}).cyclicOut()".replace(/([\( ])selfAAField([,\) \n])/, '$1' + selfAAField + '$2'),
         parameters: [
             
             {
@@ -147,7 +147,7 @@ let termini = Object.assign({
         }).intoA(),
         // For avoiding webpacking minifying issues:
         funcName: "MyStruct.intoA",
-        expr: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => "somelib.MyStruct.fromFields({\n    a: selfA,\n    b: selfB,\n    c: selfC,\n    d: selfD,\n    e: selfE,\n    f: selfF,\n    g: selfG\n}).intoA()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2').replace(/([\( ])selfD([,\) \n])/, '$1' + selfD + '$2').replace(/([\( ])selfE([,\) \n])/, '$1' + selfE + '$2').replace(/([\( ])selfF([,\) \n])/, '$1' + selfF + '$2').replace(/([\( ])selfG([,\) \n])/, '$1' + selfG + '$2'),
+        expr: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => "somelib.MyStruct.fromFields({\n    a: selfA,\n    b: selfB,\n    c: selfC,\n    d: selfD,\n    e: selfE,\n    f: selfF,\n    g: selfG\n}).intoA()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2').replace(/([\( ])selfD([,\) \n])/, '$1' + selfD + '$2').replace(/([\( ])selfE([,\) \n])/, '$1' + selfE + '$2').replace(/([\( ])selfF([,\) \n])/, '$1' + selfF + '$2').replace(/([\( ])selfG([,\) \n])/, '$1' + selfG + '$2'),
         parameters: [
             
             {
@@ -203,7 +203,7 @@ let termini = Object.assign({
         }).returnLast(),
         // For avoiding webpacking minifying issues:
         funcName: "StructWithSlices.returnLast",
-        expr: (selfFirst, selfSecond) => "somelib.StructWithSlices.fromFields({\n    first: selfFirst,\n    second: selfSecond\n}).returnLast()".replace(/([\( ])selfFirst([,\) \n])/, '$1' + selfFirst + '$2').replace(/([\( ])selfSecond([,\) \n])/, '$1' + selfSecond + '$2'),
+        expr: (selfFirst, selfSecond) => "somelib.StructWithSlices.fromFields({\n    first: selfFirst,\n    second: selfSecond\n}).returnLast()".replace(/([\( ])selfFirst([,\) \n])/, '$1' + selfFirst + '$2').replace(/([\( ])selfSecond([,\) \n])/, '$1' + selfSecond + '$2'),
         parameters: [
             
             {

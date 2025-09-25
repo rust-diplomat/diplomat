@@ -36,8 +36,8 @@ class CyclicStructC internal constructor (
             val returnVal = lib.CyclicStructC_takes_nested_parameters(c.nativeStruct);
             
             val returnStruct = CyclicStructC(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
     
     fun cyclicOut(): String {
@@ -46,6 +46,7 @@ class CyclicStructC internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
 }
+

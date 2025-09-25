@@ -38,22 +38,23 @@ enum MyEnum {
     final result = _MyEnum_into_value(_ffi);
     return result;
   }
-
+
   static MyEnum getA() {
     final result = _MyEnum_get_a();
     return MyEnum.values.firstWhere((v) => v._ffi == result);
   }
-
+
 }
 
 @_DiplomatFfiUse('MyEnum_into_value')
 @ffi.Native<ffi.Int8 Function(ffi.Int32)>(isLeaf: true, symbol: 'MyEnum_into_value')
 // ignore: non_constant_identifier_names
-external int _MyEnum_into_value(int self);
+external int _MyEnum_into_value(int self);
 
 @_DiplomatFfiUse('MyEnum_get_a')
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'MyEnum_get_a')
 // ignore: non_constant_identifier_names
-external int _MyEnum_get_a();
+external int _MyEnum_get_a();
 
 // dart format on
+

@@ -34,7 +34,7 @@ class MyIterator internal constructor (
         
         val returnVal = lib.namespace_MyIterator_next(handle);
         return returnVal.option()?.toUByte()
-    }
+    }
 
     var iterVal = nextInternal()
 
@@ -52,4 +52,4 @@ class MyIterator internal constructor (
         }
     }
 
-}
+}

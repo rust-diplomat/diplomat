@@ -72,4 +72,4 @@ export class RenamedOpaqueRefIterable {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

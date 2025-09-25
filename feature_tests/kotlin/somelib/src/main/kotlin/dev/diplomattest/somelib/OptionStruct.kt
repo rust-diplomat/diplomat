@@ -47,3 +47,4 @@ class OptionStruct internal constructor (
     }
 
 }
+

@@ -12,4 +12,4 @@ export class RenamedOpaqueIterable {
     [Symbol.iterator](): RenamedOpaqueIterator;
 
     constructor(size: number);
-}
+}

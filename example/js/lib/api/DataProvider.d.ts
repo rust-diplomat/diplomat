@@ -24,4 +24,4 @@ export class DataProvider {
      * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
      */
     static returnsResult(): boolean;
-}
+}

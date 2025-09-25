@@ -86,14 +86,14 @@ class MutableCallbackHolder internal constructor (
             val handle = returnVal 
             val returnOpaque = MutableCallbackHolder(handle, selfEdges)
             CLEANER.register(returnOpaque, MutableCallbackHolder.MutableCallbackHolderCleaner(handle, MutableCallbackHolder.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun call(a: Int): Int {
         
         val returnVal = lib.MutableCallbackHolder_call(handle, a);
         return (returnVal)
-    }
+    }
 
-}
+}

@@ -27,4 +27,4 @@ enum class DeprecatedEnum {
             return A
         }
     }
-}
+}

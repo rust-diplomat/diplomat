@@ -12,4 +12,4 @@ export class RenamedMyIterable {
     [Symbol.iterator](): RenamedMyIterator;
 
     constructor(x: Array<number>);
-}
+}

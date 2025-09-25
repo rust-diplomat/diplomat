@@ -19,4 +19,4 @@ export class UnimportedEnum {
 
 
     constructor(value: UnimportedEnum | string );
-}
+}

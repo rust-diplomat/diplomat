@@ -13,4 +13,4 @@ export class Utf16Wrap {
     borrowCont(): string;
 
     constructor(input: string);
-}
+}

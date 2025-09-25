@@ -29,4 +29,4 @@ export class AttrOpaque1Renamed {
      * More example docs
      */
     constructor();
-}
+}

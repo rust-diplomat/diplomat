@@ -642,7 +642,7 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultUnitUnitUnion: Union() {
 }
 
@@ -657,6 +657,7 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 
 
+

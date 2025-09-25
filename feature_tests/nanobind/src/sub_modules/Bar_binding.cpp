@@ -14,3 +14,4 @@ void add_Bar_binding(nb::module_ mod) {
         .def_prop_ro("foo", &Bar::foo);
 }
 
+

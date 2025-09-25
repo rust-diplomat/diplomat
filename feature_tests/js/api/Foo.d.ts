@@ -26,4 +26,4 @@ export class Foo {
     static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;
 
     constructor(x: string);
-}
+}

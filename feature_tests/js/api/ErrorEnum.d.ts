@@ -18,4 +18,4 @@ export class ErrorEnum {
 
 
     constructor(value: ErrorEnum | string );
-}
+}

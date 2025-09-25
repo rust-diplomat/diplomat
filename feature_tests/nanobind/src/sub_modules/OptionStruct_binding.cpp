@@ -22,6 +22,7 @@ void add_OptionStruct_binding(nb::module_ mod) {
         .def_prop_rw("d", 
             [](const OptionStruct& self) { return self.d.get(); },
             [](OptionStruct& self, std::unique_ptr<OptionOpaque>&& v) { self.d = std::move(v); }
-        );
+        );
 }
 
+

@@ -169,4 +169,4 @@ export class BigStructWithStuff {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

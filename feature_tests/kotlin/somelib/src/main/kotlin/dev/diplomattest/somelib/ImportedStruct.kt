@@ -33,3 +33,4 @@ class ImportedStruct internal constructor (
     }
 
 }
+

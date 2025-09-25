@@ -8,8 +8,9 @@ namespace ns{
 
 void add_RenamedDeprecatedStruct_binding(nb::module_ mod) {
     nb::class_<ns::RenamedDeprecatedStruct>(mod, "RenamedDeprecatedStruct")
-        .def(nb::init<>());
+        .def(nb::init<>());
 }
 
 
 }
+

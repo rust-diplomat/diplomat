@@ -122,4 +122,4 @@ export class OpaqueThinVec {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

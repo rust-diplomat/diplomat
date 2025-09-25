@@ -16,6 +16,7 @@ void add_ScalarPairWithPadding_binding(nb::module_ mod) {
         .def(nb::init<uint8_t, uint32_t>(), "first"_a.none(),  "second"_a.none())
         .def_rw("first", &ScalarPairWithPadding::first)
         .def_rw("second", &ScalarPairWithPadding::second)
-        .def("assert_value", &ScalarPairWithPadding::assert_value);
+        .def("assert_value", &ScalarPairWithPadding::assert_value);
 }
 
+

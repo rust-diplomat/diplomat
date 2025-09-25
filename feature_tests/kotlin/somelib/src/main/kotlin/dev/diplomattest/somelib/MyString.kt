@@ -37,7 +37,7 @@ class MyString internal constructor (
         @JvmStatic
         
         fun new_(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -45,12 +45,12 @@ class MyString internal constructor (
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             if (vMem != null) vMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun newUnsafe(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new_unsafe(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -58,24 +58,24 @@ class MyString internal constructor (
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             if (vMem != null) vMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun newOwned(v: String): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.moveUtf8(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.moveUtf8(v)
             
             val returnVal = lib.MyString_new_owned(vSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun newFromFirst(v: Array<String>): MyString {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8s(v)
+            val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.MyString_new_from_first(vSlice);
             val selfEdges: List<Any> = listOf()
@@ -83,33 +83,33 @@ class MyString internal constructor (
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             vMem.forEach {if (it != null) it.close()}
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun getStaticStr(): String {
             
             val returnVal = lib.MyString_get_static_str();
                 return PrimitiveArrayTools.getUtf8(returnVal)
-        }
+        }
         @JvmStatic
         
         fun stringTransform(foo: String): String {
-            val (fooMem, fooSlice) = PrimitiveArrayTools.borrowUtf8(foo)
+            val (fooMem, fooSlice) = PrimitiveArrayTools.borrowUtf8(foo)
             val write = DW.lib.diplomat_buffer_write_create(0)
             val returnVal = lib.MyString_string_transform(fooSlice, write);
             
             val returnString = DW.writeToString(write)
             return returnString
-        }
+        }
     }
     
     fun setStr(newStr: String): Unit {
-        val (newStrMem, newStrSlice) = PrimitiveArrayTools.borrowUtf8(newStr)
+        val (newStrMem, newStrSlice) = PrimitiveArrayTools.borrowUtf8(newStr)
         
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
         
-    }
+    }
     
     fun getStr(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
@@ -117,12 +117,12 @@ class MyString internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
     
     fun borrow(): String {
         
         val returnVal = lib.MyString_borrow(handle);
             return PrimitiveArrayTools.getUtf8(returnVal)
-    }
+    }
 
-}
+}

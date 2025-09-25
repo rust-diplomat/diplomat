@@ -27,19 +27,19 @@ final class Opaque implements ffi.Finalizable {
     final result = _Opaque_new();
     return Opaque._fromFfi(result, []);
   }
-
+
   static Opaque? tryFromUtf8(String input) {
     final temp = _FinalizedArena();
     final result = _Opaque_try_from_utf8(input._utf8AllocIn(temp.arena));
     return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
-
+
   static Opaque fromStr(String input) {
     final temp = _FinalizedArena();
     final result = _Opaque_from_str(input._utf8AllocIn(temp.arena));
     return Opaque._fromFfi(result, []);
   }
-
+
   String getDebugStr() {
     final write = _Write();
     _Opaque_get_debug_str(_ffi, write._ffi);
@@ -55,22 +55,22 @@ final class Opaque implements ffi.Finalizable {
     final temp = _FinalizedArena();
     _Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
   }
-
+
   static int returnsUsize() {
     final result = _Opaque_returns_usize();
     return result;
   }
-
+
   static ImportedStruct returnsImported() {
     final result = _Opaque_returns_imported();
     return ImportedStruct._fromFfi(result);
   }
-
+
   static int cmp() {
     final result = _Opaque_cmp();
     return result;
   }
-
+
 }
 
 @_DiplomatFfiUse('Opaque_destroy')
@@ -81,41 +81,42 @@ external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('Opaque_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Opaque_new();
+external ffi.Pointer<ffi.Opaque> _Opaque_new();
 
 @_DiplomatFfiUse('Opaque_try_from_utf8')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_try_from_utf8')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(_SliceUtf8 input);
+external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(_SliceUtf8 input);
 
 @_DiplomatFfiUse('Opaque_from_str')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Opaque_from_str')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Opaque_from_str(_SliceUtf8 input);
+external ffi.Pointer<ffi.Opaque> _Opaque_from_str(_SliceUtf8 input);
 
 @_DiplomatFfiUse('Opaque_get_debug_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Opaque_get_debug_str')
 // ignore: non_constant_identifier_names
-external void _Opaque_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external void _Opaque_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @_DiplomatFfiUse('Opaque_assert_struct')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true, symbol: 'Opaque_assert_struct')
 // ignore: non_constant_identifier_names
-external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s);
+external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s);
 
 @_DiplomatFfiUse('Opaque_returns_usize')
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'Opaque_returns_usize')
 // ignore: non_constant_identifier_names
-external int _Opaque_returns_usize();
+external int _Opaque_returns_usize();
 
 @_DiplomatFfiUse('Opaque_returns_imported')
 @ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')
 // ignore: non_constant_identifier_names
-external _ImportedStructFfi _Opaque_returns_imported();
+external _ImportedStructFfi _Opaque_returns_imported();
 
 @_DiplomatFfiUse('Opaque_cmp')
 @ffi.Native<ffi.Int8 Function()>(isLeaf: true, symbol: 'Opaque_cmp')
 // ignore: non_constant_identifier_names
-external int _Opaque_cmp();
+external int _Opaque_cmp();
 
 // dart format on
+

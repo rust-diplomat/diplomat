@@ -9,6 +9,7 @@ enum ErrorEnum {
 
   bar;
 
-}
+}
 
 // dart format on
+

@@ -41,8 +41,8 @@ class BorrowedFieldsWithBounds internal constructor (
         @JvmStatic
         
         fun fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds {
-            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.borrowUtf16(dstr16X)
-            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrZ)
+            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.borrowUtf16(dstr16X)
+            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrZ)
             
             val returnVal = lib.BorrowedFieldsWithBounds_from_foo_and_strings(foo.handle, dstr16XSlice, utf8StrZSlice);
             
@@ -50,8 +50,9 @@ class BorrowedFieldsWithBounds internal constructor (
             val yEdges: List<Any?> = listOf(foo) + listOf(utf8StrZMem)
             val zEdges: List<Any?> = listOf(utf8StrZMem)
             val returnStruct = BorrowedFieldsWithBounds(returnVal, xEdges, yEdges, zEdges)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
 
 }
+

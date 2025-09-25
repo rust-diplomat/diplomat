@@ -34,6 +34,6 @@ enum class DefaultEnum {
             
             val returnVal = lib.DefaultEnum_new();
             return (DefaultEnum.fromNative(returnVal))
-        }
+        }
     }
-}
+}

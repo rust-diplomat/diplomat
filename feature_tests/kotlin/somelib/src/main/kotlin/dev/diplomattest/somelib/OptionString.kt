@@ -31,7 +31,7 @@ class OptionString internal constructor (
         @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {
-            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.borrowUtf8(diplomatStr)
+            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
             val returnVal = lib.OptionString_new(diplomatStrSlice);
             val selfEdges: List<Any> = listOf()
@@ -39,8 +39,8 @@ class OptionString internal constructor (
             val returnOpaque = OptionString(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
             if (diplomatStrMem != null) diplomatStrMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun write(): Result<String> {
@@ -52,8 +52,8 @@ class OptionString internal constructor (
             return returnString.ok()
         } else {
             return UnitError().err()
-        }
-    }
+        }
+    }
     
     fun borrow(): String? {
         
@@ -62,6 +62,6 @@ class OptionString internal constructor (
         val intermediateOption = returnVal.option() ?: return null
             return PrimitiveArrayTools.getUtf8(intermediateOption)
                                 
-    }
+    }
 
-}
+}

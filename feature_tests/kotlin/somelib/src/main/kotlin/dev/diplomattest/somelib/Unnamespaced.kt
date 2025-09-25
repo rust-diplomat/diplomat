@@ -36,14 +36,14 @@ class Unnamespaced internal constructor (
             val handle = returnVal 
             val returnOpaque = Unnamespaced(handle, selfEdges)
             CLEANER.register(returnOpaque, Unnamespaced.UnnamespacedCleaner(handle, Unnamespaced.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun useNamespaced(n: AttrOpaque1): Unit {
         
         val returnVal = lib.namespace_Unnamespaced_use_namespaced(handle, n.handle);
         
-    }
+    }
 
-}
+}

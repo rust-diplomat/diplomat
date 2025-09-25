@@ -29,35 +29,35 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     final result = _namespace_AttrOpaque1_new();
     return AttrOpaque1Renamed._fromFfi(result, []);
   }
-
+
   static int macTest() {
     final result = _namespace_AttrOpaque1_mac_test();
     return result;
   }
-
+
   static int hello() {
     final result = _namespace_AttrOpaque1_hello();
     return result;
   }
-
+
   int get methodRenamed {
     final result = _namespace_AttrOpaque1_method(_ffi);
     return result;
   }
-
+
   int get abirenamed {
     final result = _renamed_on_abi_only(_ffi);
     return result;
   }
-
+
   void useUnnamespaced(Unnamespaced un) {
     _namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);
   }
-
+
   void useNamespaced(RenamedAttrEnum n) {
     _namespace_AttrOpaque1_use_namespaced(_ffi, n.index);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_destroy')
@@ -68,36 +68,37 @@ external void _namespace_AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_AttrOpaque1_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
+external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_mac_test')
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_mac_test')
 // ignore: non_constant_identifier_names
-external int _namespace_AttrOpaque1_mac_test();
+external int _namespace_AttrOpaque1_mac_test();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_hello')
 @ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_hello')
 // ignore: non_constant_identifier_names
-external int _namespace_AttrOpaque1_hello();
+external int _namespace_AttrOpaque1_hello();
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_method')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
 // ignore: non_constant_identifier_names
-external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
+external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('renamed_on_abi_only')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_on_abi_only')
 // ignore: non_constant_identifier_names
-external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
+external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_use_unnamespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_use_unnamespaced')
 // ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque1_use_unnamespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> un);
+external void _namespace_AttrOpaque1_use_unnamespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> un);
 
 @_DiplomatFfiUse('namespace_AttrOpaque1_use_namespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_use_namespaced')
 // ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque1_use_namespaced(ffi.Pointer<ffi.Opaque> self, int n);
+external void _namespace_AttrOpaque1_use_namespaced(ffi.Pointer<ffi.Opaque> self, int n);
 
 // dart format on
+

@@ -37,7 +37,7 @@ final class DataProvider implements ffi.Finalizable {
     final result = _icu4x_DataProvider_returns_result_mv1();
     return result.isOk;
   }
-
+
 }
 
 @_DiplomatFfiUse('icu4x_DataProvider_destroy_mv1')
@@ -48,11 +48,12 @@ external void _icu4x_DataProvider_destroy_mv1(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('icu4x_DataProvider_new_static_mv1')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_new_static_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _icu4x_DataProvider_new_static_mv1();
+external ffi.Pointer<ffi.Opaque> _icu4x_DataProvider_new_static_mv1();
 
 @_DiplomatFfiUse('icu4x_DataProvider_returns_result_mv1')
 @ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'icu4x_DataProvider_returns_result_mv1')
 // ignore: non_constant_identifier_names
-external _ResultVoidVoid _icu4x_DataProvider_returns_result_mv1();
+external _ResultVoidVoid _icu4x_DataProvider_returns_result_mv1();
 
 // dart format on
+

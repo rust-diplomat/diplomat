@@ -42,7 +42,7 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
     final result = _OpaqueThinIter_next(_ffi);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('OpaqueThinIter_destroy')
@@ -53,6 +53,7 @@ external void _OpaqueThinIter_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('OpaqueThinIter_next')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinIter_next')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinIter_next(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinIter_next(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

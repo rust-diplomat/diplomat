@@ -181,4 +181,4 @@ export class NestedBorrowedFields {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

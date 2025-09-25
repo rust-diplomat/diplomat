@@ -15,3 +15,4 @@ void add_MyOpaqueEnum_binding(nb::module_ mod) {
         .def("to_string", &MyOpaqueEnum::to_string);
 }
 
+

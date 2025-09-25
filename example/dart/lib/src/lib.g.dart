@@ -129,7 +129,7 @@ final class _ResultOpaqueVoid extends ffi.Struct {
     struct.isOk = false;
     return struct;
   }
-}
+}
 
 final class _ResultVoidVoid extends ffi.Struct {
 
@@ -148,7 +148,7 @@ final class _ResultVoidVoid extends ffi.Struct {
     struct.isOk = false;
     return struct;
   }
-}
+}
 
 final class _SliceUtf8 extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> _data;
@@ -196,7 +196,7 @@ extension on String {
     slice._length = encoded.length;
     return slice;
   }
-}
+}
 
 final class _Write {
   final ffi.Pointer<ffi.Opaque> _ffi;
@@ -237,3 +237,4 @@ external ffi.Pointer<ffi.Uint8> _diplomat_buffer_write_get_bytes(ffi.Pointer<ffi
 external void _diplomat_buffer_write_destroy(ffi.Pointer<ffi.Opaque> ptr);
 
 // dart format on
+

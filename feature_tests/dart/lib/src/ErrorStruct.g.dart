@@ -46,6 +46,7 @@ final class ErrorStruct {
         i,
         j,
       ]);
-}
+}
 
 // dart format on
+

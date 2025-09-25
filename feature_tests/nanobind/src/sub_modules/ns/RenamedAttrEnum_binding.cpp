@@ -21,7 +21,9 @@ void add_RenamedAttrEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const ns::RenamedAttrEnum& self){
                 return nb::str(nb::cast(ns::RenamedAttrEnum::Value(self)));
             });
+    
 }
 
 
 }
+

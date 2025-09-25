@@ -45,3 +45,4 @@ class PrimitiveStruct internal constructor (
     }
 
 }
+

@@ -38,8 +38,8 @@ class CyclicStructA internal constructor (
             val returnVal = lib.CyclicStructA_get_b();
             
             val returnStruct = CyclicStructB(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
     
     fun cyclicOut(): String {
@@ -48,7 +48,7 @@ class CyclicStructA internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
     
     fun doubleCyclicOut(cyclicStructA: CyclicStructA): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
@@ -56,7 +56,7 @@ class CyclicStructA internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
     
     fun getterOut(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
@@ -64,6 +64,7 @@ class CyclicStructA internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
 }
+

@@ -15,4 +15,4 @@ export class Unnamespaced {
     static make(e: RenamedAttrEnum): Unnamespaced;
 
     useNamespaced(n: AttrOpaque1Renamed): void;
-}
+}

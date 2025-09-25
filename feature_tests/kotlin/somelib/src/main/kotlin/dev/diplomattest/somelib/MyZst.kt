@@ -10,3 +10,4 @@ class MyZst internal constructor (
     ): Exception("Rust error result for MyZst") {
 
     }
+

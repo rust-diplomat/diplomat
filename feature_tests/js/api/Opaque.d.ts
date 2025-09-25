@@ -33,4 +33,4 @@ export class Opaque {
     static cmp(): number;
 
     constructor();
-}
+}

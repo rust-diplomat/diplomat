@@ -46,7 +46,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
     _icu4x_FixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
     return write.finalize();
   }
-
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_destroy_mv1')
@@ -57,11 +57,12 @@ external void _icu4x_FixedDecimalFormatter_destroy_mv1(ffi.Pointer<ffi.Void> sel
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_try_new_mv1')
 @ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _FixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatter_try_new_mv1')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueVoid _icu4x_FixedDecimalFormatter_try_new_mv1(ffi.Pointer<ffi.Opaque> locale, ffi.Pointer<ffi.Opaque> provider, _FixedDecimalFormatterOptionsFfi options);
+external _ResultOpaqueVoid _icu4x_FixedDecimalFormatter_try_new_mv1(ffi.Pointer<ffi.Opaque> locale, ffi.Pointer<ffi.Opaque> provider, _FixedDecimalFormatterOptionsFfi options);
 
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_format_write_mv1')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatter_format_write_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_FixedDecimalFormatter_format_write_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> value, ffi.Pointer<ffi.Opaque> write);
+external void _icu4x_FixedDecimalFormatter_format_write_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> value, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on
+

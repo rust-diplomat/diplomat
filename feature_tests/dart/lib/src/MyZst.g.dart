@@ -14,6 +14,7 @@ final class MyZst {
 
   @override
   int get hashCode => 0;
-}
+}
 
 // dart format on
+

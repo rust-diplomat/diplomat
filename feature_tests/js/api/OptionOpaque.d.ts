@@ -48,4 +48,4 @@ export class OptionOpaque {
     static acceptsOptionInputStruct(arg: OptionInputStruct | null, sentinel: number): OptionInputStruct | null;
 
     static returnsOptionInputStruct(): OptionInputStruct;
-}
+}

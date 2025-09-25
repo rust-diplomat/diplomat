@@ -65,4 +65,4 @@ export class OpaqueThinIter {
     constructor(symbol, ptr, selfEdge, aEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

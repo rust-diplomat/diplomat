@@ -48,7 +48,7 @@ final class FixedDecimal implements ffi.Finalizable {
     }
     return write.finalize();
   }
-
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimal_destroy_mv1')
@@ -59,16 +59,17 @@ external void _icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('icu4x_FixedDecimal_new_mv1')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_new_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _icu4x_FixedDecimal_new_mv1(int v);
+external ffi.Pointer<ffi.Opaque> _icu4x_FixedDecimal_new_mv1(int v);
 
 @_DiplomatFfiUse('icu4x_FixedDecimal_multiply_pow10_mv1')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_multiply_pow10_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_FixedDecimal_multiply_pow10_mv1(ffi.Pointer<ffi.Opaque> self, int power);
+external void _icu4x_FixedDecimal_multiply_pow10_mv1(ffi.Pointer<ffi.Opaque> self, int power);
 
 @_DiplomatFfiUse('icu4x_FixedDecimal_to_string_mv1')
 @ffi.Native<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_to_string_mv1')
 // ignore: non_constant_identifier_names
-external _ResultVoidVoid _icu4x_FixedDecimal_to_string_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external _ResultVoidVoid _icu4x_FixedDecimal_to_string_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on
+

@@ -72,4 +72,4 @@ export class Locale {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

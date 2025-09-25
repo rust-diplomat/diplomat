@@ -66,4 +66,4 @@ export class RenamedDeprecatedEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

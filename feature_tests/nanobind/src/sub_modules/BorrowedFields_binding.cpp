@@ -12,6 +12,7 @@ void add_BorrowedFields_binding(nb::module_ mod) {
         .def_rw("a", &BorrowedFields::a)
         .def_rw("b", &BorrowedFields::b)
         .def_rw("c", &BorrowedFields::c)
-        .def_static("from_bar_and_strings", &BorrowedFields::from_bar_and_strings, "bar"_a, "dstr16"_a, "utf8_str"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::keep_alive<0, 3>());
+        .def_static("from_bar_and_strings", &BorrowedFields::from_bar_and_strings, "bar"_a, "dstr16"_a, "utf8_str"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::keep_alive<0, 3>());
 }
 
+

@@ -9,4 +9,4 @@ export class Two {
     /** @internal */
     constructor();
 
-}
+}

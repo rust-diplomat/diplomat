@@ -12,6 +12,7 @@ void add_BorrowedFieldsWithBounds_binding(nb::module_ mod) {
         .def_rw("field_a", &BorrowedFieldsWithBounds::field_a)
         .def_rw("field_b", &BorrowedFieldsWithBounds::field_b)
         .def_rw("field_c", &BorrowedFieldsWithBounds::field_c)
-        .def_static("from_foo_and_strings", &BorrowedFieldsWithBounds::from_foo_and_strings, "foo"_a, "dstr16_x"_a, "utf8_str_z"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::keep_alive<0, 3>());
+        .def_static("from_foo_and_strings", &BorrowedFieldsWithBounds::from_foo_and_strings, "foo"_a, "dstr16_x"_a, "utf8_str_z"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::keep_alive<0, 3>());
 }
 
+

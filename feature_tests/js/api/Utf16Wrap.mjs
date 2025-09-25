@@ -93,4 +93,4 @@ export class Utf16Wrap {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

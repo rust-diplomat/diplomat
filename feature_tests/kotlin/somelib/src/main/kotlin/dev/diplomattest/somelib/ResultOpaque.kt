@@ -46,11 +46,11 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newFailingFoo(): Result<ResultOpaque> {
@@ -61,11 +61,11 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newFailingBar(): Result<ResultOpaque> {
@@ -76,11 +76,11 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newFailingUnit(): Result<ResultOpaque> {
@@ -91,11 +91,11 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 return UnitError().err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newFailingStruct(i: Int): Result<ResultOpaque> {
@@ -106,13 +106,13 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.ok 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.ok()
+                return returnOpaque.ok()
             } else {
                 
                 val returnStruct = ErrorStruct(returnVal.union.err)
-                return returnStruct.err()
-            }
-        }
+                return returnStruct.err()
+            }
+        }
         @JvmStatic
         
         fun newInErr(i: Int): Result<Unit> {
@@ -125,9 +125,9 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.err 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.err()
-            }
-        }
+                return returnOpaque.err()
+            }
+        }
         @JvmStatic
         
         fun newInt(i: Int): Result<Int> {
@@ -137,8 +137,8 @@ class ResultOpaque internal constructor (
                 return (returnVal.union.ok).ok()
             } else {
                 return UnitError().err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newFailingInt(i: Int): Result<Unit> {
@@ -148,8 +148,8 @@ class ResultOpaque internal constructor (
                 return Unit.ok()
             } else {
                 return IntError(returnVal.union.err).err()
-            }
-        }
+            }
+        }
         @JvmStatic
         
         fun newInEnumErr(i: Int): Result<ErrorEnum> {
@@ -162,29 +162,29 @@ class ResultOpaque internal constructor (
                 val handle = returnVal.union.err 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-                return returnOpaque.err()
-            }
-        }
+                return returnOpaque.err()
+            }
+        }
     }
     
     /** When we take &str, the return type becomes a Result
     *Test that this interacts gracefully with returning a reference type
     */
     fun takesStr(v: String): ResultOpaque {
-        val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
+        val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSlice);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = ResultOpaque(handle, selfEdges)
         if (vMem != null) vMem.close()
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun assertInteger(i: Int): Unit {
         
         val returnVal = lib.ResultOpaque_assert_integer(handle, i);
         
-    }
+    }
 
-}
+}

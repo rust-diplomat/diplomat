@@ -192,4 +192,4 @@ export class MyString {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

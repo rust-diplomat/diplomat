@@ -41,6 +41,7 @@ class StructWithSlices internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
 
 }
+

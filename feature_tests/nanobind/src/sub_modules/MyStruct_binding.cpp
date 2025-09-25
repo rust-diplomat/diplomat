@@ -19,6 +19,7 @@ void add_MyStruct_binding(nb::module_ mod) {
         .def("__init__", [](MyStruct* self){ *self = MyStruct::new_(); })
         .def_static("returns_zst_result", &MyStruct::returns_zst_result)
         .def("takes_const", &MyStruct::takes_const, "o"_a)
-        .def("takes_mut", &MyStruct::takes_mut, "o"_a);
+        .def("takes_mut", &MyStruct::takes_mut, "o"_a);
 }
 
+

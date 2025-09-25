@@ -44,8 +44,8 @@ class FixedDecimal internal constructor (
             val handle = returnVal 
             val returnOpaque = FixedDecimal(handle, selfEdges)
             CLEANER.register(returnOpaque, FixedDecimal.FixedDecimalCleaner(handle, FixedDecimal.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     /** Multiply the [FixedDecimal] by a given power of ten.
@@ -56,7 +56,7 @@ class FixedDecimal internal constructor (
         
         val returnVal = lib.icu4x_FixedDecimal_multiply_pow10_mv1(handle, power);
         
-    }
+    }
     
     /** Format the [FixedDecimal] as a string.
     *
@@ -71,7 +71,7 @@ class FixedDecimal internal constructor (
             return returnString.ok()
         } else {
             return UnitError().err()
-        }
-    }
+        }
+    }
 
-}
+}

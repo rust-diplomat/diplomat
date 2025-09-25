@@ -36,8 +36,8 @@ class CyclicStructB internal constructor (
             val returnVal = lib.CyclicStructB_get_a();
             
             val returnStruct = CyclicStructA(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
         @JvmStatic
         
         fun getAOption(): CyclicStructA? {
@@ -49,7 +49,8 @@ class CyclicStructB internal constructor (
             val returnStruct = CyclicStructA(intermediateOption)
             return returnStruct
                                     
-        }
+        }
     }
 
 }
+

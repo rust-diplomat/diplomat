@@ -38,4 +38,4 @@ export class RefListParameter {
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

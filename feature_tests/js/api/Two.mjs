@@ -42,4 +42,4 @@ export class Two {
     constructor(symbol, ptr, selfEdge, aEdge, bEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

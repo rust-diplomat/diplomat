@@ -11,6 +11,7 @@ void add_MyStructContainingAnOption_binding(nb::module_ mod) {
         .def_rw("a", &MyStructContainingAnOption::a)
         .def_rw("b", &MyStructContainingAnOption::b)
         .def_static("filled", &MyStructContainingAnOption::filled)
-        .def("__init__", [](MyStructContainingAnOption* self){ *self = MyStructContainingAnOption::new_(); });
+        .def("__init__", [](MyStructContainingAnOption* self){ *self = MyStructContainingAnOption::new_(); });
 }
 
+

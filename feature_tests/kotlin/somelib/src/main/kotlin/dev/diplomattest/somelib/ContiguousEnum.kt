@@ -30,4 +30,4 @@ enum class ContiguousEnum {
             return C
         }
     }
-}
+}

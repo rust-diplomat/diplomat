@@ -33,4 +33,4 @@ export class Float64Vec {
     get(i: number): number | null;
 
     constructor(v: Array<number>);
-}
+}

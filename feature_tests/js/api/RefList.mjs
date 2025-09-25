@@ -56,4 +56,4 @@ export class RefList {
     constructor(symbol, ptr, selfEdge, aEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

@@ -42,4 +42,4 @@ export class MyStruct {
     static failsZstResult(): void;
 
     constructor();
-}
+}

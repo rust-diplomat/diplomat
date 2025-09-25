@@ -13,6 +13,7 @@ enum ContiguousEnum {
 
   f;
 
-}
+}
 
 // dart format on
+

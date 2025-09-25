@@ -41,23 +41,24 @@ class StructWithAttrs internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 
                 val returnStruct = StructWithAttrs(returnVal.union.ok)
-                return returnStruct.ok()
+                return returnStruct.ok()
             } else {
                 return UnitError().err()
-            }
-        }
+            }
+        }
     }
     
     fun c(): UInt {
         
         val returnVal = lib.namespace_StructWithAttrs_c(nativeStruct);
         return (returnVal.toUInt())
-    }
+    }
     
     fun deprecated(): Unit {
         
         val returnVal = lib.namespace_StructWithAttrs_deprecated(nativeStruct);
         
-    }
+    }
 
 }
+

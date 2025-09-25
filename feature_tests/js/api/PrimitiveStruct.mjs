@@ -167,4 +167,4 @@ export class PrimitiveStruct {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

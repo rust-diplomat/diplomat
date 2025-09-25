@@ -29,4 +29,4 @@ class Two internal constructor (
         internal val lib: TwoLib = Native.load("somelib", libClass)
     }
 
-}
+}

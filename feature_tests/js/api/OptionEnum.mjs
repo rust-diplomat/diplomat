@@ -69,4 +69,4 @@ export class OptionEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

@@ -11,6 +11,7 @@ enum OptionEnum {
 
   baz;
 
-}
+}
 
 // dart format on
+

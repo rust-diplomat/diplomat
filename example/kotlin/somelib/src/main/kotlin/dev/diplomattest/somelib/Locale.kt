@@ -34,7 +34,7 @@ class Locale internal constructor (
         /** Construct an [Locale] from a locale identifier represented as a string.
         */
         fun new_(name: String): Locale {
-            val (nameMem, nameSlice) = PrimitiveArrayTools.borrowUtf8(name)
+            val (nameMem, nameSlice) = PrimitiveArrayTools.borrowUtf8(name)
             
             val returnVal = lib.icu4x_Locale_new_mv1(nameSlice);
             val selfEdges: List<Any> = listOf()
@@ -42,8 +42,8 @@ class Locale internal constructor (
             val returnOpaque = Locale(handle, selfEdges)
             CLEANER.register(returnOpaque, Locale.LocaleCleaner(handle, Locale.lib));
             if (nameMem != null) nameMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
 
-}
+}

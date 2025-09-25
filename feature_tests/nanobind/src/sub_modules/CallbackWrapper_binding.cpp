@@ -28,6 +28,7 @@ void add_CallbackWrapper_binding(nb::module_ mod) {
         .def_static("test_slice_conversion", &CallbackWrapper::test_slice_conversion, "t"_a)
         .def_static("test_str_cb_arg", &CallbackWrapper::test_str_cb_arg, "f"_a)
         .def_static("test_str_conversion", &CallbackWrapper::test_str_conversion, "t"_a)
-        .def_static("test_struct_slice_conversion", &CallbackWrapper::test_struct_slice_conversion, "t"_a);
+        .def_static("test_struct_slice_conversion", &CallbackWrapper::test_struct_slice_conversion, "t"_a);
 }
 
+

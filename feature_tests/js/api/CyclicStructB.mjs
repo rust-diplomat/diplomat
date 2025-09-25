@@ -111,4 +111,4 @@ export class CyclicStructB {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

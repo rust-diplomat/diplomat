@@ -26,4 +26,4 @@ export class MyEnum {
     static getA(): MyEnum;
 
     constructor(value: MyEnum | string );
-}
+}

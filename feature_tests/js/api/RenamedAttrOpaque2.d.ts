@@ -9,4 +9,4 @@ export class RenamedAttrOpaque2 {
     /** @internal */
     constructor();
 
-}
+}

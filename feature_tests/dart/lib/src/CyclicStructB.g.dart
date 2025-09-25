@@ -33,7 +33,7 @@ final class CyclicStructB {
     final result = _CyclicStructB_get_a();
     return CyclicStructA._fromFfi(result);
   }
-
+
   static CyclicStructA? getAOption() {
     final result = _CyclicStructB_get_a_option();
     if (!result.isOk) {
@@ -41,7 +41,7 @@ final class CyclicStructB {
     }
     return CyclicStructA._fromFfi(result.union.ok);
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -57,11 +57,12 @@ final class CyclicStructB {
 @_DiplomatFfiUse('CyclicStructB_get_a')
 @ffi.Native<_CyclicStructAFfi Function()>(isLeaf: true, symbol: 'CyclicStructB_get_a')
 // ignore: non_constant_identifier_names
-external _CyclicStructAFfi _CyclicStructB_get_a();
+external _CyclicStructAFfi _CyclicStructB_get_a();
 
 @_DiplomatFfiUse('CyclicStructB_get_a_option')
 @ffi.Native<_ResultCyclicStructAFfiVoid Function()>(isLeaf: true, symbol: 'CyclicStructB_get_a_option')
 // ignore: non_constant_identifier_names
-external _ResultCyclicStructAFfiVoid _CyclicStructB_get_a_option();
+external _ResultCyclicStructAFfiVoid _CyclicStructB_get_a_option();
 
 // dart format on
+

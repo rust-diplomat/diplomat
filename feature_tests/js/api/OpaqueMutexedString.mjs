@@ -159,4 +159,4 @@ export class OpaqueMutexedString {
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

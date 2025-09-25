@@ -26,7 +26,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   void assertChar(Rune ch) {
     _OptionOpaqueChar_assert_char(_ffi, ch);
   }
-
+
 }
 
 @_DiplomatFfiUse('OptionOpaqueChar_destroy')
@@ -37,6 +37,7 @@ external void _OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('OptionOpaqueChar_assert_char')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Uint32)>(isLeaf: true, symbol: 'OptionOpaqueChar_assert_char')
 // ignore: non_constant_identifier_names
-external void _OptionOpaqueChar_assert_char(ffi.Pointer<ffi.Opaque> self, Rune ch);
+external void _OptionOpaqueChar_assert_char(ffi.Pointer<ffi.Opaque> self, Rune ch);
 
 // dart format on
+

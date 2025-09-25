@@ -115,3 +115,4 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
         }
     }
 }
+

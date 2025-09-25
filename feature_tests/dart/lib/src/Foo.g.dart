@@ -32,7 +32,7 @@ final class Foo implements ffi.Finalizable {
     final result = _Foo_new(x._utf8AllocIn(xArena.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
-
+
   Bar get bar {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
@@ -41,14 +41,14 @@ final class Foo implements ffi.Finalizable {
     final result = _Foo_get_bar(_ffi);
     return Bar._fromFfi(result, [], bEdges, aEdges);
   }
-
+
   BorrowedFieldsReturning asReturning() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Foo_as_returning(_ffi);
     return BorrowedFieldsReturning._fromFfi(result, aEdges);
   }
-
+
   factory Foo.extractFromFields(BorrowedFields fields) {
     final temp = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a
@@ -66,7 +66,7 @@ final class Foo implements ffi.Finalizable {
     final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherString._utf8AllocIn(anotherStringArena.arena));
     return Foo._fromFfi(result, [], aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('Foo_destroy')
@@ -77,26 +77,27 @@ external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('Foo_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
+external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
 
 @_DiplomatFfiUse('Foo_get_bar')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('Foo_as_returning')
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
+external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('Foo_extract_from_fields')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
+external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
 
 @_DiplomatFfiUse('Foo_extract_from_bounds')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, _SliceUtf8)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, _SliceUtf8 anotherString);
+external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, _SliceUtf8 anotherString);
 
 // dart format on
+

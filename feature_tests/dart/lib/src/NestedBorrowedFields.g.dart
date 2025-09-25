@@ -51,7 +51,7 @@ final class NestedBorrowedFields {
     final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), dstr16Z._utf16AllocIn(dstr16ZArena.arena), utf8StrY._utf8AllocIn(utf8StrYArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -95,6 +95,7 @@ final class NestedBorrowedFields {
 @_DiplomatFfiUse('NestedBorrowedFields_from_bar_and_foo_and_strings')
 @ffi.Native<_NestedBorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf16, _SliceUtf8, _SliceUtf8)>(isLeaf: true, symbol: 'NestedBorrowedFields_from_bar_and_foo_and_strings')
 // ignore: non_constant_identifier_names
-external _NestedBorrowedFieldsFfi _NestedBorrowedFields_from_bar_and_foo_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf16 dstr16Z, _SliceUtf8 utf8StrY, _SliceUtf8 utf8StrZ);
+external _NestedBorrowedFieldsFfi _NestedBorrowedFields_from_bar_and_foo_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf16 dstr16Z, _SliceUtf8 utf8StrY, _SliceUtf8 utf8StrZ);
 
 // dart format on
+

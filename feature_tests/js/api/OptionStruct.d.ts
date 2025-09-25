@@ -13,4 +13,4 @@ export class OptionStruct {
     /** @internal */
     constructor();
 
-}
+}

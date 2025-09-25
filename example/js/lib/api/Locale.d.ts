@@ -17,4 +17,4 @@ export class Locale {
      * Construct an {@link Locale} from a locale identifier represented as a string.
      */
     constructor(name: string);
-}
+}

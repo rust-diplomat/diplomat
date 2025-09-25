@@ -66,4 +66,4 @@ export class ErrorEnum {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

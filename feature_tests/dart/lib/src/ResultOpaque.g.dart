@@ -55,7 +55,7 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
-
+
   static ResultOpaque? failingUnit() {
     final result = _ResultOpaque_new_failing_unit();
     if (!result.isOk) {
@@ -84,7 +84,7 @@ final class ResultOpaque implements ffi.Finalizable {
       throw ResultOpaque._fromFfi(result.union.err, []);
     }
   }
-
+
   static int? newInt(int i) {
     final result = _ResultOpaque_new_int(i);
     if (!result.isOk) {
@@ -113,11 +113,11 @@ final class ResultOpaque implements ffi.Finalizable {
     final result = _ResultOpaque_takes_str(_ffi, v._utf8AllocIn(temp.arena));
     return ResultOpaque._fromFfi(result, aEdges);
   }
-
+
   void assertInteger(int i) {
     _ResultOpaque_assert_integer(_ffi, i);
   }
-
+
 }
 
 @_DiplomatFfiUse('ResultOpaque_destroy')
@@ -128,51 +128,52 @@ external void _ResultOpaque_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('ResultOpaque_new')
 @ffi.Native<_ResultOpaqueInt32 Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueInt32 _ResultOpaque_new(int i);
+external _ResultOpaqueInt32 _ResultOpaque_new(int i);
 
 @_DiplomatFfiUse('ResultOpaque_new_failing_foo')
 @ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_foo')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueInt32 _ResultOpaque_new_failing_foo();
+external _ResultOpaqueInt32 _ResultOpaque_new_failing_foo();
 
 @_DiplomatFfiUse('ResultOpaque_new_failing_bar')
 @ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_bar')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueInt32 _ResultOpaque_new_failing_bar();
+external _ResultOpaqueInt32 _ResultOpaque_new_failing_bar();
 
 @_DiplomatFfiUse('ResultOpaque_new_failing_unit')
 @ffi.Native<_ResultOpaqueVoid Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_unit')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueVoid _ResultOpaque_new_failing_unit();
+external _ResultOpaqueVoid _ResultOpaque_new_failing_unit();
 
 @_DiplomatFfiUse('ResultOpaque_new_failing_struct')
 @ffi.Native<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_failing_struct')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueErrorStructFfi _ResultOpaque_new_failing_struct(int i);
+external _ResultOpaqueErrorStructFfi _ResultOpaque_new_failing_struct(int i);
 
 @_DiplomatFfiUse('ResultOpaque_new_in_err')
 @ffi.Native<_ResultVoidOpaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_err')
 // ignore: non_constant_identifier_names
-external _ResultVoidOpaque _ResultOpaque_new_in_err(int i);
+external _ResultVoidOpaque _ResultOpaque_new_in_err(int i);
 
 @_DiplomatFfiUse('ResultOpaque_new_int')
 @ffi.Native<_ResultInt32Void Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_int')
 // ignore: non_constant_identifier_names
-external _ResultInt32Void _ResultOpaque_new_int(int i);
+external _ResultInt32Void _ResultOpaque_new_int(int i);
 
 @_DiplomatFfiUse('ResultOpaque_new_in_enum_err')
 @ffi.Native<_ResultInt32Opaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_enum_err')
 // ignore: non_constant_identifier_names
-external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
+external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
 
 @_DiplomatFfiUse('ResultOpaque_takes_str')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'ResultOpaque_takes_str')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _ResultOpaque_takes_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 v);
+external ffi.Pointer<ffi.Opaque> _ResultOpaque_takes_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 v);
 
 @_DiplomatFfiUse('ResultOpaque_assert_integer')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_assert_integer')
 // ignore: non_constant_identifier_names
-external void _ResultOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
+external void _ResultOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
 
 // dart format on
+

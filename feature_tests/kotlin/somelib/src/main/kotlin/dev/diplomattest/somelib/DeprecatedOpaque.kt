@@ -27,4 +27,4 @@ class DeprecatedOpaque internal constructor (
         internal val lib: DeprecatedOpaqueLib = Native.load("somelib", libClass)
     }
 
-}
+}

@@ -38,4 +38,4 @@ export class RenamedNested2 {
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

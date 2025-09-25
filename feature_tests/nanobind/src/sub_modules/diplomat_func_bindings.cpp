@@ -9,3 +9,4 @@ void add_diplomat_func_binding(nb::module_ mod) {
         .def("free_callback_holder", &free_callback_holder, "f"_a);
 }
 
+

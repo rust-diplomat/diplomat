@@ -156,4 +156,4 @@ export class Foo {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

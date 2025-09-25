@@ -21,6 +21,7 @@ void add_PrimitiveStruct_binding(nb::module_ mod) {
         .def_rw("d", &PrimitiveStruct::d)
         .def_rw("e", &PrimitiveStruct::e)
         .def("mutable_ref", &PrimitiveStruct::mutable_ref, "a"_a)
-        .def_static("mutable_slice", &PrimitiveStruct::mutable_slice, "a"_a);
+        .def_static("mutable_slice", &PrimitiveStruct::mutable_slice, "a"_a);
 }
 
+

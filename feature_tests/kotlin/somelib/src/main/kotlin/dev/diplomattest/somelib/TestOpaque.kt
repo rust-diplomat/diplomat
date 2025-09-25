@@ -27,4 +27,4 @@ class TestOpaque internal constructor (
         internal val lib: TestOpaqueLib = Native.load("somelib", libClass)
     }
 
-}
+}

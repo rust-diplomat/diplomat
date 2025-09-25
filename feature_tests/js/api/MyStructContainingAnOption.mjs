@@ -141,4 +141,4 @@ export class MyStructContainingAnOption {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

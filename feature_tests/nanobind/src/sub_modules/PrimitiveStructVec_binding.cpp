@@ -22,3 +22,4 @@ void add_PrimitiveStructVec_binding(nb::module_ mod) {
         .def_static("take_slice_from_other_namespace", &PrimitiveStructVec::take_slice_from_other_namespace, "_sl"_a);
 }
 
+

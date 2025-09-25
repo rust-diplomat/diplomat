@@ -33,9 +33,9 @@ class OpaqueThinVec internal constructor (
         @JvmStatic
         
         fun create(a: IntArray, b: FloatArray, c: String): OpaqueThinVec {
-            val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
-            val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
-            val (cMem, cSlice) = PrimitiveArrayTools.borrowUtf8(c)
+            val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
+            val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
+            val (cMem, cSlice) = PrimitiveArrayTools.borrowUtf8(c)
             
             val returnVal = lib.OpaqueThinVec_create(aSlice, bSlice, cSlice);
             val selfEdges: List<Any> = listOf()
@@ -45,8 +45,8 @@ class OpaqueThinVec internal constructor (
             if (aMem != null) aMem.close()
             if (bMem != null) bMem.close()
             if (cMem != null) cMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     override fun iterator(): OpaqueThinIter {
@@ -57,14 +57,14 @@ class OpaqueThinVec internal constructor (
         val handle = returnVal 
         val returnOpaque = OpaqueThinIter(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun len(): ULong {
         
         val returnVal = lib.OpaqueThinVec_len(handle);
         return (returnVal.toULong())
-    }
+    }
     
     internal fun getInternal(idx: ULong): OpaqueThin? {
         
@@ -72,8 +72,8 @@ class OpaqueThinVec internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
         val returnOpaque = OpaqueThin(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun first(): OpaqueThin? {
         
@@ -81,8 +81,8 @@ class OpaqueThinVec internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
         val returnOpaque = OpaqueThin(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
 
     operator fun get(index: ULong): OpaqueThin? {
         val returnVal = getInternal(index)
@@ -93,4 +93,4 @@ class OpaqueThinVec internal constructor (
         }
     }
 
-}
+}

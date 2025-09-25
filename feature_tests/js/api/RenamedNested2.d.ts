@@ -9,4 +9,4 @@ export class RenamedNested2 {
     /** @internal */
     constructor();
 
-}
+}

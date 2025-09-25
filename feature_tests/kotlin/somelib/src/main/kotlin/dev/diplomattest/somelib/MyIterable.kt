@@ -30,7 +30,7 @@ class MyIterable internal constructor (
         @JvmStatic
         
         fun new_(x: UByteArray): MyIterable {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrow(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrow(x)
             
             val returnVal = lib.namespace_MyIterable_new(xSlice);
             val selfEdges: List<Any> = listOf()
@@ -38,8 +38,8 @@ class MyIterable internal constructor (
             val returnOpaque = MyIterable(handle, selfEdges)
             CLEANER.register(returnOpaque, MyIterable.MyIterableCleaner(handle, MyIterable.lib));
             if (xMem != null) xMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     override fun iterator(): MyIterator {
@@ -50,7 +50,7 @@ class MyIterable internal constructor (
         val handle = returnVal 
         val returnOpaque = MyIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, MyIterator.MyIteratorCleaner(handle, MyIterator.lib));
-        return returnOpaque
-    }
+        return returnOpaque
+    }
 
-}
+}

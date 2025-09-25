@@ -24,4 +24,4 @@ export class CyclicStructB {
     static getA(): CyclicStructA;
 
     static getAOption(): CyclicStructA | null;
-}
+}

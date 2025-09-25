@@ -72,4 +72,4 @@ export class FixedDecimalGroupingStrategy {
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

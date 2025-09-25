@@ -27,4 +27,4 @@ export class ScalarPairWithPadding {
 
 
     assertValue(): void;
-}
+}

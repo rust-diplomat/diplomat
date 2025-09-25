@@ -19,4 +19,4 @@ export class BorrowedFieldsReturning {
     */
     constructor(structObj: BorrowedFieldsReturning_obj);
 
-}
+}

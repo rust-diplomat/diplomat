@@ -176,4 +176,4 @@ export class BorrowedFieldsWithBounds {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

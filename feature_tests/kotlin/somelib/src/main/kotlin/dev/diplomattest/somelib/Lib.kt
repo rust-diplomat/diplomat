@@ -642,7 +642,7 @@ class ResultIntUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultIntPointerUnion: Union() {
     @JvmField
     internal var ok: Int = ErrorEnum.default().toNative()
@@ -661,7 +661,7 @@ class ResultIntPointer: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultPointerErrorStructNativeUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
@@ -680,7 +680,7 @@ class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultPointerIntUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
@@ -699,7 +699,7 @@ class ResultPointerInt: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultPointerUnitUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
@@ -716,7 +716,7 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultStructWithAttrsNativeUnitUnion: Union() {
     @JvmField
     internal var ok: StructWithAttrsNative = StructWithAttrsNative()
@@ -733,7 +733,7 @@ class ResultStructWithAttrsNativeUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultUnitIntUnion: Union() {
     @JvmField
     internal var err: Int = 0
@@ -750,7 +750,7 @@ class ResultUnitInt: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultUnitMyZstNativeUnion: Union() {
 }
 
@@ -765,7 +765,7 @@ class ResultUnitMyZstNative: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultUnitPointerUnion: Union() {
     @JvmField
     internal var err: Pointer = Pointer(0)
@@ -782,7 +782,7 @@ class ResultUnitPointer: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 internal class ResultUnitUnitUnion: Union() {
 }
 
@@ -797,7 +797,7 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
-}
+}
 
 
 internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
@@ -819,7 +819,7 @@ internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionDouble: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Double = 0.0
@@ -839,7 +839,7 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIIsizet = FFIIsizet()
@@ -859,7 +859,7 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionFFISizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFISizet = FFISizet()
@@ -879,7 +879,7 @@ internal class OptionFFISizet: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionFFIUint32: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint32 = FFIUint32()
@@ -899,7 +899,7 @@ internal class OptionFFIUint32: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionFFIUint8: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint8 = FFIUint8()
@@ -919,7 +919,7 @@ internal class OptionFFIUint8: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionInt: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Int = 0
@@ -939,7 +939,7 @@ internal class OptionInt: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: OptionStructNative = OptionStructNative()
@@ -959,7 +959,7 @@ internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
 internal class OptionSlice: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Slice = Slice()
@@ -979,4 +979,5 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
             return null
         }
     }
-}
+}
+

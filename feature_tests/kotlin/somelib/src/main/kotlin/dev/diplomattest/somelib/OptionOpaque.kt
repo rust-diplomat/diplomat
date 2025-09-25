@@ -47,8 +47,8 @@ class OptionOpaque internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun newNone(): OptionOpaque? {
@@ -58,8 +58,8 @@ class OptionOpaque internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun returns(): OptionStruct? {
@@ -71,7 +71,7 @@ class OptionOpaque internal constructor (
             val returnStruct = OptionStruct(intermediateOption)
             return returnStruct
                                     
-        }
+        }
         @JvmStatic
         
         fun newStruct(): OptionStruct {
@@ -79,8 +79,8 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new_struct();
             
             val returnStruct = OptionStruct(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
         @JvmStatic
         
         fun newStructNones(): OptionStruct {
@@ -88,40 +88,40 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new_struct_nones();
             
             val returnStruct = OptionStruct(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
         @JvmStatic
         
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
             
             val returnVal = lib.OptionOpaque_option_opaque_argument(arg?.handle);
             return (returnVal > 0)
-        }
+        }
     }
     
     fun optionIsize(): Long? {
         
         val returnVal = lib.OptionOpaque_option_isize(handle);
         return returnVal.option()?.toLong()
-    }
+    }
     
     fun optionUsize(): ULong? {
         
         val returnVal = lib.OptionOpaque_option_usize(handle);
         return returnVal.option()?.toULong()
-    }
+    }
     
     fun optionI32(): Int? {
         
         val returnVal = lib.OptionOpaque_option_i32(handle);
         return returnVal.option()
-    }
+    }
     
     fun optionU32(): UInt? {
         
         val returnVal = lib.OptionOpaque_option_u32(handle);
         return returnVal.option()?.toUInt()
-    }
+    }
     
     fun returnsNoneSelf(): OptionOpaque? {
         
@@ -129,8 +129,8 @@ class OptionOpaque internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
         val returnOpaque = OptionOpaque(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun returnsSomeSelf(): OptionOpaque? {
         
@@ -138,13 +138,13 @@ class OptionOpaque internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
         val returnOpaque = OptionOpaque(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun assertInteger(i: Int): Unit {
         
         val returnVal = lib.OptionOpaque_assert_integer(handle, i);
         
-    }
+    }
 
-}
+}

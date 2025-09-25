@@ -17,3 +17,4 @@ void add_RenamedAttrOpaque2_binding(nb::module_ mod) {
 
 
 }
+

@@ -29,6 +29,7 @@ final class RenamedDeprecatedOpaque implements ffi.Finalizable {
 @_DiplomatFfiUse('namespace_DeprecatedOpaque_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_DeprecatedOpaque_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_DeprecatedOpaque_destroy(ffi.Pointer<ffi.Void> self);
+external void _namespace_DeprecatedOpaque_destroy(ffi.Pointer<ffi.Void> self);
 
 // dart format on
+

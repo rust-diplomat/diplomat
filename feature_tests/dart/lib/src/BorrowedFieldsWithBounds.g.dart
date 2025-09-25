@@ -49,7 +49,7 @@ final class BorrowedFieldsWithBounds {
     final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -93,6 +93,7 @@ final class BorrowedFieldsWithBounds {
 @_DiplomatFfiUse('BorrowedFieldsWithBounds_from_foo_and_strings')
 @ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, _SliceUtf16, _SliceUtf8)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
 // ignore: non_constant_identifier_names
-external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf8 utf8StrZ);
+external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, _SliceUtf16 dstr16X, _SliceUtf8 utf8StrZ);
 
 // dart format on
+

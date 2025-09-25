@@ -23,3 +23,4 @@ void add_ResultOpaque_binding(nb::module_ mod) {
         .def("takes_str", &ResultOpaque::takes_str, "_v"_a, nb::rv_policy::reference_internal);
 }
 
+

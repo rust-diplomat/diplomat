@@ -42,12 +42,12 @@ class Opaque internal constructor (
             val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun tryFromUtf8(input: String): Opaque? {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_try_from_utf8(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -55,12 +55,12 @@ class Opaque internal constructor (
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             if (inputMem != null) inputMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun fromStr(input: String): Opaque {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_from_str(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -68,15 +68,15 @@ class Opaque internal constructor (
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             if (inputMem != null) inputMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
             return (returnVal.toULong())
-        }
+        }
         @JvmStatic
         
         fun returnsImported(): ImportedStruct {
@@ -84,15 +84,15 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_returns_imported();
             
             val returnStruct = ImportedStruct(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
         @JvmStatic
         
         fun cmp(): Byte {
             
             val returnVal = lib.Opaque_cmp();
             return (returnVal)
-        }
+        }
     }
     
     fun getDebugStr(): String {
@@ -101,7 +101,7 @@ class Opaque internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
     
     /** See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
     *
@@ -113,6 +113,6 @@ class Opaque internal constructor (
         
         val returnVal = lib.Opaque_assert_struct(handle, s.nativeStruct);
         
-    }
+    }
 
-}
+}

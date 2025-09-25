@@ -228,4 +228,4 @@ export class ResultOpaque {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

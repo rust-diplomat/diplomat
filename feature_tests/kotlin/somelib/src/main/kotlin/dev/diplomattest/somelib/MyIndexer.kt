@@ -35,7 +35,7 @@ class MyIndexer internal constructor (
         val intermediateOption = returnVal.option() ?: return null
             return PrimitiveArrayTools.getUtf8(intermediateOption)
                                 
-    }
+    }
 
     operator fun get(index: ULong): String {
         val returnVal = getInternal(index)
@@ -46,4 +46,4 @@ class MyIndexer internal constructor (
         }
     }
 
-}
+}

@@ -35,7 +35,7 @@ final class Bar implements ffi.Finalizable {
     final result = _Bar_foo(_ffi);
     return Foo._fromFfi(result, bEdges, aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('Bar_destroy')
@@ -46,6 +46,7 @@ external void _Bar_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('Bar_foo')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Bar_foo')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _Bar_foo(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _Bar_foo(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

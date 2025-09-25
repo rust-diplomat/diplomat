@@ -83,7 +83,7 @@ final class MyStruct {
     }
     return dart;
   }
-
+
   int intoA() {
     final temp = _FinalizedArena();
     final result = _MyStruct_into_a(_toFfi(temp.arena));
@@ -109,7 +109,7 @@ final class MyStruct {
       throw MyZst();
     }
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -137,21 +137,22 @@ final class MyStruct {
 @_DiplomatFfiUse('MyStruct_new')
 @ffi.Native<_MyStructFfi Function()>(isLeaf: true, symbol: 'MyStruct_new')
 // ignore: non_constant_identifier_names
-external _MyStructFfi _MyStruct_new();
+external _MyStructFfi _MyStruct_new();
 
 @_DiplomatFfiUse('MyStruct_into_a')
 @ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
 // ignore: non_constant_identifier_names
-external int _MyStruct_into_a(_MyStructFfi self);
+external int _MyStruct_into_a(_MyStructFfi self);
 
 @_DiplomatFfiUse('MyStruct_returns_zst_result')
 @ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_returns_zst_result')
 // ignore: non_constant_identifier_names
-external _ResultVoidMyZstFfi _MyStruct_returns_zst_result();
+external _ResultVoidMyZstFfi _MyStruct_returns_zst_result();
 
 @_DiplomatFfiUse('MyStruct_fails_zst_result')
 @ffi.Native<_ResultVoidMyZstFfi Function()>(isLeaf: true, symbol: 'MyStruct_fails_zst_result')
 // ignore: non_constant_identifier_names
-external _ResultVoidMyZstFfi _MyStruct_fails_zst_result();
+external _ResultVoidMyZstFfi _MyStruct_fails_zst_result();
 
 // dart format on
+

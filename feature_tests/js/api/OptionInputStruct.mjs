@@ -120,4 +120,4 @@ export class OptionInputStruct {
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

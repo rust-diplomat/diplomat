@@ -19,7 +19,9 @@ void add_RenamedDeprecatedEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const ns::RenamedDeprecatedEnum& self){
                 return nb::str(nb::cast(ns::RenamedDeprecatedEnum::Value(self)));
             });
+    
 }
 
 
 }
+

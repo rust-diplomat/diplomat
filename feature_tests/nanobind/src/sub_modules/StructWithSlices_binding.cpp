@@ -10,6 +10,7 @@ void add_StructWithSlices_binding(nb::module_ mod) {
         .def(nb::init<std::string_view, diplomat::span<const uint16_t>>(), "first"_a.none(),  "second"_a.none())
         .def_rw("first", &StructWithSlices::first)
         .def_rw("second", &StructWithSlices::second)
-        .def("return_last", &StructWithSlices::return_last);
+        .def("return_last", &StructWithSlices::return_last);
 }
 
+

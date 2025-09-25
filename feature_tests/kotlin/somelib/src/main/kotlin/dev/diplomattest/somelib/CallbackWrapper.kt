@@ -333,36 +333,37 @@ class CallbackWrapper internal constructor (
             
             val returnVal = lib.CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun testNoArgs(h: ()->Unit): Int {
             
             val returnVal = lib.CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun testCbWithStruct(f: (CallbackTestingStruct)->Int): Int {
             
             val returnVal = lib.CallbackWrapper_test_cb_with_struct(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f.fromCallback(f).nativeStruct);
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun testMultipleCbArgs(f: ()->Int, g: (Int)->Int): Int {
             
             val returnVal = lib.CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f.fromCallback(f).nativeStruct, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g.fromCallback(g).nativeStruct);
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun testSliceCbArg(arg: UByteArray, f: (UByteArray)->Unit): Unit {
-            val (argMem, argSlice) = PrimitiveArrayTools.borrow(arg)
+            val (argMem, argSlice) = PrimitiveArrayTools.borrow(arg)
             
             val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSlice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
             
-        }
+        }
     }
 
 }
+

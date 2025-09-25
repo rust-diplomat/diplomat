@@ -50,46 +50,46 @@ class AttrOpaque1 internal constructor (
             val handle = returnVal 
             val returnOpaque = AttrOpaque1(handle, selfEdges)
             CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun macTest(): Int {
             
             val returnVal = lib.namespace_AttrOpaque1_mac_test();
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun hello(): Int {
             
             val returnVal = lib.namespace_AttrOpaque1_hello();
             return (returnVal)
-        }
+        }
     }
     
     override fun method(): UByte {
         
         val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return (returnVal.toUByte())
-    }
+    }
     
     override fun abirenamed(): UByte {
         
         val returnVal = lib.renamed_on_abi_only(handle);
         return (returnVal.toUByte())
-    }
+    }
     
     override fun useUnnamespaced(un: Unnamespaced): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_unnamespaced(handle, un.handle);
         
-    }
+    }
     
     override fun useNamespaced(n: AttrEnum): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         
-    }
+    }
 
-}
+}

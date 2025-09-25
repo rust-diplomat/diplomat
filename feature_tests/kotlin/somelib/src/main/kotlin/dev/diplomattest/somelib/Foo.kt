@@ -35,7 +35,7 @@ class Foo internal constructor (
         @JvmStatic
         
         fun new_(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
             
             val returnVal = lib.Foo_new(xSlice);
             val selfEdges: List<Any> = listOf()
@@ -43,12 +43,12 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun newStatic(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
             
             val returnVal = lib.Foo_new_static(xSlice);
             val selfEdges: List<Any> = listOf()
@@ -57,8 +57,8 @@ class Foo internal constructor (
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
             if (xMem != null) xMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         fun extractFromFields(fields: BorrowedFields): Foo {
@@ -69,14 +69,14 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
         @JvmStatic
         
         /** Test that the extraction logic correctly pins the right fields
         */
         fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
-            val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.borrowUtf8(anotherString)
+            val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.borrowUtf8(anotherString)
             
             val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
             val selfEdges: List<Any> = listOf()
@@ -84,8 +84,8 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun getBar(): Bar {
@@ -97,8 +97,8 @@ class Foo internal constructor (
         val handle = returnVal 
         val returnOpaque = Bar(handle, selfEdges, bEdges, aEdges)
         CLEANER.register(returnOpaque, Bar.BarCleaner(handle, Bar.lib));
-        return returnOpaque
-    }
+        return returnOpaque
+    }
     
     fun asReturning(): BorrowedFieldsReturning {
         
@@ -106,7 +106,7 @@ class Foo internal constructor (
         
         val aEdges: List<Any?> = listOf(this)
         val returnStruct = BorrowedFieldsReturning(returnVal, aEdges)
-        return returnStruct
-    }
+        return returnStruct
+    }
 
-}
+}

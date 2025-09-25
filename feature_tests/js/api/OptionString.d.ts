@@ -15,4 +15,4 @@ export class OptionString {
     write(): string | null;
 
     borrow(): string | null;
-}
+}

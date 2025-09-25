@@ -24,4 +24,4 @@ export class StructWithSlices {
 
 
     returnLast(): string;
-}
+}

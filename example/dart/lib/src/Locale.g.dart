@@ -32,7 +32,7 @@ final class Locale implements ffi.Finalizable {
     final result = _icu4x_Locale_new_mv1(name._utf8AllocIn(temp.arena));
     return Locale._fromFfi(result, []);
   }
-
+
 }
 
 @_DiplomatFfiUse('icu4x_Locale_destroy_mv1')
@@ -43,6 +43,7 @@ external void _icu4x_Locale_destroy_mv1(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('icu4x_Locale_new_mv1')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'icu4x_Locale_new_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _icu4x_Locale_new_mv1(_SliceUtf8 name);
+external ffi.Pointer<ffi.Opaque> _icu4x_Locale_new_mv1(_SliceUtf8 name);
 
 // dart format on
+

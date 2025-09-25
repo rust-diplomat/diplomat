@@ -13,6 +13,7 @@ enum FixedDecimalGroupingStrategy {
   /// At least 2 groups
   min2;
 
-}
+}
 
 // dart format on
+

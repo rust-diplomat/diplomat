@@ -35,7 +35,7 @@ class TestMacroStruct internal constructor (
             
             val returnVal = lib.namespace_TestMacroStruct_test_func();
             return (returnVal.toULong())
-        }
+        }
         @JvmStatic
         
         fun testMeta(): TestMacroStruct {
@@ -43,8 +43,9 @@ class TestMacroStruct internal constructor (
             val returnVal = lib.namespace_TestMacroStruct_test_meta();
             
             val returnStruct = TestMacroStruct(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
 
 }
+

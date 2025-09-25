@@ -19,4 +19,4 @@ export class RenamedAttrEnum {
 
 
     constructor(value: RenamedAttrEnum | string );
-}
+}

@@ -38,4 +38,4 @@ export class RenamedTestOpaque {
     constructor(symbol, ptr, selfEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

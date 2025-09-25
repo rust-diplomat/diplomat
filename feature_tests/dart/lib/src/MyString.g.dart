@@ -28,54 +28,54 @@ final class MyString implements ffi.Finalizable {
     final result = _MyString_new(v._utf8AllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
-
+
   factory MyString.unsafe(String v) {
     final temp = _FinalizedArena();
     final result = _MyString_new_unsafe(v._utf8AllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
-
+
   static MyString newOwned(String v) {
     final result = _MyString_new_owned(v._utf8AllocIn(_RustAlloc()));
     return MyString._fromFfi(result, []);
   }
-
+
   static MyString newFromFirst(core.List<core.String> v) {
     final temp = _FinalizedArena();
     final result = _MyString_new_from_first(v._utf8SliceAllocIn(temp.arena));
     return MyString._fromFfi(result, []);
   }
-
+
   set str(String newStr) {
     final temp = _FinalizedArena();
     _MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
   }
-
+
   String get str {
     final write = _Write();
     _MyString_get_str(_ffi, write._ffi);
     return write.finalize();
   }
-
+
   static String getStaticStr() {
     final result = _MyString_get_static_str();
     return result._toDart([], isStatic: true);
   }
-
+
   static String stringTransform(String foo) {
     final temp = _FinalizedArena();
     final write = _Write();
     _MyString_string_transform(foo._utf8AllocIn(temp.arena), write._ffi);
     return write.finalize();
   }
-
+
   String borrow() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _MyString_borrow(_ffi);
     return result._toDart(aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('MyString_destroy')
@@ -86,46 +86,47 @@ external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('MyString_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new(_SliceUtf8 v);
+external ffi.Pointer<ffi.Opaque> _MyString_new(_SliceUtf8 v);
 
 @_DiplomatFfiUse('MyString_new_unsafe')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_unsafe')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(_SliceUtf8 v);
+external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(_SliceUtf8 v);
 
 @_DiplomatFfiUse('MyString_new_owned')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_owned')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_owned(_SliceUtf8 v);
+external ffi.Pointer<ffi.Opaque> _MyString_new_owned(_SliceUtf8 v);
 
 @_DiplomatFfiUse('MyString_new_from_first')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'MyString_new_from_first')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(_SliceSliceUtf8 v);
+external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(_SliceSliceUtf8 v);
 
 @_DiplomatFfiUse('MyString_set_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'MyString_set_str')
 // ignore: non_constant_identifier_names
-external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 newStr);
+external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 newStr);
 
 @_DiplomatFfiUse('MyString_get_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
-external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @_DiplomatFfiUse('MyString_get_static_str')
 @ffi.Native<_SliceUtf8 Function()>(isLeaf: true, symbol: 'MyString_get_static_str')
 // ignore: non_constant_identifier_names
-external _SliceUtf8 _MyString_get_static_str();
+external _SliceUtf8 _MyString_get_static_str();
 
 @_DiplomatFfiUse('MyString_string_transform')
 @ffi.Native<ffi.Void Function(_SliceUtf8, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
-external void _MyString_string_transform(_SliceUtf8 foo, ffi.Pointer<ffi.Opaque> write);
+external void _MyString_string_transform(_SliceUtf8 foo, ffi.Pointer<ffi.Opaque> write);
 
 @_DiplomatFfiUse('MyString_borrow')
 @ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_borrow')
 // ignore: non_constant_identifier_names
-external _SliceUtf8 _MyString_borrow(ffi.Pointer<ffi.Opaque> self);
+external _SliceUtf8 _MyString_borrow(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

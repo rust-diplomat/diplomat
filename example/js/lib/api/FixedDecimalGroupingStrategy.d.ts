@@ -20,4 +20,4 @@ export class FixedDecimalGroupingStrategy {
 
 
     constructor(value: FixedDecimalGroupingStrategy | string );
-}
+}

@@ -55,6 +55,7 @@ final class OptionStruct {
         c,
         d,
       ]);
-}
+}
 
 // dart format on
+

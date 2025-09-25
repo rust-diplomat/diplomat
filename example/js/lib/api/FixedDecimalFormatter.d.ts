@@ -33,4 +33,4 @@ export class FixedDecimalFormatter {
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
     formatWrite(value: FixedDecimal): string;
-}
+}

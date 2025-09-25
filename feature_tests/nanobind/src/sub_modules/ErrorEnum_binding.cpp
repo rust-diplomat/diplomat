@@ -18,5 +18,7 @@ void add_ErrorEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const ErrorEnum& self){
                 return nb::str(nb::cast(ErrorEnum::Value(self)));
             });
+    
 }
 
+

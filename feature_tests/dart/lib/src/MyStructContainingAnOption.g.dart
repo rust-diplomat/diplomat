@@ -43,12 +43,12 @@ final class MyStructContainingAnOption {
     }
     return dart;
   }
-
+
   static MyStructContainingAnOption filled() {
     final result = _MyStructContainingAnOption_filled();
     return MyStructContainingAnOption._fromFfi(result);
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -66,11 +66,12 @@ final class MyStructContainingAnOption {
 @_DiplomatFfiUse('MyStructContainingAnOption_new')
 @ffi.Native<_MyStructContainingAnOptionFfi Function()>(isLeaf: true, symbol: 'MyStructContainingAnOption_new')
 // ignore: non_constant_identifier_names
-external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_new();
+external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_new();
 
 @_DiplomatFfiUse('MyStructContainingAnOption_filled')
 @ffi.Native<_MyStructContainingAnOptionFfi Function()>(isLeaf: true, symbol: 'MyStructContainingAnOption_filled')
 // ignore: non_constant_identifier_names
-external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_filled();
+external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_filled();
 
 // dart format on
+

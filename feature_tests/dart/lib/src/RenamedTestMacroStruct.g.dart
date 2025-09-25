@@ -31,7 +31,7 @@ final class RenamedTestMacroStruct {
     final result = _namespace_TestMacroStruct_test_func();
     return result;
   }
-
+
   factory RenamedTestMacroStruct({int? a}) {
     final result = _namespace_TestMacroStruct_test_meta();
     final dart = RenamedTestMacroStruct._fromFfi(result);
@@ -40,7 +40,7 @@ final class RenamedTestMacroStruct {
     }
     return dart;
   }
-
+
 
   @override
   bool operator ==(Object other) =>
@@ -56,11 +56,12 @@ final class RenamedTestMacroStruct {
 @_DiplomatFfiUse('namespace_TestMacroStruct_test_func')
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'namespace_TestMacroStruct_test_func')
 // ignore: non_constant_identifier_names
-external int _namespace_TestMacroStruct_test_func();
+external int _namespace_TestMacroStruct_test_func();
 
 @_DiplomatFfiUse('namespace_TestMacroStruct_test_meta')
 @ffi.Native<_RenamedTestMacroStructFfi Function()>(isLeaf: true, symbol: 'namespace_TestMacroStruct_test_meta')
 // ignore: non_constant_identifier_names
-external _RenamedTestMacroStructFfi _namespace_TestMacroStruct_test_meta();
+external _RenamedTestMacroStructFfi _namespace_TestMacroStruct_test_meta();
 
 // dart format on
+

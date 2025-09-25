@@ -29,4 +29,4 @@ export class CyclicStructA {
     doubleCyclicOut(cyclicStructA: CyclicStructA_obj): string;
 
     get getterOut(): string;
-}
+}

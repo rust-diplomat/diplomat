@@ -133,4 +133,4 @@ export class AttrOpaque1Renamed {
             return this.#defaultConstructor(...arguments);
         }
     }
-}
+}

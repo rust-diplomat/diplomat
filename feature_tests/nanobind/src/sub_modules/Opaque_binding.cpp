@@ -22,3 +22,4 @@ void add_Opaque_binding(nb::module_ mod) {
         .def_static("try_from_utf8", &Opaque::try_from_utf8, "input"_a);
 }
 
+

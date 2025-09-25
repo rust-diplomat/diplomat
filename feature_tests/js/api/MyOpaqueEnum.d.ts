@@ -13,4 +13,4 @@ export class MyOpaqueEnum {
     static new_(): MyOpaqueEnum;
 
     toString(): string;
-}
+}

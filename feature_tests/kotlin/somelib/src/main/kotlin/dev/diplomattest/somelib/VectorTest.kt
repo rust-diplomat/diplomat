@@ -38,27 +38,27 @@ class VectorTest internal constructor (
             val handle = returnVal 
             val returnOpaque = VectorTest(handle, selfEdges)
             CLEANER.register(returnOpaque, VectorTest.VectorTestCleaner(handle, VectorTest.lib));
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun len(): ULong {
         
         val returnVal = lib.namespace_VectorTest_len(handle);
         return (returnVal.toULong())
-    }
+    }
     
     internal fun getInternal(idx: ULong): Double? {
         
         val returnVal = lib.namespace_VectorTest_get(handle, FFISizet(idx));
         return returnVal.option()
-    }
+    }
     
     fun push(value: Double): Unit {
         
         val returnVal = lib.namespace_VectorTest_push(handle, value);
         
-    }
+    }
 
     operator fun get(index: ULong): Double {
         val returnVal = getInternal(index)
@@ -69,4 +69,4 @@ class VectorTest internal constructor (
         }
     }
 
-}
+}

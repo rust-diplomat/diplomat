@@ -20,5 +20,7 @@ void add_ContiguousEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const ContiguousEnum& self){
                 return nb::str(nb::cast(ContiguousEnum::Value(self)));
             });
+    
 }
 
+

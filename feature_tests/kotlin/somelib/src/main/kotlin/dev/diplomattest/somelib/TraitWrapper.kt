@@ -35,14 +35,15 @@ class TraitWrapper internal constructor (
             
             val returnVal = lib.TraitWrapper_test_with_trait(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct, x);
             return (returnVal)
-        }
+        }
         @JvmStatic
         
         fun testTraitWithStruct(t: TesterTrait): Int {
             
             val returnVal = lib.TraitWrapper_test_trait_with_struct(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
             return (returnVal)
-        }
+        }
     }
 
 }
+

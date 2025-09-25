@@ -32,7 +32,7 @@ final class RenamedMyIndexer implements ffi.Finalizable {
     }
     return result.union.ok._toDart(aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('namespace_MyIndexer_destroy')
@@ -43,6 +43,7 @@ external void _namespace_MyIndexer_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('namespace_MyIndexer_get')
 @ffi.Native<_ResultSliceUtf8Void Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_MyIndexer_get')
 // ignore: non_constant_identifier_names
-external _ResultSliceUtf8Void _namespace_MyIndexer_get(ffi.Pointer<ffi.Opaque> self, int i);
+external _ResultSliceUtf8Void _namespace_MyIndexer_get(ffi.Pointer<ffi.Opaque> self, int i);
 
 // dart format on
+

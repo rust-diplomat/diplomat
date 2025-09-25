@@ -36,8 +36,8 @@ class OpaqueRefIterator internal constructor (
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
         val returnOpaque = AttrOpaque1(handle, selfEdges)
-        return returnOpaque
-    }
+        return returnOpaque
+    }
 
     var iterVal = nextInternal()
 
@@ -55,4 +55,4 @@ class OpaqueRefIterator internal constructor (
         }
     }
 
-}
+}

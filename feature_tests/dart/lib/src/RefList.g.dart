@@ -31,7 +31,7 @@ final class RefList implements ffi.Finalizable {
     final result = _RefList_node(data._ffi);
     return RefList._fromFfi(result, [], bEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('RefList_destroy')
@@ -42,6 +42,7 @@ external void _RefList_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('RefList_node')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'RefList_node')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _RefList_node(ffi.Pointer<ffi.Opaque> data);
+external ffi.Pointer<ffi.Opaque> _RefList_node(ffi.Pointer<ffi.Opaque> data);
 
 // dart format on
+

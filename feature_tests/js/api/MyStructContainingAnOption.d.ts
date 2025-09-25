@@ -23,4 +23,4 @@ export class MyStructContainingAnOption {
     static filled(): MyStructContainingAnOption;
 
     constructor();
-}
+}

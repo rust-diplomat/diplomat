@@ -9,4 +9,4 @@ export class RenamedTestOpaque {
     /** @internal */
     constructor();
 
-}
+}

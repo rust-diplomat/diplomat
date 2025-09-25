@@ -11,6 +11,7 @@ enum UnimportedEnum {
 
   c;
 
-}
+}
 
 // dart format on
+

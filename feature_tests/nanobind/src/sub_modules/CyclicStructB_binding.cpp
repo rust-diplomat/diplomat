@@ -16,6 +16,7 @@ void add_CyclicStructB_binding(nb::module_ mod) {
         .def(nb::init<uint8_t>(), "field"_a.none())
         .def_rw("field", &CyclicStructB::field)
         .def_static("get_a", &CyclicStructB::get_a)
-        .def_static("get_a_option", &CyclicStructB::get_a_option);
+        .def_static("get_a_option", &CyclicStructB::get_a_option);
 }
 
+

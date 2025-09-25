@@ -23,8 +23,9 @@ void add_RenamedStructWithAttrs_binding(nb::module_ mod) {
                         *self = std::move(tmp).ok().value();
                     } else {
                         nb::cast(tmp); // This will raise a python error with the contents of the error type
-                    }}, "a"_a, "b"_a);
+                    }}, "a"_a, "b"_a);
 }
 
 
 }
+

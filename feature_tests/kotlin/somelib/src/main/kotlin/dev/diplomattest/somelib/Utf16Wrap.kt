@@ -31,7 +31,7 @@ class Utf16Wrap internal constructor (
         @JvmStatic
         
         fun fromUtf16(input: String): Utf16Wrap {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf16(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf16(input)
             
             val returnVal = lib.Utf16Wrap_from_utf16(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -39,8 +39,8 @@ class Utf16Wrap internal constructor (
             val returnOpaque = Utf16Wrap(handle, selfEdges)
             CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
             if (inputMem != null) inputMem.close()
-            return returnOpaque
-        }
+            return returnOpaque
+        }
     }
     
     fun getDebugStr(): String {
@@ -49,12 +49,12 @@ class Utf16Wrap internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
+    }
     
     fun borrowCont(): String {
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
             return PrimitiveArrayTools.getUtf16(returnVal)
-    }
+    }
 
-}
+}

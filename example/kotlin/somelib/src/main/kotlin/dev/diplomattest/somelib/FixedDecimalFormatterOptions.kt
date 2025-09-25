@@ -38,8 +38,9 @@ class FixedDecimalFormatterOptions internal constructor (
             val returnVal = lib.icu4x_FixedDecimalFormatterOptions_default_mv1();
             
             val returnStruct = FixedDecimalFormatterOptions(returnVal)
-            return returnStruct
-        }
+            return returnStruct
+        }
     }
 
 }
+

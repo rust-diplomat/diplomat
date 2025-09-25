@@ -19,5 +19,7 @@ void add_OptionEnum_binding(nb::module_ mod) {
             .def("__repr__", [](const OptionEnum& self){
                 return nb::str(nb::cast(OptionEnum::Value(self)));
             });
+    
 }
 
+

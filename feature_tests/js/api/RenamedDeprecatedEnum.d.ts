@@ -20,4 +20,4 @@ export class RenamedDeprecatedEnum {
 
 
     constructor(value: RenamedDeprecatedEnum | string );
-}
+}

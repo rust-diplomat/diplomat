@@ -39,4 +39,4 @@ export class BigStructWithStuff {
 
 
     assertValue(extraVal: number): void;
-}
+}

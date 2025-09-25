@@ -28,33 +28,33 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
     final result = _OpaqueThinVec_create(a._int32AllocIn(temp.arena), b._float32AllocIn(temp.arena), c._utf8AllocIn(temp.arena));
     return OpaqueThinVec._fromFfi(result, []);
   }
-
+
   OpaqueThinIter get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_iter(_ffi);
     return OpaqueThinIter._fromFfi(result, [], aEdges);
   }
-
+
   int len() {
     final result = _OpaqueThinVec_len(_ffi);
     return result;
   }
-
+
   OpaqueThin? operator [](int idx) {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_get(_ffi, idx);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
-
+
   OpaqueThin? get firstelement {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _OpaqueThinVec_first(_ffi);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
-
+
 }
 
 @_DiplomatFfiUse('OpaqueThinVec_destroy')
@@ -65,26 +65,27 @@ external void _OpaqueThinVec_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('OpaqueThinVec_create')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceInt32, _SliceFloat, _SliceUtf8)>(isLeaf: true, symbol: 'OpaqueThinVec_create')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_create(_SliceInt32 a, _SliceFloat b, _SliceUtf8 c);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_create(_SliceInt32 a, _SliceFloat b, _SliceUtf8 c);
 
 @_DiplomatFfiUse('OpaqueThinVec_iter')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinVec_iter')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_iter(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_iter(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('OpaqueThinVec_len')
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinVec_len')
 // ignore: non_constant_identifier_names
-external int _OpaqueThinVec_len(ffi.Pointer<ffi.Opaque> self);
+external int _OpaqueThinVec_len(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('OpaqueThinVec_get')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'OpaqueThinVec_get')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_get(ffi.Pointer<ffi.Opaque> self, int idx);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_get(ffi.Pointer<ffi.Opaque> self, int idx);
 
 @_DiplomatFfiUse('OpaqueThinVec_first')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinVec_first')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_first(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _OpaqueThinVec_first(ffi.Pointer<ffi.Opaque> self);
 
 // dart format on
+

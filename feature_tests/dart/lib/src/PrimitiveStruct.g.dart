@@ -74,6 +74,7 @@ final class PrimitiveStruct {
         d,
         e,
       ]);
-}
+}
 
 // dart format on
+

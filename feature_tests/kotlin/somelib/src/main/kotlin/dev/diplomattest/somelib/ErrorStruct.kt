@@ -33,3 +33,4 @@ class ErrorStruct internal constructor (
     }
 
 }
+

@@ -27,18 +27,18 @@ final class OpaqueThin implements ffi.Finalizable {
     final result = _OpaqueThin_a(_ffi);
     return result;
   }
-
+
   double get b {
     final result = _OpaqueThin_b(_ffi);
     return result;
   }
-
+
   String get c {
     final write = _Write();
     _OpaqueThin_c(_ffi, write._ffi);
     return write.finalize();
   }
-
+
 }
 
 @_DiplomatFfiUse('OpaqueThin_destroy')
@@ -49,16 +49,17 @@ external void _OpaqueThin_destroy(ffi.Pointer<ffi.Void> self);
 @_DiplomatFfiUse('OpaqueThin_a')
 @ffi.Native<ffi.Int32 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_a')
 // ignore: non_constant_identifier_names
-external int _OpaqueThin_a(ffi.Pointer<ffi.Opaque> self);
+external int _OpaqueThin_a(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('OpaqueThin_b')
 @ffi.Native<ffi.Float Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_b')
 // ignore: non_constant_identifier_names
-external double _OpaqueThin_b(ffi.Pointer<ffi.Opaque> self);
+external double _OpaqueThin_b(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('OpaqueThin_c')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_c')
 // ignore: non_constant_identifier_names
-external void _OpaqueThin_c(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+external void _OpaqueThin_c(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on
+

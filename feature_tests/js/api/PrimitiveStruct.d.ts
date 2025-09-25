@@ -34,4 +34,4 @@ export class PrimitiveStruct {
     */
     constructor(structObj: PrimitiveStruct_obj);
 
-}
+}

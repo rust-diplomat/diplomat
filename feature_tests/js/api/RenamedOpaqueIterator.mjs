@@ -62,4 +62,4 @@ export class RenamedOpaqueIterator {
     constructor(symbol, ptr, selfEdge, aEdge) {
         return this.#internalConstructor(...arguments)
     }
-}
+}

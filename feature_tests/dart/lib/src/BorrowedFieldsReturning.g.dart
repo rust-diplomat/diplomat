@@ -45,6 +45,7 @@ final class BorrowedFieldsReturning {
   // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeA => [bytes];
-}
+}
 
 // dart format on
+
