@@ -69,14 +69,6 @@ pub enum TypeId {
     Enum(EnumId),
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[non_exhaustive]
-pub enum SymbolId {
-    TypeId(TypeId),
-    TraitId(TraitId),
-    FunctionId(FunctionId),
-}
-
 enum Param<'a> {
     Input(&'a str),
     Return,
@@ -233,17 +225,11 @@ impl TypeContext {
                 match sym {
                     ast::ModSymbol::CustomType(custom_type) => match custom_type {
                         ast::CustomType::Struct(strct) => {
-                            let id = if strct.output_only {
-                                TypeId::OutStruct(OutStructId(ast_out_structs.len()))
-                            } else {
-                                TypeId::Struct(StructId(ast_structs.len()))
-                            };
                             let item = ItemAndInfo {
                                 item: strct,
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: id.into(),
                             };
                             if strct.output_only {
                                 ast_out_structs.push(item);
@@ -257,7 +243,6 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Opaque(OpaqueId(ast_opaques.len())).into(),
                             };
                             ast_opaques.push(item)
                         }
@@ -267,7 +252,6 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Enum(EnumId(ast_enums.len())).into(),
                             };
                             ast_enums.push(item)
                         }
@@ -278,7 +262,6 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: TraitId(ast_traits.len()).into(),
                         };
                         ast_traits.push(item)
                     }
@@ -288,7 +271,6 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: FunctionId(ast_functions.len()).into(),
                         };
                         ast_functions.push(item)
                     }
@@ -703,68 +685,6 @@ impl From<OpaqueId> for TypeId {
 impl From<EnumId> for TypeId {
     fn from(x: EnumId) -> Self {
         TypeId::Enum(x)
-    }
-}
-
-impl From<TypeId> for SymbolId {
-    fn from(x: TypeId) -> Self {
-        SymbolId::TypeId(x)
-    }
-}
-
-impl From<TraitId> for SymbolId {
-    fn from(x: TraitId) -> Self {
-        SymbolId::TraitId(x)
-    }
-}
-
-impl From<FunctionId> for SymbolId {
-    fn from(x: FunctionId) -> Self {
-        SymbolId::FunctionId(x)
-    }
-}
-
-impl From<StructId> for SymbolId {
-    fn from(x: StructId) -> Self {
-        SymbolId::TypeId(x.into())
-    }
-}
-
-impl From<OutStructId> for SymbolId {
-    fn from(x: OutStructId) -> Self {
-        SymbolId::TypeId(x.into())
-    }
-}
-
-impl From<OpaqueId> for SymbolId {
-    fn from(x: OpaqueId) -> Self {
-        SymbolId::TypeId(x.into())
-    }
-}
-
-impl From<EnumId> for SymbolId {
-    fn from(x: EnumId) -> Self {
-        SymbolId::TypeId(x.into())
-    }
-}
-
-impl TryInto<TypeId> for SymbolId {
-    type Error = ();
-    fn try_into(self) -> Result<TypeId, Self::Error> {
-        match self {
-            SymbolId::TypeId(id) => Ok(id),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryInto<TraitId> for SymbolId {
-    type Error = ();
-    fn try_into(self) -> Result<TraitId, Self::Error> {
-        match self {
-            SymbolId::TraitId(id) => Ok(id),
-            _ => Err(()),
-        }
     }
 }
 
