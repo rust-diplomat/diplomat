@@ -351,7 +351,7 @@ impl BorrowedParams<'_> {
         self.0.iter().map(move |_| self_name).chain(
             self.1
                 .iter()
-                .filter(|(_, ltk)| (*ltk == LifetimeKind::ReturnValue))
+                .filter(|(_, ltk)| *ltk == LifetimeKind::ReturnValue)
                 .map(|(param, _)| &param.name),
         )
     }
@@ -361,7 +361,7 @@ impl BorrowedParams<'_> {
     pub fn static_names(&self) -> impl Iterator<Item = &'_ Ident> {
         self.1
             .iter()
-            .filter(|(_, ltk)| (*ltk == LifetimeKind::Static))
+            .filter(|(_, ltk)| *ltk == LifetimeKind::Static)
             .map(|(param, _)| &param.name)
     }
 

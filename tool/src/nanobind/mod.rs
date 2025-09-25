@@ -57,6 +57,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[allow(dead_code)] // Constructed by serialization
 struct PythonConfig {
     lib_name: String,
 }
