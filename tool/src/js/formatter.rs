@@ -68,7 +68,7 @@ impl<'tcx> JSFormatter<'tcx> {
         Self { docs_url_gen }
     }
 
-    /// Given a [`TypeId`] that we're reading, make sure to rename it appropriately, or throw an error if it's reserved.
+    /// Given a [`TypeDef`] that we're reading, make sure to rename it appropriately, or throw an error if it's reserved.
     pub fn fmt_type_name(&self, type_def: TypeDef<'tcx>) -> Cow<'tcx, str> {
         let name = type_def
             .attrs()

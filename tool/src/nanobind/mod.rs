@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, FunctionId};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
@@ -112,7 +112,7 @@ pub(crate) fn run<'cx>(
     root_module.module_name = lib_name.into();
 
     let mut submodules = BTreeMap::new();
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
@@ -130,7 +130,6 @@ pub(crate) fn run<'cx>(
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
-                    id: id.into(),
                     decl_header_path: &cpp_decl_path,
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
@@ -194,7 +193,6 @@ pub(crate) fn run<'cx>(
                 tcx,
                 formatter: &formatter.cxx.c,
                 is_for_cpp: false,
-                id: FunctionId::default().into(), // This is a junk value
                 errors: &errors,
                 decl_header_path: "",
                 impl_header_path: "",
@@ -221,7 +219,7 @@ pub(crate) fn run<'cx>(
 
     let mut func_map = BTreeMap::new();
 
-    for (_, func) in tcx.all_free_functions() {
+    for func in tcx.all_free_functions() {
         let Some(func_info) = ty_context.gen_method_info(func.into(), func) else {
             continue;
         };
@@ -360,12 +358,12 @@ mod test {
             }
         };
 
-        let (type_id, opaque_def) = match tcx
+        let opaque_def = match tcx
             .all_types()
             .next()
             .expect("Failed to generate first opaque def")
         {
-            (type_id, TypeDef::Opaque(opaque_def)) => (type_id, opaque_def),
+            TypeDef::Opaque(opaque_def) => opaque_def,
             _ => panic!("Failed to find opaque type from AST"),
         };
 
@@ -389,7 +387,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -439,12 +436,12 @@ mod test {
             }
         };
 
-        let (type_id, enum_def) = match tcx
+        let enum_def = match tcx
             .all_types()
             .next()
             .expect("Failed to generate first opaque def")
         {
-            (type_id, TypeDef::Enum(enum_def)) => (type_id, enum_def),
+            TypeDef::Enum(enum_def) => enum_def,
             _ => panic!("Failed to find opaque type from AST"),
         };
 
@@ -468,7 +465,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -517,12 +513,12 @@ mod test {
             }
         };
 
-        let (type_id, struct_def) = match tcx
+        let struct_def = match tcx
             .all_types()
             .next()
             .expect("Failed to generate first opaque def")
         {
-            (type_id, TypeDef::Struct(struct_def)) => (type_id, struct_def),
+            TypeDef::Struct(struct_def) => struct_def,
             _ => panic!("Failed to find opaque type from AST"),
         };
 
@@ -546,7 +542,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },

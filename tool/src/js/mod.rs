@@ -100,19 +100,16 @@ pub(crate) fn run<'tcx>(
         include_str!("../../templates/js/wasm.mjs").into(),
     );
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
 
         if ty.attrs().disable {
             continue;
         }
 
-        let type_def = tcx.resolve_type(id);
-        assert_eq!(type_def.name(), ty.name());
+        let _guard = errors.set_context_ty(ty.name().as_str().into());
 
-        let _guard = errors.set_context_ty(type_def.name().as_str().into());
-
-        let type_name = formatter.fmt_type_name(type_def);
+        let type_name = formatter.fmt_type_name(ty);
 
         let context = ItemGenContext {
             tcx,
@@ -126,7 +123,7 @@ pub(crate) fn run<'tcx>(
             config: config.js_config.clone(),
         };
 
-        let (m, special_method_presence, fields, fields_out) = match type_def {
+        let (m, special_method_presence, fields, fields_out) = match ty {
             TypeDef::Enum(e) => (&e.methods, &e.special_method_presence, None, None),
             TypeDef::Opaque(o) => (&o.methods, &o.special_method_presence, None, None),
             TypeDef::Struct(s) => (
@@ -141,7 +138,7 @@ pub(crate) fn run<'tcx>(
                 None,
                 Some(context.generate_fields(s)),
             ),
-            _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
+            _ => unreachable!("HIR/AST variant {:?} is unknown.", ty),
         };
 
         let mut special_methods = context.generate_special_method(special_method_presence);
@@ -174,7 +171,7 @@ pub(crate) fn run<'tcx>(
             }
             methods_info.special_methods.typescript = ts;
 
-            let contents = match type_def {
+            let contents = match ty {
                 TypeDef::Enum(e) => context.gen_enum(ts, e, &methods_info),
                 TypeDef::Opaque(o) => context.gen_opaque(ts, o, &methods_info),
                 TypeDef::Struct(s) => {
@@ -185,7 +182,7 @@ pub(crate) fn run<'tcx>(
                     let (fields, layout) = fields_out.clone().unwrap();
                     context.gen_struct(ts, s, &fields, &methods_info, true, layout)
                 }
-                _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def),
+                _ => unreachable!("HIR/AST variant {:?} is unknown.", ty),
             };
 
             let file_name = formatter.fmt_file_name(&context.type_name, &file_type);
@@ -194,7 +191,7 @@ pub(crate) fn run<'tcx>(
             context.remove_import(context.type_name.clone(), None, gen::ImportUsage::Both);
 
             // If we're a struct, remove importing our own StructType_obj definition if it exists.
-            if matches!(type_def, TypeDef::Struct(..)) {
+            if matches!(ty, TypeDef::Struct(..)) {
                 context.remove_import(
                     format!("{}_obj", context.type_name).into(),
                     None,
@@ -215,7 +212,7 @@ pub(crate) fn run<'tcx>(
         ts_exports.push(
             formatter
                 .fmt_export_statement(
-                    &match type_def {
+                    &match ty {
                         TypeDef::Struct(s) if !s.fields.is_empty() => {
                             format!("{}, {}_obj", context.type_name, context.type_name).into()
                         }

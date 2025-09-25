@@ -111,7 +111,7 @@ pub(crate) fn run<'tcx>(
         callback_params: &mut callback_params,
     };
 
-    for (_id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
@@ -177,7 +177,7 @@ pub(crate) fn run<'tcx>(
         }
     }
 
-    for (_id, trt_def) in tcx.all_traits() {
+    for trt_def in tcx.all_traits() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx
             .errors
@@ -1984,7 +1984,7 @@ returnVal.option() ?: return null
             }
             Type::Struct(ref st) => {
                 let def = self.tcx.resolve_type(st.id());
-                self.formatter.fmt_type_name(def.into())
+                self.formatter.fmt_type_name(def)
             }
             Type::ImplTrait(ref trt) => {
                 let def = self.tcx.resolve_trait(trt.id());
@@ -2199,7 +2199,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Enum(enum_def)) = all_types
+        if let TypeDef::Enum(enum_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2287,7 +2287,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Struct(strct)) = all_types
+        if let TypeDef::Struct(strct) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2339,7 +2339,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2453,7 +2453,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2509,7 +2509,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2582,7 +2582,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_traits = tcx.all_traits();
-        let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
+        let trait_def = all_traits.next().expect("Failed to generate trait");
         let error_store = ErrorStore::default();
         let docs_urls = HashMap::new();
         let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
@@ -2629,7 +2629,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {

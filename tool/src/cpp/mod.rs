@@ -82,7 +82,7 @@ pub(crate) fn run<'tcx>(
     };
     files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
@@ -102,7 +102,6 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id: id.into(),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },
@@ -140,9 +139,9 @@ pub(crate) fn run<'tcx>(
         // Group free functions by namespace, removing those which are disabled
         let mut free_func_map = HashMap::<_, Vec<_>>::new();
         for e in tcx.all_free_functions() {
-            if !e.1.attrs.disable {
+            if !e.attrs.disable {
                 free_func_map
-                    .entry(e.1.attrs.namespace.clone())
+                    .entry(e.attrs.namespace.clone())
                     .or_default()
                     .push(e);
             }
@@ -150,7 +149,6 @@ pub(crate) fn run<'tcx>(
 
         for (ns, funcs) in free_func_map {
             let impl_header_path = formatter.fmt_free_function_header_path(ns.clone());
-            let first_id = funcs.first().unwrap().0;
 
             let mut free_func_impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
@@ -162,7 +160,6 @@ pub(crate) fn run<'tcx>(
                     tcx,
                     formatter: &formatter.c,
                     errors: &errors,
-                    id: first_id.into(),
                     is_for_cpp: true,
                     impl_header_path: &impl_header_path,
                     decl_header_path: "",
@@ -172,13 +169,11 @@ pub(crate) fn run<'tcx>(
                 generating_struct_fields: false,
             };
 
-            let c_header = ty_context
-                .c
-                .gen_function_impls(None, funcs.iter().map(|(_, m)| *m));
+            let c_header = ty_context.c.gen_function_impls(None, funcs.iter().copied());
 
             let methods = funcs
                 .into_iter()
-                .filter_map(|(_, func)| ty_context.gen_method_info(func.into(), func))
+                .filter_map(|func| ty_context.gen_method_info(func.into(), func))
                 .collect();
 
             crate::cpp::gen::FuncImplTemplate {
@@ -227,7 +222,7 @@ mod test {
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
         let config = crate::Config::default();
-        if let (id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -246,7 +241,6 @@ mod test {
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },

@@ -11,7 +11,7 @@ use diplomat_core::hir::{
     },
     BackendAttrSupport, DocsUrlGenerator, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner,
     ReturnType, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType,
-    TyPosition, Type, TypeContext, TypeDef, TypeId,
+    TyPosition, Type, TypeContext, TypeDef,
 };
 
 use askama::Template;
@@ -69,12 +69,12 @@ pub(crate) fn run<'cx>(
         formatter: &formatter,
     };
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             continue;
         }
 
-        let (file_name, body) = context.gen(id);
+        let (file_name, body) = context.gen(ty);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -151,9 +151,7 @@ struct ItemGenContext<'a, 'cx> {
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
-    fn gen(&mut self, id: TypeId) -> (String, String) {
-        let ty = self.tcx.resolve_type(id);
-
+    fn gen(&mut self, ty: TypeDef<'cx>) -> (String, String) {
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
 
         let name = self.formatter.fmt_type_name(ty);

@@ -93,45 +93,21 @@ impl Display for Param<'_> {
 }
 
 impl TypeContext {
-    pub fn all_types<'tcx>(&'tcx self) -> impl Iterator<Item = (TypeId, TypeDef<'tcx>)> {
+    pub fn all_types<'tcx>(&'tcx self) -> impl Iterator<Item = TypeDef<'tcx>> {
         self.structs
             .iter()
-            .enumerate()
-            .map(|(i, ty)| (TypeId::Struct(StructId(i)), TypeDef::Struct(ty)))
-            .chain(
-                self.out_structs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i)), TypeDef::OutStruct(ty))),
-            )
-            .chain(
-                self.opaques
-                    .iter()
-                    .enumerate()
-                    .map(|(i, ty)| (TypeId::Opaque(OpaqueId(i)), TypeDef::Opaque(ty))),
-            )
-            .chain(
-                self.enums
-                    .iter()
-                    .enumerate()
-                    .map(|(i, ty)| (TypeId::Enum(EnumId(i)), TypeDef::Enum(ty))),
-            )
+            .map(TypeDef::Struct)
+            .chain(self.out_structs.iter().map(TypeDef::OutStruct))
+            .chain(self.opaques.iter().map(TypeDef::Opaque))
+            .chain(self.enums.iter().map(TypeDef::Enum))
     }
 
-    pub fn all_traits<'tcx>(&'tcx self) -> impl Iterator<Item = (TraitId, &'tcx TraitDef)> {
-        self.traits
-            .iter()
-            .enumerate()
-            .map(|(i, trt)| (TraitId(i), trt))
+    pub fn all_traits<'tcx>(&'tcx self) -> impl Iterator<Item = &'tcx TraitDef> {
+        self.traits.iter()
     }
 
-    pub fn all_free_functions<'tcx>(
-        &'tcx self,
-    ) -> impl Iterator<Item = (FunctionId, &'tcx Method)> {
-        self.functions
-            .iter()
-            .enumerate()
-            .map(|(i, f)| (FunctionId(i), f))
+    pub fn all_free_functions<'tcx>(&'tcx self) -> impl Iterator<Item = &'tcx Method> {
+        self.functions.iter()
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -203,14 +179,6 @@ impl TypeContext {
     /// (don't apply rename rules and such)
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'_, str> {
         self.resolve_type(id).name().as_str().into()
-    }
-
-    pub fn fmt_symbol_name_diagnostics(&self, id: SymbolId) -> Cow<'_, str> {
-        match id {
-            SymbolId::TypeId(id) => self.fmt_type_name_diagnostics(id),
-            SymbolId::TraitId(id) => self.resolve_trait(id).name.as_str().into(),
-            SymbolId::FunctionId(id) => self.resolve_function(id).name.as_str().into(),
-        }
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.
@@ -385,7 +353,7 @@ impl TypeContext {
     ///    Todo: Automatically insert these bounds during HIR construction in a second phase
     fn validate<'hir>(&'hir self, errors: &mut ErrorStore<'hir>) {
         // Lifetime validity check
-        for (_id, ty) in self.all_types() {
+        for ty in self.all_types() {
             errors.set_item(ty.name().as_str());
 
             self.validate_type_def(errors, ty);
@@ -464,7 +432,7 @@ impl TypeContext {
             }
         }
 
-        for (_id, def) in self.all_traits() {
+        for def in self.all_traits() {
             errors.set_item(def.name.as_str());
             self.validate_trait(errors, def);
         }

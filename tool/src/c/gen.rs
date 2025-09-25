@@ -3,8 +3,8 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId,
-    TraitIdGetter, TyPosition, Type, TypeDef,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitIdGetter,
+    TyPosition, Type, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -79,7 +79,6 @@ pub struct ItemGenContext<'cx, 'tcx, 'header> {
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
-    pub id: SymbolId,
     pub decl_header_path: &'header str,
     pub impl_header_path: &'header str,
 }

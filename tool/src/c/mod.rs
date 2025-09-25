@@ -62,7 +62,7 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
@@ -76,7 +76,6 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
@@ -96,7 +95,7 @@ pub(crate) fn run<'tcx>(
         files.add_file(impl_header_path, impl_header.to_string());
     }
 
-    for (id, trt) in tcx.all_traits() {
+    for trt in tcx.all_traits() {
         if trt.attrs.disable {
             // Skip type if disabled
             continue;
@@ -110,7 +109,6 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
@@ -123,23 +121,19 @@ pub(crate) fn run<'tcx>(
 
     let impl_header_path = "free_functions.h".to_string();
 
-    if let Some((first_func_id, _)) = tcx.all_free_functions().next() {
-        let context = ItemGenContext {
-            tcx,
-            formatter: &formatter,
-            errors: &errors,
-            id: first_func_id.into(),
-            is_for_cpp: false,
-            decl_header_path: "",
-            impl_header_path: &impl_header_path,
-        };
+    let context = ItemGenContext {
+        tcx,
+        formatter: &formatter,
+        errors: &errors,
+        is_for_cpp: false,
+        decl_header_path: "",
+        impl_header_path: &impl_header_path,
+    };
 
-        let impl_header =
-            context.gen_function_impls(None, tcx.all_free_functions().map(|(_, m)| m));
+    let impl_header = context.gen_function_impls(None, tcx.all_free_functions());
 
-        if !impl_header.body.is_empty() {
-            files.add_file(impl_header.path.clone(), impl_header.to_string());
-        }
+    if !impl_header.body.is_empty() {
+        files.add_file(impl_header.path.clone(), impl_header.to_string());
     }
 
     (files, errors)

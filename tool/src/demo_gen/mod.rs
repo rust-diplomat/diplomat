@@ -115,7 +115,7 @@ pub(crate) fn run<'tcx>(
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
 
-    for (_id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
 
         let methods = ty.methods();

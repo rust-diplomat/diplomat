@@ -363,7 +363,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Struct(p) => {
                 let op_def = self.tcx.resolve_type(p.id());
-                self.fmt_type_name(op_def.into())
+                self.fmt_type_name(op_def)
             }
             Type::Enum(e) => {
                 let e_def = self.tcx.resolve_enum(e.tcx_id);
@@ -513,11 +513,11 @@ pub mod test {
         let opaques = tcx.opaques();
         assert!(!opaques.is_empty());
         let mut all_types = tcx.all_types();
-        let (_, ty) = all_types.next().expect("Failed to get next type");
+        let ty = all_types.next().expect("Failed to get next type");
 
         assert_eq!(Cow::from("MyOpaqueStruct"), formatter.fmt_type_name(ty));
 
-        let (_, ty) = all_types.next().expect("Failed to get next type");
+        let ty = all_types.next().expect("Failed to get next type");
 
         assert_eq!(Cow::from("StringWrapper"), formatter.fmt_type_name(ty));
     }
