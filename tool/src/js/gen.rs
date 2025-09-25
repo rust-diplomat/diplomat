@@ -11,7 +11,7 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::{
     self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
-    StructPathLike, Type, TypeContext, TypeId,
+    StructPathLike, Type, TypeContext,
 };
 
 use askama::{self, Template};
@@ -424,21 +424,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
     /// Generate required method info for all other [`ItemGenContext::generate_*`] calls.
     ///
     /// For re-usability between `.d.ts` and `.mjs` files.
-    pub(super) fn generate_method(
-        &self,
-        type_id: TypeId,
-        method: &'tcx Method,
-    ) -> Option<MethodInfo<'_>> {
+    pub(super) fn generate_method(&self, method: &'tcx Method) -> Option<MethodInfo<'_>> {
         if method.attrs.disable {
             return None;
         }
 
         let mut visitor = method.borrowing_param_visitor(self.tcx, true);
 
-        let _guard = self.errors.set_context_method(
-            self.tcx.fmt_type_name_diagnostics(type_id),
-            method.name.as_str().into(),
-        );
+        let _guard = self.errors.set_context_method(method.name.as_str().into());
 
         let abi_name = String::from(method.abi_name.as_str());
 

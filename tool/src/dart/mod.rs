@@ -160,21 +160,21 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         (
             self.formatter.fmt_file_name(&name),
             match ty {
-                TypeDef::Enum(e) => self.gen_enum(e, id, &name),
-                TypeDef::Opaque(o) => self.gen_opaque_def(o, id, &name),
-                TypeDef::Struct(s) => self.gen_struct_def(s, id, false, &name, true),
-                TypeDef::OutStruct(s) => self.gen_struct_def(s, id, true, &name, false),
+                TypeDef::Enum(e) => self.gen_enum(e, &name),
+                TypeDef::Opaque(o) => self.gen_opaque_def(o, &name),
+                TypeDef::Struct(s) => self.gen_struct_def(s, false, &name, true),
+                TypeDef::OutStruct(s) => self.gen_struct_def(s, true, &name, false),
                 _ => unreachable!("unknown AST/HIR variant"),
             },
         )
     }
 
-    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, id: TypeId, type_name: &str) -> String {
+    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
         let methods = ty
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .flat_map(|method| self.gen_method_info(id, method, type_name))
+            .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
 
         let special = self.gen_special_method_info(&ty.special_method_presence);
@@ -206,12 +206,12 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         .unwrap()
     }
 
-    fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, id: TypeId, type_name: &str) -> String {
+    fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> String {
         let methods = ty
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .flat_map(|method| self.gen_method_info(id, method, type_name))
+            .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
 
         let destructor = &ty.dtor_abi_name;
@@ -245,7 +245,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
-        id: TypeId,
         is_out: bool,
         type_name: &str,
         mutable: bool,
@@ -335,7 +334,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .flat_map(|method| self.gen_method_info(id, method, type_name))
+            .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
@@ -428,20 +427,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
     fn gen_method_info(
         &mut self,
-        id: TypeId,
         method: &'cx hir::Method,
         type_name: &str,
     ) -> Option<MethodInfo<'cx>> {
         if method.attrs.disable {
             return None;
         }
+        let _guard = self.errors.set_context_method(method.name.as_str().into());
 
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
-
-        let _guard = self.errors.set_context_method(
-            self.tcx.fmt_type_name_diagnostics(id),
-            method.name.as_str().into(),
-        );
 
         let abi_name = method.abi_name.as_str();
 

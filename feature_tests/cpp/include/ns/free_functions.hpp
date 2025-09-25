@@ -1,8 +1,6 @@
 #ifndef SOMELIB_ns_free_functions_HPP
 #define SOMELIB_ns_free_functions_HPP
 
-#include "free_functions.d.hpp"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -24,10 +22,12 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+namespace somelib::ns {
 
-inline int32_t somelib::ns::Renamedfree_func_test(int32_t x) {
+inline int32_t Renamedfree_func_test(int32_t x) {
     auto result = somelib::ns::capi::namespace_free_func_test(x);
     return result;
 }
 
+} // namespace
 #endif // SOMELIB_ns_free_functions_HPP

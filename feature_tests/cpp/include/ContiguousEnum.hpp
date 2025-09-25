@@ -16,9 +16,7 @@
 
 namespace somelib {
 namespace capi {
-    extern "C" {
 
-    } // extern "C"
 } // namespace capi
 } // namespace
 

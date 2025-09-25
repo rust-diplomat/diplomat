@@ -74,19 +74,9 @@ struct NamedExpression<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "cpp/free_functions/func_block_impl.h.jinja", escape = "none")]
+#[template(path = "cpp/free_functions.h.jinja", escape = "none")]
 /// Header for the implementation of a block of functions.
 pub(crate) struct FuncImplTemplate<'a> {
-    pub namespace: Option<String>,
-    pub methods: Vec<String>,
-    pub c_header: C2Header,
-    pub fmt: &'a Cpp2Formatter<'a>,
-}
-
-#[derive(Template)]
-#[template(path = "cpp/free_functions/func_block_decl.h.jinja", escape = "none")]
-/// Header for the definition of a block of function.s
-pub(crate) struct FuncDeclTemplate<'a> {
     pub namespace: Option<String>,
     pub methods: Vec<String>,
     pub c_header: C2Header,
@@ -118,7 +108,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.formatter.fmt_c_type_name(id);
         let c_header = self.c.gen_enum_def(ty);
-        let c_impl_header = self.c.gen_impl(ty.into());
+        let c_impl_header = self.c.gen_impl(id);
+
+        let _guard = self
+            .errors
+            .set_context_ty(self.c.tcx.fmt_symbol_name_diagnostics(id.into()));
 
         let methods = ty
             .methods
@@ -219,7 +213,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
 
         let c_header = self.c.gen_opaque_def(ty);
-        let c_impl_header = self.c.gen_impl(ty.into());
+        let c_impl_header = self.c.gen_impl(id);
 
         let methods = ty
             .methods
@@ -292,7 +286,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let namespace = def.attrs.namespace.clone();
 
         let c_header = self.c.gen_struct_def(def);
-        let c_impl_header = self.c.gen_impl(def.into());
+        let c_impl_header = self.c.gen_impl(id);
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -389,9 +383,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         &mut self,
         func_id: hir::FunctionId,
         func: &'tcx hir::Method,
-        c_type_header: &mut crate::c::Header,
-        c_func_block: &mut crate::c::gen::FuncBlockTemplate<'tcx>,
-    ) -> Option<(String, String)> {
+    ) -> Option<String> {
         let info = self.gen_method_info(func_id.into(), func)?;
         let fmt = &self.formatter;
 
@@ -403,30 +395,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         struct FunctionImpl<'a> {
             m: &'a MethodInfo<'a>,
             fmt: &'a Cpp2Formatter<'a>,
-            namespace: Option<String>,
         }
 
-        #[derive(Template)]
-        #[template(
-            path = "cpp/function_defs/func_block_function_decl.h.jinja",
-            escape = "none"
-        )]
-        struct FunctionDecl<'a> {
-            m: &'a MethodInfo<'a>,
-        }
+        let impl_bl = FunctionImpl { m: &info, fmt };
 
-        let impl_bl = FunctionImpl {
-            m: &info,
-            fmt,
-            namespace: func.attrs.namespace.clone(),
-        };
-
-        let decl_bl = FunctionDecl { m: &info };
-
-        let (c_method, c_callbacks) = self.c.gen_method(func, c_type_header);
-        c_func_block.methods.push(c_method);
-        c_func_block.cb_structs_and_defs.extend(c_callbacks);
-        Some((decl_bl.to_string(), impl_bl.to_string()))
+        Some(impl_bl.to_string())
     }
 
     pub fn gen_method_info(
@@ -438,10 +411,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             return None;
         }
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
-        let _guard = self.errors.set_context_method(
-            self.c.tcx.fmt_symbol_name_diagnostics(id),
-            method.name.to_string().into(),
-        );
+        let _guard = self
+            .errors
+            .set_context_method(method.name.to_string().into());
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = self
             .formatter
