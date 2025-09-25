@@ -2,8 +2,8 @@ use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
     Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, FloatType, IntSizeType, IntType, LifetimeEnv,
-    MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId, TyPosition, Type,
-    TypeContext, TypeId,
+    MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike, TraitDef, TyPosition, Type,
+    TypeContext, TypeDef,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -293,8 +293,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
                         }))
                         .collect::<Vec<_>>()
                         .join(", ");
-                let ty_name =
-                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
+                let ty_def = self.tcx.resolve_opaque(opaque.tcx_id);
+                let ty_name = self.fmt_type_name(ty_def.into());
                 if opaque.is_optional() {
                     format!(
                         r#"if (nativeStruct.{field_name} == null) {{
@@ -309,8 +309,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 .into()
             }
             Type::Struct(strct) => {
-                let ty_name =
-                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
+                let s_def = self.tcx.resolve_type(strct.id());
+                let ty_name = self.fmt_type_name(s_def);
                 let lt_list: String = strct
                     .lifetimes()
                     .lifetimes()
@@ -358,16 +358,17 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Opaque(op) => {
                 // todo: optional
                 let optional = if op.is_optional() { "?" } else { "" };
-                format!(
-                    "{}{optional}",
-                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"))
-                )
-                .into()
+                let op_def = self.tcx.resolve_opaque(op.tcx_id);
+                format!("{}{optional}", self.fmt_type_name(op_def.into())).into()
             }
-            Type::Struct(_) => {
-                self.fmt_type_name(ty.id().expect("Failed to get type id for struct"))
+            Type::Struct(p) => {
+                let op_def = self.tcx.resolve_type(p.id());
+                self.fmt_type_name(op_def.into())
             }
-            Type::Enum(_) => self.fmt_type_name(ty.id().expect("Failed to get type id for enum")),
+            Type::Enum(e) => {
+                let e_def = self.tcx.resolve_enum(e.tcx_id);
+                self.fmt_type_name(e_def.into())
+            }
             Type::Slice(Slice::Primitive(_, prim)) => {
                 format!("{}Array", self.fmt_primitive_as_kt(*prim)).into()
             }
@@ -409,46 +410,40 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_type(id);
-
+    pub fn fmt_type_name(&self, def: TypeDef<'tcx>) -> Cow<'tcx, str> {
         let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved
-                .name()
+            def.name()
                 .as_str()
                 .strip_prefix(strip_prefix)
-                .unwrap_or(resolved.name().as_str())
+                .unwrap_or(def.name().as_str())
                 .into()
         } else {
-            resolved.name().as_str().into()
+            def.name().as_str().into()
         };
 
         if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
             panic!("{candidate:?} is not a valid Kotlin type name. Please rename.");
         }
 
-        resolved.attrs().rename.apply(candidate)
+        def.attrs().rename.apply(candidate)
     }
 
-    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_trait(id);
-
+    pub fn fmt_trait_name(&self, def: &'tcx TraitDef) -> Cow<'tcx, str> {
         let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved
-                .name
+            def.name
                 .as_str()
                 .strip_prefix(strip_prefix)
-                .unwrap_or(resolved.name.as_str())
+                .unwrap_or(def.name.as_str())
                 .into()
         } else {
-            resolved.name.as_str().into()
+            def.name.as_str().into()
         };
 
         if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
             panic!("{candidate:?} is not a valid Kotlin trait name. Please rename.");
         }
 
-        resolved.attrs.rename.apply(candidate)
+        def.attrs.rename.apply(candidate)
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
@@ -518,12 +513,12 @@ pub mod test {
         let opaques = tcx.opaques();
         assert!(!opaques.is_empty());
         let mut all_types = tcx.all_types();
-        let (ty_id, _) = all_types.next().expect("Failed to get next type");
+        let (_, ty) = all_types.next().expect("Failed to get next type");
 
-        assert_eq!(Cow::from("MyOpaqueStruct"), formatter.fmt_type_name(ty_id));
+        assert_eq!(Cow::from("MyOpaqueStruct"), formatter.fmt_type_name(ty));
 
-        let (ty_id, _) = all_types.next().expect("Failed to get next type");
+        let (_, ty) = all_types.next().expect("Failed to get next type");
 
-        assert_eq!(Cow::from("StringWrapper"), formatter.fmt_type_name(ty_id));
+        assert_eq!(Cow::from("StringWrapper"), formatter.fmt_type_name(ty));
     }
 }

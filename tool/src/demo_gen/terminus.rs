@@ -217,15 +217,19 @@ impl RenderTerminusContext<'_, '_> {
 
         let type_name = match type_info {
             Type::Primitive(p) => self.formatter.fmt_primitive_as_ffi(*p).to_string(),
-            Type::Enum(e) => self.formatter.fmt_type_name(e.tcx_id.into()).to_string(),
+            Type::Enum(e) => {
+                let type_def = e.resolve(self.tcx);
+                self.formatter.fmt_type_name(type_def.into()).to_string()
+            }
             Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
             Type::Slice(hir::Slice::Primitive(.., p)) => {
                 self.formatter.fmt_primitive_list_type(*p).to_string()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<string>".to_string(),
             _ => {
-                if let Some(i) = type_info.id() {
-                    self.formatter.fmt_type_name(i).to_string()
+                if let Some(id) = type_info.id() {
+                    let type_def = self.tcx.resolve_type(id);
+                    self.formatter.fmt_type_name(type_def).to_string()
                 } else {
                     panic!("Type {type_info:?} not recognized.");
                 }
@@ -296,9 +300,10 @@ impl RenderTerminusContext<'_, '_> {
                 self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Enum(e) if param_name == "self" => {
-                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+                let type_def = e.resolve(self.tcx);
+                let type_name = self.formatter.fmt_type_name(type_def.into()).to_string();
 
-                if e.resolve(self.tcx).attrs.disable {
+                if type_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -309,9 +314,10 @@ impl RenderTerminusContext<'_, '_> {
                 format!("new {}.{type_name}({param})", self.lib_name,)
             }
             Type::Enum(e) => {
-                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+                let type_def = e.resolve(self.tcx);
+                let type_name = self.formatter.fmt_type_name(type_def.into()).to_string();
 
-                if e.resolve(self.tcx).attrs.disable {
+                if type_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -324,9 +330,9 @@ impl RenderTerminusContext<'_, '_> {
             // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
                 let op = o.resolve(self.tcx);
-                let type_name = self.formatter.fmt_type_name(o.tcx_id.into());
+                let type_name = self.formatter.fmt_type_name(op.into());
 
-                let all_attrs = &o.resolve(self.tcx).attrs;
+                let all_attrs = &op.attrs;
                 if all_attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
@@ -346,7 +352,7 @@ impl RenderTerminusContext<'_, '_> {
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
 
-                let type_name = self.formatter.fmt_type_name(s.tcx_id.into());
+                let type_name = self.formatter.fmt_type_name(st.into());
                 if st.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))

@@ -1941,17 +1941,17 @@ returnVal.option() ?: return null
                 format!("Pointer{optional}").into()
             }
             Type::Struct(ref strct) => {
-                let op_id = strct.id();
-                format!("{}Native", self.formatter.fmt_type_name(op_id)).into()
+                let def = self.tcx.resolve_type(strct.id());
+                format!("{}Native", self.formatter.fmt_type_name(def)).into()
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => self.gen_type_name(ty, additional_name),
             Type::ImplTrait(ref trt) => {
-                let op_id = trt.id();
+                let def = self.tcx.resolve_trait(trt.id());
                 format!(
                     "DiplomatTrait_{}_Wrapper_Native",
-                    self.formatter.fmt_trait_name(op_id)
+                    self.formatter.fmt_trait_name(def)
                 )
                 .into()
             }
@@ -1967,10 +1967,10 @@ returnVal.option() ?: return null
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_kt(prim).into(),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
+                let op_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(op_def.into());
 
-                if self.tcx.resolve_type(op_id).attrs().disable {
+                if op_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -1982,19 +1982,22 @@ returnVal.option() ?: return null
 
                 ret.into_owned().into()
             }
-            Type::Struct(ref strct) => {
-                let op_id = strct.id();
-                self.formatter.fmt_type_name(op_id)
+            Type::Struct(ref st) => {
+                let def = self.tcx.resolve_type(st.id());
+                self.formatter.fmt_type_name(def.into())
             }
             Type::ImplTrait(ref trt) => {
-                let op_id = trt.id();
+                let def = self.tcx.resolve_trait(trt.id());
                 format!(
                     "DiplomatTrait_{}_Wrapper",
-                    self.formatter.fmt_trait_name(op_id)
+                    self.formatter.fmt_trait_name(def)
                 )
                 .into()
             }
-            Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
+            Type::Enum(ref e) => {
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                self.formatter.fmt_type_name(def.into())
+            }
             Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()

@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, DocsTypeReferenceSyntax, DocsUrlGenerator, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsTypeReferenceSyntax, DocsUrlGenerator, TypeDef};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -14,7 +14,6 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
-    tcx: &'tcx TypeContext,
     docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
@@ -23,8 +22,8 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
-        Self { tcx, docs_url_gen }
+    pub fn new(docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+        Self { docs_url_gen }
     }
 
     pub fn fmt_lifetime_edge_array(
@@ -74,16 +73,14 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     /// Resolve and format a named type for use in code
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_type(id);
-
-        let candidate = resolved.name().as_str();
+    pub fn fmt_type_name(&self, def: TypeDef<'tcx>) -> Cow<'tcx, str> {
+        let candidate = def.name().as_str();
 
         if DISALLOWED_CORE_TYPES.contains(&candidate) {
             panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
 
-        resolved.attrs().rename.apply(candidate.into())
+        def.attrs().rename.apply(candidate.into())
     }
 
     /// Format an enum variant.

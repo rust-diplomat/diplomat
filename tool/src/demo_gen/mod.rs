@@ -72,7 +72,7 @@ pub(crate) fn run<'tcx>(
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
     conf: Config,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
-    let formatter = JSFormatter::new(tcx, docs);
+    let formatter = JSFormatter::new(docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
 
@@ -115,7 +115,7 @@ pub(crate) fn run<'tcx>(
 
     let is_explicit = unwrapped_conf.explicit_generation.unwrap_or(false);
 
-    for (id, ty) in tcx.all_types() {
+    for (_id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
 
         let methods = ty.methods();
@@ -123,10 +123,8 @@ pub(crate) fn run<'tcx>(
         let mut termini = Vec::new();
 
         {
-            let ty_name = formatter.fmt_type_name(id);
+            let ty_name = formatter.fmt_type_name(ty);
             let type_name: String = ty_name.into();
-
-            let ty = tcx.resolve_type(id);
 
             let attrs = ty.attrs();
             if attrs.disable {

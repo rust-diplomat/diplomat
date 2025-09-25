@@ -5,7 +5,7 @@ use std::{borrow::Cow, fmt::Write};
 
 use diplomat_core::hir::{
     self, Attrs, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, SpecialMethod,
-    TypeContext, TypeId,
+    TypeDef,
 };
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
@@ -59,21 +59,17 @@ const RESERVED_TYPES: &[&str] = &["Infinity", "NaN"];
 /// Helper class for us to format JS identifiers from the HIR.
 pub(crate) struct JSFormatter<'tcx> {
     /// Per [`CFormatter`]'s documentation we use it for support.
-    tcx: &'tcx TypeContext,
-
     /// For generating doc.rs links
     docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 impl<'tcx> JSFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
-        Self { tcx, docs_url_gen }
+    pub fn new(docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+        Self { docs_url_gen }
     }
 
     /// Given a [`TypeId`] that we're reading, make sure to rename it appropriately, or throw an error if it's reserved.
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let type_def = self.tcx.resolve_type(id);
-
+    pub fn fmt_type_name(&self, type_def: TypeDef<'tcx>) -> Cow<'tcx, str> {
         let name = type_def
             .attrs()
             .rename

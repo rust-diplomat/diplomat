@@ -390,7 +390,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let method_name = self.formatter.fmt_method_name(method);
         let abi_name = self
             .formatter
-            .namespace_c_name(associated_symbol.into(), method.abi_name.as_str());
+            .namespace_c_name(associated_symbol, method.abi_name.as_str());
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -672,7 +672,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 self.impl_header
                     .includes
                     .insert(self.formatter.fmt_impl_header_path(def.into()));
-                type_name.into()
+                type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
@@ -729,7 +729,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .into_owned()
             .into()
         } else {
-            type_name.into()
+            type_name
         }
     }
 

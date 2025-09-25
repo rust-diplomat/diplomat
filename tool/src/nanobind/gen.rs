@@ -377,7 +377,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     .impl_header
                     .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(def));
-                type_name.into()
+                type_name
             }
             Type::Enum(ref e) => {
                 let def = self.cpp.c.tcx.resolve_enum(e.tcx_id);
@@ -391,7 +391,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     .impl_header
                     .includes
                     .insert(self.formatter.cxx.fmt_impl_header_path(def.into()));
-                type_name.into()
+                type_name
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
                 self.formatter.cxx.fmt_borrowed_str(encoding)

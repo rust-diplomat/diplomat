@@ -46,13 +46,13 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         match *ty {
             Type::Primitive(primitive) => self.formatter.fmt_primitive_as_ffi(primitive).into(),
             Type::Opaque(ref op) => {
-                let opaque_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(opaque_id);
+                let opaque_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(opaque_def.into());
 
                 // Add to the import list:
                 self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
-                if self.tcx.resolve_type(opaque_id).attrs().disable {
+                if opaque_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -64,26 +64,26 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 }
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
+                let type_def = self.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_type_name(type_def);
 
                 // Add to the import list:
                 self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
-                if self.tcx.resolve_type(id).attrs().disable {
+                if type_def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 type_name
             }
             Type::Enum(ref enumerator) => {
-                let enum_id = enumerator.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(enum_id);
+                let type_def = self.tcx.resolve_enum(enumerator.tcx_id);
+                let type_name = self.formatter.fmt_type_name(type_def.into());
 
                 // Add to the import list:
                 self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
-                if self.tcx.resolve_type(enum_id).attrs().disable {
+                if type_def.attrs.disable {
                     self.errors
                         .push_error(format!("Using disabled type {type_name}"))
                 }
@@ -124,8 +124,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         match *ty {
             Type::Primitive(..) => variable_name,
             Type::Opaque(ref op) => {
-                let type_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(type_id);
+                let type_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(type_def.into());
 
                 let mut edges = if let Some(lt) = op.owner.lifetime() {
                     match lt {
@@ -169,8 +169,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 format!("diplomatRuntime.readOption(wasm, {variable_name}, {size}, (wasm, offset) => {{ const deref = {inner_deref}; return {inner_conversion} }})").into()
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
+                let type_def = self.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_type_name(type_def);
                 let mut edges = String::new();
                 for lt in st.lifetimes().lifetimes() {
                     match lt {
@@ -182,7 +182,6 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     }
                 }
 
-                let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(st) if st.fields.is_empty() => {
                         format!("new {type_name}()").into()
@@ -200,8 +199,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 }
             }
             Type::Enum(ref enum_path) => {
-                let id = enum_path.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let type_def = self.tcx.resolve_enum(enum_path.tcx_id);
+                let type_name = self.formatter.fmt_type_name(type_def.into());
                 format!("new {type_name}(diplomatRuntime.internalConstructor, {variable_name})")
                     .into()
             }
@@ -430,8 +429,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 let (requires_buf, error_ret) = match return_type {
                     ReturnType::Fallible(s, Some(e)) => {
-                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        self.add_import(type_name, None, super::gen::ImportUsage::Both);
+                        let type_def = self.tcx.resolve_type(e.id().unwrap());
+                        let type_name = self.formatter.fmt_type_name(type_def);
+                        self.add_import(type_name.clone(), None, super::gen::ImportUsage::Both);
 
                         let fields_empty = matches!(e, Type::Struct(s) if match s.resolve(self.tcx) {
                                 ReturnableStructDef::Struct(s) => s.fields.is_empty(),
@@ -457,7 +457,6 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                             0,
                         );
 
-                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         let cause =
                             self.gen_c_to_js_for_type(e, receive_deref, &method.lifetime_env);
                         // We still require an out buffer even if our error types is empty
@@ -582,7 +581,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
 
             // We just need access to the pointer, so we just make a regular _intoFFI call.
             SelfType::Struct(ref s) => {
-                let type_name = self.formatter.fmt_type_name(s.id());
+                let type_def = self.tcx.resolve_type(s.id());
+                let type_name = self.formatter.fmt_type_name(type_def);
 
                 if matches!(
                     gen_context,
@@ -630,16 +630,22 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 gen_context,
                 PrimitiveType::Int(IntType::I32),
             ),
-            Type::Struct(ref s) => self.gen_js_to_c_for_struct_type(
-                self.formatter.fmt_type_name(s.id()),
-                js_name,
-                struct_borrow_info,
-                alloc.unwrap_or_else(|| panic!(
-                    "Expected an allocator to be specified when generating the definition for a struct: {}",
-                    self.formatter.fmt_type_name(s.id())
-                )),
-                gen_context,
-            ),
+            Type::Struct(ref s) => {
+                let def = self.tcx.resolve_type(s.id());
+                let name = self.formatter.fmt_type_name(def);
+                let Some(alloc) = alloc else {
+                    panic!(
+                    "Expected an allocator to be specified when generating the definition for a struct: {name}"
+                );
+                };
+                self.gen_js_to_c_for_struct_type(
+                    name,
+                    js_name,
+                    struct_borrow_info,
+                    alloc,
+                    gen_context,
+                )
+            }
             Type::DiplomatOption(ref inner) => {
                 let layout = crate::js::layout::type_size_alignment(inner, self.tcx);
                 let size = layout.size();
@@ -659,7 +665,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     JsToCConversionContext::List => {
                         let a = alloc.unwrap_or_else(|| {
                             let id = if let Some(id) = inner.id() {
-                                self.formatter.fmt_type_name(id)
+                                let def = self.tcx.resolve_type(id);
+                                self.formatter.fmt_type_name(def)
                             } else {
                                 "()".into()
                             };
@@ -680,22 +687,31 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     let alloc = if slice.lifetime().is_none() {
                         "diplomatRuntime.OwnedSliceLeaker"
                     } else {
-                        alloc.expect("Must provide some allocation anchor for slice conversion generation!")
+                        alloc.expect(
+                            "Must provide some allocation anchor for slice conversion generation!",
+                        )
                     };
 
                     let mut alloc_stmnt = format!("{alloc}.alloc(");
                     let mut alloc_end = ")";
 
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
-                    if matches!(gen_context, JsToCConversionContext::List | JsToCConversionContext::SlicePrealloc) {
+                    if matches!(
+                        gen_context,
+                        JsToCConversionContext::List | JsToCConversionContext::SlicePrealloc
+                    ) {
                         alloc_stmnt = "".into();
                         alloc_end = "";
                     }
 
                     let (spread_pre, spread_post) = match gen_context {
                         // SlicePreAlloc just wants the DiplomatBufe
-                        JsToCConversionContext::SlicePrealloc =>
-                            (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed("))")),
+                        JsToCConversionContext::SlicePrealloc => (
+                            format!(
+                                "{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "
+                            ),
+                            Cow::Borrowed("))"),
+                        ),
                         // List mode wants a list of (ptr, len)
                         // NOTE: This is only possible in the old WASM ABI, as _intoFFI requires this splatting:
                         JsToCConversionContext::List => ("...".into(), ".splat()".into()),

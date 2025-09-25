@@ -81,7 +81,7 @@ pub(crate) fn run<'tcx>(
     config: Config,
     docs: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
-    let formatter = JSFormatter::new(tcx, docs);
+    let formatter = JSFormatter::new(docs);
     let errors = ErrorStore::default();
     let files = FileMap::default();
     let mut exports = Vec::new();
@@ -108,10 +108,11 @@ pub(crate) fn run<'tcx>(
         }
 
         let type_def = tcx.resolve_type(id);
+        assert_eq!(type_def.name(), ty.name());
 
         let _guard = errors.set_context_ty(type_def.name().as_str().into());
 
-        let type_name = formatter.fmt_type_name(id);
+        let type_name = formatter.fmt_type_name(type_def);
 
         let context = ItemGenContext {
             tcx,
