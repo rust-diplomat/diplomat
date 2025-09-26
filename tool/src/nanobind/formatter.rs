@@ -28,20 +28,10 @@ impl<'tcx> PyFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_binding_fn(&self, id: TypeId, namespaced: bool) -> String {
-        let resolved = self.cxx.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        match &resolved.attrs().namespace {
-            Some(ns) if namespaced => {
-                format!("{ns}::add_{type_name}_binding")
-            }
-            _ => {
-                format!("add_{type_name}_binding")
-            }
-        }
+    pub fn fmt_binding_fn(&self, id: TypeId) -> String {
+        let def = self.cxx.c.tcx().resolve_type(id);
+        let type_name = def.attrs().rename.apply(def.name().as_str().into());
+        format!("add_{type_name}_binding")
     }
 
     pub fn fmt_binding_impl_path(&self, id: TypeId) -> String {

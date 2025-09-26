@@ -57,7 +57,7 @@ pub struct EnumId(usize);
 pub struct TraitId(usize);
 
 /// Key used to index into a [`TypeContext`] representing a function.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct FunctionId(usize);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

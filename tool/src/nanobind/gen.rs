@@ -116,32 +116,34 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         Self::gen_binding_fn(
             self.root_module,
             self.formatter.fmt_namespaces(id.into()),
-            self.formatter.fmt_binding_fn(id, true),
-            self.formatter.fmt_binding_fn(id, false),
+            self.formatter.fmt_binding_fn(id),
         );
     }
 
     pub fn gen_binding_fn(
         root_module: &mut RootModule,
         namespaces: impl Iterator<Item = &'tcx str>,
-        binding_fn_name: String,
         binding_fn_name_unnamespaced: String,
     ) {
-        let vec = namespaces.collect::<Vec<_>>();
+        let ns_vec = namespaces.collect::<Vec<_>>();
+        let namespace_prefix = ns_vec.join("::");
         root_module
             .fwd_decls
-            .entry(vec.join("::"))
+            .entry(namespace_prefix.clone())
             .or_default()
             .push(format!("void {binding_fn_name_unnamespaced}(nb::module_);"));
 
-        let module_namespaces = [root_module.module_name.to_string()]
-            .into_iter()
-            .chain(vec.iter().map(|s| s.to_string()))
-            .collect();
+        let module_namespaces = ns_vec.iter().map(|s| s.to_string()).collect();
 
         let entry = root_module.module_fns.entry(module_namespaces).or_default();
 
-        entry.push(binding_fn_name);
+        let namespaced_binding_fn = [
+            ns_vec.as_slice(),
+            [binding_fn_name_unnamespaced.as_str()].as_slice(),
+        ]
+        .concat()
+        .join("::");
+        entry.push(namespaced_binding_fn);
     }
 
     pub fn gen_opaque_def<W: std::fmt::Write + ?Sized>(
@@ -578,32 +580,5 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             },
             overloads: vec![],
         })
-    }
-
-    pub fn gen_function(
-        &mut self,
-        id: hir::FunctionId,
-        func: &'tcx hir::Method,
-        includes: &mut BTreeSet<String>,
-        functions: &mut Vec<String>,
-    ) {
-        let Some(m) = self.gen_method_info(id.into(), func) else {
-            return;
-        };
-
-        self.gen_modules(id.into(), None);
-
-        #[derive(Template)]
-        #[template(path = "nanobind/function_impl.cpp.jinja", escape = "none")]
-        struct FunctionDef<'a> {
-            m: MethodInfo<'a>,
-        }
-
-        includes.insert(
-            self.formatter
-                .cxx
-                .fmt_free_function_header_path(func.attrs.namespace.clone()),
-        );
-        functions.push(FunctionDef { m }.to_string());
     }
 }
