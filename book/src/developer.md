@@ -35,9 +35,9 @@ create a module `tool/src/{backend}/mod.rs`  (make sure you add a line `pub mod 
 `tool/src/lib.rs`). Add the following to it
 
 ```rs
-use diplomat_core::hir::{OpaqueDef, TypeContext, TypeId};
+use diplomat_core::hir::{OpaqueDef, TypeContext};
 
-fn gen_opaque_def(ctx: &TypeContext, type_id: TypeId, opaque_path: &OpaqueDef) -> String {
+fn gen_opaque_def(ctx: &TypeContext, opaque_path: &OpaqueDef) -> String {
     "We'll get to it".into()
 }
 
@@ -76,16 +76,16 @@ mod test {
             }
         };
 
-        let (type_id, opaque_def) = match context
+        let opaque_def = match context
             .all_types()
             .next()
             .expect("Failed to generate first opaque def")
         {
-            (type_id, TypeDef::Opaque(opaque_def)) => (type_id, opaque_def),
+            TypeDef::Opaque(opaque_def) => opaque_def,
             _ => panic!("Failed to find opaque type from AST"),
         };
 
-        let generated = super::gen_opaque_def(&context, type_id, opaque_def);
+        let generated = super::gen_opaque_def(&context, opaque_def);
 
         insta::assert_snapshot!(generated)
     }
@@ -158,13 +158,13 @@ symbol for your new impl method:
 ```rust
 use crate::c2::CFormatter;
 
-fn gen_opaque_def(ctx: &TypeContext, type_id: TypeId, opaque_path: &OpaqueDef) -> String {
+fn gen_opaque_def(ctx: &TypeContext, opaque_path: &OpaqueDef) -> String {
     let c_formatter = CFormatter::new(ctx);
 
     opaque_def
         .methods
         .iter()
-        .map(|method| c_formatter.fmt_method_name(type_id, method))
+        .map(|method| c_formatter.fmt_method_name(method))
         .collect::<Vec<_>>()
         .join("\n")
 }

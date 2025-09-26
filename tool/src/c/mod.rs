@@ -57,26 +57,25 @@ pub(crate) fn run<'tcx>(
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = CFormatter::new(tcx, false, config, docs_url_gen);
+    let formatter = CFormatter::new(false, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
         }
 
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(ty.into());
+        let impl_header_path = formatter.fmt_impl_header_path(ty.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
         let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
@@ -90,27 +89,26 @@ pub(crate) fn run<'tcx>(
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let impl_header = context.gen_impl(id);
+        let impl_header = context.gen_impl(ty);
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
     }
 
-    for (id, trt) in tcx.all_traits() {
+    for trt in tcx.all_traits() {
         if trt.attrs.disable {
             // Skip type if disabled
             continue;
         }
 
-        let decl_header_path = formatter.fmt_decl_header_path(id.into());
-        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(trt.into());
+        let impl_header_path = formatter.fmt_impl_header_path(trt.into());
 
         let _guard = errors.set_context_ty(trt.name.as_str().into());
         let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
-            id: id.into(),
             is_for_cpp: false,
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
@@ -123,23 +121,19 @@ pub(crate) fn run<'tcx>(
 
     let impl_header_path = "free_functions.h".to_string();
 
-    if let Some((first_func_id, _)) = tcx.all_free_functions().next() {
-        let context = ItemGenContext {
-            tcx,
-            formatter: &formatter,
-            errors: &errors,
-            id: first_func_id.into(),
-            is_for_cpp: false,
-            decl_header_path: "",
-            impl_header_path: &impl_header_path,
-        };
+    let context = ItemGenContext {
+        tcx,
+        formatter: &formatter,
+        errors: &errors,
+        is_for_cpp: false,
+        decl_header_path: "",
+        impl_header_path: &impl_header_path,
+    };
 
-        let impl_header =
-            context.gen_function_impls(None, tcx.all_free_functions().map(|(_, m)| m));
+    let impl_header = context.gen_function_impls(None, tcx.all_free_functions());
 
-        if !impl_header.body.is_empty() {
-            files.add_file(impl_header.path.clone(), impl_header.to_string());
-        }
+    if !impl_header.body.is_empty() {
+        files.add_file(impl_header.path.clone(), impl_header.to_string());
     }
 
     (files, errors)

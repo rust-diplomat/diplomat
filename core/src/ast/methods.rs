@@ -22,6 +22,9 @@ pub struct Method {
     /// The `self` param of the method, if any.
     pub self_param: Option<SelfParam>,
 
+    // the 'Self' type of the method, if any.
+    pub self_type: Option<PathType>,
+
     /// All non-`self` params taken by the method.
     pub params: Vec<Param>,
 
@@ -78,7 +81,7 @@ impl Method {
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
-                    Some(self_path_type),
+                    Some(self_path_type.clone()),
                 ))
             }
             syn::ReturnType::Default => None,
@@ -97,6 +100,7 @@ impl Method {
             docs: Docs::from_attrs(&m.attrs),
             abi_name: Ident::from(&extern_ident),
             self_param,
+            self_type: Some(self_path_type),
             params: all_params,
             return_type: return_ty,
             lifetime_env,

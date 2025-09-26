@@ -111,7 +111,7 @@ pub(crate) fn run<'tcx>(
         callback_params: &mut callback_params,
     };
 
-    for (_id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
@@ -177,7 +177,7 @@ pub(crate) fn run<'tcx>(
         }
     }
 
-    for (_id, trt_def) in tcx.all_traits() {
+    for trt_def in tcx.all_traits() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx
             .errors
@@ -1941,17 +1941,17 @@ returnVal.option() ?: return null
                 format!("Pointer{optional}").into()
             }
             Type::Struct(ref strct) => {
-                let op_id = strct.id();
-                format!("{}Native", self.formatter.fmt_type_name(op_id)).into()
+                let def = self.tcx.resolve_type(strct.id());
+                format!("{}Native", self.formatter.fmt_type_name(def)).into()
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::Callback(_) => self.gen_type_name(ty, additional_name),
             Type::ImplTrait(ref trt) => {
-                let op_id = trt.id();
+                let def = self.tcx.resolve_trait(trt.id());
                 format!(
                     "DiplomatTrait_{}_Wrapper_Native",
-                    self.formatter.fmt_trait_name(op_id)
+                    self.formatter.fmt_trait_name(def)
                 )
                 .into()
             }
@@ -1967,10 +1967,10 @@ returnVal.option() ?: return null
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_kt(prim).into(),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
+                let op_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(op_def.into());
 
-                if self.tcx.resolve_type(op_id).attrs().disable {
+                if op_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -1982,19 +1982,22 @@ returnVal.option() ?: return null
 
                 ret.into_owned().into()
             }
-            Type::Struct(ref strct) => {
-                let op_id = strct.id();
-                self.formatter.fmt_type_name(op_id)
+            Type::Struct(ref st) => {
+                let def = self.tcx.resolve_type(st.id());
+                self.formatter.fmt_type_name(def)
             }
             Type::ImplTrait(ref trt) => {
-                let op_id = trt.id();
+                let def = self.tcx.resolve_trait(trt.id());
                 format!(
                     "DiplomatTrait_{}_Wrapper",
-                    self.formatter.fmt_trait_name(op_id)
+                    self.formatter.fmt_trait_name(def)
                 )
                 .into()
             }
-            Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
+            Type::Enum(ref e) => {
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                self.formatter.fmt_type_name(def.into())
+            }
             Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
@@ -2196,7 +2199,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Enum(enum_def)) = all_types
+        if let TypeDef::Enum(enum_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2284,7 +2287,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Struct(strct)) = all_types
+        if let TypeDef::Struct(strct) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2336,7 +2339,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2450,7 +2453,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2506,7 +2509,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2579,7 +2582,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_traits = tcx.all_traits();
-        let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
+        let trait_def = all_traits.next().expect("Failed to generate trait");
         let error_store = ErrorStore::default();
         let docs_urls = HashMap::new();
         let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
@@ -2626,7 +2629,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let TypeDef::Opaque(opaque_def) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {

@@ -1,8 +1,8 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, DocsTypeReferenceSyntax, DocsUrlGenerator, MaybeOwn, StringEncoding, SymbolId, TraitId,
-    TyPosition, TypeContext, TypeId,
+    self, DocsTypeReferenceSyntax, DocsUrlGenerator, MaybeOwn, StringEncoding, SymbolDef,
+    TyPosition, TypeDef,
 };
 use std::borrow::Cow;
 use std::sync::LazyLock;
@@ -17,7 +17,6 @@ use std::sync::LazyLock;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub struct CFormatter<'tcx> {
-    tcx: &'tcx TypeContext,
     is_for_cpp: bool,
     docs_url_gen: &'tcx DocsUrlGenerator,
 
@@ -28,42 +27,21 @@ pub(crate) const CAPI_NAMESPACE: &str = "capi";
 
 impl<'tcx> CFormatter<'tcx> {
     pub fn new(
-        tcx: &'tcx TypeContext,
         is_for_cpp: bool,
         config: &crate::Config,
         docs_url_gen: &'tcx DocsUrlGenerator,
     ) -> Self {
         Self {
-            tcx,
             is_for_cpp,
             lib_name: config.shared_config.lib_name.clone(),
             docs_url_gen,
         }
     }
-    pub fn tcx(&self) -> &'tcx TypeContext {
-        self.tcx
-    }
 
     /// Resolve and format a named type for use in code (without the namespace)
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_type(id);
-        let name: Cow<_> = resolved.name().as_str().into();
-        let attrs = resolved.attrs();
-
-        // Only apply renames in cpp mode, in pure C mode you'd want the
-        // method names to match the type names.
-        // Potential future improvement: Use alias attributes in pure C mode.
-        if self.is_for_cpp {
-            attrs.rename.apply(name)
-        } else {
-            name
-        }
-    }
-
-    pub fn fmt_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
-        let resolved = self.tcx.resolve_trait(id);
-        let name: Cow<_> = resolved.name.as_str().into();
-        let attrs = &resolved.attrs;
+    pub fn fmt_symbol_name(&self, ty: SymbolDef<'tcx>) -> Cow<'tcx, str> {
+        let name: Cow<_> = ty.name().as_str().into();
+        let attrs = ty.attrs();
 
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
@@ -117,22 +95,8 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
-    pub fn fmt_type_name_maybe_namespaced(&self, id: SymbolId) -> Cow<'tcx, str> {
-        let (name, attrs) = match id {
-            SymbolId::TypeId(id) => {
-                let resolved = self.tcx.resolve_type(id);
-                let name: Cow<_> = resolved.name().as_str().into();
-                let attrs = resolved.attrs();
-                (name, attrs)
-            }
-            SymbolId::TraitId(id) => {
-                let resolved = self.tcx.resolve_trait(id);
-                let name: Cow<_> = resolved.name.as_str().into();
-                let attrs = &resolved.attrs;
-                (name, attrs)
-            }
-            _ => panic!("Unexpected symbol ID type"),
-        };
+    pub fn fmt_type_name_maybe_namespaced(&self, def: SymbolDef<'tcx>) -> Cow<'tcx, str> {
+        let (name, attrs) = (def.name().as_str().into(), def.attrs());
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.
@@ -151,21 +115,14 @@ impl<'tcx> CFormatter<'tcx> {
     /// To handle this, we make a separate header file called Foo_decl.h, that contains
     /// *just* the enum. It is included from Foo.h, and external users should not be importing
     /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
-    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
-        let type_name = match id {
-            SymbolId::TypeId(id) => self.fmt_type_name(id),
-            SymbolId::TraitId(id) => self.fmt_trait_name(id),
-            _ => panic!("Unexpected symbol ID type"),
-        };
+    pub fn fmt_decl_header_path(&self, def: SymbolDef<'tcx>) -> String {
+        let type_name = self.fmt_symbol_name(def);
         format!("{type_name}.d.h")
     }
+
     /// Resolve and format the name of a type for use in header names: impl version
-    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
-        let type_name = match id {
-            SymbolId::TypeId(id) => self.fmt_type_name(id),
-            SymbolId::TraitId(id) => self.fmt_trait_name(id),
-            _ => panic!("Unexpected symbol ID type"),
-        };
+    pub fn fmt_impl_header_path(&self, def: SymbolDef) -> String {
+        let type_name = self.fmt_symbol_name(def);
         format!("{type_name}.h")
     }
 
@@ -252,15 +209,8 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
-    pub fn fmt_struct_slice_name<P: TyPosition>(
-        &self,
-        borrow: MaybeOwn,
-        st_ty: &P::StructPath,
-    ) -> Cow<'tcx, str> {
-        let st_id = hir::StructPathLike::id(st_ty);
-        let st_name = self.fmt_type_name(st_id);
-
-        let def = self.tcx.resolve_type(st_id);
+    pub fn fmt_struct_slice_name(&self, borrow: MaybeOwn, def: TypeDef<'tcx>) -> Cow<'tcx, str> {
+        let st_name = self.fmt_symbol_name(def.into());
 
         let mtb = match borrow {
             MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",

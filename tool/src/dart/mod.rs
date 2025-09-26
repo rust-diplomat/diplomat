@@ -11,7 +11,7 @@ use diplomat_core::hir::{
     },
     BackendAttrSupport, DocsUrlGenerator, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner,
     ReturnType, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType,
-    TyPosition, Type, TypeContext, TypeDef, TypeId,
+    TyPosition, Type, TypeContext, TypeDef,
 };
 
 use askama::Template;
@@ -54,7 +54,7 @@ pub(crate) fn run<'cx>(
     tcx: &'cx TypeContext,
     docs_url_gen: &'cx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'cx, String>) {
-    let formatter = DartFormatter::new(tcx, docs_url_gen);
+    let formatter = DartFormatter::new(docs_url_gen);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
@@ -69,12 +69,12 @@ pub(crate) fn run<'cx>(
         formatter: &formatter,
     };
 
-    for (id, ty) in tcx.all_types() {
+    for ty in tcx.all_types() {
         if ty.attrs().disable {
             continue;
         }
 
-        let (file_name, body) = context.gen(id);
+        let (file_name, body) = context.gen(ty);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -151,12 +151,10 @@ struct ItemGenContext<'a, 'cx> {
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
-    fn gen(&mut self, id: TypeId) -> (String, String) {
-        let ty = self.tcx.resolve_type(id);
-
+    fn gen(&mut self, ty: TypeDef<'cx>) -> (String, String) {
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
 
-        let name = self.formatter.fmt_type_name(id);
+        let name = self.formatter.fmt_type_name(ty);
         (
             self.formatter.fmt_file_name(&name),
             match ty {
@@ -690,10 +688,10 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, true).into(),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
+                let op_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(op_def.into());
 
-                if self.tcx.resolve_type(op_id).attrs().disable {
+                if op_def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -706,18 +704,18 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
-                if self.tcx.resolve_type(id).attrs().disable {
+                let def = self.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_type_name(def);
+                if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 type_name
             }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                if self.tcx.resolve_type(id).attrs().disable {
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.fmt_type_name(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -773,27 +771,27 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, cast).into(),
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
-                if self.tcx.resolve_type(op_id).attrs().disable {
+                let def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 self.formatter.fmt_opaque_as_ffi().into()
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
-                if self.tcx.resolve_type(id).attrs().disable {
+                let def = self.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_type_name(def);
+                if def.attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 format!("_{type_name}Ffi").into()
             }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                if self.tcx.resolve_type(id).attrs().disable {
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.fmt_type_name(def.into());
+                if def.attrs.disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
@@ -834,8 +832,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         match ty {
             SelfType::Opaque(_) => self.formatter.fmt_opaque_as_ffi().into(),
             SelfType::Struct(s) => {
-                let id = s.id();
-                let type_name = self.formatter.fmt_type_name(id);
+                let def = self.tcx.resolve_type(s.id());
+                let type_name = self.formatter.fmt_type_name(def);
                 format!("_{type_name}Ffi").into()
             }
             SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
@@ -952,8 +950,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         match *ty {
             Type::Primitive(..) => var_name,
             Type::Opaque(ref op) => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
+                let type_def = self.tcx.resolve_opaque(op.tcx_id);
+                let type_name = self.formatter.fmt_type_name(type_def.into());
 
                 let mut edges = if let Some(lt) = op.owner.lifetime() {
                     let MaybeStatic::NonStatic(lt) = lt else {
@@ -991,9 +989,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 }
             }
             Type::Struct(ref st) => {
-                let id = st.id();
-                let type_name = self.formatter.fmt_type_name(id);
-                let is_zst = match self.tcx.resolve_type(id) {
+                let def = self.tcx.resolve_type(st.id());
+                let type_name = self.formatter.fmt_type_name(def);
+                let is_zst = match def {
                     TypeDef::Struct(def) => def.fields.is_empty(),
                     TypeDef::OutStruct(def) => def.fields.is_empty(),
                     _ => false,
@@ -1012,15 +1010,14 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     format!("{type_name}._fromFfi({var_name}{edges})").into()
                 }
             }
-            Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}.values[{var_name}]").into()
-            }
             Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
+                let def = self.tcx.resolve_enum(e.tcx_id);
+                let type_name = self.formatter.fmt_type_name(def.into());
+                if is_contiguous_enum(def) {
+                    format!("{type_name}.values[{var_name}]").into()
+                } else {
+                    format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
+                }
             }
             Type::Slice(ref slice) => match slice.lifetime() {
                 Some(MaybeStatic::NonStatic(lifetime)) => format!(
