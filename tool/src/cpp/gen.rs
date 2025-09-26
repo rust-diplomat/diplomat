@@ -78,7 +78,7 @@ struct NamedExpression<'a> {
 /// Header for the implementation of a block of functions.
 pub(crate) struct FuncImplTemplate<'a> {
     pub namespace: Option<String>,
-    pub methods: Vec<String>,
+    pub methods: Vec<MethodInfo<'a>>,
     pub c_header: C2Header,
     pub fmt: &'a Cpp2Formatter<'a>,
 }
@@ -375,31 +375,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
         .render_into(self.impl_header)
         .unwrap();
-    }
-
-    /// Generate a free function and output it's (impl, decl) as a pair of strings
-    /// Returns None if the function is marked as disabled
-    pub fn gen_function(
-        &mut self,
-        func_id: hir::FunctionId,
-        func: &'tcx hir::Method,
-    ) -> Option<String> {
-        let info = self.gen_method_info(func_id.into(), func)?;
-        let fmt = &self.formatter;
-
-        #[derive(Template)]
-        #[template(
-            path = "cpp/function_defs/func_block_function.h.jinja",
-            escape = "none"
-        )]
-        struct FunctionImpl<'a> {
-            m: &'a MethodInfo<'a>,
-            fmt: &'a Cpp2Formatter<'a>,
-        }
-
-        let impl_bl = FunctionImpl { m: &info, fmt };
-
-        Some(impl_bl.to_string())
     }
 
     pub fn gen_method_info(

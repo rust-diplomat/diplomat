@@ -4,9 +4,9 @@ mod root_module;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{cpp::Header, Config, ErrorStore, FileMap};
+use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, FunctionId};
 use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
@@ -190,82 +190,72 @@ pub(crate) fn run<'cx>(
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
 
+    let mut ty_context = ItemGenContext {
+        formatter: &formatter,
+        errors: &errors,
+        cpp: crate::cpp::ItemGenContext {
+            c: crate::c::ItemGenContext {
+                tcx,
+                formatter: &formatter.cxx.c,
+                is_for_cpp: false,
+                id: FunctionId::default().into(), // This is a junk value
+                errors: &errors,
+                decl_header_path: "",
+                impl_header_path: "",
+            },
+            config: &conf.cpp_config,
+            errors: &errors,
+            formatter: &formatter.cxx,
+            impl_header: &mut Header::default(),
+            decl_header: &mut Header::default(),
+            generating_struct_fields: false,
+        },
+        root_module: &mut root_module,
+        submodules: &mut submodules,
+        generating_struct_fields: false,
+    };
+
     #[derive(Default)]
-    struct FuncGenContext {
+    struct FuncGenContext<'a> {
         namespace: Option<String>,
         namespaces: Vec<String>,
-        functions: Vec<String>,
+        functions: Vec<gen::MethodInfo<'a>>,
         includes: BTreeSet<String>,
     }
 
     let mut func_map = BTreeMap::new();
-    {
-        for (id, func) in tcx.all_free_functions() {
-            let _guard = errors.set_context_ty(func.name.as_str().into());
-            let key = if let Some(ns) = &func.attrs.namespace {
-                ns.clone()
-            } else {
-                "".into()
-            };
 
-            let context = if let Some(v) = func_map.get_mut(&key) {
-                v
-            } else {
-                func_map.insert(
-                    key.clone(),
-                    FuncGenContext {
-                        namespace: func.attrs.namespace.clone(),
-                        namespaces: formatter
-                            .fmt_namespaces(id.into())
-                            .map(|n| n.to_string())
-                            .collect(),
-                        ..Default::default()
-                    },
-                );
-                func_map.get_mut(&key).unwrap()
-            };
+    for (func_id, func) in tcx.all_free_functions() {
+        let Some(func_info) = ty_context.gen_method_info(func_id.into(), func) else {
+            continue;
+        };
 
-            let mut ty_context = ItemGenContext {
-                formatter: &formatter,
-                errors: &errors,
-                cpp: crate::cpp::ItemGenContext {
-                    c: crate::c::ItemGenContext {
-                        tcx,
-                        formatter: &formatter.cxx.c,
-                        is_for_cpp: false,
-                        errors: &errors,
-                        id: id.into(),
-                        decl_header_path: "",
-                        impl_header_path: "",
-                    },
-                    config: &conf.cpp_config,
-                    errors: &errors,
-                    formatter: &formatter.cxx,
-                    impl_header: &mut Header::default(),
-                    decl_header: &mut Header::default(),
-                    generating_struct_fields: false,
-                },
-                root_module: &mut root_module,
-                submodules: &mut submodules,
-                generating_struct_fields: false,
-            };
+        let include = formatter
+            .cxx
+            .fmt_free_function_header_path(func.attrs.namespace.clone());
 
-            ty_context.gen_function(id, func, &mut context.includes, &mut context.functions);
+        ty_context.gen_modules(func_id.into(), None);
+        let key = func.attrs.namespace.clone().unwrap_or_default();
+        let context = func_map.entry(key).or_insert_with(|| FuncGenContext {
+            namespace: func.attrs.namespace.clone(),
+            namespaces: formatter
+                .fmt_namespaces(func_id.into())
+                .map(|n| n.to_string())
+                .collect(),
+            ..Default::default()
+        });
 
-            drop(_guard);
-        }
+        context.includes.insert(include);
+        context.functions.push(func_info);
     }
 
-    for (_, ctx) in func_map.iter_mut() {
-        let binding_impl_path = if let Some(ns) = &ctx.namespace {
-            format!(
-                "sub_modules/{}/{}_func_bindings.cpp",
-                ns.replace("::", "/"),
-                ns.replace("::", "_")
-            )
-        } else {
-            "sub_modules/diplomat_func_bindings.cpp".into()
-        };
+    for (_, ctx) in func_map {
+        let binding_impl_path = format!(
+            "sub_modules/{}/func_bindings.cpp",
+            ctx.namespace.clone().unwrap_or_default().replace("::", "/"),
+        );
+
+        use diplomat_core::hir::Type;
 
         #[derive(Template)]
         #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
@@ -277,32 +267,32 @@ pub(crate) fn run<'cx>(
             binding_prefix: String,
         }
 
-        let no_add_binding_fn_name_unnamespaced = if ctx.namespace.is_some() {
-            format!("{}_func", ctx.namespaces.join("_"))
-        } else {
-            "diplomat_func".into()
-        };
-
-        let binding_fn_name_unnamespaced =
-            format!("add_{no_add_binding_fn_name_unnamespaced}_binding");
-
-        let binding_fn_name = if let Some(ns) = &ctx.namespace {
-            format!("{ns}::{binding_fn_name_unnamespaced}")
-        } else {
-            binding_fn_name_unnamespaced.clone()
-        };
+        let unqualified_type = "free_function".to_string(); // fake type name
 
         ItemGenContext::gen_binding_fn(
-            &mut root_module,
+            ty_context.root_module,
             ctx.namespaces.iter().map(|s| s.as_str()),
-            binding_fn_name,
-            binding_fn_name_unnamespaced,
+            format!("add_{unqualified_type}_binding"),
         );
+
         let b = Binding {
-            includes: ctx.includes.clone(),
-            namespace: ctx.namespace.clone().unwrap_or_default(),
-            unqualified_type: no_add_binding_fn_name_unnamespaced,
-            body: format!("mod\n{};", ctx.functions.join("\n")),
+            includes: ctx.includes,
+            namespace: ctx.namespace.unwrap_or_default(),
+            unqualified_type,
+            body: format!(
+                "mod\n{};",
+                ctx.functions
+                    .into_iter()
+                    .map(|m| {
+                        #[derive(Template)]
+                        #[template(path = "nanobind/function_impl.cpp.jinja", escape = "none")]
+                        struct FuncBlock<'a> {
+                            m: MethodInfo<'a>,
+                        }
+                        FuncBlock { m }.to_string()
+                    })
+                    .join("\n")
+            ),
             binding_prefix: String::new(),
         };
 

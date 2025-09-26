@@ -7,7 +7,7 @@ namespace {{lib_name}} {
 {% endif -%}
 
 {% for m in methods %}
-{{m}}
+{% include "cpp/function_defs/func_block_function.h.jinja" -%}
 {%- endfor ~%}
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}

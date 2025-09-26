@@ -52,33 +52,33 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-NB_MODULE({{module_name}}, {{module_name}}_mod)
+NB_MODULE({{module_name}}, mod)
 {
     {
-        nb::class_<_Dummy> dummy({{module_name}}_mod, "__dummy__");
+        nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
     }
 
-    nb::class_<std::monostate>({{module_name}}_mod, "monostate")
+    nb::class_<std::monostate>(mod, "monostate")
         .def("__repr__", [](const std::monostate &)
              { return ""; })
         .def("__str__", [](const std::monostate &)
              { return ""; });
              
 
+    {%- let mod_str = ["mod".to_string()] -%}
     // Module declarations
     {% for module_path in sub_modules %}
-    {%- let module_name = module_path.join("_") -%}
-    {%- let parent_name = module_path[..module_path.len()-1].join("_") -%}
-        nb::module_ {{module_name}}_mod = {{parent_name}}_mod.def_submodule("{{module_path.last().unwrap()}}");
+        {%- let module_name = [module_path.as_slice(), mod_str.as_slice()].concat().join("_") -%}
+        {%- let parent_name = [module_path[..module_path.len()-1], mod_str.as_slice()].concat().join("_") -%}
+        nb::module_ {{module_name}} = {{parent_name}}.def_submodule("{{module_path.last().unwrap()}}");
     {% endfor -%}
 
     // Add bindings
-    {%- for (module_path, fns) in module_fns -%}
-        {%- let module_name = module_path.join("_") -%}
-
+    {%- for (namespaces, fns) in module_fns -%}
+        {%- let module_name = [namespaces.as_slice(), mod_str.as_slice()].concat().join("_") -%}
         {% for func in fns %}
-    {{ func -}}({{module_name}}_mod);
+    {{ func -}}({{module_name}});
         {%- endfor %}
     {% endfor %}
     

@@ -50,23 +50,20 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-NB_MODULE(pymod, pymod_mod)
+NB_MODULE(pymod, mod)
 {
     {
-        nb::class_<_Dummy> dummy(pymod_mod, "__dummy__");
+        nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
     }
 
-    nb::class_<std::monostate>(pymod_mod, "monostate")
+    nb::class_<std::monostate>(mod, "monostate")
         .def("__repr__", [](const std::monostate &)
              { return ""; })
         .def("__str__", [](const std::monostate &)
-             { return ""; });
-             
-
-    // Module declarations
+             { return ""; });// Module declarations
     // Add bindings
-    mylib::add_OpaqueStruct_binding(pymod_mylib_mod);
+    mylib::add_OpaqueStruct_binding(mylib_mod);
     
     
 }

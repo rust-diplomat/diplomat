@@ -4,7 +4,7 @@
 #include "free_functions.hpp"
 
 
-void add_diplomat_func_binding(nb::module_ mod) {
+void add_free_function_binding(nb::module_ mod) {
     mod
         .def("free_callback_holder", &free_callback_holder, "f"_a);
 }

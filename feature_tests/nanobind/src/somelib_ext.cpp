@@ -54,10 +54,10 @@ void add_ErrorEnum_binding(nb::module_);
 void add_ContiguousEnum_binding(nb::module_);
 void add_DefaultEnum_binding(nb::module_);
 void add_MyEnum_binding(nb::module_);
-void add_diplomat_func_binding(nb::module_);
+void add_free_function_binding(nb::module_);
 namespace nested::ns {
 void add_Nested_binding(nb::module_);
-void add_nested_ns_func_binding(nb::module_);
+void add_free_function_binding(nb::module_);
 }
 
 namespace nested::ns2 {
@@ -84,7 +84,7 @@ void add_RenamedTestOpaque_binding(nb::module_);
 void add_RenamedVectorTest_binding(nb::module_);
 void add_RenamedAttrEnum_binding(nb::module_);
 void add_RenamedDeprecatedEnum_binding(nb::module_);
-void add_ns_func_binding(nb::module_);
+void add_free_function_binding(nb::module_);
 }
 
 
@@ -126,104 +126,101 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-NB_MODULE(somelib, somelib_mod)
+NB_MODULE(somelib, mod)
 {
     {
-        nb::class_<_Dummy> dummy(somelib_mod, "__dummy__");
+        nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
     }
 
-    nb::class_<std::monostate>(somelib_mod, "monostate")
+    nb::class_<std::monostate>(mod, "monostate")
         .def("__repr__", [](const std::monostate &)
              { return ""; })
         .def("__str__", [](const std::monostate &)
-             { return ""; });
-             
-
-    // Module declarations
-    nb::module_ somelib_nested_mod = somelib_mod.def_submodule("nested");
-    nb::module_ somelib_nested_ns_mod = somelib_nested_mod.def_submodule("ns");
-    nb::module_ somelib_nested_ns2_mod = somelib_nested_mod.def_submodule("ns2");
-    nb::module_ somelib_ns_mod = somelib_mod.def_submodule("ns");
+             { return ""; });// Module declarations
+    nb::module_ nested_mod = mod.def_submodule("nested");
+    nb::module_ nested_ns_mod = nested_mod.def_submodule("ns");
+    nb::module_ nested_ns2_mod = nested_mod.def_submodule("ns2");
+    nb::module_ ns_mod = mod.def_submodule("ns");
     // Add bindings
-    add_CallbackTestingStruct_binding(somelib_mod);
-    add_CallbackWrapper_binding(somelib_mod);
-    add_ImportedStruct_binding(somelib_mod);
-    add_BorrowedFields_binding(somelib_mod);
-    add_BorrowedFieldsReturning_binding(somelib_mod);
-    add_BorrowedFieldsWithBounds_binding(somelib_mod);
-    add_NestedBorrowedFields_binding(somelib_mod);
-    add_OptionInputStruct_binding(somelib_mod);
-    add_ErrorStruct_binding(somelib_mod);
-    add_BigStructWithStuff_binding(somelib_mod);
-    add_CyclicStructA_binding(somelib_mod);
-    add_CyclicStructB_binding(somelib_mod);
-    add_CyclicStructC_binding(somelib_mod);
-    add_MyStruct_binding(somelib_mod);
-    add_MyStructContainingAnOption_binding(somelib_mod);
-    add_MyZst_binding(somelib_mod);
-    add_PrimitiveStruct_binding(somelib_mod);
-    add_ScalarPairWithPadding_binding(somelib_mod);
-    add_StructArithmetic_binding(somelib_mod);
-    add_StructWithSlices_binding(somelib_mod);
-    add_OptionStruct_binding(somelib_mod);
-    add_Unnamespaced_binding(somelib_mod);
-    add_CallbackHolder_binding(somelib_mod);
-    add_MutableCallbackHolder_binding(somelib_mod);
-    add_Bar_binding(somelib_mod);
-    add_Foo_binding(somelib_mod);
-    add_One_binding(somelib_mod);
-    add_OpaqueThin_binding(somelib_mod);
-    add_OpaqueThinIter_binding(somelib_mod);
-    add_OpaqueThinVec_binding(somelib_mod);
-    add_Two_binding(somelib_mod);
-    add_OptionOpaque_binding(somelib_mod);
-    add_OptionOpaqueChar_binding(somelib_mod);
-    add_OptionString_binding(somelib_mod);
-    add_ResultOpaque_binding(somelib_mod);
-    add_RefList_binding(somelib_mod);
-    add_RefListParameter_binding(somelib_mod);
-    add_Float64Vec_binding(somelib_mod);
-    add_Float64VecError_binding(somelib_mod);
-    add_MyString_binding(somelib_mod);
-    add_MyOpaqueEnum_binding(somelib_mod);
-    add_Opaque_binding(somelib_mod);
-    add_OpaqueMutexedString_binding(somelib_mod);
-    add_PrimitiveStructVec_binding(somelib_mod);
-    add_Utf16Wrap_binding(somelib_mod);
-    add_UnimportedEnum_binding(somelib_mod);
-    add_OptionEnum_binding(somelib_mod);
-    add_ErrorEnum_binding(somelib_mod);
-    add_ContiguousEnum_binding(somelib_mod);
-    add_DefaultEnum_binding(somelib_mod);
-    add_MyEnum_binding(somelib_mod);
-    add_diplomat_func_binding(somelib_mod);
+    add_CallbackTestingStruct_binding(mod);
+    add_CallbackWrapper_binding(mod);
+    add_ImportedStruct_binding(mod);
+    add_BorrowedFields_binding(mod);
+    add_BorrowedFieldsReturning_binding(mod);
+    add_BorrowedFieldsWithBounds_binding(mod);
+    add_NestedBorrowedFields_binding(mod);
+    add_OptionInputStruct_binding(mod);
+    add_ErrorStruct_binding(mod);
+    add_BigStructWithStuff_binding(mod);
+    add_CyclicStructA_binding(mod);
+    add_CyclicStructB_binding(mod);
+    add_CyclicStructC_binding(mod);
+    add_MyStruct_binding(mod);
+    add_MyStructContainingAnOption_binding(mod);
+    add_MyZst_binding(mod);
+    add_PrimitiveStruct_binding(mod);
+    add_ScalarPairWithPadding_binding(mod);
+    add_StructArithmetic_binding(mod);
+    add_StructWithSlices_binding(mod);
+    add_OptionStruct_binding(mod);
+    add_Unnamespaced_binding(mod);
+    add_CallbackHolder_binding(mod);
+    add_MutableCallbackHolder_binding(mod);
+    add_Bar_binding(mod);
+    add_Foo_binding(mod);
+    add_One_binding(mod);
+    add_OpaqueThin_binding(mod);
+    add_OpaqueThinIter_binding(mod);
+    add_OpaqueThinVec_binding(mod);
+    add_Two_binding(mod);
+    add_OptionOpaque_binding(mod);
+    add_OptionOpaqueChar_binding(mod);
+    add_OptionString_binding(mod);
+    add_ResultOpaque_binding(mod);
+    add_RefList_binding(mod);
+    add_RefListParameter_binding(mod);
+    add_Float64Vec_binding(mod);
+    add_Float64VecError_binding(mod);
+    add_MyString_binding(mod);
+    add_MyOpaqueEnum_binding(mod);
+    add_Opaque_binding(mod);
+    add_OpaqueMutexedString_binding(mod);
+    add_PrimitiveStructVec_binding(mod);
+    add_Utf16Wrap_binding(mod);
+    add_UnimportedEnum_binding(mod);
+    add_OptionEnum_binding(mod);
+    add_ErrorEnum_binding(mod);
+    add_ContiguousEnum_binding(mod);
+    add_DefaultEnum_binding(mod);
+    add_MyEnum_binding(mod);
+    add_free_function_binding(mod);
     
-    nested::ns::add_Nested_binding(somelib_nested_ns_mod);
-    nested::ns::add_nested_ns_func_binding(somelib_nested_ns_mod);
+    nested::ns::add_Nested_binding(nested_ns_mod);
+    nested::ns::add_free_function_binding(nested_ns_mod);
     
-    nested::ns2::add_Nested_binding(somelib_nested_ns2_mod);
+    nested::ns2::add_Nested_binding(nested_ns2_mod);
     
-    ns::add_RenamedDeprecatedStruct_binding(somelib_ns_mod);
-    ns::add_RenamedStructWithAttrs_binding(somelib_ns_mod);
-    ns::add_RenamedTestMacroStruct_binding(somelib_ns_mod);
-    ns::add_AttrOpaque1Renamed_binding(somelib_ns_mod);
-    ns::add_RenamedAttrOpaque2_binding(somelib_ns_mod);
-    ns::add_RenamedComparable_binding(somelib_ns_mod);
-    ns::add_RenamedDeprecatedOpaque_binding(somelib_ns_mod);
-    ns::add_RenamedMyIndexer_binding(somelib_ns_mod);
-    ns::add_RenamedMyIterable_binding(somelib_ns_mod);
-    ns::add_RenamedMyIterator_binding(somelib_ns_mod);
-    ns::add_RenamedOpaqueArithmetic_binding(somelib_ns_mod);
-    ns::add_RenamedOpaqueIterable_binding(somelib_ns_mod);
-    ns::add_RenamedOpaqueIterator_binding(somelib_ns_mod);
-    ns::add_RenamedOpaqueRefIterable_binding(somelib_ns_mod);
-    ns::add_RenamedOpaqueRefIterator_binding(somelib_ns_mod);
-    ns::add_RenamedTestOpaque_binding(somelib_ns_mod);
-    ns::add_RenamedVectorTest_binding(somelib_ns_mod);
-    ns::add_RenamedAttrEnum_binding(somelib_ns_mod);
-    ns::add_RenamedDeprecatedEnum_binding(somelib_ns_mod);
-    ns::add_ns_func_binding(somelib_ns_mod);
+    ns::add_RenamedDeprecatedStruct_binding(ns_mod);
+    ns::add_RenamedStructWithAttrs_binding(ns_mod);
+    ns::add_RenamedTestMacroStruct_binding(ns_mod);
+    ns::add_AttrOpaque1Renamed_binding(ns_mod);
+    ns::add_RenamedAttrOpaque2_binding(ns_mod);
+    ns::add_RenamedComparable_binding(ns_mod);
+    ns::add_RenamedDeprecatedOpaque_binding(ns_mod);
+    ns::add_RenamedMyIndexer_binding(ns_mod);
+    ns::add_RenamedMyIterable_binding(ns_mod);
+    ns::add_RenamedMyIterator_binding(ns_mod);
+    ns::add_RenamedOpaqueArithmetic_binding(ns_mod);
+    ns::add_RenamedOpaqueIterable_binding(ns_mod);
+    ns::add_RenamedOpaqueIterator_binding(ns_mod);
+    ns::add_RenamedOpaqueRefIterable_binding(ns_mod);
+    ns::add_RenamedOpaqueRefIterator_binding(ns_mod);
+    ns::add_RenamedTestOpaque_binding(ns_mod);
+    ns::add_RenamedVectorTest_binding(ns_mod);
+    ns::add_RenamedAttrEnum_binding(ns_mod);
+    ns::add_RenamedDeprecatedEnum_binding(ns_mod);
+    ns::add_free_function_binding(ns_mod);
     
     
 }
