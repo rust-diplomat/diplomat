@@ -178,7 +178,7 @@ pub(crate) fn run<'tcx>(
 
             let methods = funcs
                 .into_iter()
-                .filter_map(|(id, func)| ty_context.gen_function(id, func))
+                .filter_map(|(id, func)| ty_context.gen_method_info(id.into(), func))
                 .collect();
 
             crate::cpp::gen::FuncImplTemplate {
