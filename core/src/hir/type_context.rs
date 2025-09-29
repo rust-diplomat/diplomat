@@ -264,17 +264,11 @@ impl TypeContext {
                 match sym {
                     ast::ModSymbol::CustomType(custom_type) => match custom_type {
                         ast::CustomType::Struct(strct) => {
-                            let id = if strct.output_only {
-                                TypeId::OutStruct(OutStructId(ast_out_structs.len()))
-                            } else {
-                                TypeId::Struct(StructId(ast_structs.len()))
-                            };
                             let item = ItemAndInfo {
                                 item: strct,
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: id.into(),
                             };
                             if strct.output_only {
                                 ast_out_structs.push(item);
@@ -288,7 +282,6 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Opaque(OpaqueId(ast_opaques.len())).into(),
                             };
                             ast_opaques.push(item)
                         }
@@ -298,7 +291,6 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
-                                id: TypeId::Enum(EnumId(ast_enums.len())).into(),
                             };
                             ast_enums.push(item)
                         }
@@ -309,7 +301,6 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: TraitId(ast_traits.len()).into(),
                         };
                         ast_traits.push(item)
                     }
@@ -319,7 +310,6 @@ impl TypeContext {
                             in_path: path,
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
-                            id: FunctionId(ast_functions.len()).into(),
                         };
                         ast_functions.push(item)
                     }

@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, FunctionId};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
