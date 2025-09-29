@@ -102,7 +102,6 @@ pub(crate) fn run<'tcx>(
                 formatter: &formatter.c,
                 errors: &errors,
                 is_for_cpp: true,
-                id: id.into(),
                 decl_header_path: &decl_header_path,
                 impl_header_path: &impl_header_path,
             },
@@ -113,11 +112,12 @@ pub(crate) fn run<'tcx>(
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
         let guard = errors.set_context_ty(ty.name().as_str().into());
-        match ty {
-            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s, id),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+        match id {
+            hir::TypeId::Enum(e_id) => context.gen_enum_def(e_id),
+            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id),
+            hir::TypeId::Struct(s_id) => context.gen_struct_def::<hir::Everywhere>(s_id),
+            hir::TypeId::OutStruct(s_id) => context.gen_struct_def::<hir::OutputOnly>(s_id),
+
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
@@ -150,7 +150,6 @@ pub(crate) fn run<'tcx>(
 
         for (ns, funcs) in free_func_map {
             let impl_header_path = formatter.fmt_free_function_header_path(ns.clone());
-            let first_id = funcs.first().unwrap().0;
 
             let mut free_func_impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
@@ -162,7 +161,6 @@ pub(crate) fn run<'tcx>(
                     tcx,
                     formatter: &formatter.c,
                     errors: &errors,
-                    id: first_id.into(),
                     is_for_cpp: true,
                     impl_header_path: &impl_header_path,
                     decl_header_path: "",
@@ -200,7 +198,7 @@ pub(crate) fn run<'tcx>(
 #[cfg(test)]
 mod test {
 
-    use diplomat_core::hir::TypeDef;
+    use diplomat_core::hir::TypeId;
     use quote::quote;
 
     use crate::cpp::header;
@@ -227,7 +225,7 @@ mod test {
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
         let config = crate::Config::default();
-        if let (id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (TypeId::Opaque(id), _) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -246,7 +244,6 @@ mod test {
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },
@@ -255,7 +252,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(opaque_def, id);
+            ty_gen_cx.gen_opaque_def(id);
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }

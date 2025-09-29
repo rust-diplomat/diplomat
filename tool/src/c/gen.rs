@@ -3,8 +3,8 @@ use super::header::Header;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, SymbolId,
-    TraitIdGetter, TyPosition, Type, TypeDef, TypeId,
+    self, CallbackInstantiationFunctionality, MaybeOwn, OpaqueOwner, StructPathLike, TraitIdGetter,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType, TypeContext};
 use std::borrow::Cow;
@@ -79,15 +79,15 @@ pub struct ItemGenContext<'cx, 'tcx, 'header> {
     pub formatter: &'cx CFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub is_for_cpp: bool,
-    pub id: SymbolId,
     pub decl_header_path: &'header str,
     pub impl_header_path: &'header str,
 }
 
 impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
-    pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
+    pub fn gen_enum_def(&self, id: hir::EnumId) -> Header {
+        let def = self.tcx.resolve_enum(id);
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(id.into());
         EnumTemplate {
             ty: def,
             fmt: self.formatter,
@@ -100,9 +100,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
+    pub fn gen_opaque_def(&self, id: hir::OpaqueId) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(id.into());
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
@@ -113,12 +113,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
+    pub fn gen_struct_def<P: TyPosition>(&self, id: P::StructId) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(self.id.try_into().unwrap());
+        let ty_name = self.formatter.fmt_type_name(id.into());
         let mut fields = vec![];
         let mut cb_structs_and_defs = vec![];
-        for field in def.fields.iter() {
+
+        let def = P::resolve_struct(self.tcx, id);
+        for field in P::get_fields(def) {
             fields.push(self.gen_ty_decl(
                 &field.ty,
                 field.name.as_str(),
@@ -140,9 +142,10 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_trait_def(&self, def: &'tcx hir::TraitDef) -> Header {
+    pub fn gen_trait_def(&self, id: hir::TraitId) -> Header {
+        let def = self.tcx.resolve_trait(id);
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
-        let trt_name = self.formatter.fmt_trait_name(self.id.try_into().unwrap());
+        let trt_name = self.formatter.fmt_trait_name(id);
 
         let mut trait_structs = vec![];
         let mut method_sigs = vec![];

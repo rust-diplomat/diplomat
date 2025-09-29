@@ -5,10 +5,11 @@ use crate::c::ItemGenContext as CItemGenContext;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
+use diplomat_core::hir::OpaqueId;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
-    SymbolId, TyPosition, Type, TypeDef, TypeId,
+    SymbolId, TyPosition, Type, TypeDef,
 };
 use std::borrow::Cow;
 
@@ -103,12 +104,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
-        let c_header = self.c.gen_enum_def(ty);
-        let c_impl_header = self.c.gen_impl(id);
+    pub fn gen_enum_def(&mut self, id: hir::EnumId) {
+        let ty = self.c.tcx.resolve_enum(id);
+        let type_name = self.formatter.fmt_type_name(id.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id.into());
+        let ctype = self.formatter.fmt_c_type_name(id.into());
+        let c_header = self.c.gen_enum_def(id);
+        let c_impl_header = self.c.gen_impl(id.into());
 
         let _guard = self
             .errors
@@ -204,16 +206,17 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
+    pub fn gen_opaque_def(&mut self, id: OpaqueId) {
+        let type_name = self.formatter.fmt_type_name(id.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id.into());
+        let ctype = self.formatter.fmt_c_type_name(id.into());
+        let ty = self.c.tcx.resolve_opaque(id);
         let dtor_name = self
             .formatter
             .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
 
-        let c_header = self.c.gen_opaque_def(ty);
-        let c_impl_header = self.c.gen_impl(id);
+        let c_header = self.c.gen_opaque_def(id);
+        let c_impl_header = self.c.gen_impl(id.into());
 
         let methods = ty
             .methods
@@ -278,15 +281,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let type_name = self.formatter.fmt_type_name(id);
-        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-        let ctype = self.formatter.fmt_c_type_name(id);
+    pub fn gen_struct_def<P: TyPosition + 'ccx>(&mut self, id: P::StructId) {
+        let def = P::resolve_struct(self.c.tcx, id);
+        let type_name = self.formatter.fmt_type_name(id.into());
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id.into());
+        let ctype = self.formatter.fmt_c_type_name(id.into());
 
         let namespace = def.attrs.namespace.clone();
 
-        let c_header = self.c.gen_struct_def(def);
-        let c_impl_header = self.c.gen_impl(id);
+        let c_header = self.c.gen_struct_def::<P>(id);
+        let c_impl_header = self.c.gen_impl(id.into());
 
         self.generating_struct_fields = true;
         let field_decls = def
@@ -311,7 +315,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let methods = def
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id.into(), method))
+            .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
         #[derive(Template)]

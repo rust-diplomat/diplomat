@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, FunctionId};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
@@ -130,7 +130,6 @@ pub(crate) fn run<'cx>(
                     tcx,
                     formatter: &formatter.cxx.c,
                     errors: &errors,
-                    id: id.into(),
                     decl_header_path: &cpp_decl_path,
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
@@ -198,7 +197,6 @@ pub(crate) fn run<'cx>(
                 tcx,
                 formatter: &formatter.cxx.c,
                 is_for_cpp: false,
-                id: FunctionId::default().into(), // This is a junk value
                 errors: &errors,
                 decl_header_path: "",
                 impl_header_path: "",
@@ -393,7 +391,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -472,7 +469,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
@@ -550,7 +546,6 @@ mod test {
                     formatter: &formatter.cxx.c,
                     errors: &errors,
                     is_for_cpp: false,
-                    id: type_id.into(),
                     decl_header_path: &decl_header_path,
                     impl_header_path: &impl_file_path,
                 },
