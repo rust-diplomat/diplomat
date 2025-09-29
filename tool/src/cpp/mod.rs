@@ -198,7 +198,7 @@ pub(crate) fn run<'tcx>(
 #[cfg(test)]
 mod test {
 
-    use diplomat_core::hir::TypeDef;
+    use diplomat_core::hir::TypeId;
     use quote::quote;
 
     use crate::cpp::header;
@@ -225,7 +225,7 @@ mod test {
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
         let config = crate::Config::default();
-        if let (id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (TypeId::Opaque(id), _) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -244,7 +244,6 @@ mod test {
                     formatter: &formatter.c,
                     errors: &error_store,
                     is_for_cpp: true,
-                    id: id.into(),
                     decl_header_path: "test/",
                     impl_header_path: "test/",
                 },
@@ -253,7 +252,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(opaque_def, id);
+            ty_gen_cx.gen_opaque_def(id);
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }
