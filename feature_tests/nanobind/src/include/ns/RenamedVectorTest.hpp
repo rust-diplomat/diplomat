@@ -1,5 +1,5 @@
-#ifndef ns_RenamedVectorTest_HPP
-#define ns_RenamedVectorTest_HPP
+#ifndef SOMELIB_ns_RenamedVectorTest_HPP
+#define SOMELIB_ns_RenamedVectorTest_HPP
 
 #include "RenamedVectorTest.d.hpp"
 
@@ -14,18 +14,18 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
-    ns::capi::RenamedVectorTest* namespace_VectorTest_new(void);
+    somelib::ns::capi::RenamedVectorTest* namespace_VectorTest_new(void);
 
-    size_t namespace_VectorTest_len(const ns::capi::RenamedVectorTest* self);
+    size_t namespace_VectorTest_len(const somelib::ns::capi::RenamedVectorTest* self);
 
     typedef struct namespace_VectorTest_get_result {union {double ok; }; bool is_ok;} namespace_VectorTest_get_result;
-    namespace_VectorTest_get_result namespace_VectorTest_get(const ns::capi::RenamedVectorTest* self, size_t idx);
+    namespace_VectorTest_get_result namespace_VectorTest_get(const somelib::ns::capi::RenamedVectorTest* self, size_t idx);
 
-    void namespace_VectorTest_push(ns::capi::RenamedVectorTest* self, double value);
+    void namespace_VectorTest_push(somelib::ns::capi::RenamedVectorTest* self, double value);
 
     void namespace_VectorTest_destroy(RenamedVectorTest* self);
 
@@ -33,46 +33,46 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<ns::RenamedVectorTest> ns::RenamedVectorTest::new_() {
-    auto result = ns::capi::namespace_VectorTest_new();
-    return std::unique_ptr<ns::RenamedVectorTest>(ns::RenamedVectorTest::FromFFI(result));
+inline std::unique_ptr<somelib::ns::RenamedVectorTest> somelib::ns::RenamedVectorTest::new_() {
+    auto result = somelib::ns::capi::namespace_VectorTest_new();
+    return std::unique_ptr<somelib::ns::RenamedVectorTest>(somelib::ns::RenamedVectorTest::FromFFI(result));
 }
 
-inline size_t ns::RenamedVectorTest::len() const {
-    auto result = ns::capi::namespace_VectorTest_len(this->AsFFI());
+inline size_t somelib::ns::RenamedVectorTest::len() const {
+    auto result = somelib::ns::capi::namespace_VectorTest_len(this->AsFFI());
     return result;
 }
 
-inline std::optional<double> ns::RenamedVectorTest::operator[](size_t idx) const {
-    auto result = ns::capi::namespace_VectorTest_get(this->AsFFI(),
+inline std::optional<double> somelib::ns::RenamedVectorTest::operator[](size_t idx) const {
+    auto result = somelib::ns::capi::namespace_VectorTest_get(this->AsFFI(),
         idx);
     return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
 }
 
-inline void ns::RenamedVectorTest::push(double value) {
-    ns::capi::namespace_VectorTest_push(this->AsFFI(),
+inline void somelib::ns::RenamedVectorTest::push(double value) {
+    somelib::ns::capi::namespace_VectorTest_push(this->AsFFI(),
         value);
 }
 
-inline const ns::capi::RenamedVectorTest* ns::RenamedVectorTest::AsFFI() const {
-    return reinterpret_cast<const ns::capi::RenamedVectorTest*>(this);
+inline const somelib::ns::capi::RenamedVectorTest* somelib::ns::RenamedVectorTest::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedVectorTest*>(this);
 }
 
-inline ns::capi::RenamedVectorTest* ns::RenamedVectorTest::AsFFI() {
-    return reinterpret_cast<ns::capi::RenamedVectorTest*>(this);
+inline somelib::ns::capi::RenamedVectorTest* somelib::ns::RenamedVectorTest::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedVectorTest*>(this);
 }
 
-inline const ns::RenamedVectorTest* ns::RenamedVectorTest::FromFFI(const ns::capi::RenamedVectorTest* ptr) {
-    return reinterpret_cast<const ns::RenamedVectorTest*>(ptr);
+inline const somelib::ns::RenamedVectorTest* somelib::ns::RenamedVectorTest::FromFFI(const somelib::ns::capi::RenamedVectorTest* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedVectorTest*>(ptr);
 }
 
-inline ns::RenamedVectorTest* ns::RenamedVectorTest::FromFFI(ns::capi::RenamedVectorTest* ptr) {
-    return reinterpret_cast<ns::RenamedVectorTest*>(ptr);
+inline somelib::ns::RenamedVectorTest* somelib::ns::RenamedVectorTest::FromFFI(somelib::ns::capi::RenamedVectorTest* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedVectorTest*>(ptr);
 }
 
-inline void ns::RenamedVectorTest::operator delete(void* ptr) {
-    ns::capi::namespace_VectorTest_destroy(reinterpret_cast<ns::capi::RenamedVectorTest*>(ptr));
+inline void somelib::ns::RenamedVectorTest::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_VectorTest_destroy(reinterpret_cast<somelib::ns::capi::RenamedVectorTest*>(ptr));
 }
 
 
-#endif // ns_RenamedVectorTest_HPP
+#endif // SOMELIB_ns_RenamedVectorTest_HPP

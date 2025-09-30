@@ -1,5 +1,5 @@
-#ifndef CyclicStructA_D_HPP
-#define CyclicStructA_D_HPP
+#ifndef SOMELIB_CyclicStructA_D_HPP
+#define SOMELIB_CyclicStructA_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,16 +11,17 @@
 #include <cstdlib>
 #include "CyclicStructB.d.hpp"
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
+struct CyclicStructA;
 struct CyclicStructB;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct CyclicStructA {
-      diplomat::capi::CyclicStructB a;
+      somelib::capi::CyclicStructB a;
     };
 
     typedef struct CyclicStructA_option {union { CyclicStructA ok; }; bool is_ok; } CyclicStructA_option;
@@ -37,39 +38,40 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct CyclicStructA {
-    CyclicStructB a;
+    somelib::CyclicStructB a;
 
-  inline static CyclicStructB get_b();
+  inline static somelib::CyclicStructB get_b();
 
   inline std::string cyclic_out() const;
   template<typename W>
   inline void cyclic_out_write(W& writeable_output) const;
 
-  inline static uint8_t nested_slice(diplomat::span<const CyclicStructA> sl);
+  inline static uint8_t nested_slice(somelib::diplomat::span<const somelib::CyclicStructA> sl);
 
-  inline std::string double_cyclic_out(CyclicStructA cyclic_struct_a) const;
+  inline std::string double_cyclic_out(somelib::CyclicStructA cyclic_struct_a) const;
   template<typename W>
-  inline void double_cyclic_out_write(CyclicStructA cyclic_struct_a, W& writeable_output) const;
+  inline void double_cyclic_out_write(somelib::CyclicStructA cyclic_struct_a, W& writeable_output) const;
 
   inline std::string getter_out() const;
   template<typename W>
   inline void getter_out_write(W& writeable_output) const;
 
-    inline diplomat::capi::CyclicStructA AsFFI() const;
-    inline static CyclicStructA FromFFI(diplomat::capi::CyclicStructA c_struct);
+    inline somelib::capi::CyclicStructA AsFFI() const;
+    inline static somelib::CyclicStructA FromFFI(somelib::capi::CyclicStructA c_struct);
 };
 
-
-namespace diplomat {
+} // namespace
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructA>>>> {
-        using type = capi::DiplomatCyclicStructAView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::CyclicStructA>>>> {
+        using type = somelib::capi::DiplomatCyclicStructAView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructA>>>> {
-        using type = capi::DiplomatCyclicStructAViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::CyclicStructA>>>> {
+        using type = somelib::capi::DiplomatCyclicStructAViewMut;
 };
 }
-#endif // CyclicStructA_D_HPP
+#endif // SOMELIB_CyclicStructA_D_HPP

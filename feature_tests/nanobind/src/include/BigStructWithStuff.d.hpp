@@ -1,5 +1,5 @@
-#ifndef BigStructWithStuff_D_HPP
-#define BigStructWithStuff_D_HPP
+#ifndef SOMELIB_BigStructWithStuff_D_HPP
+#define SOMELIB_BigStructWithStuff_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,19 +11,20 @@
 #include <cstdlib>
 #include "ScalarPairWithPadding.d.hpp"
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
+struct BigStructWithStuff;
 struct ScalarPairWithPadding;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct BigStructWithStuff {
       uint8_t first;
       uint16_t second;
       uint16_t third;
-      diplomat::capi::ScalarPairWithPadding fourth;
+      somelib::capi::ScalarPairWithPadding fourth;
       uint8_t fifth;
     };
 
@@ -41,6 +42,7 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 /**
  * Testing JS-specific layout/padding behavior
  * Also being used to test CPP backends taking structs with primitive values.
@@ -49,27 +51,27 @@ struct BigStructWithStuff {
     uint8_t first;
     uint16_t second;
     uint16_t third;
-    ScalarPairWithPadding fourth;
+    somelib::ScalarPairWithPadding fourth;
     uint8_t fifth;
 
   inline void assert_value(uint16_t extra_val) const;
 
-  inline static void assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value);
+  inline static void assert_slice(somelib::diplomat::span<const somelib::BigStructWithStuff> slice, uint16_t second_value);
 
-    inline diplomat::capi::BigStructWithStuff AsFFI() const;
-    inline static BigStructWithStuff FromFFI(diplomat::capi::BigStructWithStuff c_struct);
+    inline somelib::capi::BigStructWithStuff AsFFI() const;
+    inline static somelib::BigStructWithStuff FromFFI(somelib::capi::BigStructWithStuff c_struct);
 };
 
-
-namespace diplomat {
+} // namespace
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const BigStructWithStuff>>>> {
-        using type = capi::DiplomatBigStructWithStuffView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::BigStructWithStuff>>>> {
+        using type = somelib::capi::DiplomatBigStructWithStuffView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<BigStructWithStuff>>>> {
-        using type = capi::DiplomatBigStructWithStuffViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::BigStructWithStuff>>>> {
+        using type = somelib::capi::DiplomatBigStructWithStuffViewMut;
 };
 }
-#endif // BigStructWithStuff_D_HPP
+#endif // SOMELIB_BigStructWithStuff_D_HPP

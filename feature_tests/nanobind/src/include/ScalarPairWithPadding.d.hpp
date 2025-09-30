@@ -1,5 +1,5 @@
-#ifndef ScalarPairWithPadding_D_HPP
-#define ScalarPairWithPadding_D_HPP
+#ifndef SOMELIB_ScalarPairWithPadding_D_HPP
+#define SOMELIB_ScalarPairWithPadding_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct ScalarPairWithPadding {
       uint8_t first;
@@ -33,6 +33,7 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 /**
  * Testing JS-specific layout/padding behavior
  */
@@ -42,20 +43,20 @@ struct ScalarPairWithPadding {
 
   inline void assert_value() const;
 
-    inline diplomat::capi::ScalarPairWithPadding AsFFI() const;
-    inline static ScalarPairWithPadding FromFFI(diplomat::capi::ScalarPairWithPadding c_struct);
+    inline somelib::capi::ScalarPairWithPadding AsFFI() const;
+    inline static somelib::ScalarPairWithPadding FromFFI(somelib::capi::ScalarPairWithPadding c_struct);
 };
 
-
-namespace diplomat {
+} // namespace
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ScalarPairWithPadding>>>> {
-        using type = capi::DiplomatScalarPairWithPaddingView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::ScalarPairWithPadding>>>> {
+        using type = somelib::capi::DiplomatScalarPairWithPaddingView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ScalarPairWithPadding>>>> {
-        using type = capi::DiplomatScalarPairWithPaddingViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::ScalarPairWithPadding>>>> {
+        using type = somelib::capi::DiplomatScalarPairWithPaddingViewMut;
 };
 }
-#endif // ScalarPairWithPadding_D_HPP
+#endif // SOMELIB_ScalarPairWithPadding_D_HPP

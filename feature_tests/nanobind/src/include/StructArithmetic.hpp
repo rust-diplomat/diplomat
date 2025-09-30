@@ -1,5 +1,5 @@
-#ifndef StructArithmetic_HPP
-#define StructArithmetic_HPP
+#ifndef SOMELIB_StructArithmetic_HPP
+#define SOMELIB_StructArithmetic_HPP
 
 #include "StructArithmetic.d.hpp"
 
@@ -14,97 +14,97 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::StructArithmetic StructArithmetic_ORIGIN(void);
+    somelib::capi::StructArithmetic StructArithmetic_ORIGIN(void);
 
-    void StructArithmetic_set_origin(diplomat::capi::StructArithmetic _new_origin);
+    void StructArithmetic_set_origin(somelib::capi::StructArithmetic _new_origin);
 
-    diplomat::capi::StructArithmetic StructArithmetic_new(int32_t x, int32_t y);
+    somelib::capi::StructArithmetic StructArithmetic_new(int32_t x, int32_t y);
 
-    diplomat::capi::StructArithmetic StructArithmetic_add(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
+    somelib::capi::StructArithmetic StructArithmetic_add(somelib::capi::StructArithmetic self, somelib::capi::StructArithmetic o);
 
-    diplomat::capi::StructArithmetic StructArithmetic_sub(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
+    somelib::capi::StructArithmetic StructArithmetic_sub(somelib::capi::StructArithmetic self, somelib::capi::StructArithmetic o);
 
-    diplomat::capi::StructArithmetic StructArithmetic_mul(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
+    somelib::capi::StructArithmetic StructArithmetic_mul(somelib::capi::StructArithmetic self, somelib::capi::StructArithmetic o);
 
-    diplomat::capi::StructArithmetic StructArithmetic_div(diplomat::capi::StructArithmetic self, diplomat::capi::StructArithmetic o);
+    somelib::capi::StructArithmetic StructArithmetic_div(somelib::capi::StructArithmetic self, somelib::capi::StructArithmetic o);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline StructArithmetic StructArithmetic::ORIGIN() {
-    auto result = diplomat::capi::StructArithmetic_ORIGIN();
-    return StructArithmetic::FromFFI(result);
+inline somelib::StructArithmetic somelib::StructArithmetic::ORIGIN() {
+    auto result = somelib::capi::StructArithmetic_ORIGIN();
+    return somelib::StructArithmetic::FromFFI(result);
 }
 
-inline void StructArithmetic::set_origin(StructArithmetic _new_origin) {
-    diplomat::capi::StructArithmetic_set_origin(_new_origin.AsFFI());
+inline void somelib::StructArithmetic::set_origin(somelib::StructArithmetic _new_origin) {
+    somelib::capi::StructArithmetic_set_origin(_new_origin.AsFFI());
 }
 
-inline StructArithmetic StructArithmetic::new_(int32_t x, int32_t y) {
-    auto result = diplomat::capi::StructArithmetic_new(x,
+inline somelib::StructArithmetic somelib::StructArithmetic::new_(int32_t x, int32_t y) {
+    auto result = somelib::capi::StructArithmetic_new(x,
         y);
-    return StructArithmetic::FromFFI(result);
+    return somelib::StructArithmetic::FromFFI(result);
 }
 
-inline StructArithmetic StructArithmetic::operator+(StructArithmetic o) const {
-    auto result = diplomat::capi::StructArithmetic_add(this->AsFFI(),
+inline somelib::StructArithmetic somelib::StructArithmetic::operator+(somelib::StructArithmetic o) const {
+    auto result = somelib::capi::StructArithmetic_add(this->AsFFI(),
         o.AsFFI());
-    return StructArithmetic::FromFFI(result);
+    return somelib::StructArithmetic::FromFFI(result);
 }
-inline StructArithmetic& StructArithmetic::operator+=(StructArithmetic o) {
+inline somelib::StructArithmetic& somelib::StructArithmetic::operator+=(somelib::StructArithmetic o) {
   *this = *this + o;
   return *this;
 }
 
-inline StructArithmetic StructArithmetic::operator-(StructArithmetic o) const {
-    auto result = diplomat::capi::StructArithmetic_sub(this->AsFFI(),
+inline somelib::StructArithmetic somelib::StructArithmetic::operator-(somelib::StructArithmetic o) const {
+    auto result = somelib::capi::StructArithmetic_sub(this->AsFFI(),
         o.AsFFI());
-    return StructArithmetic::FromFFI(result);
+    return somelib::StructArithmetic::FromFFI(result);
 }
-inline StructArithmetic& StructArithmetic::operator-=(StructArithmetic o) {
+inline somelib::StructArithmetic& somelib::StructArithmetic::operator-=(somelib::StructArithmetic o) {
   *this = *this - o;
   return *this;
 }
 
-inline StructArithmetic StructArithmetic::operator*(StructArithmetic o) const {
-    auto result = diplomat::capi::StructArithmetic_mul(this->AsFFI(),
+inline somelib::StructArithmetic somelib::StructArithmetic::operator*(somelib::StructArithmetic o) const {
+    auto result = somelib::capi::StructArithmetic_mul(this->AsFFI(),
         o.AsFFI());
-    return StructArithmetic::FromFFI(result);
+    return somelib::StructArithmetic::FromFFI(result);
 }
-inline StructArithmetic& StructArithmetic::operator*=(StructArithmetic o) {
+inline somelib::StructArithmetic& somelib::StructArithmetic::operator*=(somelib::StructArithmetic o) {
   *this = *this * o;
   return *this;
 }
 
-inline StructArithmetic StructArithmetic::operator/(StructArithmetic o) const {
-    auto result = diplomat::capi::StructArithmetic_div(this->AsFFI(),
+inline somelib::StructArithmetic somelib::StructArithmetic::operator/(somelib::StructArithmetic o) const {
+    auto result = somelib::capi::StructArithmetic_div(this->AsFFI(),
         o.AsFFI());
-    return StructArithmetic::FromFFI(result);
+    return somelib::StructArithmetic::FromFFI(result);
 }
-inline StructArithmetic& StructArithmetic::operator/=(StructArithmetic o) {
+inline somelib::StructArithmetic& somelib::StructArithmetic::operator/=(somelib::StructArithmetic o) {
   *this = *this / o;
   return *this;
 }
 
 
-inline diplomat::capi::StructArithmetic StructArithmetic::AsFFI() const {
-    return diplomat::capi::StructArithmetic {
+inline somelib::capi::StructArithmetic somelib::StructArithmetic::AsFFI() const {
+    return somelib::capi::StructArithmetic {
         /* .x = */ x,
         /* .y = */ y,
     };
 }
 
-inline StructArithmetic StructArithmetic::FromFFI(diplomat::capi::StructArithmetic c_struct) {
-    return StructArithmetic {
+inline somelib::StructArithmetic somelib::StructArithmetic::FromFFI(somelib::capi::StructArithmetic c_struct) {
+    return somelib::StructArithmetic {
         /* .x = */ c_struct.x,
         /* .y = */ c_struct.y,
     };
 }
 
 
-#endif // StructArithmetic_HPP
+#endif // SOMELIB_StructArithmetic_HPP

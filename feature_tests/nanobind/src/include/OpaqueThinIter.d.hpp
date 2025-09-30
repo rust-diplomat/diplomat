@@ -1,5 +1,5 @@
-#ifndef OpaqueThinIter_D_HPP
-#define OpaqueThinIter_D_HPP
+#ifndef SOMELIB_OpaqueThinIter_D_HPP
+#define SOMELIB_OpaqueThinIter_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,37 +10,38 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct OpaqueThin; }
+namespace somelib {
+namespace capi { struct OpaqueThin; }
 class OpaqueThin;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct OpaqueThinIter;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class OpaqueThinIter {
 public:
 
-  inline const OpaqueThin* next();
+  inline const somelib::OpaqueThin* next();
 
-    inline const diplomat::capi::OpaqueThinIter* AsFFI() const;
-    inline diplomat::capi::OpaqueThinIter* AsFFI();
-    inline static const OpaqueThinIter* FromFFI(const diplomat::capi::OpaqueThinIter* ptr);
-    inline static OpaqueThinIter* FromFFI(diplomat::capi::OpaqueThinIter* ptr);
+    inline const somelib::capi::OpaqueThinIter* AsFFI() const;
+    inline somelib::capi::OpaqueThinIter* AsFFI();
+    inline static const somelib::OpaqueThinIter* FromFFI(const somelib::capi::OpaqueThinIter* ptr);
+    inline static somelib::OpaqueThinIter* FromFFI(somelib::capi::OpaqueThinIter* ptr);
     inline static void operator delete(void* ptr);
 private:
     OpaqueThinIter() = delete;
-    OpaqueThinIter(const OpaqueThinIter&) = delete;
-    OpaqueThinIter(OpaqueThinIter&&) noexcept = delete;
-    OpaqueThinIter operator=(const OpaqueThinIter&) = delete;
-    OpaqueThinIter operator=(OpaqueThinIter&&) noexcept = delete;
+    OpaqueThinIter(const somelib::OpaqueThinIter&) = delete;
+    OpaqueThinIter(somelib::OpaqueThinIter&&) noexcept = delete;
+    OpaqueThinIter operator=(const somelib::OpaqueThinIter&) = delete;
+    OpaqueThinIter operator=(somelib::OpaqueThinIter&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // OpaqueThinIter_D_HPP
+} // namespace
+#endif // SOMELIB_OpaqueThinIter_D_HPP

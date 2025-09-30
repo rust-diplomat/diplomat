@@ -1,5 +1,5 @@
-#ifndef BorrowedFieldsReturning_HPP
-#define BorrowedFieldsReturning_HPP
+#ifndef SOMELIB_BorrowedFieldsReturning_HPP
+#define SOMELIB_BorrowedFieldsReturning_HPP
 
 #include "BorrowedFieldsReturning.d.hpp"
 
@@ -14,24 +14,24 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
 
-inline diplomat::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
-    return diplomat::capi::BorrowedFieldsReturning {
+inline somelib::capi::BorrowedFieldsReturning somelib::BorrowedFieldsReturning::AsFFI() const {
+    return somelib::capi::BorrowedFieldsReturning {
         /* .bytes = */ {bytes.data(), bytes.size()},
     };
 }
 
-inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct) {
-    return BorrowedFieldsReturning {
+inline somelib::BorrowedFieldsReturning somelib::BorrowedFieldsReturning::FromFFI(somelib::capi::BorrowedFieldsReturning c_struct) {
+    return somelib::BorrowedFieldsReturning {
         /* .bytes = */ std::string_view(c_struct.bytes.data, c_struct.bytes.len),
     };
 }
 
 
-#endif // BorrowedFieldsReturning_HPP
+#endif // SOMELIB_BorrowedFieldsReturning_HPP

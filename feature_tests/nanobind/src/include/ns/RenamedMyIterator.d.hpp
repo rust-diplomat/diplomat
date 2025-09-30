@@ -1,5 +1,5 @@
-#ifndef ns_RenamedMyIterator_D_HPP
-#define ns_RenamedMyIterator_D_HPP
+#ifndef SOMELIB_ns_RenamedMyIterator_D_HPP
+#define SOMELIB_ns_RenamedMyIterator_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,31 +12,31 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct RenamedMyIterator;
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 class RenamedMyIterator {
 public:
 
   inline std::optional<uint8_t> next();
 
-    inline const ns::capi::RenamedMyIterator* AsFFI() const;
-    inline ns::capi::RenamedMyIterator* AsFFI();
-    inline static const ns::RenamedMyIterator* FromFFI(const ns::capi::RenamedMyIterator* ptr);
-    inline static ns::RenamedMyIterator* FromFFI(ns::capi::RenamedMyIterator* ptr);
+    inline const somelib::ns::capi::RenamedMyIterator* AsFFI() const;
+    inline somelib::ns::capi::RenamedMyIterator* AsFFI();
+    inline static const somelib::ns::RenamedMyIterator* FromFFI(const somelib::ns::capi::RenamedMyIterator* ptr);
+    inline static somelib::ns::RenamedMyIterator* FromFFI(somelib::ns::capi::RenamedMyIterator* ptr);
     inline static void operator delete(void* ptr);
 private:
     RenamedMyIterator() = delete;
-    RenamedMyIterator(const ns::RenamedMyIterator&) = delete;
-    RenamedMyIterator(ns::RenamedMyIterator&&) noexcept = delete;
-    RenamedMyIterator operator=(const ns::RenamedMyIterator&) = delete;
-    RenamedMyIterator operator=(ns::RenamedMyIterator&&) noexcept = delete;
+    RenamedMyIterator(const somelib::ns::RenamedMyIterator&) = delete;
+    RenamedMyIterator(somelib::ns::RenamedMyIterator&&) noexcept = delete;
+    RenamedMyIterator operator=(const somelib::ns::RenamedMyIterator&) = delete;
+    RenamedMyIterator operator=(somelib::ns::RenamedMyIterator&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
-#endif // ns_RenamedMyIterator_D_HPP
+#endif // SOMELIB_ns_RenamedMyIterator_D_HPP

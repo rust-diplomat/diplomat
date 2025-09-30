@@ -1,5 +1,5 @@
-#ifndef ErrorStruct_HPP
-#define ErrorStruct_HPP
+#ifndef SOMELIB_ErrorStruct_HPP
+#define SOMELIB_ErrorStruct_HPP
 
 #include "ErrorStruct.d.hpp"
 
@@ -14,26 +14,26 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
 
-inline diplomat::capi::ErrorStruct ErrorStruct::AsFFI() const {
-    return diplomat::capi::ErrorStruct {
+inline somelib::capi::ErrorStruct somelib::ErrorStruct::AsFFI() const {
+    return somelib::capi::ErrorStruct {
         /* .i = */ i,
         /* .j = */ j,
     };
 }
 
-inline ErrorStruct ErrorStruct::FromFFI(diplomat::capi::ErrorStruct c_struct) {
-    return ErrorStruct {
+inline somelib::ErrorStruct somelib::ErrorStruct::FromFFI(somelib::capi::ErrorStruct c_struct) {
+    return somelib::ErrorStruct {
         /* .i = */ c_struct.i,
         /* .j = */ c_struct.j,
     };
 }
 
 
-#endif // ErrorStruct_HPP
+#endif // SOMELIB_ErrorStruct_HPP

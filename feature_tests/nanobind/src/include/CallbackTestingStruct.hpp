@@ -1,5 +1,5 @@
-#ifndef CallbackTestingStruct_HPP
-#define CallbackTestingStruct_HPP
+#ifndef SOMELIB_CallbackTestingStruct_HPP
+#define SOMELIB_CallbackTestingStruct_HPP
 
 #include "CallbackTestingStruct.d.hpp"
 
@@ -14,26 +14,26 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
 
-inline diplomat::capi::CallbackTestingStruct CallbackTestingStruct::AsFFI() const {
-    return diplomat::capi::CallbackTestingStruct {
+inline somelib::capi::CallbackTestingStruct somelib::CallbackTestingStruct::AsFFI() const {
+    return somelib::capi::CallbackTestingStruct {
         /* .x = */ x,
         /* .y = */ y,
     };
 }
 
-inline CallbackTestingStruct CallbackTestingStruct::FromFFI(diplomat::capi::CallbackTestingStruct c_struct) {
-    return CallbackTestingStruct {
+inline somelib::CallbackTestingStruct somelib::CallbackTestingStruct::FromFFI(somelib::capi::CallbackTestingStruct c_struct) {
+    return somelib::CallbackTestingStruct {
         /* .x = */ c_struct.x,
         /* .y = */ c_struct.y,
     };
 }
 
 
-#endif // CallbackTestingStruct_HPP
+#endif // SOMELIB_CallbackTestingStruct_HPP

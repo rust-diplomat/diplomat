@@ -1,5 +1,5 @@
-#ifndef OpaqueMutexedString_HPP
-#define OpaqueMutexedString_HPP
+#ifndef SOMELIB_OpaqueMutexedString_HPP
+#define SOMELIB_OpaqueMutexedString_HPP
 
 #include "OpaqueMutexedString.d.hpp"
 
@@ -15,27 +15,27 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
+    somelib::capi::OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
 
-    void OpaqueMutexedString_change(const diplomat::capi::OpaqueMutexedString* self, size_t number);
+    void OpaqueMutexedString_change(const somelib::capi::OpaqueMutexedString* self, size_t number);
 
-    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow(const diplomat::capi::OpaqueMutexedString* self);
+    const somelib::capi::OpaqueMutexedString* OpaqueMutexedString_borrow(const somelib::capi::OpaqueMutexedString* self);
 
-    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_other(const diplomat::capi::OpaqueMutexedString* other);
+    const somelib::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_other(const somelib::capi::OpaqueMutexedString* other);
 
-    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const diplomat::capi::OpaqueMutexedString* self, const diplomat::capi::OpaqueMutexedString* other);
+    const somelib::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const somelib::capi::OpaqueMutexedString* self, const somelib::capi::OpaqueMutexedString* other);
 
-    size_t OpaqueMutexedString_get_len_and_add(const diplomat::capi::OpaqueMutexedString* self, size_t other);
+    size_t OpaqueMutexedString_get_len_and_add(const somelib::capi::OpaqueMutexedString* self, size_t other);
 
-    diplomat::capi::DiplomatStringView OpaqueMutexedString_dummy_str(const diplomat::capi::OpaqueMutexedString* self);
+    somelib::diplomat::capi::DiplomatStringView OpaqueMutexedString_dummy_str(const somelib::capi::OpaqueMutexedString* self);
 
-    diplomat::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const diplomat::capi::OpaqueMutexedString* self);
+    somelib::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const somelib::capi::OpaqueMutexedString* self);
 
-    uint16_t OpaqueMutexedString_to_unsigned_from_unsigned(const diplomat::capi::OpaqueMutexedString* self, uint16_t input);
+    uint16_t OpaqueMutexedString_to_unsigned_from_unsigned(const somelib::capi::OpaqueMutexedString* self, uint16_t input);
 
     void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
 
@@ -43,73 +43,73 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<OpaqueMutexedString> OpaqueMutexedString::from_usize(size_t number) {
-    auto result = diplomat::capi::OpaqueMutexedString_from_usize(number);
-    return std::unique_ptr<OpaqueMutexedString>(OpaqueMutexedString::FromFFI(result));
+inline std::unique_ptr<somelib::OpaqueMutexedString> somelib::OpaqueMutexedString::from_usize(size_t number) {
+    auto result = somelib::capi::OpaqueMutexedString_from_usize(number);
+    return std::unique_ptr<somelib::OpaqueMutexedString>(somelib::OpaqueMutexedString::FromFFI(result));
 }
 
-inline void OpaqueMutexedString::change(size_t number) const {
-    diplomat::capi::OpaqueMutexedString_change(this->AsFFI(),
+inline void somelib::OpaqueMutexedString::change(size_t number) const {
+    somelib::capi::OpaqueMutexedString_change(this->AsFFI(),
         number);
 }
 
-inline const OpaqueMutexedString& OpaqueMutexedString::borrow() const {
-    auto result = diplomat::capi::OpaqueMutexedString_borrow(this->AsFFI());
-    return *OpaqueMutexedString::FromFFI(result);
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow() const {
+    auto result = somelib::capi::OpaqueMutexedString_borrow(this->AsFFI());
+    return *somelib::OpaqueMutexedString::FromFFI(result);
 }
 
-inline const OpaqueMutexedString& OpaqueMutexedString::borrow_other(const OpaqueMutexedString& other) {
-    auto result = diplomat::capi::OpaqueMutexedString_borrow_other(other.AsFFI());
-    return *OpaqueMutexedString::FromFFI(result);
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_other(const somelib::OpaqueMutexedString& other) {
+    auto result = somelib::capi::OpaqueMutexedString_borrow_other(other.AsFFI());
+    return *somelib::OpaqueMutexedString::FromFFI(result);
 }
 
-inline const OpaqueMutexedString& OpaqueMutexedString::borrow_self_or_other(const OpaqueMutexedString& other) const {
-    auto result = diplomat::capi::OpaqueMutexedString_borrow_self_or_other(this->AsFFI(),
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_self_or_other(const somelib::OpaqueMutexedString& other) const {
+    auto result = somelib::capi::OpaqueMutexedString_borrow_self_or_other(this->AsFFI(),
         other.AsFFI());
-    return *OpaqueMutexedString::FromFFI(result);
+    return *somelib::OpaqueMutexedString::FromFFI(result);
 }
 
-inline size_t OpaqueMutexedString::get_len_and_add(size_t other) const {
-    auto result = diplomat::capi::OpaqueMutexedString_get_len_and_add(this->AsFFI(),
+inline size_t somelib::OpaqueMutexedString::get_len_and_add(size_t other) const {
+    auto result = somelib::capi::OpaqueMutexedString_get_len_and_add(this->AsFFI(),
         other);
     return result;
 }
 
-inline std::string_view OpaqueMutexedString::dummy_str() const {
-    auto result = diplomat::capi::OpaqueMutexedString_dummy_str(this->AsFFI());
+inline std::string_view somelib::OpaqueMutexedString::dummy_str() const {
+    auto result = somelib::capi::OpaqueMutexedString_dummy_str(this->AsFFI());
     return std::string_view(result.data, result.len);
 }
 
-inline std::unique_ptr<Utf16Wrap> OpaqueMutexedString::wrapper() const {
-    auto result = diplomat::capi::OpaqueMutexedString_wrapper(this->AsFFI());
-    return std::unique_ptr<Utf16Wrap>(Utf16Wrap::FromFFI(result));
+inline std::unique_ptr<somelib::Utf16Wrap> somelib::OpaqueMutexedString::wrapper() const {
+    auto result = somelib::capi::OpaqueMutexedString_wrapper(this->AsFFI());
+    return std::unique_ptr<somelib::Utf16Wrap>(somelib::Utf16Wrap::FromFFI(result));
 }
 
-inline uint16_t OpaqueMutexedString::to_unsigned_from_unsigned(uint16_t input) const {
-    auto result = diplomat::capi::OpaqueMutexedString_to_unsigned_from_unsigned(this->AsFFI(),
+inline uint16_t somelib::OpaqueMutexedString::to_unsigned_from_unsigned(uint16_t input) const {
+    auto result = somelib::capi::OpaqueMutexedString_to_unsigned_from_unsigned(this->AsFFI(),
         input);
     return result;
 }
 
-inline const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::OpaqueMutexedString*>(this);
+inline const somelib::capi::OpaqueMutexedString* somelib::OpaqueMutexedString::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::OpaqueMutexedString*>(this);
 }
 
-inline diplomat::capi::OpaqueMutexedString* OpaqueMutexedString::AsFFI() {
-    return reinterpret_cast<diplomat::capi::OpaqueMutexedString*>(this);
+inline somelib::capi::OpaqueMutexedString* somelib::OpaqueMutexedString::AsFFI() {
+    return reinterpret_cast<somelib::capi::OpaqueMutexedString*>(this);
 }
 
-inline const OpaqueMutexedString* OpaqueMutexedString::FromFFI(const diplomat::capi::OpaqueMutexedString* ptr) {
-    return reinterpret_cast<const OpaqueMutexedString*>(ptr);
+inline const somelib::OpaqueMutexedString* somelib::OpaqueMutexedString::FromFFI(const somelib::capi::OpaqueMutexedString* ptr) {
+    return reinterpret_cast<const somelib::OpaqueMutexedString*>(ptr);
 }
 
-inline OpaqueMutexedString* OpaqueMutexedString::FromFFI(diplomat::capi::OpaqueMutexedString* ptr) {
-    return reinterpret_cast<OpaqueMutexedString*>(ptr);
+inline somelib::OpaqueMutexedString* somelib::OpaqueMutexedString::FromFFI(somelib::capi::OpaqueMutexedString* ptr) {
+    return reinterpret_cast<somelib::OpaqueMutexedString*>(ptr);
 }
 
-inline void OpaqueMutexedString::operator delete(void* ptr) {
-    diplomat::capi::OpaqueMutexedString_destroy(reinterpret_cast<diplomat::capi::OpaqueMutexedString*>(ptr));
+inline void somelib::OpaqueMutexedString::operator delete(void* ptr) {
+    somelib::capi::OpaqueMutexedString_destroy(reinterpret_cast<somelib::capi::OpaqueMutexedString*>(ptr));
 }
 
 
-#endif // OpaqueMutexedString_HPP
+#endif // SOMELIB_OpaqueMutexedString_HPP

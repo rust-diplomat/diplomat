@@ -1,5 +1,5 @@
-#ifndef ns_RenamedTestOpaque_HPP
-#define ns_RenamedTestOpaque_HPP
+#ifndef SOMELIB_ns_RenamedTestOpaque_HPP
+#define SOMELIB_ns_RenamedTestOpaque_HPP
 
 #include "RenamedTestOpaque.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
@@ -24,25 +24,25 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const ns::capi::RenamedTestOpaque* ns::RenamedTestOpaque::AsFFI() const {
-    return reinterpret_cast<const ns::capi::RenamedTestOpaque*>(this);
+inline const somelib::ns::capi::RenamedTestOpaque* somelib::ns::RenamedTestOpaque::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedTestOpaque*>(this);
 }
 
-inline ns::capi::RenamedTestOpaque* ns::RenamedTestOpaque::AsFFI() {
-    return reinterpret_cast<ns::capi::RenamedTestOpaque*>(this);
+inline somelib::ns::capi::RenamedTestOpaque* somelib::ns::RenamedTestOpaque::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedTestOpaque*>(this);
 }
 
-inline const ns::RenamedTestOpaque* ns::RenamedTestOpaque::FromFFI(const ns::capi::RenamedTestOpaque* ptr) {
-    return reinterpret_cast<const ns::RenamedTestOpaque*>(ptr);
+inline const somelib::ns::RenamedTestOpaque* somelib::ns::RenamedTestOpaque::FromFFI(const somelib::ns::capi::RenamedTestOpaque* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedTestOpaque*>(ptr);
 }
 
-inline ns::RenamedTestOpaque* ns::RenamedTestOpaque::FromFFI(ns::capi::RenamedTestOpaque* ptr) {
-    return reinterpret_cast<ns::RenamedTestOpaque*>(ptr);
+inline somelib::ns::RenamedTestOpaque* somelib::ns::RenamedTestOpaque::FromFFI(somelib::ns::capi::RenamedTestOpaque* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedTestOpaque*>(ptr);
 }
 
-inline void ns::RenamedTestOpaque::operator delete(void* ptr) {
-    ns::capi::namespace_TestOpaque_destroy(reinterpret_cast<ns::capi::RenamedTestOpaque*>(ptr));
+inline void somelib::ns::RenamedTestOpaque::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_TestOpaque_destroy(reinterpret_cast<somelib::ns::capi::RenamedTestOpaque*>(ptr));
 }
 
 
-#endif // ns_RenamedTestOpaque_HPP
+#endif // SOMELIB_ns_RenamedTestOpaque_HPP

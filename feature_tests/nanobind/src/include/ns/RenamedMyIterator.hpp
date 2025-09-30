@@ -1,5 +1,5 @@
-#ifndef ns_RenamedMyIterator_HPP
-#define ns_RenamedMyIterator_HPP
+#ifndef SOMELIB_ns_RenamedMyIterator_HPP
+#define SOMELIB_ns_RenamedMyIterator_HPP
 
 #include "RenamedMyIterator.d.hpp"
 
@@ -14,12 +14,12 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
     typedef struct namespace_MyIterator_next_result {union {uint8_t ok; }; bool is_ok;} namespace_MyIterator_next_result;
-    namespace_MyIterator_next_result namespace_MyIterator_next(ns::capi::RenamedMyIterator* self);
+    namespace_MyIterator_next_result namespace_MyIterator_next(somelib::ns::capi::RenamedMyIterator* self);
 
     void namespace_MyIterator_destroy(RenamedMyIterator* self);
 
@@ -27,30 +27,30 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::optional<uint8_t> ns::RenamedMyIterator::next() {
-    auto result = ns::capi::namespace_MyIterator_next(this->AsFFI());
+inline std::optional<uint8_t> somelib::ns::RenamedMyIterator::next() {
+    auto result = somelib::ns::capi::namespace_MyIterator_next(this->AsFFI());
     return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
 }
 
-inline const ns::capi::RenamedMyIterator* ns::RenamedMyIterator::AsFFI() const {
-    return reinterpret_cast<const ns::capi::RenamedMyIterator*>(this);
+inline const somelib::ns::capi::RenamedMyIterator* somelib::ns::RenamedMyIterator::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedMyIterator*>(this);
 }
 
-inline ns::capi::RenamedMyIterator* ns::RenamedMyIterator::AsFFI() {
-    return reinterpret_cast<ns::capi::RenamedMyIterator*>(this);
+inline somelib::ns::capi::RenamedMyIterator* somelib::ns::RenamedMyIterator::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedMyIterator*>(this);
 }
 
-inline const ns::RenamedMyIterator* ns::RenamedMyIterator::FromFFI(const ns::capi::RenamedMyIterator* ptr) {
-    return reinterpret_cast<const ns::RenamedMyIterator*>(ptr);
+inline const somelib::ns::RenamedMyIterator* somelib::ns::RenamedMyIterator::FromFFI(const somelib::ns::capi::RenamedMyIterator* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedMyIterator*>(ptr);
 }
 
-inline ns::RenamedMyIterator* ns::RenamedMyIterator::FromFFI(ns::capi::RenamedMyIterator* ptr) {
-    return reinterpret_cast<ns::RenamedMyIterator*>(ptr);
+inline somelib::ns::RenamedMyIterator* somelib::ns::RenamedMyIterator::FromFFI(somelib::ns::capi::RenamedMyIterator* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedMyIterator*>(ptr);
 }
 
-inline void ns::RenamedMyIterator::operator delete(void* ptr) {
-    ns::capi::namespace_MyIterator_destroy(reinterpret_cast<ns::capi::RenamedMyIterator*>(ptr));
+inline void somelib::ns::RenamedMyIterator::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_MyIterator_destroy(reinterpret_cast<somelib::ns::capi::RenamedMyIterator*>(ptr));
 }
 
 
-#endif // ns_RenamedMyIterator_HPP
+#endif // SOMELIB_ns_RenamedMyIterator_HPP

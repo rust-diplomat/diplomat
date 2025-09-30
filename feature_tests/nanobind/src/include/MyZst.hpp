@@ -1,5 +1,5 @@
-#ifndef MyZst_HPP
-#define MyZst_HPP
+#ifndef SOMELIB_MyZst_HPP
+#define SOMELIB_MyZst_HPP
 
 #include "MyZst.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
 
 } // namespace capi
@@ -23,4 +23,4 @@ namespace capi {
 
 
 
-#endif // MyZst_HPP
+#endif // SOMELIB_MyZst_HPP

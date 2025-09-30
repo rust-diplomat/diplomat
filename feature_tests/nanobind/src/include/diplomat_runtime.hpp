@@ -1,5 +1,5 @@
-#ifndef DIPLOMAT_RUNTIME_CPP_H
-#define DIPLOMAT_RUNTIME_CPP_H
+#ifndef SOMELIB_DIPLOMAT_RUNTIME_CPP_H
+#define SOMELIB_DIPLOMAT_RUNTIME_CPP_H
 
 #include <optional>
 #include <string>
@@ -18,7 +18,7 @@
 #include <array>
 #endif
 
-
+namespace somelib {
 namespace diplomat {
 
 namespace capi {
@@ -563,5 +563,5 @@ struct next_to_iter_helper {
 };
 
 } // namespace diplomat
-
+} // namespace somelib
 #endif

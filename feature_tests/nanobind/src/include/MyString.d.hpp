@@ -1,5 +1,5 @@
-#ifndef MyString_D_HPP
-#define MyString_D_HPP
+#ifndef SOMELIB_MyString_D_HPP
+#define SOMELIB_MyString_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,24 +10,30 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+namespace capi { struct MyString; }
+class MyString;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct MyString;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class MyString {
 public:
 
-  inline static std::unique_ptr<MyString> new_(std::string_view v);
+  inline static std::unique_ptr<somelib::MyString> new_(std::string_view v);
 
-  inline static diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> new_unsafe(std::string_view v);
+  inline static somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::diplomat::Utf8Error> new_unsafe(std::string_view v);
 
-  inline static std::unique_ptr<MyString> new_owned(std::string_view v);
+  inline static std::unique_ptr<somelib::MyString> new_owned(std::string_view v);
 
-  inline static std::unique_ptr<MyString> new_from_first(diplomat::span<const diplomat::string_view_for_slice> v);
+  inline static std::unique_ptr<somelib::MyString> new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v);
 
   inline void set_str(std::string_view new_str);
 
@@ -37,25 +43,25 @@ public:
 
   inline static std::string_view get_static_str();
 
-  inline static diplomat::result<std::string, diplomat::Utf8Error> string_transform(std::string_view foo);
+  inline static somelib::diplomat::result<std::string, somelib::diplomat::Utf8Error> string_transform(std::string_view foo);
   template<typename W>
-  inline static diplomat::result<std::monostate, diplomat::Utf8Error> string_transform_write(std::string_view foo, W& writeable_output);
+  inline static somelib::diplomat::result<std::monostate, somelib::diplomat::Utf8Error> string_transform_write(std::string_view foo, W& writeable_output);
 
   inline std::string_view borrow() const;
 
-    inline const diplomat::capi::MyString* AsFFI() const;
-    inline diplomat::capi::MyString* AsFFI();
-    inline static const MyString* FromFFI(const diplomat::capi::MyString* ptr);
-    inline static MyString* FromFFI(diplomat::capi::MyString* ptr);
+    inline const somelib::capi::MyString* AsFFI() const;
+    inline somelib::capi::MyString* AsFFI();
+    inline static const somelib::MyString* FromFFI(const somelib::capi::MyString* ptr);
+    inline static somelib::MyString* FromFFI(somelib::capi::MyString* ptr);
     inline static void operator delete(void* ptr);
 private:
     MyString() = delete;
-    MyString(const MyString&) = delete;
-    MyString(MyString&&) noexcept = delete;
-    MyString operator=(const MyString&) = delete;
-    MyString operator=(MyString&&) noexcept = delete;
+    MyString(const somelib::MyString&) = delete;
+    MyString(somelib::MyString&&) noexcept = delete;
+    MyString operator=(const somelib::MyString&) = delete;
+    MyString operator=(somelib::MyString&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // MyString_D_HPP
+} // namespace
+#endif // SOMELIB_MyString_D_HPP

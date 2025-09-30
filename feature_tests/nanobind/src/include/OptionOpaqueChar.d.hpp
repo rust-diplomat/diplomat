@@ -1,5 +1,5 @@
-#ifndef OptionOpaqueChar_D_HPP
-#define OptionOpaqueChar_D_HPP
+#ifndef SOMELIB_OptionOpaqueChar_D_HPP
+#define SOMELIB_OptionOpaqueChar_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,30 +12,31 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct OptionOpaqueChar;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class OptionOpaqueChar {
 public:
 
   inline void assert_char(char32_t ch) const;
 
-    inline const diplomat::capi::OptionOpaqueChar* AsFFI() const;
-    inline diplomat::capi::OptionOpaqueChar* AsFFI();
-    inline static const OptionOpaqueChar* FromFFI(const diplomat::capi::OptionOpaqueChar* ptr);
-    inline static OptionOpaqueChar* FromFFI(diplomat::capi::OptionOpaqueChar* ptr);
+    inline const somelib::capi::OptionOpaqueChar* AsFFI() const;
+    inline somelib::capi::OptionOpaqueChar* AsFFI();
+    inline static const somelib::OptionOpaqueChar* FromFFI(const somelib::capi::OptionOpaqueChar* ptr);
+    inline static somelib::OptionOpaqueChar* FromFFI(somelib::capi::OptionOpaqueChar* ptr);
     inline static void operator delete(void* ptr);
 private:
     OptionOpaqueChar() = delete;
-    OptionOpaqueChar(const OptionOpaqueChar&) = delete;
-    OptionOpaqueChar(OptionOpaqueChar&&) noexcept = delete;
-    OptionOpaqueChar operator=(const OptionOpaqueChar&) = delete;
-    OptionOpaqueChar operator=(OptionOpaqueChar&&) noexcept = delete;
+    OptionOpaqueChar(const somelib::OptionOpaqueChar&) = delete;
+    OptionOpaqueChar(somelib::OptionOpaqueChar&&) noexcept = delete;
+    OptionOpaqueChar operator=(const somelib::OptionOpaqueChar&) = delete;
+    OptionOpaqueChar operator=(somelib::OptionOpaqueChar&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // OptionOpaqueChar_D_HPP
+} // namespace
+#endif // SOMELIB_OptionOpaqueChar_D_HPP

@@ -1,5 +1,5 @@
-#ifndef CyclicStructC_D_HPP
-#define CyclicStructC_D_HPP
+#ifndef SOMELIB_CyclicStructC_D_HPP
+#define SOMELIB_CyclicStructC_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,16 +11,17 @@
 #include <cstdlib>
 #include "CyclicStructA.d.hpp"
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
 struct CyclicStructA;
+struct CyclicStructC;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct CyclicStructC {
-      diplomat::capi::CyclicStructA a;
+      somelib::capi::CyclicStructA a;
     };
 
     typedef struct CyclicStructC_option {union { CyclicStructC ok; }; bool is_ok; } CyclicStructC_option;
@@ -28,18 +29,19 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct CyclicStructC {
-    CyclicStructA a;
+    somelib::CyclicStructA a;
 
-  inline static CyclicStructC takes_nested_parameters(CyclicStructC c);
+  inline static somelib::CyclicStructC takes_nested_parameters(somelib::CyclicStructC c);
 
   inline std::string cyclic_out() const;
   template<typename W>
   inline void cyclic_out_write(W& writeable_output) const;
 
-    inline diplomat::capi::CyclicStructC AsFFI() const;
-    inline static CyclicStructC FromFFI(diplomat::capi::CyclicStructC c_struct);
+    inline somelib::capi::CyclicStructC AsFFI() const;
+    inline static somelib::CyclicStructC FromFFI(somelib::capi::CyclicStructC c_struct);
 };
 
-
-#endif // CyclicStructC_D_HPP
+} // namespace
+#endif // SOMELIB_CyclicStructC_D_HPP

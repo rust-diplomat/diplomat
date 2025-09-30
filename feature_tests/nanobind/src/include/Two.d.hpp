@@ -1,5 +1,5 @@
-#ifndef Two_D_HPP
-#define Two_D_HPP
+#ifndef SOMELIB_Two_D_HPP
+#define SOMELIB_Two_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,28 +12,29 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct Two;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class Two {
 public:
 
-    inline const diplomat::capi::Two* AsFFI() const;
-    inline diplomat::capi::Two* AsFFI();
-    inline static const Two* FromFFI(const diplomat::capi::Two* ptr);
-    inline static Two* FromFFI(diplomat::capi::Two* ptr);
+    inline const somelib::capi::Two* AsFFI() const;
+    inline somelib::capi::Two* AsFFI();
+    inline static const somelib::Two* FromFFI(const somelib::capi::Two* ptr);
+    inline static somelib::Two* FromFFI(somelib::capi::Two* ptr);
     inline static void operator delete(void* ptr);
 private:
     Two() = delete;
-    Two(const Two&) = delete;
-    Two(Two&&) noexcept = delete;
-    Two operator=(const Two&) = delete;
-    Two operator=(Two&&) noexcept = delete;
+    Two(const somelib::Two&) = delete;
+    Two(somelib::Two&&) noexcept = delete;
+    Two operator=(const somelib::Two&) = delete;
+    Two operator=(somelib::Two&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // Two_D_HPP
+} // namespace
+#endif // SOMELIB_Two_D_HPP

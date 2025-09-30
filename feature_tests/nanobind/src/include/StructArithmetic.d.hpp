@@ -1,5 +1,5 @@
-#ifndef StructArithmetic_D_HPP
-#define StructArithmetic_D_HPP
+#ifndef SOMELIB_StructArithmetic_D_HPP
+#define SOMELIB_StructArithmetic_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,9 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+struct StructArithmetic;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct StructArithmetic {
       int32_t x;
@@ -24,31 +28,32 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct StructArithmetic {
     int32_t x;
     int32_t y;
 
-  inline static StructArithmetic ORIGIN();
+  inline static somelib::StructArithmetic ORIGIN();
 
-  inline static void set_origin(StructArithmetic _new_origin);
+  inline static void set_origin(somelib::StructArithmetic _new_origin);
 
-  inline static StructArithmetic new_(int32_t x, int32_t y);
+  inline static somelib::StructArithmetic new_(int32_t x, int32_t y);
 
-  inline StructArithmetic operator+(StructArithmetic o) const;
-  inline StructArithmetic& operator+=(StructArithmetic o);
+  inline somelib::StructArithmetic operator+(somelib::StructArithmetic o) const;
+  inline somelib::StructArithmetic& operator+=(somelib::StructArithmetic o);
 
-  inline StructArithmetic operator-(StructArithmetic o) const;
-  inline StructArithmetic& operator-=(StructArithmetic o);
+  inline somelib::StructArithmetic operator-(somelib::StructArithmetic o) const;
+  inline somelib::StructArithmetic& operator-=(somelib::StructArithmetic o);
 
-  inline StructArithmetic operator*(StructArithmetic o) const;
-  inline StructArithmetic& operator*=(StructArithmetic o);
+  inline somelib::StructArithmetic operator*(somelib::StructArithmetic o) const;
+  inline somelib::StructArithmetic& operator*=(somelib::StructArithmetic o);
 
-  inline StructArithmetic operator/(StructArithmetic o) const;
-  inline StructArithmetic& operator/=(StructArithmetic o);
+  inline somelib::StructArithmetic operator/(somelib::StructArithmetic o) const;
+  inline somelib::StructArithmetic& operator/=(somelib::StructArithmetic o);
 
-    inline diplomat::capi::StructArithmetic AsFFI() const;
-    inline static StructArithmetic FromFFI(diplomat::capi::StructArithmetic c_struct);
+    inline somelib::capi::StructArithmetic AsFFI() const;
+    inline static somelib::StructArithmetic FromFFI(somelib::capi::StructArithmetic c_struct);
 };
 
-
-#endif // StructArithmetic_D_HPP
+} // namespace
+#endif // SOMELIB_StructArithmetic_D_HPP

@@ -3,15 +3,12 @@
 
 // Forward declarations for binding add functions
 {% for (ns, lines) in fwd_decls.iter() -%}
-{%- if !ns.is_empty() %}
-namespace {{ns}} {
-{%- endif -%}
+
+namespace {{module_name}} {%- if !ns.is_empty() -%} ::{{ns}} {%- endif -%} {
   {% for line in lines %}
     {{~ line }}
   {%- endfor %}
-{%- if !ns.is_empty() %}
 }
-{% endif -%}
 {%- endfor %}
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
@@ -54,6 +51,8 @@ struct _Dummy {};
 
 NB_MODULE({{module_name}}, mod)
 {
+    using namespace {{module_name}};
+
     {
         nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);

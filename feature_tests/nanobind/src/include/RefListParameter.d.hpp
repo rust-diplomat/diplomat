@@ -1,5 +1,5 @@
-#ifndef RefListParameter_D_HPP
-#define RefListParameter_D_HPP
+#ifndef SOMELIB_RefListParameter_D_HPP
+#define SOMELIB_RefListParameter_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,28 +12,29 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct RefListParameter;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class RefListParameter {
 public:
 
-    inline const diplomat::capi::RefListParameter* AsFFI() const;
-    inline diplomat::capi::RefListParameter* AsFFI();
-    inline static const RefListParameter* FromFFI(const diplomat::capi::RefListParameter* ptr);
-    inline static RefListParameter* FromFFI(diplomat::capi::RefListParameter* ptr);
+    inline const somelib::capi::RefListParameter* AsFFI() const;
+    inline somelib::capi::RefListParameter* AsFFI();
+    inline static const somelib::RefListParameter* FromFFI(const somelib::capi::RefListParameter* ptr);
+    inline static somelib::RefListParameter* FromFFI(somelib::capi::RefListParameter* ptr);
     inline static void operator delete(void* ptr);
 private:
     RefListParameter() = delete;
-    RefListParameter(const RefListParameter&) = delete;
-    RefListParameter(RefListParameter&&) noexcept = delete;
-    RefListParameter operator=(const RefListParameter&) = delete;
-    RefListParameter operator=(RefListParameter&&) noexcept = delete;
+    RefListParameter(const somelib::RefListParameter&) = delete;
+    RefListParameter(somelib::RefListParameter&&) noexcept = delete;
+    RefListParameter operator=(const somelib::RefListParameter&) = delete;
+    RefListParameter operator=(somelib::RefListParameter&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // RefListParameter_D_HPP
+} // namespace
+#endif // SOMELIB_RefListParameter_D_HPP
