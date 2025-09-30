@@ -1,5 +1,5 @@
-#ifndef PrimitiveStructVec_HPP
-#define PrimitiveStructVec_HPP
+#ifndef SOMELIB_PrimitiveStructVec_HPP
+#define SOMELIB_PrimitiveStructVec_HPP
 
 #include "PrimitiveStructVec.d.hpp"
 
@@ -16,23 +16,23 @@
 #include "ns/RenamedStructWithAttrs.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    diplomat::capi::PrimitiveStructVec* PrimitiveStructVec_new(void);
+    somelib::capi::PrimitiveStructVec* PrimitiveStructVec_new(void);
 
-    void PrimitiveStructVec_push(diplomat::capi::PrimitiveStructVec* self, diplomat::capi::PrimitiveStruct value);
+    void PrimitiveStructVec_push(somelib::capi::PrimitiveStructVec* self, somelib::capi::PrimitiveStruct value);
 
-    size_t PrimitiveStructVec_len(const diplomat::capi::PrimitiveStructVec* self);
+    size_t PrimitiveStructVec_len(const somelib::capi::PrimitiveStructVec* self);
 
-    diplomat::capi::DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const diplomat::capi::PrimitiveStructVec* self);
+    somelib::capi::DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const somelib::capi::PrimitiveStructVec* self);
 
-    diplomat::capi::DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(diplomat::capi::PrimitiveStructVec* self);
+    somelib::capi::DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(somelib::capi::PrimitiveStructVec* self);
 
-    diplomat::capi::PrimitiveStruct PrimitiveStructVec_get(const diplomat::capi::PrimitiveStructVec* self, size_t idx);
+    somelib::capi::PrimitiveStruct PrimitiveStructVec_get(const somelib::capi::PrimitiveStructVec* self, size_t idx);
 
-    void PrimitiveStructVec_take_slice_from_other_namespace(ns::capi::DiplomatRenamedStructWithAttrsView _sl);
+    void PrimitiveStructVec_take_slice_from_other_namespace(somelib::ns::capi::DiplomatRenamedStructWithAttrsView _sl);
 
     void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
@@ -40,60 +40,60 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<PrimitiveStructVec> PrimitiveStructVec::new_() {
-    auto result = diplomat::capi::PrimitiveStructVec_new();
-    return std::unique_ptr<PrimitiveStructVec>(PrimitiveStructVec::FromFFI(result));
+inline std::unique_ptr<somelib::PrimitiveStructVec> somelib::PrimitiveStructVec::new_() {
+    auto result = somelib::capi::PrimitiveStructVec_new();
+    return std::unique_ptr<somelib::PrimitiveStructVec>(somelib::PrimitiveStructVec::FromFFI(result));
 }
 
-inline void PrimitiveStructVec::append(PrimitiveStruct value) {
-    diplomat::capi::PrimitiveStructVec_push(this->AsFFI(),
+inline void somelib::PrimitiveStructVec::append(somelib::PrimitiveStruct value) {
+    somelib::capi::PrimitiveStructVec_push(this->AsFFI(),
         value.AsFFI());
 }
 
-inline size_t PrimitiveStructVec::__len__() const {
-    auto result = diplomat::capi::PrimitiveStructVec_len(this->AsFFI());
+inline size_t somelib::PrimitiveStructVec::__len__() const {
+    auto result = somelib::capi::PrimitiveStructVec_len(this->AsFFI());
     return result;
 }
 
-inline diplomat::span<const PrimitiveStruct> PrimitiveStructVec::as_slice() const {
-    auto result = diplomat::capi::PrimitiveStructVec_as_slice(this->AsFFI());
-    return diplomat::span<const PrimitiveStruct>(reinterpret_cast<const PrimitiveStruct*>(result.data), result.len);
+inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const {
+    auto result = somelib::capi::PrimitiveStructVec_as_slice(this->AsFFI());
+    return somelib::diplomat::span<const somelib::PrimitiveStruct>(reinterpret_cast<const somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
-inline diplomat::span<PrimitiveStruct> PrimitiveStructVec::as_slice_mut() {
-    auto result = diplomat::capi::PrimitiveStructVec_as_slice_mut(this->AsFFI());
-    return diplomat::span<PrimitiveStruct>(reinterpret_cast<PrimitiveStruct*>(result.data), result.len);
+inline somelib::diplomat::span<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice_mut() {
+    auto result = somelib::capi::PrimitiveStructVec_as_slice_mut(this->AsFFI());
+    return somelib::diplomat::span<somelib::PrimitiveStruct>(reinterpret_cast<somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
-inline PrimitiveStruct PrimitiveStructVec::__getitem__(size_t idx) const {
-    auto result = diplomat::capi::PrimitiveStructVec_get(this->AsFFI(),
+inline somelib::PrimitiveStruct somelib::PrimitiveStructVec::__getitem__(size_t idx) const {
+    auto result = somelib::capi::PrimitiveStructVec_get(this->AsFFI(),
         idx);
-    return PrimitiveStruct::FromFFI(result);
+    return somelib::PrimitiveStruct::FromFFI(result);
 }
 
-inline void PrimitiveStructVec::take_slice_from_other_namespace(diplomat::span<const ns::RenamedStructWithAttrs> _sl) {
-    diplomat::capi::PrimitiveStructVec_take_slice_from_other_namespace({reinterpret_cast<const ns::capi::RenamedStructWithAttrs*>(_sl.data()), _sl.size()});
+inline void somelib::PrimitiveStructVec::take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl) {
+    somelib::capi::PrimitiveStructVec_take_slice_from_other_namespace({reinterpret_cast<const somelib::ns::capi::RenamedStructWithAttrs*>(_sl.data()), _sl.size()});
 }
 
-inline const diplomat::capi::PrimitiveStructVec* PrimitiveStructVec::AsFFI() const {
-    return reinterpret_cast<const diplomat::capi::PrimitiveStructVec*>(this);
+inline const somelib::capi::PrimitiveStructVec* somelib::PrimitiveStructVec::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::PrimitiveStructVec*>(this);
 }
 
-inline diplomat::capi::PrimitiveStructVec* PrimitiveStructVec::AsFFI() {
-    return reinterpret_cast<diplomat::capi::PrimitiveStructVec*>(this);
+inline somelib::capi::PrimitiveStructVec* somelib::PrimitiveStructVec::AsFFI() {
+    return reinterpret_cast<somelib::capi::PrimitiveStructVec*>(this);
 }
 
-inline const PrimitiveStructVec* PrimitiveStructVec::FromFFI(const diplomat::capi::PrimitiveStructVec* ptr) {
-    return reinterpret_cast<const PrimitiveStructVec*>(ptr);
+inline const somelib::PrimitiveStructVec* somelib::PrimitiveStructVec::FromFFI(const somelib::capi::PrimitiveStructVec* ptr) {
+    return reinterpret_cast<const somelib::PrimitiveStructVec*>(ptr);
 }
 
-inline PrimitiveStructVec* PrimitiveStructVec::FromFFI(diplomat::capi::PrimitiveStructVec* ptr) {
-    return reinterpret_cast<PrimitiveStructVec*>(ptr);
+inline somelib::PrimitiveStructVec* somelib::PrimitiveStructVec::FromFFI(somelib::capi::PrimitiveStructVec* ptr) {
+    return reinterpret_cast<somelib::PrimitiveStructVec*>(ptr);
 }
 
-inline void PrimitiveStructVec::operator delete(void* ptr) {
-    diplomat::capi::PrimitiveStructVec_destroy(reinterpret_cast<diplomat::capi::PrimitiveStructVec*>(ptr));
+inline void somelib::PrimitiveStructVec::operator delete(void* ptr) {
+    somelib::capi::PrimitiveStructVec_destroy(reinterpret_cast<somelib::capi::PrimitiveStructVec*>(ptr));
 }
 
 
-#endif // PrimitiveStructVec_HPP
+#endif // SOMELIB_PrimitiveStructVec_HPP

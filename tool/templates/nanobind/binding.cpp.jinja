@@ -8,15 +8,11 @@
 {{ line }}
 {%- endfor %}
 
-{% if !namespace.is_empty() %}
-namespace {{namespace}}{
-{% endif %}
+namespace {{lib_name}}{%- if !namespace.is_empty() -%} ::{{namespace}} {%- endif %} {
 void add_{{unqualified_type}}_binding(nb::module_ mod) {
     {%- for line in body.lines() %}
     {{ line }}
     {%- endfor %}
 }
 
-{% if !namespace.is_empty() %}
-}
-{% endif %}
+} 

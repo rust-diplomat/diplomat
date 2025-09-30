@@ -100,11 +100,11 @@ namespace nanobind::detail
     };
 
     template <typename T, typename E>
-    struct type_caster<diplomat::result<T, E>>
+    struct type_caster<{{lib_name}}::diplomat::result<T, E>>
     {
         using U = std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T>;
         using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
-        using Value = diplomat::result<T, E>;
+        using Value = {{lib_name}}::diplomat::result<T, E>;
         // Can't store result<T, E> directly since T& will create compiler errors.
         std::optional<U> ok_val;
         std::optional<V> err_val;
@@ -113,7 +113,7 @@ namespace nanobind::detail
         using Caster = make_caster<U>;
         static constexpr auto Name = Caster::Name;
 
-        static handle from_cpp(diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
+        static handle from_cpp({{lib_name}}::diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
         {
             if (value.is_ok()) {
                 return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
@@ -138,9 +138,9 @@ namespace nanobind::detail
         using Cast = Value;
         operator Value() { 
             if (is_ok) {
-                return diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
+                return {{lib_name}}::diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
             } else {
-                return diplomat::Err<E>(forward_like_<V>(err_val.value()));
+                return {{lib_name}}::diplomat::Err<E>(forward_like_<V>(err_val.value()));
             }
         }
 
@@ -178,7 +178,7 @@ namespace nanobind::detail
     };
 
     template <typename T, std::size_t E>
-    class type_caster<diplomat::span<T, E>> {
+    class type_caster<{{lib_name}}::diplomat::span<T, E>> {
         // The type referenced by the span, with const removed.
         using value_type = std::remove_cv_t<T>;
         // Avoid pitfalls with std::vector<bool>
@@ -188,8 +188,8 @@ namespace nanobind::detail
 
 
     public:
-        using Value = diplomat::span<T, E>;
-        Value value = diplomat::span<T, E>();
+        using Value = {{lib_name}}::diplomat::span<T, E>;
+        Value value = {{lib_name}}::diplomat::span<T, E>();
 
         static constexpr auto Name = ListCaster::Name;
 
@@ -209,7 +209,7 @@ namespace nanobind::detail
                 auto caster = make_caster<nb::ndarray<T, ndim<1>>>();
                 if (caster.from_python(src, local_flags, cleanup)) {
                     // Create a span from the array data
-                    value = diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
+                    value = {{lib_name}}::diplomat::span<T, E>(caster.value.data(), caster.value.shape(0));
                     return true;
                 }
             }
@@ -221,7 +221,7 @@ namespace nanobind::detail
             // Are we a bound vector type? If so, we can pass over data directly.
             if (nb::inst_check(src) && nb::isinstance<U>(src)) {
                 U* bound_vec = nb::inst_ptr<U>(src);
-                value = diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
                 return true;
             }
 
@@ -231,7 +231,7 @@ namespace nanobind::detail
                 (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>)) {
                 ListCaster caster;
                 if (caster.from_python(src, local_flags, cleanup)) {
-                    value = diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
                     // Move the owning std::vector into a capsule that will live for the duration of the function call.
                     // The address of the vector will change, the address of the region it references won't.
                     nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
@@ -247,7 +247,7 @@ namespace nanobind::detail
         }
 
         // Cast C++ -> Python (when returning a span from a C++ function)
-        static handle from_cpp(diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
+        static handle from_cpp({{lib_name}}::diplomat::span<T, E> src, rv_policy policy, cleanup_list* cleanup) {
             using Array = nb::ndarray<std::remove_cv_t<T>, nb::numpy, nb::ndim<1>, nb::f_contig>;
             if constexpr(is_ndarray_scalar_v<T>) {
                 nb::object owner;
@@ -268,8 +268,8 @@ namespace nanobind::detail
     };
 
     template <>
-    struct type_caster<diplomat::string_view_for_slice> {
-        NB_TYPE_CASTER(diplomat::string_view_for_slice, const_name("str"))
+    struct type_caster<{{lib_name}}::diplomat::string_view_for_slice> {
+        NB_TYPE_CASTER({{lib_name}}::diplomat::string_view_for_slice, const_name("str"))
 
         bool from_python(handle src, uint8_t, cleanup_list *) noexcept {
             Py_ssize_t size;
@@ -278,11 +278,11 @@ namespace nanobind::detail
                 PyErr_Clear();
                 return false;
             }
-            value = diplomat::string_view_for_slice(str, (size_t) size);
+            value = {{lib_name}}::diplomat::string_view_for_slice(str, (size_t) size);
             return true;
         }
 
-        static handle from_cpp(diplomat::string_view_for_slice value, rv_policy, cleanup_list *) noexcept {
+        static handle from_cpp({{lib_name}}::diplomat::string_view_for_slice value, rv_policy, cleanup_list *) noexcept {
             return PyUnicode_FromStringAndSize(value.data(), value.size());
         }
     };

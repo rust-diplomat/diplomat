@@ -1,5 +1,5 @@
-#ifndef ns_RenamedTestOpaque_D_HPP
-#define ns_RenamedTestOpaque_D_HPP
+#ifndef SOMELIB_ns_RenamedTestOpaque_D_HPP
+#define SOMELIB_ns_RenamedTestOpaque_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,29 +12,29 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct RenamedTestOpaque;
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 class RenamedTestOpaque {
 public:
 
-    inline const ns::capi::RenamedTestOpaque* AsFFI() const;
-    inline ns::capi::RenamedTestOpaque* AsFFI();
-    inline static const ns::RenamedTestOpaque* FromFFI(const ns::capi::RenamedTestOpaque* ptr);
-    inline static ns::RenamedTestOpaque* FromFFI(ns::capi::RenamedTestOpaque* ptr);
+    inline const somelib::ns::capi::RenamedTestOpaque* AsFFI() const;
+    inline somelib::ns::capi::RenamedTestOpaque* AsFFI();
+    inline static const somelib::ns::RenamedTestOpaque* FromFFI(const somelib::ns::capi::RenamedTestOpaque* ptr);
+    inline static somelib::ns::RenamedTestOpaque* FromFFI(somelib::ns::capi::RenamedTestOpaque* ptr);
     inline static void operator delete(void* ptr);
 private:
     RenamedTestOpaque() = delete;
-    RenamedTestOpaque(const ns::RenamedTestOpaque&) = delete;
-    RenamedTestOpaque(ns::RenamedTestOpaque&&) noexcept = delete;
-    RenamedTestOpaque operator=(const ns::RenamedTestOpaque&) = delete;
-    RenamedTestOpaque operator=(ns::RenamedTestOpaque&&) noexcept = delete;
+    RenamedTestOpaque(const somelib::ns::RenamedTestOpaque&) = delete;
+    RenamedTestOpaque(somelib::ns::RenamedTestOpaque&&) noexcept = delete;
+    RenamedTestOpaque operator=(const somelib::ns::RenamedTestOpaque&) = delete;
+    RenamedTestOpaque operator=(somelib::ns::RenamedTestOpaque&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
-#endif // ns_RenamedTestOpaque_D_HPP
+#endif // SOMELIB_ns_RenamedTestOpaque_D_HPP

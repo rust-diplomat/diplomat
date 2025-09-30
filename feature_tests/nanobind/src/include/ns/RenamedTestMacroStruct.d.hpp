@@ -1,5 +1,5 @@
-#ifndef ns_RenamedTestMacroStruct_D_HPP
-#define ns_RenamedTestMacroStruct_D_HPP
+#ifndef SOMELIB_ns_RenamedTestMacroStruct_D_HPP
+#define SOMELIB_ns_RenamedTestMacroStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,15 +10,15 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
-
+namespace somelib {
 namespace ns {
 struct RenamedTestMacroStruct;
 } // namespace ns
+} // namespace somelib
 
 
 
-
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct RenamedTestMacroStruct {
       size_t a;
@@ -29,17 +29,17 @@ namespace capi {
 } // namespace
 
 
-namespace ns {
+namespace somelib::ns {
 struct RenamedTestMacroStruct {
     size_t a;
 
   inline static size_t test_func();
 
-  inline static ns::RenamedTestMacroStruct test_meta();
+  inline static somelib::ns::RenamedTestMacroStruct test_meta();
 
-    inline ns::capi::RenamedTestMacroStruct AsFFI() const;
-    inline static ns::RenamedTestMacroStruct FromFFI(ns::capi::RenamedTestMacroStruct c_struct);
+    inline somelib::ns::capi::RenamedTestMacroStruct AsFFI() const;
+    inline static somelib::ns::RenamedTestMacroStruct FromFFI(somelib::ns::capi::RenamedTestMacroStruct c_struct);
 };
 
 } // namespace
-#endif // ns_RenamedTestMacroStruct_D_HPP
+#endif // SOMELIB_ns_RenamedTestMacroStruct_D_HPP

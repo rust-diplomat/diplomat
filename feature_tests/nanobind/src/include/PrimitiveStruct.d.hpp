@@ -1,5 +1,5 @@
-#ifndef PrimitiveStruct_D_HPP
-#define PrimitiveStruct_D_HPP
+#ifndef SOMELIB_PrimitiveStruct_D_HPP
+#define SOMELIB_PrimitiveStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,9 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+struct PrimitiveStruct;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct PrimitiveStruct {
       float x;
@@ -37,6 +41,7 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct PrimitiveStruct {
     float x;
     bool a;
@@ -45,24 +50,24 @@ struct PrimitiveStruct {
     intptr_t d;
     uint8_t e;
 
-  inline static void mutable_slice(diplomat::span<PrimitiveStruct> a);
+  inline static void mutable_slice(somelib::diplomat::span<somelib::PrimitiveStruct> a);
 
-  inline void mutable_ref(PrimitiveStruct& a);
+  inline void mutable_ref(somelib::PrimitiveStruct& a);
 
-    inline diplomat::capi::PrimitiveStruct AsFFI() const;
-    inline static PrimitiveStruct FromFFI(diplomat::capi::PrimitiveStruct c_struct);
+    inline somelib::capi::PrimitiveStruct AsFFI() const;
+    inline static somelib::PrimitiveStruct FromFFI(somelib::capi::PrimitiveStruct c_struct);
 };
 
-
-namespace diplomat {
+} // namespace
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const PrimitiveStruct>>>> {
-        using type = capi::DiplomatPrimitiveStructView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::PrimitiveStruct>>>> {
+        using type = somelib::capi::DiplomatPrimitiveStructView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<PrimitiveStruct>>>> {
-        using type = capi::DiplomatPrimitiveStructViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::PrimitiveStruct>>>> {
+        using type = somelib::capi::DiplomatPrimitiveStructViewMut;
 };
 }
-#endif // PrimitiveStruct_D_HPP
+#endif // SOMELIB_PrimitiveStruct_D_HPP

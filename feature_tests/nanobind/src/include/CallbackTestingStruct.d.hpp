@@ -1,5 +1,5 @@
-#ifndef CallbackTestingStruct_D_HPP
-#define CallbackTestingStruct_D_HPP
+#ifndef SOMELIB_CallbackTestingStruct_D_HPP
+#define SOMELIB_CallbackTestingStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct CallbackTestingStruct {
       int32_t x;
@@ -24,13 +24,14 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct CallbackTestingStruct {
     int32_t x;
     int32_t y;
 
-    inline diplomat::capi::CallbackTestingStruct AsFFI() const;
-    inline static CallbackTestingStruct FromFFI(diplomat::capi::CallbackTestingStruct c_struct);
+    inline somelib::capi::CallbackTestingStruct AsFFI() const;
+    inline static somelib::CallbackTestingStruct FromFFI(somelib::capi::CallbackTestingStruct c_struct);
 };
 
-
-#endif // CallbackTestingStruct_D_HPP
+} // namespace
+#endif // SOMELIB_CallbackTestingStruct_D_HPP

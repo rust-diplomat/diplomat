@@ -2,7 +2,8 @@
 #include <../src/nb_internals.h>  // Required for shimming
 
 // Forward declarations for binding add functions
-
+namespace somelib{
+  
 void add_CallbackTestingStruct_binding(nb::module_);
 void add_CallbackWrapper_binding(nb::module_);
 void add_ImportedStruct_binding(nb::module_);
@@ -55,16 +56,15 @@ void add_ContiguousEnum_binding(nb::module_);
 void add_DefaultEnum_binding(nb::module_);
 void add_MyEnum_binding(nb::module_);
 void add_free_function_binding(nb::module_);
-namespace nested::ns {
+}namespace somelib::nested::ns{
+  
 void add_Nested_binding(nb::module_);
 void add_free_function_binding(nb::module_);
-}
-
-namespace nested::ns2 {
+}namespace somelib::nested::ns2{
+  
 void add_Nested_binding(nb::module_);
-}
-
-namespace ns {
+}namespace somelib::ns{
+  
 void add_RenamedDeprecatedStruct_binding(nb::module_);
 void add_RenamedStructWithAttrs_binding(nb::module_);
 void add_RenamedTestMacroStruct_binding(nb::module_);
@@ -86,7 +86,6 @@ void add_RenamedAttrEnum_binding(nb::module_);
 void add_RenamedDeprecatedEnum_binding(nb::module_);
 void add_free_function_binding(nb::module_);
 }
-
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
 // On module init, the dummy type will have the normal nanobind inst_dealloc function in the tp_dealloc slot, so we
@@ -128,6 +127,8 @@ struct _Dummy {};
 
 NB_MODULE(somelib, mod)
 {
+    using namespace somelib;
+
     {
         nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);

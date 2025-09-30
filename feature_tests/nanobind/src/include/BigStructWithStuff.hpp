@@ -1,5 +1,5 @@
-#ifndef BigStructWithStuff_HPP
-#define BigStructWithStuff_HPP
+#ifndef SOMELIB_BigStructWithStuff_HPP
+#define SOMELIB_BigStructWithStuff_HPP
 
 #include "BigStructWithStuff.d.hpp"
 
@@ -15,31 +15,31 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
 
-    void BigStructWithStuff_assert_value(diplomat::capi::BigStructWithStuff self, uint16_t extra_val);
+    void BigStructWithStuff_assert_value(somelib::capi::BigStructWithStuff self, uint16_t extra_val);
 
-    void BigStructWithStuff_assert_slice(diplomat::capi::DiplomatBigStructWithStuffView slice, uint16_t second_value);
+    void BigStructWithStuff_assert_slice(somelib::capi::DiplomatBigStructWithStuffView slice, uint16_t second_value);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline void BigStructWithStuff::assert_value(uint16_t extra_val) const {
-    diplomat::capi::BigStructWithStuff_assert_value(this->AsFFI(),
+inline void somelib::BigStructWithStuff::assert_value(uint16_t extra_val) const {
+    somelib::capi::BigStructWithStuff_assert_value(this->AsFFI(),
         extra_val);
 }
 
-inline void BigStructWithStuff::assert_slice(diplomat::span<const BigStructWithStuff> slice, uint16_t second_value) {
-    diplomat::capi::BigStructWithStuff_assert_slice({reinterpret_cast<const diplomat::capi::BigStructWithStuff*>(slice.data()), slice.size()},
+inline void somelib::BigStructWithStuff::assert_slice(somelib::diplomat::span<const somelib::BigStructWithStuff> slice, uint16_t second_value) {
+    somelib::capi::BigStructWithStuff_assert_slice({reinterpret_cast<const somelib::capi::BigStructWithStuff*>(slice.data()), slice.size()},
         second_value);
 }
 
 
-inline diplomat::capi::BigStructWithStuff BigStructWithStuff::AsFFI() const {
-    return diplomat::capi::BigStructWithStuff {
+inline somelib::capi::BigStructWithStuff somelib::BigStructWithStuff::AsFFI() const {
+    return somelib::capi::BigStructWithStuff {
         /* .first = */ first,
         /* .second = */ second,
         /* .third = */ third,
@@ -48,15 +48,15 @@ inline diplomat::capi::BigStructWithStuff BigStructWithStuff::AsFFI() const {
     };
 }
 
-inline BigStructWithStuff BigStructWithStuff::FromFFI(diplomat::capi::BigStructWithStuff c_struct) {
-    return BigStructWithStuff {
+inline somelib::BigStructWithStuff somelib::BigStructWithStuff::FromFFI(somelib::capi::BigStructWithStuff c_struct) {
+    return somelib::BigStructWithStuff {
         /* .first = */ c_struct.first,
         /* .second = */ c_struct.second,
         /* .third = */ c_struct.third,
-        /* .fourth = */ ScalarPairWithPadding::FromFFI(c_struct.fourth),
+        /* .fourth = */ somelib::ScalarPairWithPadding::FromFFI(c_struct.fourth),
         /* .fifth = */ c_struct.fifth,
     };
 }
 
 
-#endif // BigStructWithStuff_HPP
+#endif // SOMELIB_BigStructWithStuff_HPP

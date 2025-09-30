@@ -1,5 +1,5 @@
-#ifndef ns_RenamedDeprecatedOpaque_HPP
-#define ns_RenamedDeprecatedOpaque_HPP
+#ifndef SOMELIB_ns_RenamedDeprecatedOpaque_HPP
+#define SOMELIB_ns_RenamedDeprecatedOpaque_HPP
 
 #include "RenamedDeprecatedOpaque.d.hpp"
 
@@ -14,7 +14,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
@@ -24,25 +24,25 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const ns::capi::RenamedDeprecatedOpaque* ns::RenamedDeprecatedOpaque::AsFFI() const {
-    return reinterpret_cast<const ns::capi::RenamedDeprecatedOpaque*>(this);
+inline const somelib::ns::capi::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedDeprecatedOpaque*>(this);
 }
 
-inline ns::capi::RenamedDeprecatedOpaque* ns::RenamedDeprecatedOpaque::AsFFI() {
-    return reinterpret_cast<ns::capi::RenamedDeprecatedOpaque*>(this);
+inline somelib::ns::capi::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedDeprecatedOpaque*>(this);
 }
 
-inline const ns::RenamedDeprecatedOpaque* ns::RenamedDeprecatedOpaque::FromFFI(const ns::capi::RenamedDeprecatedOpaque* ptr) {
-    return reinterpret_cast<const ns::RenamedDeprecatedOpaque*>(ptr);
+inline const somelib::ns::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::FromFFI(const somelib::ns::capi::RenamedDeprecatedOpaque* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedDeprecatedOpaque*>(ptr);
 }
 
-inline ns::RenamedDeprecatedOpaque* ns::RenamedDeprecatedOpaque::FromFFI(ns::capi::RenamedDeprecatedOpaque* ptr) {
-    return reinterpret_cast<ns::RenamedDeprecatedOpaque*>(ptr);
+inline somelib::ns::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::FromFFI(somelib::ns::capi::RenamedDeprecatedOpaque* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedDeprecatedOpaque*>(ptr);
 }
 
-inline void ns::RenamedDeprecatedOpaque::operator delete(void* ptr) {
-    ns::capi::namespace_DeprecatedOpaque_destroy(reinterpret_cast<ns::capi::RenamedDeprecatedOpaque*>(ptr));
+inline void somelib::ns::RenamedDeprecatedOpaque::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_DeprecatedOpaque_destroy(reinterpret_cast<somelib::ns::capi::RenamedDeprecatedOpaque*>(ptr));
 }
 
 
-#endif // ns_RenamedDeprecatedOpaque_HPP
+#endif // SOMELIB_ns_RenamedDeprecatedOpaque_HPP

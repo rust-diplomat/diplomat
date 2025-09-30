@@ -1,5 +1,5 @@
-#ifndef ErrorStruct_D_HPP
-#define ErrorStruct_D_HPP
+#ifndef SOMELIB_ErrorStruct_D_HPP
+#define SOMELIB_ErrorStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct ErrorStruct {
       int32_t i;
@@ -24,13 +24,14 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct ErrorStruct {
     int32_t i;
     int32_t j;
 
-    inline diplomat::capi::ErrorStruct AsFFI() const;
-    inline static ErrorStruct FromFFI(diplomat::capi::ErrorStruct c_struct);
+    inline somelib::capi::ErrorStruct AsFFI() const;
+    inline static somelib::ErrorStruct FromFFI(somelib::capi::ErrorStruct c_struct);
 };
 
-
-#endif // ErrorStruct_D_HPP
+} // namespace
+#endif // SOMELIB_ErrorStruct_D_HPP

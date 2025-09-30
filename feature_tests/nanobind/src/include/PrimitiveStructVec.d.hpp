@@ -1,5 +1,5 @@
-#ifndef PrimitiveStructVec_D_HPP
-#define PrimitiveStructVec_D_HPP
+#ifndef SOMELIB_PrimitiveStructVec_D_HPP
+#define SOMELIB_PrimitiveStructVec_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,53 +10,56 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
+namespace capi { struct PrimitiveStructVec; }
+class PrimitiveStructVec;
 struct PrimitiveStruct;
-
-
+} // namespace somelib
+namespace somelib {
 namespace ns {
 struct RenamedStructWithAttrs;
 } // namespace ns
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct PrimitiveStructVec;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class PrimitiveStructVec {
 public:
 
-  inline static std::unique_ptr<PrimitiveStructVec> new_();
+  inline static std::unique_ptr<somelib::PrimitiveStructVec> new_();
 
-  inline void append(PrimitiveStruct value);
+  inline void append(somelib::PrimitiveStruct value);
 
   inline size_t __len__() const;
 
-  inline diplomat::span<const PrimitiveStruct> as_slice() const;
+  inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const;
 
-  inline diplomat::span<PrimitiveStruct> as_slice_mut();
+  inline somelib::diplomat::span<somelib::PrimitiveStruct> as_slice_mut();
 
-  inline PrimitiveStruct __getitem__(size_t idx) const;
+  inline somelib::PrimitiveStruct __getitem__(size_t idx) const;
 
-  inline static void take_slice_from_other_namespace(diplomat::span<const ns::RenamedStructWithAttrs> _sl);
+  inline static void take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl);
 
-    inline const diplomat::capi::PrimitiveStructVec* AsFFI() const;
-    inline diplomat::capi::PrimitiveStructVec* AsFFI();
-    inline static const PrimitiveStructVec* FromFFI(const diplomat::capi::PrimitiveStructVec* ptr);
-    inline static PrimitiveStructVec* FromFFI(diplomat::capi::PrimitiveStructVec* ptr);
+    inline const somelib::capi::PrimitiveStructVec* AsFFI() const;
+    inline somelib::capi::PrimitiveStructVec* AsFFI();
+    inline static const somelib::PrimitiveStructVec* FromFFI(const somelib::capi::PrimitiveStructVec* ptr);
+    inline static somelib::PrimitiveStructVec* FromFFI(somelib::capi::PrimitiveStructVec* ptr);
     inline static void operator delete(void* ptr);
 private:
     PrimitiveStructVec() = delete;
-    PrimitiveStructVec(const PrimitiveStructVec&) = delete;
-    PrimitiveStructVec(PrimitiveStructVec&&) noexcept = delete;
-    PrimitiveStructVec operator=(const PrimitiveStructVec&) = delete;
-    PrimitiveStructVec operator=(PrimitiveStructVec&&) noexcept = delete;
+    PrimitiveStructVec(const somelib::PrimitiveStructVec&) = delete;
+    PrimitiveStructVec(somelib::PrimitiveStructVec&&) noexcept = delete;
+    PrimitiveStructVec operator=(const somelib::PrimitiveStructVec&) = delete;
+    PrimitiveStructVec operator=(somelib::PrimitiveStructVec&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // PrimitiveStructVec_D_HPP
+} // namespace
+#endif // SOMELIB_PrimitiveStructVec_D_HPP

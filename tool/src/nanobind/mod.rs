@@ -11,7 +11,6 @@ use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
 use root_module::RootModule;
-use serde::{Deserialize, Serialize};
 
 use crate::cpp;
 
@@ -56,12 +55,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[allow(dead_code)] // Constructed by serialization
-struct PythonConfig {
-    lib_name: String,
-}
-
 pub(crate) fn run<'cx>(
     tcx: &'cx hir::TypeContext,
     conf: Config,
@@ -69,14 +62,7 @@ pub(crate) fn run<'cx>(
 ) -> (FileMap, ErrorStore<'cx, String>) {
     let files = FileMap::default();
 
-    let mut config_for_cpp = conf.clone();
-
-    // TODO(https://github.com/rust-diplomat/diplomat/issues/957)
-    // We should pass the original config down, probably, but only once the
-    // nanobind backend is updated to expect lib_name-based namespacing in its C++
-    config_for_cpp.shared_config.lib_name = None;
-
-    let formatter = PyFormatter::new(tcx, &config_for_cpp, docs);
+    let formatter = PyFormatter::new(tcx, &conf, docs);
     let errors = ErrorStore::default();
 
     let lib_name = conf
@@ -87,7 +73,7 @@ pub(crate) fn run<'cx>(
         .clone();
 
     // Output the C++ bindings we rely on
-    let (cpp_files, cpp_errors) = cpp::run(tcx, &config_for_cpp, docs);
+    let (cpp_files, cpp_errors) = cpp::run(tcx, &conf, docs);
 
     files.files.borrow_mut().extend(
         cpp_files
@@ -102,14 +88,22 @@ pub(crate) fn run<'cx>(
 
     #[derive(Template)]
     #[template(path = "nanobind/common.h.jinja", escape = "none")]
-    struct Common {}
+    struct Common {
+        lib_name: String,
+    }
 
-    files.add_file(nanobind_common_filepath.to_owned(), Common {}.to_string());
+    files.add_file(
+        nanobind_common_filepath.to_owned(),
+        Common {
+            lib_name: lib_name.clone(),
+        }
+        .to_string(),
+    );
 
     let nanobind_filepath = format!("{lib_name}_ext.cpp");
 
     let mut root_module = RootModule::new();
-    root_module.module_name = lib_name.into();
+    root_module.module_name = lib_name.clone().into();
 
     let mut submodules = BTreeMap::new();
     for (id, ty) in tcx.all_types() {
@@ -135,7 +129,7 @@ pub(crate) fn run<'cx>(
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
                 },
-                config: &config_for_cpp.cpp_config,
+                config: &conf.cpp_config,
                 formatter: &formatter.cxx,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
@@ -159,6 +153,7 @@ pub(crate) fn run<'cx>(
         #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
         struct Binding {
             includes: BTreeSet<String>,
+            lib_name: String,
             namespace: String,
             unqualified_type: String,
             body: String,
@@ -182,6 +177,7 @@ pub(crate) fn run<'cx>(
 
         let binding_impl = Binding {
             includes: context.cpp.impl_header.includes.clone(),
+            lib_name: lib_name.clone(),
             namespace: formatter.fmt_namespaces(id.into()).join("::"),
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
@@ -261,6 +257,7 @@ pub(crate) fn run<'cx>(
         #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
         struct Binding {
             includes: BTreeSet<String>,
+            lib_name: String,
             namespace: String,
             unqualified_type: String,
             body: String,
@@ -279,6 +276,7 @@ pub(crate) fn run<'cx>(
             includes: ctx.includes,
             namespace: ctx.namespace.unwrap_or_default(),
             unqualified_type,
+            lib_name: lib_name.clone(),
             body: format!(
                 "mod\n{};",
                 ctx.functions

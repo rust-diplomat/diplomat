@@ -1,5 +1,5 @@
-#ifndef ns_AttrOpaque1Renamed_D_HPP
-#define ns_AttrOpaque1Renamed_D_HPP
+#ifndef SOMELIB_ns_AttrOpaque1Renamed_D_HPP
+#define SOMELIB_ns_AttrOpaque1Renamed_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,27 +10,27 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct Unnamespaced; }
+namespace somelib {
+namespace capi { struct Unnamespaced; }
 class Unnamespaced;
-
-
+} // namespace somelib
+namespace somelib {
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
 class RenamedAttrEnum;
 } // namespace ns
+} // namespace somelib
 
 
 
-
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct AttrOpaque1Renamed;
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 /**
  * Some example docs
  */
@@ -40,9 +40,9 @@ public:
   /**
    * More example docs
    */
-  inline static std::unique_ptr<ns::AttrOpaque1Renamed> totally_not_new();
+  inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> totally_not_new();
 
-  inline static void test_namespaced_callback(std::function<diplomat::result<std::monostate, std::monostate>()> _t);
+  inline static void test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t);
 
   inline static int32_t mac_test();
 
@@ -52,23 +52,23 @@ public:
 
   inline uint8_t abirenamed() const;
 
-  inline void use_unnamespaced(const Unnamespaced& _un) const;
+  inline void use_unnamespaced(const somelib::Unnamespaced& _un) const;
 
-  inline void use_namespaced(ns::RenamedAttrEnum _n) const;
+  inline void use_namespaced(somelib::ns::RenamedAttrEnum _n) const;
 
-    inline const ns::capi::AttrOpaque1Renamed* AsFFI() const;
-    inline ns::capi::AttrOpaque1Renamed* AsFFI();
-    inline static const ns::AttrOpaque1Renamed* FromFFI(const ns::capi::AttrOpaque1Renamed* ptr);
-    inline static ns::AttrOpaque1Renamed* FromFFI(ns::capi::AttrOpaque1Renamed* ptr);
+    inline const somelib::ns::capi::AttrOpaque1Renamed* AsFFI() const;
+    inline somelib::ns::capi::AttrOpaque1Renamed* AsFFI();
+    inline static const somelib::ns::AttrOpaque1Renamed* FromFFI(const somelib::ns::capi::AttrOpaque1Renamed* ptr);
+    inline static somelib::ns::AttrOpaque1Renamed* FromFFI(somelib::ns::capi::AttrOpaque1Renamed* ptr);
     inline static void operator delete(void* ptr);
 private:
     AttrOpaque1Renamed() = delete;
-    AttrOpaque1Renamed(const ns::AttrOpaque1Renamed&) = delete;
-    AttrOpaque1Renamed(ns::AttrOpaque1Renamed&&) noexcept = delete;
-    AttrOpaque1Renamed operator=(const ns::AttrOpaque1Renamed&) = delete;
-    AttrOpaque1Renamed operator=(ns::AttrOpaque1Renamed&&) noexcept = delete;
+    AttrOpaque1Renamed(const somelib::ns::AttrOpaque1Renamed&) = delete;
+    AttrOpaque1Renamed(somelib::ns::AttrOpaque1Renamed&&) noexcept = delete;
+    AttrOpaque1Renamed operator=(const somelib::ns::AttrOpaque1Renamed&) = delete;
+    AttrOpaque1Renamed operator=(somelib::ns::AttrOpaque1Renamed&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
-#endif // ns_AttrOpaque1Renamed_D_HPP
+#endif // SOMELIB_ns_AttrOpaque1Renamed_D_HPP

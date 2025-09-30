@@ -1,5 +1,5 @@
-#ifndef CyclicStructB_D_HPP
-#define CyclicStructB_D_HPP
+#ifndef SOMELIB_CyclicStructB_D_HPP
+#define SOMELIB_CyclicStructB_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,13 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
 struct CyclicStructA;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct CyclicStructB {
       uint8_t field;
@@ -36,27 +36,28 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct CyclicStructB {
     uint8_t field;
 
-  inline static CyclicStructA get_a();
+  inline static somelib::CyclicStructA get_a();
 
-  inline static std::optional<CyclicStructA> get_a_option();
+  inline static std::optional<somelib::CyclicStructA> get_a_option();
 
-    inline diplomat::capi::CyclicStructB AsFFI() const;
-    inline static CyclicStructB FromFFI(diplomat::capi::CyclicStructB c_struct);
+    inline somelib::capi::CyclicStructB AsFFI() const;
+    inline static somelib::CyclicStructB FromFFI(somelib::capi::CyclicStructB c_struct);
 };
 
-
-namespace diplomat {
+} // namespace
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const CyclicStructB>>>> {
-        using type = capi::DiplomatCyclicStructBView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::CyclicStructB>>>> {
+        using type = somelib::capi::DiplomatCyclicStructBView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<CyclicStructB>>>> {
-        using type = capi::DiplomatCyclicStructBViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::CyclicStructB>>>> {
+        using type = somelib::capi::DiplomatCyclicStructBViewMut;
 };
 }
-#endif // CyclicStructB_D_HPP
+#endif // SOMELIB_CyclicStructB_D_HPP

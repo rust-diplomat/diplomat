@@ -1,5 +1,5 @@
-#ifndef BorrowedFieldsWithBounds_D_HPP
-#define BorrowedFieldsWithBounds_D_HPP
+#ifndef SOMELIB_BorrowedFieldsWithBounds_D_HPP
+#define SOMELIB_BorrowedFieldsWithBounds_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,19 +10,20 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct Foo; }
+namespace somelib {
+namespace capi { struct Foo; }
 class Foo;
+struct BorrowedFieldsWithBounds;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct BorrowedFieldsWithBounds {
-      diplomat::capi::DiplomatString16View field_a;
-      diplomat::capi::DiplomatStringView field_b;
-      diplomat::capi::DiplomatStringView field_c;
+      somelib::diplomat::capi::DiplomatString16View field_a;
+      somelib::diplomat::capi::DiplomatStringView field_b;
+      somelib::diplomat::capi::DiplomatStringView field_c;
     };
 
     typedef struct BorrowedFieldsWithBounds_option {union { BorrowedFieldsWithBounds ok; }; bool is_ok; } BorrowedFieldsWithBounds_option;
@@ -30,16 +31,17 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct BorrowedFieldsWithBounds {
     std::u16string_view field_a;
     std::string_view field_b;
     std::string_view field_c;
 
-  inline static diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z);
+  inline static somelib::diplomat::result<somelib::BorrowedFieldsWithBounds, somelib::diplomat::Utf8Error> from_foo_and_strings(const somelib::Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z);
 
-    inline diplomat::capi::BorrowedFieldsWithBounds AsFFI() const;
-    inline static BorrowedFieldsWithBounds FromFFI(diplomat::capi::BorrowedFieldsWithBounds c_struct);
+    inline somelib::capi::BorrowedFieldsWithBounds AsFFI() const;
+    inline static somelib::BorrowedFieldsWithBounds FromFFI(somelib::capi::BorrowedFieldsWithBounds c_struct);
 };
 
-
-#endif // BorrowedFieldsWithBounds_D_HPP
+} // namespace
+#endif // SOMELIB_BorrowedFieldsWithBounds_D_HPP

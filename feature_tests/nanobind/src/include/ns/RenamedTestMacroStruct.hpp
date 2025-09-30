@@ -1,5 +1,5 @@
-#ifndef ns_RenamedTestMacroStruct_HPP
-#define ns_RenamedTestMacroStruct_HPP
+#ifndef SOMELIB_ns_RenamedTestMacroStruct_HPP
+#define SOMELIB_ns_RenamedTestMacroStruct_HPP
 
 #include "RenamedTestMacroStruct.d.hpp"
 
@@ -14,40 +14,40 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
     size_t namespace_TestMacroStruct_test_func(void);
 
-    ns::capi::RenamedTestMacroStruct namespace_TestMacroStruct_test_meta(void);
+    somelib::ns::capi::RenamedTestMacroStruct namespace_TestMacroStruct_test_meta(void);
 
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline size_t ns::RenamedTestMacroStruct::test_func() {
-    auto result = ns::capi::namespace_TestMacroStruct_test_func();
+inline size_t somelib::ns::RenamedTestMacroStruct::test_func() {
+    auto result = somelib::ns::capi::namespace_TestMacroStruct_test_func();
     return result;
 }
 
-inline ns::RenamedTestMacroStruct ns::RenamedTestMacroStruct::test_meta() {
-    auto result = ns::capi::namespace_TestMacroStruct_test_meta();
-    return ns::RenamedTestMacroStruct::FromFFI(result);
+inline somelib::ns::RenamedTestMacroStruct somelib::ns::RenamedTestMacroStruct::test_meta() {
+    auto result = somelib::ns::capi::namespace_TestMacroStruct_test_meta();
+    return somelib::ns::RenamedTestMacroStruct::FromFFI(result);
 }
 
 
-inline ns::capi::RenamedTestMacroStruct ns::RenamedTestMacroStruct::AsFFI() const {
-    return ns::capi::RenamedTestMacroStruct {
+inline somelib::ns::capi::RenamedTestMacroStruct somelib::ns::RenamedTestMacroStruct::AsFFI() const {
+    return somelib::ns::capi::RenamedTestMacroStruct {
         /* .a = */ a,
     };
 }
 
-inline ns::RenamedTestMacroStruct ns::RenamedTestMacroStruct::FromFFI(ns::capi::RenamedTestMacroStruct c_struct) {
-    return ns::RenamedTestMacroStruct {
+inline somelib::ns::RenamedTestMacroStruct somelib::ns::RenamedTestMacroStruct::FromFFI(somelib::ns::capi::RenamedTestMacroStruct c_struct) {
+    return somelib::ns::RenamedTestMacroStruct {
         /* .a = */ c_struct.a,
     };
 }
 
 
-#endif // ns_RenamedTestMacroStruct_HPP
+#endif // SOMELIB_ns_RenamedTestMacroStruct_HPP

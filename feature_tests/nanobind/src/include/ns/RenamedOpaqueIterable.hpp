@@ -1,5 +1,5 @@
-#ifndef ns_RenamedOpaqueIterable_HPP
-#define ns_RenamedOpaqueIterable_HPP
+#ifndef SOMELIB_ns_RenamedOpaqueIterable_HPP
+#define SOMELIB_ns_RenamedOpaqueIterable_HPP
 
 #include "RenamedOpaqueIterable.d.hpp"
 
@@ -15,13 +15,13 @@
 #include "RenamedOpaqueIterator.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
-    ns::capi::RenamedOpaqueIterable* namespace_OpaqueIterable_new(size_t size);
+    somelib::ns::capi::RenamedOpaqueIterable* namespace_OpaqueIterable_new(size_t size);
 
-    ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const ns::capi::RenamedOpaqueIterable* self);
+    somelib::ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const somelib::ns::capi::RenamedOpaqueIterable* self);
 
     void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);
 
@@ -29,39 +29,39 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<ns::RenamedOpaqueIterable> ns::RenamedOpaqueIterable::new_(size_t size) {
-    auto result = ns::capi::namespace_OpaqueIterable_new(size);
-    return std::unique_ptr<ns::RenamedOpaqueIterable>(ns::RenamedOpaqueIterable::FromFFI(result));
+inline std::unique_ptr<somelib::ns::RenamedOpaqueIterable> somelib::ns::RenamedOpaqueIterable::new_(size_t size) {
+    auto result = somelib::ns::capi::namespace_OpaqueIterable_new(size);
+    return std::unique_ptr<somelib::ns::RenamedOpaqueIterable>(somelib::ns::RenamedOpaqueIterable::FromFFI(result));
 }
 
-inline std::unique_ptr<ns::RenamedOpaqueIterator> ns::RenamedOpaqueIterable::iter() const {
-    auto result = ns::capi::namespace_OpaqueIterable_iter(this->AsFFI());
-    return std::unique_ptr<ns::RenamedOpaqueIterator>(ns::RenamedOpaqueIterator::FromFFI(result));
+inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> somelib::ns::RenamedOpaqueIterable::iter() const {
+    auto result = somelib::ns::capi::namespace_OpaqueIterable_iter(this->AsFFI());
+    return std::unique_ptr<somelib::ns::RenamedOpaqueIterator>(somelib::ns::RenamedOpaqueIterator::FromFFI(result));
 }
 
-inline diplomat::next_to_iter_helper<ns::RenamedOpaqueIterator>ns::RenamedOpaqueIterable::begin() const {
+inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator>somelib::ns::RenamedOpaqueIterable::begin() const {
     return iter();
 }
 
-inline const ns::capi::RenamedOpaqueIterable* ns::RenamedOpaqueIterable::AsFFI() const {
-    return reinterpret_cast<const ns::capi::RenamedOpaqueIterable*>(this);
+inline const somelib::ns::capi::RenamedOpaqueIterable* somelib::ns::RenamedOpaqueIterable::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueIterable*>(this);
 }
 
-inline ns::capi::RenamedOpaqueIterable* ns::RenamedOpaqueIterable::AsFFI() {
-    return reinterpret_cast<ns::capi::RenamedOpaqueIterable*>(this);
+inline somelib::ns::capi::RenamedOpaqueIterable* somelib::ns::RenamedOpaqueIterable::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueIterable*>(this);
 }
 
-inline const ns::RenamedOpaqueIterable* ns::RenamedOpaqueIterable::FromFFI(const ns::capi::RenamedOpaqueIterable* ptr) {
-    return reinterpret_cast<const ns::RenamedOpaqueIterable*>(ptr);
+inline const somelib::ns::RenamedOpaqueIterable* somelib::ns::RenamedOpaqueIterable::FromFFI(const somelib::ns::capi::RenamedOpaqueIterable* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedOpaqueIterable*>(ptr);
 }
 
-inline ns::RenamedOpaqueIterable* ns::RenamedOpaqueIterable::FromFFI(ns::capi::RenamedOpaqueIterable* ptr) {
-    return reinterpret_cast<ns::RenamedOpaqueIterable*>(ptr);
+inline somelib::ns::RenamedOpaqueIterable* somelib::ns::RenamedOpaqueIterable::FromFFI(somelib::ns::capi::RenamedOpaqueIterable* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedOpaqueIterable*>(ptr);
 }
 
-inline void ns::RenamedOpaqueIterable::operator delete(void* ptr) {
-    ns::capi::namespace_OpaqueIterable_destroy(reinterpret_cast<ns::capi::RenamedOpaqueIterable*>(ptr));
+inline void somelib::ns::RenamedOpaqueIterable::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_OpaqueIterable_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueIterable*>(ptr));
 }
 
 
-#endif // ns_RenamedOpaqueIterable_HPP
+#endif // SOMELIB_ns_RenamedOpaqueIterable_HPP

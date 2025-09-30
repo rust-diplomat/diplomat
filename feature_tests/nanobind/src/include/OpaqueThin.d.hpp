@@ -1,5 +1,5 @@
-#ifndef OpaqueThin_D_HPP
-#define OpaqueThin_D_HPP
+#ifndef SOMELIB_OpaqueThin_D_HPP
+#define SOMELIB_OpaqueThin_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,12 +12,13 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct OpaqueThin;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class OpaqueThin {
 public:
 
@@ -29,19 +30,19 @@ public:
   template<typename W>
   inline void c_write(W& writeable_output) const;
 
-    inline const diplomat::capi::OpaqueThin* AsFFI() const;
-    inline diplomat::capi::OpaqueThin* AsFFI();
-    inline static const OpaqueThin* FromFFI(const diplomat::capi::OpaqueThin* ptr);
-    inline static OpaqueThin* FromFFI(diplomat::capi::OpaqueThin* ptr);
+    inline const somelib::capi::OpaqueThin* AsFFI() const;
+    inline somelib::capi::OpaqueThin* AsFFI();
+    inline static const somelib::OpaqueThin* FromFFI(const somelib::capi::OpaqueThin* ptr);
+    inline static somelib::OpaqueThin* FromFFI(somelib::capi::OpaqueThin* ptr);
     inline static void operator delete(void* ptr);
 private:
     OpaqueThin() = delete;
-    OpaqueThin(const OpaqueThin&) = delete;
-    OpaqueThin(OpaqueThin&&) noexcept = delete;
-    OpaqueThin operator=(const OpaqueThin&) = delete;
-    OpaqueThin operator=(OpaqueThin&&) noexcept = delete;
+    OpaqueThin(const somelib::OpaqueThin&) = delete;
+    OpaqueThin(somelib::OpaqueThin&&) noexcept = delete;
+    OpaqueThin operator=(const somelib::OpaqueThin&) = delete;
+    OpaqueThin operator=(somelib::OpaqueThin&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // OpaqueThin_D_HPP
+} // namespace
+#endif // SOMELIB_OpaqueThin_D_HPP

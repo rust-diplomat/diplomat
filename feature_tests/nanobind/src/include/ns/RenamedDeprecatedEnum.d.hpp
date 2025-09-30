@@ -1,5 +1,5 @@
-#ifndef ns_RenamedDeprecatedEnum_D_HPP
-#define ns_RenamedDeprecatedEnum_D_HPP
+#ifndef SOMELIB_ns_RenamedDeprecatedEnum_D_HPP
+#define SOMELIB_ns_RenamedDeprecatedEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     enum RenamedDeprecatedEnum {
       RenamedDeprecatedEnum_A = 0,
@@ -22,7 +22,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 /**
  * \deprecated use Foo
  */
@@ -40,11 +40,11 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
 
-    inline ns::capi::RenamedDeprecatedEnum AsFFI() const;
-    inline static ns::RenamedDeprecatedEnum FromFFI(ns::capi::RenamedDeprecatedEnum c_enum);
+    inline somelib::ns::capi::RenamedDeprecatedEnum AsFFI() const;
+    inline static somelib::ns::RenamedDeprecatedEnum FromFFI(somelib::ns::capi::RenamedDeprecatedEnum c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // ns_RenamedDeprecatedEnum_D_HPP
+#endif // SOMELIB_ns_RenamedDeprecatedEnum_D_HPP

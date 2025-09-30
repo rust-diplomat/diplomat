@@ -1,5 +1,5 @@
-#ifndef ImportedStruct_D_HPP
-#define ImportedStruct_D_HPP
+#ifndef SOMELIB_ImportedStruct_D_HPP
+#define SOMELIB_ImportedStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,16 +11,16 @@
 #include <cstdlib>
 #include "UnimportedEnum.d.hpp"
 #include "diplomat_runtime.hpp"
-
+namespace somelib {
 class UnimportedEnum;
+} // namespace somelib
 
 
 
-
-namespace diplomat {
+namespace somelib {
 namespace capi {
     struct ImportedStruct {
-      diplomat::capi::UnimportedEnum foo;
+      somelib::capi::UnimportedEnum foo;
       uint8_t count;
     };
 
@@ -29,13 +29,14 @@ namespace capi {
 } // namespace
 
 
+namespace somelib {
 struct ImportedStruct {
-    UnimportedEnum foo;
+    somelib::UnimportedEnum foo;
     uint8_t count;
 
-    inline diplomat::capi::ImportedStruct AsFFI() const;
-    inline static ImportedStruct FromFFI(diplomat::capi::ImportedStruct c_struct);
+    inline somelib::capi::ImportedStruct AsFFI() const;
+    inline static somelib::ImportedStruct FromFFI(somelib::capi::ImportedStruct c_struct);
 };
 
-
-#endif // ImportedStruct_D_HPP
+} // namespace
+#endif // SOMELIB_ImportedStruct_D_HPP

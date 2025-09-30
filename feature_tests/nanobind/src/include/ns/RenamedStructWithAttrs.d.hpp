@@ -1,5 +1,5 @@
-#ifndef ns_RenamedStructWithAttrs_D_HPP
-#define ns_RenamedStructWithAttrs_D_HPP
+#ifndef SOMELIB_ns_RenamedStructWithAttrs_D_HPP
+#define SOMELIB_ns_RenamedStructWithAttrs_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,15 +10,15 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
-
+namespace somelib {
 namespace ns {
 struct RenamedStructWithAttrs;
 } // namespace ns
+} // namespace somelib
 
 
 
-
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     struct RenamedStructWithAttrs {
       bool a;
@@ -39,12 +39,12 @@ namespace capi {
 } // namespace
 
 
-namespace ns {
+namespace somelib::ns {
 struct RenamedStructWithAttrs {
     bool a;
     uint32_t b;
 
-  inline static diplomat::result<ns::RenamedStructWithAttrs, std::monostate> new_fallible(bool a, uint32_t b);
+  inline static somelib::diplomat::result<somelib::ns::RenamedStructWithAttrs, std::monostate> new_fallible(bool a, uint32_t b);
 
   inline uint32_t c() const;
 
@@ -54,20 +54,20 @@ struct RenamedStructWithAttrs {
   [[deprecated("use Foo")]]
   inline void deprecated() const;
 
-    inline ns::capi::RenamedStructWithAttrs AsFFI() const;
-    inline static ns::RenamedStructWithAttrs FromFFI(ns::capi::RenamedStructWithAttrs c_struct);
+    inline somelib::ns::capi::RenamedStructWithAttrs AsFFI() const;
+    inline static somelib::ns::RenamedStructWithAttrs FromFFI(somelib::ns::capi::RenamedStructWithAttrs c_struct);
 };
 
 } // namespace
-namespace diplomat {
+namespace somelib::diplomat {
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const ns::RenamedStructWithAttrs>>>> {
-        using type = ns::capi::DiplomatRenamedStructWithAttrsView;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::ns::RenamedStructWithAttrs>>>> {
+        using type = somelib::ns::capi::DiplomatRenamedStructWithAttrsView;
     };
 
     template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<ns::RenamedStructWithAttrs>>>> {
-        using type = ns::capi::DiplomatRenamedStructWithAttrsViewMut;
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::ns::RenamedStructWithAttrs>>>> {
+        using type = somelib::ns::capi::DiplomatRenamedStructWithAttrsViewMut;
 };
 }
-#endif // ns_RenamedStructWithAttrs_D_HPP
+#endif // SOMELIB_ns_RenamedStructWithAttrs_D_HPP

@@ -1,5 +1,5 @@
-#ifndef ns_free_functions_HPP
-#define ns_free_functions_HPP
+#ifndef SOMELIB_ns_free_functions_HPP
+#define SOMELIB_ns_free_functions_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
 
@@ -22,12 +22,12 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 
 inline int32_t Renamedfree_func_test(int32_t x) {
-    auto result = ns::capi::namespace_free_func_test(x);
+    auto result = somelib::ns::capi::namespace_free_func_test(x);
     return result;
 }
 
 } // namespace
-#endif // ns_free_functions_HPP
+#endif // SOMELIB_ns_free_functions_HPP

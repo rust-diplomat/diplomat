@@ -6,11 +6,10 @@ expression: generated
 #include <../src/nb_internals.h>  // Required for shimming
 
 // Forward declarations for binding add functions
-
-namespace mylib {
+namespace pymod::mylib{
+  
 void add_OpaqueStruct_binding(nb::module_);
 }
-
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
 // On module init, the dummy type will have the normal nanobind inst_dealloc function in the tp_dealloc slot, so we
@@ -52,6 +51,8 @@ struct _Dummy {};
 
 NB_MODULE(pymod, mod)
 {
+    using namespace pymod;
+
     {
         nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);

@@ -1,5 +1,5 @@
-#ifndef ns_RenamedAttrEnum_HPP
-#define ns_RenamedAttrEnum_HPP
+#ifndef SOMELIB_ns_RenamedAttrEnum_HPP
+#define SOMELIB_ns_RenamedAttrEnum_HPP
 
 #include "RenamedAttrEnum.d.hpp"
 
@@ -14,24 +14,24 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
 
 } // namespace capi
 } // namespace
 
-inline ns::capi::RenamedAttrEnum ns::RenamedAttrEnum::AsFFI() const {
-    return static_cast<ns::capi::RenamedAttrEnum>(value);
+inline somelib::ns::capi::RenamedAttrEnum somelib::ns::RenamedAttrEnum::AsFFI() const {
+    return static_cast<somelib::ns::capi::RenamedAttrEnum>(value);
 }
 
-inline ns::RenamedAttrEnum ns::RenamedAttrEnum::FromFFI(ns::capi::RenamedAttrEnum c_enum) {
+inline somelib::ns::RenamedAttrEnum somelib::ns::RenamedAttrEnum::FromFFI(somelib::ns::capi::RenamedAttrEnum c_enum) {
     switch (c_enum) {
-        case ns::capi::RenamedAttrEnum_A:
-        case ns::capi::RenamedAttrEnum_B:
-        case ns::capi::RenamedAttrEnum_C:
-            return static_cast<ns::RenamedAttrEnum::Value>(c_enum);
+        case somelib::ns::capi::RenamedAttrEnum_A:
+        case somelib::ns::capi::RenamedAttrEnum_B:
+        case somelib::ns::capi::RenamedAttrEnum_C:
+            return static_cast<somelib::ns::RenamedAttrEnum::Value>(c_enum);
         default:
             std::abort();
     }
 }
-#endif // ns_RenamedAttrEnum_HPP
+#endif // SOMELIB_ns_RenamedAttrEnum_HPP
