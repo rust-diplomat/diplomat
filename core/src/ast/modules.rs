@@ -116,6 +116,10 @@ struct ModuleBuilder {
     functions_by_name: BTreeMap<Ident, Function>,
     sub_modules: Vec<Module>,
     imports: Vec<(Path, Ident)>,
+    /// As we traverse through the module, are we inside of #[diplomat::bridge]?
+    /// If so, then `analyze_types` is set to true, and types, functions, and traits are all updated according to information parsed.
+    /// 
+    /// Otherwise, we traverse through modules until we find a module marked by #[diplomat::bridge]
     analyze_types: bool,
     type_parent_attrs: Attrs,
     impl_parent_attrs: Attrs,
@@ -369,6 +373,7 @@ impl Module {
         out.insert(path_to_self, mod_symbols);
     }
 
+    /// Convert an [`ItemMod`] to a [`Module`]
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mod_attrs: Attrs = (&*input.attrs).into();
 
