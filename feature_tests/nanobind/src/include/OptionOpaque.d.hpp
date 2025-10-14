@@ -13,6 +13,7 @@
 namespace somelib {
 namespace capi { struct OptionOpaque; }
 class OptionOpaque;
+struct BorrowingOptionStruct;
 struct OptionInputStruct;
 struct OptionStruct;
 class OptionEnum;
@@ -59,6 +60,8 @@ public:
   inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel);
 
   inline static std::optional<somelib::OptionEnum> accepts_option_enum(std::optional<somelib::OptionEnum> arg, uint8_t sentinel);
+
+  inline static void accepts_borrowing_option_struct(somelib::BorrowingOptionStruct arg);
 
   inline static std::optional<somelib::OptionEnum> accepts_multiple_option_enum(uint8_t sentinel1, std::optional<somelib::OptionEnum> arg1, std::optional<somelib::OptionEnum> arg2, std::optional<somelib::OptionEnum> arg3, uint8_t sentinel2);
 
