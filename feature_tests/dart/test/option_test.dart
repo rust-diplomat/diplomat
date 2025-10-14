@@ -42,5 +42,8 @@ void main() {
     expect(struct.a, 6);
     expect(struct.b, null);
     expect(struct.c, OptionEnum.bar);
+
+    final borrowed = new BorrowingOptionStruct(a: "test string");
+    OptionOpaque.acceptsBorrowingOptionStruct(borrowed);
   });
 }
