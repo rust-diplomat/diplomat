@@ -16,6 +16,7 @@ part 'Bar.g.dart';
 part 'BorrowedFields.g.dart';
 part 'BorrowedFieldsReturning.g.dart';
 part 'BorrowedFieldsWithBounds.g.dart';
+part 'BorrowingOptionStruct.g.dart';
 part 'ContiguousEnum.g.dart';
 part 'CyclicStructA.g.dart';
 part 'CyclicStructB.g.dart';

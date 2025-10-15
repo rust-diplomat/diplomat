@@ -11,6 +11,7 @@ void add_BorrowedFields_binding(nb::module_);
 void add_BorrowedFieldsReturning_binding(nb::module_);
 void add_BorrowedFieldsWithBounds_binding(nb::module_);
 void add_NestedBorrowedFields_binding(nb::module_);
+void add_BorrowingOptionStruct_binding(nb::module_);
 void add_OptionInputStruct_binding(nb::module_);
 void add_ErrorStruct_binding(nb::module_);
 void add_BigStructWithStuff_binding(nb::module_);
@@ -151,6 +152,7 @@ NB_MODULE(somelib, mod)
     add_BorrowedFieldsReturning_binding(mod);
     add_BorrowedFieldsWithBounds_binding(mod);
     add_NestedBorrowedFields_binding(mod);
+    add_BorrowingOptionStruct_binding(mod);
     add_OptionInputStruct_binding(mod);
     add_ErrorStruct_binding(mod);
     add_BigStructWithStuff_binding(mod);

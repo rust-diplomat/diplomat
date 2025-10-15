@@ -46,6 +46,12 @@ pub mod ffi {
         c: DiplomatOption<OptionEnum>,
     }
 
+    #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
+    pub struct BorrowingOptionStruct<'a> {
+        a: DiplomatOption<&'a DiplomatStr>,
+    }
+
     impl OptionInputStruct {
         // Specifically test the Dart default constructor generation code
         // around Options
@@ -142,6 +148,11 @@ pub mod ffi {
         pub fn accepts_option_enum(arg: Option<OptionEnum>, sentinel: u8) -> Option<OptionEnum> {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
+        }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_borrowing_option_struct(arg: BorrowingOptionStruct) {
+            assert_eq!(arg.a.into_option(), Some("test string".as_bytes()));
         }
 
         #[diplomat::attr(not(supports = option), disable)]

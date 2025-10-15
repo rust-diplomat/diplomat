@@ -11,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "BorrowingOptionStruct.hpp"
 #include "OptionEnum.hpp"
 #include "OptionInputStruct.hpp"
 #include "OptionStruct.hpp"
@@ -57,6 +58,8 @@ namespace capi {
 
     typedef struct OptionOpaque_accepts_option_enum_result {union {somelib::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
     OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(somelib::capi::OptionEnum_option arg, uint8_t sentinel);
+
+    void OptionOpaque_accepts_borrowing_option_struct(somelib::capi::BorrowingOptionStruct arg);
 
     typedef struct OptionOpaque_accepts_multiple_option_enum_result {union {somelib::capi::OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_multiple_option_enum_result;
     OptionOpaque_accepts_multiple_option_enum_result OptionOpaque_accepts_multiple_option_enum(uint8_t sentinel1, somelib::capi::OptionEnum_option arg1, somelib::capi::OptionEnum_option arg2, somelib::capi::OptionEnum_option arg3, uint8_t sentinel2);
@@ -153,6 +156,10 @@ inline std::optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_option_
     auto result = somelib::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (somelib::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (somelib::capi::OptionEnum_option{ {}, false }),
         sentinel);
     return result.is_ok ? std::optional<somelib::OptionEnum>(somelib::OptionEnum::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline void somelib::OptionOpaque::accepts_borrowing_option_struct(somelib::BorrowingOptionStruct arg) {
+    somelib::capi::OptionOpaque_accepts_borrowing_option_struct(arg.AsFFI());
 }
 
 inline std::optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_multiple_option_enum(uint8_t sentinel1, std::optional<somelib::OptionEnum> arg1, std::optional<somelib::OptionEnum> arg2, std::optional<somelib::OptionEnum> arg3, uint8_t sentinel2) {

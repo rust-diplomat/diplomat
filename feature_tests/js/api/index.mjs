@@ -16,6 +16,8 @@ export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds.mjs"
 
 export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
 
+export { BorrowingOptionStruct } from "./BorrowingOptionStruct.mjs"
+
 export { OptionInputStruct } from "./OptionInputStruct.mjs"
 
 export { ErrorStruct } from "./ErrorStruct.mjs"

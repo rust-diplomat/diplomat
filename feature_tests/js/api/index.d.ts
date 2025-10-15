@@ -18,6 +18,8 @@ export { BorrowedFieldsWithBounds, BorrowedFieldsWithBounds_obj } from "./Borrow
 
 export { NestedBorrowedFields, NestedBorrowedFields_obj } from "./NestedBorrowedFields"
 
+export { BorrowingOptionStruct, BorrowingOptionStruct_obj } from "./BorrowingOptionStruct"
+
 export { OptionInputStruct, OptionInputStruct_obj } from "./OptionInputStruct"
 
 export { ErrorStruct, ErrorStruct_obj } from "./ErrorStruct"

@@ -1,6 +1,7 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "BorrowingOptionStruct.hpp"
 #include "OptionEnum.hpp"
 #include "OptionInputStruct.hpp"
 #include "OptionOpaque.hpp"
@@ -13,6 +14,7 @@ void add_OptionOpaque_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::OptionOpaque>(mod, "OptionOpaque", nb::type_slots(somelib_OptionOpaque_slots))
+        .def_static("accepts_borrowing_option_struct", &somelib::OptionOpaque::accepts_borrowing_option_struct, "arg"_a)
         .def_static("accepts_multiple_option_enum", &somelib::OptionOpaque::accepts_multiple_option_enum, "sentinel1"_a, "arg1"_a= nb::none(), "arg2"_a= nb::none(), "arg3"_a= nb::none(), "sentinel2"_a)
         .def_static("accepts_option_enum", &somelib::OptionOpaque::accepts_option_enum, "arg"_a= nb::none(), "sentinel"_a)
         .def_static("accepts_option_input_struct", &somelib::OptionOpaque::accepts_option_input_struct, "arg"_a= nb::none(), "sentinel"_a)

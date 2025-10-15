@@ -120,7 +120,12 @@ final class {{type_name}}
           ...{{field.name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
           {%- endfor -%}
         {%- else -%}
-          {{field.name}}
+        {# When we update to Dart 3.8+ we can use null-aware-field syntax (a prefix `?`) here #}
+          {%- if let Type::DiplomatOption(_) = field.ty -%}
+            if ({{field.name}} != null) {{field.name}}!
+          {%- else -%}
+            {{field.name}}
+          {%- endif -%}
         {%- endif -%}
     {%- endfor -%}
     ];
