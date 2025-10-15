@@ -237,9 +237,9 @@ jobs:
       uses: taiki-e/install-action@cargo-make
 
     - name: Install Dart
-      uses: dart-lang/setup-dart@v1
+      uses: dart-lang/setup-dart@4e3affd8e7047e1cd1ec18b666954637c96fd70b
       with:
-        sdk: 3.7.0
+        sdk: 3.10.0-290.2.beta
 
     - name: Test Dart
       run: cargo make test-dart

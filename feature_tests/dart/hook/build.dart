@@ -2,8 +2,10 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-import 'package:native_assets_cli/code_assets.dart';
 import 'dart:io';
+
+import 'package:code_assets/code_assets.dart';
+import 'package:hooks/hooks.dart';
 
 const crateName = 'diplomat-feature-tests';
 
@@ -20,20 +22,17 @@ void main(List<String> args) async {
       throw cargo.stderr;
     }
 
-    final libPath =
-        '../../target/debug/${input.config.code.targetOS.dylibFileName(crateName.replaceAll('-', '_'))}';
-
     output.assets.code.add(
       CodeAsset(
         package: input.packageName,
         name: 'src/lib.g.dart',
         linkMode: DynamicLoadingBundled(),
-        os: input.config.code.targetOS,
-        architecture: input.config.code.targetArchitecture,
-        file: Uri.file(libPath),
+        file: input.packageRoot.resolve(
+          '../../target/debug/${input.config.code.targetOS.dylibFileName(crateName.replaceAll('-', '_'))}',
+        ),
       ),
     );
 
-    output.addDependency(input.packageRoot.resolve('build.rs'));
+    output.dependencies.add(input.packageRoot.resolve('build.rs'));
   });
 }
