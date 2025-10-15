@@ -155,7 +155,7 @@ cd example/dart/
 exec --fail-on-error dart format --set-exit-if-changed .
 exec --fail-on-error dart pub get
 exec --fail-on-error dart analyze
-exec --fail-on-error dart --enable-experiment=native-assets test
+exec --fail-on-error dart test
 '''
 
 [tasks.test-dart-feature]
@@ -168,7 +168,7 @@ cd feature_tests/dart/
 exec --fail-on-error dart format --set-exit-if-changed .
 exec --fail-on-error dart pub get
 exec --fail-on-error dart analyze
-exec --fail-on-error dart --enable-experiment=native-assets test
+exec --fail-on-error dart test
 '''
 
 [tasks.test-kotlin-example.mac]
