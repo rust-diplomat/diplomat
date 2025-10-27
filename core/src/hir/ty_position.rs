@@ -6,6 +6,10 @@ use super::{
 };
 use core::fmt::Debug;
 
+/// Most of the HIR traits are for its own internal ontology,
+/// not for public implementation
+pub trait Sealed {}
+
 /// Abstraction over where a type can appear in a function signature.
 ///
 /// # "Output only" and "everywhere" types
@@ -88,7 +92,7 @@ use core::fmt::Debug;
 /// Therefore, this trait allows be extremely precise about making invalid states
 /// unrepresentable, while also reducing duplicated code.
 ///
-pub trait TyPosition: Debug + Copy
+pub trait TyPosition: Debug + Copy + Sealed
 where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
@@ -131,7 +135,7 @@ pub enum InputOrOutput {
     InputOutput,
 }
 
-pub trait TraitIdGetter {
+pub trait TraitIdGetter: Sealed {
     fn id(&self) -> TraitId;
 }
 
@@ -158,6 +162,10 @@ pub struct OutputOnly;
 #[derive(Debug, Copy, Clone)]
 #[non_exhaustive]
 pub struct InputOnly;
+
+impl Sealed for Everywhere {}
+impl Sealed for OutputOnly {}
+impl Sealed for InputOnly {}
 
 impl TyPosition for Everywhere {
     const IN_OUT_STATUS: InputOrOutput = InputOrOutput::InputOutput;
@@ -226,7 +234,7 @@ impl TyPosition for InputOnly {
     }
 }
 
-pub trait StructPathLike {
+pub trait StructPathLike: Sealed {
     fn lifetimes(&self) -> &Lifetimes;
     fn id(&self) -> TypeId;
     fn owner(&self) -> MaybeOwn;
@@ -238,6 +246,9 @@ pub trait StructPathLike {
         tcx: &'tcx TypeContext,
     ) -> LinkedLifetimes<'def, 'tcx>;
 }
+
+impl Sealed for StructPath {}
+impl Sealed for ReturnableStructPath {}
 
 impl StructPathLike for StructPath {
     fn lifetimes(&self) -> &Lifetimes {
@@ -287,6 +298,9 @@ impl StructPathLike for ReturnableStructPath {
     }
 }
 
+impl Sealed for TraitPath {}
+impl Sealed for NoTraitPath {}
+
 impl TraitIdGetter for TraitPath {
     fn id(&self) -> TraitId {
         self.tcx_id
@@ -305,7 +319,7 @@ impl TraitIdGetter for NoTraitPath {
 /// associated type in the [`TyPosition`] trait. As such, only has two implementing
 /// types: [`MaybeOwn`] and [`Borrow`] for the [`OutputOnly`] and [`Everywhere`]
 /// implementations of [`TyPosition`] respectively.
-pub trait OpaqueOwner {
+pub trait OpaqueOwner: Sealed {
     /// Return the mutability of this owner
     fn mutability(&self) -> Option<Mutability>;
 
@@ -314,6 +328,9 @@ pub trait OpaqueOwner {
     /// Return the lifetime of the borrow, if any.
     fn lifetime(&self) -> Option<MaybeStatic<Lifetime>>;
 }
+
+impl Sealed for MaybeOwn {}
+impl Sealed for Borrow {}
 
 impl OpaqueOwner for MaybeOwn {
     fn mutability(&self) -> Option<Mutability> {
