@@ -85,14 +85,14 @@ final class OptionOpaque implements ffi.Finalizable {
 
   OptionOpaque? returnsNoneSelf() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OptionOpaque_returns_none_self(_ffi);
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
   }
 
   OptionOpaque? returnsSomeSelf() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OptionOpaque_returns_some_self(_ffi);
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, aEdges);
   }

@@ -22,12 +22,14 @@ final class {{type_name}}
    {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
 
   {%- for field in fields %}
+  // ignore: public_member_api_docs
   {% if !mutable -%} final {% endif -%} {{field.dart_type_name}} {{field.name}};
   {%- endfor %}
 
   {%- match default_constructor %}
   {%- when Some with (c) %}
 
+  // ignore: public_member_api_docs
   {{c}}
   {%- when None %}
   {%- endmatch %}
@@ -71,7 +73,7 @@ final class {{type_name}}
     {%- for field in fields %}
     {%- if let Type::DiplomatOption(_ty) = field.ty %}
     {# Dart won't do nullable-promotion for public fields since they could be overridden with unstable getters. Copy to a local. -#}
-    {{field.dart_type_name}} {{field.name}} = this.{{field.name}};
+    final {{field.name}} = this.{{field.name}};
     {%- endif %}
     struct.{{field.name}} = {{field.dart_to_c}};
     {%- endfor %}

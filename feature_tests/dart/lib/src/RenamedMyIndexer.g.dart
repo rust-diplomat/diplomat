@@ -25,7 +25,7 @@ final class RenamedMyIndexer implements ffi.Finalizable {
 
   String? operator [](int i) {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_MyIndexer_get(_ffi, i);
     if (!result.isOk) {
       return null;

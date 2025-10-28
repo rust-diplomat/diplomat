@@ -8,8 +8,10 @@ final class _BorrowedFieldsReturningFfi extends ffi.Struct {
 }
 
 final class BorrowedFieldsReturning {
+  // ignore: public_member_api_docs
   String bytes;
 
+  // ignore: public_member_api_docs
   BorrowedFieldsReturning({required this.bytes});
 
   // ignore: unused_element

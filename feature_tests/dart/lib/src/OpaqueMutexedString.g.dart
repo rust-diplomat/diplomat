@@ -34,21 +34,21 @@ final class OpaqueMutexedString implements ffi.Finalizable {
 
   OpaqueMutexedString borrow() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueMutexedString_borrow(_ffi);
     return OpaqueMutexedString._fromFfi(result, aEdges);
   }
 
   static OpaqueMutexedString borrowOther(OpaqueMutexedString other) {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [other];
+    final aEdges = [other];
     final result = _OpaqueMutexedString_borrow_other(other._ffi);
     return OpaqueMutexedString._fromFfi(result, aEdges);
   }
 
   OpaqueMutexedString borrowSelfOrOther(OpaqueMutexedString other) {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this, other];
+    final aEdges = [this, other];
     final result = _OpaqueMutexedString_borrow_self_or_other(_ffi, other._ffi);
     return OpaqueMutexedString._fromFfi(result, aEdges);
   }
@@ -60,7 +60,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
 
   String dummyStr() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueMutexedString_dummy_str(_ffi);
     return result._toDart(aEdges);
   }

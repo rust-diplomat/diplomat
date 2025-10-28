@@ -8,8 +8,10 @@ final class _CyclicStructCFfi extends ffi.Struct {
 }
 
 final class CyclicStructC {
+  // ignore: public_member_api_docs
   CyclicStructA a;
 
+  // ignore: public_member_api_docs
   CyclicStructC({required this.a});
 
   // This struct contains borrowed fields, so this takes in a list of

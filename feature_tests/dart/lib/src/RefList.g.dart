@@ -27,7 +27,7 @@ final class RefList implements ffi.Finalizable {
 
   factory RefList.node(RefListParameter data) {
     // This lifetime edge depends on lifetimes: 'b
-    core.List<Object> bEdges = [data];
+    final bEdges = [data];
     final result = _RefList_node(data._ffi);
     return RefList._fromFfi(result, [], bEdges);
   }

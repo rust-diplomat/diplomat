@@ -9,6 +9,7 @@ final class _RenamedTestMacroStructFfi extends ffi.Struct {
 }
 
 final class RenamedTestMacroStruct {
+  // ignore: public_member_api_docs
   int a;
 
   // This struct contains borrowed fields, so this takes in a list of

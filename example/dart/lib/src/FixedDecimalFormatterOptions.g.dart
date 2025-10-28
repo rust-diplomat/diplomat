@@ -11,7 +11,9 @@ final class _FixedDecimalFormatterOptionsFfi extends ffi.Struct {
 }
 
 final class FixedDecimalFormatterOptions {
+  // ignore: public_member_api_docs
   FixedDecimalGroupingStrategy groupingStrategy;
+  // ignore: public_member_api_docs
   bool someOtherConfig;
 
   // This struct contains borrowed fields, so this takes in a list of

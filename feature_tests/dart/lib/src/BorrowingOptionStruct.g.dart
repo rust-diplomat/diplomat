@@ -8,8 +8,10 @@ final class _BorrowingOptionStructFfi extends ffi.Struct {
 }
 
 final class BorrowingOptionStruct {
+  // ignore: public_member_api_docs
   String? a;
 
+  // ignore: public_member_api_docs
   BorrowingOptionStruct({this.a});
 
   // ignore: unused_element
@@ -23,7 +25,7 @@ final class BorrowingOptionStruct {
   // ignore: unused_element
   _BorrowingOptionStructFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowingOptionStructFfi>();
-    String? a = this.a;
+    final a = this.a;
     struct.a = a != null ? _ResultSliceUtf8Void.ok(a._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp)) : _ResultSliceUtf8Void.err();
     return struct;
   }

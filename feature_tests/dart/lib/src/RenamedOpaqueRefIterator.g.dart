@@ -38,7 +38,7 @@ final class RenamedOpaqueRefIterator implements ffi.Finalizable, core.Iterator<A
 
   AttrOpaque1Renamed? _iteratorNext() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_OpaqueRefIterator_next(_ffi);
     return result.address == 0 ? null : AttrOpaque1Renamed._fromFfi(result, aEdges);
   }

@@ -394,7 +394,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-tool"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "askama",
  "clap",

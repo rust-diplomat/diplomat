@@ -88,8 +88,12 @@ impl<'tcx> DartFormatter<'tcx> {
 
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        let name = variant.name.as_str().to_lower_camel_case().into();
-        variant.attrs.rename.apply(name)
+        variant
+            .attrs
+            .rename
+            .apply(variant.name.as_str().into())
+            .to_lower_camel_case()
+            .into()
     }
 
     /// Format a field name or parameter name

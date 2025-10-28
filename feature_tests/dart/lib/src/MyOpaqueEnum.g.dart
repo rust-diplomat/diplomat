@@ -28,6 +28,7 @@ final class MyOpaqueEnum implements ffi.Finalizable {
     return MyOpaqueEnum._fromFfi(result, []);
   }
 
+  @override
   String toString() {
     final write = _Write();
     _MyOpaqueEnum_to_string(_ffi, write._ffi);

@@ -11,9 +11,12 @@ final class _ErrorStructFfi extends ffi.Struct {
 }
 
 final class ErrorStruct {
+  // ignore: public_member_api_docs
   int i;
+  // ignore: public_member_api_docs
   int j;
 
+  // ignore: public_member_api_docs
   ErrorStruct({required this.i, required this.j});
 
   // This struct contains borrowed fields, so this takes in a list of

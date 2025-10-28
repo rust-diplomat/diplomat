@@ -21,12 +21,19 @@ final class _MyStructFfi extends ffi.Struct {
 }
 
 final class MyStruct {
+  // ignore: public_member_api_docs
   int a;
+  // ignore: public_member_api_docs
   bool b;
+  // ignore: public_member_api_docs
   int c;
+  // ignore: public_member_api_docs
   int d;
+  // ignore: public_member_api_docs
   int e;
+  // ignore: public_member_api_docs
   Rune f;
+  // ignore: public_member_api_docs
   MyEnum g;
 
   // This struct contains borrowed fields, so this takes in a list of
