@@ -19,13 +19,20 @@ final class _PrimitiveStructFfi extends ffi.Struct {
 }
 
 final class PrimitiveStruct {
+  // ignore: public_member_api_docs
   double x;
+  // ignore: public_member_api_docs
   bool a;
+  // ignore: public_member_api_docs
   Rune b;
+  // ignore: public_member_api_docs
   int c;
+  // ignore: public_member_api_docs
   int d;
+  // ignore: public_member_api_docs
   int e;
 
+  // ignore: public_member_api_docs
   PrimitiveStruct({required this.x, required this.a, required this.b, required this.c, required this.d, required this.e});
 
   // This struct contains borrowed fields, so this takes in a list of

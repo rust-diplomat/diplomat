@@ -19,7 +19,7 @@ void main(List<String> args) async {
     ]);
 
     if (cargo.exitCode != 0) {
-      throw cargo.stderr;
+      throw cargo.stderr.toString();
     }
 
     output.assets.code.add(

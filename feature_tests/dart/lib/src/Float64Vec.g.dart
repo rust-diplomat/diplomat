@@ -66,7 +66,7 @@ final class Float64Vec implements ffi.Finalizable {
 
   core.List<double> get asSlice {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Float64Vec_as_slice(_ffi);
     return result._toDart(aEdges);
   }
@@ -90,7 +90,7 @@ final class Float64Vec implements ffi.Finalizable {
 
   core.List<double> borrow() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Float64Vec_borrow(_ffi);
     return result._toDart(aEdges);
   }

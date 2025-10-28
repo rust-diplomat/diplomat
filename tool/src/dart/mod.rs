@@ -90,7 +90,7 @@ pub(crate) fn run<'cx>(
 
     directives.insert(formatter.fmt_import(
         "dart:core",
-        Some("show int, double, bool, String, Object, override"),
+        Some("show Object, String, bool, double, int, override"),
         Some("unused_shown_name"),
     ));
     directives.insert(formatter.fmt_import("dart:core", Some("as core"), Some("unused_import")));
@@ -126,10 +126,19 @@ fn render_class(
     directives: BTreeSet<Cow<'static, str>>,
     helper_classes: BTreeMap<String, String>,
 ) -> String {
+    // BTreeMap sorting doesn't suffice because of potential comments
+    let mut directives = directives.into_iter().collect::<Vec<_>>();
+    directives.sort_by(|a, b| {
+        a.split('\n')
+            .next_back()
+            .unwrap()
+            .cmp(b.split('\n').next_back().unwrap())
+    });
+
     #[derive(askama::Template)]
     #[template(path = "dart/base.dart.jinja", escape = "none")]
     struct ClassTemplate {
-        directives: BTreeSet<Cow<'static, str>>,
+        directives: Vec<Cow<'static, str>>,
         body: String,
         helper_classes: BTreeMap<String, String>,
     }
@@ -605,7 +614,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 format!("@override\n  int compareTo({type_name} other)")
             }
             Some(SpecialMethod::Iterator) => format!("{return_ty} _iteratorNext({params})"),
-            Some(SpecialMethod::Iterable) => format!("{return_ty} get iterator"),
+            Some(SpecialMethod::Iterable) => format!("@override\n  {return_ty} get iterator"),
             Some(SpecialMethod::Indexer) => format!("{return_ty} operator []({params})"),
             None if method.param_self.is_none() => format!(
                 "static {return_ty} {}({params})",
@@ -1155,12 +1164,12 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            ) => "Utf8Decoder().convert(_data.asTypedList(_length))",
+            ) => "const Utf8Decoder().convert(_data.asTypedList(_length))",
             hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "core.String.fromCharCodes(_data.asTypedList(_length))",
             // special case: not typed lists for platform-specific integers, so cannot borrow
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Bool) => "core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false)",
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Bool) => "core.Iterable.generate(_length, (i) => _data[i]).toList(growable: false)",
             hir::Slice::Primitive(..) => "_data.asTypedList(_length)",
-            hir::Slice::Strs(..) => "core.Iterable.generate(_length).map((i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false)",
+            hir::Slice::Strs(..) => "core.Iterable.generate(_length, (i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false)",
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
@@ -1177,7 +1186,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
             ) => vec![
-                    "final encoded = Utf8Encoder().convert(this);".into(), 
+                    "final encoded = const Utf8Encoder().convert(this);".into(), 
                     "slice._data = alloc(encoded.length)..asTypedList(encoded.length).setRange(0, encoded.length, encoded);".into(),
                     "slice._length = encoded.length;".into(),
                 ],

@@ -1,7 +1,9 @@
+// ignore: experimental_member_use
 @meta.RecordUse()
 class _DiplomatFfiUse {
   final String symbol;
 
+  // ignore: experimental_member_use
   const _DiplomatFfiUse(@meta.mustBeConst this.symbol);
 }
 

@@ -9,9 +9,12 @@ final class _StructWithSlicesFfi extends ffi.Struct {
 }
 
 final class StructWithSlices {
+  // ignore: public_member_api_docs
   String first;
+  // ignore: public_member_api_docs
   core.List<int> second;
 
+  // ignore: public_member_api_docs
   StructWithSlices({required this.first, required this.second});
 
   // ignore: unused_element

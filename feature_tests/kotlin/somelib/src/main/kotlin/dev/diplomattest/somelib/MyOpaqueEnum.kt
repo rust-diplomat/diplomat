@@ -40,7 +40,7 @@ class MyOpaqueEnum internal constructor (
         }
     }
     
-    fun toString_(): String {
+    override fun toString(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.MyOpaqueEnum_to_string(handle, write);
         

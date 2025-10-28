@@ -196,6 +196,7 @@ pub mod ffi {
             Box::new(MyOpaqueEnum::A("a".into()))
         }
 
+        #[diplomat::attr(*, stringifier)]
         pub fn to_string(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(
                 write,

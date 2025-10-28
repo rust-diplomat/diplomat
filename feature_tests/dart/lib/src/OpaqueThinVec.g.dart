@@ -29,9 +29,10 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
     return OpaqueThinVec._fromFfi(result, []);
   }
 
+  @override
   OpaqueThinIter get iterator {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueThinVec_iter(_ffi);
     return OpaqueThinIter._fromFfi(result, [], aEdges);
   }
@@ -43,14 +44,14 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
 
   OpaqueThin? operator [](int idx) {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueThinVec_get(_ffi, idx);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
 
   OpaqueThin? get firstelement {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueThinVec_first(_ffi);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }

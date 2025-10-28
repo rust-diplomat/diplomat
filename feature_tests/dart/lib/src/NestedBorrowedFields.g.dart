@@ -10,10 +10,14 @@ final class _NestedBorrowedFieldsFfi extends ffi.Struct {
 }
 
 final class NestedBorrowedFields {
+  // ignore: public_member_api_docs
   BorrowedFields fields;
+  // ignore: public_member_api_docs
   BorrowedFieldsWithBounds bounds;
+  // ignore: public_member_api_docs
   BorrowedFieldsWithBounds bounds2;
 
+  // ignore: public_member_api_docs
   NestedBorrowedFields({required this.fields, required this.bounds, required this.bounds2});
 
   // ignore: unused_element
@@ -43,11 +47,11 @@ final class NestedBorrowedFields {
     final utf8StrYArena = _FinalizedArena();
     final utf8StrZArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'x, 'y
-    core.List<Object> xEdges = [bar, dstr16XArena, utf8StrYArena];
+    final xEdges = [bar, dstr16XArena, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'y
-    core.List<Object> yEdges = [bar, utf8StrYArena];
+    final yEdges = [bar, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'z
-    core.List<Object> zEdges = [foo, dstr16ZArena, utf8StrZArena];
+    final zEdges = [foo, dstr16ZArena, utf8StrZArena];
     final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), dstr16Z._utf16AllocIn(dstr16ZArena.arena), utf8StrY._utf8AllocIn(utf8StrYArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }

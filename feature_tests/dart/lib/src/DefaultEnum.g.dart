@@ -5,8 +5,10 @@ part of 'lib.g.dart';
 
 enum DefaultEnum {
 
+  // ignore: public_member_api_docs
   a,
 
+  // ignore: public_member_api_docs
   b;
 
   static DefaultEnum new_() {

@@ -109,7 +109,7 @@ final class ResultOpaque implements ffi.Finalizable {
   ResultOpaque takesStr(String v) {
     final temp = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _ResultOpaque_takes_str(_ffi, v._utf8AllocIn(temp.arena));
     return ResultOpaque._fromFfi(result, aEdges);
   }

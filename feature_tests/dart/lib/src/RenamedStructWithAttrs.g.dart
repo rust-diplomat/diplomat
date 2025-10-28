@@ -11,9 +11,12 @@ final class _RenamedStructWithAttrsFfi extends ffi.Struct {
 }
 
 final class RenamedStructWithAttrs {
+  // ignore: public_member_api_docs
   bool a;
+  // ignore: public_member_api_docs
   int b;
 
+  // ignore: public_member_api_docs
   RenamedStructWithAttrs({required this.a, required this.b});
 
   // This struct contains borrowed fields, so this takes in a list of

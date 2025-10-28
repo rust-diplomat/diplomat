@@ -37,7 +37,7 @@ final class Utf16Wrap implements ffi.Finalizable {
 
   String borrowCont() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }

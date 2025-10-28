@@ -11,6 +11,7 @@ enum {{type_name}}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
   {%- endif %}
+  // ignore: public_member_api_docs
   {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
 {% endif %}
 {%- endfor %}

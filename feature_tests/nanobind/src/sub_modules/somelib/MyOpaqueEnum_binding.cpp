@@ -12,7 +12,7 @@ void add_MyOpaqueEnum_binding(nb::module_ mod) {
     
     nb::class_<somelib::MyOpaqueEnum>(mod, "MyOpaqueEnum", nb::type_slots(somelib_MyOpaqueEnum_slots))
         .def_static("new", &somelib::MyOpaqueEnum::new_)
-        .def("to_string", &somelib::MyOpaqueEnum::to_string);
+        .def("__str__", &somelib::MyOpaqueEnum::to_string);
 }
 
 } 

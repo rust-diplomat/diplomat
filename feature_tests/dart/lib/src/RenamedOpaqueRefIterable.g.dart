@@ -28,9 +28,10 @@ final class RenamedOpaqueRefIterable with core.Iterable<AttrOpaque1Renamed> impl
     return RenamedOpaqueRefIterable._fromFfi(result, []);
   }
 
+  @override
   RenamedOpaqueRefIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_OpaqueRefIterable_iter(_ffi);
     return RenamedOpaqueRefIterator._fromFfi(result, [], aEdges);
   }

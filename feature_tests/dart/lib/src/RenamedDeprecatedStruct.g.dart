@@ -6,6 +6,7 @@ part of 'lib.g.dart';
 @core.Deprecated('use Foo')
 final class RenamedDeprecatedStruct {
 
+  // ignore: public_member_api_docs
   RenamedDeprecatedStruct();
 
 

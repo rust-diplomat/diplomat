@@ -10,10 +10,14 @@ final class _BorrowedFieldsWithBoundsFfi extends ffi.Struct {
 }
 
 final class BorrowedFieldsWithBounds {
+  // ignore: public_member_api_docs
   String fieldA;
+  // ignore: public_member_api_docs
   String fieldB;
+  // ignore: public_member_api_docs
   String fieldC;
 
+  // ignore: public_member_api_docs
   BorrowedFieldsWithBounds({required this.fieldA, required this.fieldB, required this.fieldC});
 
   // ignore: unused_element
@@ -41,11 +45,11 @@ final class BorrowedFieldsWithBounds {
     final dstr16XArena = _FinalizedArena();
     final utf8StrZArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'x, 'y, 'z
-    core.List<Object> xEdges = [foo, dstr16XArena, utf8StrZArena];
+    final xEdges = [foo, dstr16XArena, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'y, 'z
-    core.List<Object> yEdges = [foo, utf8StrZArena];
+    final yEdges = [foo, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'z
-    core.List<Object> zEdges = [utf8StrZArena];
+    final zEdges = [utf8StrZArena];
     final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }

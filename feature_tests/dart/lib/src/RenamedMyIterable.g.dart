@@ -29,9 +29,10 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
     return RenamedMyIterable._fromFfi(result, []);
   }
 
+  @override
   RenamedMyIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_MyIterable_iter(_ffi);
     return RenamedMyIterator._fromFfi(result, [], aEdges);
   }
