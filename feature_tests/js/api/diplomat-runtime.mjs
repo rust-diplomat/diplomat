@@ -749,4 +749,4 @@ export const FUNCTION_PARAM_ALLOC = new FunctionParamAllocator();
 const FunctionParamAllocatorFinalizer = new FinalizationRegistry((free) => { free(); });
 FunctionParamAllocatorFinalizer.register(FUNCTION_PARAM_ALLOC, FUNCTION_PARAM_ALLOC.free);
 // Size (in bytes) of the largest buffer we will ever have to pass in to a function:
-FUNCTION_PARAM_ALLOC.reserve(0);
+FUNCTION_PARAM_ALLOC.reserve(40);
