@@ -596,7 +596,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     type_name,
                     "this".into(),
                     struct_borrow_info,
-                    "functionCleanupArena".into(),
+                    "diplomatRuntime.FUNCTION_PARAM_ALLOC".into(),
                     gen_context,
                 )
             }
