@@ -1,6 +1,5 @@
 ---
 source: core/src/hir/elision.rs
-assertion_line: 536
 expression: method
 ---
 Method {
@@ -37,6 +36,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -46,6 +46,7 @@ Method {
                 },
                 special_method: None,
                 custom_errors: false,
+                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -56,6 +57,8 @@ Method {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
+                abi_compatible: false,
             },
         },
     ),
@@ -91,6 +94,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
                     pattern: None,
@@ -100,6 +104,7 @@ Method {
                 },
                 special_method: None,
                 custom_errors: false,
+                default: false,
                 demo_attrs: DemoInfo {
                     generate: false,
                     default_constructor: false,
@@ -110,6 +115,8 @@ Method {
                         default_value: "",
                     },
                 },
+                generate_mocking_interface: false,
+                abi_compatible: false,
             },
         },
     ],
@@ -118,6 +125,7 @@ Method {
     ),
     attrs: Attrs {
         disable: false,
+        deprecated: None,
         namespace: None,
         rename: RenameAttr {
             pattern: None,
@@ -127,6 +135,7 @@ Method {
         },
         special_method: None,
         custom_errors: false,
+        default: false,
         demo_attrs: DemoInfo {
             generate: false,
             default_constructor: false,
@@ -137,5 +146,7 @@ Method {
                 default_value: "",
             },
         },
+        generate_mocking_interface: false,
+        abi_compatible: false,
     },
 }

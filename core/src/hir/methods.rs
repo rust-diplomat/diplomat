@@ -9,6 +9,7 @@ use super::{
 };
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
+use super::ty_position::Sealed;
 
 use borrowing_field::BorrowingFieldVisitor;
 use borrowing_param::BorrowingParamVisitor;
@@ -17,6 +18,8 @@ pub mod borrowing_field;
 pub mod borrowing_param;
 
 /// A method exposed to Diplomat.
+/// Used for representing both free functions ([`crate::ast::Function`]) and struct methods ([`crate::ast::Method`]).
+/// The only difference between a free function and a struct method in this struct is that [`Self::param_self`] will always be `None` for a free function.
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Method {
@@ -39,20 +42,20 @@ pub struct Method {
     pub attrs: Attrs,
 }
 
-pub trait CallbackInstantiationFunctionality {
+pub trait CallbackInstantiationFunctionality: Sealed {
     #[allow(clippy::result_unit_err)]
     fn get_inputs(&self) -> Result<&[CallbackParam], ()>; // the types of the parameters
     #[allow(clippy::result_unit_err)]
-    fn get_output_type(&self) -> Result<&Option<Type>, ()>;
+    fn get_output_type(&self) -> Result<&ReturnType<InputOnly>, ()>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 // Note: we do not support borrowing across callbacks
 pub struct Callback {
     pub param_self: Option<TraitParamSelf>, // this is None for callbacks as method arguments
     pub params: Vec<CallbackParam>,
-    pub output: Box<Option<Type>>, // this will be used in Rust (note: can technically be a callback, or void)
+    pub output: Box<ReturnType<InputOnly>>, // this will be used in Rust (note: can technically be a callback, or void)
     pub name: Option<IdentBuf>,
     pub attrs: Option<Attrs>,
     pub docs: Option<Docs>,
@@ -63,11 +66,14 @@ pub struct Callback {
 #[non_exhaustive]
 pub enum NoCallback {}
 
+impl Sealed for Callback {}
+impl Sealed for NoCallback {}
+
 impl CallbackInstantiationFunctionality for Callback {
     fn get_inputs(&self) -> Result<&[CallbackParam], ()> {
         Ok(&self.params)
     }
-    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+    fn get_output_type(&self) -> Result<&ReturnType<InputOnly>, ()> {
         Ok(&self.output)
     }
 }
@@ -76,7 +82,7 @@ impl CallbackInstantiationFunctionality for NoCallback {
     fn get_inputs(&self) -> Result<&[CallbackParam], ()> {
         Err(())
     }
-    fn get_output_type(&self) -> Result<&Option<Type>, ()> {
+    fn get_output_type(&self) -> Result<&ReturnType<InputOnly>, ()> {
         Err(())
     }
 }
@@ -84,22 +90,22 @@ impl CallbackInstantiationFunctionality for NoCallback {
 /// Type that the method returns.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub enum SuccessType {
+pub enum SuccessType<P: super::TyPosition = OutputOnly> {
     /// Conceptually returns a string, which gets written to the `write: DiplomatWrite` argument
     Write,
     /// A Diplomat type. Some types can be outputs, but not inputs, which is expressed by the `OutType` parameter.
-    OutType(OutType),
+    OutType(Type<P>),
     /// A `()` type in Rust.
     Unit,
 }
 
 /// Whether or not the method returns a value or a result.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(clippy::exhaustive_enums)] // this only exists for fallible/infallible, breaking changes for more complex returns are ok
-pub enum ReturnType {
-    Infallible(SuccessType),
-    Fallible(SuccessType, Option<OutType>),
-    Nullable(SuccessType),
+pub enum ReturnType<P: super::TyPosition = OutputOnly> {
+    Infallible(SuccessType<P>),
+    Fallible(SuccessType<P>, Option<Type<P>>),
+    Nullable(SuccessType<P>),
 }
 
 /// The `self` parameter of a method.
@@ -127,7 +133,7 @@ pub struct Param {
 
 /// A parameter in a callback
 /// No name, since all we get is the callback type signature
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct CallbackParam {
     pub ty: Type<OutputOnly>,

@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class UnimportedEnum {
-    
     #value = undefined;
 
     static #values = new Map([
@@ -17,7 +16,7 @@ export class UnimportedEnum {
     static getAllEntries() {
         return UnimportedEnum.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -43,15 +42,17 @@ export class UnimportedEnum {
         throw TypeError(value + " is not a UnimportedEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new UnimportedEnum(value);
     }
 
-    get value() {
+    get value(){
         return [...UnimportedEnum.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    /** @internal */
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [
@@ -63,6 +64,7 @@ export class UnimportedEnum {
     static A = UnimportedEnum.#objectValues[0];
     static B = UnimportedEnum.#objectValues[1];
     static C = UnimportedEnum.#objectValues[2];
+
 
     constructor(value) {
         return this.#internalConstructor(...arguments)

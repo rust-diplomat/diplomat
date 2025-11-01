@@ -9,10 +9,8 @@ import com.sun.jna.Structure
 import com.sun.jna.Union
 import java.util.Collections
 
-
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
 val CLEANER = java.lang.ref.Cleaner.create()
-
 
 interface DiplomatWriteLib: Library {
     fun diplomat_buffer_write_create(size: Long): Pointer 
@@ -20,6 +18,7 @@ interface DiplomatWriteLib: Library {
     fun diplomat_buffer_write_len(diplomatWrite: Pointer): Long
     fun diplomat_buffer_write_destroy(diplomatWrite: Pointer)
 }
+
 
 object DW {
 
@@ -61,10 +60,18 @@ internal class DiplomatJVMRuntime {
     }
 }
 
+interface DiplomatAllocateLib: Library {
+    fun diplomat_alloc(size: Long, align: Long): Pointer
+}
+
+
 
 internal object PrimitiveArrayTools {
 
-    fun allocateMemory(size: Long): Memory? {
+    val libClass: Class<DiplomatAllocateLib> = DiplomatAllocateLib::class.java
+    val lib: DiplomatAllocateLib = Native.load("somelib", libClass)
+
+    fun allocateGarbageCollectedMemory(size: Long): Memory? {
         // we can't use the Memory constructor for a memory of size 0
         // so, if the size is zero, then we return null
         if (size > 0L)
@@ -73,169 +80,244 @@ internal object PrimitiveArrayTools {
             return null
     }
 
-    fun native(boolArray: BooleanArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(boolArray.size.toLong())
+    fun allocateOwnedMemory(size: Long, align: Long): Pointer? {
+        // we can't use the Memory constructor for a memory of size 0
+        // so, if the size is zero, then we return null
+        if (size > 0L)
+            return lib.diplomat_alloc(size, align)
+        else
+            return null
+    }
+
+    val boolAlign: Long =  1
+    val byteAlign: Long =  1
+    val shortAlign: Long =  2
+    val intalign: Long =  4
+    val longAlign: Long =  8
+    val uByteAlign: Long =  1
+    val uShortAlign: Long =  2
+    val uIntalign: Long =  4
+    val uLongAlign: Long =  8
+    val floatAlign: Long =  4
+    val doubleAlign: Long =  8
+
+
+    fun copy(arr: ByteArray, ptr: Pointer?) : Slice {
+        val slice = Slice()
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
+            ptr
+        } else {
+            Pointer(0)
+        }
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
+    }
+
+    fun borrow(boolArray: BooleanArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(boolArray.size.toLong())
         val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
-        val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, byteArray, 0, byteArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(byteArray.size.toLong().toULong())
+        val slice = copy(byteArray, mem)
         return Pair(mem, slice)
     }
 
-    fun native(byteArray: ByteArray):  Pair<Memory?, Slice> {
-        val mem = allocateMemory(byteArray.size.toLong())
-        val slice = Slice()
-        slice.data = if (mem != null) { 
-            val ptr = mem.share(0)
-            ptr.write(0, byteArray, 0, byteArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(byteArray.size.toLong().toULong())
+    fun move(boolArray: BooleanArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(boolArray.size.toLong() * boolAlign, boolAlign)
+        val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
+        val slice = copy(byteArray, mem)
         return Pair(mem, slice)
     }
 
-    @ExperimentalUnsignedTypes
-    fun native(uByteArray: UByteArray): Pair<Memory?, Slice> {
+    fun borrow(byteArray: ByteArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(byteArray.size.toLong())
+        val slice = copy(byteArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(byteArray: ByteArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(byteArray.size.toLong() * Byte.SIZE_BYTES.toLong(), uByteAlign, )
+        val slice = copy(byteArray, mem)
+        return Pair(mem, slice)
+    }
+
+
+    fun borrow(uByteArray: UByteArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(uByteArray.size.toLong())
         val byteArray = uByteArray.asByteArray()
-        val mem = allocateMemory(byteArray.size.toLong())
+        val slice = copy(byteArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(uByteArray: UByteArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(uByteArray.size.toLong() * Byte.SIZE_BYTES.toLong(), uByteAlign, )
+        val byteArray = uByteArray.asByteArray()
+        val slice = copy(byteArray, mem)
+        return Pair(mem, slice)
+    }
+
+
+    fun borrow(shortArray: ShortArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val slice = copy(shortArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(shortArray: ShortArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Short.SIZE_BYTES * shortArray.size.toLong(), Short.SIZE_BYTES.toLong())
+        val slice = copy(shortArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun copy(arr: ShortArray, ptr: Pointer?) : Slice {
         val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, byteArray, 0, byteArray.size)
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
             ptr
         } else {
             Pointer(0)
         }
-        slice.len = FFISizet(uByteArray.size.toLong().toULong())
-        return Pair(mem, slice)
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
     }
 
-    fun native(shortArray: ShortArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
-        val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, shortArray, 0, shortArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(shortArray.size.toLong().toULong())
-        return Pair(mem, slice)
-    }
-
-    @ExperimentalUnsignedTypes
-    fun native(uShortArray: UShortArray): Pair<Memory?, Slice> {
+    fun borrow(uShortArray: UShortArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Short.SIZE_BYTES * uShortArray.size.toLong())
         val shortArray = uShortArray.asShortArray()
-        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val slice = copy(shortArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(uShortArray: UShortArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Short.SIZE_BYTES * uShortArray.size.toLong(), Short.SIZE_BYTES.toLong())
+        val shortArray = uShortArray.asShortArray()
+        val slice = copy(shortArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun copy(arr: IntArray, ptr: Pointer?) : Slice {
         val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, shortArray, 0, shortArray.size)
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
             ptr
         } else {
             Pointer(0)
         }
-        slice.len = FFISizet(uShortArray.size.toLong().toULong())
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
+    }
+
+    fun borrow(intArray: IntArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Int.SIZE_BYTES * intArray.size.toLong())
+        val slice = copy(intArray, mem)
         return Pair(mem, slice)
     }
 
-    fun native(intArray: IntArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
-        val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, intArray, 0, intArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(intArray.size.toLong().toULong())
+    fun move(intArray: IntArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Int.SIZE_BYTES * intArray.size.toLong(), Int.SIZE_BYTES.toLong())
+        val slice = copy(intArray, mem)
         return Pair(mem, slice)
     }
 
-    @ExperimentalUnsignedTypes
-    fun native(uIntArray: UIntArray): Pair<Memory?, Slice> {
+    fun borrow(uIntArray: UIntArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Int.SIZE_BYTES * uIntArray.size.toLong())
         val intArray = uIntArray.asIntArray()
-        val mem = allocateMemory(Int.SIZE_BYTES * intArray.size.toLong())
+        val slice = copy(intArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(uIntArray: UIntArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Int.SIZE_BYTES * uIntArray.size.toLong(), Int.SIZE_BYTES.toLong())
+        val intArray = uIntArray.asIntArray()
+        val slice = copy(intArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun borrow(longArray: LongArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Long.SIZE_BYTES * longArray.size.toLong())
+        val slice = copy(longArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun move(longArray: LongArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Long.SIZE_BYTES * longArray.size.toLong(), Long.SIZE_BYTES.toLong())
+        val slice = copy(longArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun copy(arr: LongArray, ptr: Pointer?) : Slice {
         val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, intArray, 0, intArray.size)
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
             ptr
         } else {
             Pointer(0)
         }
-        slice.len = FFISizet(uIntArray.size.toLong().toULong())
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
+    }
+
+    fun borrow(uLongArray: ULongArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Long.SIZE_BYTES * uLongArray.size.toLong())
+        val longArray = uLongArray.asLongArray()
+        val slice = copy(longArray, mem)
         return Pair(mem, slice)
     }
 
+    fun move(uLongArray: ULongArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Long.SIZE_BYTES * uLongArray.size.toLong(), Long.SIZE_BYTES.toLong())
+        val longArray = uLongArray.asLongArray()
+        val slice = copy(longArray, mem)
+        return Pair(mem, slice)
+    }
 
-    fun native(longArray: LongArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(Long.SIZE_BYTES * longArray.size.toLong())
+    fun copy(arr: FloatArray, ptr: Pointer?) : Slice {
         val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, longArray, 0, longArray.size)
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
             ptr
         } else {
             Pointer(0)
         }
-        slice.len = FFISizet(longArray.size.toLong().toULong())
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
+    }
+
+    fun borrow(floatArray: FloatArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Float.SIZE_BYTES * floatArray.size.toLong())
+        val slice = copy(floatArray, mem)
         return Pair(mem, slice)
     }
 
-    @ExperimentalUnsignedTypes
-    fun native(uLongArray: ULongArray): Pair<Memory?, Slice> {
-        val shortArray = uLongArray.asLongArray()
-        val mem = allocateMemory(Short.SIZE_BYTES * shortArray.size.toLong())
+    fun move(floatArray: FloatArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Float.SIZE_BYTES * floatArray.size.toLong(), Float.SIZE_BYTES.toLong())
+        val slice = copy(floatArray, mem)
+        return Pair(mem, slice)
+    }
+
+    fun copy(arr: DoubleArray, ptr: Pointer?) : Slice {
         val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, shortArray, 0, shortArray.size)
+        slice.data = if (ptr != null) {
+            ptr.write(0, arr, 0, arr.size)
             ptr
         } else {
             Pointer(0)
         }
-        slice.len = FFISizet(uLongArray.size.toLong().toULong())
+        slice.len = FFISizet(arr.size.toLong().toULong())
+        return slice
+    }
+
+    fun borrow(doubleArray: DoubleArray): Pair<Memory?, Slice> {
+        val mem = allocateGarbageCollectedMemory(Double.SIZE_BYTES * doubleArray.size.toLong())
+        val slice = copy(doubleArray, mem)
         return Pair(mem, slice)
     }
 
-    fun native(floatArray: FloatArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(Float.SIZE_BYTES * floatArray.size.toLong())
-        val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, floatArray, 0, floatArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(floatArray.size.toLong().toULong())
+    fun move(doubleArray: DoubleArray): Pair<Pointer?, Slice> {
+        val mem = allocateOwnedMemory(Double.SIZE_BYTES * doubleArray.size.toLong(), Double.SIZE_BYTES.toLong())
+        val slice = copy(doubleArray, mem)
         return Pair(mem, slice)
     }
 
-    fun native(doubleArray: DoubleArray): Pair<Memory?, Slice> {
-        val mem = allocateMemory(Double.SIZE_BYTES * doubleArray.size.toLong())
-        val slice = Slice()
-        slice.data = if (mem != null) {
-            val ptr = mem.share(0)
-            ptr.write(0, doubleArray, 0, doubleArray.size)
-            ptr
-        } else {
-            Pointer(0)
-        }
-        slice.len = FFISizet(doubleArray.size.toLong().toULong())
-        return Pair(mem, slice)
-    }
 
     fun getByteArray(slice: Slice): ByteArray {
         return slice.data.getByteArray(0, slice.len.toInt())
@@ -281,13 +363,20 @@ internal object PrimitiveArrayTools {
         return slice.data.getDoubleArray(0, slice.len.toInt())
     }
 
-    fun readUtf8(str: String): Pair<Memory?, Slice> {
-        return native(str.toByteArray())
+    fun borrowUtf8(str: String): Pair<Memory?, Slice> {
+        return borrow(str.toByteArray())
     }
 
-    @ExperimentalUnsignedTypes
-    fun readUtf16(str: String): Pair<Memory?, Slice> {
-        return native(str.map {it.code.toUShort()}.toUShortArray())
+    fun moveUtf8(str: String): Pair<Pointer?, Slice> {
+        return move(str.toByteArray())
+    }
+
+    fun borrowUtf16(str: String): Pair<Memory?, Slice> {
+        return borrow(str.map {it.code.toShort()}.toShortArray())
+    }
+
+    fun moveUtf16(str: String): Pair<Pointer?, Slice> {
+        return move(str.map {it.code.toShort()}.toShortArray())
     }
 
     fun getUtf8(slice: Slice): String {
@@ -303,16 +392,16 @@ internal object PrimitiveArrayTools {
         return charArray
     }
 
-    fun readUtf8s(array: Array<String>): Pair<List<Memory?>, Slice> {
+    fun borrowUtf8s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val mem = allocateGarbageCollectedMemory(sliceSize * array.size.toLong())
         val ptr = if (mem != null) {
             mem.share(0)
         } else {
             Pointer(0)
         }
         val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
-            val (mem, slice) = readUtf8(str)
+            val (mem, slice) = borrowUtf8(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
             mem
@@ -323,16 +412,16 @@ internal object PrimitiveArrayTools {
         return Pair(mems + mem, slice)
     }
 
-    fun readUtf16s(array: Array<String>): Pair<List<Memory?>, Slice> {
+    fun borrowUtf16s(array: Array<String>): Pair<List<Memory?>, Slice> {
         val sliceSize = Slice.SIZE
-        val mem = allocateMemory(sliceSize * array.size.toLong())
+        val mem = allocateGarbageCollectedMemory(sliceSize * array.size.toLong())
         val ptr = if (mem != null) {
             mem.share(0)
         } else {
             Pointer(0)
         }
         val mems: List<Memory?> = array.zip(0..array.size.toLong()).map { (str, idx) ->
-            val (mem, slice) = readUtf16(str)
+            val (mem, slice) = borrowUtf16(str)
             ptr.setPointer(idx * sliceSize, slice.data)
             ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len.toLong())
             mem
@@ -426,7 +515,6 @@ class Slice: Structure(), Structure.ByValue {
         var SIZE: Long = Native.getNativeSize(Slice::class.java).toLong()
     }
 }
-
 
 internal fun <T> T.ok(): Result<T> {
     return Result.success(this)
@@ -537,7 +625,7 @@ class UnitError internal constructor(): Exception("Rust error result for Unit") 
         return "Unit error"
     }
 }
-           
+
 internal class ResultIntUnitUnion: Union() {
     @JvmField
     internal var ok: Int = 0
@@ -715,7 +803,7 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: CyclicStructANative = CyclicStructANative()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -735,7 +823,7 @@ internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
 internal class OptionDouble: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Double = 0.0
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -755,7 +843,7 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
 internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIIsizet = FFIIsizet()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -775,7 +863,7 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
 internal class OptionFFISizet: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFISizet = FFISizet()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -795,7 +883,7 @@ internal class OptionFFISizet: Structure(), Structure.ByValue  {
 internal class OptionFFIUint32: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint32 = FFIUint32()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -815,7 +903,7 @@ internal class OptionFFIUint32: Structure(), Structure.ByValue  {
 internal class OptionFFIUint8: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: FFIUint8 = FFIUint8()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -835,7 +923,7 @@ internal class OptionFFIUint8: Structure(), Structure.ByValue  {
 internal class OptionInt: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Int = 0
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -855,7 +943,7 @@ internal class OptionInt: Structure(), Structure.ByValue  {
 internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: OptionStructNative = OptionStructNative()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -875,7 +963,7 @@ internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
 internal class OptionSlice: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Slice = Slice()
-    
+
     @JvmField
     internal var isOk: Byte = 0
 
@@ -892,4 +980,3 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
         }
     }
 }
-

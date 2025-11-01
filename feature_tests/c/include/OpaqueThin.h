@@ -19,6 +19,7 @@ int32_t OpaqueThin_a(const OpaqueThin* self);
 
 float OpaqueThin_b(const OpaqueThin* self);
 
+void OpaqueThin_c(const OpaqueThin* self, DiplomatWrite* write);
 
 void OpaqueThin_destroy(OpaqueThin* self);
 

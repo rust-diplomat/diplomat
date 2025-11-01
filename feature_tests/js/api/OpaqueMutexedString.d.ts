@@ -5,8 +5,11 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OpaqueMutexedString {
-    
+    /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
+
 
     static fromUsize(number: number): OpaqueMutexedString;
 

@@ -1,5 +1,5 @@
-#ifndef OptionOpaqueChar_HPP
-#define OptionOpaqueChar_HPP
+#ifndef SOMELIB_OptionOpaqueChar_HPP
+#define SOMELIB_OptionOpaqueChar_HPP
 
 #include "OptionOpaqueChar.d.hpp"
 
@@ -14,43 +14,42 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    void OptionOpaqueChar_assert_char(const diplomat::capi::OptionOpaqueChar* self, char32_t ch);
-    
-    
+
+    void OptionOpaqueChar_assert_char(const somelib::capi::OptionOpaqueChar* self, char32_t ch);
+
     void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline void OptionOpaqueChar::assert_char(char32_t ch) const {
-  diplomat::capi::OptionOpaqueChar_assert_char(this->AsFFI(),
-    ch);
+inline void somelib::OptionOpaqueChar::assert_char(char32_t ch) const {
+    somelib::capi::OptionOpaqueChar_assert_char(this->AsFFI(),
+        ch);
 }
 
-inline const diplomat::capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OptionOpaqueChar*>(this);
+inline const somelib::capi::OptionOpaqueChar* somelib::OptionOpaqueChar::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::OptionOpaqueChar*>(this);
 }
 
-inline diplomat::capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(this);
+inline somelib::capi::OptionOpaqueChar* somelib::OptionOpaqueChar::AsFFI() {
+    return reinterpret_cast<somelib::capi::OptionOpaqueChar*>(this);
 }
 
-inline const OptionOpaqueChar* OptionOpaqueChar::FromFFI(const diplomat::capi::OptionOpaqueChar* ptr) {
-  return reinterpret_cast<const OptionOpaqueChar*>(ptr);
+inline const somelib::OptionOpaqueChar* somelib::OptionOpaqueChar::FromFFI(const somelib::capi::OptionOpaqueChar* ptr) {
+    return reinterpret_cast<const somelib::OptionOpaqueChar*>(ptr);
 }
 
-inline OptionOpaqueChar* OptionOpaqueChar::FromFFI(diplomat::capi::OptionOpaqueChar* ptr) {
-  return reinterpret_cast<OptionOpaqueChar*>(ptr);
+inline somelib::OptionOpaqueChar* somelib::OptionOpaqueChar::FromFFI(somelib::capi::OptionOpaqueChar* ptr) {
+    return reinterpret_cast<somelib::OptionOpaqueChar*>(ptr);
 }
 
-inline void OptionOpaqueChar::operator delete(void* ptr) {
-  diplomat::capi::OptionOpaqueChar_destroy(reinterpret_cast<diplomat::capi::OptionOpaqueChar*>(ptr));
+inline void somelib::OptionOpaqueChar::operator delete(void* ptr) {
+    somelib::capi::OptionOpaqueChar_destroy(reinterpret_cast<somelib::capi::OptionOpaqueChar*>(ptr));
 }
 
 
-#endif // OptionOpaqueChar_HPP
+#endif // SOMELIB_OptionOpaqueChar_HPP

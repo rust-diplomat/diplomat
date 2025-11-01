@@ -11,7 +11,6 @@ const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Foo {
-    
     // Internal ptr reference:
     #ptr = null;
 
@@ -19,76 +18,79 @@ export class Foo {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     #aEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Foo is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
-        
         this.#aEdge = aEdge;
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             Foo_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     #defaultConstructor(x) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const xSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, x)));
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
-        
+
+
         const result = wasm.Foo_new(xSlice.ptr);
-    
+
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
-        
+
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+
         }
     }
 
     get bar() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];
-        
+
+
         const result = wasm.Foo_get_bar(this.ffiValue);
-    
+
         try {
             return new Bar(diplomatRuntime.internalConstructor, result, [], bEdges, aEdges);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     asReturning() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-        
+
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
+
         const result = wasm.Foo_as_returning(diplomatReceive.buffer, this.ffiValue);
-    
+
         try {
             return BorrowedFieldsReturning._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, aEdges);
         }
-        
+
         finally {
             diplomatReceive.free();
         }
@@ -96,49 +98,52 @@ export class Foo {
 
     static extractFromFields(fields) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        
-        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI({aAppendArray: [aEdges],}, false));
-    
+
+
+        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false));
+
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
-        
+
         finally {
             functionCleanupArena.free();
+
         }
     }
 
-    /** 
+    /**
      * Test that the extraction logic correctly pins the right fields
      */
     static extractFromBounds(bounds, anotherString) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const anotherStringSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, anotherString)));
-        
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        
+
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [...bounds._fieldsForLifetimeA, ...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
-        
+
         // This lifetime edge depends on lifetimes 'y, 'z
         let yEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
-        
-        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI({aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
-    
+
+
+        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
+
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
-        
+
         finally {
             functionCleanupArena.free();
-        
+
             functionGarbageCollectorGrip.releaseToGarbageCollector();
+
         }
     }
 

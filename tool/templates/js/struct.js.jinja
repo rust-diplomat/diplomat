@@ -1,8 +1,8 @@
 {% extends "js/js_class.js.jinja" %}
 
 {% block header_info %}
-{%- if typescript && !is_out -%}
-type {{type_name}}_obj = {
+{%- if typescript && !is_out && !fields.is_empty() -%}
+export type {{type_name}}_obj = {
     {%- for field in fields %}
     {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
     {%- endfor %}
@@ -12,7 +12,7 @@ type {{type_name}}_obj = {
 {% endblock %}
 
 {% block internal_ctor_params -%}
-structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
+structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out && !typescript %}, internalConstructor{% endif -%}
 {%- endblock %}
 
 {% block class_body -%}
@@ -20,33 +20,31 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
     {%- if !typescript %}
     #{{field.field_name}};
-    {% endif %}
-    get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
+    {%- endif %}
+    get {{field.field_name}}() {%- if typescript %}: {{field.js_type_name}};{% else %} {
         return this.#{{field.field_name}};
     }{% endif -%}
-    {%- if mutable %} 
-    set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {% if !typescript -%} {
+    {%- if mutable %}
+    set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {%- if !typescript -%} {
         this.#{{field.field_name}} = value;
     }
     {%- endif -%}
     {%- endif %}
-    {% endfor -%}
+    {%- endfor -%}
 
-    {%~ if !is_out %}
-    /** Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    {%~ if !is_out && !fields.is_empty() %}
     {# This function exists because some structs can override their default constructors.
      # This exposes that original default constructor, and will ALWAYS exist to allow for consistent function calls to this kind of constructor.
      # For instance, demo_gen uses this function instead of the constructor
     -#}
+    /** @internal */
     static fromFields(structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%}) {% if typescript %}: {{type_name}}; {%- else -%} {
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj);
     } {%- endif %}
     {%~ endif -%}
 
     {%- if !(typescript && is_out) %}
-    {%- if !typescript %}
+    {%- if !typescript && !fields.is_empty() %}
     #internalConstructor(structObj
         {%- if is_out && !typescript %}, internalConstructor{% endif -%}
     ) {%- if typescript %};{% else %} {
@@ -82,7 +80,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     {%~ if !fields.is_empty() %}
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    {% if lifetimes.all_lifetimes().len() != 0 -%}
+    {%- if lifetimes.all_lifetimes().len() != 0 -%}
     // If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
@@ -92,41 +90,25 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     {%- endif -%}
     {%- endif %}
-    {%- if needs_force_padding %}
-    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
-    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
-    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
-    {%- endif %}
     _intoFFI(
-        appendArrayMap{% if needs_force_padding %},
-        forcePadding
-        {%- endif %}
+        functionCleanupArena,
+        appendArrayMap
     ) {
-        {%- match abi -%}
-        {%- when WasmABI::Legacy %}
-        return [
-            {%- for field in fields -%}
-            {{field.js_to_c}}
-            {%- if !loop.last -%}, {% endif %}
-            {%- endfor -%}
-        ]
-        {%- when WasmABI::CSpec -%}
         {%- if wraps_primitive -%}
         {%- if owns_wrapped_primitive %}
         return this.#{{fields.first().unwrap().field_name}};
         {%- else %}
-        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap, false);
+        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap);
         {%- endif -%}
         {%- else %}
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
         {%- endif %}
-        {%- endmatch %}
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -145,9 +127,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
         arrayBuffer,
         offset,
         functionCleanupArena,
-        appendArrayMap{% if needs_force_padding %},
-        forcePadding
-        {%- endif %}
+        appendArrayMap
     ) {
         {%- for field in fields %}
         {{field.js_to_c_write}};
@@ -169,7 +149,7 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
         {%- if wraps_primitive && owns_wrapped_primitive %}
         structObj.{{fields.first().unwrap().field_name}} = primitiveValue;
-        {% else %}
+        {%- else %}
         {%- for field in fields %}
         const {{field.field_name}}Deref = {%- if wraps_primitive && !owns_wrapped_primitive %} primitiveValue {%- else %} {{field.c_to_js_deref}} {%- endif %};
         structObj.{{field.field_name}} = {{field.c_to_js}};
@@ -178,16 +158,16 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
 
         return new {{type_name}}({% if overrides_constructor %}diplomatRuntime.exposeConstructor, {% endif -%} structObj {%- if is_out %}, internalConstructor{% endif -%});
     }
-    
+
     {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
 
-    // Return all fields corresponding to lifetime `'{{ltname}}` 
+    // Return all fields corresponding to lifetime `'{{ltname}}`
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
     // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetime{{ltname.to_uppercase()}}() { 
+    get _fieldsForLifetime{{ltname.to_uppercase()}}() {
         return [
         {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
             {%- if !loop.first %}, {% endif -%}
@@ -204,5 +184,16 @@ structObj {%- if typescript %} : {{type_name}}_obj {%- endif -%} {%- if is_out &
     };
     {%- endfor -%}
     {%- endif -%}
+    {%- endif -%}
+
+    {%- if methods.special_methods.constructor.is_none() && typescript && !is_out && !fields.is_empty() %}
+    /**
+    * Create `{{type_name}}` from an object that contains all of `{{type_name}}`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: {{type_name}}_obj);
+    {%- else if typescript && is_out && !fields.is_empty() %}
+    /** @internal */
+    constructor();
     {%- endif -%}
 {% endblock %}

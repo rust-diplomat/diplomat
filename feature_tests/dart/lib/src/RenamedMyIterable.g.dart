@@ -20,6 +20,7 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
     }
   }
 
+  @_DiplomatFfiUse('namespace_MyIterable_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterable_destroy));
 
   factory RenamedMyIterable(core.List<int> x) {
@@ -28,12 +29,14 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
     return RenamedMyIterable._fromFfi(result, []);
   }
 
+  @override
   RenamedMyIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_MyIterable_iter(_ffi);
     return RenamedMyIterator._fromFfi(result, [], aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_MyIterable_destroy')

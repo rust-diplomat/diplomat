@@ -4,16 +4,18 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class ErrorEnum {
-    
 
-    static fromValue(value : ErrorEnum | string) : ErrorEnum; 
+    /** @internal */
+    static fromValue(value: ErrorEnum | string): ErrorEnum;
 
-    get value() : string;
+    get value(): string;
 
-    get ffiValue() : number;
+    /** @internal */
+    get ffiValue(): number;
 
     static Foo : ErrorEnum;
     static Bar : ErrorEnum;
+
 
     constructor(value: ErrorEnum | string );
 }

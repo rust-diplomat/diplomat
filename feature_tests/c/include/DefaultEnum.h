@@ -21,5 +21,4 @@ DefaultEnum DefaultEnum_new(void);
 
 
 
-
 #endif // DefaultEnum_H

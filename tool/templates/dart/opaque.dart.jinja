@@ -1,7 +1,10 @@
 {% if !docs.is_empty() -%}
-/// {{docs}}
+{{docs|prefix_trimmed("/// ")}}
 {% endif -%}
-final class {{type_name}} 
+{% if let Some(deprecated) = deprecated -%}
+@core.Deprecated('{{ deprecated }}')
+{% endif -%}
+final class {{type_name}}
   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %} implements ffi.Finalizable
   {%- if special.comparator -%}, core.Comparable<{{type_name}}> {%- endif %}
   {%- if let Some(it) = special.iterator %}, core.Iterator<{{it}}> {%- endif %} {
@@ -26,6 +29,7 @@ final class {{type_name}}
     }
   }
 
+  @_DiplomatFfiUse('{{destructor}}')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
   {%- if let Some(it) = special.iterator %}
@@ -42,8 +46,9 @@ final class {{type_name}}
   }
 
   {%- endif %}
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
+
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
   {%- endfor %}
 
   {%- if special.comparator %}

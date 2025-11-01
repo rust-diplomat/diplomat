@@ -1,5 +1,5 @@
-#ifndef MyEnum_D_HPP
-#define MyEnum_D_HPP
+#ifndef SOMELIB_MyEnum_D_HPP
+#define SOMELIB_MyEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,9 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+class MyEnum;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     enum MyEnum {
       MyEnum_A = -2,
@@ -22,38 +26,40 @@ namespace capi {
       MyEnum_E = 2,
       MyEnum_F = 3,
     };
-    
+
     typedef struct MyEnum_option {union { MyEnum ok; }; bool is_ok; } MyEnum_option;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class MyEnum {
 public:
-  enum Value {
-    A = -2,
-    B = -1,
-    C = 0,
-    D = 1,
-    E = 2,
-    F = 3,
-  };
+    enum Value {
+        A = -2,
+        B = -1,
+        C = 0,
+        D = 1,
+        E = 2,
+        F = 3,
+    };
 
-  MyEnum() = default;
-  // Implicit conversions between enum and ::Value
-  constexpr MyEnum(Value v) : value(v) {}
-  constexpr operator Value() const { return value; }
-  // Prevent usage as boolean value
-  explicit operator bool() const = delete;
+    MyEnum(): value(Value::D) {}
+
+    // Implicit conversions between enum and ::Value
+    constexpr MyEnum(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
 
   inline int8_t into_value() const;
 
-  inline static MyEnum get_a();
+  inline static somelib::MyEnum get_a();
 
-  inline diplomat::capi::MyEnum AsFFI() const;
-  inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
+    inline somelib::capi::MyEnum AsFFI() const;
+    inline static somelib::MyEnum FromFFI(somelib::capi::MyEnum c_enum);
 private:
     Value value;
 };
 
-
-#endif // MyEnum_D_HPP
+} // namespace
+#endif // SOMELIB_MyEnum_D_HPP

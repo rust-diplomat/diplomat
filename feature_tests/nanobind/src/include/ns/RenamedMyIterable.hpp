@@ -1,5 +1,5 @@
-#ifndef ns_RenamedMyIterable_HPP
-#define ns_RenamedMyIterable_HPP
+#ifndef SOMELIB_ns_RenamedMyIterable_HPP
+#define SOMELIB_ns_RenamedMyIterable_HPP
 
 #include "RenamedMyIterable.d.hpp"
 
@@ -15,61 +15,60 @@
 #include "RenamedMyIterator.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
-    
-    ns::capi::RenamedMyIterable* namespace_MyIterable_new(diplomat::capi::DiplomatU8View x);
-    
-    ns::capi::RenamedMyIterator* namespace_MyIterable_iter(const ns::capi::RenamedMyIterable* self);
-    
-    size_t namespace_MyIterable_len(const ns::capi::RenamedMyIterable* self);
-    
-    
+
+    somelib::ns::capi::RenamedMyIterable* namespace_MyIterable_new(somelib::diplomat::capi::DiplomatU8View x);
+
+    somelib::ns::capi::RenamedMyIterator* namespace_MyIterable_iter(const somelib::ns::capi::RenamedMyIterable* self);
+
+    size_t namespace_MyIterable_len(const somelib::ns::capi::RenamedMyIterable* self);
+
     void namespace_MyIterable_destroy(RenamedMyIterable* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<ns::RenamedMyIterable> ns::RenamedMyIterable::new_(diplomat::span<const uint8_t> x) {
-  auto result = ns::capi::namespace_MyIterable_new({x.data(), x.size()});
-  return std::unique_ptr<ns::RenamedMyIterable>(ns::RenamedMyIterable::FromFFI(result));
+inline std::unique_ptr<somelib::ns::RenamedMyIterable> somelib::ns::RenamedMyIterable::new_(somelib::diplomat::span<const uint8_t> x) {
+    auto result = somelib::ns::capi::namespace_MyIterable_new({x.data(), x.size()});
+    return std::unique_ptr<somelib::ns::RenamedMyIterable>(somelib::ns::RenamedMyIterable::FromFFI(result));
 }
 
-inline std::unique_ptr<ns::RenamedMyIterator> ns::RenamedMyIterable::iter() const {
-  auto result = ns::capi::namespace_MyIterable_iter(this->AsFFI());
-  return std::unique_ptr<ns::RenamedMyIterator>(ns::RenamedMyIterator::FromFFI(result));
+inline std::unique_ptr<somelib::ns::RenamedMyIterator> somelib::ns::RenamedMyIterable::iter() const {
+    auto result = somelib::ns::capi::namespace_MyIterable_iter(this->AsFFI());
+    return std::unique_ptr<somelib::ns::RenamedMyIterator>(somelib::ns::RenamedMyIterator::FromFFI(result));
 }
 
-inline diplomat::next_to_iter_helper<ns::RenamedMyIterator>ns::RenamedMyIterable::begin() const {
-  return iter();
+inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedMyIterator>somelib::ns::RenamedMyIterable::begin() const {
+    return iter();
 }
 
-inline size_t ns::RenamedMyIterable::__len__() const {
-  auto result = ns::capi::namespace_MyIterable_len(this->AsFFI());
-  return result;
+inline size_t somelib::ns::RenamedMyIterable::__len__() const {
+    auto result = somelib::ns::capi::namespace_MyIterable_len(this->AsFFI());
+    return result;
 }
 
-inline const ns::capi::RenamedMyIterable* ns::RenamedMyIterable::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedMyIterable*>(this);
+inline const somelib::ns::capi::RenamedMyIterable* somelib::ns::RenamedMyIterable::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedMyIterable*>(this);
 }
 
-inline ns::capi::RenamedMyIterable* ns::RenamedMyIterable::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedMyIterable*>(this);
+inline somelib::ns::capi::RenamedMyIterable* somelib::ns::RenamedMyIterable::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedMyIterable*>(this);
 }
 
-inline const ns::RenamedMyIterable* ns::RenamedMyIterable::FromFFI(const ns::capi::RenamedMyIterable* ptr) {
-  return reinterpret_cast<const ns::RenamedMyIterable*>(ptr);
+inline const somelib::ns::RenamedMyIterable* somelib::ns::RenamedMyIterable::FromFFI(const somelib::ns::capi::RenamedMyIterable* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedMyIterable*>(ptr);
 }
 
-inline ns::RenamedMyIterable* ns::RenamedMyIterable::FromFFI(ns::capi::RenamedMyIterable* ptr) {
-  return reinterpret_cast<ns::RenamedMyIterable*>(ptr);
+inline somelib::ns::RenamedMyIterable* somelib::ns::RenamedMyIterable::FromFFI(somelib::ns::capi::RenamedMyIterable* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedMyIterable*>(ptr);
 }
 
-inline void ns::RenamedMyIterable::operator delete(void* ptr) {
-  ns::capi::namespace_MyIterable_destroy(reinterpret_cast<ns::capi::RenamedMyIterable*>(ptr));
+inline void somelib::ns::RenamedMyIterable::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_MyIterable_destroy(reinterpret_cast<somelib::ns::capi::RenamedMyIterable*>(ptr));
 }
 
 
-#endif // ns_RenamedMyIterable_HPP
+#endif // SOMELIB_ns_RenamedMyIterable_HPP

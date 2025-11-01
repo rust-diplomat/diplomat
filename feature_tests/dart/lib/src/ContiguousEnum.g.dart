@@ -4,13 +4,19 @@
 part of 'lib.g.dart';
 
 enum ContiguousEnum {
+
+  // ignore: public_member_api_docs
   c,
 
+  // ignore: public_member_api_docs
   d,
 
+  // ignore: public_member_api_docs
   e,
 
+  // ignore: public_member_api_docs
   f;
+
 }
 
 // dart format on

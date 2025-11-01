@@ -1,5 +1,5 @@
-#ifndef StructWithSlices_HPP
-#define StructWithSlices_HPP
+#ifndef SOMELIB_StructWithSlices_HPP
+#define SOMELIB_StructWithSlices_HPP
 
 #include "StructWithSlices.d.hpp"
 
@@ -14,39 +14,44 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    void StructWithSlices_return_last(diplomat::capi::StructWithSlices self, diplomat::capi::DiplomatWrite* write);
-    
-    
+
+    void StructWithSlices_return_last(somelib::capi::StructWithSlices self, somelib::diplomat::capi::DiplomatWrite* write);
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::string StructWithSlices::return_last() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::StructWithSlices_return_last(this->AsFFI(),
-    &write);
-  return output;
+inline std::string somelib::StructWithSlices::return_last() const {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::StructWithSlices_return_last(this->AsFFI(),
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::StructWithSlices::return_last_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::StructWithSlices_return_last(this->AsFFI(),
+        &write);
 }
 
 
-inline diplomat::capi::StructWithSlices StructWithSlices::AsFFI() const {
-  return diplomat::capi::StructWithSlices {
-    /* .first = */ {first.data(), first.size()},
-    /* .second = */ {second.data(), second.size()},
-  };
+inline somelib::capi::StructWithSlices somelib::StructWithSlices::AsFFI() const {
+    return somelib::capi::StructWithSlices {
+        /* .first = */ {first.data(), first.size()},
+        /* .second = */ {second.data(), second.size()},
+    };
 }
 
-inline StructWithSlices StructWithSlices::FromFFI(diplomat::capi::StructWithSlices c_struct) {
-  return StructWithSlices {
-    /* .first = */ std::string_view(c_struct.first.data, c_struct.first.len),
-    /* .second = */ diplomat::span<const uint16_t>(c_struct.second.data, c_struct.second.len),
-  };
+inline somelib::StructWithSlices somelib::StructWithSlices::FromFFI(somelib::capi::StructWithSlices c_struct) {
+    return somelib::StructWithSlices {
+        /* .first = */ std::string_view(c_struct.first.data, c_struct.first.len),
+        /* .second = */ somelib::diplomat::span<const uint16_t>(c_struct.second.data, c_struct.second.len),
+    };
 }
 
 
-#endif // StructWithSlices_HPP
+#endif // SOMELIB_StructWithSlices_HPP

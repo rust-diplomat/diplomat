@@ -8,7 +8,6 @@ const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class RefList {
-    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,41 +15,42 @@ export class RefList {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     #aEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RefList is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
-        
         this.#aEdge = aEdge;
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             RefList_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     static node(data) {
         // This lifetime edge depends on lifetimes 'b
         let bEdges = [data];
-        
+
+
         const result = wasm.RefList_node(data.ffiValue);
-    
+
         try {
             return new RefList(diplomatRuntime.internalConstructor, result, [], bEdges);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge, aEdge) {

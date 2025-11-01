@@ -41,6 +41,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_multi_arg_callback(
         f: DiplomatCallback<i32>,
         x: i32,
@@ -55,6 +56,7 @@ mod ffi {
         Wrapper::test_multi_arg_callback(f, x)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_multiarg_void_callback(f: DiplomatCallback<()>) {
         let f = move |arg0: i32, arg1: &str| unsafe {
             let arg1: diplomat_runtime::DiplomatUtf8StrSlice = arg1.into();
@@ -67,10 +69,12 @@ mod ffi {
                     diplomat_runtime::DiplomatUtf8StrSlice,
                 ) -> (),
             >(f.run_callback)(f.data, arg0, arg1)
+                .into()
         };
         Wrapper::test_multiarg_void_callback(f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_mod_array(g: DiplomatCallback<()>) {
         let g = move |arg0: &[u8]| unsafe {
             let arg0: diplomat_runtime::DiplomatSlice<u8> = arg0.into();
@@ -82,10 +86,12 @@ mod ffi {
                     diplomat_runtime::DiplomatSlice<u8>,
                 ) -> (),
             >(g.run_callback)(g.data, arg0)
+                .into()
         };
         Wrapper::test_mod_array(g)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_no_args(h: DiplomatCallback<()>) -> i32 {
         let h = move || unsafe {
             let _ = &h;
@@ -93,10 +99,12 @@ mod ffi {
                 unsafe extern "C" fn(*mut c_void, ...) -> (),
                 unsafe extern "C" fn(*const c_void) -> (),
             >(h.run_callback)(h.data)
+                .into()
         };
         Wrapper::test_no_args(h)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_cb_with_struct(f: DiplomatCallback<i32>) -> i32 {
         let f = move |arg0: TestingStruct| unsafe {
             let _ = &f;
@@ -108,6 +116,7 @@ mod ffi {
         Wrapper::test_cb_with_struct(f)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_multiple_cb_args(
         f: DiplomatCallback<i32>,
         g: DiplomatCallback<i32>,

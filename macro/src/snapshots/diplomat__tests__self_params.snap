@@ -15,6 +15,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn RefList_extend<'b>(
         this: &mut RefList<'b>,
         other: &RefList<'b>,
@@ -22,5 +23,6 @@ mod ffi {
         this.extend(other)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn RefList_destroy<'a>(this: Box<RefList<'a>>) {}
 }

@@ -5,3 +5,4 @@ somelib/build/
 somelib/gradle/
 somelib/gradlew
 somelib/gradlew.bat
+somelib/.jqwik-database

@@ -1,7 +1,8 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, StringEncoding, SymbolId, TraitId, TyPosition, TypeContext, TypeId,
+    self, DocsTypeReferenceSyntax, DocsUrlGenerator, MaybeOwn, StringEncoding, SymbolId, TraitId,
+    TyPosition, TypeContext, TypeId,
 };
 use std::borrow::Cow;
 use std::sync::LazyLock;
@@ -19,6 +20,8 @@ pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     is_for_cpp: bool,
     docs_url_gen: &'tcx DocsUrlGenerator,
+
+    lib_name: Option<String>,
 }
 
 pub(crate) const CAPI_NAMESPACE: &str = "capi";
@@ -27,11 +30,13 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn new(
         tcx: &'tcx TypeContext,
         is_for_cpp: bool,
+        config: &crate::Config,
         docs_url_gen: &'tcx DocsUrlGenerator,
     ) -> Self {
         Self {
             tcx,
             is_for_cpp,
+            lib_name: config.shared_config.lib_name.clone(),
             docs_url_gen,
         }
     }
@@ -102,7 +107,7 @@ impl<'tcx> CFormatter<'tcx> {
             hir::Type::Slice(hir::Slice::Primitive(borrow, prim)) => {
                 let prim = self.fmt_primitive_name_for_derived_type(*prim);
                 let mtb = match borrow {
-                    Some(borrow) if borrow.mutability.is_immutable() => "",
+                    MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
                     _ => "Mut",
                 };
                 self.diplomat_namespace(format!("Option{prim}View{mtb}").into()).to_string()
@@ -136,12 +141,7 @@ impl<'tcx> CFormatter<'tcx> {
         } else {
             name
         };
-        if self.is_for_cpp {
-            if let Some(ref ns) = attrs.namespace {
-                return format!("{ns}::{CAPI_NAMESPACE}::{name}").into();
-            }
-        }
-        self.diplomat_namespace(name)
+        self.diplomat_namespace_for_custom_type(name, attrs.namespace.as_deref())
     }
 
     /// Resolve and format the name of a type for use in header names: decl version
@@ -200,7 +200,7 @@ impl<'tcx> CFormatter<'tcx> {
             PrimitiveType::Bool => "bool",
 
             PrimitiveType::Char => "char32_t",
-            PrimitiveType::Int(IntType::I8) => "int8_t",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "int8_t",
             PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "uint8_t",
             PrimitiveType::Int(IntType::I16) => "int16_t",
             PrimitiveType::Int(IntType::U16) => "uint16_t",
@@ -223,7 +223,7 @@ impl<'tcx> CFormatter<'tcx> {
         match prim {
             PrimitiveType::Bool => "Bool",
             PrimitiveType::Char => "Char",
-            PrimitiveType::Int(IntType::I8) => "I8",
+            PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "I8",
             PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "U8",
             PrimitiveType::Int(IntType::I16) => "I16",
             PrimitiveType::Int(IntType::U16) => "U16",
@@ -241,15 +241,35 @@ impl<'tcx> CFormatter<'tcx> {
     /// Get the primitive type as a C type
     pub fn fmt_primitive_slice_name(
         &self,
-        borrow: Option<hir::Borrow>,
+        borrow: MaybeOwn,
         prim: hir::PrimitiveType,
     ) -> Cow<'tcx, str> {
         let prim = self.fmt_primitive_name_for_derived_type(prim);
         let mtb = match borrow {
-            Some(borrow) if borrow.mutability.is_immutable() => "",
+            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
         self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
+    }
+
+    pub fn fmt_struct_slice_name<P: TyPosition>(
+        &self,
+        borrow: MaybeOwn,
+        st_ty: &P::StructPath,
+    ) -> Cow<'tcx, str> {
+        let st_id = hir::StructPathLike::id(st_ty);
+        let st_name = self.fmt_type_name(st_id);
+
+        let def = self.tcx.resolve_type(st_id);
+
+        let mtb = match borrow {
+            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
+            _ => "Mut",
+        };
+
+        let ty = format!("Diplomat{st_name}View{mtb}");
+
+        self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
     }
 
     pub(crate) fn fmt_write_name(&self) -> Cow<'tcx, str> {
@@ -277,10 +297,9 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     pub(crate) fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n * ")
-            .replace(" \n", "\n")
+            .to_string()
     }
 
     pub(crate) fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
@@ -334,9 +353,37 @@ impl<'tcx> CFormatter<'tcx> {
         }
     }
 
+    /// Custom types in the capi namespace end up in either diplomat::capi::foo
+    /// or somens::capi::foo (Diplomat avoids polluting the global namespace with a `capi` namespace)
+    pub fn diplomat_namespace_for_custom_type(
+        &self,
+        ty: Cow<'tcx, str>,
+        ns: Option<&'_ str>,
+    ) -> Cow<'tcx, str> {
+        if self.is_for_cpp {
+            if let Some(lib_name) = &self.lib_name {
+                if let Some(ns) = ns {
+                    format!("{lib_name}::{ns}::{CAPI_NAMESPACE}::{ty}").into()
+                } else {
+                    format!("{lib_name}::{CAPI_NAMESPACE}::{ty}").into()
+                }
+            } else {
+                let root = ns.unwrap_or("diplomat");
+                format!("{root}::{CAPI_NAMESPACE}::{ty}").into()
+            }
+        } else {
+            ty
+        }
+    }
+
+    /// For types from diplomat_runtime.h
     fn diplomat_namespace(&self, ty: Cow<'tcx, str>) -> Cow<'tcx, str> {
         if self.is_for_cpp {
-            format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            if let Some(lib_name) = &self.lib_name {
+                format!("{lib_name}::diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            } else {
+                format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()
+            }
         } else {
             ty
         }

@@ -5,9 +5,17 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 
+/**
+ * Some example docs
+ */
 export class AttrOpaque1Renamed {
-    
+    /** @internal */
     get ffiValue(): pointer;
+
+
+    static macTest(): number;
+
+    static hello(): number;
 
     get methodRenamed(): number;
 
@@ -17,5 +25,8 @@ export class AttrOpaque1Renamed {
 
     useNamespaced(n: RenamedAttrEnum): void;
 
+    /**
+     * More example docs
+     */
     constructor();
 }

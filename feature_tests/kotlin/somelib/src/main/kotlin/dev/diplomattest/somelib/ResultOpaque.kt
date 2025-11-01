@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface ResultOpaqueLib: Library {
     fun ResultOpaque_destroy(handle: Pointer)
     fun ResultOpaque_new(i: Int): ResultPointerInt
@@ -37,6 +36,7 @@ class ResultOpaque internal constructor (
     companion object {
         internal val libClass: Class<ResultOpaqueLib> = ResultOpaqueLib::class.java
         internal val lib: ResultOpaqueLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(i: Int): Result<ResultOpaque> {
             
@@ -51,6 +51,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingFoo(): Result<ResultOpaque> {
             
@@ -65,6 +66,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingBar(): Result<ResultOpaque> {
             
@@ -79,6 +81,7 @@ class ResultOpaque internal constructor (
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.union.err)).err()
             }
         }
+        @JvmStatic
         
         fun newFailingUnit(): Result<ResultOpaque> {
             
@@ -93,6 +96,7 @@ class ResultOpaque internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun newFailingStruct(i: Int): Result<ResultOpaque> {
             
@@ -109,6 +113,7 @@ class ResultOpaque internal constructor (
                 return returnStruct.err()
             }
         }
+        @JvmStatic
         
         fun newInErr(i: Int): Result<Unit> {
             
@@ -123,6 +128,7 @@ class ResultOpaque internal constructor (
                 return returnOpaque.err()
             }
         }
+        @JvmStatic
         
         fun newInt(i: Int): Result<Int> {
             
@@ -133,6 +139,7 @@ class ResultOpaque internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun newFailingInt(i: Int): Result<Unit> {
             
@@ -143,6 +150,7 @@ class ResultOpaque internal constructor (
                 return IntError(returnVal.union.err).err()
             }
         }
+        @JvmStatic
         
         fun newInEnumErr(i: Int): Result<ErrorEnum> {
             
@@ -163,7 +171,7 @@ class ResultOpaque internal constructor (
     *Test that this interacts gracefully with returning a reference type
     */
     fun takesStr(v: String): ResultOpaque {
-        val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+        val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSlice);
         val selfEdges: List<Any> = listOf(this)

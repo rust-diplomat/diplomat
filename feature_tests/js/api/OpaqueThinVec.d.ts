@@ -6,8 +6,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OpaqueThinVec {
-    
+    /** @internal */
     get ffiValue(): pointer;
+
 
     [Symbol.iterator](): OpaqueThinIter;
 
@@ -17,5 +18,5 @@ export class OpaqueThinVec {
 
     get first(): OpaqueThin | null;
 
-    constructor(a: Array<number>, b: Array<number>);
+    constructor(a: Array<number>, b: Array<number>, c: string);
 }

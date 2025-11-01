@@ -1,6 +1,9 @@
   {%- if !m.docs.is_empty() %}
-  /// {{m.docs.replace('\n', "\n  ")}}
+  {{~ m.docs|prefix_trimmed("  /// ")}}
   {%- endif %}
+  {% if let Some(deprecated) = m.deprecated -%}
+  @core.Deprecated('{{ deprecated }}')
+  {% endif -%}
   {{ m.declaration }} {
     {%- for arena in m.arenas %}
     {{ arena }}
@@ -11,7 +14,7 @@
     {%- if maybe_lifetime_info.is_some() %}
     {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
     // This lifetime edge depends on lifetimes: {% for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%} {%- if !loop.first %}, {% endif -%} '{{m.lifetimes.fmt_lifetime(longer)}} {%- endfor %}
-    core.List<Object> {{m.lifetimes.fmt_lifetime(lifetime)}}Edges = [
+    final {{m.lifetimes.fmt_lifetime(lifetime)}}Edges = [
       {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
       {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
       {%- endfor -%}
@@ -23,10 +26,7 @@
     {%- if m.method.output.is_write() %}
     final write = _Write();
     {%- endif %}
-    {%- if !m.method.output.is_ffi_unit() %}
-    final result = {% else %}
-    {% endif -%}
-    _{{ m.abi_name -}}(
+    {% if !m.method.output.is_ffi_unit() -%} final result = {% endif -%} _{{ m.abi_name }}(
         {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
         {{ param }}
@@ -34,7 +34,8 @@
     );
     {%- match m.return_expression %}
     {%- when Some with (statement) %}
-    {{statement.replace('\n', "\n    ")}}
+    {{~statement|indent_trimmed(4)}}
     {%- when None %}
     {%- endmatch %}
   }
+

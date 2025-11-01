@@ -4,16 +4,23 @@
 part of 'lib.g.dart';
 
 enum MyEnum {
+
+  // ignore: public_member_api_docs
   a,
 
+  // ignore: public_member_api_docs
   b,
 
+  // ignore: public_member_api_docs
   c,
 
+  // ignore: public_member_api_docs
   d,
 
+  // ignore: public_member_api_docs
   e,
 
+  // ignore: public_member_api_docs
   f;
 
   int get _ffi {
@@ -42,6 +49,7 @@ enum MyEnum {
     final result = _MyEnum_get_a();
     return MyEnum.values.firstWhere((v) => v._ffi == result);
   }
+
 }
 
 @_DiplomatFfiUse('MyEnum_into_value')

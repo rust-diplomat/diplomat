@@ -1,9 +1,12 @@
 //! Formatter functions for Javascript for converting Rust types into Typescript types.
 //!
 //! Used in [`super::type_generation`] and [`crate::demo_gen`].
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
-use diplomat_core::hir::{self, Docs, DocsUrlGenerator, EnumVariant, TypeContext, TypeId};
+use diplomat_core::hir::{
+    self, Attrs, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, SpecialMethod,
+    TypeContext, TypeId,
+};
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
 use super::FileType;
@@ -97,11 +100,19 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     /// Just creates `/** */` doc strings.
-    pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+    pub fn fmt_docs(&self, docs: &Docs, attrs: &Attrs) -> String {
+        let mut docs = docs
+            .to_markdown(DocsTypeReferenceSyntax::AtLink, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n * ")
-            .replace(" \n", "\n")
+            .to_string();
+        if let Some(deprecated) = attrs.deprecated.as_ref() {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            let _ = writeln!(&mut docs, "@deprecated {deprecated}");
+        }
+        docs
     }
 
     /// Creates the body of an `import` or `export` statement.
@@ -139,20 +150,6 @@ impl<'tcx> JSFormatter<'tcx> {
         )
     }
 
-    /// A version of [`Self::fmt_import_statement`] that is focused more towards modules than specific files.
-    ///
-    /// Only used by [`crate::demo_gen`].
-    ///
-    /// (Probably could be consolidated with [`Self::fmt_import_statement`])
-    pub fn fmt_import_module(
-        &self,
-        type_name: &str,
-        module_name: String,
-        relative_path: String,
-    ) -> String {
-        format!(r#"import {{ {type_name} }} from "{relative_path}{module_name}""#)
-    }
-
     /// Uses [`Self::fmt_module_statement`] to create an export statement.
     pub fn fmt_export_statement(
         &self,
@@ -178,6 +175,7 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64)
             | hir::PrimitiveType::Int128(_) => "bigint",
             hir::PrimitiveType::Int(_)
+            | hir::PrimitiveType::Ordering
             | hir::PrimitiveType::IntSize(_)
             | hir::PrimitiveType::Byte
             | hir::PrimitiveType::Float(_) => "number",
@@ -205,6 +203,9 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Int128(..) => {
                 panic!("Int128 slices are not a supported type for the JS backend.")
             }
+            hir::PrimitiveType::Ordering => {
+                panic!("Lists of ordering not supported")
+            }
         }
     }
 
@@ -220,6 +221,9 @@ impl<'tcx> JSFormatter<'tcx> {
             | hir::PrimitiveType::Float(_) => "Array<number>",
             hir::PrimitiveType::Int128(_) => {
                 panic!("Int128 slices are not a supported type for the JS backend.")
+            }
+            hir::PrimitiveType::Ordering => {
+                panic!("Lists of ordering not supported")
             }
         }
     }
@@ -244,6 +248,9 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
             hir::PrimitiveType::Int128(hir::Int128Type::I128) => "i128",
             hir::PrimitiveType::Int128(hir::Int128Type::U128) => "u128",
+            hir::PrimitiveType::Ordering => {
+                panic!("Lists of ordering not supported")
+            }
         }
     }
 
@@ -265,8 +272,16 @@ impl<'tcx> JSFormatter<'tcx> {
         let name: String = method
             .attrs
             .rename
-            .apply(method.name.as_str().into())
+            .apply(
+                if let Some(SpecialMethod::Getter(Some(ref name))) = method.attrs.special_method {
+                    name
+                } else {
+                    method.name.as_str()
+                }
+                .into(),
+            )
             .to_lower_camel_case();
+
         if RESERVED.contains(&&*name) {
             format!("{name}_")
         } else {

@@ -10,8 +10,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Foo {
-    
+    /** @internal */
     get ffiValue(): pointer;
+
 
     get bar(): Bar;
 
@@ -19,7 +20,7 @@ export class Foo {
 
     static extractFromFields(fields: BorrowedFields_obj): Foo;
 
-    /** 
+    /**
      * Test that the extraction logic correctly pins the right fields
      */
     static extractFromBounds(bounds: BorrowedFieldsWithBounds_obj, anotherString: string): Foo;

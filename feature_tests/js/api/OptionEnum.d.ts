@@ -4,16 +4,19 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class OptionEnum {
-    
 
-    static fromValue(value : OptionEnum | string) : OptionEnum; 
+    /** @internal */
+    static fromValue(value: OptionEnum | string): OptionEnum;
 
-    get value() : string;
+    get value(): string;
 
-    get ffiValue() : number;
+    /** @internal */
+    get ffiValue(): number;
 
     static Foo : OptionEnum;
     static Bar : OptionEnum;
+    static Baz : OptionEnum;
+
 
     constructor(value: OptionEnum | string );
 }

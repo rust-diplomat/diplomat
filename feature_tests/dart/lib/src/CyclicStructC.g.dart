@@ -8,8 +8,10 @@ final class _CyclicStructCFfi extends ffi.Struct {
 }
 
 final class CyclicStructC {
+  // ignore: public_member_api_docs
   CyclicStructA a;
 
+  // ignore: public_member_api_docs
   CyclicStructC({required this.a});
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -40,6 +42,7 @@ final class CyclicStructC {
     _CyclicStructC_cyclic_out(_toFfi(temp.arena), write._ffi);
     return write.finalize();
   }
+
 
   @override
   bool operator ==(Object other) =>

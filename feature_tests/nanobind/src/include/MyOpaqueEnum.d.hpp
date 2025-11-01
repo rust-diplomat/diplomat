@@ -1,5 +1,5 @@
-#ifndef MyOpaqueEnum_D_HPP
-#define MyOpaqueEnum_D_HPP
+#ifndef SOMELIB_MyOpaqueEnum_D_HPP
+#define SOMELIB_MyOpaqueEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,34 +10,42 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+namespace capi { struct MyOpaqueEnum; }
+class MyOpaqueEnum;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct MyOpaqueEnum;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class MyOpaqueEnum {
 public:
 
-  inline static std::unique_ptr<MyOpaqueEnum> new_();
+  inline static std::unique_ptr<somelib::MyOpaqueEnum> new_();
 
   inline std::string to_string() const;
+  template<typename W>
+  inline void to_string_write(W& writeable_output) const;
 
-  inline const diplomat::capi::MyOpaqueEnum* AsFFI() const;
-  inline diplomat::capi::MyOpaqueEnum* AsFFI();
-  inline static const MyOpaqueEnum* FromFFI(const diplomat::capi::MyOpaqueEnum* ptr);
-  inline static MyOpaqueEnum* FromFFI(diplomat::capi::MyOpaqueEnum* ptr);
-  inline static void operator delete(void* ptr);
+    inline const somelib::capi::MyOpaqueEnum* AsFFI() const;
+    inline somelib::capi::MyOpaqueEnum* AsFFI();
+    inline static const somelib::MyOpaqueEnum* FromFFI(const somelib::capi::MyOpaqueEnum* ptr);
+    inline static somelib::MyOpaqueEnum* FromFFI(somelib::capi::MyOpaqueEnum* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  MyOpaqueEnum() = delete;
-  MyOpaqueEnum(const MyOpaqueEnum&) = delete;
-  MyOpaqueEnum(MyOpaqueEnum&&) noexcept = delete;
-  MyOpaqueEnum operator=(const MyOpaqueEnum&) = delete;
-  MyOpaqueEnum operator=(MyOpaqueEnum&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    MyOpaqueEnum() = delete;
+    MyOpaqueEnum(const somelib::MyOpaqueEnum&) = delete;
+    MyOpaqueEnum(somelib::MyOpaqueEnum&&) noexcept = delete;
+    MyOpaqueEnum operator=(const somelib::MyOpaqueEnum&) = delete;
+    MyOpaqueEnum operator=(somelib::MyOpaqueEnum&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // MyOpaqueEnum_D_HPP
+} // namespace
+#endif // SOMELIB_MyOpaqueEnum_D_HPP

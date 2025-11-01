@@ -5,11 +5,11 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueThinLib: Library {
     fun OpaqueThin_destroy(handle: Pointer)
     fun OpaqueThin_a(handle: Pointer): Int
     fun OpaqueThin_b(handle: Pointer): Float
+    fun OpaqueThin_c(handle: Pointer, write: Pointer): Unit
 }
 
 class OpaqueThin internal constructor (
@@ -40,6 +40,14 @@ class OpaqueThin internal constructor (
         
         val returnVal = lib.OpaqueThin_b(handle);
         return (returnVal)
+    }
+    
+    fun c(): String {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.OpaqueThin_c(handle, write);
+        
+        val returnString = DW.writeToString(write)
+        return returnString
     }
 
 }

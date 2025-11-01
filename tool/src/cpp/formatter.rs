@@ -2,9 +2,9 @@
 
 use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, SpecialMethod, StringEncoding, TypeContext, TypeId,
+    self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId,
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 /// This type mediates all formatting
 ///
@@ -17,12 +17,25 @@ use std::borrow::Cow;
 /// of C types and methods.
 pub(crate) struct Cpp2Formatter<'tcx> {
     pub c: CFormatter<'tcx>,
+    pub lib_name: Option<String>,
+    pub lib_name_ns_prefix: String,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        config: &crate::Config,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
         Self {
-            c: CFormatter::new(tcx, true, docs_url_gen),
+            c: CFormatter::new(tcx, true, config, docs_url_gen),
+            lib_name: config.shared_config.lib_name.clone(),
+            lib_name_ns_prefix: config
+                .shared_config
+                .lib_name
+                .as_ref()
+                .map(|l| format!("{l}::"))
+                .unwrap_or_default(),
         }
     }
 
@@ -36,6 +49,22 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .apply(resolved.name().as_str().into())
     }
 
+    pub fn fmt_symbol_name(&self, id: SymbolId) -> Cow<'tcx, str> {
+        match id {
+            SymbolId::TypeId(ty) => self.fmt_type_name(ty),
+            SymbolId::FunctionId(f) => {
+                let resolved = self.c.tcx().resolve_function(f);
+                let name = resolved.attrs.rename.apply(resolved.name.as_str().into());
+                if let Some(ns) = &resolved.attrs.namespace {
+                    format!("{ns}::{name}").into()
+                } else {
+                    name
+                }
+            }
+            _ => panic!("Unsupported SymbolId: {id:?}"),
+        }
+    }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
@@ -43,43 +72,66 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .attrs()
             .rename
             .apply(resolved.name().as_str().into());
+        let lib_prefix = &self.lib_name_ns_prefix;
         if let Some(ref ns) = resolved.attrs().namespace {
-            format!("{ns}::{name}").into()
+            format!("{lib_prefix}{ns}::{name}").into()
         } else {
-            name
+            format!("{lib_prefix}{name}").into()
         }
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_decl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.to_string(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}"),
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.d.hpp")
+            format!("{ns}/{name}.d.hpp")
         } else {
-            format!("{type_name}.d.hpp")
+            format!("{name}.d.hpp")
         }
     }
 
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
-        let resolved = self.c.tcx().resolve_type(id);
-        let type_name = resolved
-            .attrs()
-            .rename
-            .apply(resolved.name().as_str().into());
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn fmt_impl_header_path(&self, id: SymbolId) -> String {
+        let (name, namespace) = match id {
+            SymbolId::TypeId(ty) => {
+                let resolved = self.c.tcx().resolve_type(ty);
+                let type_name = resolved
+                    .attrs()
+                    .rename
+                    .apply(resolved.name().as_str().into());
+                (type_name.to_string(), resolved.attrs().namespace.clone())
+            }
+            _ => panic!("Unsupported SymbolId {id:?}"),
+        };
+
+        if let Some(ref ns) = namespace {
             let ns = ns.replace("::", "/");
-            format!("{ns}/{type_name}.hpp")
+            format!("{ns}/{name}.hpp")
         } else {
-            format!("{type_name}.hpp")
+            format!("{name}.hpp")
         }
     }
 
+    pub fn fmt_free_function_header_path(&self, namespace: Option<String>) -> String {
+        if let Some(ns) = namespace {
+            let ns = ns.replace("::", "/");
+            format!("{ns}/free_functions.hpp")
+        } else {
+            "free_functions.hpp".to_string()
+        }
+    }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         variant.attrs.rename.apply(variant.name.as_str().into())
@@ -145,10 +197,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: This needs to change if an abstraction other than std::span is used
         // TODO: Where is the right place to put `const` here?
+
+        let lib_prefix = &self.lib_name_ns_prefix;
         if mutability.is_mutable() {
-            format!("diplomat::span<{ident}>").into()
+            format!("{lib_prefix}diplomat::span<{ident}>").into()
         } else {
-            format!("diplomat::span<const {ident}>").into()
+            format!("{lib_prefix}diplomat::span<const {ident}>").into()
         }
     }
 
@@ -161,12 +215,30 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
+    pub fn fmt_borrowed_str_in_slice(&self, encoding: StringEncoding) -> Cow<'static, str> {
+        match encoding {
+            StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => {
+                "diplomat::string_view_for_slice".into()
+            }
+            StringEncoding::UnvalidatedUtf16 => "diplomat::u16string_view_for_slice".into(),
+            _ => unreachable!(),
+        }
+    }
+
     pub fn fmt_owned_str(&self) -> Cow<'static, str> {
         "std::string".into()
     }
 
-    pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        self.c.fmt_docs(docs)
+    pub fn fmt_docs(&self, docs: &hir::Docs, attrs: &hir::Attrs) -> String {
+        let mut docs = self.c.fmt_docs(docs);
+        if let Some(deprecated) = attrs.deprecated.as_ref() {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            let _ = writeln!(&mut docs, "\\deprecated {deprecated}");
+        }
+        docs
     }
 
     /// Format a method
@@ -187,11 +259,22 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
-        let resolved = self.c.tcx().resolve_type(ty);
-        if let Some(ref ns) = resolved.attrs().namespace {
+    pub fn namespace_c_name(&self, ty: SymbolId, name: &str) -> String {
+        let ns = match ty {
+            SymbolId::FunctionId(f) => &self.c.tcx().resolve_function(f).attrs.namespace,
+            SymbolId::TypeId(ty) => &self.c.tcx().resolve_type(ty).attrs().namespace,
+            _ => panic!("Unsupported SymbolId"),
+        };
+        if let Some(lib_name) = &self.lib_name {
+            if let Some(ref ns) = ns {
+                format!("{lib_name}::{ns}::{CAPI_NAMESPACE}::{name}")
+            } else {
+                format!("{lib_name}::{CAPI_NAMESPACE}::{name}")
+            }
+        } else if let Some(ref ns) = ns {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
+            // When there is no library name, capi stuff gets stuffed under the diplomat namespace
             format!("diplomat::{CAPI_NAMESPACE}::{name}")
         }
     }
@@ -204,6 +287,44 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Replace any keywords used
     pub fn fmt_identifier<'a>(&self, name: Cow<'a, str>) -> Cow<'a, str> {
         self.c.fmt_identifier(name)
+    }
+
+    pub fn fmt_c_api_callback_ret<'a>(
+        &self,
+        namespace: Option<String>,
+        method_name: String,
+        cpp_name: &'a str,
+    ) -> Cow<'a, str> {
+        let lib_prefix = &self.lib_name_ns_prefix;
+        if let Some(ns) = namespace {
+            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+        } else {
+            // When there is no library name, capi stuff gets stuffed under the diplomat namespace
+            let prefix = self.lib_name.as_deref().unwrap_or("diplomat");
+            format!("{prefix}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result")
+                .into()
+        }
+    }
+
+    pub fn fmt_run_callback_converter<'a>(
+        &self,
+        cpp_name: &'a str,
+        conversion_func: &'a str,
+        types: Vec<&'a str>,
+    ) -> String {
+        let lib_prefix = &self.lib_name_ns_prefix;
+        format!(
+            "{lib_prefix}diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
+            types.join(", ")
+        )
+    }
+
+    pub fn lib_prefixed_path<'a>(&self, path: &'a str) -> Cow<'a, str> {
+        if let Some(lib_name) = &self.lib_name {
+            format!("{lib_name}::{path}").into()
+        } else {
+            path.into()
+        }
     }
 }
 
@@ -222,7 +343,7 @@ pub mod test {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
+                    eprintln!("Lowering error: {err}");
                 }
                 panic!("Failed to create context")
             }

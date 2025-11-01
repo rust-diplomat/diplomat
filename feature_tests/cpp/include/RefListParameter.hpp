@@ -1,5 +1,5 @@
-#ifndef RefListParameter_HPP
-#define RefListParameter_HPP
+#ifndef SOMELIB_RefListParameter_HPP
+#define SOMELIB_RefListParameter_HPP
 
 #include "RefListParameter.d.hpp"
 
@@ -14,36 +14,35 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    
+
     void RefListParameter_destroy(RefListParameter* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline const diplomat::capi::RefListParameter* RefListParameter::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::RefListParameter*>(this);
+inline const somelib::capi::RefListParameter* somelib::RefListParameter::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::RefListParameter*>(this);
 }
 
-inline diplomat::capi::RefListParameter* RefListParameter::AsFFI() {
-  return reinterpret_cast<diplomat::capi::RefListParameter*>(this);
+inline somelib::capi::RefListParameter* somelib::RefListParameter::AsFFI() {
+    return reinterpret_cast<somelib::capi::RefListParameter*>(this);
 }
 
-inline const RefListParameter* RefListParameter::FromFFI(const diplomat::capi::RefListParameter* ptr) {
-  return reinterpret_cast<const RefListParameter*>(ptr);
+inline const somelib::RefListParameter* somelib::RefListParameter::FromFFI(const somelib::capi::RefListParameter* ptr) {
+    return reinterpret_cast<const somelib::RefListParameter*>(ptr);
 }
 
-inline RefListParameter* RefListParameter::FromFFI(diplomat::capi::RefListParameter* ptr) {
-  return reinterpret_cast<RefListParameter*>(ptr);
+inline somelib::RefListParameter* somelib::RefListParameter::FromFFI(somelib::capi::RefListParameter* ptr) {
+    return reinterpret_cast<somelib::RefListParameter*>(ptr);
 }
 
-inline void RefListParameter::operator delete(void* ptr) {
-  diplomat::capi::RefListParameter_destroy(reinterpret_cast<diplomat::capi::RefListParameter*>(ptr));
+inline void somelib::RefListParameter::operator delete(void* ptr) {
+    somelib::capi::RefListParameter_destroy(reinterpret_cast<somelib::capi::RefListParameter*>(ptr));
 }
 
 
-#endif // RefListParameter_HPP
+#endif // SOMELIB_RefListParameter_HPP

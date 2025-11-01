@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_destroy(handle: Pointer)
     fun Utf16Wrap_from_utf16(input: Slice): Pointer
@@ -29,9 +28,10 @@ class Utf16Wrap internal constructor (
     companion object {
         internal val libClass: Class<Utf16WrapLib> = Utf16WrapLib::class.java
         internal val lib: Utf16WrapLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun fromUtf16(input: String): Utf16Wrap {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf16(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf16(input)
             
             val returnVal = lib.Utf16Wrap_from_utf16(inputSlice);
             val selfEdges: List<Any> = listOf()

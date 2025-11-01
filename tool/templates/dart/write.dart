@@ -2,14 +2,14 @@ final class _Write {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   _Write() : _ffi = _diplomat_buffer_write_create(0);
-  
+
   String finalize() {
     try {
       final buf = _diplomat_buffer_write_get_bytes(_ffi);
       if (buf == ffi.Pointer.fromAddress(0)) {
-        throw core.OutOfMemoryError();
+        throw const core.OutOfMemoryError();
       }
-      return Utf8Decoder().convert(buf.asTypedList(_diplomat_buffer_write_len(_ffi)));
+      return const Utf8Decoder().convert(buf.asTypedList(_diplomat_buffer_write_len(_ffi)));
     } finally {
       _diplomat_buffer_write_destroy(_ffi);
     }

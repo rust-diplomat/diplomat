@@ -2,45 +2,55 @@
 export { codepoint } from './diplomat-runtime';
 
 
-export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs"
+export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct"
 
-export { ImportedStruct } from "./ImportedStruct"
+export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
-export { BorrowedFields } from "./BorrowedFields"
+export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"
 
-export { BorrowedFieldsReturning } from "./BorrowedFieldsReturning"
+export { ImportedStruct, ImportedStruct_obj } from "./ImportedStruct"
 
-export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
+export { BorrowedFields, BorrowedFields_obj } from "./BorrowedFields"
 
-export { NestedBorrowedFields } from "./NestedBorrowedFields"
+export { BorrowedFieldsReturning, BorrowedFieldsReturning_obj } from "./BorrowedFieldsReturning"
 
-export { OptionInputStruct } from "./OptionInputStruct"
+export { BorrowedFieldsWithBounds, BorrowedFieldsWithBounds_obj } from "./BorrowedFieldsWithBounds"
 
-export { ErrorStruct } from "./ErrorStruct"
+export { NestedBorrowedFields, NestedBorrowedFields_obj } from "./NestedBorrowedFields"
 
-export { BigStructWithStuff } from "./BigStructWithStuff"
+export { BorrowingOptionStruct, BorrowingOptionStruct_obj } from "./BorrowingOptionStruct"
 
-export { CyclicStructA } from "./CyclicStructA"
+export { OptionInputStruct, OptionInputStruct_obj } from "./OptionInputStruct"
 
-export { CyclicStructB } from "./CyclicStructB"
+export { ErrorStruct, ErrorStruct_obj } from "./ErrorStruct"
 
-export { CyclicStructC } from "./CyclicStructC"
+export { BigStructWithStuff, BigStructWithStuff_obj } from "./BigStructWithStuff"
 
-export { MyStruct } from "./MyStruct"
+export { CyclicStructA, CyclicStructA_obj } from "./CyclicStructA"
 
-export { MyStructContainingAnOption } from "./MyStructContainingAnOption"
+export { CyclicStructB, CyclicStructB_obj } from "./CyclicStructB"
+
+export { CyclicStructC, CyclicStructC_obj } from "./CyclicStructC"
+
+export { MyStruct, MyStruct_obj } from "./MyStruct"
+
+export { MyStructContainingAnOption, MyStructContainingAnOption_obj } from "./MyStructContainingAnOption"
 
 export { MyZst } from "./MyZst"
 
-export { ScalarPairWithPadding } from "./ScalarPairWithPadding"
+export { PrimitiveStruct, PrimitiveStruct_obj } from "./PrimitiveStruct"
 
-export { StructWithSlices } from "./StructWithSlices"
+export { ScalarPairWithPadding, ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
+
+export { StructWithSlices, StructWithSlices_obj } from "./StructWithSlices"
 
 export { OptionStruct } from "./OptionStruct"
 
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
+
+export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque"
 
 export { RenamedMyIterable } from "./RenamedMyIterable"
 
@@ -54,7 +64,15 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 
+export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable"
+
+export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator"
+
+export { RenamedTestOpaque } from "./RenamedTestOpaque"
+
 export { Unnamespaced } from "./Unnamespaced"
+
+export { RenamedVectorTest } from "./RenamedVectorTest"
 
 export { Bar } from "./Bar"
 
@@ -95,6 +113,8 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString"
 export { Utf16Wrap } from "./Utf16Wrap"
 
 export { RenamedAttrEnum } from "./RenamedAttrEnum"
+
+export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum"
 
 export { UnimportedEnum } from "./UnimportedEnum"
 

@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface CallbackHolderLib: Library {
     fun CallbackHolder_destroy(handle: Pointer)
     fun CallbackHolder_new(func: DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native): Pointer
@@ -46,7 +45,7 @@ internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func interna
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native::class.java).toLong()
-        
+
         fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackHolder_new_diplomatCallback_func {
             val callback: Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func = object :  Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
@@ -78,6 +77,7 @@ class CallbackHolder internal constructor (
     companion object {
         internal val libClass: Class<CallbackHolderLib> = CallbackHolderLib::class.java
         internal val lib: CallbackHolderLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(func: (Int)->Int): CallbackHolder {
             

@@ -20,6 +20,7 @@ final class MyString implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('MyString_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 
   factory MyString(String v) {
@@ -70,10 +71,11 @@ final class MyString implements ffi.Finalizable {
 
   String borrow() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _MyString_borrow(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('MyString_destroy')

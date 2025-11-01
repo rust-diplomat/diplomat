@@ -1,5 +1,5 @@
-#ifndef Opaque_HPP
-#define Opaque_HPP
+#ifndef SOMELIB_Opaque_HPP
+#define SOMELIB_Opaque_HPP
 
 #include "Opaque.d.hpp"
 
@@ -16,98 +16,103 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    diplomat::capi::Opaque* Opaque_new(void);
-    
-    diplomat::capi::Opaque* Opaque_try_from_utf8(diplomat::capi::DiplomatStringView input);
-    
-    diplomat::capi::Opaque* Opaque_from_str(diplomat::capi::DiplomatStringView input);
-    
-    void Opaque_get_debug_str(const diplomat::capi::Opaque* self, diplomat::capi::DiplomatWrite* write);
-    
-    void Opaque_assert_struct(const diplomat::capi::Opaque* self, diplomat::capi::MyStruct s);
-    
+
+    somelib::capi::Opaque* Opaque_new(void);
+
+    somelib::capi::Opaque* Opaque_try_from_utf8(somelib::diplomat::capi::DiplomatStringView input);
+
+    somelib::capi::Opaque* Opaque_from_str(somelib::diplomat::capi::DiplomatStringView input);
+
+    void Opaque_get_debug_str(const somelib::capi::Opaque* self, somelib::diplomat::capi::DiplomatWrite* write);
+
+    void Opaque_assert_struct(const somelib::capi::Opaque* self, somelib::capi::MyStruct s);
+
     size_t Opaque_returns_usize(void);
-    
-    diplomat::capi::ImportedStruct Opaque_returns_imported(void);
-    
+
+    somelib::capi::ImportedStruct Opaque_returns_imported(void);
+
     int8_t Opaque_cmp(void);
-    
-    
+
     void Opaque_destroy(Opaque* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<Opaque> Opaque::new_() {
-  auto result = diplomat::capi::Opaque_new();
-  return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
+inline std::unique_ptr<somelib::Opaque> somelib::Opaque::new_() {
+    auto result = somelib::capi::Opaque_new();
+    return std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result));
 }
 
-inline std::unique_ptr<Opaque> Opaque::try_from_utf8(std::string_view input) {
-  auto result = diplomat::capi::Opaque_try_from_utf8({input.data(), input.size()});
-  return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
+inline std::unique_ptr<somelib::Opaque> somelib::Opaque::try_from_utf8(std::string_view input) {
+    auto result = somelib::capi::Opaque_try_from_utf8({input.data(), input.size()});
+    return std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result));
 }
 
-inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::from_str(std::string_view input) {
-  if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
-    return diplomat::Err<diplomat::Utf8Error>();
+inline somelib::diplomat::result<std::unique_ptr<somelib::Opaque>, somelib::diplomat::Utf8Error> somelib::Opaque::from_str(std::string_view input) {
+    if (!somelib::diplomat::capi::diplomat_is_str(input.data(), input.size())) {
+    return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
-  auto result = diplomat::capi::Opaque_from_str({input.data(), input.size()});
-  return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));
+    auto result = somelib::capi::Opaque_from_str({input.data(), input.size()});
+    return somelib::diplomat::Ok<std::unique_ptr<somelib::Opaque>>(std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result)));
 }
 
-inline std::string Opaque::get_debug_str() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  diplomat::capi::Opaque_get_debug_str(this->AsFFI(),
-    &write);
-  return output;
+inline std::string somelib::Opaque::get_debug_str() const {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::Opaque_get_debug_str(this->AsFFI(),
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::Opaque::get_debug_str_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::Opaque_get_debug_str(this->AsFFI(),
+        &write);
 }
 
-inline void Opaque::assert_struct(MyStruct s) const {
-  diplomat::capi::Opaque_assert_struct(this->AsFFI(),
-    s.AsFFI());
+inline void somelib::Opaque::assert_struct(somelib::MyStruct s) const {
+    somelib::capi::Opaque_assert_struct(this->AsFFI(),
+        s.AsFFI());
 }
 
-inline size_t Opaque::returns_usize() {
-  auto result = diplomat::capi::Opaque_returns_usize();
-  return result;
+inline size_t somelib::Opaque::returns_usize() {
+    auto result = somelib::capi::Opaque_returns_usize();
+    return result;
 }
 
-inline ImportedStruct Opaque::returns_imported() {
-  auto result = diplomat::capi::Opaque_returns_imported();
-  return ImportedStruct::FromFFI(result);
+inline somelib::ImportedStruct somelib::Opaque::returns_imported() {
+    auto result = somelib::capi::Opaque_returns_imported();
+    return somelib::ImportedStruct::FromFFI(result);
 }
 
-inline int8_t Opaque::cmp() {
-  auto result = diplomat::capi::Opaque_cmp();
-  return result;
+inline int8_t somelib::Opaque::cmp() {
+    auto result = somelib::capi::Opaque_cmp();
+    return result;
 }
 
-inline const diplomat::capi::Opaque* Opaque::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Opaque*>(this);
+inline const somelib::capi::Opaque* somelib::Opaque::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::Opaque*>(this);
 }
 
-inline diplomat::capi::Opaque* Opaque::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Opaque*>(this);
+inline somelib::capi::Opaque* somelib::Opaque::AsFFI() {
+    return reinterpret_cast<somelib::capi::Opaque*>(this);
 }
 
-inline const Opaque* Opaque::FromFFI(const diplomat::capi::Opaque* ptr) {
-  return reinterpret_cast<const Opaque*>(ptr);
+inline const somelib::Opaque* somelib::Opaque::FromFFI(const somelib::capi::Opaque* ptr) {
+    return reinterpret_cast<const somelib::Opaque*>(ptr);
 }
 
-inline Opaque* Opaque::FromFFI(diplomat::capi::Opaque* ptr) {
-  return reinterpret_cast<Opaque*>(ptr);
+inline somelib::Opaque* somelib::Opaque::FromFFI(somelib::capi::Opaque* ptr) {
+    return reinterpret_cast<somelib::Opaque*>(ptr);
 }
 
-inline void Opaque::operator delete(void* ptr) {
-  diplomat::capi::Opaque_destroy(reinterpret_cast<diplomat::capi::Opaque*>(ptr));
+inline void somelib::Opaque::operator delete(void* ptr) {
+    somelib::capi::Opaque_destroy(reinterpret_cast<somelib::capi::Opaque*>(ptr));
 }
 
 
-#endif // Opaque_HPP
+#endif // SOMELIB_Opaque_HPP

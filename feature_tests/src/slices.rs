@@ -126,4 +126,25 @@ pub mod ffi {
             self.0.get(i).copied()
         }
     }
+
+    // For testing throwing IndexError:
+    #[diplomat::opaque]
+    #[diplomat::attr(not(nanobind), disable)]
+    struct Float64VecError(Vec<f64>);
+
+    impl Float64VecError {
+        #[diplomat::attr(not(supports = memory_sharing), disable)]
+        pub fn new(v: &[f64]) -> Box<Float64VecError> {
+            Box::new(Self(v.to_vec()))
+        }
+
+        #[diplomat::attr(auto, indexer)]
+        pub fn get(&self, i: usize) -> Result<f64, ()> {
+            if let Some(i) = self.0.get(i) {
+                Ok(*i)
+            } else {
+                Err(())
+            }
+        }
+    }
 }

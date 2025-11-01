@@ -1,15 +1,13 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2361
 expression: result
 ---
-package dev.gigapixel.somelib;
+package dev.diplomattest.somelib;
 import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-
 
 internal interface BorrowWrapperLib: Library {
     fun BorrowWrapper_destroy(handle: Pointer)

@@ -1,5 +1,5 @@
-#ifndef OpaqueThinVec_HPP
-#define OpaqueThinVec_HPP
+#ifndef SOMELIB_OpaqueThinVec_HPP
+#define SOMELIB_OpaqueThinVec_HPP
 
 #include "OpaqueThinVec.d.hpp"
 
@@ -16,77 +16,77 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    diplomat::capi::OpaqueThinVec* OpaqueThinVec_create(diplomat::capi::DiplomatI32View a, diplomat::capi::DiplomatF32View b);
-    
-    diplomat::capi::OpaqueThinIter* OpaqueThinVec_iter(const diplomat::capi::OpaqueThinVec* self);
-    
-    size_t OpaqueThinVec_len(const diplomat::capi::OpaqueThinVec* self);
-    
-    const diplomat::capi::OpaqueThin* OpaqueThinVec_get(const diplomat::capi::OpaqueThinVec* self, size_t idx);
-    
-    const diplomat::capi::OpaqueThin* OpaqueThinVec_first(const diplomat::capi::OpaqueThinVec* self);
-    
-    
+
+    somelib::capi::OpaqueThinVec* OpaqueThinVec_create(somelib::diplomat::capi::DiplomatI32View a, somelib::diplomat::capi::DiplomatF32View b, somelib::diplomat::capi::DiplomatStringView c);
+
+    somelib::capi::OpaqueThinIter* OpaqueThinVec_iter(const somelib::capi::OpaqueThinVec* self);
+
+    size_t OpaqueThinVec_len(const somelib::capi::OpaqueThinVec* self);
+
+    const somelib::capi::OpaqueThin* OpaqueThinVec_get(const somelib::capi::OpaqueThinVec* self, size_t idx);
+
+    const somelib::capi::OpaqueThin* OpaqueThinVec_first(const somelib::capi::OpaqueThinVec* self);
+
     void OpaqueThinVec_destroy(OpaqueThinVec* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<OpaqueThinVec> OpaqueThinVec::create(diplomat::span<const int32_t> a, diplomat::span<const float> b) {
-  auto result = diplomat::capi::OpaqueThinVec_create({a.data(), a.size()},
-    {b.data(), b.size()});
-  return std::unique_ptr<OpaqueThinVec>(OpaqueThinVec::FromFFI(result));
+inline std::unique_ptr<somelib::OpaqueThinVec> somelib::OpaqueThinVec::create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c) {
+    auto result = somelib::capi::OpaqueThinVec_create({a.data(), a.size()},
+        {b.data(), b.size()},
+        {c.data(), c.size()});
+    return std::unique_ptr<somelib::OpaqueThinVec>(somelib::OpaqueThinVec::FromFFI(result));
 }
 
-inline std::unique_ptr<OpaqueThinIter> OpaqueThinVec::iter() const {
-  auto result = diplomat::capi::OpaqueThinVec_iter(this->AsFFI());
-  return std::unique_ptr<OpaqueThinIter>(OpaqueThinIter::FromFFI(result));
+inline std::unique_ptr<somelib::OpaqueThinIter> somelib::OpaqueThinVec::iter() const {
+    auto result = somelib::capi::OpaqueThinVec_iter(this->AsFFI());
+    return std::unique_ptr<somelib::OpaqueThinIter>(somelib::OpaqueThinIter::FromFFI(result));
 }
 
-inline diplomat::next_to_iter_helper<OpaqueThinIter>OpaqueThinVec::begin() const {
-  return iter();
+inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter>somelib::OpaqueThinVec::begin() const {
+    return iter();
 }
 
-inline size_t OpaqueThinVec::len() const {
-  auto result = diplomat::capi::OpaqueThinVec_len(this->AsFFI());
-  return result;
+inline size_t somelib::OpaqueThinVec::len() const {
+    auto result = somelib::capi::OpaqueThinVec_len(this->AsFFI());
+    return result;
 }
 
-inline const OpaqueThin* OpaqueThinVec::operator[](size_t idx) const {
-  auto result = diplomat::capi::OpaqueThinVec_get(this->AsFFI(),
-    idx);
-  return OpaqueThin::FromFFI(result);
+inline const somelib::OpaqueThin* somelib::OpaqueThinVec::operator[](size_t idx) const {
+    auto result = somelib::capi::OpaqueThinVec_get(this->AsFFI(),
+        idx);
+    return somelib::OpaqueThin::FromFFI(result);
 }
 
-inline const OpaqueThin* OpaqueThinVec::first() const {
-  auto result = diplomat::capi::OpaqueThinVec_first(this->AsFFI());
-  return OpaqueThin::FromFFI(result);
+inline const somelib::OpaqueThin* somelib::OpaqueThinVec::first() const {
+    auto result = somelib::capi::OpaqueThinVec_first(this->AsFFI());
+    return somelib::OpaqueThin::FromFFI(result);
 }
 
-inline const diplomat::capi::OpaqueThinVec* OpaqueThinVec::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OpaqueThinVec*>(this);
+inline const somelib::capi::OpaqueThinVec* somelib::OpaqueThinVec::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::OpaqueThinVec*>(this);
 }
 
-inline diplomat::capi::OpaqueThinVec* OpaqueThinVec::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OpaqueThinVec*>(this);
+inline somelib::capi::OpaqueThinVec* somelib::OpaqueThinVec::AsFFI() {
+    return reinterpret_cast<somelib::capi::OpaqueThinVec*>(this);
 }
 
-inline const OpaqueThinVec* OpaqueThinVec::FromFFI(const diplomat::capi::OpaqueThinVec* ptr) {
-  return reinterpret_cast<const OpaqueThinVec*>(ptr);
+inline const somelib::OpaqueThinVec* somelib::OpaqueThinVec::FromFFI(const somelib::capi::OpaqueThinVec* ptr) {
+    return reinterpret_cast<const somelib::OpaqueThinVec*>(ptr);
 }
 
-inline OpaqueThinVec* OpaqueThinVec::FromFFI(diplomat::capi::OpaqueThinVec* ptr) {
-  return reinterpret_cast<OpaqueThinVec*>(ptr);
+inline somelib::OpaqueThinVec* somelib::OpaqueThinVec::FromFFI(somelib::capi::OpaqueThinVec* ptr) {
+    return reinterpret_cast<somelib::OpaqueThinVec*>(ptr);
 }
 
-inline void OpaqueThinVec::operator delete(void* ptr) {
-  diplomat::capi::OpaqueThinVec_destroy(reinterpret_cast<diplomat::capi::OpaqueThinVec*>(ptr));
+inline void somelib::OpaqueThinVec::operator delete(void* ptr) {
+    somelib::capi::OpaqueThinVec_destroy(reinterpret_cast<somelib::capi::OpaqueThinVec*>(ptr));
 }
 
 
-#endif // OpaqueThinVec_HPP
+#endif // SOMELIB_OpaqueThinVec_HPP

@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface MyIterableLib: Library {
     fun namespace_MyIterable_destroy(handle: Pointer)
     fun namespace_MyIterable_new(x: Slice): Pointer
@@ -28,9 +27,10 @@ class MyIterable internal constructor (
     companion object {
         internal val libClass: Class<MyIterableLib> = MyIterableLib::class.java
         internal val lib: MyIterableLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(x: UByteArray): MyIterable {
-            val (xMem, xSlice) = PrimitiveArrayTools.native(x)
+            val (xMem, xSlice) = PrimitiveArrayTools.borrow(x)
             
             val returnVal = lib.namespace_MyIterable_new(xSlice);
             val selfEdges: List<Any> = listOf()

@@ -5,16 +5,18 @@ part of 'lib.g.dart';
 
 enum FixedDecimalGroupingStrategy {
   /// Auto grouping
+  // ignore: public_member_api_docs
   auto,
-
   /// No grouping
+  // ignore: public_member_api_docs
   never,
-
   /// Always group
+  // ignore: public_member_api_docs
   always,
-
   /// At least 2 groups
+  // ignore: public_member_api_docs
   min2;
+
 }
 
 // dart format on

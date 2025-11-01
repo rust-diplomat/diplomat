@@ -1,5 +1,5 @@
-#ifndef MyZst_D_HPP
-#define MyZst_D_HPP
+#ifndef SOMELIB_MyZst_D_HPP
+#define SOMELIB_MyZst_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,16 +12,17 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
-    
+
 } // namespace capi
 } // namespace
 
 
+namespace somelib {
 struct MyZst {
 
 };
 
-
-#endif // MyZst_D_HPP
+} // namespace
+#endif // SOMELIB_MyZst_D_HPP

@@ -28,7 +28,7 @@ internal class MyStructNative: Structure(), Structure.ByValue {
     internal var f: Int = 0;
     @JvmField
     internal var g: Int = MyEnum.default().toNative();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c", "d", "e", "f", "g")
@@ -49,6 +49,7 @@ class MyStruct internal constructor (
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java
         internal val lib: MyStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructNative::class.java).toLong()
+        @JvmStatic
         
         fun new_(): MyStruct {
             
@@ -57,6 +58,7 @@ class MyStruct internal constructor (
             val returnStruct = MyStruct(returnVal)
             return returnStruct
         }
+        @JvmStatic
         
         fun returnsZstResult(): Result<Unit> {
             
@@ -67,6 +69,7 @@ class MyStruct internal constructor (
                 return MyZst().err()
             }
         }
+        @JvmStatic
         
         fun failsZstResult(): Result<Unit> {
             

@@ -1,0 +1,15 @@
+{% include "c_include.h.jinja" %}
+
+{% if let Some(ns) = namespace -%}
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
+{% endif -%}
+
+{% for m in methods %}
+{% include "cpp/function_defs/func_block_function.h.jinja" -%}
+{%- endfor ~%}
+
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
+} // namespace
+{%- endif -%}

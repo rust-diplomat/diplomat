@@ -5,18 +5,18 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionEnum {
-    
     #value = undefined;
 
     static #values = new Map([
         ["Foo", 0],
-        ["Bar", 1]
+        ["Bar", 1],
+        ["Baz", 2]
     ]);
 
     static getAllEntries() {
         return OptionEnum.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -42,24 +42,29 @@ export class OptionEnum {
         throw TypeError(value + " is not a OptionEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new OptionEnum(value);
     }
 
-    get value() {
+    get value(){
         return [...OptionEnum.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    /** @internal */
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [
         new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 0),
         new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 1),
+        new OptionEnum(diplomatRuntime.internalConstructor, diplomatRuntime.internalConstructor, 2),
     ];
 
     static Foo = OptionEnum.#objectValues[0];
     static Bar = OptionEnum.#objectValues[1];
+    static Baz = OptionEnum.#objectValues[2];
+
 
     constructor(value) {
         return this.#internalConstructor(...arguments)

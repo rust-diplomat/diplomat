@@ -1,9 +1,11 @@
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% else -%}
 namespace diplomat {
 {% endif -%}
 namespace {{self::CAPI_NAMESPACE}} {
-    {{ c_header.body|trim|indent(4) }}
+{{ c_header.body|trim|indent_trimmed(4) }}
 } // namespace {{self::CAPI_NAMESPACE}}
 } // namespace

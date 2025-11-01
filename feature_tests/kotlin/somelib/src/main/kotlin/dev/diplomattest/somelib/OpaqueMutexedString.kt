@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueMutexedStringLib: Library {
     fun OpaqueMutexedString_destroy(handle: Pointer)
     fun OpaqueMutexedString_from_usize(number: FFISizet): Pointer
@@ -35,6 +34,7 @@ class OpaqueMutexedString internal constructor (
     companion object {
         internal val libClass: Class<OpaqueMutexedStringLib> = OpaqueMutexedStringLib::class.java
         internal val lib: OpaqueMutexedStringLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun fromUsize(number: ULong): OpaqueMutexedString {
             
@@ -45,6 +45,7 @@ class OpaqueMutexedString internal constructor (
             CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun borrowOther(other: OpaqueMutexedString): OpaqueMutexedString {
             

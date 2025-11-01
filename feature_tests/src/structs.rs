@@ -22,6 +22,7 @@ pub mod ffi {
         A = -2,
         B = -1,
         C = 0,
+        #[diplomat::attr(auto, default)]
         D = 1,
         E = 2,
         F = 3,
@@ -31,6 +32,7 @@ pub mod ffi {
     pub enum ContiguousEnum {
         C = 0,
         D = 1,
+        #[diplomat::attr(auto, default)]
         E = 2,
         F = 3,
     }
@@ -63,8 +65,8 @@ pub mod ffi {
     // Not supported in kotlin
     #[diplomat::attr(kotlin, disable)]
     pub struct MyStructContainingAnOption {
-        a: DiplomatOption<MyStruct>,
-        b: DiplomatOption<DefaultEnum>,
+        pub(crate) a: DiplomatOption<MyStruct>,
+        pub(crate) b: DiplomatOption<DefaultEnum>,
     }
 
     #[diplomat::attr(auto, error)]
@@ -112,6 +114,7 @@ pub mod ffi {
     }
 
     impl OpaqueMutexedString {
+        #[diplomat::demo(default_constructor)]
         pub fn from_usize(number: usize) -> Box<OpaqueMutexedString> {
             Box::new(OpaqueMutexedString(Mutex::new(format!("{number}"))))
         }
@@ -193,6 +196,7 @@ pub mod ffi {
             Box::new(MyOpaqueEnum::A("a".into()))
         }
 
+        #[diplomat::attr(*, stringifier)]
         pub fn to_string(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(
                 write,
@@ -226,6 +230,17 @@ pub mod ffi {
                 f: '餐' as DiplomatChar,
                 g: MyEnum::B,
             }
+        }
+
+        #[diplomat::attr(not(supports=struct_refs), disable)]
+        pub fn takes_mut(&mut self, o: &mut Self) {
+            self.a = 0;
+            o.c = 100;
+        }
+
+        #[diplomat::attr(not(supports=struct_refs), disable)]
+        pub fn takes_const(&self, o: &mut Self) {
+            o.c = self.a;
         }
 
         pub fn into_a(self) -> u8 {
@@ -271,10 +286,12 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructB {
         pub field: u8,
     }
@@ -292,6 +309,15 @@ pub mod ffi {
 
         pub fn cyclic_out(self, out: &mut DiplomatWrite) {
             out.write_str(&self.a.field.to_string()).unwrap();
+        }
+
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
+        pub fn nested_slice(sl: &[CyclicStructA]) -> u8 {
+            let mut sum = 0;
+            for a in sl.iter() {
+                sum += a.a.field;
+            }
+            sum
         }
 
         // For demo gen: tests having the same variables in the namespace
@@ -330,7 +356,8 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
-    #[diplomat::attr(not(js), disable)]
+    #[diplomat::attr(not(any(js, supports=abi_compatibles)), disable)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct ScalarPairWithPadding {
         pub first: u8,
         // Padding: [3 x u8]
@@ -345,7 +372,9 @@ pub mod ffi {
     }
 
     /// Testing JS-specific layout/padding behavior
-    #[diplomat::attr(not(js), disable)]
+    /// Also being used to test CPP backends taking structs with primitive values.
+    #[diplomat::attr(not(any(js, supports=abi_compatibles)), disable)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct BigStructWithStuff {
         pub first: u8,
         // Padding: [1 x u8]
@@ -364,6 +393,14 @@ pub mod ffi {
             self.fourth.assert_value();
             assert_eq!(self.fifth, 99);
             assert_eq!(extra_val, 853);
+        }
+
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
+        pub fn assert_slice(slice: &[BigStructWithStuff], second_value: u16) {
+            assert!(slice.len() > 1);
+            let mut i = slice.iter();
+            i.next();
+            assert_eq!(i.next().unwrap().second, second_value)
         }
     }
 
@@ -429,6 +466,84 @@ pub mod ffi {
     impl<'a> StructWithSlices<'a> {
         pub fn return_last(self, w: &mut DiplomatWrite) {
             w.write_char(*self.first.last().unwrap() as char).unwrap();
+        }
+    }
+
+    #[diplomat::attr(auto, abi_compatible)]
+    #[derive(Clone)]
+    pub struct PrimitiveStruct {
+        x: f32,
+        a: bool,
+        pub(crate) b: DiplomatChar,
+        c: i64,
+        d: isize,
+        e: DiplomatByte,
+    }
+
+    impl PrimitiveStruct {
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
+        pub fn mutable_slice(a: &mut [PrimitiveStruct]) {
+            let mut running_sum = 0.0;
+            let mut alternate = false;
+            for p in a.iter_mut() {
+                running_sum += p.x;
+                p.x = running_sum;
+
+                p.a = alternate;
+                alternate = !alternate;
+
+                p.b = running_sum as u32;
+                p.c = running_sum as i64;
+                p.d = (running_sum + 100.0) as isize;
+                p.e = running_sum as u8;
+            }
+        }
+
+        #[diplomat::attr(not(supports=struct_refs), disable)]
+        pub fn mutable_ref(&mut self, a: &mut Self) {
+            self.a = false;
+            a.d = 1;
+        }
+    }
+
+    #[diplomat::attr(not(supports=abi_compatibles), disable)]
+    #[diplomat::opaque]
+    pub struct PrimitiveStructVec(Vec<PrimitiveStruct>);
+
+    impl PrimitiveStructVec {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> Box<Self> {
+            Box::new(Self(Vec::new()))
+        }
+
+        #[diplomat::attr(nanobind, rename = "append")]
+        pub fn push(&mut self, value: PrimitiveStruct) {
+            self.0.push(value);
+        }
+
+        #[diplomat::attr(nanobind, rename = "__len__")]
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
+        #[diplomat::attr(auto, getter = "asSlice")]
+        pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
+            &self.0
+        }
+
+        #[diplomat::attr(auto, getter = "asSliceMut")]
+        pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
+            &mut self.0
+        }
+
+        #[diplomat::attr(nanobind, rename = "__getitem__")]
+        pub fn get(&self, idx: usize) -> PrimitiveStruct {
+            self.0[idx].clone()
+        }
+
+        #[diplomat::attr(not(supports=abi_compatibles), disable)]
+        pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
+            assert!(true)
         }
     }
 }

@@ -1,0 +1,55 @@
+{%- macro method_body(method_name, is_generic_writeable, return_ty, c_to_cpp_return_expression) -%}
+inline {##}
+{{- return_ty }} {##}
+{%- block domain -%}{%- endblock -%}{{ method_name -}}
+(
+    {%- include "cpp/function_defs/param_decls_list.h.jinja" %}
+    {%- if is_generic_writeable %}{% if !m.param_decls.is_empty() %}, {%endif%}W& writeable{% endif -%}
+) {##}
+{%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
+{
+    {%- for validation in m.param_validations %}
+    {{ validation.replace('\n', "\n  ") }}
+    {%- endfor -%}
+    {%- if m.method.output.is_write() %}
+    {%- if is_generic_writeable %}
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteTrait<W>::Construct(writeable);
+    {%- else %}
+    std::string output;
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromString(output);
+    {%- endif %}
+    {%- endif %}
+    {% if !m.method.output.is_ffi_unit() -%}
+    auto result = {##}
+    {%- endif -%}
+
+    {%- for p in m.param_pre_conversions -%}
+    {{p}}
+    {% endfor -%}
+
+    {{ m.abi_name }}(
+        {%- for param in m.cpp_to_c_params %}
+        {%- if !loop.first %},
+        {% endif -%}
+        {{ param }}
+        {%- endfor -%}
+    );
+
+    {%- for p in m.param_post_conversions %}
+    {{p}}
+    {%- endfor -%}
+
+    {%- if let Some(statement) = c_to_cpp_return_expression %}
+    return {{ statement }};
+    {%- endif %}
+}
+{%- endmacro -%}
+{% call method_body(m.method_name, false, m.return_ty, m.c_to_cpp_return_expression) -%}
+
+{#- Extra method definitions for writeables -#}
+{%- if let Some(m_writeable) = m.writeable_info %}
+template<typename W>
+{% call method_body(m_writeable.method_name, true, m_writeable.return_ty, m_writeable.c_to_cpp_return_expression) %}
+{%- endif -%}
+
+{%- block special_methods -%}{%- endblock -%}

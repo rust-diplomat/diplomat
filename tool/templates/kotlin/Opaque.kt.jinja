@@ -5,15 +5,23 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface {{type_name}}Lib: Library {
     fun {{dtor_abi_name}}(handle: Pointer)
 
-    
     {%- for m in native_methods %}
     {{m.declaration}}
     {%- endfor %}
 }
+
+{%- if generate_mocking_interface %}
+internal interface {{type_name}}Interface {
+
+    {%- for m in self_methods %}
+    {{m.declaration}}
+    {%- endfor %}
+}
+{%- endif %}
+
 {%- if !callback_params.is_empty() -%}
     {%- for callback_param in callback_params -%}
         {{callback_param}}
@@ -41,7 +49,11 @@ class {{type_name}} internal constructor (
     {%- if use_finalizers_not_cleaners %}
     internal var finalizer_registered: Boolean = false,
     {%- endif %}
+{%- if generate_mocking_interface %}
+): {{type_name}}Interface {%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %}
+{%- else %}
 ){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %}
+{%- endif %}
 {%- if special_methods.interfaces.is_empty() %} {% else %}{%- if is_custom_error %},{% else %}:{% endif %} {% for interface in special_methods.interfaces %}
 {%- if loop.first %}{% else %}, {% endif %}{{interface}}
 {%- endfor %}
@@ -72,12 +84,13 @@ class {{type_name}} internal constructor (
         internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
 
 {%- for m in companion_methods %}
-        {{m|indent(8)}}
+        @JvmStatic
+        {{m.definition|indent(8)}}
 {%- endfor %}
     }
 
 {%- for m in self_methods %}
-    {{m|indent(4)}}
+    {{m.definition|indent(4)}}
 {%- endfor %}
 
 {%- match special_methods.iterator_type -%}
@@ -115,4 +128,3 @@ class {{type_name}} internal constructor (
 {%- endmatch %}
 
 }
-

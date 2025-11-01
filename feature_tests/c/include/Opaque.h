@@ -33,7 +33,6 @@ ImportedStruct Opaque_returns_imported(void);
 
 int8_t Opaque_cmp(void);
 
-
 void Opaque_destroy(Opaque* self);
 
 

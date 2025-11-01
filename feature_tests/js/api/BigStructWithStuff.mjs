@@ -4,61 +4,48 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-/** 
+
+/**
  * Testing JS-specific layout/padding behavior
+ * Also being used to test CPP backends taking structs with primitive values.
  */
-
-
 export class BigStructWithStuff {
-    
     #first;
-    
-    get first()  {
+    get first() {
         return this.#first;
-    } 
-    set first(value) {
+    }
+    set first(value){
         this.#first = value;
     }
-    
     #second;
-    
-    get second()  {
+    get second() {
         return this.#second;
-    } 
-    set second(value) {
+    }
+    set second(value){
         this.#second = value;
     }
-    
     #third;
-    
-    get third()  {
+    get third() {
         return this.#third;
-    } 
-    set third(value) {
+    }
+    set third(value){
         this.#third = value;
     }
-    
     #fourth;
-    
-    get fourth()  {
+    get fourth() {
         return this.#fourth;
-    } 
-    set fourth(value) {
+    }
+    set fourth(value){
         this.#fourth = value;
     }
-    
     #fifth;
-    
-    get fifth()  {
+    get fifth() {
         return this.#fifth;
-    } 
-    set fifth(value) {
+    }
+    set fifth(value){
         this.#fifth = value;
     }
-    
-    /** Create `BigStructWithStuff` from an object that contains all of `BigStructWithStuff`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BigStructWithStuff(structObj);
     }
@@ -103,15 +90,15 @@ export class BigStructWithStuff {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -137,7 +124,7 @@ export class BigStructWithStuff {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#second, Uint16Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#third, Uint16Array);
-        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, {});
+        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#fifth, Uint8Array);
     }
 
@@ -165,14 +152,17 @@ export class BigStructWithStuff {
         return new BigStructWithStuff(structObj);
     }
 
+
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), extraVal);
-    
+
+    wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), extraVal);
+
         try {}
-        
+
         finally {
             functionCleanupArena.free();
+
         }
     }
 

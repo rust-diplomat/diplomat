@@ -8,37 +8,34 @@
 {% include "c_include.h.jinja" %}
 
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% endif -%}
 {% if !docs.is_empty() -%}
 /**
- * {{docs}}
+ {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-class {{type_name_unnamespaced}} {
+class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
-{% for m in methods %}
-	{% if !m.docs.is_empty() -%}
-	/**
-	 * {{m.docs|indent(2)}}
-	 */
-	{% endif -%}
-	{% include "method_decl.h.jinja" %}
+{% for m in methods -%}
+    {% include "function_defs/method_decl.h.jinja" %}
 {% endfor %}
-	inline {{const_cptr}} AsFFI() const;
-	inline {{mut_cptr}} AsFFI();
-	inline static {{const_ptr}} FromFFI({{const_cptr}} ptr);
-	inline static {{mut_ptr}} FromFFI({{mut_cptr}} ptr);
-	inline static void operator delete(void* ptr);
+    inline {{const_cptr}} AsFFI() const;
+    inline {{mut_cptr}} AsFFI();
+    inline static {{const_ptr}} FromFFI({{const_cptr}} ptr);
+    inline static {{mut_ptr}} FromFFI({{mut_cptr}} ptr);
+    inline static void operator delete(void* ptr);
 private:
-	{{type_name_unnamespaced}}() = delete;
-	{{type_name_unnamespaced}}({{const_ref}}) = delete;
-	{{type_name_unnamespaced}}({{move_ref}}) noexcept = delete;
-	{{type_name_unnamespaced}} operator=({{const_ref}}) = delete;
-	{{type_name_unnamespaced}} operator=({{move_ref}}) noexcept = delete;
-	static void operator delete[](void*, size_t) = delete;
+    {{type_name_unnamespaced}}() = delete;
+    {{type_name_unnamespaced}}({{const_ref}}) = delete;
+    {{type_name_unnamespaced}}({{move_ref}}) noexcept = delete;
+    {{type_name_unnamespaced}} operator=({{const_ref}}) = delete;
+    {{type_name_unnamespaced}} operator=({{move_ref}}) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
-{% if namespace.is_some() -%}
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
 {%-endif%}

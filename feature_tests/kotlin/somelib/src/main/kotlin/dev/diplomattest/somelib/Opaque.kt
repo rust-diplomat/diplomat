@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueLib: Library {
     fun Opaque_destroy(handle: Pointer)
     fun Opaque_new(): Pointer
@@ -34,6 +33,7 @@ class Opaque internal constructor (
     companion object {
         internal val libClass: Class<OpaqueLib> = OpaqueLib::class.java
         internal val lib: OpaqueLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(): Opaque {
             
@@ -44,9 +44,10 @@ class Opaque internal constructor (
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         fun tryFromUtf8(input: String): Opaque? {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_try_from_utf8(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -56,9 +57,10 @@ class Opaque internal constructor (
             if (inputMem != null) inputMem.close()
             return returnOpaque
         }
+        @JvmStatic
         
         fun fromStr(input: String): Opaque {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_from_str(inputSlice);
             val selfEdges: List<Any> = listOf()
@@ -68,12 +70,14 @@ class Opaque internal constructor (
             if (inputMem != null) inputMem.close()
             return returnOpaque
         }
+        @JvmStatic
         
         fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
             return (returnVal.toULong())
         }
+        @JvmStatic
         
         fun returnsImported(): ImportedStruct {
             
@@ -82,6 +86,7 @@ class Opaque internal constructor (
             val returnStruct = ImportedStruct(returnVal)
             return returnStruct
         }
+        @JvmStatic
         
         fun cmp(): Byte {
             

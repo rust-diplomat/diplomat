@@ -1,10 +1,16 @@
 {%- let is_self_opaque = false -%}
-{% include "module_impl.cpp.jinja" %}
 
-nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
+{%- if is_sliceable %}
+// Python lists are represented as PyObject**, which runs somewhat counter to any use cases where we want to be able to transparently pass over lists without copying over memory in any ways.
+// bind_vector solves this issue by exposing std::vector<{{type_name}}> as a type that will exist inside of C++, with functions to access its memory from Python.
+// TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
+nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slice"); 
+{% endif -%}
+
+nb::class_<{{type_name}}>(mod, "{{type_name_unnamespaced}}")
     {%- if !has_constructor %}
     .def(nb::init<>())
-    
+
     {%- if fields.len() > 0 %}
     .def(nb::init<
     {%- for f in fields -%}
@@ -32,7 +38,7 @@ nb::class_<{{type_name}}>({{module}}_mod, "{{type_name_unnamespaced}}")
     )
     {%- endif -%}
     {%- endfor %}
-    
+
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
 {%- endfor %};

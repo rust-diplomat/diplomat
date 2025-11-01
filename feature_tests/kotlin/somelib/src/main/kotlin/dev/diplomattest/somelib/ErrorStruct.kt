@@ -14,7 +14,7 @@ internal class ErrorStructNative: Structure(), Structure.ByValue {
     internal var i: Int = 0;
     @JvmField
     internal var j: Int = 0;
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("i", "j")

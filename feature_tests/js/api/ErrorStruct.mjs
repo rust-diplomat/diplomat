@@ -5,28 +5,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ErrorStruct {
-    
     #i;
-    
-    get i()  {
+    get i() {
         return this.#i;
-    } 
-    set i(value) {
+    }
+    set i(value){
         this.#i = value;
     }
-    
     #j;
-    
-    get j()  {
+    get j() {
         return this.#j;
-    } 
-    set j(value) {
+    }
+    set j(value){
         this.#j = value;
     }
-    
-    /** Create `ErrorStruct` from an object that contains all of `ErrorStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new ErrorStruct(structObj);
     }
@@ -53,15 +46,15 @@ export class ErrorStruct {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -105,6 +98,7 @@ export class ErrorStruct {
 
         return new ErrorStruct(structObj);
     }
+
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

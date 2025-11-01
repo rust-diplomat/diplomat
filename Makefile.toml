@@ -41,7 +41,7 @@ dependencies = ["test-c-example"]
 
 [tasks.test-js]
 category = "Tests"
-dependencies = ["test-js-feature", "test-js-feature-legacy"]
+dependencies = ["test-js-feature"]
 
 [tasks.test-demo]
 category = "Tests"
@@ -75,7 +75,6 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-js-feature",
-    "test-js-feature-legacy",
     "test-demo-feature",
     "test-dart-feature",
     "test-kotlin-feature",
@@ -125,17 +124,7 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm ci && npm run test -w stable
 '''
 
-[tasks.test-js-feature-legacy]
-category = "Tests"
-dependencies = ["build-feature-wasm-legacy"]
-script_runner = "@shell"
-script = '''
-cd feature_tests/js
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api_legacy/diplomat_feature_tests.wasm
-npm ci && npm run test -w legacy
-'''
 
-# We don't need to test legacy JS for demo_gen, as the call sites should be identical.
 [tasks.test-demo-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
@@ -166,7 +155,7 @@ cd example/dart/
 exec --fail-on-error dart format --set-exit-if-changed .
 exec --fail-on-error dart pub get
 exec --fail-on-error dart analyze
-exec --fail-on-error dart --enable-experiment=native-assets test
+exec --fail-on-error dart test
 '''
 
 [tasks.test-dart-feature]
@@ -179,7 +168,7 @@ cd feature_tests/dart/
 exec --fail-on-error dart format --set-exit-if-changed .
 exec --fail-on-error dart pub get
 exec --fail-on-error dart analyze
-exec --fail-on-error dart --enable-experiment=native-assets test
+exec --fail-on-error dart test
 '''
 
 [tasks.test-kotlin-example.mac]
@@ -342,6 +331,26 @@ category = "Tests"
 dependencies = ["check-cpp-feature", "check-cpp-example"]
 
 
+[tasks.check-whitespace]
+category = "Tests"
+script_runner = "@duckscript"
+script = '''
+# Only these backends have clean output
+backends = array "c" "cpp" "js" "dart"
+tests = array "feature_tests" "example"
+for test in ${tests}
+ for backend in ${backends}
+    echo "Looking for trailing whitespace in generated code in ${test}/${backend}"
+    exit_code = exec --get-exit-code grep -Hrn \\s\\+$ "${test}/${backend}"
+    if eq ${exit_code} 0
+        echo "Found trailing whitespace (or Windows line endings) in ${test}/${backend}"
+        exit 1
+    end
+ end
+end
+
+'''
+
 # Generation
 [tasks.gen-feature]
 category = "Code generation"
@@ -349,7 +358,6 @@ dependencies = [
     "gen-cpp-feature",
     "gen-c-feature",
     "gen-js-feature",
-    "gen-js-feature-legacy",
     "gen-demo-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
@@ -384,7 +392,7 @@ dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 
 [tasks.gen-js]
 category = "Code generation"
-dependencies = ["gen-js-feature", "gen-js-feature-legacy", "gen-js-example"]
+dependencies = ["gen-js-feature", "gen-js-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -410,7 +418,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests cpp include
+generate_generic feature_tests cpp include 
 '''
 
 [tasks.gen-cpp-example]
@@ -431,16 +439,6 @@ exit_on_error true
 
 !include_files ./support/functions.ds
 generate_js spec feature_tests .
-'''
-
-[tasks.gen-js-feature-legacy]
-category = "Code generation"
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-
-!include_files ./support/functions.ds
-generate_js legacy feature_tests .
 '''
 
 [tasks.gen-js-example]
@@ -497,7 +495,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests kotlin somelib "" /src/main/kotlin
+generate_generic feature_tests kotlin somelib "--config kotlin.scaffold=false" /src/main/kotlin
 '''
 
 [tasks.gen-kotlin-example]
@@ -506,7 +504,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example kotlin somelib "" /src/main/kotlin
+generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/main/kotlin
 '''
 
 [tasks.gen-nanobind-feature]
@@ -515,11 +513,13 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests nanobind src/cpp
+generate_generic feature_tests nanobind src/cpp 
 mv nanobind/src/cpp/somelib_ext.cpp nanobind/src/somelib_ext.cpp
 rm -rf nanobind/src/include
 mv nanobind/src/cpp/include nanobind/src/
-rm -rf nanobind/src/cpp
+rm -fr nanobind/src/sub_modules
+mv nanobind/src/cpp/sub_modules nanobind/src/
+rm -rf nanobind/src/cpp/
 '''
 # Build deps
 
@@ -539,36 +539,17 @@ category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests"]
 [tasks.build-example-wasm]
-toolchain = "nightly"
+toolchain = "stable"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
-env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
 args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
 
 [tasks.build-feature-wasm]
-# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
-toolchain = "nightly"
+toolchain = "stable"
 description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
-env = { "RUSTFLAGS" = "-Zwasm-c-abi=spec" }
-args = [
-    "build",
-    "-p",
-    "diplomat-feature-tests",
-    "--target",
-    "wasm32-unknown-unknown",
-]
-
-[tasks.build-feature-wasm-legacy]
-# Can be set to stable once the -Zwasm-c-abi=spec flag becomes stable.
-toolchain = "nightly"
-description = "Build feature_tests for wasm"
-category = "Plumbing"
-command = "cargo"
-env = { "RUSTFLAGS" = "-Zwasm-c-abi=legacy" }
 args = [
     "build",
     "-p",

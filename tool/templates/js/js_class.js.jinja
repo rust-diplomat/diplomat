@@ -1,30 +1,30 @@
-{% if !doc_str.is_empty() %}
-/** 
- * {{doc_str}}
- */
-{% endif -%}
 {%- let overrides_constructor = methods.special_methods.constructor.is_some() -%}
 
-{% block header_info %}{% endblock %}
+{%- block header_info %}{% endblock %}
 
+{% if !doc_str.is_empty() -%}
+/**
+{{doc_str|prefix_trimmed(" * ")}}
+ */
+{% endif -%}
 export class {{type_name}} {
-    {% block class_body %}{% endblock %}
+    {%- block class_body %}{% endblock %}
 
-    {%- for method in methods.methods -%}
+    {%~ for method in methods.methods -%}
 
     {#- Do not include the method in typescript if it is meant to be private: -#}
     {%- if !method.method_decl.starts_with('#') || !typescript %}
 {% if !method.doc_str.is_empty() %}
-    /** 
-     * {{method.doc_str|indent(4)}}
+    /**
+{{method.doc_str|prefix_trimmed("     * ")}}
      */
     {%- endif %}
-    {{ method|indent(4) }}
+    {{~ method|indent_trimmed(4) }}
     {%- endif -%}
-{%- endfor -%}
+    {%- endfor -%}
     {%- if let Some(it) = methods.special_methods.iterator %}
 
-    next() {% if typescript %}: IteratorResult<{{it}}>;{% else %}{
+    next() {%- if typescript %}: IteratorResult<{{it}}>;{% else %}{
         const out = this.#iteratorNext();
 
         return {
@@ -36,6 +36,13 @@ export class {{type_name}} {
 
 {%- if show_default_ctor || overrides_constructor %}
 
+    {% if let Some(ctor) = methods.special_methods.constructor -%}
+    {% if !ctor.doc_str.is_empty() -%}
+    /**
+{{ctor.doc_str|prefix_trimmed("     * ")}}
+     */
+    {% endif -%}
+    {% endif -%}
     constructor(
     {%- if let Some(ctor) = methods.special_methods.constructor %}
         {%- for param in ctor.parameters -%}

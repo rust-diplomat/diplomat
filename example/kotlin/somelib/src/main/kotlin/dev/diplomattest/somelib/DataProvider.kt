@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface DataProviderLib: Library {
     fun icu4x_DataProvider_destroy_mv1(handle: Pointer)
     fun icu4x_DataProvider_new_static_mv1(): Pointer
@@ -31,6 +30,7 @@ class DataProvider internal constructor (
     companion object {
         internal val libClass: Class<DataProviderLib> = DataProviderLib::class.java
         internal val lib: DataProviderLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         /** See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
         */
@@ -43,6 +43,7 @@ class DataProvider internal constructor (
             CLEANER.register(returnOpaque, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
             return returnOpaque
         }
+        @JvmStatic
         
         /** This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
         */

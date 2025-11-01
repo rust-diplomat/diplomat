@@ -20,6 +20,7 @@ final class Utf16Wrap implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('Utf16Wrap_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
 
   factory Utf16Wrap(String input) {
@@ -36,10 +37,11 @@ final class Utf16Wrap implements ffi.Finalizable {
 
   String borrowCont() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('Utf16Wrap_destroy')

@@ -15,7 +15,7 @@ internal class FixedDecimalFormatterOptionsNative: Structure(), Structure.ByValu
     internal var groupingStrategy: Int = FixedDecimalGroupingStrategy.default().toNative();
     @JvmField
     internal var someOtherConfig: Byte = 0;
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("groupingStrategy", "someOtherConfig")
@@ -31,6 +31,7 @@ class FixedDecimalFormatterOptions internal constructor (
         internal val libClass: Class<FixedDecimalFormatterOptionsLib> = FixedDecimalFormatterOptionsLib::class.java
         internal val lib: FixedDecimalFormatterOptionsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(FixedDecimalFormatterOptionsNative::class.java).toLong()
+        @JvmStatic
         
         fun default_(): FixedDecimalFormatterOptions {
             

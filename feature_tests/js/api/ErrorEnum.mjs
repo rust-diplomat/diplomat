@@ -5,7 +5,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ErrorEnum {
-    
     #value = undefined;
 
     static #values = new Map([
@@ -16,7 +15,7 @@ export class ErrorEnum {
     static getAllEntries() {
         return ErrorEnum.#values.entries();
     }
-    
+
     #internalConstructor(value) {
         if (arguments.length > 1 && arguments[0] === diplomatRuntime.internalConstructor) {
             // We pass in two internalConstructor arguments to create *new*
@@ -42,15 +41,17 @@ export class ErrorEnum {
         throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
     }
 
+    /** @internal */
     static fromValue(value) {
         return new ErrorEnum(value);
     }
 
-    get value() {
+    get value(){
         return [...ErrorEnum.#values.keys()][this.#value];
     }
 
-    get ffiValue() {
+    /** @internal */
+    get ffiValue(){
         return this.#value;
     }
     static #objectValues = [
@@ -60,6 +61,7 @@ export class ErrorEnum {
 
     static Foo = ErrorEnum.#objectValues[0];
     static Bar = ErrorEnum.#objectValues[1];
+
 
     constructor(value) {
         return this.#internalConstructor(...arguments)

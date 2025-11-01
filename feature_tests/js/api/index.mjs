@@ -1,6 +1,10 @@
 
 
+export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
+
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
+
+export { RenamedTestMacroStruct } from "./RenamedTestMacroStruct.mjs"
 
 export { ImportedStruct } from "./ImportedStruct.mjs"
 
@@ -11,6 +15,8 @@ export { BorrowedFieldsReturning } from "./BorrowedFieldsReturning.mjs"
 export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds.mjs"
 
 export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
+
+export { BorrowingOptionStruct } from "./BorrowingOptionStruct.mjs"
 
 export { OptionInputStruct } from "./OptionInputStruct.mjs"
 
@@ -30,6 +36,8 @@ export { MyStructContainingAnOption } from "./MyStructContainingAnOption.mjs"
 
 export { MyZst } from "./MyZst.mjs"
 
+export { PrimitiveStruct } from "./PrimitiveStruct.mjs"
+
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding.mjs"
 
 export { StructWithSlices } from "./StructWithSlices.mjs"
@@ -39,6 +47,8 @@ export { OptionStruct } from "./OptionStruct.mjs"
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
+
+export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque.mjs"
 
 export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
 
@@ -52,7 +62,15 @@ export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable.mjs"
 
 export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
 
+export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable.mjs"
+
+export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator.mjs"
+
+export { RenamedTestOpaque } from "./RenamedTestOpaque.mjs"
+
 export { Unnamespaced } from "./Unnamespaced.mjs"
+
+export { RenamedVectorTest } from "./RenamedVectorTest.mjs"
 
 export { Bar } from "./Bar.mjs"
 
@@ -93,6 +111,8 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
 export { Utf16Wrap } from "./Utf16Wrap.mjs"
 
 export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
+
+export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum.mjs"
 
 export { UnimportedEnum } from "./UnimportedEnum.mjs"
 

@@ -46,6 +46,12 @@ pub mod ffi {
         c: DiplomatOption<OptionEnum>,
     }
 
+    #[diplomat::attr(not(supports = option), disable)]
+    #[derive(Debug)]
+    pub struct BorrowingOptionStruct<'a> {
+        a: DiplomatOption<&'a DiplomatStr>,
+    }
+
     impl OptionInputStruct {
         // Specifically test the Dart default constructor generation code
         // around Options
@@ -61,13 +67,15 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(supports = option), disable)]
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq, Eq)]
     pub enum OptionEnum {
         Foo,
         Bar,
+        Baz,
     }
 
     impl OptionOpaque {
+        #[diplomat::demo(default_constructor)]
         pub fn new(i: i32) -> Option<Box<OptionOpaque>> {
             Some(Box::new(OptionOpaque(i)))
         }
@@ -141,6 +149,27 @@ pub mod ffi {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_borrowing_option_struct(arg: BorrowingOptionStruct) {
+            assert_eq!(arg.a.into_option(), Some("test string".as_bytes()));
+        }
+
+        #[diplomat::attr(not(supports = option), disable)]
+        pub fn accepts_multiple_option_enum(
+            sentinel1: u8,
+            arg1: Option<OptionEnum>,
+            arg2: Option<OptionEnum>,
+            arg3: Option<OptionEnum>,
+            sentinel2: u8,
+        ) -> Option<OptionEnum> {
+            assert_eq!(sentinel1, 123);
+            assert_eq!(arg1, Some(OptionEnum::Foo));
+            assert_eq!(arg2, Some(OptionEnum::Bar));
+            assert_eq!(sentinel2, 200);
+            arg3
+        }
+
         #[diplomat::attr(not(supports = option), disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,
@@ -167,7 +196,11 @@ pub mod ffi {
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]
         pub fn accepts_option_str_slice(arg: Option<&[DiplomatStrSlice]>, sentinel: u8) -> bool {
             assert_eq!(sentinel, 123);
-            arg.is_some()
+            if let Some([a, _]) = arg {
+                std::str::from_utf8(a).unwrap_or("").contains("string")
+            } else {
+                false
+            }
         }
 
         #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]

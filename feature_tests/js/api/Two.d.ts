@@ -4,6 +4,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Two {
-    
+    /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
+
 }

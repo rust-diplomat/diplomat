@@ -1,15 +1,13 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2252
 expression: result
 ---
-package dev.gigapixel.somelib;
+package dev.diplomattest.somelib;
 import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-
 
 internal interface AnotherOpaqueLib: Library {
     fun AnotherOpaque_destroy(handle: Pointer)
@@ -35,8 +33,8 @@ class AnotherOpaque internal constructor (
     }
     
     fun getRustOwnedBytes(a: UByteArray, b: UByteArray): RustOwnedBytes {
-        val (aMem, aSlice) = PrimitiveArrayTools.native(a)
-        val (bMem, bSlice) = PrimitiveArrayTools.native(b)
+        val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
+        val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
         
         val returnVal = lib.AnotherOpaque_get_rust_owned_bytes(handle, aSlice, bSlice);
         val selfEdges: List<Any> = listOf()

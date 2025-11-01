@@ -7,7 +7,6 @@ const Two_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Two {
-    
     // Internal ptr reference:
     #ptr = null;
 
@@ -16,32 +15,29 @@ export class Two {
     #selfEdge = [];
     #aEdge = [];
     #bEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge, aEdge, bEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Two is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
-        
         this.#aEdge = aEdge;
-        
-        
         this.#bEdge = bEdge;
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             Two_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
+
 
     constructor(symbol, ptr, selfEdge, aEdge, bEdge) {
         return this.#internalConstructor(...arguments)

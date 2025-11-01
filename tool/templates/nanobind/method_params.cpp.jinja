@@ -1,15 +1,15 @@
 {%- for param in m.method.params -%}
-	, "{{param.name}}"_a
-	{%- match param.ty -%}
-	{%- when Type::DiplomatOption(_) -%}
-		= nb::none()
-	{%- when Type::Opaque(t) -%}
-	{%- if t.is_optional() -%}
-		= nb::none()
-	{%- endif -%}
-	{%- else -%}
-	{%- endmatch -%}
+    , "{{param.name}}"_a
+    {%- match param.ty -%}
+    {%- when Type::DiplomatOption(_) -%}
+        = nb::none()
+    {%- when Type::Opaque(t) -%}
+    {%- if t.is_optional() -%}
+        = nb::none()
+    {%- endif -%}
+    {%- else -%}
+    {%- endmatch -%}
 {%- endfor -%}
 {%- if let Some(lifetime_args) = m.lifetime_args -%} 
-	, {{lifetime_args}}
+    , {{lifetime_args}}
 {%- endif -%}

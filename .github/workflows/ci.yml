@@ -10,21 +10,41 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
+  fmt:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: rustfmt
 
     - name: Check rustfmt
       run: cargo +stable fmt --all -- --check
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: clippy
+
     - name: Check clippy
       run: cargo +stable clippy --all-targets --all-features -- -D warnings
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
+
+    - name: Check trailing whitespace
+      run: cargo make check-whitespace
 
   build-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Build
       run: cargo build --verbose
@@ -36,6 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install MSRV Rust
       run: rustup install 1.81 --profile minimal
@@ -47,6 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@v2
@@ -63,6 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -82,7 +105,7 @@ jobs:
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
-
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
     - name: clang, c11
       run: cargo make check-c
       env: 
@@ -105,6 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -124,6 +148,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
@@ -159,16 +184,13 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    # - name: Load Rust toolchain for WASM.
-    # run: rustup target add wasm32-unknown-unknown
-    
-    # Can be removed when `-Zwasm-c-abi=spec` is no longer an experimental option:
-    - name: Load Rust Nightly toolchain for WASM
-      run: rustup target add wasm32-unknown-unknown --toolchain nightly
+    - name: Load Rust toolchain for WASM.
+      run: rustup target add wasm32-unknown-unknown
 
     - name: Install Node.js
       uses: actions/setup-node@v4
@@ -176,7 +198,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Test JS
-      run: cargo +nightly make test-js 
+      run: cargo make test-js 
 
   test-demo:
     runs-on: ubuntu-latest
@@ -190,16 +212,13 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
     
-    # - name: Load Rust toolchain for WASM.
-    #   run: rustup target add wasm32-unknown-unknown
-      
-      # Can be removed when `-Zwasm-c-abi=spec` is no longer an experimental option:
-    - name: Load Rust Nightly toolchain for WASM
-      run: rustup target add wasm32-unknown-unknown --toolchain nightly
+    - name: Load Rust toolchain for WASM.
+      run: rustup target add wasm32-unknown-unknown
 
     - name: Install Node.js
       uses: actions/setup-node@v4
@@ -212,14 +231,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
     - name: Install Dart
-      uses: dart-lang/setup-dart@v1
+      uses: dart-lang/setup-dart@4e3affd8e7047e1cd1ec18b666954637c96fd70b
       with:
-        sdk: 3.7.0
+        sdk: 3.10.0-290.2.beta
 
     - name: Test Dart
       run: cargo make test-dart
@@ -227,6 +247,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
     - name: Set up JDK 17 for x64
@@ -244,19 +266,21 @@ jobs:
   test-nanobind:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install cargo-make
-        uses: taiki-e/install-action@cargo-make
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.8"
-          cache: 'pip'
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.6.10"
-      - name: Install nanobind
-        run: pip install numpy
-      - name: Test Nanobind
-        run: cargo make test-nanobind
+    - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.8"
+        cache: 'pip'
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.6.10"
+    - name: Install nanobind
+      run: pip install numpy
+    - name: Test Nanobind
+      run: cargo make test-nanobind

@@ -1,5 +1,8 @@
 lib-name = "somelib"
 
+[cpp]
+lib-name = "icu4x"
+
 [kotlin]
 domain = "dev.diplomattest"
 

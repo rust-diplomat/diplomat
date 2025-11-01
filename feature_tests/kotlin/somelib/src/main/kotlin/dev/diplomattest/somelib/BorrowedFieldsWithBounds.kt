@@ -17,7 +17,7 @@ internal class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
     internal var fieldB: Slice = Slice();
     @JvmField
     internal var fieldC: Slice = Slice();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("fieldA", "fieldB", "fieldC")
@@ -38,10 +38,11 @@ class BorrowedFieldsWithBounds internal constructor (
         internal val libClass: Class<BorrowedFieldsWithBoundsLib> = BorrowedFieldsWithBoundsLib::class.java
         internal val lib: BorrowedFieldsWithBoundsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsWithBoundsNative::class.java).toLong()
+        @JvmStatic
         
         fun fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds {
-            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.readUtf16(dstr16X)
-            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.readUtf8(utf8StrZ)
+            val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.borrowUtf16(dstr16X)
+            val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.borrowUtf8(utf8StrZ)
             
             val returnVal = lib.BorrowedFieldsWithBounds_from_foo_and_strings(foo.handle, dstr16XSlice, utf8StrZSlice);
             

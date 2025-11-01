@@ -1,0 +1,51 @@
+{%- extends "method_impl_base.h.jinja" -%}
+{%- block domain -%}
+{{- type_name -}}::
+{%- endblock -%}
+
+{%- block special_methods -%}
+{%- let is_self_opaque = matches!(m.method.param_self, Some(hir::ParamSelf{ ty : SelfType::Opaque(_), ..})) -%}
+{%- match m.method.attrs.special_method -%}
+{%- when Some(hir::SpecialMethod::Add) | Some(hir::SpecialMethod::Sub) | Some(hir::SpecialMethod::Mul) | Some(hir::SpecialMethod::Div) -%}
+{%- if !is_self_opaque -%}
+{%- let op_str = m.method.attrs.special_method.as_ref().unwrap().operator_str().unwrap() -%}
+{%- let param_var = m.param_decls[0] ~%}
+inline {{ m.return_ty }}& {{type_name}}::{{m.method_name -}}=({{ param_var.type_name }} {{ param_var.var_name }}) {
+  *this = *this {{ op_str }} {{param_var.var_name}};
+  return *this;
+}
+{%- endif -%}
+
+{%- when Some(hir::SpecialMethod::Iterable) %}
+{% let helper_type = m.return_ty.replace("std::unique_ptr", &fmt.lib_prefixed_path("diplomat::next_to_iter_helper")) %}
+inline {{helper_type}} {{- type_name }}::begin() const {
+    return iter();
+}
+
+{%- when Some(hir::SpecialMethod::Comparison) %}
+inline bool {{type_name}}::operator==(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) == 0;
+}
+
+inline bool {{type_name}}::operator!=(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) != 0;
+}
+
+inline bool {{type_name}}::operator<=(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) <= 0;
+}
+
+inline bool {{type_name}}::operator>=(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) >= 0;
+}
+
+inline bool {{type_name}}::operator<(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) < 0;
+}
+
+inline bool {{type_name}}::operator>(const {{type_name}}& other) const {
+    return this->{{m.method_name}}(other) > 0;
+}
+{%- when _ -%}
+{%- endmatch -%}
+{%- endblock -%}

@@ -9,6 +9,12 @@ use syn::{Attribute, Ident, Meta, Token};
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
 pub struct Docs(String, Vec<RustLink>);
 
+#[non_exhaustive]
+pub enum TypeReferenceSyntax {
+    SquareBrackets,
+    AtLink,
+}
+
 impl Docs {
     pub fn from_attrs(attrs: &[Attribute]) -> Self {
         Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs))
@@ -48,9 +54,17 @@ impl Docs {
     }
 
     /// Convert to markdown
-    pub fn to_markdown(&self, docs_url_gen: &DocsUrlGenerator) -> String {
+    pub fn to_markdown(
+        &self,
+        ref_syntax: TypeReferenceSyntax,
+        docs_url_gen: &DocsUrlGenerator,
+    ) -> String {
         use std::fmt::Write;
-        let mut lines = self.0.clone();
+        let mut lines = match ref_syntax {
+            TypeReferenceSyntax::SquareBrackets => self.0.replace("[`", "[").replace("`]", "]"),
+            TypeReferenceSyntax::AtLink => self.0.replace("[`", "{@link ").replace("`]", "}"),
+        };
+
         let mut has_compact = false;
         for rust_link in &self.1 {
             if rust_link.display == RustLinkDisplay::Compact {

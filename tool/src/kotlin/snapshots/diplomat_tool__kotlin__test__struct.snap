@@ -1,9 +1,8 @@
 ---
 source: tool/src/kotlin/mod.rs
-assertion_line: 2217
 expression: struct_code
 ---
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Callback
 import com.sun.jna.Library
@@ -50,7 +49,7 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
     internal var m: Slice = Slice();
     @JvmField
     internal var n: Pointer = Pointer(0);
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
@@ -93,7 +92,7 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
 
     companion object {
         val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
-        
+
         fun fromCallback(cb: (Int, Int, Int)->Int): DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f = object :  Runner_DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int, arg1: Int, arg2: Int ): Int {
@@ -132,6 +131,7 @@ class MyNativeStruct internal constructor (
         internal val libClass: Class<MyNativeStructLib> = MyNativeStructLib::class.java
         internal val lib: MyNativeStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
+        @JvmStatic
         
         fun new_(): MyNativeStruct {
             
@@ -141,18 +141,21 @@ class MyNativeStruct internal constructor (
             val returnStruct = MyNativeStruct(returnVal, bEdges)
             return returnStruct
         }
+        @JvmStatic
         
         fun testMultiArgCallback(f: (Int, Int, Int)->Int, x: Int): Int {
             
             val returnVal = lib.MyNativeStruct_test_multi_arg_callback(DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
         }
+        @JvmStatic
         
         fun getUByteSlice(): UByteArray {
             
             val returnVal = lib.MyNativeStruct_get_u_byte_slice();
                 return PrimitiveArrayTools.getUByteArray(returnVal)
         }
+        @JvmStatic
         
         fun booleanResult(): Result<Boolean> {
             
@@ -163,6 +166,7 @@ class MyNativeStruct internal constructor (
                 return UnitError().err()
             }
         }
+        @JvmStatic
         
         fun ubyteResult(): Result<UByte> {
             

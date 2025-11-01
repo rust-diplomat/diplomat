@@ -8,7 +8,7 @@ use syn::{
 };
 use toml::{value::Table, Value};
 
-use crate::{demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
+use crate::{cpp::CppConfig, demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
 use diplomat_core::hir::LoweringConfig;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
@@ -66,6 +66,8 @@ pub struct Config {
     pub demo_gen_config: DemoConfig,
     #[serde(rename = "js")]
     pub js_config: JsConfig,
+    #[serde(rename = "cpp")]
+    pub cpp_config: CppConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,
@@ -96,6 +98,12 @@ impl Config {
             } else {
                 self.js_config.set(&key.replace("js.", ""), value);
             }
+        } else if key.starts_with("cpp.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.cpp_config.set(&key.replace("cpp.", ""), value);
+            }
         } else {
             self.shared_config.set(key, value)
         }
@@ -105,7 +113,7 @@ impl Config {
         let mut out = self.clone();
 
         // Look for a match of language_name.some_value in a potential key.
-        let m = format!("{}.", target_language);
+        let m = format!("{target_language}.");
         for (k, v) in out.language_overrides.iter() {
             if k.starts_with(&m) {
                 out.shared_config.set(&k.replace(&m, ""), v.clone());
@@ -132,7 +140,7 @@ impl Config {
             if let toml::Value::Table(t) = value {
                 for (subkey, subvalue) in t {
                     let subkey = heck::AsSnakeCase(subkey).to_string();
-                    self.set(&format!("{}.{}", key, subkey), subvalue);
+                    self.set(&format!("{key}.{subkey}"), subvalue);
                 }
             } else {
                 self.set(&key, value);
@@ -158,6 +166,7 @@ pub fn toml_value_from_str(string: &str) -> toml::Value {
     let try_parse = toml::from_str::<toml::Value>(string);
 
     // If there's an error parsing (because clap will not parse quotes, for example), we just treat what we're passed as a string:
+    // toml from_str
     if let Ok(out) = try_parse {
         out
     } else {
@@ -261,4 +270,16 @@ pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatB
     }
 
     out_config
+}
+
+#[cfg(test)]
+mod test {
+    use toml::Value;
+
+    #[test]
+    fn test_toml_parse() {
+        let t = "true";
+        assert!(toml::from_str::<Value>(t).is_err());
+        assert_eq!(super::toml_value_from_str(t), Value::String(t.to_string()));
+    }
 }

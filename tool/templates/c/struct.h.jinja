@@ -7,4 +7,16 @@ struct {{ty_name}} {
 
 {% if fields.len() != 0 -%}
 typedef struct {{ ty_name }}_option {union { {{ty_name}} ok; }; bool is_ok; } {{ ty_name }}_option;
-{%- endif %}
+{%- endif -%}
+
+{%- if is_sliceable %}
+typedef struct Diplomat{{ty_name}}View {
+  const {{ty_name}}* data;
+  size_t len;
+} Diplomat{{ty_name}}View;
+
+typedef struct Diplomat{{ty_name}}ViewMut {
+  {{ty_name}}* data;
+  size_t len;
+} Diplomat{{ty_name}}ViewMut;
+{% endif %}

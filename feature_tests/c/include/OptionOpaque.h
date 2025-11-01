@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "BorrowingOptionStruct.d.h"
 #include "OptionEnum.d.h"
 #include "OptionInputStruct.d.h"
 #include "OptionStruct.d.h"
@@ -55,6 +56,11 @@ OptionOpaque_accepts_option_u8_result OptionOpaque_accepts_option_u8(OptionU8 ar
 typedef struct OptionOpaque_accepts_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_option_enum_result;
 OptionOpaque_accepts_option_enum_result OptionOpaque_accepts_option_enum(OptionEnum_option arg, uint8_t sentinel);
 
+void OptionOpaque_accepts_borrowing_option_struct(BorrowingOptionStruct arg);
+
+typedef struct OptionOpaque_accepts_multiple_option_enum_result {union {OptionEnum ok; }; bool is_ok;} OptionOpaque_accepts_multiple_option_enum_result;
+OptionOpaque_accepts_multiple_option_enum_result OptionOpaque_accepts_multiple_option_enum(uint8_t sentinel1, OptionEnum_option arg1, OptionEnum_option arg2, OptionEnum_option arg3, uint8_t sentinel2);
+
 typedef struct OptionOpaque_accepts_option_input_struct_result {union {OptionInputStruct ok; }; bool is_ok;} OptionOpaque_accepts_option_input_struct_result;
 OptionOpaque_accepts_option_input_struct_result OptionOpaque_accepts_option_input_struct(OptionInputStruct_option arg, uint8_t sentinel);
 
@@ -65,7 +71,6 @@ size_t OptionOpaque_accepts_option_str(OptionStringView arg, uint8_t sentinel);
 bool OptionOpaque_accepts_option_str_slice(OptionStringsView arg, uint8_t sentinel);
 
 int64_t OptionOpaque_accepts_option_primitive(OptionU32View arg, uint8_t sentinel);
-
 
 void OptionOpaque_destroy(OptionOpaque* self);
 

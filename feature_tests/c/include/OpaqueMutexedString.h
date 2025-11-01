@@ -34,7 +34,6 @@ Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
 
 uint16_t OpaqueMutexedString_to_unsigned_from_unsigned(const OpaqueMutexedString* self, uint16_t input);
 
-
 void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
 
 

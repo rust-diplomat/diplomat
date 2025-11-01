@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub(super) enum Forward {
+pub(crate) enum Forward {
     Class(String),
     #[allow(dead_code)]
     Struct(String),
@@ -17,6 +17,7 @@ pub(super) enum Forward {
 #[template(path = "cpp/base.h.jinja", escape = "none")]
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
+    lib_name: Option<&'a str>,
     decl_include: Option<Cow<'a, str>>,
     includes: Vec<Cow<'a, str>>,
     forwards: &'a BTreeMap<Option<String>, BTreeSet<Forward>>,
@@ -26,7 +27,7 @@ struct HeaderTemplate<'a> {
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
-pub(super) struct Header {
+pub(crate) struct Header<'a> {
     /// The path name used for the header file (for example Foo.h)
     pub path: String,
     /// A list of includes
@@ -64,10 +65,13 @@ pub(super) struct Header {
     pub body: String,
     /// What string to use for indentation.
     pub indent_str: &'static str,
+
+    /// The library name
+    pub lib_name: Option<&'a str>,
 }
 
-impl Header {
-    pub fn new(path: String) -> Self {
+impl<'a> Header<'a> {
+    pub fn new(path: String, lib_name: Option<&'a str>) -> Self {
         Header {
             path,
             includes: BTreeSet::from_iter(["diplomat_runtime.hpp".into()]),
@@ -75,6 +79,7 @@ impl Header {
             forwards: BTreeMap::new(),
             body: String::new(),
             indent_str: "  ",
+            lib_name,
         }
     }
 
@@ -107,7 +112,7 @@ impl Header {
     }
 }
 
-impl fmt::Write for Header {
+impl fmt::Write for Header<'_> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.body.write_str(s)
     }
@@ -119,14 +124,19 @@ impl fmt::Write for Header {
     }
 }
 
-impl fmt::Display for Header {
+impl fmt::Display for Header<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let header_guard = &self
+        let header_guard = self
             .path
             .replace(".d.hpp", "_D_HPP")
             .replace(".hpp", "_HPP")
             .replace("\\", "_")
             .replace("/", "_");
+        let header_guard = if let Some(lib_name) = self.lib_name {
+            format!("{}_{header_guard}", lib_name.to_ascii_uppercase())
+        } else {
+            header_guard
+        };
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
@@ -146,6 +156,7 @@ impl fmt::Display for Header {
                 .map(|s| path_diff(&self.path, s))
                 .collect(),
             forwards: &self.forwards,
+            lib_name: self.lib_name,
             body,
         }
         .render_into(f)

@@ -5,8 +5,11 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Bar {
-    
+    /** @internal */
     get ffiValue(): pointer;
+    /** @internal */
+    constructor();
+
 
     get foo(): Foo;
 }

@@ -2,31 +2,43 @@
 
 
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% endif -%}
+
 {% if !docs.is_empty() -%}
 /**
- * {{docs}}
+ {{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-struct {{type_name_unnamespaced}} {
+struct {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 {%- for field in fields %}
-	{{field.type_name}} {{field.var_name}};
+    {{field.type_name}} {{field.var_name}};
 {%- endfor %}
-{% for m in methods %}
-	{% if !m.docs.is_empty() -%}
-	/**
-	 * {{m.docs|indent(2)}}
-	 */
-	{% endif -%}
-	{% include "method_decl.h.jinja" %}
+{% for m in methods -%}
+    {% include "function_defs/method_decl.h.jinja" %}
 {% endfor %}
 {%- if !fields.is_empty() %}
-	inline {{ctype}} AsFFI() const;
-	inline static {{type_name}} FromFFI({{ctype}} c_struct);
+    inline {{ctype}} AsFFI() const;
+    inline static {{type_name}} FromFFI({{ctype}} c_struct);
 {%- endif %}
 };
 
-{% if namespace.is_some() -%}
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
 {%-endif%}
+
+{%- if is_sliceable %}
+namespace {{fmt.lib_name_ns_prefix}}diplomat {
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const {{type_name}}>>>> {
+        using type = {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::Diplomat{{type_name_unnamespaced}}View;
+    };
+
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<{{type_name}}>>>> {
+        using type = {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::Diplomat{{type_name_unnamespaced}}ViewMut;
+};
+}
+{%- endif %}

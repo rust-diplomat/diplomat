@@ -20,6 +20,7 @@ final class Float64Vec implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('Float64Vec_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Float64Vec_destroy));
 
   factory Float64Vec.bool(core.List<bool> v) {
@@ -65,7 +66,7 @@ final class Float64Vec implements ffi.Finalizable {
 
   core.List<double> get asSlice {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Float64Vec_as_slice(_ffi);
     return result._toDart(aEdges);
   }
@@ -89,7 +90,7 @@ final class Float64Vec implements ffi.Finalizable {
 
   core.List<double> borrow() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _Float64Vec_borrow(_ffi);
     return result._toDart(aEdges);
   }
@@ -101,6 +102,7 @@ final class Float64Vec implements ffi.Finalizable {
     }
     return result.union.ok;
   }
+
 }
 
 @_DiplomatFfiUse('Float64Vec_destroy')

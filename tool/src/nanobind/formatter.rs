@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::cpp::Cpp2Formatter;
-use diplomat_core::hir::{DocsUrlGenerator, Method, TypeContext, TypeId};
+use diplomat_core::hir::{DocsUrlGenerator, Method, SymbolId, TypeContext, TypeId};
 use std::{borrow::Cow, sync::LazyLock};
 
 /// This type mediates all formatting
@@ -18,28 +18,46 @@ pub(crate) struct PyFormatter<'tcx> {
 }
 
 impl<'tcx> PyFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        config_for_cpp: &crate::Config,
+        docs_url_gen: &'tcx DocsUrlGenerator,
+    ) -> Self {
         Self {
-            cxx: Cpp2Formatter::new(tcx, docs_url_gen),
+            cxx: Cpp2Formatter::new(tcx, config_for_cpp, docs_url_gen),
         }
+    }
+
+    pub fn fmt_binding_fn(&self, id: TypeId) -> String {
+        let def = self.cxx.c.tcx().resolve_type(id);
+        let type_name = def.attrs().rename.apply(def.name().as_str().into());
+        format!("add_{type_name}_binding")
+    }
+
+    pub fn fmt_binding_impl_path(&self, id: TypeId) -> String {
+        self.cxx.fmt_type_name(id).replace("::", "/") + "_binding.cpp"
     }
 
     /// Resolve and format the nested module names for this type
     /// Returns an iterator to the namespaces. Will always have at least one entry
-    pub fn fmt_namespaces(&self, id: TypeId) -> impl Iterator<Item = &'tcx str> {
-        let resolved = self.cxx.c.tcx().resolve_type(id);
-        resolved
-            .attrs()
-            .namespace
+    pub fn fmt_namespaces(&self, id: SymbolId) -> impl Iterator<Item = &'tcx str> {
+        let namespace = match id {
+            SymbolId::FunctionId(f) => self
+                .cxx
+                .c
+                .tcx()
+                .resolve_function(f)
+                .attrs
+                .namespace
+                .as_ref(),
+            SymbolId::TypeId(ty) => self.cxx.c.tcx().resolve_type(ty).attrs().namespace.as_ref(),
+            _ => panic!("Unsupported SymbolId {id:?}"),
+        };
+        namespace
             .as_ref()
             .map(|v| v.split("::"))
             .into_iter()
             .flatten()
-    }
-
-    /// Resolve the name of the module to use
-    pub fn fmt_module(&'tcx self, id: TypeId, default: &'tcx str) -> Cow<'tcx, str> {
-        self.fmt_namespaces(id).last().unwrap_or(default).into()
     }
 
     pub fn fmt_method_name<'a>(&'tcx self, method: &'a Method) -> Cow<'a, str> {

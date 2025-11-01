@@ -2,6 +2,8 @@
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
 pub mod config;
+// Custom askama filters
+pub(crate) mod filters;
 
 // Backends
 pub mod c;
@@ -90,8 +92,8 @@ pub fn gen(
         });
 
     let (files, errors) = match target_language {
-        "c" => c::run(&tcx, docs_url_gen),
-        "cpp" => cpp::run(&tcx, docs_url_gen),
+        "c" => c::run(&tcx, &config, docs_url_gen),
+        "cpp" => cpp::run(&tcx, &config, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, config, docs_url_gen),
         "py-nanobind" | "nanobind" => nanobind::run(&tcx, config, docs_url_gen),
@@ -129,7 +131,7 @@ pub fn gen(
     if !silent {
         println!(
             "{}",
-            format!("Generating {} bindings:", target_language)
+            format!("Generating {target_language} bindings:")
                 .green()
                 .bold()
         );
@@ -190,15 +192,15 @@ impl<'tcx, E> ErrorStore<'tcx, E> {
         let old = mem::replace(&mut *self.context.borrow_mut(), new);
         ErrorContextGuard(self, old)
     }
+
     /// Set the context to a named method. Will return a scope guard that will automatically
     /// clear the context on drop.
     pub fn set_context_method<'a>(
         &'a self,
-        ty: Cow<'tcx, str>,
         method: Cow<'tcx, str>,
     ) -> ErrorContextGuard<'a, 'tcx, E> {
         let new = ErrorContext {
-            ty,
+            ty: self.context.borrow().ty.clone(),
             method: Some(method),
         };
 

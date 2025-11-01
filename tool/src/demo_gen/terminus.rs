@@ -1,7 +1,8 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use diplomat_core::hir::{
-    self, DemoInfo, Method, OpaqueDef, StructDef, StructPath, TyPosition, Type, TypeContext,
+    self, DemoInfo, Method, OpaqueDef, OutType, StructDef, StructPath, SuccessType, TyPosition,
+    Type, TypeContext,
 };
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
@@ -14,6 +15,7 @@ pub struct OutParam {
     /// Full string name of the param.
     pub label: String,
     pub default_value: String,
+    pub values: Vec<String>,
     /// For typescript and RenderInfo output. Type that this parameter is. We get this directly from Rust.
     pub type_name: String,
     /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
@@ -38,9 +40,6 @@ struct MethodDependency {
     /// Used to detect whether or not we need to add parentheses to the function call.
     is_getter: bool,
 
-    /// The variable name to assign to this method.
-    variable_name: String,
-
     /// Parameters names to pass into the method.
     params: Vec<String>,
 
@@ -60,31 +59,14 @@ pub(super) struct RenderTerminusContext<'ctx, 'tcx> {
     /// To avoid similar parameter and variable names while we're collecting [`OutParam`]s and [`MethodDependency`]s.
     pub name_collision: HashMap<String, i32>,
 
-    pub relative_import_path: String,
-    pub module_name: String,
+    pub lib_name: String,
 }
 
 impl MethodDependency {
-    pub fn new(
-        ctx: &mut RenderTerminusContext,
-        method_js: String,
-        variable_name: String,
-        owning_param: Option<String>,
-    ) -> Self {
-        let (var_name, n) = if ctx.name_collision.contains_key(&variable_name) {
-            let n = ctx.name_collision.get(&variable_name).unwrap();
-
-            (format!("{variable_name}_{n}"), n + 1)
-        } else {
-            (variable_name.clone(), 1)
-        };
-
-        ctx.name_collision.insert(var_name.clone(), n);
-
+    pub fn new(method_js: String, owning_param: Option<String>) -> Self {
         MethodDependency {
             method_js,
             is_getter: false,
-            variable_name: var_name,
             params: Vec::new(),
             self_param: None,
             owning_param,
@@ -134,8 +116,6 @@ impl MethodDependency {
 ///     return out;
 /// }
 /// ```
-#[derive(Template)]
-#[template(path = "demo_gen/terminus.js.jinja", escape = "none")]
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     pub function_name: String,
@@ -154,50 +134,48 @@ pub(super) struct TerminusInfo {
     /// The type name of the type that this function belongs to.
     pub type_name: String,
 
-    pub js_file_name: String,
+    /// The function that displays a result, like converting a bool into 'true'/'false' strings
+    pub display_fn: Option<&'static str>,
 
-    /// Stack of results from calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`].
-    pub node_call_stack: Vec<String>,
-
-    /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
-    pub typescript: bool,
-
-    /// List of JS imports that this terminus needs.
-    pub imports: BTreeSet<String>,
+    /// The expression of the return value
+    pub return_val: String,
 }
 
 impl RenderTerminusContext<'_, '_> {
     /// See [`TerminusInfo`] for more information on termini.
-    ///
-    /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
-    /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
-        method.output.success_type().is_write()
+        #[allow(clippy::match_like_matches_macro)] // more readable
+        let is_return_ty_displayable = match method.output.success_type() {
+            SuccessType::Write => true,
+            SuccessType::OutType(OutType::Primitive(_) | OutType::Enum(_)) => true,
+            _ => false,
+        };
+        let is_pure = method
+            .param_self
+            .iter()
+            .all(|s| !s.ty.is_mutably_borrowed())
+            && method.params.iter().all(|p| !p.ty.is_mutably_borrowed());
+        is_return_ty_displayable && is_pure
     }
 
     /// Create a Render Terminus .js file from a method.
-    /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate(&mut self, type_name: String, method: &Method) {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root = MethodDependency::new(
-            self,
-            self.get_constructor_js(type_name.clone(), method),
-            "out".into(),
-            None,
-        );
+        let mut root =
+            MethodDependency::new(self.get_constructor_js(type_name.clone(), method), None);
 
         // And then we just treat the terminus as a regular constructor method:
-        self.evaluate_constructor(method, &mut root);
+        self.terminus_info.return_val = self.evaluate_constructor(method, &mut root);
 
-        let type_n = type_name.clone();
-        let format = self.formatter.fmt_import_module(
-            &type_n,
-            self.module_name.clone(),
-            self.relative_import_path.clone(),
-        );
-
-        self.terminus_info.imports.insert(format);
+        self.terminus_info.display_fn = match method.output.as_type() {
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Bool)) => Some("displayBool"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Ordering)) => Some("displayOrdering"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Char)) => Some("displayChar"),
+            Some(hir::OutType::Primitive(hir::PrimitiveType::Byte)) => Some("displayByte"),
+            Some(hir::OutType::Enum(_)) => Some("displayOptionalEnum"),
+            _ => None,
+        };
     }
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
@@ -219,15 +197,13 @@ impl RenderTerminusContext<'_, '_> {
     ) -> String {
         let attrs_default = attrs.unwrap_or_default();
 
-        let owning_str = node
-            .owning_param
-            .as_ref()
-            .map(|p| format!("{}:", p))
-            .unwrap_or_default();
         let owned_full_name = format!(
             "{}{}",
-            owning_str,
-            heck::AsUpperCamelCase(param_name.clone())
+            node.owning_param
+                .as_ref()
+                .map(|o| format!("{o}_"))
+                .unwrap_or_default(),
+            heck::AsLowerCamelCase(param_name.clone())
         )
         .to_string();
         // This only works for enums, since otherwise we break the type into its component parts.
@@ -265,6 +241,16 @@ impl RenderTerminusContext<'_, '_> {
             }
         };
 
+        let values = match type_info {
+            Type::Enum(e) => e
+                .resolve(self.tcx)
+                .variants
+                .iter()
+                .map(|v| v.name.as_str().to_string())
+                .collect(),
+            _ => vec![],
+        };
+
         let full_param_name = heck::AsLowerCamelCase(owned_full_name).to_string();
 
         let (p, n) = if self.name_collision.contains_key(&full_param_name) {
@@ -283,6 +269,7 @@ impl RenderTerminusContext<'_, '_> {
             type_name: type_name.clone(),
             type_use,
             default_value,
+            values,
         };
 
         self.terminus_info.out_params.push(out_param);
@@ -307,6 +294,19 @@ impl RenderTerminusContext<'_, '_> {
             // Types we can easily coerce into out parameters (i.e., get easy user input from):
             Type::Primitive(..) => {
                 self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
+            }
+            Type::Enum(e) if param_name == "self" => {
+                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+
+                if e.resolve(self.tcx).attrs.disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
+
+                let param =
+                    self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
+                // Enum coercion only works for arguments, we need to construct self manually
+                format!("new {}.{type_name}({param})", self.lib_name,)
             }
             Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
@@ -376,9 +376,9 @@ impl RenderTerminusContext<'_, '_> {
         if method.param_self.is_some() {
             method_name
         } else if let Some(hir::SpecialMethod::Constructor) = method.attrs.special_method {
-            format!("new {owner_type_name}")
+            format!("new {}.{owner_type_name}", self.lib_name)
         } else {
-            format!("{owner_type_name}.{method_name}")
+            format!("{}.{owner_type_name}.{method_name}", self.lib_name)
         }
     }
 
@@ -403,34 +403,21 @@ impl RenderTerminusContext<'_, '_> {
             }
 
             if usable_constructor {
-                self.terminus_info
-                    .imports
-                    .insert(self.formatter.fmt_import_module(
-                        &type_name.clone(),
-                        self.module_name.clone(),
-                        self.relative_import_path.clone(),
-                    ));
-
-                let owned_type = format!(
+                let param = format!(
                     "{}{}",
                     node.owning_param
                         .as_ref()
-                        .map(|o| { format!("{o}:") })
+                        .map(|o| { format!("{o}_") })
                         .unwrap_or_default(),
-                    heck::AsUpperCamelCase(param_name.clone())
+                    heck::AsLowerCamelCase(param_name.clone())
                 );
-
-                let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
 
                 let mut child = MethodDependency::new(
-                    self,
                     self.get_constructor_js(type_name.to_string(), method),
-                    var_name,
-                    Some(owned_type),
+                    Some(param),
                 );
 
-                self.evaluate_constructor(method, &mut child);
-                return child.variable_name;
+                return self.evaluate_constructor(method, &mut child);
             }
         }
 
@@ -461,30 +448,18 @@ impl RenderTerminusContext<'_, '_> {
         param_name: String,
         node: &mut MethodDependency,
     ) -> String {
-        self.terminus_info
-            .imports
-            .insert(self.formatter.fmt_import_module(
-                &type_name,
-                self.module_name.clone(),
-                self.relative_import_path.clone(),
-            ));
-
-        let owned_type = format!(
+        let param = format!(
             "{}{}",
             node.owning_param
                 .as_ref()
-                .map(|o| { format!("{o}:") })
+                .map(|o| { format!("{o}_") })
                 .unwrap_or_default(),
-            heck::AsUpperCamelCase(param_name.clone())
+            heck::AsLowerCamelCase(param_name.clone())
         );
 
-        let var_name = heck::AsLowerCamelCase(owned_type.clone()).to_string();
-
         let mut child = MethodDependency::new(
-            self,
-            format!("{type_name}.fromFields"),
-            var_name,
-            Some(owned_type),
+            format!("{}.{type_name}.fromFields", self.lib_name),
+            Some(param),
         );
 
         struct FieldInfo {
@@ -514,26 +489,18 @@ impl RenderTerminusContext<'_, '_> {
 
         child.params.push(StructInfo { fields }.render().unwrap());
 
-        self.terminus_info
-            .node_call_stack
-            .push(child.render().unwrap());
-
-        child.variable_name
+        child.render().unwrap()
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
-    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) {
+    fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
         let param_self = method.param_self.as_ref();
 
-        if param_self.is_some() {
-            let s = param_self.unwrap();
-
+        if let Some(s) = param_self {
             let ty: Type = s.ty.clone().into();
 
-            let type_name = self.formatter.fmt_type_name(ty.id().unwrap());
-
             let self_param =
-                self.evaluate_param(&ty, type_name.to_string(), node, s.attrs.demo_attrs.clone());
+                self.evaluate_param(&ty, "self".into(), node, s.attrs.demo_attrs.clone());
             node.self_param.replace(self_param);
 
             let is_getter = matches!(
@@ -554,9 +521,6 @@ impl RenderTerminusContext<'_, '_> {
             node.params.push(new_param);
         }
 
-        // Add this method to the call stack:
-        self.terminus_info
-            .node_call_stack
-            .push(node.render().unwrap());
+        node.render().unwrap()
     }
 }

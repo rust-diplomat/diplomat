@@ -5,10 +5,9 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OpaqueThinVecLib: Library {
     fun OpaqueThinVec_destroy(handle: Pointer)
-    fun OpaqueThinVec_create(a: Slice, b: Slice): Pointer
+    fun OpaqueThinVec_create(a: Slice, b: Slice, c: Slice): Pointer
     fun OpaqueThinVec_iter(handle: Pointer): Pointer
     fun OpaqueThinVec_len(handle: Pointer): FFISizet
     fun OpaqueThinVec_get(handle: Pointer, idx: FFISizet): Pointer?
@@ -31,18 +30,21 @@ class OpaqueThinVec internal constructor (
     companion object {
         internal val libClass: Class<OpaqueThinVecLib> = OpaqueThinVecLib::class.java
         internal val lib: OpaqueThinVecLib = Native.load("somelib", libClass)
+        @JvmStatic
         
-        fun create(a: IntArray, b: FloatArray): OpaqueThinVec {
-            val (aMem, aSlice) = PrimitiveArrayTools.native(a)
-            val (bMem, bSlice) = PrimitiveArrayTools.native(b)
+        fun create(a: IntArray, b: FloatArray, c: String): OpaqueThinVec {
+            val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
+            val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
+            val (cMem, cSlice) = PrimitiveArrayTools.borrowUtf8(c)
             
-            val returnVal = lib.OpaqueThinVec_create(aSlice, bSlice);
+            val returnVal = lib.OpaqueThinVec_create(aSlice, bSlice, cSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = OpaqueThinVec(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
             if (aMem != null) aMem.close()
             if (bMem != null) bMem.close()
+            if (cMem != null) cMem.close()
             return returnOpaque
         }
     }

@@ -57,7 +57,7 @@ impl OpaqueType {
     }
 
     fn dtor_abi_name(name: &Ident, attrs: &Attrs) -> Ident {
-        let dtor_abi_name = format!("{}_destroy", name);
+        let dtor_abi_name = format!("{name}_destroy");
         let dtor_abi_name = String::from(attrs.abi_rename.apply(dtor_abi_name.into()));
         Ident::from(dtor_abi_name)
     }

@@ -5,19 +5,14 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsReturning {
-    
     #bytes;
-    
-    get bytes()  {
+    get bytes() {
         return this.#bytes;
-    } 
-    set bytes(value) {
+    }
+    set bytes(value){
         this.#bytes = value;
     }
-    
-    /** Create `BorrowedFieldsReturning` from an object that contains all of `BorrowedFieldsReturning`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BorrowedFieldsReturning(structObj);
     }
@@ -37,19 +32,19 @@ export class BorrowedFieldsReturning {
     }
 
     // Return this struct in FFI function friendly format.
-    // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // Returns an array that can be expanded with spread syntax (...)// If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -86,14 +81,15 @@ export class BorrowedFieldsReturning {
         return new BorrowedFieldsReturning(structObj);
     }
 
-    // Return all fields corresponding to lifetime `'a` 
+    // Return all fields corresponding to lifetime `'a`
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'a`,
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeA() { 
+    get _fieldsForLifetimeA() {
         return [this.#bytes];
     };
+
 
     constructor(structObj) {
         return this.#internalConstructor(...arguments)

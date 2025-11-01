@@ -2,7 +2,7 @@
 import type { FixedDecimalGroupingStrategy } from "./FixedDecimalGroupingStrategy"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type FixedDecimalFormatterOptions_obj = {
+export type FixedDecimalFormatterOptions_obj = {
     groupingStrategy: FixedDecimalGroupingStrategy;
     someOtherConfig: boolean;
 };
@@ -10,17 +10,13 @@ type FixedDecimalFormatterOptions_obj = {
 
 
 export class FixedDecimalFormatterOptions {
-    
-    get groupingStrategy() : FixedDecimalGroupingStrategy; 
-    set groupingStrategy(value: FixedDecimalGroupingStrategy); 
-    
-    get someOtherConfig() : boolean; 
-    set someOtherConfig(value: boolean); 
-    
-    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    get groupingStrategy(): FixedDecimalGroupingStrategy;
+    set groupingStrategy(value: FixedDecimalGroupingStrategy);
+    get someOtherConfig(): boolean;
+    set someOtherConfig(value: boolean);
+    /** @internal */
     static fromFields(structObj : FixedDecimalFormatterOptions_obj) : FixedDecimalFormatterOptions;
+
 
 
     constructor();

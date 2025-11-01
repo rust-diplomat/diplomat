@@ -5,7 +5,9 @@ part of 'lib.g.dart';
 
 final class MyZst {
 
+  // ignore: public_member_api_docs
   MyZst();
+
 
   @override
   bool operator ==(Object other) =>

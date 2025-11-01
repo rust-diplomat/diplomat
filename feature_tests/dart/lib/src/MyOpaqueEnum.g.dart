@@ -20,6 +20,7 @@ final class MyOpaqueEnum implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('MyOpaqueEnum_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyOpaqueEnum_destroy));
 
   static MyOpaqueEnum new_() {
@@ -27,11 +28,13 @@ final class MyOpaqueEnum implements ffi.Finalizable {
     return MyOpaqueEnum._fromFfi(result, []);
   }
 
+  @override
   String toString() {
     final write = _Write();
     _MyOpaqueEnum_to_string(_ffi, write._ffi);
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('MyOpaqueEnum_destroy')

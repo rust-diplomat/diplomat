@@ -20,17 +20,19 @@ final class RenamedMyIndexer implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('namespace_MyIndexer_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIndexer_destroy));
 
   String? operator [](int i) {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _namespace_MyIndexer_get(_ffi, i);
     if (!result.isOk) {
       return null;
     }
     return result.union.ok._toDart(aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('namespace_MyIndexer_destroy')

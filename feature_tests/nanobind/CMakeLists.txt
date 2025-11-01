@@ -51,6 +51,7 @@ if(WIN32)
   target_link_libraries(diplomat_feature_tests INTERFACE kernel32.lib advapi32.lib ntdll.lib userenv.lib ws2_32.lib dbghelp.lib)
 endif()
 
+file(GLOB_RECURSE SUBMODULE_FILES src/sub_modules/*.cpp)
 # We are now ready to compile the actual extension module
 nanobind_add_module(
   # Name of the extension
@@ -65,6 +66,7 @@ nanobind_add_module(
 
   # Source code goes here
   src/somelib_ext.cpp
+  ${SUBMODULE_FILES}
 )
 target_include_directories(somelib PUBLIC "src/include" "${nanobind_ROOT}/ext/robin_map/include")
 target_compile_features(somelib PUBLIC cxx_std_20)

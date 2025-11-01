@@ -1,5 +1,5 @@
-#ifndef OptionString_HPP
-#define OptionString_HPP
+#ifndef SOMELIB_OptionString_HPP
+#define SOMELIB_OptionString_HPP
 
 #include "OptionString.d.hpp"
 
@@ -14,62 +14,68 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    diplomat::capi::OptionString* OptionString_new(diplomat::capi::DiplomatStringView diplomat_str);
-    
+
+    somelib::capi::OptionString* OptionString_new(somelib::diplomat::capi::DiplomatStringView diplomat_str);
+
     typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;
-    OptionString_write_result OptionString_write(const diplomat::capi::OptionString* self, diplomat::capi::DiplomatWrite* write);
-    
-    typedef struct OptionString_borrow_result {union {diplomat::capi::DiplomatStringView ok; }; bool is_ok;} OptionString_borrow_result;
-    OptionString_borrow_result OptionString_borrow(const diplomat::capi::OptionString* self);
-    
-    
+    OptionString_write_result OptionString_write(const somelib::capi::OptionString* self, somelib::diplomat::capi::DiplomatWrite* write);
+
+    typedef struct OptionString_borrow_result {union {somelib::diplomat::capi::DiplomatStringView ok; }; bool is_ok;} OptionString_borrow_result;
+    OptionString_borrow_result OptionString_borrow(const somelib::capi::OptionString* self);
+
     void OptionString_destroy(OptionString* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<OptionString> OptionString::new_(std::string_view diplomat_str) {
-  auto result = diplomat::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
-  return std::unique_ptr<OptionString>(OptionString::FromFFI(result));
+inline std::unique_ptr<somelib::OptionString> somelib::OptionString::new_(std::string_view diplomat_str) {
+    auto result = somelib::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
+    return std::unique_ptr<somelib::OptionString>(somelib::OptionString::FromFFI(result));
 }
 
-inline diplomat::result<std::string, std::monostate> OptionString::write() const {
-  std::string output;
-  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  auto result = diplomat::capi::OptionString_write(this->AsFFI(),
-    &write);
-  return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
+inline somelib::diplomat::result<std::string, std::monostate> somelib::OptionString::write() const {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    auto result = somelib::capi::OptionString_write(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::string, std::monostate>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, std::monostate>(somelib::diplomat::Err<std::monostate>());
+}
+template<typename W>
+inline somelib::diplomat::result<std::monostate, std::monostate> somelib::OptionString::write_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = somelib::capi::OptionString_write(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline std::optional<std::string_view> OptionString::borrow() const {
-  auto result = diplomat::capi::OptionString_borrow(this->AsFFI());
-  return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
+inline std::optional<std::string_view> somelib::OptionString::borrow() const {
+    auto result = somelib::capi::OptionString_borrow(this->AsFFI());
+    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }
 
-inline const diplomat::capi::OptionString* OptionString::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::OptionString*>(this);
+inline const somelib::capi::OptionString* somelib::OptionString::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::OptionString*>(this);
 }
 
-inline diplomat::capi::OptionString* OptionString::AsFFI() {
-  return reinterpret_cast<diplomat::capi::OptionString*>(this);
+inline somelib::capi::OptionString* somelib::OptionString::AsFFI() {
+    return reinterpret_cast<somelib::capi::OptionString*>(this);
 }
 
-inline const OptionString* OptionString::FromFFI(const diplomat::capi::OptionString* ptr) {
-  return reinterpret_cast<const OptionString*>(ptr);
+inline const somelib::OptionString* somelib::OptionString::FromFFI(const somelib::capi::OptionString* ptr) {
+    return reinterpret_cast<const somelib::OptionString*>(ptr);
 }
 
-inline OptionString* OptionString::FromFFI(diplomat::capi::OptionString* ptr) {
-  return reinterpret_cast<OptionString*>(ptr);
+inline somelib::OptionString* somelib::OptionString::FromFFI(somelib::capi::OptionString* ptr) {
+    return reinterpret_cast<somelib::OptionString*>(ptr);
 }
 
-inline void OptionString::operator delete(void* ptr) {
-  diplomat::capi::OptionString_destroy(reinterpret_cast<diplomat::capi::OptionString*>(ptr));
+inline void somelib::OptionString::operator delete(void* ptr) {
+    somelib::capi::OptionString_destroy(reinterpret_cast<somelib::capi::OptionString*>(ptr));
 }
 
 
-#endif // OptionString_HPP
+#endif // SOMELIB_OptionString_HPP

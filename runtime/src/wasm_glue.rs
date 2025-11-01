@@ -1,5 +1,10 @@
+//! Wasm-specific glue code
+//!
+//! This is a private module
 use alloc::format;
 
+/// In theory, this function may be useful for other backends eventually, but
+/// currently it is only useful in WASM so it is in this module.
 #[no_mangle]
 unsafe extern "C" fn diplomat_init() {
     #[cfg(debug_assertions)]
@@ -10,7 +15,7 @@ unsafe extern "C" fn diplomat_init() {
         .unwrap();
 }
 
-fn panic_handler(info: &std::panic::PanicInfo) {
+fn panic_handler(info: &std::panic::PanicHookInfo) {
     let msg = match info.payload().downcast_ref::<&'static str>() {
         Some(&s) => s,
         None => match info.payload().downcast_ref::<String>() {

@@ -1,5 +1,5 @@
-#ifndef ImportedStruct_HPP
-#define ImportedStruct_HPP
+#ifndef SOMELIB_ImportedStruct_HPP
+#define SOMELIB_ImportedStruct_HPP
 
 #include "ImportedStruct.d.hpp"
 
@@ -15,29 +15,26 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
-    extern "C" {
-    
-    
-    } // extern "C"
+
 } // namespace capi
 } // namespace
 
 
-inline diplomat::capi::ImportedStruct ImportedStruct::AsFFI() const {
-  return diplomat::capi::ImportedStruct {
-    /* .foo = */ foo.AsFFI(),
-    /* .count = */ count,
-  };
+inline somelib::capi::ImportedStruct somelib::ImportedStruct::AsFFI() const {
+    return somelib::capi::ImportedStruct {
+        /* .foo = */ foo.AsFFI(),
+        /* .count = */ count,
+    };
 }
 
-inline ImportedStruct ImportedStruct::FromFFI(diplomat::capi::ImportedStruct c_struct) {
-  return ImportedStruct {
-    /* .foo = */ UnimportedEnum::FromFFI(c_struct.foo),
-    /* .count = */ c_struct.count,
-  };
+inline somelib::ImportedStruct somelib::ImportedStruct::FromFFI(somelib::capi::ImportedStruct c_struct) {
+    return somelib::ImportedStruct {
+        /* .foo = */ somelib::UnimportedEnum::FromFFI(c_struct.foo),
+        /* .count = */ c_struct.count,
+    };
 }
 
 
-#endif // ImportedStruct_HPP
+#endif // SOMELIB_ImportedStruct_HPP

@@ -23,6 +23,7 @@ final class DataProvider implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('icu4x_DataProvider_destroy_mv1')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_DataProvider_destroy_mv1));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
@@ -36,6 +37,7 @@ final class DataProvider implements ffi.Finalizable {
     final result = _icu4x_DataProvider_returns_result_mv1();
     return result.isOk;
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_DataProvider_destroy_mv1')

@@ -6,28 +6,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class FixedDecimalFormatterOptions {
-    
     #groupingStrategy;
-    
-    get groupingStrategy()  {
+    get groupingStrategy() {
         return this.#groupingStrategy;
-    } 
-    set groupingStrategy(value) {
+    }
+    set groupingStrategy(value){
         this.#groupingStrategy = value;
     }
-    
     #someOtherConfig;
-    
-    get someOtherConfig()  {
+    get someOtherConfig() {
         return this.#someOtherConfig;
-    } 
-    set someOtherConfig(value) {
+    }
+    set someOtherConfig(value){
         this.#someOtherConfig = value;
     }
-    
-    /** Create `FixedDecimalFormatterOptions` from an object that contains all of `FixedDecimalFormatterOptions`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
@@ -54,19 +47,15 @@ export class FixedDecimalFormatterOptions {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
-    // JS structs need to be generated with or without padding depending on whether they are being passed as aggregates or splatted out into fields.
-    // Most of the time this is known beforehand: large structs (>2 scalar fields) always get padding, and structs passed directly in parameters omit padding
-    // if they are small. However small structs within large structs also get padding, and we signal that by setting forcePadding.
     _intoFFI(
-        appendArrayMap,
-        forcePadding
+        functionCleanupArena,
+        appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -87,8 +76,7 @@ export class FixedDecimalFormatterOptions {
         arrayBuffer,
         offset,
         functionCleanupArena,
-        appendArrayMap,
-        forcePadding
+        appendArrayMap
     ) {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#groupingStrategy.ffiValue, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#someOtherConfig, Uint8Array);
@@ -112,15 +100,17 @@ export class FixedDecimalFormatterOptions {
         return new FixedDecimalFormatterOptions(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
-        
+
+
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
-    
+
         try {
             return FixedDecimalFormatterOptions._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }

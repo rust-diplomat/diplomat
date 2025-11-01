@@ -35,4 +35,9 @@ class TestResult(unittest.TestCase):
         #cm.exception.assert_integer(198)
         assert(str(cm.exception).startswith("<somelib.somelib.ResultOpaque"))
 
+        a = somelib.ResultOpaque(102)
+        b = a.takes_str("Hello there")
+        a.assert_integer(102)
+        b.assert_integer(102)
+
 

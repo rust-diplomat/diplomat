@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface MyOpaqueEnumLib: Library {
     fun MyOpaqueEnum_destroy(handle: Pointer)
     fun MyOpaqueEnum_new(): Pointer
@@ -28,6 +27,7 @@ class MyOpaqueEnum internal constructor (
     companion object {
         internal val libClass: Class<MyOpaqueEnumLib> = MyOpaqueEnumLib::class.java
         internal val lib: MyOpaqueEnumLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(): MyOpaqueEnum {
             
@@ -40,7 +40,7 @@ class MyOpaqueEnum internal constructor (
         }
     }
     
-    fun toString_(): String {
+    override fun toString(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.MyOpaqueEnum_to_string(handle, write);
         

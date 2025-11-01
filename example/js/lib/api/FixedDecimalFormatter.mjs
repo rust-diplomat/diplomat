@@ -6,84 +6,85 @@ import { Locale } from "./Locale.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
-/** 
- * An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
- *
- * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
- */
 const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
 });
 
+/**
+ * An  Fixed Decimal Format object, capable of formatting a {@link FixedDecimal} as a string.
+ *
+ * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
+ */
 export class FixedDecimalFormatter {
-    
     // Internal ptr reference:
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("FixedDecimalFormatter is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             FixedDecimalFormatter_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
-    /** 
-     * Creates a new [`FixedDecimalFormatter`] from locale data.
+
+    /**
+     * Creates a new {@link FixedDecimalFormatter} from locale data.
      *
      * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
      */
     static tryNew(locale, provider, options) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-        
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI({}, false));
-    
+
+
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, FixedDecimalFormatterOptions._fromSuppliedValue(diplomatRuntime.internalConstructor, options)._intoFFI(functionCleanupArena, {}, false));
+
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return new FixedDecimalFormatter(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
-        
+
         finally {
             functionCleanupArena.free();
-        
+
             diplomatReceive.free();
         }
     }
 
-    /** 
-     * Formats a [`FixedDecimal`] to a string.
+    /**
+     * Formats a {@link FixedDecimal} to a string.
      *
      * See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
      */
     formatWrite(value) {
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
-    
+
+    wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
+
         try {
             return write.readString8();
         }
-        
+
         finally {
             write.free();
         }

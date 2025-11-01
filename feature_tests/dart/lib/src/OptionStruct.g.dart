@@ -12,9 +12,13 @@ final class _OptionStructFfi extends ffi.Struct {
 }
 
 final class OptionStruct {
+  // ignore: public_member_api_docs
   final OptionOpaque? a;
+  // ignore: public_member_api_docs
   final OptionOpaqueChar? b;
+  // ignore: public_member_api_docs
   final int c;
+  // ignore: public_member_api_docs
   final OptionOpaque d;
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -38,6 +42,7 @@ final class OptionStruct {
     struct.d = d._ffi;
     return struct;
   }
+
 
   @override
   bool operator ==(Object other) =>

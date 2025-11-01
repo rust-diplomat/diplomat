@@ -3,7 +3,7 @@ import type { DefaultEnum } from "./DefaultEnum"
 import type { MyStruct } from "./MyStruct"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type MyStructContainingAnOption_obj = {
+export type MyStructContainingAnOption_obj = {
     a?: MyStruct | null;
     b?: DefaultEnum | null;
 };
@@ -11,17 +11,13 @@ type MyStructContainingAnOption_obj = {
 
 
 export class MyStructContainingAnOption {
-    
-    get a() : MyStruct | null; 
-    set a(value: MyStruct | null); 
-    
-    get b() : DefaultEnum | null; 
-    set b(value: DefaultEnum | null); 
-    
-    /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    get a(): MyStruct | null;
+    set a(value: MyStruct | null);
+    get b(): DefaultEnum | null;
+    set b(value: DefaultEnum | null);
+    /** @internal */
     static fromFields(structObj : MyStructContainingAnOption_obj) : MyStructContainingAnOption;
+
 
 
     static filled(): MyStructContainingAnOption;

@@ -3,17 +3,77 @@
 #[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
+    #[diplomat::macro_rules]
+    macro_rules! impl_mac {
+        ($arg1:ident, $arg2:ident, $arg3:block) => {
+            pub fn $arg1() -> i32 {
+                $arg3
+            }
+
+            pub fn $arg2() -> i32 {
+                println!("Test");
+                0
+            }
+        };
+    }
+
+    #[diplomat::macro_rules]
+    macro_rules! create_vec {
+        ($vec_name:ident contains "hello"; [$ty:ident]) => {
+            #[diplomat::opaque]
+            pub struct $vec_name(Vec<$ty>);
+
+            impl $vec_name {
+                #[diplomat::attr(auto, constructor)]
+                pub fn new() -> Box<$vec_name> {
+                    println!("{}", stringify!($vec_name));
+                    Box::new(Self(Vec::new()))
+                }
+
+                #[diplomat::attr(auto, getter)]
+                pub fn len(&self) -> usize {
+                    self.0.len()
+                }
+
+                #[diplomat::attr(auto, indexer)]
+                pub fn get(&self, idx: usize) -> Option<$ty> {
+                    self.0.get(idx).cloned()
+                }
+
+                pub fn push(&mut self, value: $ty) {
+                    self.0.push(value)
+                }
+            }
+        };
+    }
+
+    create_vec!(VectorTest contains "hello"; [f64]);
+
     #[derive(Clone)]
     #[diplomat::opaque]
+    // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
+    #[diplomat::attr(kotlin, generate_mocking_interface)]
     #[diplomat::attr(not(kotlin), rename = "AttrOpaque1Renamed")]
+    /// Some example docs
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
         #[diplomat::attr(not(kotlin), rename = "totally_not_{0}")]
         #[diplomat::attr(auto, constructor)]
+        /// More example docs
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
+
+        #[diplomat::attr(any(not(supports=callbacks), kotlin), disable)]
+        pub fn test_namespaced_callback(_t: impl Fn() -> Result<(), ()>) {
+            todo!()
+        }
+
+        impl_mac!(mac_test, hello, {
+            println!("Hello world!");
+            10
+        });
 
         #[diplomat::attr(not(kotlin), rename = "method_renamed")]
         #[diplomat::attr(auto, getter = "method")]
@@ -130,6 +190,11 @@ pub mod ffi {
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
     impl OpaqueIterable {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(size: usize) -> Box<Self> {
+            Box::new(Self(vec![AttrOpaque1; size]))
+        }
+
         #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
             Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
@@ -147,6 +212,32 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueRefIterable(Vec<AttrOpaque1>);
+
+    impl OpaqueRefIterable {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(size: usize) -> Box<Self> {
+            Box::new(Self(vec![AttrOpaque1; size]))
+        }
+
+        #[diplomat::attr(auto, iterable)]
+        pub fn iter<'a>(&'a self) -> Box<OpaqueRefIterator<'a>> {
+            Box::new(OpaqueRefIterator(self.0.iter()))
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueRefIterator<'a>(std::slice::Iter<'a, AttrOpaque1>);
+    impl<'a> OpaqueRefIterator<'a> {
+        #[diplomat::attr(auto, iterator)]
+        pub fn next(&'a mut self) -> Option<&'a AttrOpaque1> {
+            self.0.next()
+        }
+    }
+
+    #[diplomat::opaque]
     #[diplomat::attr(not(supports = arithmetic), disable)]
     pub(crate) struct OpaqueArithmetic {
         x: i32,
@@ -156,6 +247,14 @@ pub mod ffi {
     impl OpaqueArithmetic {
         pub fn make(x: i32, y: i32) -> Box<Self> {
             Box::new(Self { x, y })
+        }
+
+        #[diplomat::attr(supports=method_overloading, rename="make")]
+        pub fn make_overload(x: f32, y: f32) -> Box<Self> {
+            Box::new(Self {
+                x: (x as i32) + 2,
+                y: y as i32,
+            })
         }
 
         pub fn x(&self) -> i32 {
@@ -223,6 +322,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct StructWithAttrs {
         a: bool,
         b: u32,
@@ -243,5 +343,69 @@ pub mod ffi {
         pub fn c(self) -> u32 {
             5
         }
+
+        #[deprecated(note = "use Foo")]
+        pub fn deprecated(self) {}
+    }
+
+    #[deprecated(note = "use Foo")]
+    pub struct DeprecatedStruct;
+
+    #[deprecated(note = "use Foo")]
+    pub enum DeprecatedEnum {
+        A,
+    }
+
+    #[diplomat::opaque]
+    #[deprecated(note = "use Foo")]
+    pub struct DeprecatedOpaque;
+
+    #[diplomat::macro_rules]
+    macro_rules! macro_frag_spec_test {
+        (BLOCK $b:block [EXPR $e:expr, IDENT $i:ident] LT $lt:lifetime literal $l:literal <=> $m:meta $p:path; $t:tt $ty:ty, $vis:vis, $it:item) => {
+            struct $i {
+                a: usize,
+            }
+
+            $it
+
+            use $p;
+            impl $i {
+                #[allow(clippy::extra_unused_lifetimes)]
+                $vis fn test_func<$lt>(w : &mut DiplomatWrite) -> usize {
+                    let a = $e;
+                    write!(w, $l).unwrap();
+                    a
+                }
+
+                #[$m]
+                $vis fn test_meta() -> $i {
+                    $b
+                    $i { a: 0 }
+                }
+            }
+
+            #[diplomat::opaque]
+            struct TestOpaque($ty);
+
+            impl TestOpaque $t
+        };
+    }
+
+    macro_frag_spec_test! {BLOCK {
+        println!("Hello world");
+    } [EXPR 0, IDENT TestMacroStruct] LT 'a literal "Testing" <=> diplomat::attr(auto, constructor) std::fmt::Write; {
+        fn hello() {}
+    } f64, pub, const IT:usize = 0;}
+
+    #[diplomat::attr(not(supports = free_functions), disable)]
+    pub fn free_func_test(x: i32) -> i32 {
+        x + 5
+    }
+
+    #[diplomat::attr(not(supports = free_functions), disable)]
+    #[diplomat::attr(auto, namespace = "nested::ns")]
+    pub fn nested_ns_fn(x: bool) -> bool {
+        !x
     }
 }

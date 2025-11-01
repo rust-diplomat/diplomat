@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OptionStringLib: Library {
     fun OptionString_destroy(handle: Pointer)
     fun OptionString_new(diplomatStr: Slice): Pointer?
@@ -29,9 +28,10 @@ class OptionString internal constructor (
     companion object {
         internal val libClass: Class<OptionStringLib> = OptionStringLib::class.java
         internal val lib: OptionStringLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {
-            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.readUtf8(diplomatStr)
+            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
             val returnVal = lib.OptionString_new(diplomatStrSlice);
             val selfEdges: List<Any> = listOf()

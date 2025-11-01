@@ -7,7 +7,6 @@ const RenamedMyIterator_box_destroy_registry = new FinalizationRegistry((ptr) =>
 });
 
 export class RenamedMyIterator {
-    
     // Internal ptr reference:
     #ptr = null;
 
@@ -15,48 +14,48 @@ export class RenamedMyIterator {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     #aEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedMyIterator is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
-        
         this.#aEdge = aEdge;
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             RenamedMyIterator_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     #iteratorNext() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
-        
+
+
         const result = wasm.namespace_MyIterator_next(diplomatReceive.buffer, this.ffiValue);
-    
+
         try {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
             return (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
-        
+
         finally {
             diplomatReceive.free();
         }
     }
 
-    next() {
+    next(){
         const out = this.#iteratorNext();
 
         return {

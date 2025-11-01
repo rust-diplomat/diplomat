@@ -6,19 +6,14 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class CyclicStructC {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
-    /** Create `CyclicStructC` from an object that contains all of `CyclicStructC`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new CyclicStructC(structObj);
     }
@@ -39,11 +34,11 @@ export class CyclicStructC {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
-        return this.#a._intoFFI(functionCleanupArena, appendArrayMap, false);
+        return this.#a._intoFFI(functionCleanupArena, appendArrayMap);
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -64,7 +59,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, {});
+        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -83,33 +78,37 @@ export class CyclicStructC {
         return new CyclicStructC(structObj);
     }
 
+
     static takesNestedParameters(c) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
-        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI({}, false));
-    
+
+
+        const result = wasm.CyclicStructC_takes_nested_parameters(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, c)._intoFFI(functionCleanupArena, {}, false));
+
         try {
             return CyclicStructC._fromFFI(diplomatRuntime.internalConstructor, result);
         }
-        
+
         finally {
             functionCleanupArena.free();
+
         }
     }
 
     cyclicOut() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI({}, false), write.buffer);
-    
+
+    wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+
         try {
             return write.readString8();
         }
-        
+
         finally {
             functionCleanupArena.free();
-        
+
             write.free();
         }
     }

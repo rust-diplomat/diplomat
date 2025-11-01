@@ -1,5 +1,5 @@
-#ifndef ns_RenamedAttrOpaque2_HPP
-#define ns_RenamedAttrOpaque2_HPP
+#ifndef SOMELIB_ns_RenamedAttrOpaque2_HPP
+#define SOMELIB_ns_RenamedAttrOpaque2_HPP
 
 #include "RenamedAttrOpaque2.d.hpp"
 
@@ -14,36 +14,35 @@
 #include "../diplomat_runtime.hpp"
 
 
-namespace ns {
+namespace somelib::ns {
 namespace capi {
     extern "C" {
-    
-    
+
     void namespace_AttrOpaque2_destroy(RenamedAttrOpaque2* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline const ns::capi::RenamedAttrOpaque2* ns::RenamedAttrOpaque2::AsFFI() const {
-  return reinterpret_cast<const ns::capi::RenamedAttrOpaque2*>(this);
+inline const somelib::ns::capi::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedAttrOpaque2*>(this);
 }
 
-inline ns::capi::RenamedAttrOpaque2* ns::RenamedAttrOpaque2::AsFFI() {
-  return reinterpret_cast<ns::capi::RenamedAttrOpaque2*>(this);
+inline somelib::ns::capi::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedAttrOpaque2*>(this);
 }
 
-inline const ns::RenamedAttrOpaque2* ns::RenamedAttrOpaque2::FromFFI(const ns::capi::RenamedAttrOpaque2* ptr) {
-  return reinterpret_cast<const ns::RenamedAttrOpaque2*>(ptr);
+inline const somelib::ns::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::FromFFI(const somelib::ns::capi::RenamedAttrOpaque2* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedAttrOpaque2*>(ptr);
 }
 
-inline ns::RenamedAttrOpaque2* ns::RenamedAttrOpaque2::FromFFI(ns::capi::RenamedAttrOpaque2* ptr) {
-  return reinterpret_cast<ns::RenamedAttrOpaque2*>(ptr);
+inline somelib::ns::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::FromFFI(somelib::ns::capi::RenamedAttrOpaque2* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedAttrOpaque2*>(ptr);
 }
 
-inline void ns::RenamedAttrOpaque2::operator delete(void* ptr) {
-  ns::capi::namespace_AttrOpaque2_destroy(reinterpret_cast<ns::capi::RenamedAttrOpaque2*>(ptr));
+inline void somelib::ns::RenamedAttrOpaque2::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_AttrOpaque2_destroy(reinterpret_cast<somelib::ns::capi::RenamedAttrOpaque2*>(ptr));
 }
 
 
-#endif // ns_RenamedAttrOpaque2_HPP
+#endif // SOMELIB_ns_RenamedAttrOpaque2_HPP

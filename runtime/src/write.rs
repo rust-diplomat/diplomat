@@ -18,19 +18,52 @@ use core::{fmt, ptr};
 /// need not perform additional state updates after passing an [`DiplomatWrite`] to
 /// a function.
 ///
-/// [`diplomat_simple_write()`] can be used to write to a fixed-size char buffer.
-///
 /// May be extended in the future to support further invariants
 ///
 /// DiplomatWrite will not perform any cleanup on `context` or `buf`, these are logically
 /// "borrows" from the FFI side.
 ///
+/// # DiplomatWrite is Polymorphic
+///
+/// Instances of [`DiplomatWrite`] can be created from multiple different sources.
+/// There are two constructors available in `diplomat_runtime`:
+///
+/// 1. [`diplomat_simple_write()`] to write to a fixed-size buffer.
+/// 2. [`diplomat_buffer_write_create()`] to write to a Vec allocated by Rust.
+///    A wrapper is provided: [`RustWriteVec`](rust_interop::RustWriteVec).
+///
+/// Backends may have additional constructors for writing to various shapes of buffer.
+///
+/// ⚠️ Because [`DiplomatWrite`] is polymorphic, the destructor must know how the instance
+/// was constructed. It is therefore unsound to use functions such as [`core::mem::swap`]
+/// on instances of [`DiplomatWrite`] with potentially different sources. For example,
+/// the following code is not safe:
+///
+/// ```no_run
+/// use diplomat_runtime::DiplomatWrite;
+/// fn bad(write: &mut DiplomatWrite) {
+///   let mut some_other_write: DiplomatWrite = unimplemented!();
+///   // Not safe! The two `DiplomatWrite`s have different invariants
+///   core::mem::swap(write, &mut some_other_write);
+/// }
+/// ```
+///
+/// As a result, any function that returns an owned `DiplomatWrite` or a `&mut DiplomatWrite`
+/// must be `unsafe`. For an example, see [`RustWriteVec::borrow_mut`].
+///
+/// Diplomat backends guarantee they will only ever hand the same type of `DiplomatWrite` object to Rust
+/// code; this is only something you need to worry about if using [`RustWriteVec`](rust_interop::RustWriteVec),
+/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_simple_write`.
+///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
 ///    `context` may be  null, however `flush()` and `grow()` must then be ready to receive it as such.
-///  - `buf` must be `cap` bytes long
+///  - `buf` must be a valid pointer to `cap` bytes of memory
+///  - `buf` must point to `len` consecutive properly initialized bytes
+///  - `cap` must be less than or equal to isize::MAX
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
-///    of at least the requested buffer size
+///    of at least the requested buffer size.
+///  - If grow_failed is true all safety invariants on buf/cap/len MUST still hold.
 ///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
 ///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
 #[repr(C)]
@@ -71,6 +104,25 @@ impl DiplomatWrite {
     pub fn flush(&mut self) {
         (self.flush)(self);
     }
+
+    /// Returns a pointer to the buffer's bytes.
+    ///
+    /// If growth has failed, this returns what has been written so far.
+    pub fn as_bytes(&self) -> &[u8] {
+        if self.buf.is_null() {
+            return &[];
+        }
+        debug_assert!(self.len <= self.cap);
+        // Safety checklist, assuming this struct's safety invariants:
+        // 1. `buf` is a valid pointer and not null
+        // 2. `buf` points to `len` consecutive properly initialized bytes
+        // 3. `buf` won't be mutated because it is only directly accessible via
+        //    `diplomat_buffer_write_get_bytes`, whose safety invariant states
+        //    that the bytes cannot be mutated while borrowed
+        //    can only be dereferenced using unsafe code
+        // 4. `buf`'s total size is no larger than isize::MAX
+        unsafe { core::slice::from_raw_parts(self.buf, self.len) }
+    }
 }
 impl fmt::Write for DiplomatWrite {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
@@ -97,6 +149,9 @@ impl fmt::Write for DiplomatWrite {
 /// Create an `DiplomatWrite` that can write to a fixed-length stack allocated `u8` buffer.
 ///
 /// Once done, this will append a null terminator to the written string.
+///
+/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
+/// manually outside of that context. See [`RustWriteVec`](rust_interop::RustWriteVec) if you need this in Rust.
 ///
 /// # Safety
 ///
@@ -128,6 +183,12 @@ pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) ->
 /// Create an [`DiplomatWrite`] that can write to a dynamically allocated buffer managed by Rust.
 ///
 /// Use [`diplomat_buffer_write_destroy()`] to free the writable and its underlying buffer.
+/// The pointer is valid until that function is called.
+///
+/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
+/// manually outside of that context. See [`RustWriteVec`](rust_interop::RustWriteVec) if you need this in Rust.
+///
+/// The grow impl never sets `grow_failed`, although it is possible for it to panic.
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite {
     extern "C" fn grow(this: *mut DiplomatWrite, new_cap: usize) -> bool {
@@ -165,10 +226,13 @@ pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite
 ///
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
+/// - The returned pointer is valid for both reads and writes, however Rust code
+///   may not write to it if `this` is being accessed by other methods simultaneously.
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
 ///   [`diplomat_buffer_write_create()`].
 #[no_mangle]
-pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut u8 {
+pub extern "C" fn diplomat_buffer_write_get_bytes(this: *mut DiplomatWrite) -> *mut u8 {
+    let this = unsafe { &*this };
     if this.grow_failed {
         core::ptr::null_mut()
     } else {

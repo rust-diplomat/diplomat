@@ -1,5 +1,5 @@
-#ifndef NestedBorrowedFields_D_HPP
-#define NestedBorrowedFields_D_HPP
+#ifndef SOMELIB_NestedBorrowedFields_D_HPP
+#define SOMELIB_NestedBorrowedFields_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,38 +12,42 @@
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct Bar; }
+namespace somelib {
+namespace capi { struct Bar; }
 class Bar;
-namespace diplomat::capi { struct Foo; }
+namespace capi { struct Foo; }
 class Foo;
 struct BorrowedFields;
 struct BorrowedFieldsWithBounds;
+struct NestedBorrowedFields;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct NestedBorrowedFields {
-      diplomat::capi::BorrowedFields fields;
-      diplomat::capi::BorrowedFieldsWithBounds bounds;
-      diplomat::capi::BorrowedFieldsWithBounds bounds2;
+      somelib::capi::BorrowedFields fields;
+      somelib::capi::BorrowedFieldsWithBounds bounds;
+      somelib::capi::BorrowedFieldsWithBounds bounds2;
     };
-    
+
     typedef struct NestedBorrowedFields_option {union { NestedBorrowedFields ok; }; bool is_ok; } NestedBorrowedFields_option;
 } // namespace capi
 } // namespace
 
 
+namespace somelib {
 struct NestedBorrowedFields {
-  BorrowedFields fields;
-  BorrowedFieldsWithBounds bounds;
-  BorrowedFieldsWithBounds bounds2;
+    somelib::BorrowedFields fields;
+    somelib::BorrowedFieldsWithBounds bounds;
+    somelib::BorrowedFieldsWithBounds bounds2;
 
-  inline static diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z);
+  inline static somelib::diplomat::result<somelib::NestedBorrowedFields, somelib::diplomat::Utf8Error> from_bar_and_foo_and_strings(const somelib::Bar& bar, const somelib::Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z);
 
-  inline diplomat::capi::NestedBorrowedFields AsFFI() const;
-  inline static NestedBorrowedFields FromFFI(diplomat::capi::NestedBorrowedFields c_struct);
+    inline somelib::capi::NestedBorrowedFields AsFFI() const;
+    inline static somelib::NestedBorrowedFields FromFFI(somelib::capi::NestedBorrowedFields c_struct);
 };
 
-
-#endif // NestedBorrowedFields_D_HPP
+} // namespace
+#endif // SOMELIB_NestedBorrowedFields_D_HPP

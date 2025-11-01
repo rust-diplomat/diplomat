@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface RefListLib: Library {
     fun RefList_destroy(handle: Pointer)
     fun RefList_node(data: Pointer): Pointer
@@ -28,6 +27,7 @@ class RefList internal constructor (
     companion object {
         internal val libClass: Class<RefListLib> = RefListLib::class.java
         internal val lib: RefListLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun node(data: RefListParameter): RefList {
             

@@ -8,7 +8,6 @@ const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class Bar {
-    
     // Internal ptr reference:
     #ptr = null;
 
@@ -17,47 +16,46 @@ export class Bar {
     #selfEdge = [];
     #bEdge = [];
     #aEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge, bEdge, aEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("Bar is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
-        
         this.#bEdge = bEdge;
-        
-        
         this.#aEdge = aEdge;
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             Bar_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     get foo() {
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
-        
+
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
+
         const result = wasm.Bar_foo(this.ffiValue);
-    
+
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, bEdges, aEdges);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     constructor(symbol, ptr, selfEdge, bEdge, aEdge) {

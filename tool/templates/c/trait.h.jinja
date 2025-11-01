@@ -1,4 +1,8 @@
-{% if !is_for_cpp -%} typedef {% endif -%}
+{% for ts in trait_structs %}
+{{ts}}
+{% endfor -%}
+
+{%- if !is_for_cpp -%} typedef {% endif -%}
 struct {{trt_name}}_VTable {
     void (*destructor)(const void*);
     size_t SIZE; size_t ALIGNMENT;

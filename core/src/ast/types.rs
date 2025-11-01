@@ -11,7 +11,7 @@ use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
     OpaqueType, Path, RustLink, Struct, Trait,
 };
-use crate::Env;
+use crate::{ast::Function, Env};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
@@ -96,6 +96,8 @@ pub enum ModSymbol {
     CustomType(CustomType),
     /// A trait
     Trait(Trait),
+    /// A free function not associated with any type.
+    Function(Function),
 }
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
@@ -201,6 +203,9 @@ impl PathType {
                     }
                     Some(ModSymbol::Trait(trt)) => {
                         panic!("Found trait {} but expected a type", trt.name);
+                    }
+                    Some(ModSymbol::Function(f)) => {
+                        panic!("Found function {} but expected a type", f.name);
                     }
                     None => panic!(
                         "Could not resolve symbol {} in {}",
@@ -339,6 +344,25 @@ impl From<&syn::TraitBound> for PathType {
     }
 }
 
+impl From<&syn::Signature> for PathType {
+    fn from(other: &syn::Signature) -> Self {
+        let lifetimes = other
+            .generics
+            .params
+            .iter()
+            .map(|generic_arg| match generic_arg {
+                syn::GenericParam::Lifetime(lt) => (&lt.lifetime).into(),
+                _ => panic!("generic type arguments are unsupported {other:?}"),
+            })
+            .collect();
+
+        Self {
+            path: Path::empty().sub_path((&other.ident).into()),
+            lifetimes,
+        }
+    }
+}
+
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
         PathType::new(other)
@@ -456,6 +480,10 @@ pub enum TypeName {
     /// If StdlibOrDiplomat::Stdlib, it's specified as `&[&DiplomatFoo]`, if StdlibOrDiplomat::Diplomat it's specified
     /// as `DiplomatSlice<&DiplomatFoo>`
     StrSlice(StringEncoding, StdlibOrDiplomat),
+    /// `&[Struct]`. Meant for passing slices of structs where the struct's layout is known to be shared between Rust
+    /// and the backend language. Primarily meant for large lists of compound types like `Vector3f64` or `Color4i16`.
+    /// This is implemented on a per-backend basis.
+    CustomTypeSlice(Option<(Lifetime, Mutability)>, Box<TypeName>),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -576,7 +604,7 @@ impl TypeName {
             // can only be passed across the FFI boundary; callbacks and traits are input-only
             TypeName::Function(..) | TypeName::ImplTrait(..) |
             // These are specified using FFI-safe diplomat_runtime types
-            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) => true,
+            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) | TypeName::CustomTypeSlice(..) => true,
             // These are special anyway and shouldn't show up in structs
             TypeName::Unit | TypeName::Write | TypeName::Result(..) |
             // This is basically only useful in return types
@@ -619,6 +647,9 @@ impl TypeName {
                     StdlibOrDiplomat::Diplomat,
                 ),
             },
+            TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
+                TypeName::Result(ok.clone(), err.clone(), StdlibOrDiplomat::Diplomat)
+            }
             _ => self.clone(),
         }
     }
@@ -691,10 +722,20 @@ impl TypeName {
                     primitive.get_diplomat_slice_type(ltmt)
                 }
             }
+            TypeName::CustomTypeSlice(ltmt, type_name) => {
+                let inner = type_name.to_syn();
+                if let Some((ref lt, ref mtbl)) = ltmt {
+                    let reference = ReferenceDisplay(lt, mtbl);
+                    syn::parse_quote_spanned!(Span::call_site() => #reference [#inner])
+                } else {
+                    syn::parse_quote_spanned! (Span::call_site() => &[#inner])
+                }
+            }
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
             TypeName::Function(_input_types, output_type, _mutability) => {
-                let output_type = output_type.to_syn();
+                // Convert the return type to something FFI-friendly:
+                let output_type = output_type.ffi_safe_version().to_syn();
                 // should be DiplomatCallback<function_output_type>
                 syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
             }
@@ -776,6 +817,10 @@ impl TypeName {
                         }
                         return TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib);
                     }
+                    return TypeName::CustomTypeSlice(
+                        Some((lifetime, mutability)),
+                        Box::new(TypeName::from_syn(slice.elem.as_ref(), self_path_type)),
+                    );
                 }
                 TypeName::Reference(
                     lifetime,
@@ -1078,7 +1123,7 @@ impl TypeName {
                             );
                         }
                         _ => {
-                            panic!("Unsupported trait component: {:?}", trait_bound);
+                            panic!("Unsupported trait component: {trait_bound:?}");
                         }
                     }
                 }
@@ -1183,7 +1228,8 @@ impl TypeName {
         &self,
         mut transitivity: LifetimeTransitivity<'env>,
     ) -> Vec<&'env NamedLifetime> {
-        self.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
+        // We don't use the control flow here
+        let _ = self.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
             if let Lifetime::Named(named) = lifetime {
                 transitivity.visit(named);
             }
@@ -1293,6 +1339,10 @@ impl fmt::Display for TypeName {
                 write!(f, "DiplomatSlice{maybemut}<{lt}{typ}>")
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
+            TypeName::CustomTypeSlice(Some((lifetime, mutability)), type_name) => {
+                write!(f, "{}[{type_name}]", ReferenceDisplay(lifetime, mutability))
+            }
+            TypeName::CustomTypeSlice(None, type_name) => write!(f, "Box<[{type_name}]>"),
             TypeName::Unit => "()".fmt(f),
             TypeName::Function(input_types, out_type, _mutability) => {
                 write!(f, "fn (")?;

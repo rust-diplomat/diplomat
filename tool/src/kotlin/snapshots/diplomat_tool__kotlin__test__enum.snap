@@ -2,7 +2,7 @@
 source: tool/src/kotlin/mod.rs
 expression: enum_code
 ---
-package dev.gigapixel.somelib
+package dev.diplomattest.somelib
 
 import com.sun.jna.Callback
 import com.sun.jna.Library

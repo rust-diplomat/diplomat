@@ -8,18 +8,24 @@ use jni::{
     JNIEnv,
 };
 
-// struct representing a callback from Rust into a foreign language
-// TODO restrict the return type?
+/// Struct representing a callback from Rust into a foreign language
+///
+/// This is largely used internally by the Diplomat macro, and should not need to be constructed
+/// manually outside of that context
 #[repr(C)]
 pub struct DiplomatCallback<ReturnType> {
-    // any data required to run the callback; e.g. a pointer to the
-    // callback wrapper object in the foreign runtime + the runtime itself
+    /// Any data required to run the callback; e.g. a pointer to the
+    /// callback wrapper object in the foreign runtime + the runtime itself
     pub data: *mut c_void,
-    // function to actually run the callback. Note the first param is mutable, but depending
-    // on if this is passed to a Fn or FnMut may not actually need to be. FFI-Callers
-    // of said functions should cast to mutable.
+    /// Function to actually run the callback. Note the first param is mutable, but depending
+    /// on if this is passed to a Fn or FnMut may not actually need to be.
+    /// FFI-Callers of said functions should cast to mutable.
+    ///
+    /// Takes in `self.data` and any number of additional arguments.
     pub run_callback: unsafe extern "C" fn(*mut c_void, ...) -> ReturnType,
-    // function to destroy this callback struct
+    /// Function to destroy this callback struct.
+    ///
+    /// Takes in `self.data`
     pub destructor: Option<unsafe extern "C" fn(*mut c_void)>,
 }
 

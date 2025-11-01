@@ -12,19 +12,24 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 
 {% endif -%}
 {% if !docs.is_empty() -%}
-/// {{docs}}
+{{ docs|prefix_trimmed("/// ")}}
+{% endif -%}
+{% if let Some(deprecated) = deprecated -%}
+@core.Deprecated('{{ deprecated }}')
 {% endif -%}
 final class {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
    {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
 
   {%- for field in fields %}
+  // ignore: public_member_api_docs
   {% if !mutable -%} final {% endif -%} {{field.dart_type_name}} {{field.name}};
   {%- endfor %}
 
   {%- match default_constructor %}
   {%- when Some with (c) %}
 
+  // ignore: public_member_api_docs
   {{c}}
   {%- when None %}
   {%- endmatch %}
@@ -68,17 +73,16 @@ final class {{type_name}}
     {%- for field in fields %}
     {%- if let Type::DiplomatOption(_ty) = field.ty %}
     {# Dart won't do nullable-promotion for public fields since they could be overridden with unstable getters. Copy to a local. -#}
-    {{field.dart_type_name}} {{field.name}} = this.{{field.name}};
+    final {{field.name}} = this.{{field.name}};
     {%- endif %}
     struct.{{field.name}} = {{field.dart_to_c}};
     {%- endfor %}
     return struct;
   }
-  {%- endif -%}
+  {%- endif %}
 
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
-
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
   {%- endfor %}
 
   @override
@@ -103,7 +107,7 @@ final class {{type_name}}
   {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
 
-  // Return all fields corresponding to lifetime `'{{ltname}}` 
+  // Return all fields corresponding to lifetime `'{{ltname}}`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
   // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
@@ -118,7 +122,12 @@ final class {{type_name}}
           ...{{field.name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
           {%- endfor -%}
         {%- else -%}
-          {{field.name}}
+        {# When we update to Dart 3.8+ we can use null-aware-field syntax (a prefix `?`) here #}
+          {%- if let Type::DiplomatOption(_) = field.ty -%}
+            if ({{field.name}} != null) {{field.name}}!
+          {%- else -%}
+            {{field.name}}
+          {%- endif -%}
         {%- endif -%}
     {%- endfor -%}
     ];

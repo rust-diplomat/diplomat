@@ -1,5 +1,5 @@
-#ifndef OpaqueThinVec_D_HPP
-#define OpaqueThinVec_D_HPP
+#ifndef SOMELIB_OpaqueThinVec_D_HPP
+#define SOMELIB_OpaqueThinVec_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,47 +10,52 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct OpaqueThin; }
+namespace somelib {
+namespace capi { struct OpaqueThin; }
 class OpaqueThin;
-namespace diplomat::capi { struct OpaqueThinIter; }
+namespace capi { struct OpaqueThinIter; }
 class OpaqueThinIter;
+namespace capi { struct OpaqueThinVec; }
+class OpaqueThinVec;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct OpaqueThinVec;
 } // namespace capi
 } // namespace
 
+namespace somelib {
 class OpaqueThinVec {
 public:
 
-  inline static std::unique_ptr<OpaqueThinVec> create(diplomat::span<const int32_t> a, diplomat::span<const float> b);
+  inline static std::unique_ptr<somelib::OpaqueThinVec> create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c);
 
-  inline std::unique_ptr<OpaqueThinIter> iter() const;
-  inline diplomat::next_to_iter_helper<OpaqueThinIter> begin() const;
+  inline std::unique_ptr<somelib::OpaqueThinIter> iter() const;
+  inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
   inline size_t __len__() const;
 
-  inline const OpaqueThin* operator[](size_t idx) const;
+  inline const somelib::OpaqueThin* operator[](size_t idx) const;
 
-  inline const OpaqueThin* first() const;
+  inline const somelib::OpaqueThin* first() const;
 
-  inline const diplomat::capi::OpaqueThinVec* AsFFI() const;
-  inline diplomat::capi::OpaqueThinVec* AsFFI();
-  inline static const OpaqueThinVec* FromFFI(const diplomat::capi::OpaqueThinVec* ptr);
-  inline static OpaqueThinVec* FromFFI(diplomat::capi::OpaqueThinVec* ptr);
-  inline static void operator delete(void* ptr);
+    inline const somelib::capi::OpaqueThinVec* AsFFI() const;
+    inline somelib::capi::OpaqueThinVec* AsFFI();
+    inline static const somelib::OpaqueThinVec* FromFFI(const somelib::capi::OpaqueThinVec* ptr);
+    inline static somelib::OpaqueThinVec* FromFFI(somelib::capi::OpaqueThinVec* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  OpaqueThinVec() = delete;
-  OpaqueThinVec(const OpaqueThinVec&) = delete;
-  OpaqueThinVec(OpaqueThinVec&&) noexcept = delete;
-  OpaqueThinVec operator=(const OpaqueThinVec&) = delete;
-  OpaqueThinVec operator=(OpaqueThinVec&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    OpaqueThinVec() = delete;
+    OpaqueThinVec(const somelib::OpaqueThinVec&) = delete;
+    OpaqueThinVec(somelib::OpaqueThinVec&&) noexcept = delete;
+    OpaqueThinVec operator=(const somelib::OpaqueThinVec&) = delete;
+    OpaqueThinVec operator=(somelib::OpaqueThinVec&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
-
-#endif // OpaqueThinVec_D_HPP
+} // namespace
+#endif // SOMELIB_OpaqueThinVec_D_HPP

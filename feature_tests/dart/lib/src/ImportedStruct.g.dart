@@ -11,9 +11,12 @@ final class _ImportedStructFfi extends ffi.Struct {
 }
 
 final class ImportedStruct {
+  // ignore: public_member_api_docs
   UnimportedEnum foo;
+  // ignore: public_member_api_docs
   int count;
 
+  // ignore: public_member_api_docs
   ImportedStruct({required this.foo, required this.count});
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -33,6 +36,7 @@ final class ImportedStruct {
     struct.count = count;
     return struct;
   }
+
 
   @override
   bool operator ==(Object other) =>

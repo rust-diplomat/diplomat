@@ -7,52 +7,70 @@ const OpaqueThin_box_destroy_registry = new FinalizationRegistry((ptr) => {
 });
 
 export class OpaqueThin {
-    
     // Internal ptr reference:
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("OpaqueThin is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             OpaqueThin_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     get a() {
+
         const result = wasm.OpaqueThin_a(this.ffiValue);
-    
+
         try {
             return result;
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     get b() {
+
         const result = wasm.OpaqueThin_b(this.ffiValue);
-    
+
         try {
             return result;
         }
-        
-        finally {}
+
+        finally {
+        }
+    }
+
+    get c() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.OpaqueThin_c(this.ffiValue, write.buffer);
+
+        try {
+            return write.readString8();
+        }
+
+        finally {
+            write.free();
+        }
     }
 
     constructor(symbol, ptr, selfEdge) {

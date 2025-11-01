@@ -4,8 +4,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Float64Vec {
-    
+    /** @internal */
     get ffiValue(): pointer;
+
 
     static newBool(v: Array<boolean>): Float64Vec;
 

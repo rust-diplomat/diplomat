@@ -24,7 +24,6 @@ CallbackHolder* CallbackHolder_new(DiplomatCallback_CallbackHolder_new_func func
 
 int32_t CallbackHolder_call(const CallbackHolder* self, int32_t a);
 
-
 void CallbackHolder_destroy(CallbackHolder* self);
 
 

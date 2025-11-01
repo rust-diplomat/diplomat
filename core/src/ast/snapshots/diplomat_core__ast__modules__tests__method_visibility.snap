@@ -1,7 +1,6 @@
 ---
 source: core/src/ast/modules.rs
-assertion_line: 371
-expression: "Module::from_syn(&syn::parse_quote! {\n                #[diplomat::bridge] mod ffi\n                {\n                    struct Foo {} impl Foo\n                    {\n                        pub fn pub_fn() { unimplemented!() } pub(crate) fn\n                        pub_crate_fn() { unimplemented!() } pub(super) fn\n                        pub_super_fn() { unimplemented!() } fn priv_fn()\n                        { unimplemented!() }\n                    }\n                }\n            }, true)"
+expression: "Module::from_syn(&syn::parse_quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        struct Foo {} impl Foo\n        {\n            pub fn pub_fn() { unimplemented!() } pub(crate) fn pub_crate_fn()\n            { unimplemented!() } pub(super) fn pub_super_fn()\n            { unimplemented!() } fn priv_fn() { unimplemented!() }\n        }\n    }\n}, true)"
 ---
 name: ffi
 imports: []
@@ -21,6 +20,11 @@ declared_types:
             - []
           abi_name: Foo_pub_fn
           self_param: ~
+          self_type:
+            path:
+              elements:
+                - Foo
+            lifetimes: []
           params: []
           return_type: ~
           lifetime_env: {}
@@ -28,5 +32,6 @@ declared_types:
       output_only: false
       attrs: {}
 declared_traits: {}
+declared_functions: {}
 sub_modules: []
 attrs: {}

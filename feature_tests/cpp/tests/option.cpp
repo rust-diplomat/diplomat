@@ -4,6 +4,8 @@
 #include "../include/OptionStruct.hpp"
 #include "assert.hpp"
 
+using namespace somelib;
+
 int main(int argc, char *argv[])
 {
 
@@ -47,8 +49,8 @@ int main(int argc, char *argv[])
 
     using namespace std::string_view_literals;
 
-    std::array<std::string_view, 2> string_array{"string1"sv, "string2"sv};
-    diplomat::span<const std::string_view> arg{string_array};
+    std::array<diplomat::string_view_for_slice, 2> string_array{"string1"sv, "string2"sv};
+    diplomat::string_view_span arg{string_array};
     auto str_slice_result = OptionOpaque::accepts_option_str_slice(std::make_optional(std::move(arg)), 123);
     simple_assert("option_str_slice functions", str_slice_result);
 

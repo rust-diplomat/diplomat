@@ -6,37 +6,28 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFields {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
     #c;
-    
-    get c()  {
+    get c() {
         return this.#c;
-    } 
-    set c(value) {
+    }
+    set c(value){
         this.#c = value;
     }
-    
-    /** Create `BorrowedFields` from an object that contains all of `BorrowedFields`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new BorrowedFields(structObj);
     }
@@ -68,19 +59,19 @@ export class BorrowedFields {
     }
 
     // Return this struct in FFI function friendly format.
-    // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // Returns an array that can be expanded with spread syntax (...)// If this struct contains any slices, their lifetime-edge-relevant information will be
     // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 24, 4);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -123,35 +114,35 @@ export class BorrowedFields {
         return new BorrowedFields(structObj);
     }
 
-    // Return all fields corresponding to lifetime `'a` 
+    // Return all fields corresponding to lifetime `'a`
     // without handling lifetime dependencies (this is the job of the caller)
     // This is all fields that may be borrowed from if borrowing `'a`,
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    get _fieldsForLifetimeA() { 
+    get _fieldsForLifetimeA() {
         return [this.#a, this.#b, this.#c];
     };
+
 
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         let functionGarbageCollectorGrip = new diplomatRuntime.GarbageCollectorGrip();
         const dstr16Slice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str16(wasm, dstr16)));
-        
         const utf8StrSlice = functionGarbageCollectorGrip.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str)));
-        
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
-        
+
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
-        
+
+
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomatReceive.buffer, bar.ffiValue, dstr16Slice.ptr, utf8StrSlice.ptr);
-    
+
         try {
             return BorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges);
         }
-        
+
         finally {
             functionGarbageCollectorGrip.releaseToGarbageCollector();
-        
+
             diplomatReceive.free();
         }
     }

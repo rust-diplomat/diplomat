@@ -4,11 +4,16 @@
 part of 'lib.g.dart';
 
 enum RenamedAttrEnum {
+
+  // ignore: public_member_api_docs
   a,
 
+  // ignore: public_member_api_docs
   b,
 
-  Renamed;
+  // ignore: public_member_api_docs
+  renamed;
+
 }
 
 // dart format on

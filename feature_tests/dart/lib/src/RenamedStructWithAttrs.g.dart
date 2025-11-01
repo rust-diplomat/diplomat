@@ -11,9 +11,12 @@ final class _RenamedStructWithAttrsFfi extends ffi.Struct {
 }
 
 final class RenamedStructWithAttrs {
+  // ignore: public_member_api_docs
   bool a;
+  // ignore: public_member_api_docs
   int b;
 
+  // ignore: public_member_api_docs
   RenamedStructWithAttrs({required this.a, required this.b});
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -40,6 +43,13 @@ final class RenamedStructWithAttrs {
     return result;
   }
 
+  @core.Deprecated('use Foo')
+  void deprecated() {
+    final temp = _FinalizedArena();
+    _namespace_StructWithAttrs_deprecated(_toFfi(temp.arena));
+  }
+
+
   @override
   bool operator ==(Object other) =>
       other is RenamedStructWithAttrs &&
@@ -57,5 +67,10 @@ final class RenamedStructWithAttrs {
 @ffi.Native<ffi.Uint32 Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')
 // ignore: non_constant_identifier_names
 external int _namespace_StructWithAttrs_c(_RenamedStructWithAttrsFfi self);
+
+@_DiplomatFfiUse('namespace_StructWithAttrs_deprecated')
+@ffi.Native<ffi.Void Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_deprecated')
+// ignore: non_constant_identifier_names
+external void _namespace_StructWithAttrs_deprecated(_RenamedStructWithAttrsFfi self);
 
 // dart format on

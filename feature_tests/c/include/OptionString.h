@@ -23,7 +23,6 @@ OptionString_write_result OptionString_write(const OptionString* self, DiplomatW
 typedef struct OptionString_borrow_result {union {DiplomatStringView ok; }; bool is_ok;} OptionString_borrow_result;
 OptionString_borrow_result OptionString_borrow(const OptionString* self);
 
-
 void OptionString_destroy(OptionString* self);
 
 

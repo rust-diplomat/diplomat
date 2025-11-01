@@ -1,31 +1,30 @@
-//! Built around the [`TyGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
+//! Built around the [`ItemGenContext`] type. We use this for creating `.mjs` and `.d.ts` files from given [`hir::TypeDef`]s.
 //! See [`converter`] for more conversion specific functions.
 
 use std::alloc::Layout;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::Write;
 
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
     self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence,
-    StructPathLike, Type, TypeContext, TypeId,
+    StructPathLike, Type, TypeContext,
 };
 
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
-use super::{JsConfig, WasmABI};
+use super::JsConfig;
+use crate::filters;
 use crate::ErrorStore;
 
-use super::converter::{ForcePaddingStatus, JsToCConversionContext, StructBorrowContext};
-use super::layout::ScalarCount;
+use super::converter::{JsToCConversionContext, StructBorrowContext};
 
 /// Represents list of imports that our Type is going to use.
-/// Resolved in [`TyGenContext::generate_base`]
+/// Resolved in [`ItemGenContext::generate_base`]
 pub(super) struct Imports<'tcx> {
     pub js: BTreeSet<ImportInfo<'tcx>>,
     pub ts: BTreeSet<ImportInfo<'tcx>>,
@@ -34,17 +33,18 @@ pub(super) struct Imports<'tcx> {
 /// Represents context for generating a Javascript class.
 ///
 /// Given an enum, opaque, struct, etc. (anything from [`hir::TypeDef`] that JS supports), this handles creation of the associated `.mjs`` files.
-pub(super) struct TyGenContext<'ctx, 'tcx> {
+pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub type_name: Cow<'tcx, str>,
     pub formatter: &'ctx JSFormatter<'tcx>,
     pub errors: &'ctx ErrorStore<'tcx, String>,
-    /// Imports, stored as a type name. Imports are fully resolved in [`TyGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
+    /// Imports, stored as a type name. Imports are fully resolved in [`ItemGenContext::generate_base`], with a call to [`JSFormatter::fmt_import_statement`].
     pub imports: RefCell<Imports<'tcx>>,
+    #[allow(dead_code)]
     pub config: JsConfig,
 }
 
-impl<'tcx> TyGenContext<'_, 'tcx> {
+impl<'tcx> ItemGenContext<'_, 'tcx> {
     /// Generates the code at the top of every `.d.ts` and `.mjs` file.
     ///
     /// This could easily be an [inherited template](https://djc.github.io/askama/template_syntax.html#template-inheritance), if you want to be a little more strict about how templates are used.
@@ -165,7 +165,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             type_name: &self.type_name,
             typescript,
 
-            doc_str: self.formatter.fmt_docs(&enum_def.docs),
+            doc_str: self.formatter.fmt_docs(&enum_def.docs, &enum_def.attrs),
             is_contiguous,
 
             methods,
@@ -211,7 +211,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             lifetimes: &opaque_def.lifetimes,
             destructor,
 
-            doc_str: self.formatter.fmt_docs(&opaque_def.docs),
+            doc_str: self.formatter.fmt_docs(&opaque_def.docs, &opaque_def.attrs),
 
             methods,
 
@@ -223,8 +223,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
     /// Generate a list of [`FieldInfo`] to be used in [`Self::gen_struct`].
     ///
-    /// Also returns a boolean of whether the forcePadding argument is needed.
-    ///
     /// We separate this step out for two reasons:
     ///
     /// 1. It allows re-use between `.d.ts` and `.mjs` files.
@@ -232,10 +230,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_fields<P: hir::TyPosition>(
         &self,
         struct_def: &'tcx hir::StructDef<P>,
-    ) -> (Vec<FieldInfo<P>>, bool, Layout) {
+    ) -> (Vec<FieldInfo<'_, P>>, Layout) {
         let struct_field_info =
             crate::js::layout::struct_field_info(struct_def.fields.iter().map(|f| &f.ty), self.tcx);
-        let mut needs_force_padding = false;
 
         let fields = struct_def.fields.iter().enumerate()
         .map(|(i, field)| {
@@ -306,69 +303,8 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 None
             };
 
-            let padding = struct_field_info.fields[i].padding_count;
+            let js_name = format!("this.#{field_name}");
 
-            // See docs/wasm_abi_quirks.md for when "padded direct" parameter passing kicks in
-            let force_padding = match (struct_field_info.fields[i].scalar_count, struct_field_info.scalar_count) {
-                // There's no padding needed
-                (ScalarCount::Zst | ScalarCount::Scalars(1), _) => ForcePaddingStatus::NoForce,
-                // Non-structs don't care
-                // This includes slices, which *are* aggregates but have no padding.
-                _ if !matches!(&field.ty, &hir::Type::Struct(_)) => ForcePaddingStatus::NoForce,
-                // 2-field struct contained in 2-field struct, caller decides
-                (ScalarCount::Scalars(2), ScalarCount::Scalars(2)) => {
-                    needs_force_padding = true;
-                    ForcePaddingStatus::PassThrough
-                }
-                // Outer struct has > 3 fields, always pad
-                (ScalarCount::Scalars(2), ScalarCount::Scalars(3..)) => ForcePaddingStatus::Force,
-                // Larger fields will always have padding anyway
-                _ => ForcePaddingStatus::NoForce
-
-            };
-
-            let maybe_padding_after = if padding > 0 {
-                let padding_size_str = match struct_field_info.fields[i].padding_field_width {
-                    1 => "i8",
-                    2 => "i16",
-                    4 => "i32",
-                    8 => "i64",
-                    other => unreachable!("Found unknown padding size {other}")
-                };
-
-                if struct_field_info.scalar_count == ScalarCount::Scalars(2) {
-                    // For structs with 2 scalar fields, we pass down whether or not padding is needed from the caller. See docs/wasm_abi_quirks.md
-                    needs_force_padding = true;
-                    format!(", ...diplomatRuntime.maybePaddingFields(forcePadding, {padding} /* x {padding_size_str} */)")
-                } else {
-                    let mut out = format!(", /* [{padding} x {padding_size_str}] padding */ ");
-                    for i in 0..padding {
-                        if i < padding - 1 {
-                            write!(out, "0, ").unwrap();
-                        } else {
-                            write!(out, "0 /* end padding */").unwrap();
-                        }
-                    }
-
-                    out
-                }
-
-            } else {
-                "".into()
-            };
-            let js_name = format!("this.#{}", field_name);
-
-            let js_to_c = match self.config.abi {
-                // For the legacy ABI, we expect to return a splatted list of the
-                // fields converted into WASM friendly types and buffers for us. 
-                // So we use the List context here.
-                WasmABI::Legacy => self.gen_js_to_c_for_type(&field.ty, js_name.clone().into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::List(force_padding)),
-                // For the C spec ABI, we use the _writeToArrayBuffer function (generated using js_to_c_write) info,
-                // so we don't need to provide any information here:
-                WasmABI::CSpec => "".into()
-            };
-
-            let js_to_c = format!("{js_to_c}{maybe_padding_after}");
             let js_to_c_write = self.gen_js_to_c_for_type(&field.ty, js_name.into(), maybe_struct_borrow_info.as_ref(), alloc.as_deref(), JsToCConversionContext::WriteToBuffer("offset", struct_field_info.fields[i].offset)).into();
 
             FieldInfo {
@@ -377,14 +313,13 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 js_type_name,
                 c_to_js_deref,
                 c_to_js,
-                js_to_c,
                 js_to_c_write,
                 maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info),
                 is_optional: is_option
             }
         }).collect::<Vec<_>>();
 
-        (fields, needs_force_padding, struct_field_info.struct_layout)
+        (fields, struct_field_info.struct_layout)
     }
 
     pub(super) fn only_primitive<P: hir::TyPosition>(&self, st: &hir::StructDef<P>) -> bool {
@@ -415,7 +350,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         }
     }
 
-    // Going to have to be a lot of arguments for now (can remove `needs_force_padding` once Rust removes the `-Zwasm-c-abi=legacy` option).
+    // Going to have to be a lot of arguments for now.
     #[allow(clippy::too_many_arguments)]
     /// Generate a struct type's body for a file from the given definition.
     ///
@@ -429,7 +364,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
         methods: &MethodsInfo,
 
         is_out: bool,
-        needs_force_padding: bool,
         layout: Layout,
     ) -> String {
         #[derive(Template)]
@@ -440,7 +374,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             typescript: bool,
             mutable: bool,
             is_out: bool,
-            needs_force_padding: bool,
 
             lifetimes: &'a LifetimeEnv,
             fields: &'a Vec<FieldInfo<'a, P>>,
@@ -457,7 +390,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
 
             size: usize,
             align: usize,
-            abi: WasmABI,
         }
 
         ImplTemplate {
@@ -466,7 +398,6 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             typescript,
             is_out,
             mutable: !is_out,
-            needs_force_padding,
 
             lifetimes: &struct_def.lifetimes,
             fields,
@@ -479,37 +410,28 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                     hir::Type::Primitive(..)
                 ),
 
-            doc_str: self.formatter.fmt_docs(&struct_def.docs),
+            doc_str: self.formatter.fmt_docs(&struct_def.docs, &struct_def.attrs),
 
-            show_default_ctor: !is_out || !typescript,
+            show_default_ctor: !typescript && !struct_def.fields.is_empty(),
 
             size: layout.size(),
             align: layout.align(),
-
-            abi: self.config.abi.clone(),
         }
         .render()
         .unwrap()
     }
 
-    /// Generate required method info for all other [`TyGenContext::generate_*`] calls.
+    /// Generate required method info for all other [`ItemGenContext::generate_*`] calls.
     ///
     /// For re-usability between `.d.ts` and `.mjs` files.
-    pub(super) fn generate_method(
-        &self,
-        type_id: TypeId,
-        method: &'tcx Method,
-    ) -> Option<MethodInfo> {
+    pub(super) fn generate_method(&self, method: &'tcx Method) -> Option<MethodInfo<'_>> {
         if method.attrs.disable {
             return None;
         }
 
         let mut visitor = method.borrowing_param_visitor(self.tcx, true);
 
-        let _guard = self.errors.set_context_method(
-            self.tcx.fmt_type_name_diagnostics(type_id),
-            method.name.as_str().into(),
-        );
+        let _guard = self.errors.set_context_method(method.name.as_str().into());
 
         let abi_name = String::from(method.abi_name.as_str());
 
@@ -517,7 +439,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
             abi_name,
             method_output_is_ffi_unit: method.output.is_ffi_unit(),
             needs_cleanup: false,
-            doc_str: self.formatter.fmt_docs(&method.docs),
+            doc_str: self.formatter.fmt_docs(&method.docs, &method.attrs),
             ..Default::default()
         };
 
@@ -550,7 +472,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 .param_conversions
                 // Pretty sure we don't need to force padding because we're just passing in a pointer:
                 .push(self.gen_js_to_c_self(
-                    JsToCConversionContext::List(ForcePaddingStatus::NoForce),
+                    JsToCConversionContext::List,
                     struct_borrow.as_ref(),
                     &param_self.ty,
                 ));
@@ -625,13 +547,9 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                 );
 
                 // We add the pointer and size for slices:
-                method_info.param_conversions.push(
-                    match self.config.abi {
-                        WasmABI::Legacy => format!("...{}Slice.splat()", param_info.name),
-                        WasmABI::CSpec => format!("{}Slice.ptr", param_info.name),
-                    }
-                    .into(),
-                );
+                method_info
+                    .param_conversions
+                    .push(format!("{}Slice.ptr", param_info.name).into());
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
@@ -667,7 +585,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
                         struct_borrow_info.as_ref(),
                         alloc,
                         // Arguments need a list, and never force padding
-                        JsToCConversionContext::List(ForcePaddingStatus::NoForce),
+                        JsToCConversionContext::List,
                     ));
             }
 
@@ -712,7 +630,7 @@ impl<'tcx> TyGenContext<'_, 'tcx> {
     pub(super) fn generate_special_method(
         &self,
         special_method_presence: &SpecialMethodPresence,
-    ) -> SpecialMethodInfo {
+    ) -> SpecialMethodInfo<'_> {
         let mut iterator = None;
 
         if let Some(ref val) = special_method_presence.iterator {
@@ -773,7 +691,7 @@ pub(super) struct MethodInfo<'info> {
     pub parameters: Vec<ParamInfo<'info>>,
     /// See [`SliceParam`] for info on how this array is used.
     pub slice_params: Vec<SliceParam<'info>>,
-    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`TyGenContext::gen_js_to_c_for_type`] for more.
+    /// Represents the Javascript needed to take the parameters from the method definition into C-friendly terms. See [`ItemGenContext::gen_js_to_c_for_type`] for more.
     pub param_conversions: Vec<Cow<'info, str>>,
 
     /// The return type, for `.d.ts` files.
@@ -797,7 +715,7 @@ pub(super) struct MethodInfo<'info> {
     pub max_alloc: usize,
 }
 
-/// See [`TyGenContext::generate_special_method`].
+/// See [`ItemGenContext::generate_special_method`].
 /// Used in `js_class.js.jinja`
 pub(super) struct SpecialMethodInfo<'a> {
     iterator: Option<Cow<'a, str>>,
@@ -821,7 +739,6 @@ pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     c_to_js: Cow<'info, str>,
     /// Because all structs are created in WebAssembly as pointers, we need to be able to de-reference those pointers. This is an expression for taking a given pointer and returning JS.
     c_to_js_deref: Cow<'info, str>,
-    js_to_c: String,
     /// A version of js_to_c that writes the struct field to an arraybuffer `arrayBuffer` at offset `offset`
     js_to_c_write: String,
     /// Used in `get _fieldsForLifetime...` fields, which themselves are used in [`display_lifetime_edge`].
@@ -857,7 +774,7 @@ impl Ord for ImportInfo<'_> {
 
 impl PartialOrd for ImportInfo<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.import_type.cmp(&other.import_type))
+        Some(self.cmp(other))
     }
 }
 
@@ -871,7 +788,7 @@ impl Eq for ImportInfo<'_> {}
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`TyGenContext::gen_c_to_js_for_type`] for more.)
+/// Used in `method.js.jinja`. Used to create JS friendly interpretations of lifetime edges, to be passed into newly created JS structures (see [`JSFormatter::fmt_lifetime_edge_array`] and see [`ItemGenContext::gen_c_to_js_for_type`] for more.)
 ///
 /// Modified from dart backend.
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {

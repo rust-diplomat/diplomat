@@ -1,11 +1,11 @@
 mod formatter;
+pub(crate) mod gen;
 mod header;
-mod ty;
 
 pub use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
+pub use self::gen::ItemGenContext;
 pub(crate) use self::header::Header;
-pub use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::BackendAttrSupport;
@@ -39,6 +39,10 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.custom_errors = false;
     a.traits_are_send = false;
     a.traits_are_sync = false;
+    a.generate_mocking_interface = false;
+    a.abi_compatibles = true;
+    a.struct_refs = true;
+    a.free_functions = true;
 
     a
 }
@@ -49,10 +53,11 @@ pub struct Runtime;
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx hir::TypeContext,
+    config: &crate::Config,
     docs_url_gen: &'tcx DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let files = FileMap::default();
-    let formatter = CFormatter::new(tcx, false, docs_url_gen);
+    let formatter = CFormatter::new(tcx, false, config, docs_url_gen);
     let errors = ErrorStore::default();
 
     files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
@@ -67,25 +72,24 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(ty.name().as_str().into());
-        let context = TyGenContext {
+        let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
             is_for_cpp: false,
-            id: id.into(),
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
 
-        let decl_header = match ty {
-            hir::TypeDef::Enum(e) => context.gen_enum_def(e),
-            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o),
-            hir::TypeDef::Struct(s) => context.gen_struct_def(s),
-            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s),
+        let decl_header = match id {
+            hir::TypeId::Enum(e) => context.gen_enum_def(e),
+            hir::TypeId::Opaque(o) => context.gen_opaque_def(o),
+            hir::TypeId::Struct(s) => context.gen_struct_def::<hir::Everywhere>(s),
+            hir::TypeId::OutStruct(s) => context.gen_struct_def::<hir::OutputOnly>(s),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let impl_header = context.gen_impl(ty);
+        let impl_header = context.gen_impl(id);
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -101,20 +105,36 @@ pub(crate) fn run<'tcx>(
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
 
         let _guard = errors.set_context_ty(trt.name.as_str().into());
-        let context = TyGenContext {
+        let context = ItemGenContext {
             tcx,
             formatter: &formatter,
             errors: &errors,
             is_for_cpp: false,
-            id: id.into(),
             decl_header_path: &decl_header_path,
             impl_header_path: &impl_header_path,
         };
 
-        let decl_header = context.gen_trait_def(trt);
+        let decl_header = context.gen_trait_def(id);
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too
+
+    let impl_header_path = "free_functions.h".to_string();
+
+    let context = ItemGenContext {
+        tcx,
+        formatter: &formatter,
+        errors: &errors,
+        is_for_cpp: false,
+        decl_header_path: "",
+        impl_header_path: &impl_header_path,
+    };
+
+    let impl_header = context.gen_function_impls(None, tcx.all_free_functions().map(|(_, m)| m));
+
+    if !impl_header.body.is_empty() {
+        files.add_file(impl_header.path.clone(), impl_header.to_string());
+    }
 
     (files, errors)
 }

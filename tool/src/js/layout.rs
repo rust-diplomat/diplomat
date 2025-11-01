@@ -1,6 +1,6 @@
 //! The corpse of the old AST backend, wearing a fresh coat of paint. AST used to have this  `layout.rs` file for figuring out how types would look in memory.
 //!
-//! Every backend needed this. But now only Javascript does. And we pretty much only use it for structs; WASM sometimes requires us to create an appropriately sized buffer for a struct. It sometimes also requires us to pad method signatures when inserting a flattened structure (see [`super::type_generation::TyGenContext::gen_c_to_js_for_return_type`] or [`super::type_generation::TyGenContext::generate_fields`] for more).
+//! Every backend needed this. But now only Javascript does. And we pretty much only use it for structs; WASM sometimes requires us to create an appropriately sized buffer for a struct. It sometimes also requires us to pad method signatures when inserting a flattened structure (see [`super::type_generation::ItemGenContext::gen_c_to_js_for_return_type`] or [`super::type_generation::ItemGenContext::generate_fields`] for more).
 use std::ops::{Add, AddAssign};
 use std::{alloc::Layout, cmp::max};
 
@@ -22,8 +22,6 @@ pub struct StructFieldLayout {
     pub padding_count: usize,
     /// The width of an individual padding field
     pub padding_field_width: usize,
-    /// The number of scalar (integer primitive) fields in this field, transitively. Does not count padding fields.
-    pub scalar_count: ScalarCount,
 }
 
 pub struct StructFieldsInfo {
@@ -88,7 +86,6 @@ pub fn struct_field_info<'a, P: hir::TyPosition + 'a>(
             offset: next_offset,
             padding_count: 0,
             padding_field_width: 1,
-            scalar_count: field_scalars,
         });
         prev_align = align;
         next_offset += size;
@@ -209,9 +206,10 @@ pub fn primitive_size_alignment(prim: PrimitiveType) -> Layout {
     match prim {
         PrimitiveType::Bool => Layout::new::<bool>(),
         PrimitiveType::Char => Layout::new::<char>(),
-        PrimitiveType::Int(IntType::I8) | PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => {
-            Layout::new::<u8>()
-        }
+        PrimitiveType::Int(IntType::I8)
+        | PrimitiveType::Int(IntType::U8)
+        | PrimitiveType::Byte
+        | PrimitiveType::Ordering => Layout::new::<u8>(),
         PrimitiveType::Int(IntType::I16) | PrimitiveType::Int(IntType::U16) => Layout::new::<u16>(),
         PrimitiveType::Int(IntType::I32) | PrimitiveType::Int(IntType::U32) => Layout::new::<u32>(),
         PrimitiveType::Int(IntType::I64) | PrimitiveType::Int(IntType::U64) => Layout::new::<u64>(),

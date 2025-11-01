@@ -1,5 +1,5 @@
-#ifndef OptionStruct_D_HPP
-#define OptionStruct_D_HPP
+#ifndef SOMELIB_OptionStruct_D_HPP
+#define SOMELIB_OptionStruct_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,36 +10,39 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
-
-namespace diplomat::capi { struct OptionOpaque; }
+namespace somelib {
+namespace capi { struct OptionOpaque; }
 class OptionOpaque;
-namespace diplomat::capi { struct OptionOpaqueChar; }
+namespace capi { struct OptionOpaqueChar; }
 class OptionOpaqueChar;
+} // namespace somelib
 
 
-namespace diplomat {
+
+namespace somelib {
 namespace capi {
     struct OptionStruct {
-      diplomat::capi::OptionOpaque* a;
-      diplomat::capi::OptionOpaqueChar* b;
+      somelib::capi::OptionOpaque* a;
+      somelib::capi::OptionOpaqueChar* b;
       uint32_t c;
-      diplomat::capi::OptionOpaque* d;
+      somelib::capi::OptionOpaque* d;
     };
-    
+
     typedef struct OptionStruct_option {union { OptionStruct ok; }; bool is_ok; } OptionStruct_option;
 } // namespace capi
 } // namespace
 
 
+namespace somelib {
 struct OptionStruct {
-  std::unique_ptr<OptionOpaque> a;
-  std::unique_ptr<OptionOpaqueChar> b;
-  uint32_t c;
-  std::unique_ptr<OptionOpaque> d;
+    std::unique_ptr<somelib::OptionOpaque> a;
+    std::unique_ptr<somelib::OptionOpaqueChar> b;
+    uint32_t c;
+    std::unique_ptr<somelib::OptionOpaque> d;
 
-  inline diplomat::capi::OptionStruct AsFFI() const;
-  inline static OptionStruct FromFFI(diplomat::capi::OptionStruct c_struct);
+    inline somelib::capi::OptionStruct AsFFI() const;
+    inline static somelib::OptionStruct FromFFI(somelib::capi::OptionStruct c_struct);
 };
 
-
-#endif // OptionStruct_D_HPP
+} // namespace
+#endif // SOMELIB_OptionStruct_D_HPP

@@ -1,44 +1,39 @@
 {% include "c_include.h.jinja" %}
 
 {% if let Some(ns) = namespace -%}
-namespace {{ns}} {
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
 {% endif -%}
 {% if !docs.is_empty() -%}
 /**
- * {{docs}}
+{{~ docs|prefix_trimmed(" * ")}}
  */
 {% endif -%}
-class {{type_name_unnamespaced}} {
+class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} {{type_name_unnamespaced}} {
 public:
-	enum Value {
-		{%- for enum_variant in ty.variants %}
-		{{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
-		{%- endfor %}
-	};
+    enum Value {
+        {%- for enum_variant in ty.variants %}
+        {{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
+        {%- endfor %}
+    };
 
-	{{type_name_unnamespaced}}() = default;
-	// Implicit conversions between enum and ::Value
-	constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
-	constexpr operator Value() const { return value; }
-	// Prevent usage as boolean value
-	explicit operator bool() const = delete; 
+    {{type_name_unnamespaced}}(): value(Value::{{default_variant}}) {}
 
-	{%- for m in methods %}
-
-	{% if !m.docs.is_empty() -%}
-	/**
-	 * {{m.docs|indent(2)}}
-	 */
-	{% endif -%}
-	{% include "method_decl.h.jinja" %}
-	{%- endfor %}
-
-	inline {{ctype}} AsFFI() const;
-	inline static {{type_name}} FromFFI({{ctype}} c_enum);
+    // Implicit conversions between enum and ::Value
+    constexpr {{type_name_unnamespaced}}(Value v) : value(v) {}
+    constexpr operator Value() const { return value; }
+    // Prevent usage as boolean value
+    explicit operator bool() const = delete;
+    {%~ for m in methods -%}
+    {%- include "function_defs/method_decl.h.jinja" %}
+    {%~ endfor %}
+    inline {{ctype}} AsFFI() const;
+    inline static {{type_name}} FromFFI({{ctype}} c_enum);
 private:
     Value value;
 };
 
-{% if namespace.is_some() -%}
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
 {%-endif%}

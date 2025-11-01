@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface UnnamespacedLib: Library {
     fun namespace_Unnamespaced_destroy(handle: Pointer)
     fun namespace_Unnamespaced_make(e: Int): Pointer
@@ -28,6 +27,7 @@ class Unnamespaced internal constructor (
     companion object {
         internal val libClass: Class<UnnamespacedLib> = UnnamespacedLib::class.java
         internal val lib: UnnamespacedLib = Native.load("somelib", libClass)
+        @JvmStatic
         
         fun make(e: AttrEnum): Unnamespaced {
             

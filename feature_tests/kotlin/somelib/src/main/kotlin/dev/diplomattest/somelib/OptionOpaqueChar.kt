@@ -5,7 +5,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface OptionOpaqueCharLib: Library {
     fun OptionOpaqueChar_destroy(handle: Pointer)
     fun OptionOpaqueChar_assert_char(handle: Pointer, ch: Int): Unit

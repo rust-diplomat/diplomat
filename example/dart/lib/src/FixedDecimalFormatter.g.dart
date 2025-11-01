@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-/// An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+/// An  Fixed Decimal Format object, capable of formatting a [FixedDecimal] as a string.
 ///
 /// See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
 final class FixedDecimalFormatter implements ffi.Finalizable {
@@ -23,9 +23,10 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
     }
   }
 
+  @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_destroy_mv1')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimalFormatter_destroy_mv1));
 
-  /// Creates a new [`FixedDecimalFormatter`] from locale data.
+  /// Creates a new [FixedDecimalFormatter] from locale data.
   ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
   static FixedDecimalFormatter? tryNew(Locale locale, DataProvider provider, FixedDecimalFormatterOptions options) {
@@ -37,7 +38,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
     return FixedDecimalFormatter._fromFfi(result.union.ok, []);
   }
 
-  /// Formats a [`FixedDecimal`] to a string.
+  /// Formats a [FixedDecimal] to a string.
   ///
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(FixedDecimal value) {
@@ -45,6 +46,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
     _icu4x_FixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
     return write.finalize();
   }
+
 }
 
 @_DiplomatFfiUse('icu4x_FixedDecimalFormatter_destroy_mv1')

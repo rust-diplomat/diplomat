@@ -1,5 +1,5 @@
-#ifndef ns_RenamedOpaqueIterable_D_HPP
-#define ns_RenamedOpaqueIterable_D_HPP
+#ifndef SOMELIB_ns_RenamedOpaqueIterable_D_HPP
+#define SOMELIB_ns_RenamedOpaqueIterable_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -10,40 +10,46 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
-
+namespace somelib {
 namespace ns {
+namespace capi { struct RenamedOpaqueIterable; }
+class RenamedOpaqueIterable;
 namespace capi { struct RenamedOpaqueIterator; }
 class RenamedOpaqueIterator;
-}
+} // namespace ns
+} // namespace somelib
 
 
-namespace ns {
+
+namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueIterable;
 } // namespace capi
 } // namespace
 
-namespace ns {
+namespace somelib::ns {
 class RenamedOpaqueIterable {
 public:
 
-  inline std::unique_ptr<ns::RenamedOpaqueIterator> iter() const;
-  inline diplomat::next_to_iter_helper<ns::RenamedOpaqueIterator> begin() const;
+  inline static std::unique_ptr<somelib::ns::RenamedOpaqueIterable> new_(size_t size);
+
+  inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> iter() const;
+  inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
-  inline const ns::capi::RenamedOpaqueIterable* AsFFI() const;
-  inline ns::capi::RenamedOpaqueIterable* AsFFI();
-  inline static const ns::RenamedOpaqueIterable* FromFFI(const ns::capi::RenamedOpaqueIterable* ptr);
-  inline static ns::RenamedOpaqueIterable* FromFFI(ns::capi::RenamedOpaqueIterable* ptr);
-  inline static void operator delete(void* ptr);
+    inline const somelib::ns::capi::RenamedOpaqueIterable* AsFFI() const;
+    inline somelib::ns::capi::RenamedOpaqueIterable* AsFFI();
+    inline static const somelib::ns::RenamedOpaqueIterable* FromFFI(const somelib::ns::capi::RenamedOpaqueIterable* ptr);
+    inline static somelib::ns::RenamedOpaqueIterable* FromFFI(somelib::ns::capi::RenamedOpaqueIterable* ptr);
+    inline static void operator delete(void* ptr);
 private:
-  RenamedOpaqueIterable() = delete;
-  RenamedOpaqueIterable(const ns::RenamedOpaqueIterable&) = delete;
-  RenamedOpaqueIterable(ns::RenamedOpaqueIterable&&) noexcept = delete;
-  RenamedOpaqueIterable operator=(const ns::RenamedOpaqueIterable&) = delete;
-  RenamedOpaqueIterable operator=(ns::RenamedOpaqueIterable&&) noexcept = delete;
-  static void operator delete[](void*, size_t) = delete;
+    RenamedOpaqueIterable() = delete;
+    RenamedOpaqueIterable(const somelib::ns::RenamedOpaqueIterable&) = delete;
+    RenamedOpaqueIterable(somelib::ns::RenamedOpaqueIterable&&) noexcept = delete;
+    RenamedOpaqueIterable operator=(const somelib::ns::RenamedOpaqueIterable&) = delete;
+    RenamedOpaqueIterable operator=(somelib::ns::RenamedOpaqueIterable&&) noexcept = delete;
+    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
-#endif // ns_RenamedOpaqueIterable_D_HPP
+#endif // SOMELIB_ns_RenamedOpaqueIterable_D_HPP

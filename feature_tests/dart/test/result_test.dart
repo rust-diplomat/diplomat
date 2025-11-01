@@ -2,7 +2,7 @@ import 'package:feature_tests/lib.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test("Verify result methods", () {
+  test('Verify result methods', () {
     expect(ResultOpaque(5), ResultOpaqueMatcher(5));
 
     expect(ResultOpaque.failingFoo, throwsA(ErrorEnum.foo));

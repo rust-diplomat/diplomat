@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsTypeReferenceSyntax, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -64,14 +64,13 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_part(&self, part: &str) -> Cow<'static, str> {
-        format!("part '{}';", part).into()
+        format!("part '{part}';").into()
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen)
+        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n/// ")
-            .replace(" \n", "\n")
+            .to_string()
     }
 
     /// Resolve and format a named type for use in code
@@ -89,8 +88,12 @@ impl<'tcx> DartFormatter<'tcx> {
 
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        let name = variant.name.as_str().to_lower_camel_case().into();
-        variant.attrs.rename.apply(name)
+        variant
+            .attrs
+            .rename
+            .apply(variant.name.as_str().into())
+            .to_lower_camel_case()
+            .into()
     }
 
     /// Format a field name or parameter name
@@ -183,7 +186,10 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "bool",
                 PrimitiveType::Char => "Rune",
-                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) | PrimitiveType::Byte => "int",
+                PrimitiveType::Int(_)
+                | PrimitiveType::IntSize(_)
+                | PrimitiveType::Byte
+                | PrimitiveType::Ordering => "int",
                 PrimitiveType::Float(_) => "double",
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             }
@@ -191,7 +197,7 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "ffi.Bool",
                 PrimitiveType::Char => "ffi.Uint32",
-                PrimitiveType::Int(IntType::I8) => "ffi.Int8",
+                PrimitiveType::Int(IntType::I8) | PrimitiveType::Ordering => "ffi.Int8",
                 PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "ffi.Uint8",
                 PrimitiveType::Int(IntType::I16) => "ffi.Int16",
                 PrimitiveType::Int(IntType::U16) => "ffi.Uint16",
@@ -225,6 +231,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "core.List<int>",
             PrimitiveType::Float(_) => "core.List<double>",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 
@@ -254,6 +261,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Float(FloatType::F32) => "_float32AllocIn",
             PrimitiveType::Float(FloatType::F64) => "_float64AllocIn",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 
@@ -276,7 +284,7 @@ impl<'tcx> DartFormatter<'tcx> {
     /// Get the FFI slice type corresponding to a slice
     ///
     /// Note: you probably want to call gen_slice() to ensure helpers get made
-    pub fn fmt_slice_type(&self, slice: &hir::Slice) -> &'static str {
+    pub fn fmt_slice_type<P: hir::TyPosition>(&self, slice: &hir::Slice<P>) -> &'static str {
         match slice {
             hir::Slice::Primitive(_, p) => self.fmt_prim_slice_type(*p),
             hir::Slice::Str(_, encoding) => self.fmt_str_slice_type(*encoding),
@@ -303,6 +311,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Float(FloatType::F32) => "_SliceFloat",
             PrimitiveType::Float(FloatType::F64) => "_SliceDouble",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Ordering => panic!("List of ordering not supported"),
         }
     }
 

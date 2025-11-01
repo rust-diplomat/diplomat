@@ -1,5 +1,5 @@
-#ifndef DefaultEnum_HPP
-#define DefaultEnum_HPP
+#ifndef SOMELIB_DefaultEnum_HPP
+#define SOMELIB_DefaultEnum_HPP
 
 #include "DefaultEnum.d.hpp"
 
@@ -14,33 +14,32 @@
 #include "diplomat_runtime.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    diplomat::capi::DefaultEnum DefaultEnum_new(void);
-    
-    
+
+    somelib::capi::DefaultEnum DefaultEnum_new(void);
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline diplomat::capi::DefaultEnum DefaultEnum::AsFFI() const {
-  return static_cast<diplomat::capi::DefaultEnum>(value);
+inline somelib::capi::DefaultEnum somelib::DefaultEnum::AsFFI() const {
+    return static_cast<somelib::capi::DefaultEnum>(value);
 }
 
-inline DefaultEnum DefaultEnum::FromFFI(diplomat::capi::DefaultEnum c_enum) {
-  switch (c_enum) {
-    case diplomat::capi::DefaultEnum_A:
-    case diplomat::capi::DefaultEnum_B:
-      return static_cast<DefaultEnum::Value>(c_enum);
-    default:
-      std::abort();
-  }
+inline somelib::DefaultEnum somelib::DefaultEnum::FromFFI(somelib::capi::DefaultEnum c_enum) {
+    switch (c_enum) {
+        case somelib::capi::DefaultEnum_A:
+        case somelib::capi::DefaultEnum_B:
+            return static_cast<somelib::DefaultEnum::Value>(c_enum);
+        default:
+            std::abort();
+    }
 }
 
-inline DefaultEnum DefaultEnum::new_() {
-  auto result = diplomat::capi::DefaultEnum_new();
-  return DefaultEnum::FromFFI(result);
+inline somelib::DefaultEnum somelib::DefaultEnum::new_() {
+    auto result = somelib::capi::DefaultEnum_new();
+    return somelib::DefaultEnum::FromFFI(result);
 }
-#endif // DefaultEnum_HPP
+#endif // SOMELIB_DefaultEnum_HPP

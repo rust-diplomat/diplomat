@@ -5,13 +5,12 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-
 internal interface FixedDecimalFormatterLib: Library {
     fun icu4x_FixedDecimalFormatter_destroy_mv1(handle: Pointer)
     fun icu4x_FixedDecimalFormatter_try_new_mv1(locale: Pointer, provider: Pointer, options: FixedDecimalFormatterOptionsNative): ResultPointerUnit
     fun icu4x_FixedDecimalFormatter_format_write_mv1(handle: Pointer, value: Pointer, write: Pointer): Unit
 }
-/** An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
+/** An  Fixed Decimal Format object, capable of formatting a [FixedDecimal] as a string.
 *
 *See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
 */
@@ -31,8 +30,9 @@ class FixedDecimalFormatter internal constructor (
     companion object {
         internal val libClass: Class<FixedDecimalFormatterLib> = FixedDecimalFormatterLib::class.java
         internal val lib: FixedDecimalFormatterLib = Native.load("somelib", libClass)
+        @JvmStatic
         
-        /** Creates a new [`FixedDecimalFormatter`] from locale data.
+        /** Creates a new [FixedDecimalFormatter] from locale data.
         *
         *See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
         */
@@ -51,7 +51,7 @@ class FixedDecimalFormatter internal constructor (
         }
     }
     
-    /** Formats a [`FixedDecimal`] to a string.
+    /** Formats a [FixedDecimal] to a string.
     *
     *See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
     */

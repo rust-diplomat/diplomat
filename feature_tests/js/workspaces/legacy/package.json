@@ -1,7 +1,7 @@
 {
-	"type": "module",
-	"scripts": {
-		"pretest": "tsc",
-		"test": "ava"
-	}
+    "type": "module",
+    "scripts": {
+        "pretest": "tsc",
+        "test": "ava"
+    }
 }

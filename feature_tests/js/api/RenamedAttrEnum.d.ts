@@ -4,17 +4,19 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class RenamedAttrEnum {
-    
 
-    static fromValue(value : RenamedAttrEnum | string) : RenamedAttrEnum; 
+    /** @internal */
+    static fromValue(value: RenamedAttrEnum | string): RenamedAttrEnum;
 
-    get value() : string;
+    get value(): string;
 
-    get ffiValue() : number;
+    /** @internal */
+    get ffiValue(): number;
 
     static A : RenamedAttrEnum;
     static B : RenamedAttrEnum;
     static Renamed : RenamedAttrEnum;
+
 
     constructor(value: RenamedAttrEnum | string );
 }

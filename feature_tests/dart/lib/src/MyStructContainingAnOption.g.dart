@@ -9,7 +9,9 @@ final class _MyStructContainingAnOptionFfi extends ffi.Struct {
 }
 
 final class MyStructContainingAnOption {
+  // ignore: public_member_api_docs
   MyStruct? a;
+  // ignore: public_member_api_docs
   DefaultEnum? b;
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -25,9 +27,9 @@ final class MyStructContainingAnOption {
   // ignore: unused_element
   _MyStructContainingAnOptionFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_MyStructContainingAnOptionFfi>();
-    MyStruct? a = this.a;
+    final a = this.a;
     struct.a = a != null ? _ResultMyStructFfiVoid.ok(a._toFfi(temp)) : _ResultMyStructFfiVoid.err();
-    DefaultEnum? b = this.b;
+    final b = this.b;
     struct.b = b != null ? _ResultInt32Void.ok(b.index) : _ResultInt32Void.err();
     return struct;
   }
@@ -48,6 +50,7 @@ final class MyStructContainingAnOption {
     final result = _MyStructContainingAnOption_filled();
     return MyStructContainingAnOption._fromFfi(result);
   }
+
 
   @override
   bool operator ==(Object other) =>

@@ -17,6 +17,7 @@ mod ffi {
     #[no_mangle]
     #[cfg(feature = "bar")]
     #[cfg(feature = "foo")]
+    #[allow(deprecated)]
     extern "C" fn Foo_bar(s: u8) {
         Foo::bar(s)
     }

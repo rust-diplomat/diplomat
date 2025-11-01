@@ -8,61 +8,64 @@ const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) =>
 });
 
 export class RenamedMyIterable {
-    
     // Internal ptr reference:
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
+
     #internalConstructor(symbol, ptr, selfEdge) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("RenamedMyIterable is an Opaque type. You cannot call its constructor.");
             return;
         }
-        
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             RenamedMyIterable_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
+    /** @internal */
     get ffiValue() {
         return this.#ptr;
     }
 
+
     #defaultConstructor(x) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
-        
+
         const xSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8")));
-        
+
         const result = wasm.namespace_MyIterable_new(xSlice.ptr);
-    
+
         try {
             return new RenamedMyIterable(diplomatRuntime.internalConstructor, result, []);
         }
-        
+
         finally {
             functionCleanupArena.free();
+
         }
     }
 
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        
+
+
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
-    
+
         try {
             return new RenamedMyIterator(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
-        
-        finally {}
+
+        finally {
+        }
     }
 
     constructor(x) {

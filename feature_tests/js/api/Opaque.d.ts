@@ -7,8 +7,9 @@ import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 export class Opaque {
-    
+    /** @internal */
     get ffiValue(): pointer;
+
 
     static tryFromUtf8(input: string): Opaque | null;
 
@@ -16,7 +17,7 @@ export class Opaque {
 
     getDebugStr(): string;
 
-    /** 
+    /**
      * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
      *
      * See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.

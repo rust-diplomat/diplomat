@@ -10,10 +10,14 @@ final class _NestedBorrowedFieldsFfi extends ffi.Struct {
 }
 
 final class NestedBorrowedFields {
+  // ignore: public_member_api_docs
   BorrowedFields fields;
+  // ignore: public_member_api_docs
   BorrowedFieldsWithBounds bounds;
+  // ignore: public_member_api_docs
   BorrowedFieldsWithBounds bounds2;
 
+  // ignore: public_member_api_docs
   NestedBorrowedFields({required this.fields, required this.bounds, required this.bounds2});
 
   // ignore: unused_element
@@ -43,14 +47,15 @@ final class NestedBorrowedFields {
     final utf8StrYArena = _FinalizedArena();
     final utf8StrZArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'x, 'y
-    core.List<Object> xEdges = [bar, dstr16XArena, utf8StrYArena];
+    final xEdges = [bar, dstr16XArena, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'y
-    core.List<Object> yEdges = [bar, utf8StrYArena];
+    final yEdges = [bar, utf8StrYArena];
     // This lifetime edge depends on lifetimes: 'z
-    core.List<Object> zEdges = [foo, dstr16ZArena, utf8StrZArena];
+    final zEdges = [foo, dstr16ZArena, utf8StrZArena];
     final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16X._utf16AllocIn(dstr16XArena.arena), dstr16Z._utf16AllocIn(dstr16ZArena.arena), utf8StrY._utf8AllocIn(utf8StrYArena.arena), utf8StrZ._utf8AllocIn(utf8StrZArena.arena));
     return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
   }
+
 
   @override
   bool operator ==(Object other) =>
@@ -66,7 +71,7 @@ final class NestedBorrowedFields {
         bounds2,
       ]);
 
-  // Return all fields corresponding to lifetime `'x` 
+  // Return all fields corresponding to lifetime `'x`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'x`,
   // assuming that there are no `'other: x`. bounds. In case of such bounds,
@@ -74,7 +79,7 @@ final class NestedBorrowedFields {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeX => [...fields._fieldsForLifetimeA, ...bounds._fieldsForLifetimeA];
 
-  // Return all fields corresponding to lifetime `'y` 
+  // Return all fields corresponding to lifetime `'y`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'y`,
   // assuming that there are no `'other: y`. bounds. In case of such bounds,
@@ -82,7 +87,7 @@ final class NestedBorrowedFields {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeY => [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
 
-  // Return all fields corresponding to lifetime `'z` 
+  // Return all fields corresponding to lifetime `'z`
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'z`,
   // assuming that there are no `'other: z`. bounds. In case of such bounds,

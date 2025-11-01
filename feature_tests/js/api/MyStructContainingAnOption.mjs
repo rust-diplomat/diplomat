@@ -7,28 +7,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyStructContainingAnOption {
-    
     #a;
-    
-    get a()  {
+    get a() {
         return this.#a;
-    } 
-    set a(value) {
+    }
+    set a(value){
         this.#a = value;
     }
-    
     #b;
-    
-    get b()  {
+    get b() {
         return this.#b;
-    } 
-    set b(value) {
+    }
+    set b(value){
         this.#b = value;
     }
-    
-    /** Create `MyStructContainingAnOption` from an object that contains all of `MyStructContainingAnOption`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    /** @internal */
     static fromFields(structObj) {
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
@@ -55,15 +48,15 @@ export class MyStructContainingAnOption {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    
     _intoFFI(
+        functionCleanupArena,
         appendArrayMap
     ) {
         let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 48, 8);
 
         this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
-        
-        diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(buffer);
+
+        functionCleanupArena.alloc(buffer);
 
         return buffer.ptr;
     }
@@ -86,7 +79,7 @@ export class MyStructContainingAnOption {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, {}));
+        diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 0, this.#a, 32, 8, (arrayBuffer, offset, jsValue) => MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, jsValue)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {}));
         diplomatRuntime.writeOptionToArrayBuffer(arrayBuffer, offset + 40, this.#b, 4, 4, (arrayBuffer, offset, jsValue) => diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array));
     }
 
@@ -108,15 +101,17 @@ export class MyStructContainingAnOption {
         return new MyStructContainingAnOption(diplomatRuntime.exposeConstructor, structObj);
     }
 
+
     #defaultConstructor() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
-        
+
+
         const result = wasm.MyStructContainingAnOption_new(diplomatReceive.buffer);
-    
+
         try {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }
@@ -124,13 +119,14 @@ export class MyStructContainingAnOption {
 
     static filled() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 48, 8, false);
-        
+
+
         const result = wasm.MyStructContainingAnOption_filled(diplomatReceive.buffer);
-    
+
         try {
             return MyStructContainingAnOption._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer);
         }
-        
+
         finally {
             diplomatReceive.free();
         }

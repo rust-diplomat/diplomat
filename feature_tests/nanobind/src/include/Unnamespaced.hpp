@@ -1,5 +1,5 @@
-#ifndef Unnamespaced_HPP
-#define Unnamespaced_HPP
+#ifndef SOMELIB_Unnamespaced_HPP
+#define SOMELIB_Unnamespaced_HPP
 
 #include "Unnamespaced.d.hpp"
 
@@ -16,50 +16,49 @@
 #include "ns/RenamedAttrEnum.hpp"
 
 
-namespace diplomat {
+namespace somelib {
 namespace capi {
     extern "C" {
-    
-    diplomat::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::RenamedAttrEnum _e);
-    
-    void namespace_Unnamespaced_use_namespaced(const diplomat::capi::Unnamespaced* self, const ns::capi::AttrOpaque1Renamed* _n);
-    
-    
+
+    somelib::capi::Unnamespaced* namespace_Unnamespaced_make(somelib::ns::capi::RenamedAttrEnum _e);
+
+    void namespace_Unnamespaced_use_namespaced(const somelib::capi::Unnamespaced* self, const somelib::ns::capi::AttrOpaque1Renamed* _n);
+
     void namespace_Unnamespaced_destroy(Unnamespaced* self);
-    
+
     } // extern "C"
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::RenamedAttrEnum _e) {
-  auto result = diplomat::capi::namespace_Unnamespaced_make(_e.AsFFI());
-  return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
+inline std::unique_ptr<somelib::Unnamespaced> somelib::Unnamespaced::make(somelib::ns::RenamedAttrEnum _e) {
+    auto result = somelib::capi::namespace_Unnamespaced_make(_e.AsFFI());
+    return std::unique_ptr<somelib::Unnamespaced>(somelib::Unnamespaced::FromFFI(result));
 }
 
-inline void Unnamespaced::use_namespaced(const ns::AttrOpaque1Renamed& _n) const {
-  diplomat::capi::namespace_Unnamespaced_use_namespaced(this->AsFFI(),
-    _n.AsFFI());
+inline void somelib::Unnamespaced::use_namespaced(const somelib::ns::AttrOpaque1Renamed& _n) const {
+    somelib::capi::namespace_Unnamespaced_use_namespaced(this->AsFFI(),
+        _n.AsFFI());
 }
 
-inline const diplomat::capi::Unnamespaced* Unnamespaced::AsFFI() const {
-  return reinterpret_cast<const diplomat::capi::Unnamespaced*>(this);
+inline const somelib::capi::Unnamespaced* somelib::Unnamespaced::AsFFI() const {
+    return reinterpret_cast<const somelib::capi::Unnamespaced*>(this);
 }
 
-inline diplomat::capi::Unnamespaced* Unnamespaced::AsFFI() {
-  return reinterpret_cast<diplomat::capi::Unnamespaced*>(this);
+inline somelib::capi::Unnamespaced* somelib::Unnamespaced::AsFFI() {
+    return reinterpret_cast<somelib::capi::Unnamespaced*>(this);
 }
 
-inline const Unnamespaced* Unnamespaced::FromFFI(const diplomat::capi::Unnamespaced* ptr) {
-  return reinterpret_cast<const Unnamespaced*>(ptr);
+inline const somelib::Unnamespaced* somelib::Unnamespaced::FromFFI(const somelib::capi::Unnamespaced* ptr) {
+    return reinterpret_cast<const somelib::Unnamespaced*>(ptr);
 }
 
-inline Unnamespaced* Unnamespaced::FromFFI(diplomat::capi::Unnamespaced* ptr) {
-  return reinterpret_cast<Unnamespaced*>(ptr);
+inline somelib::Unnamespaced* somelib::Unnamespaced::FromFFI(somelib::capi::Unnamespaced* ptr) {
+    return reinterpret_cast<somelib::Unnamespaced*>(ptr);
 }
 
-inline void Unnamespaced::operator delete(void* ptr) {
-  diplomat::capi::namespace_Unnamespaced_destroy(reinterpret_cast<diplomat::capi::Unnamespaced*>(ptr));
+inline void somelib::Unnamespaced::operator delete(void* ptr) {
+    somelib::capi::namespace_Unnamespaced_destroy(reinterpret_cast<somelib::capi::Unnamespaced*>(ptr));
 }
 
 
-#endif // Unnamespaced_HPP
+#endif // SOMELIB_Unnamespaced_HPP

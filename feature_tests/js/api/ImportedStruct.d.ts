@@ -2,7 +2,7 @@
 import type { UnimportedEnum } from "./UnimportedEnum"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
-type ImportedStruct_obj = {
+export type ImportedStruct_obj = {
     foo: UnimportedEnum;
     count: number;
 };
@@ -10,18 +10,17 @@ type ImportedStruct_obj = {
 
 
 export class ImportedStruct {
-    
-    get foo() : UnimportedEnum; 
-    set foo(value: UnimportedEnum); 
-    
-    get count() : number; 
-    set count(value: number); 
-    
-    /** Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
-    * Optional fields do not need to be included in the provided object.
-    */
+    get foo(): UnimportedEnum;
+    set foo(value: UnimportedEnum);
+    get count(): number;
+    set count(value: number);
+    /** @internal */
     static fromFields(structObj : ImportedStruct_obj) : ImportedStruct;
 
+    /**
+    * Create `ImportedStruct` from an object that contains all of `ImportedStruct`s fields.
+    * Optional fields do not need to be included in the provided object.
+    */
+    constructor(structObj: ImportedStruct_obj);
 
-    constructor(structObj : ImportedStruct_obj);
 }

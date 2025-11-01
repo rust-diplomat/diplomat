@@ -17,6 +17,16 @@ typedef struct StructWithAttrs {
 } StructWithAttrs;
 
 typedef struct StructWithAttrs_option {union { StructWithAttrs ok; }; bool is_ok; } StructWithAttrs_option;
+typedef struct DiplomatStructWithAttrsView {
+  const StructWithAttrs* data;
+  size_t len;
+} DiplomatStructWithAttrsView;
+
+typedef struct DiplomatStructWithAttrsViewMut {
+  StructWithAttrs* data;
+  size_t len;
+} DiplomatStructWithAttrsViewMut;
+
 
 
 

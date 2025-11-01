@@ -1,13 +1,17 @@
 {% if !docs.is_empty() -%}
-/// {{docs}}
+{{ docs|prefix_trimmed("/// ")}}
+{% endif -%}
+{% if let Some(deprecated) = deprecated -%}
+@core.Deprecated('{{ deprecated }}')
 {% endif -%}
 enum {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
    {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
-{%- for enum_variant in ty.variants %}
-  {% if !enum_variant.docs.is_empty() -%}
-  /// {{fmt.fmt_docs(enum_variant.docs).replace('\n', "\n  ") }}
-  {% endif -%}
+{%~ for enum_variant in ty.variants %}
+  {%- if !enum_variant.docs.is_empty() %}
+  {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
+  {%- endif %}
+  // ignore: public_member_api_docs
   {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
 {% endif %}
 {%- endfor %}
@@ -23,9 +27,9 @@ enum {{type_name}}
   }
   {%- endif %}
 
-  {%- for m in methods %}
-{% include "method.dart.jinja" %}
-  {%-endfor %}
+  {%~ for m in methods %}
+  {%- include "method.dart.jinja" %}
+  {%- endfor %}
 
   {%- if special.comparator %}
 

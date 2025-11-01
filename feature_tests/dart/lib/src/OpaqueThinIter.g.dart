@@ -22,6 +22,7 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
     }
   }
 
+  @_DiplomatFfiUse('OpaqueThinIter_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinIter_destroy));
 
   OpaqueThin? _current;
@@ -37,10 +38,11 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
 
   OpaqueThin? _iteratorNext() {
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [this];
+    final aEdges = [this];
     final result = _OpaqueThinIter_next(_ffi);
     return result.address == 0 ? null : OpaqueThin._fromFfi(result, aEdges);
   }
+
 }
 
 @_DiplomatFfiUse('OpaqueThinIter_destroy')

@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use std::fmt::Write;
+
     use diplomat_runtime::DiplomatStr16;
 
     #[diplomat::opaque]
@@ -298,6 +300,7 @@ pub mod ffi {
     // are all handled via attributes, which may have slightly different codepaths.
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
+    #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
 
     impl OpaqueThin {
@@ -308,6 +311,11 @@ pub mod ffi {
         #[diplomat::attr(auto, getter)]
         pub fn b(&self) -> f32 {
             self.0.b
+        }
+
+        #[diplomat::attr(auto, getter)]
+        pub fn c(&self, w: &mut DiplomatWrite) {
+            w.write_str(&self.0.c).unwrap();
         }
     }
 
@@ -326,12 +334,16 @@ pub mod ffi {
 
     impl OpaqueThinVec {
         #[diplomat::attr(auto, constructor)]
-        pub fn create(a: &[i32], b: &[f32]) -> Box<Self> {
+        pub fn create(a: &[i32], b: &[f32], c: &DiplomatStr) -> Box<Self> {
             assert!(a.len() == b.len(), "arrays must be of equal size");
             Box::new(Self(
                 a.iter()
                     .zip(b.iter())
-                    .map(|(a, b)| crate::lifetimes::Internal { a: *a, b: *b })
+                    .map(|(a, b)| crate::lifetimes::Internal {
+                        a: *a,
+                        b: *b,
+                        c: String::from_utf8(c.to_vec()).unwrap(),
+                    })
                     .collect(),
             ))
         }
@@ -370,4 +382,5 @@ pub struct Two<'a, 'b>(&'a (), &'b ());
 pub struct Internal {
     a: i32,
     b: f32,
+    c: String,
 }

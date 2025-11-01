@@ -3,7 +3,7 @@ internal class Option{{type_name}}: Structure(), Structure.ByValue  {
     {%- when Some with (default_value)%}
     @JvmField
     internal var value: {{type_name}} = {{default_value}}
-    
+
     {% when None -%}
     {%- endmatch -%}
     @JvmField

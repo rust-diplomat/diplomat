@@ -25,30 +25,36 @@ symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifeti
     {%- for lifetime in lifetimes.all_lifetimes() %}
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
     {%- endfor %}
-    
+
     #internalConstructor(symbol, ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
         if (symbol !== diplomatRuntime.internalConstructor) {
             console.error("{{type_name}} is an Opaque type. You cannot call its constructor.");
             return;
         }
-        {% for lifetime in lifetimes.all_lifetimes() %}
-        {% let lt = lifetimes.fmt_lifetime(lifetime) %}
+        {%- for lifetime in lifetimes.all_lifetimes() %}
+        {%- let lt = lifetimes.fmt_lifetime(lifetime) %}
         this.#{{lt}}Edge = {{lt}}Edge;
-        {% endfor %}
+        {%- endfor %}
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        
+
         // Are we being borrowed? If not, we can register.
         if (this.#selfEdge.length === 0) {
             {{type_name}}_box_destroy_registry.register(this, this.#ptr);
         }
-        
+
         return this;
     }
 
     {%- endif %}
-    get ffiValue(){% if typescript %}: pointer;{% else %} {
+    /** @internal */
+    get ffiValue() {%- if typescript %}: pointer;{% else %} {
         return this.#ptr;
     }
+    {%- endif -%}
+
+    {%- if methods.special_methods.constructor.is_none() && typescript %}
+    /** @internal */
+    constructor();
     {%- endif -%}
 {% endblock %}

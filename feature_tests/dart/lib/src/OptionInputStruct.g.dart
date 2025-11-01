@@ -10,8 +10,11 @@ final class _OptionInputStructFfi extends ffi.Struct {
 }
 
 final class OptionInputStruct {
+  // ignore: public_member_api_docs
   int? a;
+  // ignore: public_member_api_docs
   Rune? b;
+  // ignore: public_member_api_docs
   OptionEnum? c;
 
   // This struct contains borrowed fields, so this takes in a list of
@@ -28,11 +31,11 @@ final class OptionInputStruct {
   // ignore: unused_element
   _OptionInputStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_OptionInputStructFfi>();
-    int? a = this.a;
+    final a = this.a;
     struct.a = a != null ? _ResultUint8Void.ok(a) : _ResultUint8Void.err();
-    Rune? b = this.b;
+    final b = this.b;
     struct.b = b != null ? _ResultUint32Void.ok(b) : _ResultUint32Void.err();
-    OptionEnum? c = this.c;
+    final c = this.c;
     struct.c = c != null ? _ResultInt32Void.ok(c.index) : _ResultInt32Void.err();
     return struct;
   }
@@ -51,6 +54,7 @@ final class OptionInputStruct {
     }
     return dart;
   }
+
 
   @override
   bool operator ==(Object other) =>

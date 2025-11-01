@@ -1,18 +1,36 @@
-export * as lib from "{{js_out}}";
-{% for terminus in termini_exports -%}
-import * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
-export * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
-{% endfor %}
-{% for i in imports -%}
+import * as {{lib_name}} from "{{js_out}}";
+export * as {{lib_name}} from "{{js_out}}";
+{%- for i in imports %}
 {{ i }}
-{% endfor %}
+{%- endfor %}
+
+const displayBool = (out) => out ? 'true' : 'false';
+const displayOrdering = (out) => out == 0 ? '==' : out == 1 ? '>' : '<';
+const displayChar = (out) => String.fromCharCode(out);
+const displayByte = (out) => '0x' + out.toString(16);
+const displayOptionalEnum = (out) => out?.value || 'None';
 
 let termini = Object.assign({
 {%- for terminus in termini %}
     "{{terminus.type_name}}.{{terminus.function_name}}": {
-        func: {{terminus.type_name}}Demo.{{terminus.function_name}},
+        func: (
+            {%- for param in terminus.out_params -%}
+            {{param.param_name}}{% if !loop.last %}, {% endif %}
+            {%- endfor -%}
+        ) => {{terminus.return_val|indent(8)}},
         // For avoiding webpacking minifying issues:
         funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
+        expr: (
+            {%- for param in terminus.out_params -%}
+            {{param.param_name}}{% if !loop.last %}, {% endif %}
+            {%- endfor -%}
+        ) => "{{terminus.return_val.replace("\n", "\\n")}}"
+            {%- for param in terminus.out_params -%}
+            .replace(/([\( ]){{param.param_name}}([,\) \n])/, '$1' + {{param.param_name}} + '$2')
+            {%- endfor -%},
+        {% if let Some(display) = terminus.display_fn -%}
+        display: {{display}},
+        {% endif -%}
         parameters: [
             {% for param in terminus.out_params %}
             {
@@ -22,6 +40,10 @@ let termini = Object.assign({
                 {%- if !param.default_value.is_empty() -%} 
                 ,
                 defaultValue: "{{ param.default_value }}"
+                {%- endif %}
+                {%- if !param.values.is_empty() -%}
+                ,
+                values: {{ format!("{:?}", param.values) }}
                 {%- endif %}
             }{% if !loop.last %},{% endif %}
             {% endfor %}

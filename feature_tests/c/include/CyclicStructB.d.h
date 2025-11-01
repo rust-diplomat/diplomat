@@ -16,6 +16,16 @@ typedef struct CyclicStructB {
 } CyclicStructB;
 
 typedef struct CyclicStructB_option {union { CyclicStructB ok; }; bool is_ok; } CyclicStructB_option;
+typedef struct DiplomatCyclicStructBView {
+  const CyclicStructB* data;
+  size_t len;
+} DiplomatCyclicStructBView;
+
+typedef struct DiplomatCyclicStructBViewMut {
+  CyclicStructB* data;
+  size_t len;
+} DiplomatCyclicStructBViewMut;
+
 
 
 

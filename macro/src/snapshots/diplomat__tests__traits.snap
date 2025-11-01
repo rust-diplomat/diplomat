@@ -31,6 +31,7 @@ mod ffi {
     use diplomat_runtime::*;
     use core::ffi::c_void;
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_with_trait(
         t: DiplomatTraitStruct_TesterTrait,
         x: i32,
@@ -38,12 +39,14 @@ mod ffi {
         Wrapper::test_with_trait(t, x)
     }
     #[no_mangle]
+    #[allow(deprecated)]
     extern "C" fn Wrapper_test_trait_with_struct(
         t: DiplomatTraitStruct_TesterTrait,
     ) -> i32 {
         Wrapper::test_trait_with_struct(t)
     }
     #[repr(C)]
+    #[allow(deprecated)]
     pub struct TesterTrait_VTable {
         pub destructor: Option<unsafe extern "C" fn(*const c_void)>,
         pub size: usize,

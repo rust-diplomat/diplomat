@@ -16,7 +16,7 @@ internal interface CyclicStructALib: Library {
 internal class CyclicStructANative: Structure(), Structure.ByValue {
     @JvmField
     internal var a: CyclicStructBNative = CyclicStructBNative();
-  
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a")
@@ -31,6 +31,7 @@ class CyclicStructA internal constructor (
         internal val libClass: Class<CyclicStructALib> = CyclicStructALib::class.java
         internal val lib: CyclicStructALib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CyclicStructANative::class.java).toLong()
+        @JvmStatic
         
         fun getB(): CyclicStructB {
             
