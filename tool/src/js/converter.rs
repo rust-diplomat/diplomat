@@ -596,6 +596,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     type_name,
                     "this".into(),
                     struct_borrow_info,
+                    "functionCleanupArena".into(),
                     gen_context,
                 )
             }
@@ -633,6 +634,10 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 self.formatter.fmt_type_name(s.id()),
                 js_name,
                 struct_borrow_info,
+                alloc.unwrap_or_else(|| panic!(
+                    "Expected an allocator to be specified when generating the definition for a struct: {}",
+                    self.formatter.fmt_type_name(s.id())
+                )),
                 gen_context,
             ),
             Type::DiplomatOption(ref inner) => {
@@ -740,6 +745,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         js_type: Cow<'tcx, str>,
         js_name: Cow<'tcx, str>,
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
+        allocator: &str,
         gen_context: JsToCConversionContext,
     ) -> Cow<'tcx, str> {
         let mut params = String::new();
@@ -778,7 +784,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 "{js_call}._intoFFI({allocator}, {{{params}}}, false)"
             ).into(),
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
-                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {{{params}}})"
+                "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"
             )
             .into(),
             JsToCConversionContext::SlicePrealloc => {

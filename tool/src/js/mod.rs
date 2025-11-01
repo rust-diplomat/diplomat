@@ -139,7 +139,7 @@ pub(crate) fn run<'tcx>(
             .iter()
             .flat_map(|method| {
                 let inf = context.generate_method(method);
-                if inf.is_some() {
+                if let Some(inf) = inf.clone() {
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
                         method.attrs.special_method
                     {
