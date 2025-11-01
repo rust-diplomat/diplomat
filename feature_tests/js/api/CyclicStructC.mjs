@@ -59,7 +59,7 @@ export class CyclicStructC {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, diplomatRuntime.FUNCTION_PARAM_ALLOC, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -100,7 +100,7 @@ export class CyclicStructC {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructC_cyclic_out(CyclicStructC._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false), write.buffer);
 
         try {
             return write.readString8();

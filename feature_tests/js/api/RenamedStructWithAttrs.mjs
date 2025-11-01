@@ -122,7 +122,7 @@ export class RenamedStructWithAttrs {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
 
-        const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
+        const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
 
         try {
             return result;
@@ -140,7 +140,7 @@ export class RenamedStructWithAttrs {
     deprecated() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.namespace_StructWithAttrs_deprecated(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false));
+    wasm.namespace_StructWithAttrs_deprecated(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
 
         try {}
 

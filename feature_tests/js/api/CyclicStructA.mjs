@@ -59,7 +59,7 @@ export class CyclicStructA {
         functionCleanupArena,
         appendArrayMap
     ) {
-        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {});
+        CyclicStructB._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#a)._writeToArrayBuffer(arrayBuffer, offset + 0, diplomatRuntime.FUNCTION_PARAM_ALLOC, {});
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -96,7 +96,7 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false), write.buffer);
 
         try {
             return write.readString8();
@@ -114,7 +114,7 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
 
         try {
             return write.readString8();
@@ -132,7 +132,7 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false), write.buffer);
 
         try {
             return write.readString8();

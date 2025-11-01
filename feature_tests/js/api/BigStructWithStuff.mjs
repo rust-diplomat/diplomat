@@ -124,7 +124,7 @@ export class BigStructWithStuff {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#first, Uint8Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 2, this.#second, Uint16Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#third, Uint16Array);
-        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, functionCleanupArena, {});
+        ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fourth)._writeToArrayBuffer(arrayBuffer, offset + 8, diplomatRuntime.FUNCTION_PARAM_ALLOC, {});
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#fifth, Uint8Array);
     }
 
@@ -156,7 +156,7 @@ export class BigStructWithStuff {
     assertValue(extraVal) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), extraVal);
+    wasm.BigStructWithStuff_assert_value(BigStructWithStuff._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false), extraVal);
 
         try {}
 
