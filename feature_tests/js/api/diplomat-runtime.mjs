@@ -708,6 +708,11 @@ export class FunctionParamAllocator {
     init(symbol, wasm) {
         if (symbol === internalConstructor) {
             this.#wasm = wasm;
+            
+            // Hack, not sure else how to handle things though:
+            if (this.#ptr === 0){
+                this.#ptr = this.#wasm.diplomat_alloc(this.#capacity, 1);
+            }
         }
     }
 
@@ -717,7 +722,6 @@ export class FunctionParamAllocator {
             throw new Error("FunctionParamAllocator already reserved.");
         }
 
-        this.#ptr = this.#wasm.diplomat_alloc(capacity, 1);
         this.#capacity = capacity;
     }
 
