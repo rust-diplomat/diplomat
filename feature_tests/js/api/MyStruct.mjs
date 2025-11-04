@@ -128,6 +128,11 @@ export class MyStruct {
         return 32;
     }
 
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return 8;
+    }
+
     static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");

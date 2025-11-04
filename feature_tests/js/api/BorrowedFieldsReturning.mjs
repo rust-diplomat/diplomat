@@ -51,6 +51,11 @@ export class BorrowedFieldsReturning {
         return 8;
     }
 
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return 4;
+    }
+
     static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
