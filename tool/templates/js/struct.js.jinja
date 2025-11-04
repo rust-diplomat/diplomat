@@ -113,6 +113,11 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
         return {{size}};
     }
 
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return {{align}};
+    }
+
     static _fromSuppliedValue(internalConstructor, obj) {
         if (internalConstructor !== diplomatRuntime.internalConstructor) {
             throw new Error("_fromSuppliedValue cannot be called externally.");
