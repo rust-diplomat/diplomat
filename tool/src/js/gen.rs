@@ -286,7 +286,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                         Some("functionCleanupArena".into())
                     }
                 },
-                hir::Type::Struct(..) => Some("diplomatRuntime.FUNCTION_PARAM_ALLOC".into()),
+                hir::Type::Struct(..) => Some("functionCleanupArena".into()),
                 // We take ownership
                 _ => None
             };
