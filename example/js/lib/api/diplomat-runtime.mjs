@@ -693,22 +693,22 @@ const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());
 
 /**
  * For allocating and cleaning up structs to be passed into the C Spec WASM ABI.
- * 
+ *
  * Created when we load in the WebAssembly.
  */
 export class FunctionParamAllocator {
     #wasm = null;
-    
+
     #ptr = 0;
     #capacity = 0;
-    
+
     #allocated = [];
     #currentPtr = 0;
 
     init(symbol, wasm) {
         if (symbol === internalConstructor) {
             this.#wasm = wasm;
-            
+
             // Hack, not sure else how to handle things though:
             if (this.#ptr === 0){
                 this.#ptr = this.#wasm.diplomat_alloc(this.#capacity, 1);
@@ -737,7 +737,7 @@ export class FunctionParamAllocator {
     get() {
         return this.#allocated.pop();
     }
-    
+
     clean() {
         this.#currentPtr = 0;
 
