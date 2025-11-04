@@ -242,7 +242,7 @@ pub(crate) fn run<'tcx>(
     // Quick hack to make sure our singleton reserves the correct info:
     files.add_file(
         "diplomat-runtime.mjs".into(),
-        format!("{}\n// Size (in bytes) of the largest buffer we will ever have to pass in to a function:\nFUNCTION_PARAM_ALLOC.reserve({});", include_str!("../../templates/js/runtime.mjs"), function_alloc_max).into(),
+        format!("{}\n// Size (in bytes) of the largest buffer we will ever have to pass in to a function:\nFUNCTION_PARAM_ALLOC.reserve({});", include_str!("../../templates/js/runtime.mjs"), function_alloc_max),
     );
     files.add_file(
         "diplomat-runtime.d.ts".into(),
