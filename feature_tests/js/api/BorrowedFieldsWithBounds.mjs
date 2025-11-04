@@ -66,16 +66,18 @@ export class BorrowedFieldsWithBounds {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 24, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 24;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -167,6 +169,7 @@ export class BorrowedFieldsWithBounds {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionGarbageCollectorGrip.releaseToGarbageCollector();
 
             diplomatReceive.free();

@@ -48,6 +48,7 @@ export class RenamedMyIterable {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -65,6 +66,7 @@ export class RenamedMyIterable {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

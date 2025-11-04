@@ -34,10 +34,15 @@ export class RenamedTestMacroStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
         return this.#a;
+    }
+
+    static get _sizeBytes() {
+        return 4;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -86,6 +91,7 @@ export class RenamedTestMacroStruct {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -98,6 +104,7 @@ export class RenamedTestMacroStruct {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

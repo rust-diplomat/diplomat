@@ -50,16 +50,18 @@ export class ScalarPairWithPadding {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 8;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -106,11 +108,12 @@ export class ScalarPairWithPadding {
     assertValue() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.ScalarPairWithPadding_assert_value(ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
+    wasm.ScalarPairWithPadding_assert_value(ScalarPairWithPadding._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(ScalarPairWithPadding._sizeBytes), functionCleanupArena, {}, false));
 
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }

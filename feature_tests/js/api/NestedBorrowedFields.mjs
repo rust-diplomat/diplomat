@@ -69,16 +69,18 @@ export class NestedBorrowedFields {
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 72, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 72;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -99,9 +101,9 @@ export class NestedBorrowedFields {
         functionCleanupArena,
         appendArrayMap
     ) {
-        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, diplomatRuntime.FUNCTION_PARAM_ALLOC, {aAppendArray: [...appendArrayMap['xAppendArray']],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, diplomatRuntime.FUNCTION_PARAM_ALLOC, {aAppendArray: [...appendArrayMap['xAppendArray']],bAppendArray: [...appendArrayMap['yAppendArray']],cAppendArray: [...appendArrayMap['yAppendArray']],});
-        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, diplomatRuntime.FUNCTION_PARAM_ALLOC, {aAppendArray: [...appendArrayMap['zAppendArray']],bAppendArray: [...appendArrayMap['zAppendArray']],cAppendArray: [...appendArrayMap['zAppendArray']],});
+        BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#fields)._writeToArrayBuffer(arrayBuffer, offset + 0, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds)._writeToArrayBuffer(arrayBuffer, offset + 24, functionCleanupArena, {aAppendArray: [...appendArrayMap['xAppendArray']],bAppendArray: [...appendArrayMap['yAppendArray']],cAppendArray: [...appendArrayMap['yAppendArray']],});
+        BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, this.#bounds2)._writeToArrayBuffer(arrayBuffer, offset + 48, functionCleanupArena, {aAppendArray: [...appendArrayMap['zAppendArray']],bAppendArray: [...appendArrayMap['zAppendArray']],cAppendArray: [...appendArrayMap['zAppendArray']],});
     }
 
     static _fromFFI(internalConstructor, ptr, xEdges, yEdges, zEdges) {
@@ -172,6 +174,7 @@ export class NestedBorrowedFields {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionGarbageCollectorGrip.releaseToGarbageCollector();
 
             diplomatReceive.free();

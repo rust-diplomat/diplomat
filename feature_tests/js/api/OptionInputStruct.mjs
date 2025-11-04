@@ -61,16 +61,18 @@ export class OptionInputStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 20, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 20;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

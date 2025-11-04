@@ -47,16 +47,18 @@ export class RenamedStructWithAttrs {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 8, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 8;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -114,6 +116,7 @@ export class RenamedStructWithAttrs {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -122,13 +125,14 @@ export class RenamedStructWithAttrs {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
 
-        const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
+        const result = wasm.namespace_StructWithAttrs_c(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(RenamedStructWithAttrs._sizeBytes), functionCleanupArena, {}, false));
 
         try {
             return result;
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -140,11 +144,12 @@ export class RenamedStructWithAttrs {
     deprecated() {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.namespace_StructWithAttrs_deprecated(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
+    wasm.namespace_StructWithAttrs_deprecated(RenamedStructWithAttrs._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(RenamedStructWithAttrs._sizeBytes), functionCleanupArena, {}, false));
 
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }

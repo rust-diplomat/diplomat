@@ -35,10 +35,15 @@ export class CyclicStructB {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
         return this.#field;
+    }
+
+    static get _sizeBytes() {
+        return 1;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -87,6 +92,7 @@ export class CyclicStructB {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -104,6 +110,7 @@ export class CyclicStructB {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }

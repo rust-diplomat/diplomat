@@ -114,16 +114,18 @@ export class MyStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 32, 8);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 32;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -193,6 +195,7 @@ export class MyStruct {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -201,13 +204,14 @@ export class MyStruct {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
 
-        const result = wasm.MyStruct_into_a(MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC, {}, false));
+        const result = wasm.MyStruct_into_a(MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(MyStruct._sizeBytes), functionCleanupArena, {}, false));
 
         try {
             return result;
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -225,6 +229,7 @@ export class MyStruct {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -240,6 +245,7 @@ export class MyStruct {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

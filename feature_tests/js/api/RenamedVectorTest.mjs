@@ -44,6 +44,7 @@ export class RenamedVectorTest {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -56,6 +57,7 @@ export class RenamedVectorTest {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -73,6 +75,7 @@ export class RenamedVectorTest {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -83,6 +86,7 @@ export class RenamedVectorTest {
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

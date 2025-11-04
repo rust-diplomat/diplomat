@@ -50,6 +50,7 @@ export class OpaqueThinIter {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
