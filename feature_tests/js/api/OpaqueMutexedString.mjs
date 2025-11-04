@@ -77,7 +77,7 @@ export class OpaqueMutexedString {
         let aEdges = [other];
 
 
-        const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
+        const result = wasm.OpaqueMutexedString_borrow_other(other instanceof OpaqueMutexedString ? other.ffiValue : typeError('other', 'OpaqueMutexedString'));
 
         try {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);
@@ -92,7 +92,7 @@ export class OpaqueMutexedString {
         let aEdges = [this, other];
 
 
-        const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
+        const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other instanceof OpaqueMutexedString ? other.ffiValue : typeError('other', 'OpaqueMutexedString'));
 
         try {
             return new OpaqueMutexedString(diplomatRuntime.internalConstructor, result, aEdges);

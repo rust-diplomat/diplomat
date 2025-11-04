@@ -165,7 +165,7 @@ export class NestedBorrowedFields {
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
 
 
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16ZSlice.ptr, utf8StrYSlice.ptr, utf8StrZSlice.ptr);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomatReceive.buffer, bar instanceof Bar ? bar.ffiValue : typeError('bar', 'Bar'), foo instanceof Foo ? foo.ffiValue : typeError('foo', 'Foo'), dstr16XSlice.ptr, dstr16ZSlice.ptr, utf8StrYSlice.ptr, utf8StrZSlice.ptr);
 
         try {
             return NestedBorrowedFields._fromFFI(diplomatRuntime.internalConstructor, diplomatReceive.buffer, xEdges, yEdges, zEdges);

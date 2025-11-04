@@ -224,7 +224,7 @@ export class OptionOpaque {
 
     static optionOpaqueArgument(arg) {
 
-        const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
+        const result = wasm.OptionOpaque_option_opaque_argument(arg === null || arg instanceof OptionOpaque ? arg?.ffiValue ?? 0 : typeError('arg', 'OptionOpaque'));
 
         try {
             return result;
@@ -262,7 +262,7 @@ export class OptionOpaque {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.OptionOpaque_accepts_option_enum(diplomatReceive.buffer, diplomatRuntime.optionToBufferForCalling(wasm, arg, 4, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, jsValue.ffiValue, Int32Array)]), sentinel);
+        const result = wasm.OptionOpaque_accepts_option_enum(diplomatReceive.buffer, diplomatRuntime.optionToBufferForCalling(wasm, arg, 4, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, new OptionEnum(jsValue).ffiValue, Int32Array)]), sentinel);
 
         try {
             if (!diplomatReceive.resultFlag) {
