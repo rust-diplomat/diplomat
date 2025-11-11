@@ -24,3 +24,6 @@ Cargo.lock
 # External libraries downloaded by make actions
 vendor
 
+# Compiled dylibs
+*.so
+*.dylib
