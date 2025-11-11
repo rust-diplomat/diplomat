@@ -6,6 +6,8 @@ use diplomat_core::hir::{
     TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
+use std::collections::HashSet;
+use std::sync::LazyLock;
 use std::{borrow::Cow, iter::once};
 
 /// This type mediates all formatting
@@ -16,9 +18,50 @@ pub(super) struct KotlinFormatter<'tcx> {
     docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &[
-    "new", "static", "default", "private", "internal", "toString",
-];
+static INVALID_METHOD_NAMES: LazyLock<HashSet<&str>> = LazyLock::new(|| {
+    [
+        "new", "static", "default", "private", "internal", "toString",
+    ]
+    .iter()
+    .copied()
+    .collect()
+});
+static KEYWORDS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
+    [
+        "as",
+        "break",
+        "class",
+        "continue",
+        "do",
+        "else",
+        "false",
+        "for",
+        "fun",
+        "if",
+        "in",
+        "interface",
+        "is",
+        "null",
+        "object",
+        "package",
+        "return",
+        "super",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typealias",
+        "typeof",
+        "val",
+        "var",
+        "when",
+        "while",
+    ]
+    .iter()
+    .copied()
+    .collect()
+});
+
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
@@ -117,7 +160,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
-        if INVALID_METHOD_NAMES.contains(&&*name) {
+        if INVALID_METHOD_NAMES.contains(&&*name) || KEYWORDS.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name
@@ -134,7 +177,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         } else {
             name.into()
         };
-        if INVALID_METHOD_NAMES.contains(&&*name) {
+        if INVALID_METHOD_NAMES.contains(&&*name) || KEYWORDS.contains(&&*name) {
             format!("{name}_").into()
         } else {
             name
@@ -142,7 +185,12 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'tcx, str> {
-        ident.to_lower_camel_case().into()
+        let name = ident.to_lower_camel_case();
+        if KEYWORDS.contains(&*name) {
+            format!("{name}_").into()
+        } else {
+            name.into()
+        }
     }
 
     pub fn fmt_borrow<'a>(&self, edge: &LifetimeEdge<'a>) -> Cow<'a, str> {
@@ -151,7 +199,12 @@ impl<'tcx> KotlinFormatter<'tcx> {
             kind: ty,
             ..
         } = edge;
-        let param_name = self.fmt_param_name(param_name).to_string();
+        // `this` is a special param and should not be formatted like a regular param
+        let param_name = if param_name == "this" {
+            param_name.into()
+        } else {
+            self.fmt_param_name(param_name)
+        };
         match ty {
             LifetimeEdgeKind::OpaqueParam => format!("listOf({param_name})").into(),
             LifetimeEdgeKind::SliceParam => format!("listOf({param_name}Mem)").into(),
