@@ -35,10 +35,20 @@ export class CyclicStructA {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        return this.#a._intoFFI(functionCleanupArena, appendArrayMap);
+        return this.#a._intoFFI(dst, appendArrayMap);
+    }
+
+    static get _sizeBytes() {
+        return 1;
+    }
+
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return 1;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -88,6 +98,7 @@ export class CyclicStructA {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -96,13 +107,14 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(CyclicStructA._sizeBytes), functionCleanupArena, {}, false), write.buffer);
 
         try {
             return write.readString8();
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             write.free();
@@ -114,13 +126,14 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_double_cyclic_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(CyclicStructA._sizeBytes), functionCleanupArena, {}, false), CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, cyclicStructA)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(CyclicStructA._sizeBytes), functionCleanupArena, {}, false), write.buffer);
 
         try {
             return write.readString8();
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             write.free();
@@ -132,13 +145,14 @@ export class CyclicStructA {
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-    wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {}, false), write.buffer);
+    wasm.CyclicStructA_getter_out(CyclicStructA._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(CyclicStructA._sizeBytes), functionCleanupArena, {}, false), write.buffer);
 
         try {
             return write.readString8();
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             write.free();

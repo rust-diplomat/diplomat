@@ -46,6 +46,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -61,6 +62,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -78,6 +80,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -93,6 +96,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             write.free();
         }
     }
@@ -107,11 +111,12 @@ export class Opaque {
     assertStruct(s) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(functionCleanupArena, {}, false));
+    wasm.Opaque_assert_struct(this.ffiValue, MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, s)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(MyStruct._sizeBytes), functionCleanupArena, {}, false));
 
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -126,6 +131,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -140,6 +146,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -153,6 +160,7 @@ export class Opaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

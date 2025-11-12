@@ -49,6 +49,7 @@ export class OptionString {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionGarbageCollectorGrip.releaseToGarbageCollector();
 
         }
@@ -65,6 +66,7 @@ export class OptionString {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             write.free();
         }
     }
@@ -86,6 +88,7 @@ export class OptionString {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }

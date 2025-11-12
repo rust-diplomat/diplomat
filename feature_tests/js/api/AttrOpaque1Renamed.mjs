@@ -52,6 +52,7 @@ export class AttrOpaque1Renamed {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -64,6 +65,7 @@ export class AttrOpaque1Renamed {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -76,6 +78,7 @@ export class AttrOpaque1Renamed {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -88,6 +91,7 @@ export class AttrOpaque1Renamed {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -100,6 +104,7 @@ export class AttrOpaque1Renamed {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -109,6 +114,7 @@ export class AttrOpaque1Renamed {
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -118,6 +124,7 @@ export class AttrOpaque1Renamed {
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

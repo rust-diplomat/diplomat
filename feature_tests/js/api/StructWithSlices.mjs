@@ -50,16 +50,23 @@ export class StructWithSlices {
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, 16, 4);
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
+        return dst;
+    }
 
-        return buffer.ptr;
+    static get _sizeBytes() {
+        return 16;
+    }
+
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return 4;
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {
@@ -115,13 +122,14 @@ export class StructWithSlices {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...this._fieldsForLifetimeA];
 
-    wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false), write.buffer);
+    wasm.StructWithSlices_return_last(StructWithSlices._fromSuppliedValue(diplomatRuntime.internalConstructor, this)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(StructWithSlices._sizeBytes), functionCleanupArena, {aAppendArray: [aEdges],}, false), write.buffer);
 
         try {
             return write.readString8();
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             write.free();

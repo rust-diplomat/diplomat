@@ -45,6 +45,7 @@ export class RenamedOpaqueIterable {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -60,6 +61,7 @@ export class RenamedOpaqueIterable {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

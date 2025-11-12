@@ -48,6 +48,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -60,6 +61,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -77,6 +79,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -95,6 +98,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -113,6 +117,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -131,6 +136,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -149,6 +155,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -164,6 +171,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -179,6 +187,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -195,6 +204,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -210,6 +220,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -219,6 +230,7 @@ export class OptionOpaque {
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -231,6 +243,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -250,6 +263,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             diplomatReceive.free();
@@ -272,6 +286,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             diplomatReceive.free();
@@ -281,11 +296,12 @@ export class OptionOpaque {
     static acceptsBorrowingOptionStruct(arg) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-    wasm.OptionOpaque_accepts_borrowing_option_struct(BorrowingOptionStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, arg)._intoFFI(functionCleanupArena, {}, false));
+    wasm.OptionOpaque_accepts_borrowing_option_struct(BorrowingOptionStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, arg)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(BorrowingOptionStruct._sizeBytes), functionCleanupArena, {}, false));
 
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -307,6 +323,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             diplomatReceive.free();
@@ -329,6 +346,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             diplomatReceive.free();
@@ -346,6 +364,7 @@ export class OptionOpaque {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }

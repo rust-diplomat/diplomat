@@ -55,6 +55,7 @@ export class Foo {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionGarbageCollectorGrip.releaseToGarbageCollector();
 
         }
@@ -75,6 +76,7 @@ export class Foo {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -92,6 +94,7 @@ export class Foo {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
         }
     }
@@ -103,13 +106,14 @@ export class Foo {
         let aEdges = [...fields._fieldsForLifetimeA];
 
 
-        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(functionCleanupArena, {aAppendArray: [aEdges],}, false));
+        const result = wasm.Foo_extract_from_fields(BorrowedFields._fromSuppliedValue(diplomatRuntime.internalConstructor, fields)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(BorrowedFields._sizeBytes), functionCleanupArena, {aAppendArray: [aEdges],}, false));
 
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
         }
@@ -133,13 +137,14 @@ export class Foo {
         let yEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
 
 
-        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
+        const result = wasm.Foo_extract_from_bounds(BorrowedFieldsWithBounds._fromSuppliedValue(diplomatRuntime.internalConstructor, bounds)._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc(BorrowedFieldsWithBounds._sizeBytes), functionCleanupArena, {aAppendArray: [xEdges],bAppendArray: [aEdges, xEdges, yEdges],cAppendArray: [aEdges, xEdges, yEdges],}, false), anotherStringSlice.ptr);
 
         try {
             return new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             functionCleanupArena.free();
 
             functionGarbageCollectorGrip.releaseToGarbageCollector();
