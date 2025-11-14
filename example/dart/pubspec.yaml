@@ -3,12 +3,12 @@ name: example
 publish_to: none
 
 environment:
-  sdk: '>=3.9.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
-  code_assets: ^0.19.8
+  code_assets: ^1.0.0
   ffi: ^2.0.0
-  hooks: ^0.20.4
+  hooks: ^1.0.0
   meta: ^1.12.0
 
 dev_dependencies:
