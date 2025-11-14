@@ -1,13 +1,13 @@
-# Returning strings: Writeables
+# Returning strings: Write
 
-Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports [`DiplomatWriteable`](https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatWriteable.html), a type with a `Write` implementation which can be used to write to appropriate string types on the other side.
+Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports [`DiplomatWrite`](https://docs.rs/diplomat-runtime/latest/diplomat_runtime/struct.DiplomatWrite.html), a type with a `Write` implementation which can be used to write to appropriate string types on the other side.
 
 For example, if we want to have methods that philosophically return a `String` or a `Result<String>`, we can do the following:
 
 ```rust
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
+    use diplomat_runtime::DiplomatWrite;
     use std::fmt::Write;
 
     #[diplomat::opaque]
@@ -15,12 +15,12 @@ mod ffi {
     pub struct Thingy(u8);
 
     impl Thingy {
-        pub fn debug_output(&self, writeable: &mut DiplomatWriteable) {
-            write!(writeable, "{:?}", self);
+        pub fn debug_output(&self, write: &mut DiplomatWrite) {
+            write!(write, "{:?}", self);
         }
 
-        pub fn maybe_get_string(&self, writeable: &mut DiplomatWriteable) -> Result<(), ()> {
-            write!(writeable, "integer is {}", self.0).map_err(|_| ())
+        pub fn maybe_get_string(&self, write: &mut DiplomatWrite) -> Result<(), ()> {
+            write!(write, "integer is {}", self.0).map_err(|_| ())
         }
     }
 }
