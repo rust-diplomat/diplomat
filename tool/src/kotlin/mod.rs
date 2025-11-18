@@ -229,7 +229,6 @@ pub(crate) fn run<'tcx>(
         .map(|result_type| result_type.render().expect("failed to render result type"))
         .collect::<Vec<_>>();
 
-
     let native_options = ty_gen_cx
         .option_types
         .borrow()
@@ -466,7 +465,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                         format!("{infallible_return}()")
                     }
                     // Enums are Ints over FFI
-                    SuccessType::OutType(Type::Enum(..)) => format!("0"),
+                    SuccessType::OutType(Type::Enum(..)) => "0".to_string(),
                     SuccessType::OutType(Type::Primitive(prim)) => {
                         self.formatter.fmt_primitive_default(*prim).into()
                     }
@@ -998,7 +997,7 @@ returnVal.option() ?: return null
                         "#,
                 Self::write_return("")
             ),
-            ReturnType::Nullable(SuccessType::Unit) => "returnVal.option() ?: return null".into(),
+            ReturnType::Nullable(SuccessType::Unit) => "return returnVal.option()".into(),
             _ => panic!("unsupported type"),
         }
     }
