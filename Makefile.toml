@@ -55,6 +55,10 @@ dependencies = ["test-dart-example", "test-dart-feature"]
 category = "Tests"
 dependencies = ["test-kotlin-example", "test-kotlin-feature"]
 
+[tasks.test-kotlin-mvn]
+category = "Tests"
+dependencies = ["test-kotlin-feature-mvn"]
+
 [tasks.test-nanobind]
 category = "Tests"
 dependencies = ["test-nanobind-feature"]
@@ -171,38 +175,64 @@ exec --fail-on-error dart analyze
 exec --fail-on-error dart test
 '''
 
-[tasks.test-kotlin-example.mac]
+[tasks.copy-kotlin-example.mac]
 env = { "OUT_FILE" = "dylib" }
 
-[tasks.test-kotlin-example.linux]
+[tasks.copy-kotlin-example.linux]
 env = { "OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./" }
 
-[tasks.test-kotlin-example]
+[tasks.copy-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-example-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
+'''
+
+[tasks.test-kotlin-example]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["copy-kotlin-example"]
+script = '''
+exit_on_error true
 cd example/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all
 '''
 
-[tasks.test-kotlin-feature.mac]
+[tasks.copy-kotlin-feature.mac]
 env = { "OUT_FILE" = "dylib" }
 
-[tasks.test-kotlin-feature.linux]
+[tasks.copy-kotlin-feature.linux]
 env = { "OUT_FILE" = "so", "LD_LIBRARY_PATH" = "./" }
 
-[tasks.test-kotlin-feature]
+[tasks.copy-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"
 dependencies = ["build-feature-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
+'''
+
+[tasks.test-kotlin-feature]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["copy-kotlin-feature"]
+script = '''
+exit_on_error true
 cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test  --warning-mode all 
+'''
+
+[tasks.test-kotlin-feature-mvn]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["copy-kotlin-feature"]
+script = '''
+exit_on_error true
+cd feature_tests/kotlin/somelib
+exec --fail-on-error mvn test
 '''
 
 [tasks.test-nanobind-feature]

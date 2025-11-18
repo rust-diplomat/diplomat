@@ -259,8 +259,10 @@ jobs:
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: "8.10"
-    - name: Test Kotlin
+    - name: Test Kotlin (Gradle)
       run: cargo make test-kotlin
+    - name: Test Kotlin (Maven)
+      run: cargo make test-kotlin-mvn
   test-nanobind:
     runs-on: ubuntu-latest
     steps:
