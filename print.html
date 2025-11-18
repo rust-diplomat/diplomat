@@ -13,21 +13,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-9dfbd86b.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="highlight-css" href="highlight.css">
-        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
-        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -37,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex.js";
+            window.path_to_searchindex_js = "searchindex-af94474e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
+        <script src="toc-576801a3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -54,7 +53,7 @@
             </div>
         </div>
     </div>
-    <div id="body-container">
+    <div id="mdbook-body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -83,12 +82,12 @@
             html.classList.add("js");
         </script>
 
-        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             let sidebar = null;
-            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
@@ -103,39 +102,39 @@
             }
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
                 <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
             </noscript>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <div id="page-wrapper" class="page-wrapper">
+        <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
                         </label>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
                         </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
                         </button>
                     </div>
 
@@ -143,47 +142,47 @@
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
                     </div>
                 </div>
 
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
                         <div class="search-wrapper">
-                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
                             <div class="spinner-wrapper">
-                                <i class="fa fa-spinner fa-spin"></i>
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
                             </div>
                         </div>
                     </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
                         </ul>
                     </div>
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="content" class="content">
+                <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p><a href="https://github.com/rust-diplomat/diplomat">Diplomat</a> is a framework and tool for generating bindings to Rust libraries from an extensible set of languages.</p>
-<p>Diplomat is for <em>unidirectional</em> bindings: it's for when foreign code wishes to call into a Rust library, but not vice versa. If you're looking for bidirectional bindings, tools like <a href="https://github.com/dtolnay/cxx">cxx</a> are a good bet.</p>
-<p>Diplomat is a proc macro paired with a tool. The proc macro is capable of generating an <code>extern "C"</code> binding layer around tagged Rust code, while the tool is able to generate corresponding C, C++, JS, or <code>&lt;insert language here&gt;</code> that philosophically matches the API on the Rust side. This means that methods in Rust map to "methods" in the target language, <code>Result</code> in Rust map to tagged unions in C++ and exceptions in Javascript, etc. These all work through the generated C API, however they preserve higher level API features which C cannot express.</p>
+<p>Diplomat is for <em>unidirectional</em> bindings: it’s for when foreign code wishes to call into a Rust library, but not vice versa. If you’re looking for bidirectional bindings, tools like <a href="https://github.com/dtolnay/cxx">cxx</a> are a good bet.</p>
+<p>Diplomat is a proc macro paired with a tool. The proc macro is capable of generating an <code>extern "C"</code> binding layer around tagged Rust code, while the tool is able to generate corresponding C, C++, JS, or <code>&lt;insert language here&gt;</code> that philosophically matches the API on the Rust side. This means that methods in Rust map to “methods” in the target language, <code>Result</code> in Rust map to tagged unions in C++ and exceptions in Javascript, etc. These all work through the generated C API, however they preserve higher level API features which C cannot express.</p>
 <h2 id="a-note-on-the-design"><a class="header" href="#a-note-on-the-design">A note on the design</a></h2>
 <p>You can read the full design doc <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/design_doc.md">here</a>.</p>
 <p>Diplomat does not do cross-crate global analysis, it restricts its view to specially tagged modules, and only generates bindings based on information found in those modules. This means that changing some struct in some dependency will not magically affect your generated C++/JS/etc APIs; all such change can only come from deliberate change to these tagged modules. This also means that Diplomat can cleanly define a subset of Rust used for declaring the exported API without impacting the flavor of Rust used in dependencies. One can imagine <code>#[diplomat::bridge]</code> blocks to almost be a DSL for bridging between your Rust APIs and a more general API shape that can be translated cleanly across languages.</p>
-<p>Diplomat is designed such that it should not be a large amount of effort to <a href="developer.html">write new language targets for Diplomat</a>.</p>
+<p>Diplomat is designed such that it should not be a large amount of effort to <a href="#how-to-set-up-a-minimal-backend">write new language targets for Diplomat</a>.</p>
 <h2 id="backends-supported"><a class="header" href="#backends-supported">Backends supported</a></h2>
 <p>Diplomat currently supports the following backends:</p>
 <ul>
@@ -191,39 +190,41 @@
 <li>C++</li>
 <li>JavaScript/TypeScript (using WASM)
 <ul>
-<li><a href="./demo_gen/intro.html">demo_gen</a></li>
+<li><a href="#demo_gen">demo_gen</a></li>
 </ul>
 </li>
 <li>Dart</li>
-<li><a href="./backends/kotlin.html">Kotlin (using JNA)</a></li>
+<li><a href="#kotlin-backend">Kotlin (using JNA)</a></li>
 <li>Python via <a href="https://github.com/wjakob/nanobind">Nanobind</a> (maintained by <a href="https://www.zeromatter.com/">Zeromatter</a>)</li>
 </ul>
 <p>There is work in progress for a <a href="https://github.com/rust-diplomat/diplomat/issues/144">Java backend</a> (using Panama). We used to have a .NET backend but it was removed in a refactor, it may get added again.</p>
-<p>We're happy to fix bugs or add configurability in the current backends if their produced output does not match what you need in your language. Details on how to write new backends is documented <a href="developer.html">later in this book</a>: you can do so as a third party library depending on <code>diplomat_core</code>, but we are also happy to accept these into Diplomat with the understanding that we'll only do minimal work to keep them working over time.</p>
+<p>We’re happy to fix bugs or add configurability in the current backends if their produced output does not match what you need in your language. Details on how to write new backends is documented <a href="#how-to-set-up-a-minimal-backend">later in this book</a>: you can do so as a third party library depending on <code>diplomat_core</code>, but we are also happy to accept these into Diplomat with the understanding that we’ll only do minimal work to keep them working over time.</p>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
 <p>To install the <code>diplomat</code> CLI tool, run</p>
 <pre><code class="language-shell">$ cargo install diplomat-tool
 </code></pre>
-<p>Let's say this installs <code>diplomat-tool 0.10.0</code></p>
+<p>Let’s say this installs <code>diplomat-tool 0.10.0</code></p>
 <p>You can then add <code>diplomat</code> as a dependency to your project like so:</p>
 <pre><code class="language-toml">diplomat = "0.10.0"
 diplomat-runtime = "0.10.0"
 </code></pre>
 <p>It is recommended to create a separate crate for the FFI interface. Diplomat will only read the contents of specially tagged modules so it is possible to mix Diplomat code with normal Rust code, but it is prefereable to minimize this since proc macros can make debugging hard.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="user-guide"><a class="header" href="#user-guide">User Guide</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="user-guide"><a class="header" href="#user-guide">User Guide</a></h1>
 <h2 id="setup-1"><a class="header" href="#setup-1">Setup</a></h2>
 <p>To install the <code>diplomat</code> CLI tool, run</p>
 <pre><code class="language-shell">$ cargo install diplomat-tool
 </code></pre>
-<p>Let's say this installs <code>diplomat-tool 0.10.0</code></p>
+<p>Let’s say this installs <code>diplomat-tool 0.10.0</code></p>
 <p>You can then add <code>diplomat</code> as a dependency to your project like so:</p>
 <pre><code class="language-toml">diplomat = "0.10.0"
 diplomat-runtime = "0.10.0"
 </code></pre>
 <p>It is recommended to create a separate crate for the FFI interface. Diplomat will only read the contents of specially tagged modules so it is possible to mix Diplomat code with normal Rust code, but it is prefereable to minimize this since proc macros can make debugging hard.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="basics"><a class="header" href="#basics">Basics</a></h1>
-<p>When using Diplomat, you'll need to define Rust modules that contain the Rust APIs you want to expose. You can do this by using the <code>diplomat::bridge</code> macro:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="basics"><a class="header" href="#basics">Basics</a></h1>
+<p>When using Diplomat, you’ll need to define Rust modules that contain the Rust APIs you want to expose. You can do this by using the <code>diplomat::bridge</code> macro:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -245,10 +246,10 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>This is a simple struct with public fields; which is easier to reason about in an introductory example. <em>Most</em> APIs exposed via Diplomat will be via "opaque types", to be covered in the <a href="./opaque.html">chapter on opaque types</a>.</p>
+<span class="boring">}</span></code></pre>
+<p>This is a simple struct with public fields; which is easier to reason about in an introductory example. <em>Most</em> APIs exposed via Diplomat will be via “opaque types”, to be covered in the <a href="#opaque-types">chapter on opaque types</a>.</p>
 <p>Every type declared within a <code>diplomat::bridge</code> module along with all methods in its associated impl will be exposed over FFI. For example, the above code will generate the following extern API:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[no_mangle]
 extern "C" fn MyFFIStruct_create() -&gt; MyFFIStruct {
@@ -259,7 +260,7 @@ extern "C" fn MyFFIStruct_create() -&gt; MyFFIStruct {
 extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
     this.do_a_thing()
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>We can then generate the bindings for this API using the <code>diplomat-tool</code> CLI.</p>
 <h2 id="c"><a class="header" href="#c">C++</a></h2>
 <p>For example, if we want to generate C++ bindings, we can create a folder `cpp/`` and generate bindings in it by running:</p>
@@ -286,8 +287,9 @@ extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
 <p>While low-level C headers are generated in the process of running <code>diplomat-tool cpp</code>, you can also generate just the C headers with</p>
 <pre><code class="language-shell">$ diplomat-tool c c/
 </code></pre>
-<p>Note that Diplomat's C mode generates direct bindings to the lower level <code>extern "C"</code> API, and is not idiomatic C code. It is recommended that one build a higher level API around the C API (perhaps by writing a plugin) if C bindings are desired.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="configuring-diplomat"><a class="header" href="#configuring-diplomat">Configuring Diplomat</a></h1>
+<p>Note that Diplomat’s C mode generates direct bindings to the lower level <code>extern "C"</code> API, and is not idiomatic C code. It is recommended that one build a higher level API around the C API (perhaps by writing a plugin) if C bindings are desired.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="configuring-diplomat"><a class="header" href="#configuring-diplomat">Configuring Diplomat</a></h1>
 <p>Some Diplomat backends have configurable parameters to change the behavior of their output.</p>
 <p>For instance, Kotlin requires a <code>domain</code> parameter and <code>lib_name</code> parameter. These two parameters are used to generate a package name and folder structure on generation.</p>
 <h2 id="configuration-structures"><a class="header" href="#configuration-structures">Configuration Structures</a></h2>
@@ -320,10 +322,10 @@ some-value = 100
 <p><code>diplomat-tool</code> flags take priority over <code>config.toml</code>.</p>
 <h3 id="diplomat_toolgen"><a class="header" href="#diplomat_toolgen"><code>diplomat_tool::gen</code></a></h3>
 <p>If you call <code>diplomat_tool::gen</code> manually, then you have the option of setting configuration yourself, with the <code>diplomat_tool::config::Config</code> struct.</p>
-<p>See <a href="config.html#backend-structures">Backend Structures</a> for more on these structures.</p>
+<p>See <a href="#backend-structures">Backend Structures</a> for more on these structures.</p>
 <h3 id="diplomatconfig"><a class="header" href="#diplomatconfig"><code>#[diplomat::config(...)]</code></a></h3>
 <p>In <code>lib.rs</code>, any top-level <code>mod</code>ule, <code>struct</code>, or <code>impl</code> block can use the <code>#[diplomat::config]</code> attribute:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::config(lib_name="MyLibrary")]
 struct SomeConfig;
@@ -335,9 +337,10 @@ mod kotlin_specific_mod;
 impl SomeConfig {
 
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Due to a quirk of how Diplomat reads these attributes, <code>#[diplomat::config]</code> has priority over all other methods of setting configuration.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="types"><a class="header" href="#types">Types</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="types"><a class="header" href="#types">Types</a></h1>
 <p>Diplomat only supports a small set of types that can be passed over FFI.</p>
 <ul>
 <li>Builtins:
@@ -351,7 +354,7 @@ impl SomeConfig {
 <li>An integer type</li>
 <li><code>bool</code></li>
 <li><code>char</code></li>
-<li><code>DiplomatByte</code> (<code>u8</code>): The same as <code>u8</code> except in languages where "byte buffer" and "list of integers" are different types</li>
+<li><code>DiplomatByte</code> (<code>u8</code>): The same as <code>u8</code> except in languages where “byte buffer” and “list of integers” are different types</li>
 <li><code>Box&lt;OpaqueType&gt;</code></li>
 <li><code>DiplomatStrSlice</code>: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends</li>
 </ul>
@@ -363,26 +366,27 @@ impl SomeConfig {
 <li><code>&amp;DiplomatStr16</code>: An unvalidated string expected to be UTF-16.</li>
 </ul>
 </li>
-<li><a href="./writeable.html"><code>DiplomatWriteable</code></a> for returning strings. This needs to be the last parameter of the method.</li>
-<li><a href="./option.html"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
-<li><a href="./callbacks.html">Callbacks</a> in parameters. Support is limited.</li>
+<li><a href="#returning-strings-writeables"><code>DiplomatWriteable</code></a> for returning strings. This needs to be the last parameter of the method.</li>
+<li><a href="#option-types"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
+<li><a href="#callbacks">Callbacks</a> in parameters. Support is limited.</li>
 <li><code>Result&lt;T, E&gt;</code> in return values</li>
 <li><code>()</code> as a <code>Result</code> <code>Ok</code>/<code>Error</code> type, or as a return value</li>
 </ul>
 </li>
 <li>Custom types
 <ul>
-<li>Custom <a href="./opaque.html">opaque types</a> (passed as references or via <code>Box&lt;T&gt;</code>)</li>
-<li>Custom <a href="./structs.html">structs and C-like enums</a></li>
+<li>Custom <a href="#opaque-types">opaque types</a> (passed as references or via <code>Box&lt;T&gt;</code>)</li>
+<li>Custom <a href="#structs-and-enums">structs and C-like enums</a></li>
 </ul>
 </li>
 </ul>
 <p>More types can be supported in the future (We have an issue open for <a href="https://github.com/rust-diplomat/diplomat/pull/621">traits</a>)</p>
-<p>The <em>main</em> distinction to keep track of is between "opaque types" and "structs": opaque types are for when you want to wrap a Rust object that has its own semantics, whereas "structs" are for when you want to transparently pass around multiple values at once (usually when you want to make an options struct as an argument, or return multiple values at once).</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="opaque-types"><a class="header" href="#opaque-types">Opaque Types</a></h1>
-<p>In the vast majority of cases, we'd like to expose Rust types over FFI "opaquely", that is, the FFI code does not know anything about the contents of these types, rather it wants to do things with the type.</p>
-<p>By default, Diplomat will not let you expose fields of types other than the <a href="./types.html">allowed types</a> over FFI. The following code will trigger a resolution error when running <code>diplomat-tool</code>:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<p>The <em>main</em> distinction to keep track of is between “opaque types” and “structs”: opaque types are for when you want to wrap a Rust object that has its own semantics, whereas “structs” are for when you want to transparently pass around multiple values at once (usually when you want to make an options struct as an argument, or return multiple values at once).</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="opaque-types"><a class="header" href="#opaque-types">Opaque Types</a></h1>
+<p>In the vast majority of cases, we’d like to expose Rust types over FFI “opaquely”, that is, the FFI code does not know anything about the contents of these types, rather it wants to do things with the type.</p>
+<p>By default, Diplomat will not let you expose fields of types other than the <a href="#types">allowed types</a> over FFI. The following code will trigger a resolution error when running <code>diplomat-tool</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -397,11 +401,11 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>Of course, if Diplomat is to be able to usefully expose Rust APIs without requiring everything be defined within Diplomat's bridge blocks, there has to be some way to include them in this the API.</p>
+<span class="boring">}</span></code></pre>
+<p>Of course, if Diplomat is to be able to usefully expose Rust APIs without requiring everything be defined within Diplomat’s bridge blocks, there has to be some way to include them in this the API.</p>
 <p>For this in Diplomat we declare <em>opaque types</em>, which can only exist behind pointers. Such types can contain whatever they want, but they can never be passed over the stack through FFI, and the other side cannot peek into them in ways other than calling explicitly defined methods.</p>
 <p>For example, say we have the following type:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct MyCollection {
     name: String,
@@ -423,9 +427,9 @@ impl MyCollection {
         println!("Collection {} with items {:?}", self.name, self.items);
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>To expose it over FFI, we'd do something like:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<span class="boring">}</span></code></pre>
+<p>To expose it over FFI, we’d do something like:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -450,7 +454,7 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>This will generate code exposing <code>create()</code>, <code>push()</code>, and <code>dump()</code> over FFI, as well as glue to ensure the destructor is called. However this will not expose any way to get at the <code>RustCollection</code>.</p>
 <p>For example, the generated C++ looks something like</p>
 <pre><code class="language-cpp">class MyCollection {
@@ -462,13 +466,14 @@ mod ffi {
  private:
 };
 </code></pre>
-<p>When exposing your library over FFI, most of the main types will probably end up being "opaque".</p>
+<p>When exposing your library over FFI, most of the main types will probably end up being “opaque”.</p>
 <h1 id="boxes-are-return-only"><a class="header" href="#boxes-are-return-only">Boxes are return-only</a></h1>
 <p><code>Box&lt;T&gt;</code> can only be returned, not accepted as a parameter. This is because in garbage collected languages it is not possible to know if we are the unique owner when converting back to Rust. There are some techniques we could use to add such functionality, see <a href="https://github.com/rust-diplomat/diplomat/issues/317">#317</a></p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="structs-and-enums"><a class="header" href="#structs-and-enums">Structs and enums</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="structs-and-enums"><a class="header" href="#structs-and-enums">Structs and enums</a></h1>
 <p>Diplomat allows for exposing basic structs and enums over FFI. Typically these should be used as inputs and outputs to other methods, rather than having methods of their own, however it is possible to give them methods which capture <code>self</code> by-value.</p>
 <p>Structs are most commonly found when making an options type for a method, or when doing multiple return values.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -511,12 +516,12 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>Enums exposed via Diplomat must be simple C-like enums. They can have explicit discriminants. Structs may only contain fields which are themselves <a href="./types.html">allowed types</a>.</p>
+<span class="boring">}</span></code></pre>
+<p>Enums exposed via Diplomat must be simple C-like enums. They can have explicit discriminants. Structs may only contain fields which are themselves <a href="#types">allowed types</a>.</p>
 <p>In C++ the structs are translated to simple structs and the enums become simple enum classes. In JS the structs become objects with fields, and the enums are exposed as strings that get converted at the boundary.</p>
 <h1 id="diplomatenum_convert"><a class="header" href="#diplomatenum_convert"><code>diplomat::enum_convert</code></a></h1>
 <p>Diplomat can autogenerate <code>Into</code> impls to an enum from your library using <code>#[diplomat::enum_convert]</code>:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -529,11 +534,11 @@ mod ffi {
 
     // ...
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>In case the enum is <code>#[non_exhaustive]</code>, you may need to supply a <code>needs_wildcard</code> argument, like so: <code>#[diplomat::enum_convert(my_library::SpeedSetting, needs_wildcard)]</code>.</p>
 <h1 id="structs-containing-boxes"><a class="header" href="#structs-containing-boxes">Structs containing boxes</a></h1>
 <p>By default, structs cannot contain output-only types like <code>Box&lt;T&gt;</code>. This can be opted in to by using <code>#[diplomat::out]</code>, which will have the additional effect of making the struct an output-only type.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>mod ffi {
     use my_thingy::MyThingy;
@@ -558,11 +563,12 @@ mod ffi {
     }
 
 }
-<span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="option-types"><a class="header" href="#option-types">Option types</a></h1>
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="option-types"><a class="header" href="#option-types">Option types</a></h1>
 <p>Option types in Diplomat are relatively straightforward, you simply use <code>Option&lt;T&gt;</code> and it turns into the idiomatic equivalent over FFI.</p>
 <p><code>Option&lt;T&gt;</code> currently only works when wrapping reference types (<code>Box&lt;OpaqueType&gt;</code> and <code>&amp;OpaqueType</code>), structs/enums/primitives, or slices of the above. It may be used as an input argument, or in return type position:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -580,12 +586,12 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>In C++ <code>maybe_create</code> will return a <code>std::optional&lt;std::unique_ptr&lt;Thingy&gt;&gt;</code>, and in JS it will return a potentially-null object.</p>
 <p><code>make_option</code> will have similar behavior, returning <code>std::optional&lt;uint8_t&gt;</code> and an integer-or-null in JS. It will accept <code>std::optional&lt;uint8_t&gt;</code> in C++ and null-check the parameter in JS.</p>
 <h2 id="diplomatoption"><a class="header" href="#diplomatoption">DiplomatOption</a></h2>
 <p><code>Option&lt;T&gt;</code> is FFI-safe for reference types but not for other arbitrary types. When used in function parameters, Diplomat will automatically use FFI-safe types over the boundary, however with structs layout concerns prevent automatically doing this. Instead, if you wish to use an <code>Option&lt;T&gt;</code> in a struct (for struct, enum, or primitive <code>T</code>), use <code>DiplomatOption&lt;T&gt;</code></p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -604,11 +610,12 @@ mod ffi {
         c: Option&lt;&amp;'a MyOpaque&gt;
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="result-types"><a class="header" href="#result-types">Result types</a></h1>
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="result-types"><a class="header" href="#result-types">Result types</a></h1>
 <p>Result types are returned by using <a href="https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatResult.html"><code>Result&lt;T, E&gt;</code></a> (or <code>DiplomatResult&lt;T, E&gt;</code>).</p>
-<p>For example, let's say we wish to define a fallible constructor:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<p>For example, let’s say we wish to define a fallible constructor:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -622,36 +629,38 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>On the C++ side, this will generate a method on <code>Thingy</code> with the signature</p>
 <pre><code class="language-cpp">  static diplomat::result&lt;std::unique_ptr&lt;Thingy&gt;, std::monostate&gt; try_create(const std::string_view string);
 </code></pre>
 <p><code>diplomat::result</code> is a type that can be found in the generated <a href="https://github.com/rust-diplomat/diplomat/blob/main/tool/src/cpp/runtime.hpp"><code>diplomat_runtime.hpp</code></a> file. The most basic APIs are <code>.is_ok()</code> and <code>.is_err()</code>, returning <code>bool</code>s, and <code>.ok()</code> and <code>.err()</code> returning <code>std::option</code>s. There are further APIs for constructing and manipulating these that can be found in the header file.</p>
 <p>On backends that do not support <code>Result</code>, they will instead throw an error (i.e., Python/Nanobind and JS).</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h1>
 <p>Diplomat has limited, experimental support for exposing and working with callbacks. See <a href="https://github.com/rust-diplomat/diplomat/issues/146">tracking issue</a>
 Currently these are only supported in the C++, kotlin, and nanobind backends.</p>
 <p>Functions taking callbacks as parameters take the form</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 impl MyType{
     pub fn acceptsCallback(&amp;self, impl Fn())
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>or</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl MyType{
     pub fn acceptsCallback(&amp;self, impl FnMut())
 }
-<span class="boring">}</span></code></pre></pre>
-<p>The callback's parameters &amp; return types may be limited depending on the target language for now. Additional traits are not supported, however <code>+ 'static</code> may be given, which allows for moving the trait object into a <code>Box&lt;dyn Fn()&gt;</code>.</p>
+<span class="boring">}</span></code></pre>
+<p>The callback’s parameters &amp; return types may be limited depending on the target language for now. Additional traits are not supported, however <code>+ 'static</code> may be given, which allows for moving the trait object into a <code>Box&lt;dyn Fn()&gt;</code>.</p>
 <p>Some backends may support callbacks accepting [mutable] references to opaque types as parameters, but lifetime parsing for these is not yet supported by any backend. Only anonymous lifetimes are allowed as a result, meaning that no such parameter may be guaranteed to live longer than a single invocation of the callback.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="returning-strings-writeables"><a class="header" href="#returning-strings-writeables">Returning strings: Writeables</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="returning-strings-writeables"><a class="header" href="#returning-strings-writeables">Returning strings: Writeables</a></h1>
 <p>Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports <a href="https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatWriteable.html"><code>DiplomatWriteable</code></a>, a type with a <code>Write</code> implementation which can be used to write to appropriate string types on the other side.</p>
 <p>For example, if we want to have methods that philosophically return a <code>String</code> or a <code>Result&lt;String&gt;</code>, we can do the following:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -672,19 +681,20 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
 <p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
 <p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
 <p>Some Diplomat backends support <code>--docs</code>, which will generate additional documentation from your Markdown doc comments</p>
 <pre><code class="language-shell">$ diplomat-tool cpp cpp/ --docs cpp-docs/
 </code></pre>
 <p>The C++ and JS backends generate Sphinx docs. If using TypeScript, the definition files will automatically come with <code>tsdoc</code>-compatible doc comments.</p>
 <p>A limited amount of intra-doc-links are supported: it is possible to link to custom <em>types</em> (but not methods or variants) using <code>[`FooBar`]</code> syntax, like Rust.</p>
-<p>Furthermore, you can use <code>#[diplomat::rust_link(path::to::rust::type, Struct)]</code> to autogenerate links for to published docs, which typically show up as a "For more information see &lt;link&gt;" at the bottom of the docs for the given item. Since Diplomat cannot do resolution on other crates, it relies on the <code>rust_link</code> annotation to provide the kind of Rust item or doc page being linked to. An additional <code>compact</code> parameter can be passed in case you wish to provide multiple <code>rust_link</code>s that are to be collapsed into a single "For more information see 1, 2, 3" line.</p>
+<p>Furthermore, you can use <code>#[diplomat::rust_link(path::to::rust::type, Struct)]</code> to autogenerate links for to published docs, which typically show up as a “For more information see &lt;link&gt;” at the bottom of the docs for the given item. Since Diplomat cannot do resolution on other crates, it relies on the <code>rust_link</code> annotation to provide the kind of Rust item or doc page being linked to. An additional <code>compact</code> parameter can be passed in case you wish to provide multiple <code>rust_link</code>s that are to be collapsed into a single “For more information see 1, 2, 3” line.</p>
 <p>Put together, this might look something like the following:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -722,7 +732,7 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>The full list of item kinds recognized by <code>rust_link</code> is:</p>
 <ul>
 <li><code>Struct</code></li>
@@ -747,11 +757,12 @@ mod ffi {
 <li><code>AssociatedTypeInStruct</code></li>
 <li><code>Typedef</code></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="lifetimes"><a class="header" href="#lifetimes">Lifetimes</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lifetimes"><a class="header" href="#lifetimes">Lifetimes</a></h1>
 <p>Diplomat <em>is</em> able to safely handle methods that do complex borrowing, as long as the lifetimes are fully specified (i.e., not elided).</p>
 <p>In general, Diplomat attempts to follow language norms when it comes to patterns akin to borrowing. In C++, for example, the norm is to document the behavior of a method, which is what Diplomat does. However, in JS, the norm is to not have use-after-frees, which Diplomat attempts to achieve by stashing extra references to borrowed-from objects.</p>
-<p>For example, let's take this iterator API:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<p>For example, let’s take this iterator API:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -780,14 +791,15 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<p>It's crucial the return type of <code>MyFancyVec::iter()</code> is not held on to longer than the <code>MyFancyVec</code> it came from.</p>
+<span class="boring">}</span></code></pre>
+<p>It’s crucial the return type of <code>MyFancyVec::iter()</code> is not held on to longer than the <code>MyFancyVec</code> it came from.</p>
 <p>In C++, this will produce documentation that looks like the following:</p>
 <pre><code>Lifetimes: `self` must live at least as long as the output.
 </code></pre>
 <p>On the other hand, in JS, the JS object wrapping <code>MyFancyIterator</code> will internally stash a reference to the <code>MyFancyVec</code>, which will be noticed by the GC, keeping the vector alive as long as needed.</p>
 <p>This also works with non-opaque structs; you can have a function that takes in a struct where one field has a lifetime, and returns a different struct with a similar property, and Diplomat will document or GC-link the appropriate fields.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
 <p>Diplomat has support for generating bindings with macro_rules!, with quite a few caveats:</p>
 <ol>
 <li>Any <code>macro_rules</code> definitions that you wish Diplomat to evaluate must use the <code>#[diplomat::macro_rules]</code> attribute.</li>
@@ -798,15 +810,16 @@ mod ffi {
 </ul>
 </li>
 <li>Macros can exist only in <code>#[diplomat::bridge] mod ... { ... }</code> blocks or <code>impl</code> blocks.</li>
-<li>Macros exist solely in the file you've defined them in. They must also be defined first.</li>
+<li>Macros exist solely in the file you’ve defined them in. They must also be defined first.</li>
 <li>Macros do not use interpolation matchers, nor do they allow recursive usage of other <code>#[diplomat::macro_rules]</code> macros.</li>
 </ol>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="abi-namingrenaming"><a class="header" href="#abi-namingrenaming">ABI naming/renaming</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="abi-namingrenaming"><a class="header" href="#abi-namingrenaming">ABI naming/renaming</a></h1>
 <p>As previously mentioned, the <code>#[diplomat::bridge]</code> macro from the <code>diplomat</code> crate will generate <code>extern "C"</code> functions for all methods expected to be exposed over FFI.</p>
 <p><em>By default</em>, the naming scheme for these types is <code>TypeName_method()</code>. For example, <code>Foo::bar()</code> becomes <code>Foo_bar()</code>.</p>
 <p>However, these names can be changed, both at an individual and bulk level, using the <code>#[diplomat::abi_rename = "..."]</code> attribute.</p>
-<p>One use case for this is maintaining ABI stability. Let's say you wished to change the signature or even behavior of <code>Foo::bar()</code> to go from returning a <code>u8</code> to returning a <code>u16</code>, and were okay with requiring new bindings for the new behavior, but wanted to ensure that old headers/bindings would still work against new Rust code without any change. You could do that by</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<p>One use case for this is maintaining ABI stability. Let’s say you wished to change the signature or even behavior of <code>Foo::bar()</code> to go from returning a <code>u8</code> to returning a <code>u16</code>, and were okay with requiring new bindings for the new behavior, but wanted to ensure that old headers/bindings would still work against new Rust code without any change. You could do that by</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -822,11 +835,11 @@ mod ffi {
         pub fn bar(&amp;self) -&gt; u16 {}
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Here, <code>old_bar()</code> is still exposed over FFI as <code>Foo_bar()</code>, whereas the new <code>bar()</code> method is exposed as <code>Foo_bar2()</code>.</p>
 <p>However, from the point of view of higher-level bindings generated over this (e.g. in C++ or JS), <code>Foo</code> now has a <code>bar()</code> method with a new signature, and an <code>old_bar()</code> method with the signature <code>bar()</code> used to have.</p>
 <p>The attribute can be applied directly on methods, but it can also be applied on impl blocks, types, and even entire bridge modules. It supports using replacement patterns, so it can be used for namespacing the generated FFI functions:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 #[diplomat::abi_rename = "mylibrary_{}"]
@@ -839,16 +852,17 @@ mod ffi {
         pub fn bar() -&gt; u8 {}
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Here, instead of the function being generated as <code>Foo_bar()</code>, it will be generated as <code>mylibrary_Foo_bar()</code> which is a more unique symbol, less likely to cause trouble for the linker.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="customizing-via-backend-attributes"><a class="header" href="#customizing-via-backend-attributes">Customizing via backend attributes</a></h1>
-<p>Diplomat supports a number of "backend attributes" that allow one to customize the backend-side code generation of a particular API. This allows for more expressivity than that afforded by Diplomat's relatively constrained type system, including things like the ability to rename types, namespace types, or mark types as iterators.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="customizing-via-backend-attributes"><a class="header" href="#customizing-via-backend-attributes">Customizing via backend attributes</a></h1>
+<p>Diplomat supports a number of “backend attributes” that allow one to customize the backend-side code generation of a particular API. This allows for more expressivity than that afforded by Diplomat’s relatively constrained type system, including things like the ability to rename types, namespace types, or mark types as iterators.</p>
 <h2 id="configurability"><a class="header" href="#configurability">Configurability</a></h2>
 <p>All backend attributes are applied via the <code>#[diplomat::attr(...)]</code> directive. As its first parameter, it requires a configuration specification, which can be:</p>
 <ul>
-<li><code>*</code>, meaning "all backends"</li>
+<li><code>*</code>, meaning “all backends”</li>
 <li><code>auto</code>, explained below</li>
-<li>A backend/language name: (<code>c</code>, <code>cpp</code>, <code>js</code>, <code>dart</code>, <code>kotlin</code>, <code>demo</code>, ...). Note that a backend may accept multiple names, for example the <code>demo</code> backend both accepts attributes marked for the <code>js</code> and <code>demo</code> backends.</li>
+<li>A backend/language name: (<code>c</code>, <code>cpp</code>, <code>js</code>, <code>dart</code>, <code>kotlin</code>, <code>demo</code>, …). Note that a backend may accept multiple names, for example the <code>demo</code> backend both accepts attributes marked for the <code>js</code> and <code>demo</code> backends.</li>
 <li>A <code>supports</code> query, like <code>supports = constructors</code>. A full list can be found on the <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.BackendAttrSupport.html"><code>BackendAttrSupport</code></a> type, but furthermore the pages on individual attributes will specifically list configuration options relevant to that attribute.</li>
 <li><code>not(...)</code> containing a configuration specification</li>
 <li><code>any(...)</code> containing one or more comma separated configuration specifications</li>
@@ -859,11 +873,12 @@ mod ffi {
 <p>A lot of attributes (basically all of them except for <code>rename</code> and <code>disable</code>) represent features that need not be present in all backends. For example, not every backend wishes to, or can, support iteration, or namespacing, or accessors. By default when an unsupported attribute is passed to a backend, Diplomat will error as a lint. However, this has the unfortunate effect of sprinkling the code with a lot of stuff that looks like <code>#[diplomat::attr(supports = iterators, iterator)]</code>.</p>
 <p>To aid in that, <code>auto</code> can be used instead. <code>auto</code> is roughly equivalent to <code>supports = whichever attribute this is attempting to apply</code>.</p>
 <h2 id="when-to-configure"><a class="header" href="#when-to-configure">When to configure</a></h2>
-<p>Besides for reasons of differing backend support, Diplomat's attribute configuration is useful for providing a more idiomatic, tailored experience for individual languages. For example, in some languages (like C++) adding a field to a struct accepted as a parameter in a function would be a breaking change, but in languages like JS that change can be made without any breakage if the new field is nullable. In such a case, the appropriate mixing of language-specific renames can lead to a split v1/v2 API in C++ whilst JS gets a smoother experience with no need for versioning.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="disabling-apis"><a class="header" href="#disabling-apis">Disabling APIs</a></h1>
+<p>Besides for reasons of differing backend support, Diplomat’s attribute configuration is useful for providing a more idiomatic, tailored experience for individual languages. For example, in some languages (like C++) adding a field to a struct accepted as a parameter in a function would be a breaking change, but in languages like JS that change can be made without any breakage if the new field is nullable. In such a case, the appropriate mixing of language-specific renames can lead to a split v1/v2 API in C++ whilst JS gets a smoother experience with no need for versioning.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="disabling-apis"><a class="header" href="#disabling-apis">Disabling APIs</a></h1>
 <p>(Supported by all backends)</p>
-<p>Any type or method can be "disabled" by applying the <code>disable</code> attribute:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<p>Any type or method can be “disabled” by applying the <code>disable</code> attribute:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -878,13 +893,14 @@ mod ffi {
         pub fn baz() {}
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Here, the class <code>Foo</code> will not show up in the C++ backend. It will in the JS backend, however it will not have the function <code>bar()</code>.</p>
 <p>Currently enum variants cannot be disabled, however this is technically feasible for input-only enums and could be added if people request. It is also not possible to disable struct fields.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="renaming-apis"><a class="header" href="#renaming-apis">Renaming APIs</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="renaming-apis"><a class="header" href="#renaming-apis">Renaming APIs</a></h1>
 <p>(Supported by all backends)</p>
 <p>Any type, method, field, or enum variant can be renamed with the <code>rename</code> attribute.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -898,14 +914,15 @@ mod ffi {
         pub fn baz() {}
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Here, C++ will see a class <code>Foo2</code> instead of <code>Foo</code>, and in JS the method <code>bar()</code> will be renamed to <code>barbar()</code>.</p>
 <p>Note that some backends apply some of their own renames as well, which will be applied on top of the attribute rename. For example, the JS and Dart backends both turn <code>snake_case</code> into <code>camelCase</code> for better idiomaticity. Renaming to <code>bar_bar</code> would then produce <code>barBar()</code> in these backends.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="namespacing"><a class="header" href="#namespacing">Namespacing</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="namespacing"><a class="header" href="#namespacing">Namespacing</a></h1>
 <p>(Supported by <code>cpp</code>, queried with <code>supports = namespacing</code>)</p>
 <p>This attribute can be applied on types and on bridge modules (applying to all types in the module).
 It allows code to be organized under one or more namespaces.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 #[diplomat::attr(auto, namespace = "mylib")]
@@ -916,14 +933,15 @@ mod ffi {
     #[diplomat::opaque]
     struct Bar;
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Here, in C++ <code>Foo</code> and <code>Bar</code> will both be available as <code>mylib::Foo</code> and <code>mylib::Bar</code>.</p>
-<p>Nested namespaces are technically supported using things like <code>mylib::mymodule</code>, however they're not tested and support is brittle, so use at your own risk (<a href="https://github.com/rust-diplomat/diplomat/issues/591">#591</a>).</p>
+<p>Nested namespaces are technically supported using things like <code>mylib::mymodule</code>, however they’re not tested and support is brittle, so use at your own risk (<a href="https://github.com/rust-diplomat/diplomat/issues/591">#591</a>).</p>
 <p>There is some discussion over separating the concept of a namespace and a library in <a href="https://github.com/rust-diplomat/diplomat/issues/589">#589</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="constructors"><a class="header" href="#constructors">Constructors</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="constructors"><a class="header" href="#constructors">Constructors</a></h1>
 <p>(Supported by <code>dart</code>, queried with <code>supports = constructors</code>. Intended to be supported in <code>kotlin</code>, <code>js</code>, and <code>cpp</code>)</p>
 <p>Methods that return <code>Self</code> can be marked as a constructor:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -937,19 +955,20 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>and then instead of there being a regular <code>Foo::create()</code> method, <code>Foo</code> will now have a direct constructor <code>Foo()</code>.</p>
 <p>Constructors can additionally be given names using <code>#[diplomat::attr(auto, named_constructor = "make")]</code>, for languages that support named constructors (<code>supports = named_constructors</code>).</p>
 <p>Not all languages support fallible constructors, this can be queried with <code>supports = fallible_constructors</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="iterators-and-iterables"><a class="header" href="#iterators-and-iterables">Iterators and iterables</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="iterators-and-iterables"><a class="header" href="#iterators-and-iterables">Iterators and iterables</a></h1>
 <p>(Supported by <code>js</code>, <code>dart</code>, <code>kotlin</code>, queried with <code>supports = iterators</code> and <code>supports = iterables</code>)</p>
-<p>Some languages support a first-class notion of "iterator", a type that can be looped over in a <code>for</code> loop, stepping through its values typically until they are exhausted.</p>
-<p>Furthermore, some languages support a first-class notion of an "iterable": types like collections that can be asked to <em>produce</em> an iterator over their values which can be stepped through. Typically <code>for</code> loops will also accept iterables, and looping through an iterable involves producing and then looping through the associated iterator.</p>
+<p>Some languages support a first-class notion of “iterator”, a type that can be looped over in a <code>for</code> loop, stepping through its values typically until they are exhausted.</p>
+<p>Furthermore, some languages support a first-class notion of an “iterable”: types like collections that can be asked to <em>produce</em> an iterator over their values which can be stepped through. Typically <code>for</code> loops will also accept iterables, and looping through an iterable involves producing and then looping through the associated iterator.</p>
 <p>The distinction here is: iterators are mutated by iteration and often one-time use, iterables are not mutated and can be iterated over multiple times. Put in Rust terms, <code>Iterator</code> types are iterators, and <code>IntoIterator</code> types are iterables.</p>
 <p>Diplomat supports marking types as such by using <code>iterator</code> and <code>iterable</code> on a specific <em>method</em> of the type.</p>
 <h2 id="marking-a-type-as-an-iterator"><a class="header" href="#marking-a-type-as-an-iterator">Marking a type as an iterator</a></h2>
 <p>To mark a type as an iterator, it should have a signature of <code>fn next(&amp;mut self) -&gt; Option&lt;...&gt;</code>. The method name may be anything, and it may take <code>self</code> by immutable reference instead, if needed (this is useful for situations where aliasing safety is needed, see <a href="https://github.com/rust-diplomat/diplomat/issues/225">#225</a> ).</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -963,10 +982,10 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <h2 id="marking-a-type-as-an-iterable"><a class="header" href="#marking-a-type-as-an-iterable">Marking a type as an iterable</a></h2>
 <p>Marking a type as an iterable requires annotating it with <code>iterable</code>, and it just needs to be a method that takes <code>self</code> and returns a type that has a method marked as <code>iterator</code>.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -980,12 +999,13 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="getters-and-setters"><a class="header" href="#getters-and-setters">Getters and setters</a></h1>
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="getters-and-setters"><a class="header" href="#getters-and-setters">Getters and setters</a></h1>
 <p>(Supported by <code>dart</code>, <code>js</code>, queried with <code>supports = accessors</code>)</p>
 <h2 id="getters"><a class="header" href="#getters">Getters</a></h2>
 <p>A method that returns a value (and takes no argument) can be marked as a getter. It may be fallible.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1002,12 +1022,12 @@ mod ffi {
     }
 }
 
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>If the name is not provided, the method name is used<sup class="footnote-reference" id="fr-1-1"><a href="#footnote-1">1</a></sup>.</p>
 <p>In languages that support accessors, instead of there being a <code>Foo::get_a()</code> method, people can use field access syntax on <code>Foo</code>-typed objects. For example, in JS, <code>foo.a</code> will work.</p>
 <h2 id="setters"><a class="header" href="#setters">Setters</a></h2>
 <p>A method that accepts a value can be marked as a setter. <code>self</code> need not be mutable, and the method may be fallible.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1024,17 +1044,20 @@ mod ffi {
     }
 }
 
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>If the name is not provided, the method name is used.</p>
 <p>In languages that support accessors, instead of there being a <code>Foo::set_a()</code> method, people can use field access syntax on <code>Foo</code>-typed objects to set the value. For example, in JS, <code>foo.a = 1</code> will work.</p>
 <hr>
-<ol class="footnote-definition"><li id="footnote-1">
+<ol class="footnote-definition">
+<li id="footnote-1">
 <p>A potential future improvement is to use the method name but strip common prefixes like <code>get_</code> and <code>set_</code>, which would allow a getter and setter for the same field to coexist without requiring them have explicit names. <a href="#fr-1-1">↩</a></p>
 </li>
-</ol><div style="break-before: page; page-break-before: always;"></div><h1 id="indexing"><a class="header" href="#indexing">Indexing</a></h1>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="indexing"><a class="header" href="#indexing">Indexing</a></h1>
 <p>(Supported by <code>dart</code> and <code>cpp</code>, queried with <code>supports = indexing</code>)</p>
 <p><code>[]</code> can be overloaded in languages that support it by applying an <code>indexer</code> attribute to a method that takes an integer argument and returns an <code>Option&lt;u8&gt;</code>.</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1048,11 +1071,17 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="arithmetic-operator-overloads"><a class="header" href="#arithmetic-operator-overloads">Arithmetic operator overloads</a></h1>
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="arithmetic-operator-overloads"><a class="header" href="#arithmetic-operator-overloads">Arithmetic operator overloads</a></h1>
 <p>(Supported by and <code>cpp</code> and <code>nanobind</code>, queried with <code>supports = arithmetic</code>)</p>
 <p><code>+-*/</code> and their in-place variants can be overloaded in languages that support it by applying an attribute to single-argument functions taking self. The Names are</p>
-<div class="table-wrapper"><table><thead><tr><th>Operator</th><th>Name</th></tr></thead><tbody>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Operator</th><th>Name</th></tr>
+</thead>
+<tbody>
 <tr><td>+</td><td>add</td></tr>
 <tr><td>-</td><td>sub</td></tr>
 <tr><td>*</td><td>div</td></tr>
@@ -1061,9 +1090,10 @@ mod ffi {
 <tr><td>+=</td><td>sub_assign</td></tr>
 <tr><td>+=</td><td>div_assign</td></tr>
 <tr><td>+=</td><td>mul_assign</td></tr>
-</tbody></table>
+</tbody>
+</table>
 </div>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1082,12 +1112,13 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="comparators"><a class="header" href="#comparators">Comparators</a></h1>
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="comparators"><a class="header" href="#comparators">Comparators</a></h1>
 <p>(Supported by <code>dart</code>, queried with <code>supports = comparators</code>. Intended to be supported in <code>cpp</code> and <code>kotlin</code>)</p>
-<p>Some languages allow for overloading the <code>&lt;</code>/<code>&gt;</code>/<code>=</code>/etc operators, similar to Rust's <code>PartialOrd</code>.</p>
+<p>Some languages allow for overloading the <code>&lt;</code>/<code>&gt;</code>/<code>=</code>/etc operators, similar to Rust’s <code>PartialOrd</code>.</p>
 <p>To expose this over Diplomat, use the <code>comparison</code> attribute on a method that takes another <code>Self</code> parameter:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1102,14 +1133,15 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>In Dart, this will provide an overloaded <code>==</code>, and <code>Foo</code> will implement <code>Comparable&lt;Foo&gt;</code>.</p>
 <p>We currently do not but Diplomat would like to also support the ability to <em>just</em> overload <code>==</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="stringifiers"><a class="header" href="#stringifiers">Stringifiers</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="stringifiers"><a class="header" href="#stringifiers">Stringifiers</a></h1>
 <p>(Supported by <code>dart</code>, queried with <code>supports = stringifiers</code>. Intended to be supported in <code>js</code> and <code>kotlin</code>)</p>
 <p>Some languages have a designated way to provide a method for converting a type to a string.</p>
 <p>The <code>stringifier</code>  attribute can be applied to such a method:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1123,9 +1155,10 @@ mod ffi {
         }
     }
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>In Dart, this will generate a <code>toString()</code> method.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
 <h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
 <p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, <code>nanobind</code>, queried with <code>supports=static_slices</code>)</p>
 <p>Support for <code>&amp;'static</code> slices.</p>
@@ -1156,20 +1189,22 @@ mod ffi {
 </ul>
 </li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="references"><a class="header" href="#references">References</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="references"><a class="header" href="#references">References</a></h1>
 <h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
 <p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>supports=struct_refs</code>)</p>
 <p>Structs can be borrowed mutably or immutably as parameters to functions, but nowhere else.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="notes-on-diplomat-and-safety"><a class="header" href="#notes-on-diplomat-and-safety">Notes on Diplomat and safety</a></h1>
-<p>Overall, Diplomat is intended to provide safe FFI. However, there are some caveats around the current state of Diplomat's safety.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="notes-on-diplomat-and-safety"><a class="header" href="#notes-on-diplomat-and-safety">Notes on Diplomat and safety</a></h1>
+<p>Overall, Diplomat is intended to provide safe FFI. However, there are some caveats around the current state of Diplomat’s safety.</p>
 <h2 id="the-safety-of-the-bridge-crate-when-called-from-rust"><a class="header" href="#the-safety-of-the-bridge-crate-when-called-from-rust">The safety of the bridge crate when called from Rust</a></h2>
-<p>Diplomat's <code>extern "C"</code> functions are generated in a "bridge crate" that contains "bridge modules" tagged with <code>#[diplomat::bridge]</code>. This generated code is not designed with Rust as a primary client, rather, it is designed to be used from C.</p>
+<p>Diplomat’s <code>extern "C"</code> functions are generated in a “bridge crate” that contains “bridge modules” tagged with <code>#[diplomat::bridge]</code>. This generated code is not designed with Rust as a primary client, rather, it is designed to be used from C.</p>
 <p>As such, it may be possible to trigger unsoundness by directly calling these <code>extern "C"</code> APIs from Rust. Work shoring this up is welcome.</p>
 <h2 id="aliasing-safety"><a class="header" href="#aliasing-safety">Aliasing safety</a></h2>
 <p>Primary issue: <a href="https://github.com/rust-diplomat/diplomat/issues/225">#225</a></p>
 <p>In Rust, it is undefined behavior to have any additional references (<code>&amp;</code> or <code>&amp;mut</code>) to some data whilst there is an active <code>&amp;mut T</code> reference to it.</p>
 <p>Diplomat currently lets you do the following:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[diplomat::bridge]
 mod ffi {
@@ -1191,7 +1226,7 @@ mod ffi {
     }
 }
 
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Calling <code>change_foo_number()</code> while a reference from <code>get_foo()</code> is active could be UB, or cause thread safety issues in multithreaded code.</p>
 <p>Diplomat has <a href="https://github.com/rust-diplomat/diplomat/issues/225">plans</a> on how to fix this, but until this is fixed, it can be avoided by doing the following:</p>
 <ul>
@@ -1203,21 +1238,21 @@ mod ffi {
 </ul>
 </li>
 </ul>
-<p>As long as you're careful, this should not be an issue. ICU4X tends to not need much in the way of mutation and is so far safe from this.</p>
+<p>As long as you’re careful, this should not be an issue. ICU4X tends to not need much in the way of mutation and is so far safe from this.</p>
 <h2 id="thread-safety"><a class="header" href="#thread-safety">Thread safety</a></h2>
 <p>Primary issue: <a href="https://github.com/rust-diplomat/diplomat/issues/533">#533</a></p>
 <p>So far ICU4X has mostly been targeting languages where thread safety is locked down by thread isolation (Dart, JS), or where thread safety is a matter of documentation convention (C++), so it has not yet needed to think deeply about this. However, other users of Diplomat may.</p>
 <p>Specific backends may choose their own route as to how they apply and enforce thread safety. Diplomat may over time add some annotation system to help with this. Limiting mutation and using <code>RwLock</code>/<code>Mutex</code> can help here.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-set-up-a-minimal-backend"><a class="header" href="#how-to-set-up-a-minimal-backend">How to Set up a Minimal Backend</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="how-to-set-up-a-minimal-backend"><a class="header" href="#how-to-set-up-a-minimal-backend">How to Set up a Minimal Backend</a></h1>
 <p>How to create a backend is quite language dependent, and what is easier in one
-may be harder in another. Below we will start setting up a simple backend. We'll
+may be harder in another. Below we will start setting up a simple backend. We’ll
 show you how to set up a test in diplomat so you can start generating code quickly.
 Then we give you a template for a simple dynamic library that you can then link
 to your host language. Finally we provide a suggested checklist for your backend.
-It is not automatically generated so when in doubt look at diplomat's <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/index.html">HIR</a></p>
+It is not automatically generated so when in doubt look at diplomat’s <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/index.html">HIR</a></p>
 <ul>
-<li><input disabled="" type="checkbox"/>
-<strong>project structure</strong>: You will need need to test your generated code so you should
+<li><input disabled="" type="checkbox"> <strong>project structure</strong>: You will need need to test your generated code so you should
 first set up a host language project. It should have all dependencies to be able to interface
 with native code (or WASM).</li>
 </ul>
@@ -1348,7 +1383,7 @@ Now you can run</p>
 First, copy the impl block for <code>OpaqueStruct</code> into the test code underneath the <code>OpaqueStruct</code>.
 Next, update your the code for <code>gen_opaque_def</code> to the following which will generate the native
 symbol for your new impl method:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use crate::c2::CFormatter;
 
@@ -1362,7 +1397,7 @@ fn gen_opaque_def(ctx: &amp;TypeContext, type_id: TypeId, opaque_path: &amp;Opaq
         .collect::&lt;Vec&lt;_&gt;&gt;()
         .join("\n")
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <p>Now your snapshot should have the following contents</p>
 <pre><code>---
 source: tool/src/backend/mod.rs
@@ -1380,7 +1415,7 @@ with methods that only accept and return <a href="https://docs.rs/diplomat_core/
 <p>You will need to update <code>tool/src/lib.rs</code> to add handling for your backend.</p>
 <p>Once you have the basics of a backend you can add attribute handling. The best way to do this is to check the existing backends
 e.g. <a href="https://github.com/rust-diplomat/diplomat/blob/b3a8702f6736dbd6e667638ca0025b8f8cd1509f/tool/src/lib.rs#L95">dart</a>(Note: git permalink may be out of date).
-The most important is to ignore disabled types and methods, as then you can take advantage of diplomat's feature tests
+The most important is to ignore disabled types and methods, as then you can take advantage of diplomat’s feature tests
 and start building progressively.</p>
 <h2 id="feature-tests"><a class="header" href="#feature-tests">Feature Tests</a></h2>
 <p>Diplomat already includes feature tests that you can disable with <code>#[diplomat::attrs(disable, {backend})]</code>.
@@ -1395,93 +1430,75 @@ e.g</p>
 (<a href="https://sagiegurari.github.io/duckscript/">Duckscript</a> is a simple scripting language)</p>
 <h2 id="backend-checklist"><a class="header" href="#backend-checklist">Backend Checklist</a></h2>
 <ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html"><strong>primitive types</strong></a>: This will be the most basic piece of the backend, and you will want
+<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html"><strong>primitive types</strong></a>: This will be the most basic piece of the backend, and you will want
 to implement them early in order to test your ability to correctly call methods.</li>
-<li><input disabled="" type="checkbox"/>
-<a href=""><strong>opaque types</strong></a>:
+<li><input disabled="" type="checkbox"> <a href="#how-to-set-up-a-minimal-backend"><strong>opaque types</strong></a>:
 <ul>
-<li><input disabled="" type="checkbox"/>
-basic definiton</li>
-<li><input disabled="" type="checkbox"/>
-return a boxed opaque. This needs to be cleaned in managed languages.
+<li><input disabled="" type="checkbox"> basic definiton</li>
+<li><input disabled="" type="checkbox"> return a boxed opaque. This needs to be cleaned in managed languages.
 You can use the autogenerated <code>{OpaqueName}_destroy({OpaqueName}*)</code> native method to clean up
 the memory of the associated opaque.</li>
-<li><input disabled="" type="checkbox"/>
-as self parameter</li>
-<li><input disabled="" type="checkbox"/>
-as another parameter</li>
+<li><input disabled="" type="checkbox"> as self parameter</li>
+<li><input disabled="" type="checkbox"> as another parameter</li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox"/>
-<a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.StructDef.html"><strong>structs</strong></a></li>
-<li><input disabled="" type="checkbox"/>
-<a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.EnumDef.html"><strong>enums</strong></a></li>
-<li><input disabled="" type="checkbox"/>
-<a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.SuccessType.html#variant.Writeable"><strong>writeable</strong></a></li>
-<li><input disabled="" type="checkbox"/>
-<a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.Slice.html"><strong>slices</strong></a>
+<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.StructDef.html"><strong>structs</strong></a></li>
+<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.EnumDef.html"><strong>enums</strong></a></li>
+<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.SuccessType.html#variant.Writeable"><strong>writeable</strong></a></li>
+<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.Slice.html"><strong>slices</strong></a>
 <ul>
-<li><input disabled="" type="checkbox"/>
-primitive slices</li>
-<li><input disabled="" type="checkbox"/>
-str slices</li>
-<li><input disabled="" type="checkbox"/>
-owned slices</li>
-<li><input disabled="" type="checkbox"/>
-slices of strings</li>
-<li><input disabled="" type="checkbox"/>
-strings</li>
+<li><input disabled="" type="checkbox"> primitive slices</li>
+<li><input disabled="" type="checkbox"> str slices</li>
+<li><input disabled="" type="checkbox"> owned slices</li>
+<li><input disabled="" type="checkbox"> slices of strings</li>
+<li><input disabled="" type="checkbox"> strings</li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox"/>
-borrows. This is probably one of the trickiest things, as you need to ensure that managed objects don't get
+<li><input disabled="" type="checkbox"> borrows. This is probably one of the trickiest things, as you need to ensure that managed objects don’t get
 cleaned up if something depends on them.
 <ul>
-<li><input disabled="" type="checkbox"/>
-borrows of parameters</li>
-<li><input disabled="" type="checkbox"/>
-in struct fields</li>
+<li><input disabled="" type="checkbox"> borrows of parameters</li>
+<li><input disabled="" type="checkbox"> in struct fields</li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox"/>
-nullables, i.e. returning option types.</li>
-<li><input disabled="" type="checkbox"/>
-fallibles, i.e. returning result types. The resulting native type will be a discriminated union.</li>
+<li><input disabled="" type="checkbox"> nullables, i.e. returning option types.</li>
+<li><input disabled="" type="checkbox"> fallibles, i.e. returning result types. The resulting native type will be a discriminated union.</li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="demo_gen"><a class="header" href="#demo_gen">demo_gen</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="demo_gen"><a class="header" href="#demo_gen">demo_gen</a></h1>
 <h2 id="what-is-demo_gen"><a class="header" href="#what-is-demo_gen">What is demo_gen?</a></h2>
 <p>demo_gen is a backend for creating demonstration webpages automatically from Diplomat FFI definitions. These webpages are meant to showcase the capabilities of your library.</p>
 <p>You can view the tracking issue for the demo_gen backend <a href="https://github.com/rust-diplomat/diplomat/issues/604">here</a>.</p>
-<p>If you're interested in the design behind demo_gen, we have a <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md">design document</a> viewable on the Diplomat repository.</p>
+<p>If you’re interested in the design behind demo_gen, we have a <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md">design document</a> viewable on the Diplomat repository.</p>
 <h2 id="why-do-i-want-to-use-demo_gen"><a class="header" href="#why-do-i-want-to-use-demo_gen">Why do I want to use demo_gen?</a></h2>
-<p>The current big-name use case for demo_gen is the ICU4X internationalization library. ICU4X has a wide breadth of functions that can be somewhat hard to grasp if you're not already using the library heavily. demo_gen is a quick way</p>
+<p>The current big-name use case for demo_gen is the ICU4X internationalization library. ICU4X has a wide breadth of functions that can be somewhat hard to grasp if you’re not already using the library heavily. demo_gen is a quick way</p>
 <p>You can view the ICU4X demo_gen results <a href="https://ambiguous.name/icu4x/">here</a> for a full demonstration of what demo_gen is currently capable.</p>
-<p>If you're interested in trying demo_gen yourself, hop on to the <a href="demo_gen/./quickstart.html">Quickstart</a> page to get started!</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
-<p>Demo Gen takes a bit of configuration if you don't already have your own Diplomat library set up.</p>
-<p>For that reason, we have a <a href="https://github.com/rust-diplomat/demo-gen-quickstart">quickstart repository</a>. You can also follow along in your own library if you'd like.</p>
+<p>If you’re interested in trying demo_gen yourself, hop on to the <a href="#quickstart">Quickstart</a> page to get started!</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
+<p>Demo Gen takes a bit of configuration if you don’t already have your own Diplomat library set up.</p>
+<p>For that reason, we have a <a href="https://github.com/rust-diplomat/demo-gen-quickstart">quickstart repository</a>. You can also follow along in your own library if you’d like.</p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
-<p>You'll need to clone <a href="https://github.com/rust-diplomat/demo-gen-quickstart">the repository</a>.</p>
-<p>You'll need to have Rust, Cargo, and the <code>wasm32-unknown-unknown</code> target installed:</p>
+<p>You’ll need to clone <a href="https://github.com/rust-diplomat/demo-gen-quickstart">the repository</a>.</p>
+<p>You’ll need to have Rust, Cargo, and the <code>wasm32-unknown-unknown</code> target installed:</p>
 <pre><code class="language-sh">rustup target add wasm32-unknown-unknown
 </code></pre>
-<p>You'll also need <code>Node</code> and <code>npm</code> <a href="https://nodejs.org/en/download/package-manager">installed</a>, as Diplomat generates JS code in modules that is easier for Node to parse as a package.</p>
+<p>You’ll also need <code>Node</code> and <code>npm</code> <a href="https://nodejs.org/en/download/package-manager">installed</a>, as Diplomat generates JS code in modules that is easier for Node to parse as a package.</p>
 <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>You just need to run (in the repository folder):</p>
 <pre><code class="language-sh">cargo build -p adder_bindings --target wasm32-unknown-unknown
 cargo run -p generator
 cp target/wasm32-unknown-unknown/debug/adder_bindings.wasm adder_bindings/demo
 </code></pre>
-<p>You'll notice the <code>demo</code> folder now has a <code>demo_gen</code> folder, which is full of JS and rendering files. We can view our results in an HTTP server:</p>
+<p>You’ll notice the <code>demo</code> folder now has a <code>demo_gen</code> folder, which is full of JS and rendering files. We can view our results in an HTTP server:</p>
 <pre><code class="language-sh">npm -C adder_bindings/demo install
 npm -C adder_bindings/demo run start
 </code></pre>
 <p>If you open the server, you should see a webpage listing <code>AddResult.getAddStr</code> with a link. If you click the link, you should see something like:</p>
-<p><img src="demo_gen/images/demo_output.png" alt="A search bar for the web server, with the added URL /demo_gen/rendering/template.html?func=AddResult.getAddStr. Displayed on the webpage is &quot;AddResult.getAddStr&quot; in large text. Below are two inputs: one labelled &quot;left&quot; that has a value of 1, and one labelled &quot;right&quot; that has a value of 2. Below is a submit button. There is output below the button, with the label &quot;Output&quot; and a value of 3." /></p>
-<p>And that's it! Let's talk about what each step means.</p>
+<p><img src="demo_gen/images/demo_output.png" alt="A search bar for the web server, with the added URL /demo_gen/rendering/template.html?func=AddResult.getAddStr. Displayed on the webpage is “AddResult.getAddStr” in large text. Below are two inputs: one labelled “left” that has a value of 1, and one labelled “right” that has a value of 2. Below is a submit button. There is output below the button, with the label “Output” and a value of 3."></p>
+<p>And that’s it! Let’s talk about what each step means.</p>
 <h1 id="what-we-just-accomplished"><a class="header" href="#what-we-just-accomplished">What We Just Accomplished</a></h1>
-<p>When you clone the repository, you'll notice three packages.</p>
+<p>When you clone the repository, you’ll notice three packages.</p>
 <h2 id="the-library"><a class="header" href="#the-library">The Library</a></h2>
 <p><code>basic_adder</code> is our Rust library that we want to make examples of. It only has one function:</p>
 <pre><code class="language-rs">pub fn add(left: u64, right: u64) -&gt; u64 {
@@ -1490,12 +1507,12 @@ npm -C adder_bindings/demo run start
 </code></pre>
 <p>Everything else we build will be based on this.</p>
 <h2 id="the-bindings"><a class="header" href="#the-bindings">The Bindings</a></h2>
-<p><code>adder_bindings</code> is our <a href="demo_gen/../basics.html">Diplomat bridge</a>. When we want to make our library accessible in other languages, we need to run <code>diplomat-tool</code> on these bindings.</p>
+<p><code>adder_bindings</code> is our <a href="#basics">Diplomat bridge</a>. When we want to make our library accessible in other languages, we need to run <code>diplomat-tool</code> on these bindings.</p>
 <p>We build these bundings with</p>
 <pre><code class="language-sh">cargo build -p adder_bindings --target wasm32-unknown-unknown
 </code></pre>
 <p><code>--target wasm32-unknown-unknown</code> tells <code>cargo</code> to build a <code>.wasm</code> file.</p>
-<p>For more on how you can explicitly configure your bindings to work better in demos, see <a href="demo_gen/attributes.html">the chapter on attributes</a>.</p>
+<p>For more on how you can explicitly configure your bindings to work better in demos, see <a href="#attributes">the chapter on attributes</a>.</p>
 <h2 id="the-generator"><a class="header" href="#the-generator">The Generator</a></h2>
 <p><code>generator</code> is our wrapper for calling <code>diplomat-tool</code>. demo_gen is still in progress, and so we need a wayt to use the latest version of <code>diplomat-tool</code> to use this experimental backend. <code>generator</code> may be removed in future versions of this tutorial.</p>
 <p>We run the generator with</p>
@@ -1504,32 +1521,33 @@ npm -C adder_bindings/demo run start
 <p>And it performs the equivalent of:</p>
 <pre><code class="language-sh">diplomat-tool demo_gen adder_bindings/demo/demo_gen --entry adder_bindings/src/lib.rs
 </code></pre>
-<p>demo_gen will automatically generate JS bindings by default, along with a bunch of other files to help you get started as easily as possible. If you have JS bindings elsewhere, or a different file structure from the Quickstart repository, you can configure how demo_gen works with a library config file. See <a href="demo_gen/markup.html">the section on markup generation for more</a>.</p>
+<p>demo_gen will automatically generate JS bindings by default, along with a bunch of other files to help you get started as easily as possible. If you have JS bindings elsewhere, or a different file structure from the Quickstart repository, you can configure how demo_gen works with a library config file. See <a href="#configuring-markup">the section on markup generation for more</a>.</p>
 <h2 id="the-web-demo"><a class="header" href="#the-web-demo">The Web Demo</a></h2>
-<p>demo_gen is designed to work with most Diplomat libraries with minimal configuration. However, we currently don't provide <em>everything</em> that you'll need to instantly see a demo</p>
+<p>demo_gen is designed to work with most Diplomat libraries with minimal configuration. However, we currently don’t provide <em>everything</em> that you’ll need to instantly see a demo</p>
 <p>The minimum requirement is at least a web server to load JS modules.</p>
 <p>This is why we have you run</p>
 <pre><code class="language-sh">npm -C adder_bindings/demo install
 npm -C adder_bindings/demo run start
 </code></pre>
-<p>See the chapter on <a href="demo_gen/./renderer.html">the renderer</a> for more.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="attributes"><a class="header" href="#attributes">Attributes</a></h1>
+<p>See the chapter on <a href="#configuring-the-default-renderer">the renderer</a> for more.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="attributes"><a class="header" href="#attributes">Attributes</a></h1>
 <p>demo_gen does a lot in its attempt to automagically generate demonstrations for you. Sometimes however, hands on configuration is required.</p>
 <p>Find below a list of the attributes that demo_gen supports.</p>
 <h2 id="diplomatattr"><a class="header" href="#diplomatattr">#[diplomat::attr]</a></h2>
-<p>demo_gen supports all attributes listed in the <a href="demo_gen/../attrs.html">attrs chapter</a>. You mostly will want to use the <code>disable</code> attribute, to disable any functions that you may not want to include in output.</p>
-<p>Because demo_gen is so heavily based on the JS backend, any <code>#[diplomat::attr]</code>s that apply to the JS backend will also apply to the demo_gen backend. So for example, any methods disabled in the JS backend will also be disabled in demo_gen's output.</p>
+<p>demo_gen supports all attributes listed in the <a href="#customizing-via-backend-attributes">attrs chapter</a>. You mostly will want to use the <code>disable</code> attribute, to disable any functions that you may not want to include in output.</p>
+<p>Because demo_gen is so heavily based on the JS backend, any <code>#[diplomat::attr]</code>s that apply to the JS backend will also apply to the demo_gen backend. So for example, any methods disabled in the JS backend will also be disabled in demo_gen’s output.</p>
 <h2 id="diplomatdemo"><a class="header" href="#diplomatdemo">#[diplomat::demo]</a></h2>
 <p>This is the core attribute that demo_gen looks for in configuring its output. There are a few supported attributes currently:</p>
 <h3 id="diplomatdemogenerate"><a class="header" href="#diplomatdemogenerate">#[diplomat::demo(generate)]</a></h3>
-<p>Used in explicit generation of output. See <a href="demo_gen/./markup.html">markup</a> for more.</p>
+<p>Used in explicit generation of output. See <a href="#configuring-markup">markup</a> for more.</p>
 <h3 id="diplomatdemodefault_constructor"><a class="header" href="#diplomatdemodefault_constructor">#[diplomat::demo(default_constructor)]</a></h3>
 <p>demo_gen will throw errors for any Opaque types that do not have a method labelled with this attribute. demo_gen also looks for any Opaque methods labelled with <code>#[diplomat::attr(auto, constructor)]</code> as an alternative.</p>
 <p>You should label each Opaque in your FFI definition with a <code>default_constructor</code> attribute, where the method is one you expect most users to call regularly when trying to create the Opaque in question. If your Opaque does not have an associated constructor method in its <code>impl</code> block, you should consider disabling functions (as this sort of behavior is too advanced for demo_gen to parse correctly).</p>
 <p>For reasons on why demo_gen requires explicit labelling of Opaque constructors, see <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md">the demo_gen design doc</a>.</p>
 <h3 id="diplomatdemoexternal"><a class="header" href="#diplomatdemoexternal">#[diplomat::demo(external)]</a></h3>
 <p>Can be used above a parameter, struct field, or Opaque type.</p>
-<p>It represents any input that you want to specify custom behavior for in the <a href="demo_gen/./renderer.html">rendering</a> Javascript.</p>
+<p>It represents any input that you want to specify custom behavior for in the <a href="#configuring-the-default-renderer">rendering</a> Javascript.</p>
 <p>For example: In ICU4X, we have a <code>DataProvider</code> Opaque type that must be compiled ahead of time, and so we flag it as an external type:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
@@ -1538,16 +1556,16 @@ mod ffi {
 	pub struct DataProvider;
 }
 </code></pre>
-<p>We then override the <a href="demo_gen/renderer.html#runtimemjs">default renderer's runtime.mjs</a> file to provide the compiled <code>DataProvider</code> when it is requested.</p>
-<h3 id="diplomatdemoinput"><a class="header" href="#diplomatdemoinput">#[diplomat::demo(input(...))]</a></h3>
+<p>We then override the <a href="#runtimemjs">default renderer’s runtime.mjs</a> file to provide the compiled <code>DataProvider</code> when it is requested.</p>
+<h3 id="diplomatdemoinput"><a class="header" href="#diplomatdemoinput">#[diplomat::demo(input(…))]</a></h3>
 <p>For configuring user input to your demos. <code>input(...)</code> takes in a comma separated list of values.</p>
-<p>May be used on parameters or struct fields to configure specific properties passed to the <a href="demo_gen/renderer.html">renderer</a>.</p>
+<p>May be used on parameters or struct fields to configure specific properties passed to the <a href="#configuring-the-default-renderer">renderer</a>.</p>
 <p>Here are some valid <code>input</code> values:</p>
 <ul>
 <li><code>input(label = "Label Here")</code>. Changes the label a given function parameter will have in the output.</li>
 </ul>
 <h4 id="input-example"><a class="header" href="#input-example">Input Example</a></h4>
-<p>If we modify our <a href="demo_gen/quickstart.html">quickstart</a> example, we can add <code>#[diplomat::demo(input(...))]</code> labels to the function parameters:</p>
+<p>If we modify our <a href="#quickstart">quickstart</a> example, we can add <code>#[diplomat::demo(input(...))]</code> labels to the function parameters:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
     use std::fmt::Write;
@@ -1569,11 +1587,12 @@ mod ffi {
 }
 </code></pre>
 <p>Which creates the following HTML output:</p>
-<p><img src="demo_gen/images/demo_output_renamed.png" alt="&quot;AddResult.getAddStr&quot; in large text. Below are two inputs: one labelled &quot;x&quot; that has a value of 10, and one labelled &quot;y&quot; that has a value of 2. Below is a submit button. There is output below the button, with the label &quot;Output&quot; and a value of 12." /></p>
-<h3 id="diplomatdemocustom_func"><a class="header" href="#diplomatdemocustom_func">#[diplomat::demo(custom_func="...")]</a></h3>
-<p>See <a href="demo_gen/./custom_functions.html">Making Custom Functions</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="configuring-markup"><a class="header" href="#configuring-markup">Configuring Markup</a></h1>
-<p>Through <a href="demo_gen/../config.html">Diplomat's configuration interfaces</a>, you can customize some of demo_gen's output. Here's a sample .toml file for configuration (with comments for clarity):</p>
+<p><img src="demo_gen/images/demo_output_renamed.png" alt="“AddResult.getAddStr” in large text. Below are two inputs: one labelled “x” that has a value of 10, and one labelled “y” that has a value of 2. Below is a submit button. There is output below the button, with the label “Output” and a value of 12."></p>
+<h3 id="diplomatdemocustom_func"><a class="header" href="#diplomatdemocustom_func">#[diplomat::demo(custom_func=“…”)]</a></h3>
+<p>See <a href="#making-custom-functions">Making Custom Functions</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="configuring-markup"><a class="header" href="#configuring-markup">Configuring Markup</a></h1>
+<p>Through <a href="#configuring-diplomat">Diplomat’s configuration interfaces</a>, you can customize some of demo_gen’s output. Here’s a sample .toml file for configuration (with comments for clarity):</p>
 <pre><code class="language-toml">[demo-gen]
 # If false, demo_gen will automatically search all methods for functions it can generate demonstration JS for.
 # If true, demo_gen will look for any methods explicitly flagged with #[diplomat::demo(generate)] to perform generation.
@@ -1594,15 +1613,16 @@ module-name="icu4x" # (string)
 # Intended to be a mutually exclusive setting with module_name, although you can set both simultaneously to import modules from a relative path. 
 relative-js-path="../js/folder/here" # (string)
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="configuring-the-default-renderer"><a class="header" href="#configuring-the-default-renderer">Configuring the Default Renderer</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="configuring-the-default-renderer"><a class="header" href="#configuring-the-default-renderer">Configuring the Default Renderer</a></h1>
 <p>demo_gen comes bundled with an HTML renderer to make getting started with creating demo_gen output to be as fast as possible. The default renderer is also designed to be highly customizable for your own preferences or front ends.</p>
-<p>The front end renderer uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components">Web Components</a>, which are natively supported by most browsers. For this reason, it should be very portable into other front end systems like Svelte or React. However, if you're dead set on a solution that works even <em>better</em> for your front end of choice, you should read <a href="demo_gen/./custom_renderer.html">making your own renderer</a>.</p>
+<p>The front end renderer uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components">Web Components</a>, which are natively supported by most browsers. For this reason, it should be very portable into other front end systems like Svelte or React. However, if you’re dead set on a solution that works even <em>better</em> for your front end of choice, you should read <a href="#making-your-own-renderer">making your own renderer</a>.</p>
 <p>For more on how the default renderer works, you can read our <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/design_doc.md">design doc</a>.</p>
-<p>Regardless, let's discuss some ways you can customize the default renderer to your liking.</p>
+<p>Regardless, let’s discuss some ways you can customize the default renderer to your liking.</p>
 <h2 id="templatehtml"><a class="header" href="#templatehtml">template.html</a></h2>
-<p><code>rendering/template.html</code> represents a list of templates that demo_gen's default renderer will use</p>
+<p><code>rendering/template.html</code> represents a list of templates that demo_gen’s default renderer will use</p>
 <p>demo_gen will automatically generate <code>template.html</code> in the rendering folder. There is nothing that ties <code>template.html</code> to this folder specifically however; you can copy, modify, and link to a changed <code>template.html</code> file for custom HTML, JS, and CSS.</p>
-<p>For instance, this is one template we've overridden in the ICU4X repo to take advantage of Bootstrap:</p>
+<p>For instance, this is one template we’ve overridden in the ICU4X repo to take advantage of Bootstrap:</p>
 <pre><code class="language-html">&lt;template id="terminus"&gt;
 &lt;link rel="stylesheet" href="dist/index.css"/&gt;
 &lt;div class="vstack gap-2"&gt;
@@ -1621,25 +1641,25 @@ relative-js-path="../js/folder/here" # (string)
 <p>For <code>&lt;template&gt;</code> tags, we hook into events by looking for <code>data-*</code> attributes, which have some of the following properties:</p>
 <ul>
 <li><code>data-submit</code> tells the attached element to await a press before attempting to run demo_gen code (only works for the <code>#terminus</code> tag).</li>
-<li><code>data-oninput</code> tells the attached element to listen for the <code>oninput</code> event and save the user's input on this element for submission.</li>
+<li><code>data-oninput</code> tells the attached element to listen for the <code>oninput</code> event and save the user’s input on this element for submission.</li>
 </ul>
-<p>If you're on the <a href="demo_gen/quickstart.html">quickstart</a> repository, you might try copying <code>template.html</code> out of the rendering folder and modifying it yourself to include your own stylesheets.</p>
-<blockquote>
-<p>[!NOTE]
-Because the renderer uses the Web Components API, stylesheets need to be linked inside of each <code>&lt;template&gt;</code> tag.</p>
+<p>If you’re on the <a href="#quickstart">quickstart</a> repository, you might try copying <code>template.html</code> out of the rendering folder and modifying it yourself to include your own stylesheets.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Because the renderer uses the Web Components API, stylesheets need to be linked inside of each <code>&lt;template&gt;</code> tag.</p>
 </blockquote>
 <h2 id="runtimemjs"><a class="header" href="#runtimemjs">runtime.mjs</a></h2>
 <p>This is simply a wrapper for the underlying <code>rendering/rendering.mjs</code>, which contains most of the logic for taking <code>&lt;template&gt;</code> tags and transforming them into</p>
 <p>The expected end result of <code>runtime.mjs</code> is to create a <code>TerminusRender</code> object from <code>rendering.mjs</code>, and append it to the HTML.</p>
-<p>If you are interested in overriding the underlying Javascript more thoroughly, reading the documentation <a href="demo_gen/custom_renderer.html">on writing your own custom renderer</a> is recommended. Otherwise, you will mostly be interested in overwriting the <code>evaluateExternal</code> parameter, which looks something like this:</p>
+<p>If you are interested in overriding the underlying Javascript more thoroughly, reading the documentation <a href="#making-your-own-renderer">on writing your own custom renderer</a> is recommended. Otherwise, you will mostly be interested in overwriting the <code>evaluateExternal</code> parameter, which looks something like this:</p>
 <pre><code class="language-js">(param, updateParamEvent) =&gt; {
 	console.error(`Unrecognized parameter type ${param}`);
 }
 </code></pre>
-<p>If you've flagged anything with the <a href="demo_gen/attributes.html#diplomatdemoexternal">external</a> attribute, you can check for parameters that Diplomat cannot evaluate on its own and provide these yourself with the <code>updateParamEvent(updatedParamValue)</code> callback, containing the value of the parameter that is required.</p>
-<blockquote>
-<p>[!TIP]
-<code>evaluateExternal</code> is only called once on creation, so if you're planning on updating a param more than once, you should save a dictionary of <code>updateParamEvent</code> callbacks somewhere for future reference.</p>
+<p>If you’ve flagged anything with the <a href="#diplomatdemoexternal">external</a> attribute, you can check for parameters that Diplomat cannot evaluate on its own and provide these yourself with the <code>updateParamEvent(updatedParamValue)</code> callback, containing the value of the parameter that is required.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p><code>evaluateExternal</code> is only called once on creation, so if you’re planning on updating a param more than once, you should save a dictionary of <code>updateParamEvent</code> callbacks somewhere for future reference.</p>
 </blockquote>
 <p>For example, in the ICU4X demo, we look for the DataProvider parameter and provide it from a compiled set of data:</p>
 <pre><code class="language-js">let dataProvider = DataProvider.compiled();
@@ -1652,9 +1672,9 @@ let evaluateExternal = (param, updateParamEvent) =&gt; {
 };
 </code></pre>
 <h2 id="indexhtml"><a class="header" href="#indexhtml">index.html</a></h2>
-<p>demo_gen currently doesn't provide an <code>index.html</code> file for you, as even with the default renderer your file structure can vary wildly. It is up to the user to provide their own additional <code>.html</code> files.</p>
-<p>If you're looking to get into output right away: you can access any function from the default renderer by opening <code>template.html</code> from your webserver with the URL <code>/renderer/template.html?func=TypeName.functionName</code>.</p>
-<p>Here's the current script that <a href="demo_gen/quickstart.html">the quickstart</a> has to list all possible function names:</p>
+<p>demo_gen currently doesn’t provide an <code>index.html</code> file for you, as even with the default renderer your file structure can vary wildly. It is up to the user to provide their own additional <code>.html</code> files.</p>
+<p>If you’re looking to get into output right away: you can access any function from the default renderer by opening <code>template.html</code> from your webserver with the URL <code>/renderer/template.html?func=TypeName.functionName</code>.</p>
+<p>Here’s the current script that <a href="#quickstart">the quickstart</a> has to list all possible function names:</p>
 <pre><code class="language-js">import { RenderInfo } from "./demo_gen/index.mjs";
 
 Object.values(RenderInfo.termini).toSorted((a, b) =&gt; a.funcName &lt; b.funcName ? -1 : 1).forEach((t) =&gt; {
@@ -1663,22 +1683,24 @@ Object.values(RenderInfo.termini).toSorted((a, b) =&gt; a.funcName &lt; b.funcNa
 	document.getElementById("links").appendChild(a);
 });
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="making-your-own-renderer"><a class="header" href="#making-your-own-renderer">Making Your Own Renderer</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="making-your-own-renderer"><a class="header" href="#making-your-own-renderer">Making Your Own Renderer</a></h1>
 <p>Inside of <code>index.mjs</code>, demo_gen outputs an object called <code>RenderInfo</code> that points to all the functions demo_gen has created for the purposes of demonstration.</p>
 <p><code>RenderInfo</code> gives you the function to call directly, as well as the required parameters needed for each function in order.</p>
-<p>This is meant to slot in to almost any Javascript solution with ease, but if there's an issue with <code>RenderInfo</code>s setup that is not quite compatible with your solution, please <a href="https://github.com/rust-diplomat/diplomat/issues/new?labels=B-demo_gen">open an issue</a>.</p>
+<p>This is meant to slot in to almost any Javascript solution with ease, but if there’s an issue with <code>RenderInfo</code>s setup that is not quite compatible with your solution, please <a href="https://github.com/rust-diplomat/diplomat/issues/new?labels=B-demo_gen">open an issue</a>.</p>
 <p>The exact structure of <code>RenderInfo</code> is available in the demo_gen <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md#step-two-constructing-renderinfo">design docs</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="making-custom-functions"><a class="header" href="#making-custom-functions">Making Custom Functions</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="making-custom-functions"><a class="header" href="#making-custom-functions">Making Custom Functions</a></h1>
 <h2 id="what-is-a-custom-function"><a class="header" href="#what-is-a-custom-function">What is a custom function?</a></h2>
 <p>demo_gen tends towards automagical configuration. demo_gen will do its best to take Rust functions and convert them into JS output.</p>
-<p>But there arise situations where we want to create our own custom Javascript functions to demonstrate our library's capabilities to the user, then add them to demo_gen's output. This may be the case if you want to demonstrate functionality that is more involved than demo_gen's automagical work.</p>
+<p>But there arise situations where we want to create our own custom Javascript functions to demonstrate our library’s capabilities to the user, then add them to demo_gen’s output. This may be the case if you want to demonstrate functionality that is more involved than demo_gen’s automagical work.</p>
 <h3 id="example"><a class="header" href="#example">Example</a></h3>
-<p>Let's look at the <a href="demo_gen/quickstart.html">quickstart</a> repository for an example.</p>
+<p>Let’s look at the <a href="#quickstart">quickstart</a> repository for an example.</p>
 <p>We only have one function exposed: <code>get_add_str(left : u32, right: u32)</code>.</p>
 <p>What if we have variables <code>a</code>, <code>b</code>, and <code>c</code>, and we want to show the user the results of calling:</p>
 <p><code>get_add_str(a, b)</code> and <code>get_add_str(b, c)</code>?</p>
 <p>We can do this without adding a new binding, through the use of a custom Javascript function.</p>
-<h2 id="diplomatdemocustom_func-1"><a class="header" href="#diplomatdemocustom_func-1">#[diplomat::demo(custom_func="...")]</a></h2>
+<h2 id="diplomatdemocustom_func-1"><a class="header" href="#diplomatdemocustom_func-1">#[diplomat::demo(custom_func=“…”)]</a></h2>
 <p><code>#[diplomat::demo(custom_func="filename.mjs")]</code> can be added above any <code>struct</code> definition. demo_gen will search for files relative to <code>lib.rs</code>, and add the contents of <code>filename.mjs</code> to its output.</p>
 <p>Then demo_gen will import the default export of <code>filename.mjs</code>, and append it to the list of <a href="https://github.com/rust-diplomat/diplomat/blob/main/docs/demo_gen.md#step-two-constructing-renderinfo">RenderInfo</a> termini.</p>
 <h3 id="example-1"><a class="header" href="#example-1">Example</a></h3>
@@ -1727,12 +1749,15 @@ mod ffi {
 </code></pre>
 <p>And our exported object is then added to <code>RenderInfo</code>s list of render termini, and is evaluated by the renderer accordingly!</p>
 <p>If you <a href="https://rust-diplomat.github.io/diplomat/demo_gen/quickstart.html#getting-started">regenerate the bindings and start the web server</a>, you should see <code>Add a + b, b + c</code> in the list of functions.</p>
-<div style="break-before: page; page-break-before: always;"></div><p>The different backends have specific considerations or configurations. Check below
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="backend-specific-documentation"><a href="#backend-specific-documentation" class="header">Backend specific documentation</a></h1>
+<p>The different backends have specific considerations or configurations. Check below
 to see what is necessary. Documentation for more backends will be added in the future.</p>
 <ul>
-<li><a href="backends/kotlin.html">Kotlin</a></li>
+<li><a href="#kotlin-backend">Kotlin</a></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="kotlin-backend"><a class="header" href="#kotlin-backend">Kotlin Backend</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="kotlin-backend"><a class="header" href="#kotlin-backend">Kotlin Backend</a></h1>
 <p>The kotlin backend uses JNA to wrap the ABI types from diplomat into an ergonomic library for use in the JVM.
 The backend ensures safe sharing and disposal of memory, but it is still experimental so bugs may exist.</p>
 <p>To run the kotlin backend you need to provide some configuration</p>
@@ -1772,7 +1797,7 @@ If you choose <code>scaffold</code> then it will also generate a couple of confi
 ├── setttings.gradle.kts
 </code></pre>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<p>The best way to learn to use the kotlin backend is first understand diplomat generally by reading this <a href="backends/../SUMMARY.html">book</a>.
+<p>The best way to learn to use the kotlin backend is first understand diplomat generally by reading this <a href="SUMMARY.html">book</a>.
 Then look at the <code>example</code> and <code>feature_tests</code> directories in the diplomat project. Then you can look at the tests
 for how to use them</p>
 <ul>
@@ -1807,6 +1832,11 @@ so here some specific examples</p>
 
         </div>
 
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
 
 
@@ -1815,13 +1845,13 @@ so here some specific examples</p>
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
