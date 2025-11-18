@@ -250,7 +250,15 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_field_default<'a, P: TyPosition>(&'a self, ty: &'a Type<P>) -> Cow<'tcx, str> {
+    /// This function formats a type to a default field value for use over FFI.
+    ///
+    /// `for_results` is whether this is in use in Result's FFI: Enums over FFI are all Ints, so we don't
+    /// want to call type-specific stuff when generating generic Result wrappers.
+    pub fn fmt_field_default<'a, P: TyPosition>(
+        &'a self,
+        ty: &'a Type<P>,
+        for_results: bool,
+    ) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => self.fmt_primitive_default(*prim).into(),
             Type::Opaque(op) => if op.is_optional() {
@@ -265,7 +273,11 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Enum(enum_def) => {
                 let field_type_name: &str = self.tcx.resolve_enum(enum_def.tcx_id).name.as_ref();
-                format!("{field_type_name}.default().toNative()").into()
+                if for_results {
+                    "0".into()
+                } else {
+                    format!("{field_type_name}.default().toNative()").into()
+                }
             }
             Type::Slice(_) => "Slice()".into(),
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),

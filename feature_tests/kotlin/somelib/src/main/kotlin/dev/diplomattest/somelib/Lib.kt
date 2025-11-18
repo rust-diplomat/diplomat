@@ -626,14 +626,16 @@ class UnitError internal constructor(): Exception("Rust error result for Unit") 
     }
 }
 
-internal class ResultIntUnitUnion: Union() {
+internal class ResultIntPointerUnion: Union() {
     @JvmField
     internal var ok: Int = 0
+    @JvmField
+    internal var err: Pointer = Pointer(0)
 }
 
-class ResultIntUnit: Structure(), Structure.ByValue  {
+class ResultIntPointer: Structure(), Structure.ByValue  {
     @JvmField
-    internal var union: ResultIntUnitUnion = ResultIntUnitUnion()
+    internal var union: ResultIntPointerUnion = ResultIntPointerUnion()
 
     @JvmField
     internal var isOk: Byte = 0
@@ -643,16 +645,14 @@ class ResultIntUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
-internal class ResultIntPointerUnion: Union() {
+internal class ResultIntUnitUnion: Union() {
     @JvmField
-    internal var ok: Int = ErrorEnum.default().toNative()
-    @JvmField
-    internal var err: Pointer = Pointer(0)
+    internal var ok: Int = 0
 }
 
-class ResultIntPointer: Structure(), Structure.ByValue  {
+class ResultIntUnit: Structure(), Structure.ByValue  {
     @JvmField
-    internal var union: ResultIntPointerUnion = ResultIntPointerUnion()
+    internal var union: ResultIntUnitUnion = ResultIntUnitUnion()
 
     @JvmField
     internal var isOk: Byte = 0
@@ -685,7 +685,7 @@ internal class ResultPointerIntUnion: Union() {
     @JvmField
     internal var ok: Pointer = Pointer(0)
     @JvmField
-    internal var err: Int = ErrorEnum.default().toNative()
+    internal var err: Int = 0
 }
 
 class ResultPointerInt: Structure(), Structure.ByValue  {

@@ -236,6 +236,38 @@ pub(crate) fn run<'tcx>(
         .map(|option_type| option_type.render().expect("failed to render option type"))
         .collect::<Vec<_>>();
 
+    // The map may contain entries that resolve to the same underlying native types
+    // In this case, we don't want to generate multiple copies of those types, as
+    // that will error. Make sure we're not doing that.
+
+    let mut native_results_found = BTreeSet::new();
+
+    for ty in &*ty_gen_cx.result_types.borrow() {
+        let combined = (&ty.ok.type_name, &ty.err.type_name);
+
+        let inserted = native_results_found.insert(combined);
+        if !inserted {
+            panic!(
+                "Found duplicate native Result type for Result<{}, {}> (defaults: ({:?}, {:?}))",
+                ty.ok.type_name, ty.err.type_name, ty.ok.default, ty.err.default
+            );
+        }
+    }
+
+    let mut native_options_found = BTreeSet::new();
+
+    for ty in &*ty_gen_cx.option_types.borrow() {
+        println!("{:?} / {:?}", ty.type_name, ty.default);
+
+        let inserted = native_options_found.insert(&ty.type_name);
+        if !inserted {
+            panic!(
+                "Found duplicate native Option type for Option<{}> (defaults: ({:?}))",
+                ty.type_name, ty.default
+            );
+        }
+    }
+
     #[derive(Template)]
     #[template(path = "kotlin/init.kt.jinja", escape = "none")]
     struct Init<'a> {
@@ -274,7 +306,7 @@ struct TypeForResult<'d> {
     default: Option<Cow<'d, str>>,
 }
 
-#[derive(Template, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Template, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[template(path = "kotlin/Result.kt.jinja")]
 struct NativeResult<'d> {
     ok: TypeForResult<'d>,
@@ -382,7 +414,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                                 _ => unreachable!("unknown AST/HIR variant"),
                             }
                         })
-                        .map(|t| self.formatter.fmt_field_default(t)),
+                        .map(|t| self.formatter.fmt_field_default(t, true)),
                     _ => None,
                 };
                 let err_default = err
@@ -397,7 +429,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                             _ => unreachable!("unknown AST/HIR variant"),
                         }
                     })
-                    .map(|t| self.formatter.fmt_field_default(t));
+                    .map(|t| self.formatter.fmt_field_default(t, true));
                 let result_type = NativeResult {
                     ok: TypeForResult {
                         type_name: ok_type.clone(),
@@ -429,9 +461,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 let mut option_types = self.option_types.borrow_mut();
                 let infallible_return = self.gen_infallible_return_type_ffi(success);
                 let default = match success {
-                    SuccessType::OutType(Type::Struct(..) | Type::Enum(..)) => {
+                    SuccessType::OutType(Type::Struct(..)) => {
                         format!("{infallible_return}()")
                     }
+                    // Enums are Ints over FFI
+                    SuccessType::OutType(Type::Enum(..)) => "0".to_string(),
                     SuccessType::OutType(Type::Primitive(prim)) => {
                         self.formatter.fmt_primitive_default(*prim).into()
                     }
@@ -963,7 +997,7 @@ returnVal.option() ?: return null
                         "#,
                 Self::write_return("")
             ),
-            ReturnType::Nullable(SuccessType::Unit) => "returnVal.option() ?: return null".into(),
+            ReturnType::Nullable(SuccessType::Unit) => "return returnVal.option()".into(),
             _ => panic!("unsupported type"),
         }
     }
@@ -1584,7 +1618,9 @@ returnVal.option() ?: return null
 
                 StructFieldDef {
                     name: field_name.clone(),
-                    ffi_type_default: self.formatter.fmt_field_default(&field.ty),
+                    ffi_type_default: self
+                        .formatter
+                        .fmt_field_default(&field.ty, /* for_results */ false),
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
                     native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
