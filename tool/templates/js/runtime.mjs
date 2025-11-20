@@ -767,6 +767,3 @@ export class FunctionParamAllocator {
 }
 
 export const FUNCTION_PARAM_ALLOC = new FunctionParamAllocator();
-
-const FunctionParamAllocatorFinalizer = new FinalizationRegistry((free) => { free(); });
-FunctionParamAllocatorFinalizer.register(FUNCTION_PARAM_ALLOC, FUNCTION_PARAM_ALLOC.free);
