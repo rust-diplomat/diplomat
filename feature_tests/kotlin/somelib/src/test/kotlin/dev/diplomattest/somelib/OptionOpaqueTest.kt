@@ -11,7 +11,7 @@ class OptionOpaqueTest {
     @Test
     fun testOption() {
         val libClass: Class<OptionOpaqueLib> = OptionOpaqueLib::class.java
-        val lib: OptionOpaqueLib = Native.load("somelib", libClass)
+        val lib: OptionOpaqueLib = Native.load("diplomat_feature_tests", libClass)
         val ptr = lib.OptionOpaque_new(0)
         val ptr_2 = lib.OptionOpaque_new_none()
         assert(ptr != null)
