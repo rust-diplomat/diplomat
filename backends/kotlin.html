@@ -16,7 +16,7 @@
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
         <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-9dfbd86b.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-af94474e.js";
+            window.path_to_searchindex_js = "../searchindex-bd3757a3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-576801a3.js"></script>
+        <script src="../toc-eac50189.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,19 +180,31 @@ The backend ensures safe sharing and disposal of memory, but it is still experim
 <p>To run the kotlin backend you need to provide some configuration</p>
 <pre><code class="language-sh">diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} --config {CONFIG_OVERRIDE_1} --config {CONFIG_OVERRIDE_2} kotlin {OUTPUT_PATH}
 </code></pre>
-<p>The configuration consists of three parts</p>
+<p>The configuration consists of these options:</p>
 <ul>
-<li><code>lib-name</code> - the name of the library. This can be different to the rust library name, but native access will
+<li>
+<p><code>lib-name</code> - the name of the library. This can be different to the rust library name, but native access will
 look for a file with the name <code>lib{lib-name}.so</code> (linux) or <code>lib{lib-name}.dylib</code> (macos) or <code>{lib-name}.dll</code> (windows)
 If you include this in <code>src/main/resources</code> then the library should be packaged automatically when you publish
 the kotlin library. With the appropriate directory structure you can include binaries for multple operating
-systems and architectures.</li>
-<li><code>kotlin.domain</code> - this is the group of the package, e.g. <code>io.apache</code>.</li>
-<li><code>kotlin.use_finalizers_not_cleaners</code> - An optional binary value. By default kotlin uses the Cleaner API from
+systems and architectures.</p>
+</li>
+<li>
+<p><code>kotlin.domain</code> - this is the group of the package, e.g. <code>io.apache</code>.</p>
+</li>
+<li>
+<p><code>kotlin.use_finalizers_not_cleaners</code> - An optional binary value. By default kotlin uses the Cleaner API from
 Java 9 onwards for cleaning up the native memory alloated by the diplomat library. It can, however, be
-configured to use the finalizer api from Java 8 and prior.</li>
-<li><code>kotlin.scaffold</code> - an optional binary value. If it is set to <code>true</code>, <code>diplomat-tool</code> will scaffold a project
-for you with configuration corresponding to your group and library name.</li>
+configured to use the finalizer api from Java 8 and prior.</p>
+</li>
+<li>
+<p><code>kotlin.scaffold</code> - an optional binary value. If it is set to <code>true</code>, <code>diplomat-tool</code> will scaffold a project
+for you with configuration corresponding to your group and library name.</p>
+</li>
+<li>
+<p><code>kotlin.dylib-name</code> - an optional string. If set, instead of loading a <code>lib{lib-name}.ext</code> binary, Diplomat
+will look for a <code>lib{dylib-name}.ext</code>.</p>
+</li>
 </ul>
 <p>Diplomat always create the following structure in the <code>OUTPUT_PATH</code></p>
 <pre><code>├── src 
