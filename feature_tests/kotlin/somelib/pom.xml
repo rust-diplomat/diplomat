@@ -84,9 +84,9 @@
             <filtering>false</filtering>
             <directory>${basedir}</directory>
             <includes>
-              <include>libsomelib.so</include>
-              <include>libsomelib.dylib</include>
-              <include>libsomelib.dll</include>
+              <include>libdiplomat_feature_tests.so</include>
+              <include>libdiplomat_feature_tests.dylib</include>
+              <include>libdiplomat_feature_tests.dll</include>
             </includes>
           </resource>
         </resources>

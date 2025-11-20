@@ -187,7 +187,7 @@ script_runner = "@duckscript"
 dependencies = ["build-example-jvm"]
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libsomelib.${OUT_FILE}
+cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libdiplomat_example.${OUT_FILE}
 '''
 
 [tasks.test-kotlin-example]
@@ -212,7 +212,7 @@ script_runner = "@duckscript"
 dependencies = ["build-feature-jvm"]
 script = '''
 exit_on_error true
-cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libsomelib.${OUT_FILE}
+cp target/debug/libdiplomat_feature_tests.${OUT_FILE} feature_tests/kotlin/somelib/libdiplomat_feature_tests.${OUT_FILE}
 '''
 
 [tasks.test-kotlin-feature]
