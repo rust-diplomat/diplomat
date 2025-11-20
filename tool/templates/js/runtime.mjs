@@ -702,14 +702,24 @@ export class FunctionParamAllocator {
     #ptr = 0;
     #capacity = 0;
 
+    /**
+     * A stack of pointers to Rust types allocated with alloc().
+     * The stack is popped with get(), returning the most recently allocated pointer.
+     * Note that this does NOT clear allocated memory, this must be done with clean().
+     * Each pointer is guaranteed to be within the bounds of #ptr.
+     * 
+     */
     #allocated = [];
+    /**
+     * The size of everything currently allocated.
+     * The size is only reset with clean().
+     */
     #currentPtr = 0;
 
     init(symbol, wasm) {
         if (symbol === internalConstructor) {
             this.#wasm = wasm;
 
-            // Hack, not sure else how to handle things though:
             if (this.#ptr === 0){
                 this.#ptr = this.#wasm.diplomat_alloc(this.#capacity, 1);
             }
