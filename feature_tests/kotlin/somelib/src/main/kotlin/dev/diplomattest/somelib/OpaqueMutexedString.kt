@@ -33,7 +33,7 @@ class OpaqueMutexedString internal constructor (
 
     companion object {
         internal val libClass: Class<OpaqueMutexedStringLib> = OpaqueMutexedStringLib::class.java
-        internal val lib: OpaqueMutexedStringLib = Native.load("somelib", libClass)
+        internal val lib: OpaqueMutexedStringLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun fromUsize(number: ULong): OpaqueMutexedString {

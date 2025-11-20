@@ -325,7 +325,7 @@ class CallbackWrapper internal constructor (
 
     companion object {
         internal val libClass: Class<CallbackWrapperLib> = CallbackWrapperLib::class.java
-        internal val lib: CallbackWrapperLib = Native.load("somelib", libClass)
+        internal val lib: CallbackWrapperLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackWrapperNative::class.java).toLong()
         @JvmStatic
         

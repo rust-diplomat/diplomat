@@ -24,7 +24,7 @@ class DeprecatedOpaque internal constructor (
 
     companion object {
         internal val libClass: Class<DeprecatedOpaqueLib> = DeprecatedOpaqueLib::class.java
-        internal val lib: DeprecatedOpaqueLib = Native.load("somelib", libClass)
+        internal val lib: DeprecatedOpaqueLib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }

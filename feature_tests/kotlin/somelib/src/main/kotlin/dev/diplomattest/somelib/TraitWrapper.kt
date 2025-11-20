@@ -27,7 +27,7 @@ class TraitWrapper internal constructor (
 
     companion object {
         internal val libClass: Class<TraitWrapperLib> = TraitWrapperLib::class.java
-        internal val lib: TraitWrapperLib = Native.load("somelib", libClass)
+        internal val lib: TraitWrapperLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TraitWrapperNative::class.java).toLong()
         @JvmStatic
         

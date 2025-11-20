@@ -27,7 +27,7 @@ class MyIterator internal constructor (
 
     companion object {
         internal val libClass: Class<MyIteratorLib> = MyIteratorLib::class.java
-        internal val lib: MyIteratorLib = Native.load("somelib", libClass)
+        internal val lib: MyIteratorLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     internal fun nextInternal(): UByte? {

@@ -23,7 +23,7 @@ interface DiplomatWriteLib: Library {
 object DW {
 
     val libClass: Class<DiplomatWriteLib> = DiplomatWriteLib::class.java
-    val lib: DiplomatWriteLib = Native.load("somelib", libClass)
+    val lib: DiplomatWriteLib = Native.load("diplomat_example", libClass)
 
     fun writeToString (write: Pointer): String {
         try {
@@ -48,7 +48,7 @@ internal interface DiplomatJVMRuntimeLib: Library {
 internal class DiplomatJVMRuntime {
     companion object {
         val libClass: Class<DiplomatJVMRuntimeLib> = DiplomatJVMRuntimeLib::class.java
-        val lib: DiplomatJVMRuntimeLib = Native.load("somelib", libClass, Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
+        val lib: DiplomatJVMRuntimeLib = Native.load("diplomat_example", libClass, Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
 
         fun buildRustCookie(obj: Object): Pointer {
             return lib.create_rust_jvm_cookie(JNIEnv.CURRENT, obj);
@@ -69,7 +69,7 @@ interface DiplomatAllocateLib: Library {
 internal object PrimitiveArrayTools {
 
     val libClass: Class<DiplomatAllocateLib> = DiplomatAllocateLib::class.java
-    val lib: DiplomatAllocateLib = Native.load("somelib", libClass)
+    val lib: DiplomatAllocateLib = Native.load("diplomat_example", libClass)
 
     fun allocateGarbageCollectedMemory(size: Long): Memory? {
         // we can't use the Memory constructor for a memory of size 0

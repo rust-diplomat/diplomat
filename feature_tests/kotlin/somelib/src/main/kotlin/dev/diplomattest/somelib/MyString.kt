@@ -33,7 +33,7 @@ class MyString internal constructor (
 
     companion object {
         internal val libClass: Class<MyStringLib> = MyStringLib::class.java
-        internal val lib: MyStringLib = Native.load("somelib", libClass)
+        internal val lib: MyStringLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(v: String): MyString {

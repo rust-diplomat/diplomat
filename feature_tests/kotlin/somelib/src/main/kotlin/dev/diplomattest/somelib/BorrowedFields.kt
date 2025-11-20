@@ -34,7 +34,7 @@ class BorrowedFields internal constructor (
 
     companion object {
         internal val libClass: Class<BorrowedFieldsLib> = BorrowedFieldsLib::class.java
-        internal val lib: BorrowedFieldsLib = Native.load("somelib", libClass)
+        internal val lib: BorrowedFieldsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsNative::class.java).toLong()
         @JvmStatic
         

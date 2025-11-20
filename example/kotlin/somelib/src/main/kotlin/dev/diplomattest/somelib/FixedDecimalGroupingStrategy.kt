@@ -21,7 +21,7 @@ enum class FixedDecimalGroupingStrategy {
 
     companion object {
         internal val libClass: Class<FixedDecimalGroupingStrategyLib> = FixedDecimalGroupingStrategyLib::class.java
-        internal val lib: FixedDecimalGroupingStrategyLib = Native.load("somelib", libClass) 
+        internal val lib: FixedDecimalGroupingStrategyLib = Native.load("diplomat_example", libClass) 
         fun fromNative(native: Int): FixedDecimalGroupingStrategy {
             return FixedDecimalGroupingStrategy.entries[native]
         }

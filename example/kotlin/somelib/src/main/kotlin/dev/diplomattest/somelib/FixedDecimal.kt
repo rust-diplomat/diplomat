@@ -32,7 +32,7 @@ class FixedDecimal internal constructor (
 
     companion object {
         internal val libClass: Class<FixedDecimalLib> = FixedDecimalLib::class.java
-        internal val lib: FixedDecimalLib = Native.load("somelib", libClass)
+        internal val lib: FixedDecimalLib = Native.load("diplomat_example", libClass)
         @JvmStatic
         
         /** Construct an [FixedDecimal] from an integer.

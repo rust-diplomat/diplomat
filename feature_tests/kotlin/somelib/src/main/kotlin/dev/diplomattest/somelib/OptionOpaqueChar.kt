@@ -25,7 +25,7 @@ class OptionOpaqueChar internal constructor (
 
     companion object {
         internal val libClass: Class<OptionOpaqueCharLib> = OptionOpaqueCharLib::class.java
-        internal val lib: OptionOpaqueCharLib = Native.load("somelib", libClass)
+        internal val lib: OptionOpaqueCharLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     fun assertChar(ch: Int): Unit {

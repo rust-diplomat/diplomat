@@ -38,7 +38,7 @@ class AttrOpaque1 internal constructor (
 
     companion object {
         internal val libClass: Class<AttrOpaque1Lib> = AttrOpaque1Lib::class.java
-        internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
+        internal val lib: AttrOpaque1Lib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         /** More example docs

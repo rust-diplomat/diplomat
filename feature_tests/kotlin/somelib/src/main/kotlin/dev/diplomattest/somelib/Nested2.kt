@@ -24,7 +24,7 @@ class Nested2 internal constructor (
 
     companion object {
         internal val libClass: Class<Nested2Lib> = Nested2Lib::class.java
-        internal val lib: Nested2Lib = Native.load("somelib", libClass)
+        internal val lib: Nested2Lib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }

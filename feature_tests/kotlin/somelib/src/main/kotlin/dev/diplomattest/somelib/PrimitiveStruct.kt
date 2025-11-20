@@ -40,7 +40,7 @@ class PrimitiveStruct internal constructor (
 
     companion object {
         internal val libClass: Class<PrimitiveStructLib> = PrimitiveStructLib::class.java
-        internal val lib: PrimitiveStructLib = Native.load("somelib", libClass)
+        internal val lib: PrimitiveStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(PrimitiveStructNative::class.java).toLong()
     }
 

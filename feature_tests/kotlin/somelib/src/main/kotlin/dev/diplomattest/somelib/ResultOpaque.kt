@@ -35,7 +35,7 @@ class ResultOpaque internal constructor (
 
     companion object {
         internal val libClass: Class<ResultOpaqueLib> = ResultOpaqueLib::class.java
-        internal val lib: ResultOpaqueLib = Native.load("somelib", libClass)
+        internal val lib: ResultOpaqueLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(i: Int): Result<ResultOpaque> {

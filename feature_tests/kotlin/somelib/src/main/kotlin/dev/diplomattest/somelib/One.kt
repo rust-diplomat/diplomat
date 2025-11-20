@@ -36,7 +36,7 @@ class One internal constructor (
 
     companion object {
         internal val libClass: Class<OneLib> = OneLib::class.java
-        internal val lib: OneLib = Native.load("somelib", libClass)
+        internal val lib: OneLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun transitivity(hold: One, nohold: One): One {

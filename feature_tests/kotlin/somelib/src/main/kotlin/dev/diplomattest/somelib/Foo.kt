@@ -31,7 +31,7 @@ class Foo internal constructor (
 
     companion object {
         internal val libClass: Class<FooLib> = FooLib::class.java
-        internal val lib: FooLib = Native.load("somelib", libClass)
+        internal val lib: FooLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(x: String): Foo {

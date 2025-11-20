@@ -21,7 +21,7 @@ enum class ContiguousEnum {
 
     companion object {
         internal val libClass: Class<ContiguousEnumLib> = ContiguousEnumLib::class.java
-        internal val lib: ContiguousEnumLib = Native.load("somelib", libClass) 
+        internal val lib: ContiguousEnumLib = Native.load("diplomat_feature_tests", libClass) 
         fun fromNative(native: Int): ContiguousEnum {
             return ContiguousEnum.entries[native]
         }

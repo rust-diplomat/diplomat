@@ -27,7 +27,7 @@ class OpaqueIterator internal constructor (
 
     companion object {
         internal val libClass: Class<OpaqueIteratorLib> = OpaqueIteratorLib::class.java
-        internal val lib: OpaqueIteratorLib = Native.load("somelib", libClass)
+        internal val lib: OpaqueIteratorLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     internal fun nextInternal(): AttrOpaque1? {

@@ -28,7 +28,7 @@ class ErrorStruct internal constructor (
 
     companion object {
         internal val libClass: Class<ErrorStructLib> = ErrorStructLib::class.java
-        internal val lib: ErrorStructLib = Native.load("somelib", libClass)
+        internal val lib: ErrorStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(ErrorStructNative::class.java).toLong()
     }
 

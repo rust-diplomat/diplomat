@@ -25,7 +25,7 @@ class MyIndexer internal constructor (
 
     companion object {
         internal val libClass: Class<MyIndexerLib> = MyIndexerLib::class.java
-        internal val lib: MyIndexerLib = Native.load("somelib", libClass)
+        internal val lib: MyIndexerLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     internal fun getInternal(i: ULong): String? {

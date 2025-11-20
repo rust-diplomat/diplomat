@@ -26,7 +26,7 @@ class Unnamespaced internal constructor (
 
     companion object {
         internal val libClass: Class<UnnamespacedLib> = UnnamespacedLib::class.java
-        internal val lib: UnnamespacedLib = Native.load("somelib", libClass)
+        internal val lib: UnnamespacedLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun make(e: AttrEnum): Unnamespaced {

@@ -29,7 +29,7 @@ class FixedDecimalFormatterOptions internal constructor (
 
     companion object {
         internal val libClass: Class<FixedDecimalFormatterOptionsLib> = FixedDecimalFormatterOptionsLib::class.java
-        internal val lib: FixedDecimalFormatterOptionsLib = Native.load("somelib", libClass)
+        internal val lib: FixedDecimalFormatterOptionsLib = Native.load("diplomat_example", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(FixedDecimalFormatterOptionsNative::class.java).toLong()
         @JvmStatic
         

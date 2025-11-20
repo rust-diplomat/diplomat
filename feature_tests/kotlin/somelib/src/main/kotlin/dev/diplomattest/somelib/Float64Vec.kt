@@ -37,7 +37,7 @@ class Float64Vec internal constructor (
 
     companion object {
         internal val libClass: Class<Float64VecLib> = Float64VecLib::class.java
-        internal val lib: Float64VecLib = Native.load("somelib", libClass)
+        internal val lib: Float64VecLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun newBool(v: BooleanArray): Float64Vec {

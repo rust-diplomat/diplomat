@@ -26,7 +26,7 @@ class Two internal constructor (
 
     companion object {
         internal val libClass: Class<TwoLib> = TwoLib::class.java
-        internal val lib: TwoLib = Native.load("somelib", libClass)
+        internal val lib: TwoLib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }

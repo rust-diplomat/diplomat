@@ -27,7 +27,7 @@ class OpaqueThin internal constructor (
 
     companion object {
         internal val libClass: Class<OpaqueThinLib> = OpaqueThinLib::class.java
-        internal val lib: OpaqueThinLib = Native.load("somelib", libClass)
+        internal val lib: OpaqueThinLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     fun a(): Int {

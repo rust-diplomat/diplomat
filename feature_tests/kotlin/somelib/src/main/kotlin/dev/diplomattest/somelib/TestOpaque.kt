@@ -24,7 +24,7 @@ class TestOpaque internal constructor (
 
     companion object {
         internal val libClass: Class<TestOpaqueLib> = TestOpaqueLib::class.java
-        internal val lib: TestOpaqueLib = Native.load("somelib", libClass)
+        internal val lib: TestOpaqueLib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }
