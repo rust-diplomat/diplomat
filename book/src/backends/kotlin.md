@@ -6,7 +6,7 @@ To run the kotlin backend you need to provide some configuration
 ```sh
 diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} --config {CONFIG_OVERRIDE_1} --config {CONFIG_OVERRIDE_2} kotlin {OUTPUT_PATH}
 ```
-The configuration consists of three parts
+The configuration consists of these options:
 * `lib-name` - the name of the library. This can be different to the rust library name, but native access will 
   look for a file with the name `lib{lib-name}.so` (linux) or `lib{lib-name}.dylib` (macos) or `{lib-name}.dll` (windows)
   If you include this in `src/main/resources` then the library should be packaged automatically when you publish 
@@ -18,6 +18,9 @@ The configuration consists of three parts
   configured to use the finalizer api from Java 8 and prior.
 * `kotlin.scaffold` - an optional binary value. If it is set to `true`, `diplomat-tool` will scaffold a project
   for you with configuration corresponding to your group and library name.
+
+* `kotlin.dylib-name` - an optional string. If set, instead of loading a `lib{lib-name}.ext` binary, Diplomat
+  will look for a `lib{dylib-name}.ext`.
 
 Diplomat always create the following structure in the `OUTPUT_PATH`
 ```

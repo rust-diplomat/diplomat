@@ -54,6 +54,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct KotlinConfig {
     domain: Option<String>,
+    /// An optional override for the dylib name
+    /// By default this will look for a dylib named lib{lib-name}.so
+    dylib_name: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
     scaffold: Option<bool>,
 }
@@ -72,6 +75,9 @@ impl KotlinConfig {
             "scaffold" => {
                 self.scaffold = value.as_str().map(|val| val == "true");
             }
+            "dylib_name" => {
+                self.dylib_name = value.as_str().map(|val| val.to_string());
+            }
             _ => {}
         }
     }
@@ -86,6 +92,7 @@ pub(crate) fn run<'tcx>(
         domain,
         use_finalizers_not_cleaners,
         scaffold,
+        dylib_name,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -94,6 +101,8 @@ pub(crate) fn run<'tcx>(
         .shared_config
         .lib_name
         .expect("Failed to parse Kotlin config. Missing required field `lib_name`.");
+
+    let dylib_name = dylib_name.as_deref().unwrap_or(&lib_name);
 
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
     let formatter = KotlinFormatter::new(tcx, None, docs_url_gen);
@@ -110,6 +119,7 @@ pub(crate) fn run<'tcx>(
         formatter: &formatter,
         callback_params: &mut callback_params,
         lib_name: &lib_name,
+        dylib_name,
         domain: &domain,
         use_finalizers_not_cleaners,
     };
@@ -254,12 +264,14 @@ pub(crate) fn run<'tcx>(
         native_results: &'a [String],
         native_options: &'a [String],
         lib_name: &'a str,
+        dylib_name: &'a str,
         use_finalizers_not_cleaners: bool,
     }
 
     let init = Init {
         domain: &domain,
         lib_name: &lib_name,
+        dylib_name,
         native_results: native_results.as_slice(),
         native_options: native_options.as_slice(),
         use_finalizers_not_cleaners,
@@ -295,6 +307,7 @@ struct NativeResult<'d> {
 struct ItemGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     lib_name: &'a str,
+    dylib_name: &'a str,
     domain: &'a str,
     formatter: &'a KotlinFormatter<'cx>,
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
@@ -1438,6 +1451,7 @@ returnVal.option() ?: return null
         struct ImplTemplate<'a> {
             domain: &'a str,
             lib_name: &'a str,
+            dylib_name: &'a str,
             type_name: &'a str,
             dtor_abi_name: &'a str,
             self_methods: &'a [MethodInfo],
@@ -1461,6 +1475,7 @@ returnVal.option() ?: return null
             ImplTemplate {
                 domain: self.domain,
                 lib_name: self.lib_name,
+                dylib_name: self.dylib_name,
                 type_name,
                 dtor_abi_name: ty.dtor_abi_name.as_str(),
                 self_methods: self_methods.as_ref(),
@@ -1553,6 +1568,7 @@ returnVal.option() ?: return null
         struct ImplTemplate<'a> {
             domain: &'a str,
             lib_name: &'a str,
+            dylib_name: &'a str,
             type_name: &'a str,
             fields: Vec<StructFieldDef<'a>>,
             self_methods: &'a [MethodInfo],
@@ -1596,6 +1612,7 @@ returnVal.option() ?: return null
             ImplTemplate {
                 domain: self.domain,
                 lib_name: self.lib_name,
+                dylib_name: self.dylib_name,
                 type_name,
                 fields,
                 self_methods: self_methods.as_ref(),
@@ -1877,8 +1894,9 @@ returnVal.option() ?: return null
         #[derive(Template)]
         #[template(path = "kotlin/Enum.kt.jinja", escape = "none")]
         struct EnumDef<'d> {
-            lib_name: Cow<'d, str>,
-            domain: Cow<'d, str>,
+            lib_name: &'d str,
+            dylib_name: &'d str,
+            domain: &'d str,
             type_name: Cow<'d, str>,
             variants: &'d EnumVariants<'d>,
             self_methods: &'d [MethodInfo],
@@ -1892,8 +1910,9 @@ returnVal.option() ?: return null
         let variants = EnumVariants::new(ty);
 
         let enum_def = EnumDef {
-            lib_name: self.lib_name.into(),
-            domain: self.domain.into(),
+            lib_name: self.lib_name,
+            dylib_name: self.dylib_name,
+            domain: self.domain,
             type_name: type_name.into(),
             variants: &variants,
             self_methods: self_methods.as_ref(),
