@@ -37,7 +37,7 @@ class OptionOpaque internal constructor (
 
     companion object {
         internal val libClass: Class<OptionOpaqueLib> = OptionOpaqueLib::class.java
-        internal val lib: OptionOpaqueLib = Native.load("somelib", libClass)
+        internal val lib: OptionOpaqueLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(i: Int): OptionOpaque? {

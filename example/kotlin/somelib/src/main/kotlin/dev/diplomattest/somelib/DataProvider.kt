@@ -29,7 +29,7 @@ class DataProvider internal constructor (
 
     companion object {
         internal val libClass: Class<DataProviderLib> = DataProviderLib::class.java
-        internal val lib: DataProviderLib = Native.load("somelib", libClass)
+        internal val lib: DataProviderLib = Native.load("diplomat_example", libClass)
         @JvmStatic
         
         /** See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.

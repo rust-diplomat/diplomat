@@ -28,7 +28,7 @@ class Locale internal constructor (
 
     companion object {
         internal val libClass: Class<LocaleLib> = LocaleLib::class.java
-        internal val lib: LocaleLib = Native.load("somelib", libClass)
+        internal val lib: LocaleLib = Native.load("diplomat_example", libClass)
         @JvmStatic
         
         /** Construct an [Locale] from a locale identifier represented as a string.

@@ -47,7 +47,7 @@ class MyStruct internal constructor (
 
     companion object {
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java
-        internal val lib: MyStructLib = Native.load("somelib", libClass)
+        internal val lib: MyStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructNative::class.java).toLong()
         @JvmStatic
         

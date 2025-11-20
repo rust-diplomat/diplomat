@@ -1,4 +1,6 @@
-somelib/libsomelib.dylib
+somelib/*.dylib
+somelib/*.dll
+somelib/*.so
 somelib/.idea/
 somelib/.gradle/
 somelib/build/

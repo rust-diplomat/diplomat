@@ -36,7 +36,7 @@ class NestedBorrowedFields internal constructor (
 
     companion object {
         internal val libClass: Class<NestedBorrowedFieldsLib> = NestedBorrowedFieldsLib::class.java
-        internal val lib: NestedBorrowedFieldsLib = Native.load("somelib", libClass)
+        internal val lib: NestedBorrowedFieldsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(NestedBorrowedFieldsNative::class.java).toLong()
         @JvmStatic
         

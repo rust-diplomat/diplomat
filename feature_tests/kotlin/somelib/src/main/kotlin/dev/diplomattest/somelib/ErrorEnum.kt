@@ -19,7 +19,7 @@ enum class ErrorEnum {
 
     companion object {
         internal val libClass: Class<ErrorEnumLib> = ErrorEnumLib::class.java
-        internal val lib: ErrorEnumLib = Native.load("somelib", libClass) 
+        internal val lib: ErrorEnumLib = Native.load("diplomat_feature_tests", libClass) 
         fun fromNative(native: Int): ErrorEnum {
             return ErrorEnum.entries[native]
         }

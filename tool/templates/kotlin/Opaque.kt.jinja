@@ -81,7 +81,7 @@ class {{type_name}} internal constructor (
 
     companion object {
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
-        internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
+        internal val lib: {{type_name}}Lib = Native.load("{{dylib_name}}", libClass)
 
 {%- for m in companion_methods %}
         @JvmStatic

@@ -31,7 +31,7 @@ class StructWithAttrs internal constructor (
 
     companion object {
         internal val libClass: Class<StructWithAttrsLib> = StructWithAttrsLib::class.java
-        internal val lib: StructWithAttrsLib = Native.load("somelib", libClass)
+        internal val lib: StructWithAttrsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithAttrsNative::class.java).toLong()
         @JvmStatic
         

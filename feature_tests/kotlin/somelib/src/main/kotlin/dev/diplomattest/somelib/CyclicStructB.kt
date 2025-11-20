@@ -27,7 +27,7 @@ class CyclicStructB internal constructor (
 
     companion object {
         internal val libClass: Class<CyclicStructBLib> = CyclicStructBLib::class.java
-        internal val lib: CyclicStructBLib = Native.load("somelib", libClass)
+        internal val lib: CyclicStructBLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CyclicStructBNative::class.java).toLong()
         @JvmStatic
         

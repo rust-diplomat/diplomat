@@ -28,7 +28,7 @@ class CallbackTestingStruct internal constructor (
 
     companion object {
         internal val libClass: Class<CallbackTestingStructLib> = CallbackTestingStructLib::class.java
-        internal val lib: CallbackTestingStructLib = Native.load("somelib", libClass)
+        internal val lib: CallbackTestingStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackTestingStructNative::class.java).toLong()
     }
 

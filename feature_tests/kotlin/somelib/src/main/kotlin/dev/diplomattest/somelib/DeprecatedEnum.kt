@@ -18,7 +18,7 @@ enum class DeprecatedEnum {
 
     companion object {
         internal val libClass: Class<DeprecatedEnumLib> = DeprecatedEnumLib::class.java
-        internal val lib: DeprecatedEnumLib = Native.load("somelib", libClass) 
+        internal val lib: DeprecatedEnumLib = Native.load("diplomat_feature_tests", libClass) 
         fun fromNative(native: Int): DeprecatedEnum {
             return DeprecatedEnum.entries[native]
         }

@@ -29,7 +29,7 @@ class OpaqueThinVec internal constructor (
 
     companion object {
         internal val libClass: Class<OpaqueThinVecLib> = OpaqueThinVecLib::class.java
-        internal val lib: OpaqueThinVecLib = Native.load("somelib", libClass)
+        internal val lib: OpaqueThinVecLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun create(a: IntArray, b: FloatArray, c: String): OpaqueThinVec {

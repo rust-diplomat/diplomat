@@ -27,7 +27,7 @@ class Bar internal constructor (
 
     companion object {
         internal val libClass: Class<BarLib> = BarLib::class.java
-        internal val lib: BarLib = Native.load("somelib", libClass)
+        internal val lib: BarLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     fun foo(): Foo {

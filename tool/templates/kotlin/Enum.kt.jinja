@@ -46,7 +46,7 @@ enum class {{type_name}}
 
     companion object {
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
-        internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
+        internal val lib: {{type_name}}Lib = Native.load("{{dylib_name}}", libClass)
 
         {%- match (variants_for_native) %}
         {%- when EnumVariants::NonContiguous with (variants) %}

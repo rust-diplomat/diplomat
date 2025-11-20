@@ -25,7 +25,7 @@ enum class MyEnum(val inner: Int) {
 
     companion object {
         internal val libClass: Class<MyEnumLib> = MyEnumLib::class.java
-        internal val lib: MyEnumLib = Native.load("somelib", libClass)
+        internal val lib: MyEnumLib = Native.load("diplomat_feature_tests", libClass)
         fun fromNative(native: Int): MyEnum {
             return when (native) {
                 -2 -> A

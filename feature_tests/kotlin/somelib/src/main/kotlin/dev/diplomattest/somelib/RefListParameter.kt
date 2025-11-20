@@ -24,7 +24,7 @@ class RefListParameter internal constructor (
 
     companion object {
         internal val libClass: Class<RefListParameterLib> = RefListParameterLib::class.java
-        internal val lib: RefListParameterLib = Native.load("somelib", libClass)
+        internal val lib: RefListParameterLib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }

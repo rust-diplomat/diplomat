@@ -27,7 +27,7 @@ class Utf16Wrap internal constructor (
 
     companion object {
         internal val libClass: Class<Utf16WrapLib> = Utf16WrapLib::class.java
-        internal val lib: Utf16WrapLib = Native.load("somelib", libClass)
+        internal val lib: Utf16WrapLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun fromUtf16(input: String): Utf16Wrap {

@@ -20,7 +20,7 @@ enum class UnimportedEnum {
 
     companion object {
         internal val libClass: Class<UnimportedEnumLib> = UnimportedEnumLib::class.java
-        internal val lib: UnimportedEnumLib = Native.load("somelib", libClass) 
+        internal val lib: UnimportedEnumLib = Native.load("diplomat_feature_tests", libClass) 
         fun fromNative(native: Int): UnimportedEnum {
             return UnimportedEnum.entries[native]
         }

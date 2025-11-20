@@ -54,6 +54,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct KotlinConfig {
     domain: Option<String>,
+    /// An optional override for the dylib name
+    /// By default this will look for a dylib named lib{lib-name}.so
+    dylib_name: Option<String>,
     use_finalizers_not_cleaners: Option<bool>,
     scaffold: Option<bool>,
 }
@@ -72,6 +75,9 @@ impl KotlinConfig {
             "scaffold" => {
                 self.scaffold = value.as_str().map(|val| val == "true");
             }
+            "dylib_name" => {
+                self.dylib_name = value.as_str().map(|val| val.to_string());
+            }
             _ => {}
         }
     }
@@ -86,6 +92,7 @@ pub(crate) fn run<'tcx>(
         domain,
         use_finalizers_not_cleaners,
         scaffold,
+        dylib_name,
     } = conf.kotlin_config;
 
     let domain = domain.expect("Failed to parse Kotlin config. Missing required field `domain`.");
@@ -94,6 +101,8 @@ pub(crate) fn run<'tcx>(
         .shared_config
         .lib_name
         .expect("Failed to parse Kotlin config. Missing required field `lib_name`.");
+
+    let dylib_name = dylib_name.as_deref().unwrap_or(&lib_name);
 
     let use_finalizers_not_cleaners = use_finalizers_not_cleaners.unwrap_or(false);
     let formatter = KotlinFormatter::new(tcx, None, docs_url_gen);
@@ -109,6 +118,10 @@ pub(crate) fn run<'tcx>(
         option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
         callback_params: &mut callback_params,
+        lib_name: &lib_name,
+        dylib_name,
+        domain: &domain,
+        use_finalizers_not_cleaners,
     };
 
     for (_id, ty) in tcx.all_types() {
@@ -121,13 +134,7 @@ pub(crate) fn run<'tcx>(
             TypeDef::Opaque(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_opaque_def(
-                    o,
-                    &type_name,
-                    &domain,
-                    &lib_name,
-                    use_finalizers_not_cleaners,
-                );
+                let (file_name, body) = ty_gen_cx.gen_opaque_def(o, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -135,13 +142,7 @@ pub(crate) fn run<'tcx>(
             TypeDef::OutStruct(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_struct_def(
-                    o,
-                    &type_name,
-                    &domain,
-                    &lib_name,
-                    use_finalizers_not_cleaners,
-                );
+                let (file_name, body) = ty_gen_cx.gen_struct_def(o, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -149,13 +150,7 @@ pub(crate) fn run<'tcx>(
             TypeDef::Struct(struct_def) => {
                 let type_name = struct_def.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_struct_def(
-                    struct_def,
-                    &type_name,
-                    &domain,
-                    &lib_name,
-                    use_finalizers_not_cleaners,
-                );
+                let (file_name, body) = ty_gen_cx.gen_struct_def(struct_def, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -163,13 +158,7 @@ pub(crate) fn run<'tcx>(
             TypeDef::Enum(enum_def) => {
                 let type_name = enum_def.name.to_string();
 
-                let (file_name, body) = ty_gen_cx.gen_enum_def(
-                    enum_def,
-                    &type_name,
-                    &domain,
-                    &lib_name,
-                    use_finalizers_not_cleaners,
-                );
+                let (file_name, body) = ty_gen_cx.gen_enum_def(enum_def, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -187,7 +176,7 @@ pub(crate) fn run<'tcx>(
         }
         let trait_name = trt_def.name.to_string();
 
-        let (file_name, body) = ty_gen_cx.gen_trait_def(trt_def, &trait_name, &domain, &lib_name);
+        let (file_name, body) = ty_gen_cx.gen_trait_def(trt_def, &trait_name);
 
         files.add_file(format!("src/main/kotlin/{file_name}"), body);
     }
@@ -275,12 +264,14 @@ pub(crate) fn run<'tcx>(
         native_results: &'a [String],
         native_options: &'a [String],
         lib_name: &'a str,
+        dylib_name: &'a str,
         use_finalizers_not_cleaners: bool,
     }
 
     let init = Init {
         domain: &domain,
         lib_name: &lib_name,
+        dylib_name,
         native_results: native_results.as_slice(),
         native_options: native_options.as_slice(),
         use_finalizers_not_cleaners,
@@ -315,11 +306,15 @@ struct NativeResult<'d> {
 
 struct ItemGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
+    lib_name: &'a str,
+    dylib_name: &'a str,
+    domain: &'a str,
     formatter: &'a KotlinFormatter<'cx>,
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
     option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
     callback_params: &'a mut Vec<CallbackParamInfo>,
+    use_finalizers_not_cleaners: bool,
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
@@ -530,7 +525,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
-        use_finalizers_not_cleaners: bool,
     ) -> String {
         let opaque_def = opaque_path.resolve(self.tcx);
 
@@ -603,7 +597,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             optional,
             val_name,
             return_type_modifier,
-            use_finalizers_not_cleaners,
+            use_finalizers_not_cleaners: self.use_finalizers_not_cleaners,
         };
         opaque_return
             .render()
@@ -750,7 +744,6 @@ return string{return_type_modifier}"#
         return_type_modifier: &'d str,
         err_cast: &'d str,
         o: &'d OutType,
-        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -766,7 +759,6 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 return_type_modifier,
-                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -801,7 +793,6 @@ return string{return_type_modifier}"#
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         o: &'d OutType,
-        use_finalizers_not_cleaners: bool,
     ) -> String {
         match o {
             Type::Primitive(prim) => {
@@ -815,7 +806,6 @@ return string{return_type_modifier}"#
                 cleanups,
                 val_name,
                 ".?",
-                use_finalizers_not_cleaners,
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
@@ -866,7 +856,6 @@ val intermediateOption = {val_name}.option() ?: return null
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_postfix: &str,
-        use_finalizers_not_cleaners: bool,
     ) -> String {
         match res {
             SuccessType::Write => Self::write_return(return_type_postfix),
@@ -878,7 +867,6 @@ val intermediateOption = {val_name}.option() ?: return null
                 return_type_postfix,
                 "", // error cast
                 o,
-                use_finalizers_not_cleaners,
             ),
             SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
             SuccessType::Unit => format!("return Unit{return_type_postfix}"),
@@ -891,7 +879,6 @@ val intermediateOption = {val_name}.option() ?: return null
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
-        use_finalizers_not_cleaners: bool,
     ) -> String {
         match &method.output {
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
@@ -901,7 +888,6 @@ val intermediateOption = {val_name}.option() ?: return null
                 cleanups,
                 "returnVal",
                 "",
-                use_finalizers_not_cleaners,
             ),
             ReturnType::Fallible(ok, err) => {
                 let ok_path = self.gen_success_return_conversion(
@@ -911,7 +897,6 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal.union.ok",
                     ".ok()",
-                    use_finalizers_not_cleaners,
                 );
 
                 let err_path = err
@@ -962,7 +947,6 @@ val intermediateOption = {val_name}.option() ?: return null
                             err_converter,
                             &err_cast,
                             err,
-                            use_finalizers_not_cleaners,
                         )
                     })
                     .unwrap_or_else(|| "return UnitError().err()".into());
@@ -987,7 +971,6 @@ val intermediateOption = {val_name}.option() ?: return null
                     cleanups,
                     "returnVal",
                     res,
-                    use_finalizers_not_cleaners,
                 ),
 
             ReturnType::Nullable(SuccessType::Write) => format!(
@@ -1067,7 +1050,6 @@ returnVal.option() ?: return null
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
         struct_name: Option<&str>,
-        use_finalizers_not_cleaners: bool,
         add_override_specifier_for_opaque_self_methods: bool,
     ) -> MethodInfo {
         if method.attrs.disable {
@@ -1261,12 +1243,7 @@ returnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return_conversion(
-                method,
-                method_lifetimes_map,
-                cleanups.as_ref(),
-                use_finalizers_not_cleaners,
-            )
+            .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
             .into();
 
         // this should only be called in the special method generation below
@@ -1411,14 +1388,7 @@ returnVal.option() ?: return null
         }
     }
 
-    fn gen_opaque_def(
-        &mut self,
-        ty: &'cx hir::OpaqueDef,
-        type_name: &str,
-        domain: &str,
-        lib_name: &str,
-        use_finalizers_not_cleaners: bool,
-    ) -> (String, String) {
+    fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> (String, String) {
         let native_methods = ty
             .methods
             .iter()
@@ -1443,7 +1413,6 @@ returnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    use_finalizers_not_cleaners,
                     ty.attrs.generate_mocking_interface, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1461,7 +1430,6 @@ returnVal.option() ?: return null
                     method,
                     None,
                     Some(type_name),
-                    use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1483,6 +1451,7 @@ returnVal.option() ?: return null
         struct ImplTemplate<'a> {
             domain: &'a str,
             lib_name: &'a str,
+            dylib_name: &'a str,
             type_name: &'a str,
             dtor_abi_name: &'a str,
             self_methods: &'a [MethodInfo],
@@ -1498,10 +1467,15 @@ returnVal.option() ?: return null
         }
 
         (
-            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/")),
+            format!(
+                "{}/{lib_name}/{type_name}.kt",
+                self.domain.replace('.', "/"),
+                lib_name = self.lib_name
+            ),
             ImplTemplate {
-                domain,
-                lib_name,
+                domain: self.domain,
+                lib_name: self.lib_name,
+                dylib_name: self.dylib_name,
                 type_name,
                 dtor_abi_name: ty.dtor_abi_name.as_str(),
                 self_methods: self_methods.as_ref(),
@@ -1510,7 +1484,7 @@ returnVal.option() ?: return null
                 lifetimes,
                 special_methods: SpecialMethodsImpl::new(special_methods),
                 callback_params: self.callback_params.as_ref(),
-                use_finalizers_not_cleaners,
+                use_finalizers_not_cleaners: self.use_finalizers_not_cleaners,
                 docs: self.formatter.fmt_docs(&ty.docs),
                 is_custom_error: ty.attrs.custom_errors,
                 generate_mocking_interface: (ty.attrs.generate_mocking_interface
@@ -1525,9 +1499,6 @@ returnVal.option() ?: return null
         &mut self,
         ty: &'cx hir::StructDef<P>,
         type_name: &str,
-        domain: &str,
-        lib_name: &str,
-        use_finalizers_not_cleaners: bool,
     ) -> (String, String) {
         let native_methods = ty
             .methods
@@ -1552,7 +1523,6 @@ returnVal.option() ?: return null
                     method,
                     Some(self_param),
                     Some(type_name),
-                    use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1568,7 +1538,6 @@ returnVal.option() ?: return null
                     method,
                     None,
                     Some(type_name),
-                    use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1599,6 +1568,7 @@ returnVal.option() ?: return null
         struct ImplTemplate<'a> {
             domain: &'a str,
             lib_name: &'a str,
+            dylib_name: &'a str,
             type_name: &'a str,
             fields: Vec<StructFieldDef<'a>>,
             self_methods: &'a [MethodInfo],
@@ -1634,10 +1604,15 @@ returnVal.option() ?: return null
             .collect();
 
         (
-            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/"),),
+            format!(
+                "{}/{lib_name}/{type_name}.kt",
+                self.domain.replace('.', "/"),
+                lib_name = self.lib_name
+            ),
             ImplTemplate {
-                domain,
-                lib_name,
+                domain: self.domain,
+                lib_name: self.lib_name,
+                dylib_name: self.dylib_name,
                 type_name,
                 fields,
                 self_methods: self_methods.as_ref(),
@@ -1769,13 +1744,7 @@ returnVal.option() ?: return null
         }
     }
 
-    fn gen_trait_def(
-        &mut self,
-        trt: &'cx hir::TraitDef,
-        trait_name: &str,
-        domain: &str,
-        lib_name: &str,
-    ) -> (String, String) {
+    fn gen_trait_def(&mut self, trt: &'cx hir::TraitDef, trait_name: &str) -> (String, String) {
         let trait_methods = trt
             .methods
             .iter()
@@ -1806,10 +1775,14 @@ returnVal.option() ?: return null
         }
 
         (
-            format!("{}/{lib_name}/{trait_name}.kt", domain.replace('.', "/"),),
+            format!(
+                "{}/{lib_name}/{trait_name}.kt",
+                self.domain.replace('.', "/"),
+                lib_name = self.lib_name
+            ),
             ImplTemplate {
-                domain,
-                lib_name,
+                domain: self.domain,
+                lib_name: self.lib_name,
                 trait_name,
                 trait_methods: trait_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
@@ -1821,14 +1794,7 @@ returnVal.option() ?: return null
         )
     }
 
-    fn gen_enum_def(
-        &mut self,
-        ty: &'cx hir::EnumDef,
-        type_name: &str,
-        domain: &str,
-        lib_name: &str,
-        use_finalizers_not_cleaners: bool,
-    ) -> (String, String) {
+    fn gen_enum_def(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> (String, String) {
         let native_methods = ty
             .methods
             .iter()
@@ -1853,7 +1819,6 @@ returnVal.option() ?: return null
                     method,
                     Some(self_param),
                     None,
-                    use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1870,7 +1835,6 @@ returnVal.option() ?: return null
                     method,
                     None,
                     None,
-                    use_finalizers_not_cleaners,
                     false, // Add override specifier when interface is generated for opaque self methods
                 )
             })
@@ -1930,8 +1894,9 @@ returnVal.option() ?: return null
         #[derive(Template)]
         #[template(path = "kotlin/Enum.kt.jinja", escape = "none")]
         struct EnumDef<'d> {
-            lib_name: Cow<'d, str>,
-            domain: Cow<'d, str>,
+            lib_name: &'d str,
+            dylib_name: &'d str,
+            domain: &'d str,
             type_name: Cow<'d, str>,
             variants: &'d EnumVariants<'d>,
             self_methods: &'d [MethodInfo],
@@ -1945,8 +1910,9 @@ returnVal.option() ?: return null
         let variants = EnumVariants::new(ty);
 
         let enum_def = EnumDef {
-            lib_name: lib_name.into(),
-            domain: domain.into(),
+            lib_name: self.lib_name,
+            dylib_name: self.dylib_name,
+            domain: self.domain,
             type_name: type_name.into(),
             variants: &variants,
             self_methods: self_methods.as_ref(),
@@ -1960,7 +1926,11 @@ returnVal.option() ?: return null
         .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
 
         (
-            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/"),),
+            format!(
+                "{}/{lib_name}/{type_name}.kt",
+                self.domain.replace('.', "/"),
+                lib_name = self.lib_name
+            ),
             enum_def,
         )
     }
@@ -2249,11 +2219,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: false,
             };
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, enum_code) =
-                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.diplomattest", "somelib", false);
+            let (_, enum_code) = ty_gen_cx.gen_enum_def(enum_def, &type_name);
             insta::assert_snapshot!(enum_code)
         }
     }
@@ -2337,11 +2310,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: false,
             };
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, struct_code) =
-                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.diplomattest", "somelib", false);
+            let (_, struct_code) = ty_gen_cx.gen_struct_def(strct, &type_name);
             insta::assert_snapshot!(struct_code)
         }
     }
@@ -2389,16 +2365,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: false,
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) = ty_gen_cx.gen_opaque_def(
-                opaque_def,
-                &type_name,
-                "dev.diplomattest",
-                "somelib",
-                false,
-            );
+            let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
         }
     }
@@ -2503,16 +2477,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: false,
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) = ty_gen_cx.gen_opaque_def(
-                opaque_def,
-                &type_name,
-                "dev.diplomattest",
-                "somelib",
-                false,
-            );
+            let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
         }
     }
@@ -2559,16 +2531,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: true,
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) = ty_gen_cx.gen_opaque_def(
-                opaque_def,
-                &type_name,
-                "dev.diplomattest",
-                "somelib",
-                true,
-            );
+            let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
         }
     }
@@ -2628,11 +2598,14 @@ mod test {
             option_types: RefCell::new(BTreeSet::new()),
             errors: &error_store,
             callback_params: &mut callback_params,
+            lib_name: "somelib",
+            dylib_name: "somelib",
+            domain: "dev.diplomattest",
+            use_finalizers_not_cleaners: false,
         };
         let trait_name = trait_def.name.to_string();
         // test that we can render and that it doesn't panic
-        let (_, result) =
-            ty_gen_cx.gen_trait_def(trait_def, &trait_name, "dev.diplomattest", "somelib");
+        let (_, result) = ty_gen_cx.gen_trait_def(trait_def, &trait_name);
         insta::assert_snapshot!(result)
     }
 
@@ -2679,16 +2652,14 @@ mod test {
                 option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
+                lib_name: "somelib",
+                dylib_name: "somelib",
+                domain: "dev.diplomattest",
+                use_finalizers_not_cleaners: true,
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) = ty_gen_cx.gen_opaque_def(
-                opaque_def,
-                &type_name,
-                "dev.diplomattest",
-                "somelib",
-                true,
-            );
+            let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
         }
     }

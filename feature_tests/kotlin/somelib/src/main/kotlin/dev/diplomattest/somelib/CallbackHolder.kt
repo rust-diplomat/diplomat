@@ -76,7 +76,7 @@ class CallbackHolder internal constructor (
 
     companion object {
         internal val libClass: Class<CallbackHolderLib> = CallbackHolderLib::class.java
-        internal val lib: CallbackHolderLib = Native.load("somelib", libClass)
+        internal val lib: CallbackHolderLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(func: (Int)->Int): CallbackHolder {

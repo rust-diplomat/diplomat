@@ -20,7 +20,7 @@ enum class AttrEnum {
 
     companion object {
         internal val libClass: Class<AttrEnumLib> = AttrEnumLib::class.java
-        internal val lib: AttrEnumLib = Native.load("somelib", libClass) 
+        internal val lib: AttrEnumLib = Native.load("diplomat_feature_tests", libClass) 
         fun fromNative(native: Int): AttrEnum {
             return AttrEnum.entries[native]
         }

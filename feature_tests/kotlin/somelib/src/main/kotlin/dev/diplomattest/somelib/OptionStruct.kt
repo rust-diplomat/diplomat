@@ -42,7 +42,7 @@ class OptionStruct internal constructor (
 
     companion object {
         internal val libClass: Class<OptionStructLib> = OptionStructLib::class.java
-        internal val lib: OptionStructLib = Native.load("somelib", libClass)
+        internal val lib: OptionStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(OptionStructNative::class.java).toLong()
     }
 

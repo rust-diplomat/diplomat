@@ -28,7 +28,7 @@ class TraitTestingStruct internal constructor (
 
     companion object {
         internal val libClass: Class<TraitTestingStructLib> = TraitTestingStructLib::class.java
-        internal val lib: TraitTestingStructLib = Native.load("somelib", libClass)
+        internal val lib: TraitTestingStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TraitTestingStructNative::class.java).toLong()
     }
 

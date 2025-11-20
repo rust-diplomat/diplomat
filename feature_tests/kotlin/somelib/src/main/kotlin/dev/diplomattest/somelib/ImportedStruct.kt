@@ -28,7 +28,7 @@ class ImportedStruct internal constructor (
 
     companion object {
         internal val libClass: Class<ImportedStructLib> = ImportedStructLib::class.java
-        internal val lib: ImportedStructLib = Native.load("somelib", libClass)
+        internal val lib: ImportedStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(ImportedStructNative::class.java).toLong()
     }
 

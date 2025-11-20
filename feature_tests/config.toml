@@ -4,6 +4,7 @@ unsafe_references_in_callbacks = true
 
 [kotlin]
 domain = "dev.diplomattest"
+dylib-name = "diplomat_feature_tests"
 
 [demo-gen]
 relative-js-path = "../../js/api/"

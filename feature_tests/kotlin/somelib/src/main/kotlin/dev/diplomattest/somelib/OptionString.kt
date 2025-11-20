@@ -27,7 +27,7 @@ class OptionString internal constructor (
 
     companion object {
         internal val libClass: Class<OptionStringLib> = OptionStringLib::class.java
-        internal val lib: OptionStringLib = Native.load("somelib", libClass)
+        internal val lib: OptionStringLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {

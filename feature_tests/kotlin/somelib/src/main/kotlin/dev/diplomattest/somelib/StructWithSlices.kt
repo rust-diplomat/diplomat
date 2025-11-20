@@ -31,7 +31,7 @@ class StructWithSlices internal constructor (
 
     companion object {
         internal val libClass: Class<StructWithSlicesLib> = StructWithSlicesLib::class.java
-        internal val lib: StructWithSlicesLib = Native.load("somelib", libClass)
+        internal val lib: StructWithSlicesLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithSlicesNative::class.java).toLong()
     }
     

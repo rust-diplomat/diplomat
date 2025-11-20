@@ -27,7 +27,7 @@ class TestMacroStruct internal constructor (
 
     companion object {
         internal val libClass: Class<TestMacroStructLib> = TestMacroStructLib::class.java
-        internal val lib: TestMacroStructLib = Native.load("somelib", libClass)
+        internal val lib: TestMacroStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TestMacroStructNative::class.java).toLong()
         @JvmStatic
         
