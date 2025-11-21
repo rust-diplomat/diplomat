@@ -280,6 +280,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 }
             }
             Type::Slice(_) => "Slice()".into(),
+            Type::DiplomatOption(inner) => {
+                let option_ty_name = self.fmt_struct_field_type_native(inner);
+                format!("{option_ty_name}.none()").into()
+            }
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }
     }
@@ -438,6 +442,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Slice(Slice::Str(_, _)) => "String".into(),
             Type::Slice(Slice::Strs(_)) => "List<String>".into(),
+            Type::DiplomatOption(t) => format!("{}?", self.fmt_struct_field_type_kt(t)).into(),
             _ => todo!(),
         }
     }
@@ -470,6 +475,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
+            Type::DiplomatOption(t) => format!("Option{}", self.fmt_struct_field_type_native(t)).into(),
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }
     }

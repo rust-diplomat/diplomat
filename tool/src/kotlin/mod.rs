@@ -30,6 +30,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.utf8_strings = false;
     a.utf16_strings = true;
     a.static_slices = true;
+    a.option = true;
 
     a.constructors = false; // TODO
     a.named_constructors = false; // TODO
@@ -348,6 +349,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 let real_param_name = name[name.rfind('_').unwrap() + 1..].to_string(); // past last _
                 format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
             }
+            Type::DiplomatOption(ref inner) => {
+                let inner_expr = self.gen_kt_to_c_for_type(inner, "it".into());
+                let ffi_option = format!(
+                    "Option{}",
+                    self.formatter.fmt_struct_field_type_native(inner)
+                );
+                format!("{name}?.let {{ {ffi_option}.some({inner_expr}) }} ?: {ffi_option}.none()")
+                    .into()
+            }
             _ => todo!(),
         }
     }
@@ -455,6 +465,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 let trait_id = trt.id();
                 let resolved = self.tcx.resolve_trait(trait_id);
                 format!("DiplomatTrait_{}_Wrapper_Native", resolved.name).into()
+            }
+
+            Type::DiplomatOption(ref inner) => {
+                assert!(additional_name.is_none());
+                format!("Option{}", self.gen_type_name_ffi(inner, None)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1905,6 +1920,10 @@ returnVal.option() ?: return null
                 )
                 .into()
             }
+            Type::DiplomatOption(ref inner) => {
+                assert!(additional_name.is_none());
+                format!("Option{}", self.gen_native_type_name(inner, None)).into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1950,6 +1969,10 @@ returnVal.option() ?: return null
                 self.formatter.fmt_primitive_slice(ty).into()
             }
             Type::Callback(_) => format!("DiplomatCallback_{}", additional_name.unwrap()).into(),
+            Type::DiplomatOption(ref inner) => {
+                assert!(additional_name.is_none());
+                format!("{}?", self.gen_type_name(inner, None)).into()
+            }
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
