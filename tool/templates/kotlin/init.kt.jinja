@@ -632,6 +632,23 @@ class UnitError internal constructor(): Exception("Rust error result for Unit") 
 {{native_result}}
 {% endfor %}
 
-{% for native_option in native_options-%}
-{{native_option}}
+{% for (ffi_type_name, ffi_default) in [
+    ("Unit", None),
+    ("Boolean", Some("false")),
+    ("Byte", Some("0")),
+    ("Short", Some("0")),
+    ("Int", Some("0")),
+    ("Long", Some("0")),
+    ("FFIUint8", Some("FFIUint8()")),
+    ("FFIUint16", Some("FFIUint16()")),
+    ("FFIUint32", Some("FFIUint32()")),
+    ("FFIUint64", Some("FFIUint64()")),
+    ("FFISizet", Some("FFISizet()")),
+    ("FFIIsizet", Some("FFIIsizet()")),
+    ("Float", Some("0.0F")),
+    ("Double", Some("0.0")),
+    ("Slice", Some("Slice()")),
+] -%}
+{% include "Option.kt.jinja" %}
+
 {% endfor %}

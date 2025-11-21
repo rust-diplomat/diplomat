@@ -1,8 +1,8 @@
-internal class Option{{type_name}}: Structure(), Structure.ByValue  {
-    {%- match default%}
+internal class Option{{ffi_type_name}}: Structure(), Structure.ByValue  {
+    {%- match ffi_default %}
     {%- when Some with (default_value)%}
     @JvmField
-    internal var value: {{type_name}} = {{default_value}}
+    internal var value: {{ffi_type_name}} = {{default_value}}
 
     {% when None -%}
     {%- endmatch -%}
@@ -14,9 +14,9 @@ internal class Option{{type_name}}: Structure(), Structure.ByValue  {
         return listOf("value", "isOk")
     }
 
-    internal fun option(): {{type_name}}? {
+    internal fun option(): {{ffi_type_name}}? {
         if (isOk == 1.toByte()) {
-            {%- match default %}
+            {%- match ffi_default %}
             {%- when Some with (_) %}
             return value
             {%- when None %}
