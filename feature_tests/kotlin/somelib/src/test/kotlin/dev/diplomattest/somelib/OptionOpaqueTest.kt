@@ -40,4 +40,20 @@ class OptionOpaqueTest {
         assertEquals(someOption.optionU32(), 10.toUInt())
 
     }
+
+    @Test
+    fun testAcceptsOptionStruct() {
+        var maybeStruct = OptionOpaque.acceptsOptionInputStruct(null, 123.toUByte())
+        assertEquals(maybeStruct, null)
+        val inner = OptionInputStruct.newFromParts(7.toUByte(), null, OptionEnum.Bar)
+        maybeStruct = OptionOpaque.acceptsOptionInputStruct(inner, 123.toUByte())
+        assertEquals(maybeStruct!!.a, 7.toUByte())
+        assertEquals(maybeStruct!!.b, null)
+        assertEquals(maybeStruct!!.c, OptionEnum.Bar)
+
+        val returned = OptionOpaque.returnsOptionInputStruct();
+        assertEquals(returned.a, 6.toUByte());
+        assertEquals(returned.b, null);
+        assertEquals(returned.c, OptionEnum.Bar);
+    }
 }

@@ -64,6 +64,19 @@ pub mod ffi {
                 c: None.into(),
             }
         }
+        #[diplomat::attr(not(kotlin), disable)]
+        /// Needed until https://github.com/rust-diplomat/diplomat/issues/1001 is fixed
+        pub fn new_from_parts(
+            a: Option<u8>,
+            b: Option<DiplomatChar>,
+            c: Option<OptionEnum>,
+        ) -> Self {
+            Self {
+                a: a.into(),
+                b: b.into(),
+                c: c.into(),
+            }
+        }
     }
 
     #[diplomat::attr(not(supports = option), disable)]
