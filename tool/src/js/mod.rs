@@ -225,7 +225,7 @@ pub(crate) fn run<'tcx>(
     struct IndexTemplate<'a> {
         exports: &'a Vec<Cow<'a, str>>,
         typescript: bool,
-        max_size : usize,
+        max_size: usize,
     }
 
     let mut out_index = IndexTemplate {
