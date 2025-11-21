@@ -62,8 +62,6 @@ pub mod ffi {
 
     // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
     // `diplomat-tool js` was crashing when trying to process options-in-structs
-    // Not supported in kotlin
-    #[diplomat::attr(kotlin, disable)]
     pub struct MyStructContainingAnOption {
         pub(crate) a: DiplomatOption<MyStruct>,
         pub(crate) b: DiplomatOption<DefaultEnum>,
