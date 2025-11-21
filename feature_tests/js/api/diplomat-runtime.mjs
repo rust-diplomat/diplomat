@@ -708,7 +708,7 @@ export class FunctionParamAllocator {
      * The stack is popped with {@link get}, returning the most recently allocated pointer.
      * Note that this does NOT clear allocated memory, this must be done with {@link clean}.
      * Each pointer is guaranteed to be within the bounds of #ptr.
-     * 
+     *
      */
     #allocated = [];
     /**
@@ -754,7 +754,7 @@ export class FunctionParamAllocator {
     }
 
     /**
-     * 
+     *
      * @returns The most recently allocated pointer on the stack.
      */
     get() {
