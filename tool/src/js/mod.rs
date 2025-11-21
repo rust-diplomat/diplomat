@@ -225,11 +225,13 @@ pub(crate) fn run<'tcx>(
     struct IndexTemplate<'a> {
         exports: &'a Vec<Cow<'a, str>>,
         typescript: bool,
+        max_size : usize,
     }
 
     let mut out_index = IndexTemplate {
         exports: &exports,
         typescript: false,
+        max_size: function_alloc_max,
     };
 
     files.add_file("index.mjs".into(), out_index.render().unwrap());
@@ -239,10 +241,9 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.d.ts".into(), out_index.render().unwrap());
 
-    // Quick hack to make sure our singleton reserves the correct info:
     files.add_file(
         "diplomat-runtime.mjs".into(),
-        format!("{}\n// Size (in bytes) of the largest buffer we will ever have to pass in to a function:\nFUNCTION_PARAM_ALLOC.reserve({});", include_str!("../../templates/js/runtime.mjs"), function_alloc_max),
+        include_str!("../../templates/js/runtime.mjs").into(),
     );
     files.add_file(
         "diplomat-runtime.d.ts".into(),
