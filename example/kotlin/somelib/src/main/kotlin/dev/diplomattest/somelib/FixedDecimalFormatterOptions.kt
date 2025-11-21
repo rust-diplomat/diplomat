@@ -25,7 +25,7 @@ internal class FixedDecimalFormatterOptionsNative: Structure(), Structure.ByValu
 
 
 
-internal class OptionFixedDecimalFormatterOptionsNative: Structure(), Structure.ByValue  {
+internal class OptionFixedDecimalFormatterOptionsNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FixedDecimalFormatterOptionsNative = FixedDecimalFormatterOptionsNative()
 
@@ -44,6 +44,23 @@ internal class OptionFixedDecimalFormatterOptionsNative: Structure(), Structure.
             return null
         }
     }
+
+
+    constructor(value: FixedDecimalFormatterOptionsNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FixedDecimalFormatterOptionsNative): OptionFixedDecimalFormatterOptionsNative {
+            return OptionFixedDecimalFormatterOptionsNative(value, 1)
+        }
+
+        internal fun none(): OptionFixedDecimalFormatterOptionsNative {
+            return OptionFixedDecimalFormatterOptionsNative(FixedDecimalFormatterOptionsNative(), 0)
+        }
+    }
+
 }
 
 class FixedDecimalFormatterOptions internal constructor (

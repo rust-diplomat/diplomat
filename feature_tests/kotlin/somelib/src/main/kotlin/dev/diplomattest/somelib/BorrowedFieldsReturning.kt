@@ -22,7 +22,7 @@ internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionBorrowedFieldsReturningNative: Structure(), Structure.ByValue  {
+internal class OptionBorrowedFieldsReturningNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: BorrowedFieldsReturningNative = BorrowedFieldsReturningNative()
 
@@ -41,6 +41,23 @@ internal class OptionBorrowedFieldsReturningNative: Structure(), Structure.ByVal
             return null
         }
     }
+
+
+    constructor(value: BorrowedFieldsReturningNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: BorrowedFieldsReturningNative): OptionBorrowedFieldsReturningNative {
+            return OptionBorrowedFieldsReturningNative(value, 1)
+        }
+
+        internal fun none(): OptionBorrowedFieldsReturningNative {
+            return OptionBorrowedFieldsReturningNative(BorrowedFieldsReturningNative(), 0)
+        }
+    }
+
 }
 
 class BorrowedFieldsReturning internal constructor (

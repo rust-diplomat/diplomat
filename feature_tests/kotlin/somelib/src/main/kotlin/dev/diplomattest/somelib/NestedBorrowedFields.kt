@@ -27,7 +27,7 @@ internal class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionNestedBorrowedFieldsNative: Structure(), Structure.ByValue  {
+internal class OptionNestedBorrowedFieldsNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: NestedBorrowedFieldsNative = NestedBorrowedFieldsNative()
 
@@ -46,6 +46,23 @@ internal class OptionNestedBorrowedFieldsNative: Structure(), Structure.ByValue 
             return null
         }
     }
+
+
+    constructor(value: NestedBorrowedFieldsNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: NestedBorrowedFieldsNative): OptionNestedBorrowedFieldsNative {
+            return OptionNestedBorrowedFieldsNative(value, 1)
+        }
+
+        internal fun none(): OptionNestedBorrowedFieldsNative {
+            return OptionNestedBorrowedFieldsNative(NestedBorrowedFieldsNative(), 0)
+        }
+    }
+
 }
 
 class NestedBorrowedFields internal constructor (

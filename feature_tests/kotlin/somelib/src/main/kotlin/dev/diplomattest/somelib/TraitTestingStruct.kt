@@ -24,7 +24,7 @@ internal class TraitTestingStructNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionTraitTestingStructNative: Structure(), Structure.ByValue  {
+internal class OptionTraitTestingStructNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: TraitTestingStructNative = TraitTestingStructNative()
 
@@ -43,6 +43,23 @@ internal class OptionTraitTestingStructNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: TraitTestingStructNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: TraitTestingStructNative): OptionTraitTestingStructNative {
+            return OptionTraitTestingStructNative(value, 1)
+        }
+
+        internal fun none(): OptionTraitTestingStructNative {
+            return OptionTraitTestingStructNative(TraitTestingStructNative(), 0)
+        }
+    }
+
 }
 
 class TraitTestingStruct internal constructor (

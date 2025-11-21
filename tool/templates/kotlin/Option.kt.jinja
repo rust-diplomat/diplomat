@@ -1,4 +1,4 @@
-internal class Option{{ffi_type_name}}: Structure(), Structure.ByValue  {
+internal class Option{{ffi_type_name}} constructor(): Structure(), Structure.ByValue {
     {%- match ffi_default %}
     {%- when Some with (default_value)%}
     @JvmField
@@ -26,4 +26,21 @@ internal class Option{{ffi_type_name}}: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+{% if let Some(default_value) = ffi_default %}
+    constructor(value: {{ffi_type_name}}, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: {{ffi_type_name}}): Option{{ffi_type_name}} {
+            return Option{{ffi_type_name}}(value, 1)
+        }
+
+        internal fun none(): Option{{ffi_type_name}} {
+            return Option{{ffi_type_name}}({{default_value}}, 0)
+        }
+    }
+{% endif %}
 }

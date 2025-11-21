@@ -32,7 +32,7 @@ internal class PrimitiveStructNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionPrimitiveStructNative: Structure(), Structure.ByValue  {
+internal class OptionPrimitiveStructNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: PrimitiveStructNative = PrimitiveStructNative()
 
@@ -51,6 +51,23 @@ internal class OptionPrimitiveStructNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: PrimitiveStructNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: PrimitiveStructNative): OptionPrimitiveStructNative {
+            return OptionPrimitiveStructNative(value, 1)
+        }
+
+        internal fun none(): OptionPrimitiveStructNative {
+            return OptionPrimitiveStructNative(PrimitiveStructNative(), 0)
+        }
+    }
+
 }
 
 class PrimitiveStruct internal constructor (

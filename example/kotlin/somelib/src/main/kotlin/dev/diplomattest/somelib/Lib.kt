@@ -655,7 +655,7 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 }
 
 
-internal class OptionUnit: Structure(), Structure.ByValue  {@JvmField
+internal class OptionUnit constructor(): Structure(), Structure.ByValue {@JvmField
     internal var isOk: Byte = 0
 
     // Define the fields of the struct
@@ -670,9 +670,11 @@ internal class OptionUnit: Structure(), Structure.ByValue  {@JvmField
             return null
         }
     }
+
+
 }
 
-internal class OptionBoolean: Structure(), Structure.ByValue  {
+internal class OptionBoolean constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Boolean = false
 
@@ -691,9 +693,26 @@ internal class OptionBoolean: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Boolean, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Boolean): OptionBoolean {
+            return OptionBoolean(value, 1)
+        }
+
+        internal fun none(): OptionBoolean {
+            return OptionBoolean(false, 0)
+        }
+    }
+
 }
 
-internal class OptionByte: Structure(), Structure.ByValue  {
+internal class OptionByte constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Byte = 0
 
@@ -712,9 +731,26 @@ internal class OptionByte: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Byte, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Byte): OptionByte {
+            return OptionByte(value, 1)
+        }
+
+        internal fun none(): OptionByte {
+            return OptionByte(0, 0)
+        }
+    }
+
 }
 
-internal class OptionShort: Structure(), Structure.ByValue  {
+internal class OptionShort constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Short = 0
 
@@ -733,9 +769,26 @@ internal class OptionShort: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Short, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Short): OptionShort {
+            return OptionShort(value, 1)
+        }
+
+        internal fun none(): OptionShort {
+            return OptionShort(0, 0)
+        }
+    }
+
 }
 
-internal class OptionInt: Structure(), Structure.ByValue  {
+internal class OptionInt constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Int = 0
 
@@ -754,9 +807,26 @@ internal class OptionInt: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Int, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Int): OptionInt {
+            return OptionInt(value, 1)
+        }
+
+        internal fun none(): OptionInt {
+            return OptionInt(0, 0)
+        }
+    }
+
 }
 
-internal class OptionLong: Structure(), Structure.ByValue  {
+internal class OptionLong constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Long = 0
 
@@ -775,9 +845,26 @@ internal class OptionLong: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Long, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Long): OptionLong {
+            return OptionLong(value, 1)
+        }
+
+        internal fun none(): OptionLong {
+            return OptionLong(0, 0)
+        }
+    }
+
 }
 
-internal class OptionFFIUint8: Structure(), Structure.ByValue  {
+internal class OptionFFIUint8 constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFIUint8 = FFIUint8()
 
@@ -796,9 +883,26 @@ internal class OptionFFIUint8: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFIUint8, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFIUint8): OptionFFIUint8 {
+            return OptionFFIUint8(value, 1)
+        }
+
+        internal fun none(): OptionFFIUint8 {
+            return OptionFFIUint8(FFIUint8(), 0)
+        }
+    }
+
 }
 
-internal class OptionFFIUint16: Structure(), Structure.ByValue  {
+internal class OptionFFIUint16 constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFIUint16 = FFIUint16()
 
@@ -817,9 +921,26 @@ internal class OptionFFIUint16: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFIUint16, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFIUint16): OptionFFIUint16 {
+            return OptionFFIUint16(value, 1)
+        }
+
+        internal fun none(): OptionFFIUint16 {
+            return OptionFFIUint16(FFIUint16(), 0)
+        }
+    }
+
 }
 
-internal class OptionFFIUint32: Structure(), Structure.ByValue  {
+internal class OptionFFIUint32 constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFIUint32 = FFIUint32()
 
@@ -838,9 +959,26 @@ internal class OptionFFIUint32: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFIUint32, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFIUint32): OptionFFIUint32 {
+            return OptionFFIUint32(value, 1)
+        }
+
+        internal fun none(): OptionFFIUint32 {
+            return OptionFFIUint32(FFIUint32(), 0)
+        }
+    }
+
 }
 
-internal class OptionFFIUint64: Structure(), Structure.ByValue  {
+internal class OptionFFIUint64 constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFIUint64 = FFIUint64()
 
@@ -859,9 +997,26 @@ internal class OptionFFIUint64: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFIUint64, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFIUint64): OptionFFIUint64 {
+            return OptionFFIUint64(value, 1)
+        }
+
+        internal fun none(): OptionFFIUint64 {
+            return OptionFFIUint64(FFIUint64(), 0)
+        }
+    }
+
 }
 
-internal class OptionFFISizet: Structure(), Structure.ByValue  {
+internal class OptionFFISizet constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFISizet = FFISizet()
 
@@ -880,9 +1035,26 @@ internal class OptionFFISizet: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFISizet, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFISizet): OptionFFISizet {
+            return OptionFFISizet(value, 1)
+        }
+
+        internal fun none(): OptionFFISizet {
+            return OptionFFISizet(FFISizet(), 0)
+        }
+    }
+
 }
 
-internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
+internal class OptionFFIIsizet constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: FFIIsizet = FFIIsizet()
 
@@ -901,9 +1073,26 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: FFIIsizet, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: FFIIsizet): OptionFFIIsizet {
+            return OptionFFIIsizet(value, 1)
+        }
+
+        internal fun none(): OptionFFIIsizet {
+            return OptionFFIIsizet(FFIIsizet(), 0)
+        }
+    }
+
 }
 
-internal class OptionFloat: Structure(), Structure.ByValue  {
+internal class OptionFloat constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Float = 0.0F
 
@@ -922,9 +1111,26 @@ internal class OptionFloat: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Float, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Float): OptionFloat {
+            return OptionFloat(value, 1)
+        }
+
+        internal fun none(): OptionFloat {
+            return OptionFloat(0.0F, 0)
+        }
+    }
+
 }
 
-internal class OptionDouble: Structure(), Structure.ByValue  {
+internal class OptionDouble constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Double = 0.0
 
@@ -943,9 +1149,26 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Double, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Double): OptionDouble {
+            return OptionDouble(value, 1)
+        }
+
+        internal fun none(): OptionDouble {
+            return OptionDouble(0.0, 0)
+        }
+    }
+
 }
 
-internal class OptionSlice: Structure(), Structure.ByValue  {
+internal class OptionSlice constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: Slice = Slice()
 
@@ -964,5 +1187,22 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: Slice, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: Slice): OptionSlice {
+            return OptionSlice(value, 1)
+        }
+
+        internal fun none(): OptionSlice {
+            return OptionSlice(Slice(), 0)
+        }
+    }
+
 }
 

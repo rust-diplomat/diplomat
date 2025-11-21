@@ -25,7 +25,7 @@ internal class StructWithSlicesNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionStructWithSlicesNative: Structure(), Structure.ByValue  {
+internal class OptionStructWithSlicesNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: StructWithSlicesNative = StructWithSlicesNative()
 
@@ -44,6 +44,23 @@ internal class OptionStructWithSlicesNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: StructWithSlicesNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: StructWithSlicesNative): OptionStructWithSlicesNative {
+            return OptionStructWithSlicesNative(value, 1)
+        }
+
+        internal fun none(): OptionStructWithSlicesNative {
+            return OptionStructWithSlicesNative(StructWithSlicesNative(), 0)
+        }
+    }
+
 }
 
 class StructWithSlices internal constructor (
