@@ -27,7 +27,7 @@ internal class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionBorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue  {
+internal class OptionBorrowedFieldsWithBoundsNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: BorrowedFieldsWithBoundsNative = BorrowedFieldsWithBoundsNative()
 
@@ -46,6 +46,23 @@ internal class OptionBorrowedFieldsWithBoundsNative: Structure(), Structure.ByVa
             return null
         }
     }
+
+
+    constructor(value: BorrowedFieldsWithBoundsNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: BorrowedFieldsWithBoundsNative): OptionBorrowedFieldsWithBoundsNative {
+            return OptionBorrowedFieldsWithBoundsNative(value, 1)
+        }
+
+        internal fun none(): OptionBorrowedFieldsWithBoundsNative {
+            return OptionBorrowedFieldsWithBoundsNative(BorrowedFieldsWithBoundsNative(), 0)
+        }
+    }
+
 }
 
 class BorrowedFieldsWithBounds internal constructor (

@@ -24,7 +24,7 @@ internal class CallbackTestingStructNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionCallbackTestingStructNative: Structure(), Structure.ByValue  {
+internal class OptionCallbackTestingStructNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: CallbackTestingStructNative = CallbackTestingStructNative()
 
@@ -43,6 +43,23 @@ internal class OptionCallbackTestingStructNative: Structure(), Structure.ByValue
             return null
         }
     }
+
+
+    constructor(value: CallbackTestingStructNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: CallbackTestingStructNative): OptionCallbackTestingStructNative {
+            return OptionCallbackTestingStructNative(value, 1)
+        }
+
+        internal fun none(): OptionCallbackTestingStructNative {
+            return OptionCallbackTestingStructNative(CallbackTestingStructNative(), 0)
+        }
+    }
+
 }
 
 class CallbackTestingStruct internal constructor (

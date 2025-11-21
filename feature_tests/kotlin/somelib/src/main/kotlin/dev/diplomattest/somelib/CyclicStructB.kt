@@ -24,7 +24,7 @@ internal class CyclicStructBNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionCyclicStructBNative: Structure(), Structure.ByValue  {
+internal class OptionCyclicStructBNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: CyclicStructBNative = CyclicStructBNative()
 
@@ -43,6 +43,23 @@ internal class OptionCyclicStructBNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: CyclicStructBNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: CyclicStructBNative): OptionCyclicStructBNative {
+            return OptionCyclicStructBNative(value, 1)
+        }
+
+        internal fun none(): OptionCyclicStructBNative {
+            return OptionCyclicStructBNative(CyclicStructBNative(), 0)
+        }
+    }
+
 }
 
 class CyclicStructB internal constructor (

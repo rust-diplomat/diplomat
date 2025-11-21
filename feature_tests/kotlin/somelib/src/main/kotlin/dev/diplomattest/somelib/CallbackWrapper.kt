@@ -27,7 +27,7 @@ internal class CallbackWrapperNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionCallbackWrapperNative: Structure(), Structure.ByValue  {
+internal class OptionCallbackWrapperNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: CallbackWrapperNative = CallbackWrapperNative()
 
@@ -46,6 +46,23 @@ internal class OptionCallbackWrapperNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: CallbackWrapperNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: CallbackWrapperNative): OptionCallbackWrapperNative {
+            return OptionCallbackWrapperNative(value, 1)
+        }
+
+        internal fun none(): OptionCallbackWrapperNative {
+            return OptionCallbackWrapperNative(CallbackWrapperNative(), 0)
+        }
+    }
+
 }
 
 

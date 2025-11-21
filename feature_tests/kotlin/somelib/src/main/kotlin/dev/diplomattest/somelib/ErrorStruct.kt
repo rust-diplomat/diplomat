@@ -24,7 +24,7 @@ internal class ErrorStructNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionErrorStructNative: Structure(), Structure.ByValue  {
+internal class OptionErrorStructNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: ErrorStructNative = ErrorStructNative()
 
@@ -43,6 +43,23 @@ internal class OptionErrorStructNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: ErrorStructNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: ErrorStructNative): OptionErrorStructNative {
+            return OptionErrorStructNative(value, 1)
+        }
+
+        internal fun none(): OptionErrorStructNative {
+            return OptionErrorStructNative(ErrorStructNative(), 0)
+        }
+    }
+
 }
 
 class ErrorStruct internal constructor (

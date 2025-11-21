@@ -24,7 +24,7 @@ internal class TestMacroStructNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionTestMacroStructNative: Structure(), Structure.ByValue  {
+internal class OptionTestMacroStructNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: TestMacroStructNative = TestMacroStructNative()
 
@@ -43,6 +43,23 @@ internal class OptionTestMacroStructNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: TestMacroStructNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: TestMacroStructNative): OptionTestMacroStructNative {
+            return OptionTestMacroStructNative(value, 1)
+        }
+
+        internal fun none(): OptionTestMacroStructNative {
+            return OptionTestMacroStructNative(TestMacroStructNative(), 0)
+        }
+    }
+
 }
 
 class TestMacroStruct internal constructor (

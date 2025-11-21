@@ -24,7 +24,7 @@ internal class TraitWrapperNative: Structure(), Structure.ByValue {
 
 
 
-internal class OptionTraitWrapperNative: Structure(), Structure.ByValue  {
+internal class OptionTraitWrapperNative constructor(): Structure(), Structure.ByValue {
     @JvmField
     internal var value: TraitWrapperNative = TraitWrapperNative()
 
@@ -43,6 +43,23 @@ internal class OptionTraitWrapperNative: Structure(), Structure.ByValue  {
             return null
         }
     }
+
+
+    constructor(value: TraitWrapperNative, isOk: Byte): this() {
+        this.value = value
+        this.isOk = isOk
+    }
+
+    companion object {
+        internal fun some(value: TraitWrapperNative): OptionTraitWrapperNative {
+            return OptionTraitWrapperNative(value, 1)
+        }
+
+        internal fun none(): OptionTraitWrapperNative {
+            return OptionTraitWrapperNative(TraitWrapperNative(), 0)
+        }
+    }
+
 }
 
 class TraitWrapper internal constructor (
