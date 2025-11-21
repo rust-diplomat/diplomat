@@ -30,7 +30,13 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
     }
 }
 
+
+{% let ffi_type_name = type_name.to_owned() + "Native" %}
+{% let ffi_default = Some(type_name.to_owned() + "Native()") %}
+{% include "Option.kt.jinja" %}
+
 {% endif -%}
+
 
 {% if !callback_params.is_empty() -%}
     {%- for callback_param in callback_params -%}

@@ -795,9 +795,26 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
 }
 
 
-internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
+internal class OptionUnit: Structure(), Structure.ByValue  {@JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Unit? {
+        if (isOk == 1.toByte()) {
+            return Unit
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionBoolean: Structure(), Structure.ByValue  {
     @JvmField
-    internal var value: CyclicStructANative = CyclicStructANative()
+    internal var value: Boolean = false
 
     @JvmField
     internal var isOk: Byte = 0
@@ -807,7 +824,7 @@ internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
         return listOf("value", "isOk")
     }
 
-    internal fun option(): CyclicStructANative? {
+    internal fun option(): Boolean? {
         if (isOk == 1.toByte()) {
             return value
         } else {
@@ -815,9 +832,10 @@ internal class OptionCyclicStructANative: Structure(), Structure.ByValue  {
         }
     }
 }
-internal class OptionDouble: Structure(), Structure.ByValue  {
+
+internal class OptionByte: Structure(), Structure.ByValue  {
     @JvmField
-    internal var value: Double = 0.0
+    internal var value: Byte = 0
 
     @JvmField
     internal var isOk: Byte = 0
@@ -827,7 +845,7 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
         return listOf("value", "isOk")
     }
 
-    internal fun option(): Double? {
+    internal fun option(): Byte? {
         if (isOk == 1.toByte()) {
             return value
         } else {
@@ -835,9 +853,10 @@ internal class OptionDouble: Structure(), Structure.ByValue  {
         }
     }
 }
-internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
+
+internal class OptionShort: Structure(), Structure.ByValue  {
     @JvmField
-    internal var value: FFIIsizet = FFIIsizet()
+    internal var value: Short = 0
 
     @JvmField
     internal var isOk: Byte = 0
@@ -847,7 +866,7 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
         return listOf("value", "isOk")
     }
 
-    internal fun option(): FFIIsizet? {
+    internal fun option(): Short? {
         if (isOk == 1.toByte()) {
             return value
         } else {
@@ -855,66 +874,7 @@ internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
         }
     }
 }
-internal class OptionFFISizet: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: FFISizet = FFISizet()
 
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): FFISizet? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
-internal class OptionFFIUint32: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: FFIUint32 = FFIUint32()
-
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): FFIUint32? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
-internal class OptionFFIUint8: Structure(), Structure.ByValue  {
-    @JvmField
-    internal var value: FFIUint8 = FFIUint8()
-
-    @JvmField
-    internal var isOk: Byte = 0
-
-    // Define the fields of the struct
-    override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
-    }
-
-    internal fun option(): FFIUint8? {
-        if (isOk == 1.toByte()) {
-            return value
-        } else {
-            return null
-        }
-    }
-}
 internal class OptionInt: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Int = 0
@@ -935,9 +895,10 @@ internal class OptionInt: Structure(), Structure.ByValue  {
         }
     }
 }
-internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
+
+internal class OptionLong: Structure(), Structure.ByValue  {
     @JvmField
-    internal var value: OptionStructNative = OptionStructNative()
+    internal var value: Long = 0
 
     @JvmField
     internal var isOk: Byte = 0
@@ -947,7 +908,7 @@ internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
         return listOf("value", "isOk")
     }
 
-    internal fun option(): OptionStructNative? {
+    internal fun option(): Long? {
         if (isOk == 1.toByte()) {
             return value
         } else {
@@ -955,6 +916,175 @@ internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
         }
     }
 }
+
+internal class OptionFFIUint8: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint8 = FFIUint8()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint8? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFFIUint16: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint16 = FFIUint16()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint16? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFFIUint32: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint32 = FFIUint32()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint32? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFFIUint64: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIUint64 = FFIUint64()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIUint64? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFFISizet: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFISizet = FFISizet()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFISizet? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFFIIsizet: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FFIIsizet = FFIIsizet()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FFIIsizet? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionFloat: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Float = 0.0F
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Float? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+internal class OptionDouble: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Double = 0.0
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Double? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 internal class OptionSlice: Structure(), Structure.ByValue  {
     @JvmField
     internal var value: Slice = Slice()
@@ -975,3 +1105,4 @@ internal class OptionSlice: Structure(), Structure.ByValue  {
         }
     }
 }
+

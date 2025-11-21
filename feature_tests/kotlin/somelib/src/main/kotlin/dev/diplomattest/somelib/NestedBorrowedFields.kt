@@ -24,6 +24,30 @@ internal class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionNestedBorrowedFieldsNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: NestedBorrowedFieldsNative = NestedBorrowedFieldsNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): NestedBorrowedFieldsNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class NestedBorrowedFields internal constructor (
     internal val nativeStruct: NestedBorrowedFieldsNative,
     internal val xEdges: List<Any?>,

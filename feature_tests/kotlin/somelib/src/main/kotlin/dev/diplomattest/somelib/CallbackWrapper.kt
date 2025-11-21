@@ -25,6 +25,30 @@ internal class CallbackWrapperNative: Structure(), Structure.ByValue {
 }
 
 
+
+
+internal class OptionCallbackWrapperNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: CallbackWrapperNative = CallbackWrapperNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): CallbackWrapperNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
+
 internal interface Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }

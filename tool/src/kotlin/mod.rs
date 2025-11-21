@@ -115,7 +115,6 @@ pub(crate) fn run<'tcx>(
         tcx,
         errors: &errors,
         result_types: RefCell::new(BTreeSet::new()),
-        option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
         callback_params: &mut callback_params,
         lib_name: &lib_name,
@@ -218,13 +217,6 @@ pub(crate) fn run<'tcx>(
         .map(|result_type| result_type.render().expect("failed to render result type"))
         .collect::<Vec<_>>();
 
-    let native_options = ty_gen_cx
-        .option_types
-        .borrow()
-        .iter()
-        .map(|option_type| option_type.render().expect("failed to render option type"))
-        .collect::<Vec<_>>();
-
     // The map may contain entries that resolve to the same underlying native types
     // In this case, we don't want to generate multiple copies of those types, as
     // that will error. Make sure we're not doing that.
@@ -243,26 +235,11 @@ pub(crate) fn run<'tcx>(
         }
     }
 
-    let mut native_options_found = BTreeSet::new();
-
-    for ty in &*ty_gen_cx.option_types.borrow() {
-        println!("{:?} / {:?}", ty.type_name, ty.default);
-
-        let inserted = native_options_found.insert(&ty.type_name);
-        if !inserted {
-            panic!(
-                "Found duplicate native Option type for Option<{}> (defaults: ({:?}))",
-                ty.type_name, ty.default
-            );
-        }
-    }
-
     #[derive(Template)]
     #[template(path = "kotlin/init.kt.jinja", escape = "none")]
     struct Init<'a> {
         domain: &'a str,
         native_results: &'a [String],
-        native_options: &'a [String],
         lib_name: &'a str,
         dylib_name: &'a str,
         use_finalizers_not_cleaners: bool,
@@ -273,7 +250,6 @@ pub(crate) fn run<'tcx>(
         lib_name: &lib_name,
         dylib_name,
         native_results: native_results.as_slice(),
-        native_options: native_options.as_slice(),
         use_finalizers_not_cleaners,
     }
     .render()
@@ -290,8 +266,7 @@ pub(crate) fn run<'tcx>(
     (files, errors)
 }
 
-#[derive(Template, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
-#[template(path = "kotlin/Option.kt.jinja")]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 struct TypeForResult<'d> {
     type_name: Cow<'d, str>,
     default: Option<Cow<'d, str>>,
@@ -311,7 +286,6 @@ struct ItemGenContext<'a, 'cx> {
     domain: &'a str,
     formatter: &'a KotlinFormatter<'cx>,
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
-    option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
     callback_params: &'a mut Vec<CallbackParamInfo>,
     use_finalizers_not_cleaners: bool,
@@ -440,47 +414,17 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
                 format!("Result{ok_type}{err_type}").into()
             }
-            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write) => {
-                let mut option_types = self.option_types.borrow_mut();
-                option_types.insert(TypeForResult {
-                    type_name: "Unit".into(),
-                    default: None,
-                });
-                "OptionUnit".into()
-            }
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write) => "OptionUnit".into(),
             ReturnType::Nullable(
                 ref success @ SuccessType::OutType(
                     Type::Struct(..) | Type::Enum(..) | Type::Primitive(..),
                 ),
             ) => {
-                let mut option_types = self.option_types.borrow_mut();
                 let infallible_return = self.gen_infallible_return_type_ffi(success);
-                let default = match success {
-                    SuccessType::OutType(Type::Struct(..)) => {
-                        format!("{infallible_return}()")
-                    }
-                    // Enums are Ints over FFI
-                    SuccessType::OutType(Type::Enum(..)) => "0".to_string(),
-                    SuccessType::OutType(Type::Primitive(prim)) => {
-                        self.formatter.fmt_primitive_default(*prim).into()
-                    }
-                    _ => unreachable!("success type can only be one of the above"),
-                };
-                option_types.insert(TypeForResult {
-                    type_name: infallible_return.clone(),
-                    default: Some(default.into()),
-                });
                 format!("Option{infallible_return}").into()
             }
             ReturnType::Nullable(SuccessType::OutType(Type::Opaque(..))) => "Pointer?".into(),
-            ReturnType::Nullable(SuccessType::OutType(Type::Slice(..))) => {
-                let mut option_types = self.option_types.borrow_mut();
-                option_types.insert(TypeForResult {
-                    type_name: "Slice".into(),
-                    default: Some("Slice()".into()),
-                });
-                "OptionSlice".into()
-            }
+            ReturnType::Nullable(SuccessType::OutType(Type::Slice(..))) => "OptionSlice".into(),
             _ => panic!("unsupported return type"),
         }
     }
@@ -2216,7 +2160,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",
@@ -2307,7 +2250,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",
@@ -2362,7 +2304,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",
@@ -2474,7 +2415,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",
@@ -2528,7 +2468,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",
@@ -2595,7 +2534,6 @@ mod test {
             tcx: &tcx,
             formatter: &formatter,
             result_types: RefCell::new(BTreeSet::new()),
-            option_types: RefCell::new(BTreeSet::new()),
             errors: &error_store,
             callback_params: &mut callback_params,
             lib_name: "somelib",
@@ -2649,7 +2587,6 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
-                option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
                 callback_params: &mut callback_params,
                 lib_name: "somelib",

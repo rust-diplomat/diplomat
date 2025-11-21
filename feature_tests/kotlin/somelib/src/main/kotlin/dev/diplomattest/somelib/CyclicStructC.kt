@@ -21,6 +21,30 @@ internal class CyclicStructCNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionCyclicStructCNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: CyclicStructCNative = CyclicStructCNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): CyclicStructCNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class CyclicStructC internal constructor (
     internal val nativeStruct: CyclicStructCNative) {
     val a: CyclicStructA = CyclicStructA(nativeStruct.a)

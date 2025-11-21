@@ -19,6 +19,30 @@ internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionBorrowedFieldsReturningNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: BorrowedFieldsReturningNative = BorrowedFieldsReturningNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): BorrowedFieldsReturningNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class BorrowedFieldsReturning internal constructor (
     internal val nativeStruct: BorrowedFieldsReturningNative,
     internal val aEdges: List<Any?>

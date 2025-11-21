@@ -21,6 +21,30 @@ internal class TestMacroStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionTestMacroStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: TestMacroStructNative = TestMacroStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): TestMacroStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class TestMacroStruct internal constructor (
     internal val nativeStruct: TestMacroStructNative) {
     val a: ULong = nativeStruct.a.toULong()

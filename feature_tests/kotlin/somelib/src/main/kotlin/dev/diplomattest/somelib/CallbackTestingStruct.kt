@@ -21,6 +21,30 @@ internal class CallbackTestingStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionCallbackTestingStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: CallbackTestingStructNative = CallbackTestingStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): CallbackTestingStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class CallbackTestingStruct internal constructor (
     internal val nativeStruct: CallbackTestingStructNative) {
     val x: Int = nativeStruct.x
