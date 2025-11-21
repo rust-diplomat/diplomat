@@ -746,7 +746,7 @@ export class FunctionParamAllocator {
         }
         this.#allocated.push(this.#ptr + this.#currentPtr);
         this.#currentPtr += size;
-        return this.#currentPtr - size;
+        return this.#ptr + (this.#currentPtr - size);
     }
 
     get() {
