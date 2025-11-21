@@ -282,7 +282,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Slice(_) => "Slice()".into(),
             Type::DiplomatOption(inner) => {
                 let option_ty_name = self.fmt_struct_field_type_native(inner);
-                format!("{option_ty_name}.none()").into()
+                format!("Option{option_ty_name}.none()").into()
             }
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }
