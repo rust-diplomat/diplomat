@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bd3757a3.js";
+            window.path_to_searchindex_js = "searchindex-38969b66.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-eac50189.js"></script>
@@ -174,34 +174,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="returning-strings-writeables"><a class="header" href="#returning-strings-writeables">Returning strings: Writeables</a></h1>
-<p>Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports <a href="https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatWriteable.html"><code>DiplomatWriteable</code></a>, a type with a <code>Write</code> implementation which can be used to write to appropriate string types on the other side.</p>
-<p>For example, if we want to have methods that philosophically return a <code>String</code> or a <code>Result&lt;String&gt;</code>, we can do the following:</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::bridge]
-mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
-    use std::fmt::Write;
-
-    #[diplomat::opaque]
-    #[derive(Debug)]
-    pub struct Thingy(u8);
-
-    impl Thingy {
-        pub fn debug_output(&amp;self, writeable: &amp;mut DiplomatWriteable) {
-            write!(writeable, "{:?}", self);
-        }
-
-        pub fn maybe_get_string(&amp;self, writeable: &amp;mut DiplomatWriteable) -&gt; Result&lt;(), ()&gt; {
-            write!(writeable, "integer is {}", self.0).map_err(|_| ())
-        }
-    }
-}
-<span class="boring">}</span></code></pre>
-<p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
-<p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
-<p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
+                        <h1 id="returning-strings-writeable"><a class="header" href="#returning-strings-writeable">Returning Strings: Writeable</a></h1>
 
                     </main>
 

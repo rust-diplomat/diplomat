@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bd3757a3.js";
+            window.path_to_searchindex_js = "searchindex-38969b66.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-eac50189.js"></script>
@@ -366,7 +366,7 @@ impl SomeConfig {
 <li><code>&amp;DiplomatStr16</code>: An unvalidated string expected to be UTF-16.</li>
 </ul>
 </li>
-<li><a href="#returning-strings-writeables"><code>DiplomatWriteable</code></a> for returning strings. This needs to be the last parameter of the method.</li>
+<li><a href="write.html"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
 <li><a href="#option-types"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
 <li><a href="#callbacks">Callbacks</a> in parameters. Support is limited.</li>
 <li><code>Result&lt;T, E&gt;</code> in return values</li>
@@ -657,34 +657,7 @@ impl MyType{
 <p>The callback’s parameters &amp; return types may be limited depending on the target language for now. Additional traits are not supported, however <code>+ 'static</code> may be given, which allows for moving the trait object into a <code>Box&lt;dyn Fn()&gt;</code>.</p>
 <p>Some backends may support callbacks accepting [mutable] references to opaque types as parameters, but lifetime parsing for these is not yet supported by any backend. Only anonymous lifetimes are allowed as a result, meaning that no such parameter may be guaranteed to live longer than a single invocation of the callback.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="returning-strings-writeables"><a class="header" href="#returning-strings-writeables">Returning strings: Writeables</a></h1>
-<p>Most languages have their own type to handle strings. To avoid unnecessary allocations, Diplomat supports <a href="https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatWriteable.html"><code>DiplomatWriteable</code></a>, a type with a <code>Write</code> implementation which can be used to write to appropriate string types on the other side.</p>
-<p>For example, if we want to have methods that philosophically return a <code>String</code> or a <code>Result&lt;String&gt;</code>, we can do the following:</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::bridge]
-mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
-    use std::fmt::Write;
-
-    #[diplomat::opaque]
-    #[derive(Debug)]
-    pub struct Thingy(u8);
-
-    impl Thingy {
-        pub fn debug_output(&amp;self, writeable: &amp;mut DiplomatWriteable) {
-            write!(writeable, "{:?}", self);
-        }
-
-        pub fn maybe_get_string(&amp;self, writeable: &amp;mut DiplomatWriteable) -&gt; Result&lt;(), ()&gt; {
-            write!(writeable, "integer is {}", self.0).map_err(|_| ())
-        }
-    }
-}
-<span class="boring">}</span></code></pre>
-<p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
-<p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
-<p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
+<h1 id="returning-strings-writeable"><a class="header" href="#returning-strings-writeable">Returning Strings: Writeable</a></h1>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
 <p>Some Diplomat backends support <code>--docs</code>, which will generate additional documentation from your Markdown doc comments</p>
