@@ -1553,7 +1553,7 @@ returnVal.option() ?: return null
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
                     native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
-                        field_name.as_ref(),
+                        &format!("nativeStruct.{field_name}"),
                         &ty.lifetimes,
                         &field.ty,
                     ),

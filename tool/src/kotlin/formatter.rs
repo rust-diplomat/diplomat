@@ -328,16 +328,19 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
+    /// Format the conversion of a struct field from native to Kotlin
+    /// field_val is the struct field expression, or some other expression getting the
+    /// value being converted.
     pub fn fmt_struct_field_native_to_kt<'a, P: TyPosition>(
         &'a self,
-        field_name: &'a str,
+        field_val: &'a str,
         lifetime_env: &'a LifetimeEnv,
         ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => {
                 let maybe_unsized_conversion = self.fmt_unsized_conversion(*prim, false);
-                format!("nativeStruct.{field_name}{maybe_unsized_conversion}").into()
+                format!("{field_val}{maybe_unsized_conversion}").into()
             }
             Type::Opaque(opaque) => {
                 let lt_list: String =
@@ -366,14 +369,14 @@ impl<'tcx> KotlinFormatter<'tcx> {
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
                 if opaque.is_optional() {
                     format!(
-                        r#"if (nativeStruct.{field_name} == null) {{
+                        r#"if ({field_val} == null) {{
         null
     }} else {{
-        {ty_name}(nativeStruct.{field_name}!!, {lt_list})
+        {ty_name}({field_val}!!, {lt_list})
     }}"#
                     )
                 } else {
-                    format!("{ty_name}(nativeStruct.{field_name}, {lt_list})")
+                    format!("{ty_name}({field_val}, {lt_list})")
                 }
                 .into()
             }
@@ -391,28 +394,36 @@ impl<'tcx> KotlinFormatter<'tcx> {
                         }
                     })
                     .fold(String::new(), |accum, new| format!("{accum}, {new}"));
-                format!("{ty_name}(nativeStruct.{field_name}{lt_list})").into()
+                format!("{ty_name}({field_val}{lt_list})").into()
             }
             Type::Enum(enum_path) => {
                 let field_type_name: &str = self.tcx.resolve_enum(enum_path.tcx_id).name.as_ref();
-                format!("{field_type_name}.fromNative(nativeStruct.{field_name})").into()
+                format!("{field_type_name}.fromNative({field_val})").into()
             }
             Type::Slice(Slice::Primitive(_, prim)) => format!(
-                "PrimitiveArrayTools.get{}Array(nativeStruct.{field_name})",
+                "PrimitiveArrayTools.get{}Array({field_val})",
                 self.fmt_primitive_as_kt(*prim)
             )
             .into(),
             Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
-                format!("PrimitiveArrayTools.getUtf16(nativeStruct.{field_name})").into()
+                format!("PrimitiveArrayTools.getUtf16({field_val})").into()
             }
             Type::Slice(Slice::Str(_, _)) => {
-                format!("PrimitiveArrayTools.getUtf8(nativeStruct.{field_name})").into()
+                format!("PrimitiveArrayTools.getUtf8({field_val})").into()
             }
             Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => {
-                format!("PrimitiveArrayTools.getUt16s(nativeStruct.{field_name})").into()
+                format!("PrimitiveArrayTools.getUt16s({field_val})").into()
             }
             Type::Slice(Slice::Strs(_)) => {
-                format!("PrimitiveArrayTools.getUt16s(nativeStruct.{field_name})").into()
+                format!("PrimitiveArrayTools.getUt16s({field_val})").into()
+            }
+            Type::DiplomatOption(ref inner) => {
+                // Kotlin allows you to .map() an Option via `val?.let { it.foo() }` where `it` is an implicit lambda argument
+                format!(
+                    "{field_val}.option()?.let {{ {} }}",
+                    self.fmt_struct_field_native_to_kt("it", lifetime_env, inner)
+                )
+                .into()
             }
             _ => todo!(),
         }
@@ -475,7 +486,9 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
-            Type::DiplomatOption(t) => format!("Option{}", self.fmt_struct_field_type_native(t)).into(),
+            Type::DiplomatOption(t) => {
+                format!("Option{}", self.fmt_struct_field_type_native(t)).into()
+            }
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }
     }
