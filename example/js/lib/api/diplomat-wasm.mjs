@@ -1,5 +1,5 @@
 import cfg from '../diplomat.config.mjs';
-import {readString8, FUNCTION_PARAM_ALLOC, internalConstructor} from './diplomat-runtime.mjs'
+import {readString8} from './diplomat-runtime.mjs'
 
 let wasm;
 
@@ -48,7 +48,5 @@ wasm.diplomat_init();
 if (cfg['init'] !== undefined) {
     cfg['init'](wasm);
 }
-
-FUNCTION_PARAM_ALLOC.init(internalConstructor, wasm);
 
 export default wasm;

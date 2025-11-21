@@ -125,3 +125,8 @@ export { ContiguousEnum } from "./ContiguousEnum.mjs"
 export { DefaultEnum } from "./DefaultEnum.mjs"
 
 export { MyEnum } from "./MyEnum.mjs"
+
+import wasm from "./diplomat-wasm.mjs";
+import {FUNCTION_PARAM_ALLOC, internalConstructor} from "./diplomat-runtime.mjs";
+
+FUNCTION_PARAM_ALLOC.reserve(internalConstructor, wasm, 40);
