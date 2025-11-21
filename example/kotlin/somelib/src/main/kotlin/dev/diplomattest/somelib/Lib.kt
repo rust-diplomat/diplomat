@@ -465,13 +465,11 @@ class FFISizet(val value: ULong = 0u): com.sun.jna.IntegerType(Native.SIZE_T_SIZ
 
 class FFIIsizet(val value: Long = 0): com.sun.jna.IntegerType(Native.SIZE_T_SIZE, value, true)  {
     override fun toByte(): Byte = this.toLong().toByte()
-    override fun toChar(): Char = this.toLong().toInt().toChar()
     override fun toShort(): Short = this.toLong().toShort()
 }
 
 class FFIUint8(val value: UByte = 0u): com.sun.jna.IntegerType(1, value.toByte().toLong(), true)  {
     override fun toByte(): Byte = this.toLong().toByte()
-    override fun toChar(): Char = this.toLong().toInt().toChar()
     override fun toShort(): Short = this.toLong().toShort()
     fun toUByte(): UByte = this.toByte().toUByte()
     constructor(): this(0u)
@@ -479,7 +477,6 @@ class FFIUint8(val value: UByte = 0u): com.sun.jna.IntegerType(1, value.toByte()
 
 class FFIUint16(val value: UShort = 0u): com.sun.jna.IntegerType(2, value.toShort().toLong(), true)  {
     override fun toByte(): Byte = this.toLong().toByte()
-    override fun toChar(): Char = this.toLong().toInt().toChar()
     override fun toShort(): Short = this.toLong().toShort()
     fun toUShort(): UShort = this.toShort().toUShort()
     constructor(): this(0u)
@@ -487,7 +484,6 @@ class FFIUint16(val value: UShort = 0u): com.sun.jna.IntegerType(2, value.toShor
 
 class FFIUint32(val value: UInt = 0u): com.sun.jna.IntegerType(4, value.toInt().toLong(), true)  {
     override fun toByte(): Byte = this.toLong().toByte()
-    override fun toChar(): Char = this.toLong().toInt().toChar()
     override fun toShort(): Short = this.toLong().toShort()
     fun toUInt(): UInt = this.toInt().toUInt()
     constructor(): this(0u)
@@ -495,7 +491,6 @@ class FFIUint32(val value: UInt = 0u): com.sun.jna.IntegerType(4, value.toInt().
 
 class FFIUint64(val value: ULong = 0u): com.sun.jna.IntegerType(8, value.toLong(), true)  {
     override fun toByte(): Byte = this.toLong().toByte()
-    override fun toChar(): Char = this.toLong().toInt().toChar()
     override fun toShort(): Short = this.toLong().toShort()
     fun toULong(): ULong = this.toLong().toULong()
     constructor(): this(0u)
