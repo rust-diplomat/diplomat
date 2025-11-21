@@ -29,6 +29,30 @@ internal class PrimitiveStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionPrimitiveStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: PrimitiveStructNative = PrimitiveStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): PrimitiveStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class PrimitiveStruct internal constructor (
     internal val nativeStruct: PrimitiveStructNative) {
     val x: Float = nativeStruct.x

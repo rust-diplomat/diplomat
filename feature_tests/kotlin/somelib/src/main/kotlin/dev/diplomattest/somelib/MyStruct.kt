@@ -35,6 +35,30 @@ internal class MyStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionMyStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: MyStructNative = MyStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): MyStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class MyStruct internal constructor (
     internal val nativeStruct: MyStructNative) {
     val a: UByte = nativeStruct.a.toUByte()

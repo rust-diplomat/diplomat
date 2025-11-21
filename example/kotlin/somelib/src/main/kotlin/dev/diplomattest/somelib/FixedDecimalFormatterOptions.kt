@@ -22,6 +22,30 @@ internal class FixedDecimalFormatterOptionsNative: Structure(), Structure.ByValu
     }
 }
 
+
+
+
+internal class OptionFixedDecimalFormatterOptionsNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: FixedDecimalFormatterOptionsNative = FixedDecimalFormatterOptionsNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): FixedDecimalFormatterOptionsNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class FixedDecimalFormatterOptions internal constructor (
     internal val nativeStruct: FixedDecimalFormatterOptionsNative) {
     val groupingStrategy: FixedDecimalGroupingStrategy = FixedDecimalGroupingStrategy.fromNative(nativeStruct.groupingStrategy)

@@ -21,6 +21,30 @@ internal class ErrorStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionErrorStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: ErrorStructNative = ErrorStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): ErrorStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class ErrorStruct internal constructor (
     internal val nativeStruct: ErrorStructNative): Exception("Rust error result for ErrorStruct") {
     val i: Int = nativeStruct.i

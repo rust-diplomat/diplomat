@@ -21,6 +21,30 @@ internal class ImportedStructNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionImportedStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: ImportedStructNative = ImportedStructNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): ImportedStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class ImportedStruct internal constructor (
     internal val nativeStruct: ImportedStructNative) {
     val foo: UnimportedEnum = UnimportedEnum.fromNative(nativeStruct.foo)

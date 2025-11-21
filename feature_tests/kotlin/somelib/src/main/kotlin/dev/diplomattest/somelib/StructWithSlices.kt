@@ -22,6 +22,30 @@ internal class StructWithSlicesNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionStructWithSlicesNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: StructWithSlicesNative = StructWithSlicesNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): StructWithSlicesNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class StructWithSlices internal constructor (
     internal val nativeStruct: StructWithSlicesNative,
     internal val aEdges: List<Any?>

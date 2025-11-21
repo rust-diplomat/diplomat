@@ -24,6 +24,30 @@ internal class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionBorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: BorrowedFieldsWithBoundsNative = BorrowedFieldsWithBoundsNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): BorrowedFieldsWithBoundsNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class BorrowedFieldsWithBounds internal constructor (
     internal val nativeStruct: BorrowedFieldsWithBoundsNative,
     internal val aEdges: List<Any?>,

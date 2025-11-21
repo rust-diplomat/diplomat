@@ -21,6 +21,30 @@ internal class TraitWrapperNative: Structure(), Structure.ByValue {
     }
 }
 
+
+
+
+internal class OptionTraitWrapperNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: TraitWrapperNative = TraitWrapperNative()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): TraitWrapperNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+
 class TraitWrapper internal constructor (
     internal val nativeStruct: TraitWrapperNative) {
     val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
