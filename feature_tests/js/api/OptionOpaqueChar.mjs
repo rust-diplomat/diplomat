@@ -41,6 +41,7 @@ export class OptionOpaqueChar {
         try {}
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

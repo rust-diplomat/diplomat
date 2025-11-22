@@ -91,6 +91,7 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%- endif -%}
     {%- endif %}
     _intoFFI(
+        dst,
         functionCleanupArena,
         appendArrayMap
     ) {
@@ -98,17 +99,23 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
         {%- if owns_wrapped_primitive %}
         return this.#{{fields.first().unwrap().field_name}};
         {%- else %}
-        return this.#{{fields.first().unwrap().field_name}}._intoFFI(functionCleanupArena, appendArrayMap);
+        return this.#{{fields.first().unwrap().field_name}}._intoFFI(dst, appendArrayMap);
         {%- endif -%}
         {%- else %}
-        let buffer = diplomatRuntime.DiplomatBuf.struct(wasm, {{size}}, {{align}});
 
-        this._writeToArrayBuffer(wasm.memory.buffer, buffer.ptr, functionCleanupArena, appendArrayMap);
+        this._writeToArrayBuffer(wasm.memory.buffer, dst, functionCleanupArena, appendArrayMap);
 
-        functionCleanupArena.alloc(buffer);
-
-        return buffer.ptr;
+        return dst;
         {%- endif %}
+    }
+
+    static get _sizeBytes() {
+        return {{size}};
+    }
+
+    /// Currently unused, we may want to use later on though:
+    static get _sizeAlign() {
+        return {{align}};
     }
 
     static _fromSuppliedValue(internalConstructor, obj) {

@@ -44,6 +44,7 @@ export class MyOpaqueEnum {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 
@@ -57,6 +58,7 @@ export class MyOpaqueEnum {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             write.free();
         }
     }
