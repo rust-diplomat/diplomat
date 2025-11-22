@@ -109,7 +109,7 @@ class ResultOpaque internal constructor (
                 return returnOpaque.ok()
             } else {
                 
-                val returnStruct = ErrorStruct(returnVal.union.err)
+                val returnStruct = ErrorStruct.fromNative(returnVal.union.err)
                 return returnStruct.err()
             }
         }

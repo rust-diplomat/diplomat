@@ -66,25 +66,29 @@ internal class OptionOptionStructNative constructor(): Structure(), Structure.By
 
 }
 
-class OptionStruct internal constructor (
-    internal val nativeStruct: OptionStructNative) {
-    val a: OptionOpaque? = if (nativeStruct.a == null) {
+class OptionStruct (var a: OptionOpaque?, var b: OptionOpaqueChar?, var c: UInt, var d: OptionOpaque) {
+    companion object {
+
+        internal val libClass: Class<OptionStructLib> = OptionStructLib::class.java
+        internal val lib: OptionStructLib = Native.load("diplomat_feature_tests", libClass)
+        val NATIVESIZE: Long = Native.getNativeSize(OptionStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: OptionStructNative): OptionStruct {
+            val a: OptionOpaque? = if (nativeStruct.a == null) {
         null
     } else {
         OptionOpaque(nativeStruct.a!!, listOf())
     }
-    val b: OptionOpaqueChar? = if (nativeStruct.b == null) {
+            val b: OptionOpaqueChar? = if (nativeStruct.b == null) {
         null
     } else {
         OptionOpaqueChar(nativeStruct.b!!, listOf())
     }
-    val c: UInt = nativeStruct.c.toUInt()
-    val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf())
+            val c: UInt = nativeStruct.c.toUInt()
+            val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf())
 
-    companion object {
-        internal val libClass: Class<OptionStructLib> = OptionStructLib::class.java
-        internal val lib: OptionStructLib = Native.load("diplomat_feature_tests", libClass)
-        val NATIVESIZE: Long = Native.getNativeSize(OptionStructNative::class.java).toLong()
+            return OptionStruct(a, b, c, d)
+        }
+
     }
-
 }

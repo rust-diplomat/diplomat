@@ -62,14 +62,19 @@ internal class OptionTestMacroStructNative constructor(): Structure(), Structure
 
 }
 
-class TestMacroStruct internal constructor (
-    internal val nativeStruct: TestMacroStructNative) {
-    val a: ULong = nativeStruct.a.toULong()
-
+class TestMacroStruct (var a: ULong) {
     companion object {
+
         internal val libClass: Class<TestMacroStructLib> = TestMacroStructLib::class.java
         internal val lib: TestMacroStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TestMacroStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: TestMacroStructNative): TestMacroStruct {
+            val a: ULong = nativeStruct.a.toULong()
+
+            return TestMacroStruct(a)
+        }
+
         @JvmStatic
         
         fun testFunc(): ULong {
@@ -83,9 +88,14 @@ class TestMacroStruct internal constructor (
             
             val returnVal = lib.namespace_TestMacroStruct_test_meta();
             
-            val returnStruct = TestMacroStruct(returnVal)
+            val returnStruct = TestMacroStruct.fromNative(returnVal)
             return returnStruct
         }
+    }
+    internal fun toNative(): TestMacroStructNative {
+        var native = TestMacroStructNative()
+        native.a = FFISizet(this.a)
+        return native
     }
 
 }

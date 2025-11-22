@@ -62,15 +62,26 @@ internal class OptionTraitTestingStructNative constructor(): Structure(), Struct
 
 }
 
-class TraitTestingStruct internal constructor (
-    internal val nativeStruct: TraitTestingStructNative) {
-    val x: Int = nativeStruct.x
-    val y: Int = nativeStruct.y
-
+class TraitTestingStruct (var x: Int, var y: Int) {
     companion object {
+
         internal val libClass: Class<TraitTestingStructLib> = TraitTestingStructLib::class.java
         internal val lib: TraitTestingStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TraitTestingStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: TraitTestingStructNative): TraitTestingStruct {
+            val x: Int = nativeStruct.x
+            val y: Int = nativeStruct.y
+
+            return TraitTestingStruct(x, y)
+        }
+
+    }
+    internal fun toNative(): TraitTestingStructNative {
+        var native = TraitTestingStructNative()
+        native.x = this.x
+        native.y = this.y
+        return native
     }
 
 }
