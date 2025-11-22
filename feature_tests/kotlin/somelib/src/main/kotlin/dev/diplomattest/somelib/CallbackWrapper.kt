@@ -203,7 +203,7 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
         fun fromCallback(cb: (CallbackTestingStruct)->Int): DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
             val callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int {
-                    return cb(CallbackTestingStruct(arg0));
+                    return cb(CallbackTestingStruct.fromNative(arg0));
                 }
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()
@@ -360,14 +360,19 @@ internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallba
         }
     }
 }
-class CallbackWrapper internal constructor (
-    internal val nativeStruct: CallbackWrapperNative) {
-    val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
-
+class CallbackWrapper (var cantBeEmpty: Boolean) {
     companion object {
+
         internal val libClass: Class<CallbackWrapperLib> = CallbackWrapperLib::class.java
         internal val lib: CallbackWrapperLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackWrapperNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: CallbackWrapperNative): CallbackWrapper {
+            val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
+
+            return CallbackWrapper(cantBeEmpty)
+        }
+
         @JvmStatic
         
         fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
@@ -404,6 +409,11 @@ class CallbackWrapper internal constructor (
             val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSlice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
             
         }
+    }
+    internal fun toNative(): CallbackWrapperNative {
+        var native = CallbackWrapperNative()
+        native.cantBeEmpty = if (this.cantBeEmpty) 1 else 0
+        return native
     }
 
 }

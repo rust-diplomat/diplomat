@@ -65,16 +65,21 @@ internal class OptionOptionInputStructNative constructor(): Structure(), Structu
 
 }
 
-class OptionInputStruct internal constructor (
-    internal val nativeStruct: OptionInputStructNative) {
-    val a: UByte? = nativeStruct.a.option()?.let { it.toUByte() }
-    val b: Int? = nativeStruct.b.option()?.let { it }
-    val c: OptionEnum? = nativeStruct.c.option()?.let { OptionEnum.fromNative(it) }
-
+class OptionInputStruct (var a: UByte?, var b: Int?, var c: OptionEnum?) {
     companion object {
+
         internal val libClass: Class<OptionInputStructLib> = OptionInputStructLib::class.java
         internal val lib: OptionInputStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(OptionInputStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: OptionInputStructNative): OptionInputStruct {
+            val a: UByte? = nativeStruct.a.option()?.let { it.toUByte() }
+            val b: Int? = nativeStruct.b.option()?.let { it }
+            val c: OptionEnum? = nativeStruct.c.option()?.let { OptionEnum.fromNative(it) }
+
+            return OptionInputStruct(a, b, c)
+        }
+
         @JvmStatic
         
         /** Needed until https://github.com/rust-diplomat/diplomat/issues/1001 is fixed
@@ -83,9 +88,16 @@ class OptionInputStruct internal constructor (
             
             val returnVal = lib.OptionInputStruct_new_from_parts(a?.let { OptionFFIUint8.some(FFIUint8(it)) } ?: OptionFFIUint8.none(), b?.let { OptionInt.some(it) } ?: OptionInt.none(), c?.let { OptionInt.some(it.toNative()) } ?: OptionInt.none());
             
-            val returnStruct = OptionInputStruct(returnVal)
+            val returnStruct = OptionInputStruct.fromNative(returnVal)
             return returnStruct
         }
+    }
+    internal fun toNative(): OptionInputStructNative {
+        var native = OptionInputStructNative()
+        native.a = this.a?.let { OptionFFIUint8.some(FFIUint8(it)) } ?: OptionFFIUint8.none()
+        native.b = this.b?.let { OptionInt.some(it) } ?: OptionInt.none()
+        native.c = this.c?.let { OptionInt.some(it.toNative()) } ?: OptionInt.none()
+        return native
     }
 
 }

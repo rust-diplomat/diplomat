@@ -62,15 +62,26 @@ internal class OptionCallbackTestingStructNative constructor(): Structure(), Str
 
 }
 
-class CallbackTestingStruct internal constructor (
-    internal val nativeStruct: CallbackTestingStructNative) {
-    val x: Int = nativeStruct.x
-    val y: Int = nativeStruct.y
-
+class CallbackTestingStruct (var x: Int, var y: Int) {
     companion object {
+
         internal val libClass: Class<CallbackTestingStructLib> = CallbackTestingStructLib::class.java
         internal val lib: CallbackTestingStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CallbackTestingStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: CallbackTestingStructNative): CallbackTestingStruct {
+            val x: Int = nativeStruct.x
+            val y: Int = nativeStruct.y
+
+            return CallbackTestingStruct(x, y)
+        }
+
+    }
+    internal fun toNative(): CallbackTestingStructNative {
+        var native = CallbackTestingStructNative()
+        native.x = this.x
+        native.y = this.y
+        return native
     }
 
 }

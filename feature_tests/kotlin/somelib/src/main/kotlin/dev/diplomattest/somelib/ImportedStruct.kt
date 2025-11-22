@@ -62,15 +62,26 @@ internal class OptionImportedStructNative constructor(): Structure(), Structure.
 
 }
 
-class ImportedStruct internal constructor (
-    internal val nativeStruct: ImportedStructNative) {
-    val foo: UnimportedEnum = UnimportedEnum.fromNative(nativeStruct.foo)
-    val count: UByte = nativeStruct.count.toUByte()
-
+class ImportedStruct (var foo: UnimportedEnum, var count: UByte) {
     companion object {
+
         internal val libClass: Class<ImportedStructLib> = ImportedStructLib::class.java
         internal val lib: ImportedStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(ImportedStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: ImportedStructNative): ImportedStruct {
+            val foo: UnimportedEnum = UnimportedEnum.fromNative(nativeStruct.foo)
+            val count: UByte = nativeStruct.count.toUByte()
+
+            return ImportedStruct(foo, count)
+        }
+
+    }
+    internal fun toNative(): ImportedStructNative {
+        var native = ImportedStructNative()
+        native.foo = this.foo.toNative()
+        native.count = FFIUint8(this.count)
+        return native
     }
 
 }

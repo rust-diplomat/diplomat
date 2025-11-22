@@ -74,7 +74,7 @@ class OptionOpaque internal constructor (
             
             val intermediateOption = returnVal.option() ?: return null
 
-            val returnStruct = OptionStruct(intermediateOption)
+            val returnStruct = OptionStruct.fromNative(intermediateOption)
             return returnStruct
                                     
         }
@@ -84,7 +84,7 @@ class OptionOpaque internal constructor (
             
             val returnVal = lib.OptionOpaque_new_struct();
             
-            val returnStruct = OptionStruct(returnVal)
+            val returnStruct = OptionStruct.fromNative(returnVal)
             return returnStruct
         }
         @JvmStatic
@@ -93,7 +93,7 @@ class OptionOpaque internal constructor (
             
             val returnVal = lib.OptionOpaque_new_struct_nones();
             
-            val returnStruct = OptionStruct(returnVal)
+            val returnStruct = OptionStruct.fromNative(returnVal)
             return returnStruct
         }
         @JvmStatic
@@ -123,7 +123,7 @@ class OptionOpaque internal constructor (
         
         fun acceptsBorrowingOptionStruct(arg: BorrowingOptionStruct): Unit {
             
-            val returnVal = lib.OptionOpaque_accepts_borrowing_option_struct(arg.nativeStruct);
+            val returnVal = lib.OptionOpaque_accepts_borrowing_option_struct(arg.toNative());
             
         }
         @JvmStatic
@@ -139,11 +139,11 @@ class OptionOpaque internal constructor (
         
         fun acceptsOptionInputStruct(arg: OptionInputStruct?, sentinel: UByte): OptionInputStruct? {
             
-            val returnVal = lib.OptionOpaque_accepts_option_input_struct(arg?.let { OptionOptionInputStructNative.some(it.nativeStruct) } ?: OptionOptionInputStructNative.none(), FFIUint8(sentinel));
+            val returnVal = lib.OptionOpaque_accepts_option_input_struct(arg?.let { OptionOptionInputStructNative.some(it.toNative()) } ?: OptionOptionInputStructNative.none(), FFIUint8(sentinel));
             
             val intermediateOption = returnVal.option() ?: return null
 
-            val returnStruct = OptionInputStruct(intermediateOption)
+            val returnStruct = OptionInputStruct.fromNative(intermediateOption)
             return returnStruct
                                     
         }
@@ -153,7 +153,7 @@ class OptionOpaque internal constructor (
             
             val returnVal = lib.OptionOpaque_returns_option_input_struct();
             
-            val returnStruct = OptionInputStruct(returnVal)
+            val returnStruct = OptionInputStruct.fromNative(returnVal)
             return returnStruct
         }
     }
