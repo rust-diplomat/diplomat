@@ -62,14 +62,19 @@ internal class OptionTraitWrapperNative constructor(): Structure(), Structure.By
 
 }
 
-class TraitWrapper internal constructor (
-    internal val nativeStruct: TraitWrapperNative) {
-    val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
-
+class TraitWrapper (var cantBeEmpty: Boolean) {
     companion object {
+
         internal val libClass: Class<TraitWrapperLib> = TraitWrapperLib::class.java
         internal val lib: TraitWrapperLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(TraitWrapperNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: TraitWrapperNative): TraitWrapper {
+            val cantBeEmpty: Boolean = nativeStruct.cantBeEmpty > 0
+
+            return TraitWrapper(cantBeEmpty)
+        }
+
         @JvmStatic
         
         fun testWithTrait(t: TesterTrait, x: Int): Int {
@@ -84,6 +89,11 @@ class TraitWrapper internal constructor (
             val returnVal = lib.TraitWrapper_test_trait_with_struct(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
             return (returnVal)
         }
+    }
+    internal fun toNative(): TraitWrapperNative {
+        var native = TraitWrapperNative()
+        native.cantBeEmpty = if (this.cantBeEmpty) 1 else 0
+        return native
     }
 
 }

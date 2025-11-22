@@ -65,18 +65,21 @@ internal class OptionBorrowedFieldsNative constructor(): Structure(), Structure.
 
 }
 
-class BorrowedFields internal constructor (
-    internal val nativeStruct: BorrowedFieldsNative,
-    internal val aEdges: List<Any?>
-    ) {
-    val a: String = PrimitiveArrayTools.getUtf16(nativeStruct.a)
-    val b: String = PrimitiveArrayTools.getUtf8(nativeStruct.b)
-    val c: String = PrimitiveArrayTools.getUtf8(nativeStruct.c)
-
+class BorrowedFields (var a: String, var b: String, var c: String) {
     companion object {
+
         internal val libClass: Class<BorrowedFieldsLib> = BorrowedFieldsLib::class.java
         internal val lib: BorrowedFieldsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: BorrowedFieldsNative,aEdges: List<Any?>): BorrowedFields {
+            val a: String = PrimitiveArrayTools.getUtf16(nativeStruct.a)
+            val b: String = PrimitiveArrayTools.getUtf8(nativeStruct.b)
+            val c: String = PrimitiveArrayTools.getUtf8(nativeStruct.c)
+
+            return BorrowedFields(a, b, c)
+        }
+
         @JvmStatic
         
         fun fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields {
@@ -86,9 +89,19 @@ class BorrowedFields internal constructor (
             val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice);
             
             val xEdges: List<Any?> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
-            val returnStruct = BorrowedFields(returnVal, xEdges)
+            val returnStruct = BorrowedFields.fromNative(returnVal, xEdges)
             return returnStruct
         }
     }
+    internal fun toNative(): BorrowedFieldsNative {
+        var native = BorrowedFieldsNative()
+        native.a = this.aSlice
+        native.b = this.bSlice
+        native.c = this.cSlice
+        return native
+    }
 
+    internal fun aEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }

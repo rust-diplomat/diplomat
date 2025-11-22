@@ -70,19 +70,34 @@ internal class OptionPrimitiveStructNative constructor(): Structure(), Structure
 
 }
 
-class PrimitiveStruct internal constructor (
-    internal val nativeStruct: PrimitiveStructNative) {
-    val x: Float = nativeStruct.x
-    val a: Boolean = nativeStruct.a > 0
-    val b: Int = nativeStruct.b
-    val c: Long = nativeStruct.c
-    val d: Long = nativeStruct.d.toLong()
-    val e: Byte = nativeStruct.e
-
+class PrimitiveStruct (var x: Float, var a: Boolean, var b: Int, var c: Long, var d: Long, var e: Byte) {
     companion object {
+
         internal val libClass: Class<PrimitiveStructLib> = PrimitiveStructLib::class.java
         internal val lib: PrimitiveStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(PrimitiveStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: PrimitiveStructNative): PrimitiveStruct {
+            val x: Float = nativeStruct.x
+            val a: Boolean = nativeStruct.a > 0
+            val b: Int = nativeStruct.b
+            val c: Long = nativeStruct.c
+            val d: Long = nativeStruct.d.toLong()
+            val e: Byte = nativeStruct.e
+
+            return PrimitiveStruct(x, a, b, c, d, e)
+        }
+
+    }
+    internal fun toNative(): PrimitiveStructNative {
+        var native = PrimitiveStructNative()
+        native.x = this.x
+        native.a = if (this.a) 1 else 0
+        native.b = this.b
+        native.c = this.c
+        native.d = FFIIsizet(this.d)
+        native.e = this.e
+        return native
     }
 
 }
