@@ -616,17 +616,17 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         match *ty {
             Type::Primitive(p) => self.maybe_wrap_in_write(js_name, gen_context, p),
             Type::Opaque(ref op) if op.is_optional() => self.maybe_wrap_in_write(
-                format!("{js_name}.ffiValue ?? 0").into(),
+                format!("{js_name} === null || {js_name} instanceof {ty} ? {js_name}?.ffiValue ?? 0 : typeError('{js_name}', '{ty}')", ty = self.formatter.fmt_type_name(op.tcx_id.into())).into(),
                 gen_context,
                 PrimitiveType::Int(IntType::U32),
             ),
-            Type::Opaque(..) => self.maybe_wrap_in_write(
-                format!("{js_name}.ffiValue").into(),
+            Type::Opaque(ref op) => self.maybe_wrap_in_write(
+                format!("{js_name} instanceof {ty} ? {js_name}.ffiValue : typeError('{js_name}', '{ty}')", ty = self.formatter.fmt_type_name(op.tcx_id.into())).into(),
                 gen_context,
                 PrimitiveType::Int(IntType::U32),
             ),
-            Type::Enum(..) => self.maybe_wrap_in_write(
-                format!("{js_name}.ffiValue").into(),
+            Type::Enum(ref e) => self.maybe_wrap_in_write(
+                format!("new {}({js_name}).ffiValue", self.formatter.fmt_type_name(e.tcx_id.into())).into(),
                 gen_context,
                 PrimitiveType::Int(IntType::I32),
             ),

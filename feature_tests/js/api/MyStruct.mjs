@@ -150,7 +150,7 @@ export class MyStruct {
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#d, BigUint64Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 16, this.#e, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 20, this.#f, Uint32Array);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 24, this.#g.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 24, new MyEnum(this.#g).ffiValue, Int32Array);
     }
 
     // This struct contains borrowed fields, so this takes in a list of

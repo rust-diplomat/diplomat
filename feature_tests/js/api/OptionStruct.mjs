@@ -91,10 +91,10 @@ export class OptionStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a.ffiValue ?? 0, Uint32Array);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#b.ffiValue ?? 0, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a === null || this.#a instanceof OptionOpaque ? this.#a?.ffiValue ?? 0 : typeError('this.#a', 'OptionOpaque'), Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#b === null || this.#b instanceof OptionOpaqueChar ? this.#b?.ffiValue ?? 0 : typeError('this.#b', 'OptionOpaqueChar'), Uint32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#c, Uint32Array);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 12, this.#d.ffiValue, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 12, this.#d instanceof OptionOpaque ? this.#d.ffiValue : typeError('this.#d', 'OptionOpaque'), Uint32Array);
     }
 
     // This struct contains borrowed fields, so this takes in a list of

@@ -43,7 +43,7 @@ export class One {
         let aEdges = [hold];
 
 
-        const result = wasm.One_transitivity(hold.ffiValue, nohold.ffiValue);
+        const result = wasm.One_transitivity(hold instanceof One ? hold.ffiValue : typeError('hold', 'One'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -58,7 +58,7 @@ export class One {
         let aEdges = [hold];
 
 
-        const result = wasm.One_cycle(hold.ffiValue, nohold.ffiValue);
+        const result = wasm.One_cycle(hold instanceof Two ? hold.ffiValue : typeError('hold', 'Two'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -73,7 +73,7 @@ export class One {
         let aEdges = [a, b, c, d];
 
 
-        const result = wasm.One_many_dependents(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
+        const result = wasm.One_many_dependents(a instanceof One ? a.ffiValue : typeError('a', 'One'), b instanceof One ? b.ffiValue : typeError('b', 'One'), c instanceof Two ? c.ffiValue : typeError('c', 'Two'), d instanceof Two ? d.ffiValue : typeError('d', 'Two'), nohold instanceof Two ? nohold.ffiValue : typeError('nohold', 'Two'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -88,7 +88,7 @@ export class One {
         let longEdges = [hold];
 
 
-        const result = wasm.One_return_outlives_param(hold.ffiValue, nohold.ffiValue);
+        const result = wasm.One_return_outlives_param(hold instanceof Two ? hold.ffiValue : typeError('hold', 'Two'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], longEdges);
@@ -103,7 +103,7 @@ export class One {
         let topEdges = [top, left, right, bottom];
 
 
-        const result = wasm.One_diamond_top(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
+        const result = wasm.One_diamond_top(top instanceof One ? top.ffiValue : typeError('top', 'One'), left instanceof One ? left.ffiValue : typeError('left', 'One'), right instanceof One ? right.ffiValue : typeError('right', 'One'), bottom instanceof One ? bottom.ffiValue : typeError('bottom', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], topEdges);
@@ -118,7 +118,7 @@ export class One {
         let leftEdges = [left, bottom];
 
 
-        const result = wasm.One_diamond_left(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
+        const result = wasm.One_diamond_left(top instanceof One ? top.ffiValue : typeError('top', 'One'), left instanceof One ? left.ffiValue : typeError('left', 'One'), right instanceof One ? right.ffiValue : typeError('right', 'One'), bottom instanceof One ? bottom.ffiValue : typeError('bottom', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], leftEdges);
@@ -133,7 +133,7 @@ export class One {
         let rightEdges = [right, bottom];
 
 
-        const result = wasm.One_diamond_right(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
+        const result = wasm.One_diamond_right(top instanceof One ? top.ffiValue : typeError('top', 'One'), left instanceof One ? left.ffiValue : typeError('left', 'One'), right instanceof One ? right.ffiValue : typeError('right', 'One'), bottom instanceof One ? bottom.ffiValue : typeError('bottom', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], rightEdges);
@@ -148,7 +148,7 @@ export class One {
         let bottomEdges = [bottom];
 
 
-        const result = wasm.One_diamond_bottom(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
+        const result = wasm.One_diamond_bottom(top instanceof One ? top.ffiValue : typeError('top', 'One'), left instanceof One ? left.ffiValue : typeError('left', 'One'), right instanceof One ? right.ffiValue : typeError('right', 'One'), bottom instanceof One ? bottom.ffiValue : typeError('bottom', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], bottomEdges);
@@ -163,7 +163,7 @@ export class One {
         let aEdges = [a, b, c, d];
 
 
-        const result = wasm.One_diamond_and_nested_types(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
+        const result = wasm.One_diamond_and_nested_types(a instanceof One ? a.ffiValue : typeError('a', 'One'), b instanceof One ? b.ffiValue : typeError('b', 'One'), c instanceof One ? c.ffiValue : typeError('c', 'One'), d instanceof One ? d.ffiValue : typeError('d', 'One'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -178,7 +178,7 @@ export class One {
         let aEdges = [explicitHold, implicitHold];
 
 
-        const result = wasm.One_implicit_bounds(explicitHold.ffiValue, implicitHold.ffiValue, nohold.ffiValue);
+        const result = wasm.One_implicit_bounds(explicitHold instanceof One ? explicitHold.ffiValue : typeError('explicitHold', 'One'), implicitHold instanceof One ? implicitHold.ffiValue : typeError('implicitHold', 'One'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);
@@ -193,7 +193,7 @@ export class One {
         let aEdges = [explicit, implicit1, implicit2];
 
 
-        const result = wasm.One_implicit_bounds_deep(explicit.ffiValue, implicit1.ffiValue, implicit2.ffiValue, nohold.ffiValue);
+        const result = wasm.One_implicit_bounds_deep(explicit instanceof One ? explicit.ffiValue : typeError('explicit', 'One'), implicit1 instanceof One ? implicit1.ffiValue : typeError('implicit1', 'One'), implicit2 instanceof One ? implicit2.ffiValue : typeError('implicit2', 'One'), nohold instanceof One ? nohold.ffiValue : typeError('nohold', 'One'));
 
         try {
             return new One(diplomatRuntime.internalConstructor, result, [], aEdges);

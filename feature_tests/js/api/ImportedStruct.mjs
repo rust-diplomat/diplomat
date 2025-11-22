@@ -78,7 +78,7 @@ export class ImportedStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#foo.ffiValue, Int32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, new UnimportedEnum(this.#foo).ffiValue, Int32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#count, Uint8Array);
     }
 
