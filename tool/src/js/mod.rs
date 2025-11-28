@@ -86,7 +86,7 @@ pub(crate) fn run<'tcx>(
     let files = FileMap::default();
     let mut exports = Vec::new();
     let mut ts_exports = Vec::new();
-    
+
     files.add_file(
         "diplomat-runtime.mjs".into(),
         include_str!("../../templates/js/runtime.mjs").into(),
@@ -253,7 +253,6 @@ pub(crate) fn run<'tcx>(
     out_index.exports = &ts_exports;
 
     files.add_file("index.d.ts".into(), out_index.render().unwrap());
-
 
     (files, errors)
 }
