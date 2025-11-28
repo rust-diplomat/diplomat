@@ -86,6 +86,19 @@ pub(crate) fn run<'tcx>(
     let files = FileMap::default();
     let mut exports = Vec::new();
     let mut ts_exports = Vec::new();
+    
+    files.add_file(
+        "diplomat-runtime.mjs".into(),
+        include_str!("../../templates/js/runtime.mjs").into(),
+    );
+    files.add_file(
+        "diplomat-runtime.d.ts".into(),
+        include_str!("../../templates/js/runtime.d.ts").into(),
+    );
+    files.add_file(
+        "diplomat-wasm.mjs".into(),
+        include_str!("../../templates/js/wasm.mjs").into(),
+    );
 
     // The size of the largest struct we have to pass into a function, ever.
     let mut function_alloc_max: usize = 0;
@@ -241,18 +254,6 @@ pub(crate) fn run<'tcx>(
 
     files.add_file("index.d.ts".into(), out_index.render().unwrap());
 
-    files.add_file(
-        "diplomat-runtime.mjs".into(),
-        include_str!("../../templates/js/runtime.mjs").into(),
-    );
-    files.add_file(
-        "diplomat-runtime.d.ts".into(),
-        include_str!("../../templates/js/runtime.d.ts").into(),
-    );
-    files.add_file(
-        "diplomat-wasm.mjs".into(),
-        include_str!("../../templates/js/wasm.mjs").into(),
-    );
 
     (files, errors)
 }
