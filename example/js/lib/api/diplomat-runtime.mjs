@@ -754,10 +754,10 @@ export class FunctionParamAllocator {
     }
 
     /**
-     *
+     * Pops the most recently allocated pointer on the stack.
      * @returns The most recently allocated pointer on the stack.
      */
-    get() {
+    pop() {
         return this.#allocated.pop();
     }
 
