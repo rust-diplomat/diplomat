@@ -47,6 +47,7 @@ export class RenamedOpaqueIterator {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

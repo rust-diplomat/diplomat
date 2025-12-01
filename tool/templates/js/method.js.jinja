@@ -54,6 +54,7 @@
     }
 
     finally {
+        diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
     {%- if needs_cleanup %}
         functionCleanupArena.free();
     {%~ endif %}

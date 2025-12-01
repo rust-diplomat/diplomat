@@ -72,6 +72,7 @@ export class DefaultEnum {
         }
 
         finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
         }
     }
 

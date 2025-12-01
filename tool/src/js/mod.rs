@@ -100,6 +100,9 @@ pub(crate) fn run<'tcx>(
         include_str!("../../templates/js/wasm.mjs").into(),
     );
 
+    // The size of the largest struct we have to pass into a function, ever.
+    let mut function_alloc_max: usize = 0;
+
     for (id, ty) in tcx.all_types() {
         let _guard = errors.set_context_ty(ty.name().as_str().into());
 
@@ -149,11 +152,12 @@ pub(crate) fn run<'tcx>(
             .iter()
             .flat_map(|method| {
                 let inf = context.generate_method(method);
-                if inf.is_some() {
+                if let Some(inf) = inf.clone() {
+                    function_alloc_max = std::cmp::max(function_alloc_max, inf.max_alloc);
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
                         method.attrs.special_method
                     {
-                        special_methods.constructor.replace(inf.clone().unwrap());
+                        special_methods.constructor.replace(inf);
                     }
                 }
                 inf
@@ -234,11 +238,13 @@ pub(crate) fn run<'tcx>(
     struct IndexTemplate<'a> {
         exports: &'a Vec<Cow<'a, str>>,
         typescript: bool,
+        max_size: usize,
     }
 
     let mut out_index = IndexTemplate {
         exports: &exports,
         typescript: false,
+        max_size: function_alloc_max,
     };
 
     files.add_file("index.mjs".into(), out_index.render().unwrap());

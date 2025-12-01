@@ -446,6 +446,11 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             let self_borrow_kind = visitor.visit_param(&param_self.ty.clone().into(), "this");
 
+            let layout =
+                crate::js::layout::type_size_alignment(&param_self.ty.clone().into(), self.tcx);
+            // We add because all parameters will have to be allocated at once:
+            method_info.max_alloc += layout.size();
+
             let struct_borrow = if let ParamBorrowInfo::Struct(param_info) = self_borrow_kind {
                 Some(super::converter::StructBorrowContext {
                     use_env: &method.lifetime_env,
@@ -478,6 +483,10 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         }
 
         for param in method.params.iter() {
+            let layout = crate::js::layout::type_size_alignment(&param.ty, self.tcx);
+            // We add because all parameters will have to be allocated at once:
+            method_info.max_alloc += layout.size();
+
             let base_type = self.gen_js_type_str(&param.ty);
             let param_type_str = format!(
                 "{}",
@@ -509,29 +518,33 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
 
             // If we're a slice of strings or primitives. See [`hir::Type::Slice`].
             if let hir::Type::Slice(..) = param.ty {
-                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None, Some(
-                        match param_borrow_kind {
-                            // Is Rust NOT taking ownership?
-                            // Then that means we can free this after the function is done.
-                            ParamBorrowInfo::TemporarySlice => {
-                                method_info.needs_cleanup = true;
-                                "functionCleanupArena"
-                            },
+                let alloc = match param_borrow_kind {
+                    // Is Rust NOT taking ownership?
+                    // Then that means we can free this after the function is done.
+                    ParamBorrowInfo::TemporarySlice => {
+                        method_info.needs_cleanup = true;
+                        "functionCleanupArena"
+                    }
 
-                            // Is this function borrowing the slice?
-                            // I.e., Do we need it alive for at least as long as this function call?
-                            ParamBorrowInfo::BorrowedSlice => {
-                                method_info.needs_slice_collection = true;
-                                "functionGarbageCollectorGrip"
-                            },
-                            _ => unreachable!(
-                                "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
-                            ),
-                        }
+                    // Is this function borrowing the slice?
+                    // I.e., Do we need it alive for at least as long as this function call?
+                    ParamBorrowInfo::BorrowedSlice => {
+                        method_info.needs_slice_collection = true;
+                        "functionGarbageCollectorGrip"
+                    }
+                    _ => unreachable!(
+                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                     ),
+                };
+
+                let slice_expr = self.gen_js_to_c_for_type(
+                    &param.ty,
+                    param_info.name.clone(),
+                    None,
+                    Some(alloc),
                     // We're specifically doing slice preallocation here
-                    JsToCConversionContext::SlicePrealloc
-                    );
+                    JsToCConversionContext::SlicePrealloc,
+                );
 
                 // We add the pointer and size for slices:
                 method_info
@@ -697,6 +710,9 @@ pub(super) struct MethodInfo<'info> {
     pub cleanup_expressions: Vec<Cow<'info, str>>,
 
     doc_str: String,
+
+    /// The most amount of bytes we will ever have to allocate when calling this function:
+    pub max_alloc: usize,
 }
 
 /// See [`ItemGenContext::generate_special_method`].

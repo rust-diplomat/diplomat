@@ -781,7 +781,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
 
         match gen_context {
             JsToCConversionContext::List => format!(
-                "{js_call}._intoFFI({allocator}, {{{params}}}, false)"
+                "{js_call}._intoFFI(diplomatRuntime.FUNCTION_PARAM_ALLOC.alloc({js_type}._sizeBytes), functionCleanupArena, {{{params}}}, false)"
             ).into(),
             JsToCConversionContext::WriteToBuffer(offset_var, offset) => format!(
                 "{js_call}._writeToArrayBuffer(arrayBuffer, {offset_var} + {offset}, {allocator}, {{{params}}})"

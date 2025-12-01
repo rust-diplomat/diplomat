@@ -4,3 +4,10 @@ export { codepoint } from './diplomat-runtime';
 {% for export_stmt in exports %}
 {{export_stmt}}
 {% endfor %}
+
+{%- if !typescript %}
+import wasm from "./diplomat-wasm.mjs";
+import {FUNCTION_PARAM_ALLOC, internalConstructor} from "./diplomat-runtime.mjs";
+
+FUNCTION_PARAM_ALLOC.reserve(internalConstructor, wasm, {{max_size}});
+{% endif -%}
