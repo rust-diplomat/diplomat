@@ -62,21 +62,26 @@ internal class OptionCyclicStructBNative constructor(): Structure(), Structure.B
 
 }
 
-class CyclicStructB internal constructor (
-    internal val nativeStruct: CyclicStructBNative) {
-    val field: UByte = nativeStruct.field.toUByte()
-
+class CyclicStructB (var field: UByte) {
     companion object {
+
         internal val libClass: Class<CyclicStructBLib> = CyclicStructBLib::class.java
         internal val lib: CyclicStructBLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(CyclicStructBNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: CyclicStructBNative): CyclicStructB {
+            val field: UByte = nativeStruct.field.toUByte()
+
+            return CyclicStructB(field)
+        }
+
         @JvmStatic
         
         fun getA(): CyclicStructA {
             
             val returnVal = lib.CyclicStructB_get_a();
             
-            val returnStruct = CyclicStructA(returnVal)
+            val returnStruct = CyclicStructA.fromNative(returnVal)
             return returnStruct
         }
         @JvmStatic
@@ -87,10 +92,15 @@ class CyclicStructB internal constructor (
             
             val intermediateOption = returnVal.option() ?: return null
 
-            val returnStruct = CyclicStructA(intermediateOption)
+            val returnStruct = CyclicStructA.fromNative(intermediateOption)
             return returnStruct
                                     
         }
+    }
+    internal fun toNative(): CyclicStructBNative {
+        var native = CyclicStructBNative()
+        native.field = FFIUint8(this.field)
+        return native
     }
 
 }

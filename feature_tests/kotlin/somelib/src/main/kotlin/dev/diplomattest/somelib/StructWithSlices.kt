@@ -63,25 +63,37 @@ internal class OptionStructWithSlicesNative constructor(): Structure(), Structur
 
 }
 
-class StructWithSlices internal constructor (
-    internal val nativeStruct: StructWithSlicesNative,
-    internal val aEdges: List<Any?>
-    ) {
-    val first: String = PrimitiveArrayTools.getUtf8(nativeStruct.first)
-    val second: UShortArray = PrimitiveArrayTools.getUShortArray(nativeStruct.second)
-
+class StructWithSlices (var first: String, var second: UShortArray) {
     companion object {
+
         internal val libClass: Class<StructWithSlicesLib> = StructWithSlicesLib::class.java
         internal val lib: StructWithSlicesLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithSlicesNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: StructWithSlicesNative,aEdges: List<Any?>): StructWithSlices {
+            val first: String = PrimitiveArrayTools.getUtf8(nativeStruct.first)
+            val second: UShortArray = PrimitiveArrayTools.getUShortArray(nativeStruct.second)
+
+            return StructWithSlices(first, second)
+        }
+
+    }
+    internal fun toNative(): StructWithSlicesNative {
+        var native = StructWithSlicesNative()
+        native.first = this.firstSlice
+        native.second = this.secondSlice
+        return native
+    }
+
+    internal fun aEdges(): List<Any?> {
+        return TODO("todo")
     }
     
     fun returnLast(): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.StructWithSlices_return_last(nativeStruct, write);
+        val returnVal = lib.StructWithSlices_return_last(this.toNative(), write);
         
         val returnString = DW.writeToString(write)
         return returnString
     }
-
 }

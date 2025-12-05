@@ -103,7 +103,7 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             vtable.run_testVoidTraitFn_callback = testVoidTraitFn;
             val testStructTraitFn: Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn = object :  Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn {
                 override fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int {
-                    return (trt_obj.testStructTraitFn(TraitTestingStruct(s)));
+                    return (trt_obj.testStructTraitFn(TraitTestingStruct.fromNative(s)));
                 }
             }
             vtable.run_testStructTraitFn_callback = testStructTraitFn;

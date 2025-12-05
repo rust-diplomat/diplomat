@@ -83,7 +83,7 @@ class Opaque internal constructor (
             
             val returnVal = lib.Opaque_returns_imported();
             
-            val returnStruct = ImportedStruct(returnVal)
+            val returnStruct = ImportedStruct.fromNative(returnVal)
             return returnStruct
         }
         @JvmStatic
@@ -111,7 +111,7 @@ class Opaque internal constructor (
     */
     fun assertStruct(s: MyStruct): Unit {
         
-        val returnVal = lib.Opaque_assert_struct(handle, s.nativeStruct);
+        val returnVal = lib.Opaque_assert_struct(handle, s.toNative());
         
     }
 

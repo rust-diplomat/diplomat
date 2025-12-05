@@ -65,20 +65,21 @@ internal class OptionBorrowedFieldsWithBoundsNative constructor(): Structure(), 
 
 }
 
-class BorrowedFieldsWithBounds internal constructor (
-    internal val nativeStruct: BorrowedFieldsWithBoundsNative,
-    internal val aEdges: List<Any?>,
-    internal val bEdges: List<Any?>,
-    internal val cEdges: List<Any?>
-    ) {
-    val fieldA: String = PrimitiveArrayTools.getUtf16(nativeStruct.fieldA)
-    val fieldB: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldB)
-    val fieldC: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldC)
-
+class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fieldC: String) {
     companion object {
+
         internal val libClass: Class<BorrowedFieldsWithBoundsLib> = BorrowedFieldsWithBoundsLib::class.java
         internal val lib: BorrowedFieldsWithBoundsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsWithBoundsNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: BorrowedFieldsWithBoundsNative,aEdges: List<Any?>, bEdges: List<Any?>, cEdges: List<Any?>): BorrowedFieldsWithBounds {
+            val fieldA: String = PrimitiveArrayTools.getUtf16(nativeStruct.fieldA)
+            val fieldB: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldB)
+            val fieldC: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldC)
+
+            return BorrowedFieldsWithBounds(fieldA, fieldB, fieldC)
+        }
+
         @JvmStatic
         
         fun fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds {
@@ -90,9 +91,25 @@ class BorrowedFieldsWithBounds internal constructor (
             val xEdges: List<Any?> = listOf(foo) + listOf(dstr16XMem) + listOf(utf8StrZMem)
             val yEdges: List<Any?> = listOf(foo) + listOf(utf8StrZMem)
             val zEdges: List<Any?> = listOf(utf8StrZMem)
-            val returnStruct = BorrowedFieldsWithBounds(returnVal, xEdges, yEdges, zEdges)
+            val returnStruct = BorrowedFieldsWithBounds.fromNative(returnVal, xEdges, yEdges, zEdges)
             return returnStruct
         }
     }
+    internal fun toNative(): BorrowedFieldsWithBoundsNative {
+        var native = BorrowedFieldsWithBoundsNative()
+        native.fieldA = this.fieldASlice
+        native.fieldB = this.fieldBSlice
+        native.fieldC = this.fieldCSlice
+        return native
+    }
 
+    internal fun aEdges(): List<Any?> {
+        return TODO("todo")
+    }
+    internal fun bEdges(): List<Any?> {
+        return TODO("todo")
+    }
+    internal fun cEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }

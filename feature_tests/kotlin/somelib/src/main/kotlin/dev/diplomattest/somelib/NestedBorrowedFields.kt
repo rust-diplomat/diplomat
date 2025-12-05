@@ -65,20 +65,21 @@ internal class OptionNestedBorrowedFieldsNative constructor(): Structure(), Stru
 
 }
 
-class NestedBorrowedFields internal constructor (
-    internal val nativeStruct: NestedBorrowedFieldsNative,
-    internal val xEdges: List<Any?>,
-    internal val yEdges: List<Any?>,
-    internal val zEdges: List<Any?>
-    ) {
-    val fields: BorrowedFields = BorrowedFields(nativeStruct.fields, xEdges)
-    val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds, xEdges, yEdges, yEdges)
-    val bounds2: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds2, zEdges, zEdges, zEdges)
-
+class NestedBorrowedFields (var fields: BorrowedFields, var bounds: BorrowedFieldsWithBounds, var bounds2: BorrowedFieldsWithBounds) {
     companion object {
+
         internal val libClass: Class<NestedBorrowedFieldsLib> = NestedBorrowedFieldsLib::class.java
         internal val lib: NestedBorrowedFieldsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(NestedBorrowedFieldsNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: NestedBorrowedFieldsNative,xEdges: List<Any?>, yEdges: List<Any?>, zEdges: List<Any?>): NestedBorrowedFields {
+            val fields: BorrowedFields = BorrowedFields.fromNative(nativeStruct.fields, xEdges)
+            val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds.fromNative(nativeStruct.bounds, xEdges, yEdges, yEdges)
+            val bounds2: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds.fromNative(nativeStruct.bounds2, zEdges, zEdges, zEdges)
+
+            return NestedBorrowedFields(fields, bounds, bounds2)
+        }
+
         @JvmStatic
         
         fun fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields {
@@ -92,9 +93,25 @@ class NestedBorrowedFields internal constructor (
             val xEdges: List<Any?> = listOf(bar) + listOf(dstr16XMem) + listOf(utf8StrYMem)
             val yEdges: List<Any?> = listOf(bar) + listOf(utf8StrYMem)
             val zEdges: List<Any?> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)
-            val returnStruct = NestedBorrowedFields(returnVal, xEdges, yEdges, zEdges)
+            val returnStruct = NestedBorrowedFields.fromNative(returnVal, xEdges, yEdges, zEdges)
             return returnStruct
         }
     }
+    internal fun toNative(): NestedBorrowedFieldsNative {
+        var native = NestedBorrowedFieldsNative()
+        native.fields = this.fields.toNative()
+        native.bounds = this.bounds.toNative()
+        native.bounds2 = this.bounds2.toNative()
+        return native
+    }
 
+    internal fun xEdges(): List<Any?> {
+        return TODO("todo")
+    }
+    internal fun yEdges(): List<Any?> {
+        return TODO("todo")
+    }
+    internal fun zEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }
