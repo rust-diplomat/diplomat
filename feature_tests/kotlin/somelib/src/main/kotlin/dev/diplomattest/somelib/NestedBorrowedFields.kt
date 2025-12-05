@@ -71,7 +71,7 @@ class NestedBorrowedFields (var fields: BorrowedFields, var bounds: BorrowedFiel
         internal val lib: NestedBorrowedFieldsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(NestedBorrowedFieldsNative::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: NestedBorrowedFieldsNative,xEdges: List<Any?>, yEdges: List<Any?>, zEdges: List<Any?>): NestedBorrowedFields {
+        internal fun fromNative(nativeStruct: NestedBorrowedFieldsNative, xEdges: List<Any?>, yEdges: List<Any?>, zEdges: List<Any?>): NestedBorrowedFields {
             val fields: BorrowedFields = BorrowedFields.fromNative(nativeStruct.fields, xEdges)
             val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds.fromNative(nativeStruct.bounds, xEdges, yEdges, yEdges)
             val bounds2: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds.fromNative(nativeStruct.bounds2, zEdges, zEdges, zEdges)

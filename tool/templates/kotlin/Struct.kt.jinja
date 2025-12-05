@@ -55,7 +55,7 @@ class {{type_name}} ({%- for field in fields %}var {{field.name}}: {{field.field
         internal val lib: {{type_name}}Lib = Native.load("{{dylib_name}}", libClass)
         val NATIVESIZE: Long = Native.getNativeSize({{type_name}}Native::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},{% endif %}
+        internal fun fromNative(nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %}, {% endif %}
             {%- for lt in lifetimes -%}
             {{lt}}Edges: List<Any?>{% if !loop.last%}, {% endif %}
             {%- endfor -%}

@@ -70,7 +70,7 @@ class StructWithSlices (var first: String, var second: UShortArray) {
         internal val lib: StructWithSlicesLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithSlicesNative::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: StructWithSlicesNative,aEdges: List<Any?>): StructWithSlices {
+        internal fun fromNative(nativeStruct: StructWithSlicesNative, aEdges: List<Any?>): StructWithSlices {
             val first: String = PrimitiveArrayTools.getUtf8(nativeStruct.first)
             val second: UShortArray = PrimitiveArrayTools.getUShortArray(nativeStruct.second)
 
@@ -80,8 +80,8 @@ class StructWithSlices (var first: String, var second: UShortArray) {
     }
     internal fun toNative(): StructWithSlicesNative {
         var native = StructWithSlicesNative()
-        native.first = this.firstSlice
-        native.second = this.secondSlice
+        native.first = PrimitiveArrayTools.borrowUtf8(this.first).second
+        native.second = PrimitiveArrayTools.borrow(this.second).second
         return native
     }
 

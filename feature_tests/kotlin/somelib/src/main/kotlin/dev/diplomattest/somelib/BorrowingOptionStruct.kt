@@ -67,7 +67,7 @@ class BorrowingOptionStruct (var a: String?) {
         internal val lib: BorrowingOptionStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowingOptionStructNative::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: BorrowingOptionStructNative,aEdges: List<Any?>): BorrowingOptionStruct {
+        internal fun fromNative(nativeStruct: BorrowingOptionStructNative, aEdges: List<Any?>): BorrowingOptionStruct {
             val a: String? = nativeStruct.a.option()?.let { PrimitiveArrayTools.getUtf8(it) }
 
             return BorrowingOptionStruct(a)
@@ -76,7 +76,7 @@ class BorrowingOptionStruct (var a: String?) {
     }
     internal fun toNative(): BorrowingOptionStructNative {
         var native = BorrowingOptionStructNative()
-        native.a = this.a?.let { OptionSlice.some(itSlice) } ?: OptionSlice.none()
+        native.a = this.a?.let { OptionSlice.some(PrimitiveArrayTools.borrowUtf8(it).second) } ?: OptionSlice.none()
         return native
     }
 

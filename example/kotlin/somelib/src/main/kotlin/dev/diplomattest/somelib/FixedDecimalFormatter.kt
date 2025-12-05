@@ -38,7 +38,7 @@ class FixedDecimalFormatter internal constructor (
         */
         fun tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): Result<FixedDecimalFormatter> {
             
-            val returnVal = lib.icu4x_FixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.nativeStruct);
+            val returnVal = lib.icu4x_FixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.toNative());
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 

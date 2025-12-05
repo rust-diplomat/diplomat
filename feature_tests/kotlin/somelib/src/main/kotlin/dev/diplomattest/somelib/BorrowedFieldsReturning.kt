@@ -67,7 +67,7 @@ class BorrowedFieldsReturning (var bytes: String) {
         internal val lib: BorrowedFieldsReturningLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsReturningNative::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: BorrowedFieldsReturningNative,aEdges: List<Any?>): BorrowedFieldsReturning {
+        internal fun fromNative(nativeStruct: BorrowedFieldsReturningNative, aEdges: List<Any?>): BorrowedFieldsReturning {
             val bytes: String = PrimitiveArrayTools.getUtf8(nativeStruct.bytes)
 
             return BorrowedFieldsReturning(bytes)
@@ -76,7 +76,7 @@ class BorrowedFieldsReturning (var bytes: String) {
     }
     internal fun toNative(): BorrowedFieldsReturningNative {
         var native = BorrowedFieldsReturningNative()
-        native.bytes = this.bytesSlice
+        native.bytes = PrimitiveArrayTools.borrowUtf8(this.bytes).second
         return native
     }
 

@@ -81,7 +81,12 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Unit"
     }
 
-    pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType, is_param: bool) -> String {
+    pub fn fmt_primitive_to_native_conversion(
+        &self,
+        name: &str,
+        prim: PrimitiveType,
+        is_param: bool,
+    ) -> String {
         match prim {
             // parameters are bool, but for struct fields we use Byte
             PrimitiveType::Bool if !is_param => format!("if ({name}) 1 else 0"),

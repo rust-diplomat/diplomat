@@ -71,7 +71,7 @@ class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fiel
         internal val lib: BorrowedFieldsWithBoundsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsWithBoundsNative::class.java).toLong()
 
-        internal fun fromNative(nativeStruct: BorrowedFieldsWithBoundsNative,aEdges: List<Any?>, bEdges: List<Any?>, cEdges: List<Any?>): BorrowedFieldsWithBounds {
+        internal fun fromNative(nativeStruct: BorrowedFieldsWithBoundsNative, aEdges: List<Any?>, bEdges: List<Any?>, cEdges: List<Any?>): BorrowedFieldsWithBounds {
             val fieldA: String = PrimitiveArrayTools.getUtf16(nativeStruct.fieldA)
             val fieldB: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldB)
             val fieldC: String = PrimitiveArrayTools.getUtf8(nativeStruct.fieldC)
@@ -82,9 +82,9 @@ class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fiel
     }
     internal fun toNative(): BorrowedFieldsWithBoundsNative {
         var native = BorrowedFieldsWithBoundsNative()
-        native.fieldA = this.fieldASlice
-        native.fieldB = this.fieldBSlice
-        native.fieldC = this.fieldCSlice
+        native.fieldA = PrimitiveArrayTools.borrowUtf16(this.fieldA).second
+        native.fieldB = PrimitiveArrayTools.borrowUtf8(this.fieldB).second
+        native.fieldC = PrimitiveArrayTools.borrowUtf8(this.fieldC).second
         return native
     }
 

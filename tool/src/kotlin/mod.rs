@@ -343,10 +343,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     .into()
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(MaybeOwn::Own, _)) => {
-                format!("{name}Slice").into()
+            Type::Slice(ref s) => {
+                if is_param {
+                    format!("{name}Slice").into()
+                } else {
+                    // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
+                    let slice_method = self.slice_method_for(s);
+                    format!("PrimitiveArrayTools.{slice_method}({name}).second").into()
+                }
             }
-            Type::Slice(_) => format!("{name}Slice").into(),
             Type::Callback(_) => {
                 let real_param_name = name[name.rfind('_').unwrap() + 1..].to_string(); // past last _
                 format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
@@ -742,6 +747,7 @@ return string{return_type_modifier}"#
                 )
             }
             Type::Slice(slc) => {
+                // Slices do NOT  need to worry about borrows when being returned since they're just copied
                 self.gen_slice_return_conversion(slc, val_name, return_type_modifier)
             }
             _ => todo!(),
@@ -947,6 +953,24 @@ returnVal.option() ?: return null
         }
     }
 
+    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> &'static str {
+        match slice_type {
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => "borrowUtf16",
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => "moveUtf16",
+            Slice::Str(Some(_), _) => "borrowUtf8",
+            Slice::Str(None, _) => "moveUtf8",
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => "borrow",
+            Slice::Primitive(_, _) => "move",
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "borrowUtf16s",
+            Slice::Strs(_) => "borrowUtf8s",
+            _ => {
+                self.errors
+                    .push_error("Found unsupported slice type".into());
+                ""
+            }
+        }
+    }
+
     fn gen_slice_conversion<P: TyPosition>(
         &self,
         kt_param_name: Cow<'cx, str>,
@@ -959,26 +983,12 @@ returnVal.option() ?: return null
             kt_param_name: Cow<'d, str>,
             closeable: bool,
         }
-        let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16".into(), true),
-            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
-            Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
-            Slice::Str(None, _) => ("moveUtf8".into(), true),
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow".into(), true),
-            Slice::Primitive(_, _) => ("move".into(), true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
-            Slice::Strs(_) => ("borrowUtf8s".into(), true),
-            _ => {
-                self.errors
-                    .push_error("Found unsupported slice type".into());
-                ("".into(), false)
-            }
-        };
+        let slice_method = self.slice_method_for(&slice_type).into();
 
         SliceConv {
             kt_param_name,
             slice_method,
-            closeable,
+            closeable: true,
         }
         .render()
         .expect("Failed to render slice method")
@@ -1580,7 +1590,7 @@ returnVal.option() ?: return null
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
                     native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
-                        &field_access,
+                        field_access,
                         &ty.lifetimes,
                         &field.ty,
                     ),
