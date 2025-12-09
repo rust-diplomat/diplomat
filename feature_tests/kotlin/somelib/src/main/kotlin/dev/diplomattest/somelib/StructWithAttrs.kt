@@ -65,15 +65,20 @@ internal class OptionStructWithAttrsNative constructor(): Structure(), Structure
 
 }
 
-class StructWithAttrs internal constructor (
-    internal val nativeStruct: StructWithAttrsNative) {
-    val a: Boolean = nativeStruct.a > 0
-    val b: UInt = nativeStruct.b.toUInt()
-
+class StructWithAttrs (var a: Boolean, var b: UInt) {
     companion object {
+
         internal val libClass: Class<StructWithAttrsLib> = StructWithAttrsLib::class.java
         internal val lib: StructWithAttrsLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(StructWithAttrsNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: StructWithAttrsNative): StructWithAttrs {
+            val a: Boolean = nativeStruct.a > 0
+            val b: UInt = nativeStruct.b.toUInt()
+
+            return StructWithAttrs(a, b)
+        }
+
         @JvmStatic
         
         fun newFallible(a: Boolean, b: UInt): Result<StructWithAttrs> {
@@ -81,24 +86,30 @@ class StructWithAttrs internal constructor (
             val returnVal = lib.namespace_StructWithAttrs_new_fallible(a, FFIUint32(b));
             if (returnVal.isOk == 1.toByte()) {
                 
-                val returnStruct = StructWithAttrs(returnVal.union.ok)
+                val returnStruct = StructWithAttrs.fromNative(returnVal.union.ok)
                 return returnStruct.ok()
             } else {
                 return UnitError().err()
             }
         }
     }
+    internal fun toNative(): StructWithAttrsNative {
+        var native = StructWithAttrsNative()
+        native.a = if (this.a) 1 else 0
+        native.b = FFIUint32(this.b)
+        return native
+    }
+
     
     fun c(): UInt {
         
-        val returnVal = lib.namespace_StructWithAttrs_c(nativeStruct);
+        val returnVal = lib.namespace_StructWithAttrs_c(this.toNative());
         return (returnVal.toUInt())
     }
     
     fun deprecated(): Unit {
         
-        val returnVal = lib.namespace_StructWithAttrs_deprecated(nativeStruct);
+        val returnVal = lib.namespace_StructWithAttrs_deprecated(this.toNative());
         
     }
-
 }

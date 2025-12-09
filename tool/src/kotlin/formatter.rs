@@ -81,8 +81,15 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Unit"
     }
 
-    pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType) -> String {
+    pub fn fmt_primitive_to_native_conversion(
+        &self,
+        name: &str,
+        prim: PrimitiveType,
+        is_param: bool,
+    ) -> String {
         match prim {
+            // parameters are bool, but for struct fields we use Byte
+            PrimitiveType::Bool if !is_param => format!("if ({name}) 1 else 0"),
             PrimitiveType::Int(IntType::U8) => format!("FFIUint8({name})"),
             PrimitiveType::Int(IntType::U16) => format!("FFIUint16({name})"),
             PrimitiveType::Int(IntType::U32) => format!("FFIUint32({name})"),
@@ -214,7 +221,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                     "Kotlin backend doesn't support Option<T> for struct/enum/primitive T"
                 );
                 let lt = lt_env.fmt_lifetime(lt);
-                format!("{param_name}.{lt}Edges").into()
+                format!("{param_name}.{lt}Edges()").into()
             }
             _ => panic!("unsupported lifetime kind"),
         }
@@ -394,7 +401,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                         }
                     })
                     .fold(String::new(), |accum, new| format!("{accum}, {new}"));
-                format!("{ty_name}({field_val}{lt_list})").into()
+                format!("{ty_name}.fromNative({field_val}{lt_list})").into()
             }
             Type::Enum(enum_path) => {
                 let field_type_name: &str = self.tcx.resolve_enum(enum_path.tcx_id).name.as_ref();

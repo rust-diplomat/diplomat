@@ -4,8 +4,7 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
     PrimitiveType, ReturnableStructDef, ReturnableStructPath, SelfType, Slice, SpecialMethod,
-    StringEncoding, StructField, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type,
-    TypeContext, TypeDef,
+    StringEncoding, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -315,15 +314,18 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
     }
 
-    fn gen_kt_to_c_for_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
+    /// Booleans are represented differently at the native layer in struct fields and params
+    /// so we have is_param to track that.
+    fn gen_kt_to_c_for_type<P: TyPosition<OpaqueOwnership = Borrow>>(
         &self,
         ty: &Type<P>,
-        name: Cow<'cx, str>,
+        name: Cow<str>,
+        is_param: bool,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
-                .fmt_primitive_to_native_conversion(name.as_ref(), prim)
+                .fmt_primitive_to_native_conversion(name.as_ref(), prim, is_param)
                 .into(),
             Type::Opaque(ref op @ OpaquePath { owner, .. }) => {
                 let optional = if op.is_optional() { "?" } else { "" };
@@ -332,7 +334,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
-            Type::Struct(_) => format!("{name}.nativeStruct").into(),
+            Type::Struct(_) => format!("{name}.toNative()").into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
                 let resolved = self.tcx.resolve_trait(trait_id);
@@ -341,16 +343,22 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     .into()
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(MaybeOwn::Own, _)) => {
-                format!("{name}Slice").into()
+            Type::Slice(ref s) => {
+                if is_param {
+                    format!("{name}Slice").into()
+                } else {
+                    // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
+                    let slice_method = self.slice_method_for(s);
+                    format!("PrimitiveArrayTools.{slice_method}({name}).second").into()
+                }
             }
-            Type::Slice(_) => format!("{name}Slice").into(),
             Type::Callback(_) => {
                 let real_param_name = name[name.rfind('_').unwrap() + 1..].to_string(); // past last _
                 format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
             }
             Type::DiplomatOption(ref inner) => {
-                let inner_expr = self.gen_kt_to_c_for_type(inner, "it".into());
+                // We pass false for is_params here the type is a struct field
+                let inner_expr = self.gen_kt_to_c_for_type(inner, "it".into(), false);
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -739,6 +747,7 @@ return string{return_type_modifier}"#
                 )
             }
             Type::Slice(slc) => {
+                // Slices do NOT  need to worry about borrows when being returned since they're just copied
                 self.gen_slice_return_conversion(slc, val_name, return_type_modifier)
             }
             _ => todo!(),
@@ -944,6 +953,24 @@ returnVal.option() ?: return null
         }
     }
 
+    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> &'static str {
+        match slice_type {
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => "borrowUtf16",
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => "moveUtf16",
+            Slice::Str(Some(_), _) => "borrowUtf8",
+            Slice::Str(None, _) => "moveUtf8",
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => "borrow",
+            Slice::Primitive(_, _) => "move",
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "borrowUtf16s",
+            Slice::Strs(_) => "borrowUtf8s",
+            _ => {
+                self.errors
+                    .push_error("Found unsupported slice type".into());
+                ""
+            }
+        }
+    }
+
     fn gen_slice_conversion<P: TyPosition>(
         &self,
         kt_param_name: Cow<'cx, str>,
@@ -956,26 +983,12 @@ returnVal.option() ?: return null
             kt_param_name: Cow<'d, str>,
             closeable: bool,
         }
-        let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16".into(), true),
-            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16".into(), true),
-            Slice::Str(Some(_), _) => ("borrowUtf8".into(), true),
-            Slice::Str(None, _) => ("moveUtf8".into(), true),
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow".into(), true),
-            Slice::Primitive(_, _) => ("move".into(), true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s".into(), true),
-            Slice::Strs(_) => ("borrowUtf8s".into(), true),
-            _ => {
-                self.errors
-                    .push_error("Found unsupported slice type".into());
-                ("".into(), false)
-            }
-        };
+        let slice_method = self.slice_method_for(&slice_type).into();
 
         SliceConv {
             kt_param_name,
             slice_method,
-            closeable,
+            closeable: true,
         }
         .render()
         .expect("Failed to render slice method")
@@ -1011,6 +1024,7 @@ returnVal.option() ?: return null
         struct_name: Option<&str>,
         add_override_specifier_for_opaque_self_methods: bool,
     ) -> MethodInfo {
+        let _guard = self.errors.set_context_method(method.name.as_str().into());
         if method.attrs.disable {
             return MethodInfo::default();
         }
@@ -1036,7 +1050,7 @@ returnVal.option() ?: return null
             Some(st @ SelfType::Struct(s)) => {
                 let param_type =
                     format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
-                let param_name: Cow<'_, str> = "nativeStruct".into();
+                let param_name: Cow<'_, str> = "this.toNative()".into();
                 visitor.visit_param(&st.clone().into(), "this");
                 param_types_ffi.push(param_type);
                 param_conversions.push(param_name.clone());
@@ -1071,7 +1085,7 @@ returnVal.option() ?: return null
                                 cleanups.push(cleanup)
                             }
                         }
-                        ParamBorrowInfo::BorrowedSlice => (),
+                        ParamBorrowInfo::BorrowedSlice => self.errors.push_error("Kotlin backend does not support borrowing slices across functions (#1003)".into()),
                         ParamBorrowInfo::BorrowedOpaque => (),
                         ParamBorrowInfo::NotBorrowed => (),
                         _ => todo!(),
@@ -1112,11 +1126,17 @@ returnVal.option() ?: return null
                         .zip(param_input_types.iter())
                         .zip(param_names.iter())
                         .map(|((in_param, in_ty), in_name)| match in_param.ty {
-                            Type::Enum(_) | Type::Struct(_) => {
+                            Type::Struct(_) | Type::Enum(_) => {
+                                if let Type::Struct(ref s) = in_param.ty {
+                                    assert!(
+                                        s.lifetimes().lifetimes().len() == 0,
+                                        "Code did not expect structs with lifetimes"
+                                    );
+                                }
                                 // named types have a _Native wrapper, this needs to be passed as the "native"
                                 // version of the argument
                                 (
-                                    format!("{in_ty}({in_name})"),
+                                    format!("{in_ty}.fromNative({in_name})"),
                                     format!("{in_name}: {in_ty}Native"),
                                 )
                             }
@@ -1143,8 +1163,7 @@ returnVal.option() ?: return null
                             SuccessType::OutType(ty) => (
                                 self.gen_native_type_name(ty, None).into(),
                                 match ty {
-                                    Type::Enum(..) => ".toNative()",
-                                    Type::Struct(..) => ".nativeStruct",
+                                    Type::Enum(..) | Type::Struct(..) => ".toNative()",
                                     _ => "",
                                 }
                                 .into(),
@@ -1185,7 +1204,7 @@ returnVal.option() ?: return null
                 param_name.clone()
             };
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass, true));
         }
         let write_return = matches!(
             &method.output,
@@ -1519,6 +1538,7 @@ returnVal.option() ?: return null
             ffi_cast_type_name: Cow<'d, str>,
             field_type: Cow<'d, str>,
             native_to_kt: Cow<'d, str>,
+            kt_to_native: Option<Cow<'d, str>>,
             docs: String,
         }
 
@@ -1537,14 +1557,31 @@ returnVal.option() ?: return null
             lifetimes: Vec<Cow<'a, str>>,
             docs: String,
             is_custom_error: bool,
+            is_out_struct: bool,
         }
+
+        let non_out_struct = if let TypeDef::Struct(s) = P::wrap_struct_def(ty) {
+            Some(s)
+        } else {
+            None
+        };
 
         let fields = ty
             .fields
             .iter()
-            .map(|field: &StructField<P>| {
+            .enumerate()
+            .map(|(i, field)| {
                 let field_name = self.formatter.fmt_field_name(field.name.as_str());
+                let field_access = format!("nativeStruct.{field_name}");
+                let field_access = &field_access;
 
+                let kt_to_native = non_out_struct.map(|nonout| {
+                    self.gen_kt_to_c_for_type(
+                        &nonout.fields[i].ty,
+                        format!("this.{field_name}").into(),
+                        false,
+                    )
+                });
                 StructFieldDef {
                     name: field_name.clone(),
                     ffi_type_default: self
@@ -1553,10 +1590,11 @@ returnVal.option() ?: return null
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
                     native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
-                        &format!("nativeStruct.{field_name}"),
+                        field_access,
                         &ty.lifetimes,
                         &field.ty,
                     ),
+                    kt_to_native,
                     docs: self.formatter.fmt_docs(&field.docs),
                 }
             })
@@ -1581,6 +1619,7 @@ returnVal.option() ?: return null
                 lifetimes,
                 docs: self.formatter.fmt_docs(&ty.docs),
                 is_custom_error: ty.attrs.custom_errors,
+                is_out_struct: non_out_struct.is_none(),
             }
             .render()
             .expect("Failed to render struct template"),
@@ -1616,11 +1655,11 @@ returnVal.option() ?: return null
                 .zip(param_input_types.iter())
                 .zip(param_names.iter())
                 .map(|((in_param, in_ty), in_name)| match in_param.ty {
-                    Type::Enum(_) | Type::Struct(_) => {
+                    Type::Struct(_) | Type::Enum(_) => {
                         // named types have a _Native wrapper, this needs to be passed as the "native"
                         // version of the argument
                         (
-                            format!("{in_ty}({in_name})"),
+                            format!("{in_ty}.fromNative({in_name})"),
                             format!("{in_name}: {in_ty}Native"),
                         )
                     }
@@ -1656,8 +1695,7 @@ returnVal.option() ?: return null
                 SuccessType::OutType(ty) => (
                     self.gen_native_type_name(ty, None).into(),
                     match ty {
-                        Type::Enum(..) => ".toNative()",
-                        Type::Struct(..) => ".nativeStruct",
+                        Type::Enum(..) | Type::Struct(..) => ".toNative()",
                         _ => "",
                     }
                     .into(),

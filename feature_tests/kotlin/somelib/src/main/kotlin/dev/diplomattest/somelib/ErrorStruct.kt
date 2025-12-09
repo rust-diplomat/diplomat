@@ -62,15 +62,26 @@ internal class OptionErrorStructNative constructor(): Structure(), Structure.ByV
 
 }
 
-class ErrorStruct internal constructor (
-    internal val nativeStruct: ErrorStructNative): Exception("Rust error result for ErrorStruct") {
-    val i: Int = nativeStruct.i
-    val j: Int = nativeStruct.j
-
+class ErrorStruct (var i: Int, var j: Int): Exception("Rust error result for ErrorStruct") {
     companion object {
+
         internal val libClass: Class<ErrorStructLib> = ErrorStructLib::class.java
         internal val lib: ErrorStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(ErrorStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: ErrorStructNative): ErrorStruct {
+            val i: Int = nativeStruct.i
+            val j: Int = nativeStruct.j
+
+            return ErrorStruct(i, j)
+        }
+
+    }
+    internal fun toNative(): ErrorStructNative {
+        var native = ErrorStructNative()
+        native.i = this.i
+        native.j = this.j
+        return native
     }
 
 }

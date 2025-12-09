@@ -60,16 +60,27 @@ internal class OptionBorrowedFieldsReturningNative constructor(): Structure(), S
 
 }
 
-class BorrowedFieldsReturning internal constructor (
-    internal val nativeStruct: BorrowedFieldsReturningNative,
-    internal val aEdges: List<Any?>
-    ) {
-    val bytes: String = PrimitiveArrayTools.getUtf8(nativeStruct.bytes)
-
+class BorrowedFieldsReturning (var bytes: String) {
     companion object {
+
         internal val libClass: Class<BorrowedFieldsReturningLib> = BorrowedFieldsReturningLib::class.java
         internal val lib: BorrowedFieldsReturningLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsReturningNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: BorrowedFieldsReturningNative, aEdges: List<Any?>): BorrowedFieldsReturning {
+            val bytes: String = PrimitiveArrayTools.getUtf8(nativeStruct.bytes)
+
+            return BorrowedFieldsReturning(bytes)
+        }
+
+    }
+    internal fun toNative(): BorrowedFieldsReturningNative {
+        var native = BorrowedFieldsReturningNative()
+        native.bytes = PrimitiveArrayTools.borrowUtf8(this.bytes).second
+        return native
     }
 
+    internal fun aEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }

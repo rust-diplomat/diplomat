@@ -60,16 +60,27 @@ internal class OptionBorrowingOptionStructNative constructor(): Structure(), Str
 
 }
 
-class BorrowingOptionStruct internal constructor (
-    internal val nativeStruct: BorrowingOptionStructNative,
-    internal val aEdges: List<Any?>
-    ) {
-    val a: String? = nativeStruct.a.option()?.let { PrimitiveArrayTools.getUtf8(it) }
-
+class BorrowingOptionStruct (var a: String?) {
     companion object {
+
         internal val libClass: Class<BorrowingOptionStructLib> = BorrowingOptionStructLib::class.java
         internal val lib: BorrowingOptionStructLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowingOptionStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: BorrowingOptionStructNative, aEdges: List<Any?>): BorrowingOptionStruct {
+            val a: String? = nativeStruct.a.option()?.let { PrimitiveArrayTools.getUtf8(it) }
+
+            return BorrowingOptionStruct(a)
+        }
+
+    }
+    internal fun toNative(): BorrowingOptionStructNative {
+        var native = BorrowingOptionStructNative()
+        native.a = this.a?.let { OptionSlice.some(PrimitiveArrayTools.borrowUtf8(it).second) } ?: OptionSlice.none()
+        return native
     }
 
+    internal fun aEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }

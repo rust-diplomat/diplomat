@@ -48,25 +48,25 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
 /** {{docs}}
 */
 {% endif -%}
-class {{type_name}} internal constructor (
-    {% if !fields.is_empty() -%}
-    internal val nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},{% endif %}{% endif -%}
-    {% if !lifetimes.is_empty() %}
-    {%- for lt in lifetimes %}
-    internal val {{lt}}Edges: List<Any?>{% if !loop.last%},{% endif %}
-    {%- endfor %}
-    {% endif -%}
-    ){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %} {
-
-    {%- for field in fields %}
-    val {{field.name}}: {{field.field_type}} = {{field.native_to_kt}}
-    {%- endfor %}
-
-    {% if !fields.is_empty() -%}
+class {{type_name}} ({%- for field in fields %}var {{field.name}}: {{field.field_type}}{% if !loop.last%}, {% endif %}{% endfor %}){%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %} {
     companion object {
+{% if !fields.is_empty() %}
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
         internal val lib: {{type_name}}Lib = Native.load("{{dylib_name}}", libClass)
         val NATIVESIZE: Long = Native.getNativeSize({{type_name}}Native::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %}, {% endif %}
+            {%- for lt in lifetimes -%}
+            {{lt}}Edges: List<Any?>{% if !loop.last%}, {% endif %}
+            {%- endfor -%}
+        ): {{type_name}} {
+            {%- for field in fields %}
+            val {{field.name}}: {{field.field_type}} = {{field.native_to_kt}}
+            {%- endfor %}
+
+            return {{type_name}}({%- for field in fields %}{{field.name}}{% if !loop.last%}, {% endif %}{%- endfor %})
+        }
+{% endif -%}
 
 {%- for m in companion_methods %}
         @JvmStatic
@@ -74,10 +74,24 @@ class {{type_name}} internal constructor (
 {%- endfor %}
     }
 
+{%- if !fields.is_empty() %}
+{%- if !is_out_struct %}
+    internal fun toNative(): {{type_name}}Native {
+        var native = {{type_name}}Native()
+        {%- for field in fields %}
+        native.{{field.name}} = {{field.kt_to_native.as_ref().expect("Non-out structs must have conversions")}}
+        {%- endfor %}
+        return native
+    }
+{% endif %}
+    {%- for lt in lifetimes %}
+    internal fun {{lt}}Edges(): List<Any?> {
+        return TODO("todo")
+    }
+    {%- endfor %}
+{%- endif %}
+
 {%- for m in self_methods %}
     {{m.definition|indent(4)}}
 {%- endfor %}
-
-{% endif -%}
 }
-

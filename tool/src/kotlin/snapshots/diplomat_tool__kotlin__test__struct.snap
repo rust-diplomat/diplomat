@@ -149,29 +149,32 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
 }
 /** Documentation for the struct
 */
-class MyNativeStruct internal constructor (
-    internal val nativeStruct: MyNativeStructNative,
-    internal val bEdges: List<Any?>
-    ) {
-    val a: Boolean = nativeStruct.a > 0
-    val b: Byte = nativeStruct.b
-    val c: UByte = nativeStruct.c.toUByte()
-    val d: Short = nativeStruct.d
-    val e: UShort = nativeStruct.e.toUShort()
-    val f: Int = nativeStruct.f
-    val g: UInt = nativeStruct.g.toUInt()
-    val h: Long = nativeStruct.h
-    val i: ULong = nativeStruct.i.toULong()
-    val j: Int = nativeStruct.j
-    val k: Float = nativeStruct.k
-    val l: Double = nativeStruct.l
-    val m: DoubleArray = PrimitiveArrayTools.getDoubleArray(nativeStruct.m)
-    val n: Opaque = Opaque(nativeStruct.n, listOf())
-
+class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, var e: UShort, var f: Int, var g: UInt, var h: Long, var i: ULong, var j: Int, var k: Float, var l: Double, var m: DoubleArray, var n: Opaque) {
     companion object {
+
         internal val libClass: Class<MyNativeStructLib> = MyNativeStructLib::class.java
         internal val lib: MyNativeStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: MyNativeStructNative, bEdges: List<Any?>): MyNativeStruct {
+            val a: Boolean = nativeStruct.a > 0
+            val b: Byte = nativeStruct.b
+            val c: UByte = nativeStruct.c.toUByte()
+            val d: Short = nativeStruct.d
+            val e: UShort = nativeStruct.e.toUShort()
+            val f: Int = nativeStruct.f
+            val g: UInt = nativeStruct.g.toUInt()
+            val h: Long = nativeStruct.h
+            val i: ULong = nativeStruct.i.toULong()
+            val j: Int = nativeStruct.j
+            val k: Float = nativeStruct.k
+            val l: Double = nativeStruct.l
+            val m: DoubleArray = PrimitiveArrayTools.getDoubleArray(nativeStruct.m)
+            val n: Opaque = Opaque(nativeStruct.n, listOf())
+
+            return MyNativeStruct(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+        }
+
         @JvmStatic
         
         fun new_(): MyNativeStruct {
@@ -179,7 +182,7 @@ class MyNativeStruct internal constructor (
             val returnVal = lib.MyNativeStruct_new();
             
             val bEdges: List<Any?> = listOf()
-            val returnStruct = MyNativeStruct(returnVal, bEdges)
+            val returnStruct = MyNativeStruct.fromNative(returnVal, bEdges)
             return returnStruct
         }
         @JvmStatic
@@ -219,5 +222,26 @@ class MyNativeStruct internal constructor (
             }
         }
     }
+    internal fun toNative(): MyNativeStructNative {
+        var native = MyNativeStructNative()
+        native.a = if (this.a) 1 else 0
+        native.b = this.b
+        native.c = FFIUint8(this.c)
+        native.d = this.d
+        native.e = FFIUint16(this.e)
+        native.f = this.f
+        native.g = FFIUint32(this.g)
+        native.h = this.h
+        native.i = FFIUint64(this.i)
+        native.j = this.j
+        native.k = this.k
+        native.l = this.l
+        native.m = PrimitiveArrayTools.borrow(this.m).second
+        native.n = this.n.handle
+        return native
+    }
 
+    internal fun bEdges(): List<Any?> {
+        return TODO("todo")
+    }
 }

@@ -64,22 +64,27 @@ internal class OptionMyStructContainingAnOptionNative constructor(): Structure()
 
 }
 
-class MyStructContainingAnOption internal constructor (
-    internal val nativeStruct: MyStructContainingAnOptionNative) {
-    val a: MyStruct? = nativeStruct.a.option()?.let { MyStruct(it) }
-    val b: DefaultEnum? = nativeStruct.b.option()?.let { DefaultEnum.fromNative(it) }
-
+class MyStructContainingAnOption (var a: MyStruct?, var b: DefaultEnum?) {
     companion object {
+
         internal val libClass: Class<MyStructContainingAnOptionLib> = MyStructContainingAnOptionLib::class.java
         internal val lib: MyStructContainingAnOptionLib = Native.load("diplomat_feature_tests", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructContainingAnOptionNative::class.java).toLong()
+
+        internal fun fromNative(nativeStruct: MyStructContainingAnOptionNative): MyStructContainingAnOption {
+            val a: MyStruct? = nativeStruct.a.option()?.let { MyStruct.fromNative(it) }
+            val b: DefaultEnum? = nativeStruct.b.option()?.let { DefaultEnum.fromNative(it) }
+
+            return MyStructContainingAnOption(a, b)
+        }
+
         @JvmStatic
         
         fun new_(): MyStructContainingAnOption {
             
             val returnVal = lib.MyStructContainingAnOption_new();
             
-            val returnStruct = MyStructContainingAnOption(returnVal)
+            val returnStruct = MyStructContainingAnOption.fromNative(returnVal)
             return returnStruct
         }
         @JvmStatic
@@ -88,9 +93,15 @@ class MyStructContainingAnOption internal constructor (
             
             val returnVal = lib.MyStructContainingAnOption_filled();
             
-            val returnStruct = MyStructContainingAnOption(returnVal)
+            val returnStruct = MyStructContainingAnOption.fromNative(returnVal)
             return returnStruct
         }
+    }
+    internal fun toNative(): MyStructContainingAnOptionNative {
+        var native = MyStructContainingAnOptionNative()
+        native.a = this.a?.let { OptionMyStructNative.some(it.toNative()) } ?: OptionMyStructNative.none()
+        native.b = this.b?.let { OptionInt.some(it.toNative()) } ?: OptionInt.none()
+        return native
     }
 
 }

@@ -7,12 +7,10 @@ import com.sun.jna.Structure
 
 internal interface FooLib: Library {
     fun Foo_destroy(handle: Pointer)
-    fun Foo_new(x: Slice): Pointer
     fun Foo_get_bar(handle: Pointer): Pointer
     fun Foo_new_static(x: Slice): Pointer
     fun Foo_as_returning(handle: Pointer): BorrowedFieldsReturningNative
     fun Foo_extract_from_fields(fields: BorrowedFieldsNative): Pointer
-    fun Foo_extract_from_bounds(bounds: BorrowedFieldsWithBoundsNative, anotherString: Slice): Pointer
 }
 
 class Foo internal constructor (
@@ -34,19 +32,6 @@ class Foo internal constructor (
         internal val lib: FooLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
-        fun new_(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
-            
-            val returnVal = lib.Foo_new(xSlice);
-            val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any?> = listOf(xMem)
-            val handle = returnVal 
-            val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            return returnOpaque
-        }
-        @JvmStatic
-        
         fun newStatic(x: String): Foo {
             val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
             
@@ -63,24 +48,9 @@ class Foo internal constructor (
         
         fun extractFromFields(fields: BorrowedFields): Foo {
             
-            val returnVal = lib.Foo_extract_from_fields(fields.nativeStruct);
+            val returnVal = lib.Foo_extract_from_fields(fields.toNative());
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any?> = fields.aEdges
-            val handle = returnVal 
-            val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            return returnOpaque
-        }
-        @JvmStatic
-        
-        /** Test that the extraction logic correctly pins the right fields
-        */
-        fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
-            val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.borrowUtf8(anotherString)
-            
-            val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
-            val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any?> = bounds.bEdges + bounds.cEdges + listOf(anotherStringMem)
+            val aEdges: List<Any?> = fields.aEdges()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -105,7 +75,7 @@ class Foo internal constructor (
         val returnVal = lib.Foo_as_returning(handle);
         
         val aEdges: List<Any?> = listOf(this)
-        val returnStruct = BorrowedFieldsReturning(returnVal, aEdges)
+        val returnStruct = BorrowedFieldsReturning.fromNative(returnVal, aEdges)
         return returnStruct
     }
 

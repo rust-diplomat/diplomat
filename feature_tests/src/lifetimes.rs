@@ -28,6 +28,9 @@ pub mod ffi {
     }
     impl<'a> Foo<'a> {
         #[diplomat::attr(auto, constructor)]
+        // Don't yet support borrowing from slices
+        // https://github.com/rust-diplomat/diplomat/issues/1003
+        #[diplomat::attr(kotlin, disable)]
         pub fn new(x: &'a DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
@@ -54,6 +57,9 @@ pub mod ffi {
             Box::new(Foo(fields.b.into()))
         }
 
+        // Don't yet support borrowing from slices
+        // https://github.com/rust-diplomat/diplomat/issues/1003
+        #[diplomat::attr(kotlin, disable)]
         #[diplomat::attr(auto, named_constructor)]
         /// Test that the extraction logic correctly pins the right fields
         pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
@@ -69,6 +75,9 @@ pub mod ffi {
     }
 
     impl<'x> BorrowedFields<'x> {
+        // Don't yet support borrowing from slices
+        // https://github.com/rust-diplomat/diplomat/issues/1003
+        #[diplomat::attr(kotlin, disable)]
         pub fn from_bar_and_strings(
             bar: &'x Bar<'x, 'x>,
             dstr16: &'x DiplomatStr16,
@@ -83,6 +92,9 @@ pub mod ffi {
     }
 
     impl<'x, 'y: 'x, 'z: 'y> BorrowedFieldsWithBounds<'x, 'y, 'z> {
+        // Don't yet support borrowing from slices
+        // https://github.com/rust-diplomat/diplomat/issues/1003
+        #[diplomat::attr(kotlin, disable)]
         pub fn from_foo_and_strings(
             foo: &'x Foo<'y>,
             dstr16_x: &'x DiplomatStr16,
@@ -103,6 +115,9 @@ pub mod ffi {
     }
 
     impl<'x, 'y: 'x, 'z> NestedBorrowedFields<'x, 'y, 'z> {
+        // Don't yet support borrowing from slices
+        // https://github.com/rust-diplomat/diplomat/issues/1003
+        #[diplomat::attr(kotlin, disable)]
         pub fn from_bar_and_foo_and_strings(
             bar: &'x Bar<'x, 'y>,
             foo: &'z Foo<'z>,
