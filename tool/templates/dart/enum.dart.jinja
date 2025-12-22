@@ -1,7 +1,7 @@
 {% if !docs.is_empty() -%}
 {{ docs|prefix_trimmed("/// ")}}
 {% endif -%}
-{% if let Some(deprecated) = deprecated -%}
+{% if let Some(deprecated) = ty.attrs.deprecated -%}
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 enum {{type_name}}
@@ -10,8 +10,12 @@ enum {{type_name}}
 {%~ for enum_variant in ty.variants %}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
+  {%- else -%}
+  {{- "ignore: public_member_api_docs"|prefix_trimmed("  // ") }}
   {%- endif %}
-  // ignore: public_member_api_docs
+  {%- if let Some(deprecated) = enum_variant.attrs.deprecated %}
+  @core.Deprecated('{{ deprecated }}')
+  {%- endif %}
   {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
 {% endif %}
 {%- endfor %}

@@ -72,9 +72,15 @@ export class MyEnum {
     };
 
     static A = MyEnum.#objectValues[-2];
+    /**
+     * @deprecated C is the new B
+     */
     static B = MyEnum.#objectValues[-1];
     static C = MyEnum.#objectValues[0];
     static D = MyEnum.#objectValues[1];
+    /**
+     * EEEEEEE
+     */
     static E = MyEnum.#objectValues[2];
     static F = MyEnum.#objectValues[3];
 

@@ -14,9 +14,15 @@ export class MyEnum {
     get ffiValue(): number;
 
     static A : MyEnum;
+    /**
+     * @deprecated C is the new B
+     */
     static B : MyEnum;
     static C : MyEnum;
     static D : MyEnum;
+    /**
+     * EEEEEEE
+     */
     static E : MyEnum;
     static F : MyEnum;
 

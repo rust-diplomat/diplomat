@@ -14,7 +14,12 @@ class {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")
 public:
     enum Value {
         {%- for enum_variant in ty.variants %}
-        {{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
+        {% if !enum_variant.docs.is_empty() || enum_variant.attrs.deprecated.is_some() -%}
+        /**
+        {{~ fmt.fmt_docs(enum_variant.docs, enum_variant.attrs)|prefix_trimmed("         * ")}}
+         */
+        {% endif -%}
+        {{fmt.fmt_enum_variant(enum_variant)}} {% if let Some(deprecated) = enum_variant.attrs.deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} = {{ enum_variant.discriminant }},
         {%- endfor %}
     };
 

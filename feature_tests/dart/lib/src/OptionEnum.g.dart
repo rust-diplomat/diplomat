@@ -4,13 +4,10 @@
 part of 'lib.g.dart';
 
 enum OptionEnum {
-
   // ignore: public_member_api_docs
   foo,
-
   // ignore: public_member_api_docs
   bar,
-
   // ignore: public_member_api_docs
   baz;
 
