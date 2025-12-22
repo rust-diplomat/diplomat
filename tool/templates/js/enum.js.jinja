@@ -76,6 +76,11 @@ value {%- if typescript %}: {{type_name}} | string {% endif -%}
 {%- endif %}
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}
+    {%- if !variant.docs.is_empty() || variant.attrs.deprecated.is_some() %}
+    /**
+{{formatter.fmt_docs(variant.docs, variant.attrs)|prefix_trimmed("     * ")}}
+     */
+    {%- endif %}
     static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = {{type_name}}.#objectValues[{{ variant.discriminant }}] {%- endif -%};
 {%- endfor -%}
 

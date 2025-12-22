@@ -13,9 +13,21 @@ export class FixedDecimalGroupingStrategy {
     /** @internal */
     get ffiValue(): number;
 
+    /**
+     * Auto grouping
+     */
     static Auto : FixedDecimalGroupingStrategy;
+    /**
+     * No grouping
+     */
     static Never : FixedDecimalGroupingStrategy;
+    /**
+     * Always group
+     */
     static Always : FixedDecimalGroupingStrategy;
+    /**
+     * At least 2 groups
+     */
     static Min2 : FixedDecimalGroupingStrategy;
 
 

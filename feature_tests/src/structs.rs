@@ -1,4 +1,4 @@
-#[allow(clippy::needless_lifetimes)]
+#[allow(clippy::needless_lifetimes, deprecated)]
 #[diplomat::bridge]
 pub mod ffi {
     use diplomat_runtime::DiplomatStr16;
@@ -20,10 +20,12 @@ pub mod ffi {
     #[derive(Debug, PartialEq, Eq)]
     pub enum MyEnum {
         A = -2,
+        #[deprecated(note = "C is the new B")]
         B = -1,
         C = 0,
         #[diplomat::attr(auto, default)]
         D = 1,
+        /// EEEEEEE
         E = 2,
         F = 3,
     }
