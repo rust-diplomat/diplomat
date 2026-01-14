@@ -62,7 +62,7 @@ pub struct Attrs {
     pub abi_compatible: bool,
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
-    pub binding_include : Vec<IncludeInfo>,
+    pub binding_include : Option<IncludeInfo>,
 }
 
 /// Whether the custom binding is included as a definition file/block or a header file/block.
@@ -462,7 +462,7 @@ impl Attrs {
                                 ));
                                 continue;
                             }
-                            this.binding_include.push(list.unwrap());
+                            this.binding_include = Some(list.unwrap());
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
@@ -955,15 +955,14 @@ impl Attrs {
             ));
         }
 
-        if binding_include.len() > 0 {
+        if let Some(i) = binding_include {
             if !matches!(context, AttributeContext::Type(..)) {
                 errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations or `impl` blocks.".into()));
             }
 
             // TODO: Does this make sense to do?
-            if binding_include.iter().any(|i| {
-                matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
-            }) {
+            if matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+            {
                 errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
             }
         }
@@ -1745,6 +1744,7 @@ mod tests {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::attr(tests, include(def="some_file.d.hpp"))]
+                #[diplomat::attr(cpp, include(impl_block="some_block.d.hpp"))]
                 pub struct IncludeDef {}
 
                 #[diplomat::attr(tests, include(impl="some_file.hpp"))]
