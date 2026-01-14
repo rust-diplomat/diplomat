@@ -4,3 +4,4 @@ expression: output
 ---
 Lowering error in IncludeDef::test: Custom binding includes can only be used above `struct` declarations or `impl` blocks.
 Lowering error in IncludeDef::test: Custom binding includes cannot use def_block= on non-opaque types.
+Lowering error in IncludeDef::test: Cannot have both block and file include types on the same type.

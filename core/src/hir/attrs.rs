@@ -62,27 +62,29 @@ pub struct Attrs {
     pub abi_compatible: bool,
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
-    pub binding_include : Option<IncludeInfo>,
+    pub binding_include : IncludeInfo,
 }
 
-/// Whether the custom binding is included as a definition file/block or a header file/block.
+/// Whether the custom binding is included as a file or a block. These are mutually exclusive.
 /// For some languages, these are the same thing, and can be treated as interchangeable.
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum IncludeType {
-    Definition(String),
-    Header(String)
+    /// Include as code contained within a block.
+    Block(String),
+    /// Include the whole file.
+    /// The implicit assumption is that the backend will scrap whatever file it was originally going to include instead.
+    File(String)
 }
 
 /// Information specifying how a custom binding should be included.
-#[derive(Clone, Debug)]
+#[derive(Clone, Default, Debug)]
 #[non_exhaustive]
-pub enum IncludeInfo {
-    /// Include as code contained within a block.
-    Block(IncludeType),
-    /// Include the whole file.
-    /// The implicit assumption is that the backend will scrap whatever file it was originally going to include instead.
-    File(IncludeType)
+pub struct IncludeInfo {
+    /// Header to include.
+    impl_info : Option<IncludeType>,
+    /// Definition to include.
+    def_info : Option<IncludeType>,
 }
 
 // #region: Demo specific attributes.
@@ -416,45 +418,47 @@ impl Attrs {
                         "include" => {
                             let list = attr.meta.require_list()
                             .and_then(|l| {
-                                let inf : IncludeInfo;
-                                let expr : syn::ExprAssign = l.parse_args()?;
-                                let file : String = match expr.right.as_ref() {
-                                    syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
-                                        if let syn::Lit::Str(s) = lit {
-                                            s.value()
-                                        } else {
-                                            unreachable!()
-                                        }
-                                    },
-                                    _ => return Err(syn::Error::new(expr.right.span(), format!("Expected equivalence to a file path string."))),
-                                };
-                                match expr.left.as_ref() {
-                                    syn::Expr::Path(p) => {
-                                        let ident = p.path.get_ident();
-                                        if let Some(i) = ident {
-                                            let path = i.to_string();
-                                            match path.as_str() {
-                                                "def" => {
-                                                    inf = IncludeInfo::File(IncludeType::Definition(file))
-                                                },
-                                                "impl" => {
-                                                    inf = IncludeInfo::File(IncludeType::Header(file))
-                                                }
-                                                "def_block" => {
-                                                    inf = IncludeInfo::Block(IncludeType::Definition(file))
-                                                }
-                                                "impl_block" => {
-                                                    inf = IncludeInfo::Block(IncludeType::Header(file))
-                                                }
-                                                _ => return Err(syn::Error::new(i.span(), format!("Unknown include type {path}=. Try def=, impl=, def_block=, impl_block=")))
+                                let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
+                                let punc = l.parse_args_with(parser)?;
+                                for expr in punc {
+                                    let file : String = match expr.right.as_ref() {
+                                        syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
+                                            if let syn::Lit::Str(s) = lit {
+                                                s.value()
+                                            } else {
+                                                unreachable!()
                                             }
-                                        } else {
-                                            return Err(syn::Error::new(p.path.span(), "Expected ident."));
-                                        }
-                                    },
-                                    _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
+                                        },
+                                        _ => return Err(syn::Error::new(expr.right.span(), format!("Expected equivalence to a file path string."))),
+                                    };
+                                    match expr.left.as_ref() {
+                                        syn::Expr::Path(p) => {
+                                            let ident = p.path.get_ident();
+                                            if let Some(i) = ident {
+                                                let path = i.to_string();
+                                                match path.as_str() {
+                                                    "def" => {
+                                                        this.binding_include.def_info = Some(IncludeType::File(file));
+                                                    },
+                                                    "imp" => {
+                                                        this.binding_include.impl_info = Some(IncludeType::File(file));
+                                                    }
+                                                    "def_block" => {
+                                                        this.binding_include.def_info = Some(IncludeType::Block(file));
+                                                    }
+                                                    "imp_block" => {
+                                                        this.binding_include.impl_info = Some(IncludeType::Block(file));
+                                                    }
+                                                    _ => return Err(syn::Error::new(i.span(), format!("Unknown include type {path}=. Try def=, imp=, def_block=, imp_block=")))
+                                                }
+                                            } else {
+                                                return Err(syn::Error::new(p.path.span(), "Expected ident."));
+                                            }
+                                        },
+                                        _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
+                                    }
                                 }
-                                Ok(inf)
+                                Ok(())
                             });
                             if let Err(e) = list {
                                 errors.push(LoweringError::Other(
@@ -462,7 +466,6 @@ impl Attrs {
                                 ));
                                 continue;
                             }
-                            this.binding_include = Some(list.unwrap());
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
@@ -955,18 +958,23 @@ impl Attrs {
             ));
         }
 
-        if let Some(i) = binding_include {
+        if binding_include.def_info.is_some() || binding_include.impl_info.is_some() {
             if !validator.attrs_supported().custom_bindings {
                 errors.push(LoweringError::Other("Custom bindings not supported by this language.".into()));
             } else {
                 if !matches!(context, AttributeContext::Type(..)) {
-                    errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations or `impl` blocks.".into()));
+                    errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations.".into()));
                 }
 
                 // TODO: Does this make sense to do?
-                if matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+                if matches!(binding_include.def_info, Some(IncludeType::Block(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
                 {
                     errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
+                }
+
+                if (matches!(binding_include.def_info, Some(IncludeType::Block(..))) && matches!(binding_include.impl_info, Some(IncludeType::File(..)))) || 
+                    (matches!(binding_include.def_info, Some(IncludeType::File(..))) && matches!(binding_include.impl_info, Some(IncludeType::Block(..)))) {
+                    errors.push(LoweringError::Other("Cannot have both block and file include types on the same type.".into()));
                 }
             }
         }
@@ -1753,18 +1761,17 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(tests, include(def="some_file.d.hpp"))]
-                #[diplomat::attr(cpp, include(impl_block="some_block.d.hpp"))]
+                #[diplomat::attr(tests, include(def="some_file.d.hpp", imp="some_file.hpp"))]
+                #[diplomat::attr(cpp, include(imp_block="some_block.d.hpp"))]
                 pub struct IncludeDef {}
 
-                #[diplomat::attr(tests, include(impl="some_file.hpp"))]
                 impl IncludeDef {}
 
                 #[diplomat::attr(tests, include(def_block="some_block.d.hpp"))]
+                #[diplomat::attr(tests, include(imp_block="some_block.hpp"))]
                 #[diplomat::opaque]
                 pub struct IncludeBlock();
 
-                #[diplomat::attr(tests, include(impl_block="some_block.hpp"))]
                 impl IncludeBlock {}
             }
 
@@ -1781,7 +1788,7 @@ mod tests {
                 }
 
                 impl IncludeDef {
-                    #[diplomat::attr(tests, include(def_block="some_file.d.hpp"))]
+                    #[diplomat::attr(tests, include(def_block="some_file.d.hpp", imp="somefile.hpp"))]
                     pub fn test() {
 
                     }
