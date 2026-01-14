@@ -121,10 +121,16 @@ pub(crate) fn run<'tcx>(
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
+        let def_block = if let Some(IncludeType::Block(b)) = &ty_attrs.binding_include.def_info {
+            read_custom_binding(b.clone(), config, &errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         let guard = errors.set_context_ty(ty.name().as_str().into());
         match id {
             hir::TypeId::Enum(e_id) => context.gen_enum_def(e_id),
-            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id),
+            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id, def_block),
             hir::TypeId::Struct(s_id) => context.gen_struct_def::<hir::Everywhere>(s_id),
             hir::TypeId::OutStruct(s_id) => context.gen_struct_def::<hir::OutputOnly>(s_id),
 
@@ -283,7 +289,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(id);
+            ty_gen_cx.gen_opaque_def(id, "".into());
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }
