@@ -956,14 +956,18 @@ impl Attrs {
         }
 
         if let Some(i) = binding_include {
-            if !matches!(context, AttributeContext::Type(..)) {
-                errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations or `impl` blocks.".into()));
-            }
+            if !validator.attrs_supported().custom_bindings {
+                errors.push(LoweringError::Other("Custom bindings not supported by this language.".into()));
+            } else {
+                if !matches!(context, AttributeContext::Type(..)) {
+                    errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations or `impl` blocks.".into()));
+                }
 
-            // TODO: Does this make sense to do?
-            if matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
-            {
-                errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
+                // TODO: Does this make sense to do?
+                if matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+                {
+                    errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
+                }
             }
         }
     }
@@ -1101,6 +1105,8 @@ pub struct BackendAttrSupport {
     pub struct_refs: bool,
     /// Whether the language supports generating functions not associated with any type.
     pub free_functions: bool,
+    /// Whether the language supports being able to include custom bindings.
+    pub custom_bindings : bool,
 }
 
 impl BackendAttrSupport {
@@ -1137,6 +1143,7 @@ impl BackendAttrSupport {
             abi_compatibles: true,
             struct_refs: true,
             free_functions: true,
+            custom_bindings: true,
         }
     }
 
@@ -1169,6 +1176,7 @@ impl BackendAttrSupport {
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
             "free_functions" => Some(self.free_functions),
+            "custom_bindings" => Some(self.custom_bindings),
             _ => None,
         }
     }
@@ -1312,6 +1320,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 abi_compatibles,
                 struct_refs,
                 free_functions,
+                custom_bindings,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1344,6 +1353,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
                 "free_functions" => free_functions,
+                "custom_bindings" => custom_bindings,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1740,7 +1750,7 @@ mod tests {
 
     #[test]
     fn test_custom_include() {
-        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::attr(tests, include(def="some_file.d.hpp"))]
@@ -1763,6 +1773,26 @@ mod tests {
 
     #[test]
     fn test_custom_include_fail() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct IncludeDef {
+                    a : i32
+                }
+
+                impl IncludeDef {
+                    #[diplomat::attr(tests, include(def_block="some_file.d.hpp"))]
+                    pub fn test() {
+
+                    }
+                }
+            }
+
+        }
+    }
+
+    #[test]
+    fn test_custom_include_fail_unsupported() {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
