@@ -62,6 +62,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
+                        binding_include: [],
                     },
                 },
             ],
@@ -124,6 +125,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
+                                binding_include: [],
                             },
                         },
                     ],
@@ -175,6 +177,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
+                        binding_include: [],
                     },
                 },
             ],
@@ -203,6 +206,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
+                binding_include: [],
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -272,6 +276,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
+                        binding_include: [],
                     },
                 },
             ],
@@ -337,6 +342,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
+                                binding_include: [],
                             },
                         },
                     ),
@@ -380,6 +386,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
+                                binding_include: [],
                             },
                         },
                     ],
@@ -424,6 +431,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
+                        binding_include: [],
                     },
                 },
             ],
@@ -452,6 +460,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
+                binding_include: [],
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -503,6 +512,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
+                binding_include: [],
             },
             lifetimes: LifetimeEnv {
                 nodes: [

@@ -8,6 +8,7 @@ use crate::hir::{
     TraitDef, Type, TypeDef, TypeId,
 };
 use syn::Meta;
+use syn::spanned::Spanned;
 
 pub use crate::ast::attrs::RenameAttr;
 
@@ -59,6 +60,29 @@ pub struct Attrs {
     pub generate_mocking_interface: bool,
     /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
     pub abi_compatible: bool,
+
+    /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
+    pub binding_include : Vec<IncludeInfo>,
+}
+
+/// Whether the custom binding is included as a definition file/block or a header file/block.
+/// For some languages, these are the same thing, and can be treated as interchangeable.
+#[derive(Clone, Debug)]
+#[non_exhaustive]
+pub enum IncludeType {
+    Definition(String),
+    Header(String)
+}
+
+/// Information specifying how a custom binding should be included.
+#[derive(Clone, Debug)]
+#[non_exhaustive]
+pub enum IncludeInfo {
+    /// Include as code contained within a block.
+    Block(IncludeType),
+    /// Include the whole file.
+    /// The implicit assumption is that the backend will scrap whatever file it was originally going to include instead.
+    File(IncludeType)
 }
 
 // #region: Demo specific attributes.
@@ -389,6 +413,57 @@ impl Attrs {
                             }
                             this.abi_compatible = true;
                         }
+                        "include" => {
+                            let list = attr.meta.require_list()
+                            .and_then(|l| {
+                                let inf : IncludeInfo;
+                                let expr : syn::ExprAssign = l.parse_args()?;
+                                let file : String = match expr.right.as_ref() {
+                                    syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
+                                        if let syn::Lit::Str(s) = lit {
+                                            s.value()
+                                        } else {
+                                            unreachable!()
+                                        }
+                                    },
+                                    _ => return Err(syn::Error::new(expr.right.span(), format!("Expected equivalence to a file path string."))),
+                                };
+                                match expr.left.as_ref() {
+                                    syn::Expr::Path(p) => {
+                                        let ident = p.path.get_ident();
+                                        if let Some(i) = ident {
+                                            let path = i.to_string();
+                                            match path.as_str() {
+                                                "def" => {
+                                                    inf = IncludeInfo::File(IncludeType::Definition(file))
+                                                },
+                                                "impl" => {
+                                                    inf = IncludeInfo::File(IncludeType::Header(file))
+                                                }
+                                                "def_block" => {
+                                                    inf = IncludeInfo::Block(IncludeType::Definition(file))
+                                                }
+                                                "impl_block" => {
+                                                    inf = IncludeInfo::Block(IncludeType::Header(file))
+                                                }
+                                                _ => return Err(syn::Error::new(i.span(), format!("Unknown include type {path}=. Try def=, impl=, def_block=, impl_block=")))
+                                            }
+                                        } else {
+                                            return Err(syn::Error::new(p.path.span(), "Expected ident."));
+                                        }
+                                    },
+                                    _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
+                                }
+                                Ok(inf)
+                            });
+                            if let Err(e) = list {
+                                errors.push(LoweringError::Other(
+                                    format!("Error parsing `include`: {e}")
+                                ));
+                                continue;
+                            }
+                            this.binding_include.push(list.unwrap());
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
                                 "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
@@ -496,6 +571,7 @@ impl Attrs {
             demo_attrs: _,
             generate_mocking_interface,
             abi_compatible,
+            binding_include,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -878,6 +954,19 @@ impl Attrs {
                 "`abi_compatible` can only be used on non-output-only struct types.".into(),
             ));
         }
+
+        if binding_include.len() > 0 {
+            if !matches!(context, AttributeContext::Type(..)) {
+                errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations or `impl` blocks.".into()));
+            }
+
+            // TODO: Does this make sense to do?
+            if binding_include.iter().any(|i| {
+                matches!(i, IncludeInfo::Block(IncludeType::Definition(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+            }) {
+                errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
+            }
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -915,6 +1004,8 @@ impl Attrs {
             // Not inherited
             generate_mocking_interface: false,
             abi_compatible: false,
+            // Not inherited
+            binding_include: Default::default(),
         }
     }
 }
@@ -1645,6 +1736,48 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    #[test]
+    fn test_custom_include() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(tests, include(def="some_file.d.hpp"))]
+                pub struct IncludeDef {}
+
+                #[diplomat::attr(tests, include(impl="some_file.hpp"))]
+                impl IncludeDef {}
+
+                #[diplomat::attr(tests, include(def_block="some_block.d.hpp"))]
+                #[diplomat::opaque]
+                pub struct IncludeBlock();
+
+                #[diplomat::attr(tests, include(impl_block="some_block.hpp"))]
+                impl IncludeBlock {}
+            }
+
+        }
+    }
+
+    #[test]
+    fn test_custom_include_fail() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct IncludeDef {
+                    a : i32
+                }
+
+                impl IncludeDef {
+                    #[diplomat::attr(tests, include(def_block="some_file.d.hpp"))]
+                    pub fn test() {
+
+                    }
+                }
+            }
+
         }
     }
 }
