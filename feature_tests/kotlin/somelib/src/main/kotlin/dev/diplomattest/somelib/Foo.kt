@@ -33,15 +33,15 @@ class Foo internal constructor (
         @JvmStatic
         
         fun newStatic(x: String): Foo {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrowUtf8(x)
+            val xSliceMemory = PrimitiveArrayTools.borrowUtf8(x)
             
-            val returnVal = lib.Foo_new_static(xSlice);
+            val returnVal = lib.Foo_new_static(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val aEdges: List<Any?> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            if (xMem != null) xMem.close()
+            xSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic

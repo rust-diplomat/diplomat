@@ -33,18 +33,18 @@ class OpaqueThinVec internal constructor (
         @JvmStatic
         
         fun create(a: IntArray, b: FloatArray, c: String): OpaqueThinVec {
-            val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
-            val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
-            val (cMem, cSlice) = PrimitiveArrayTools.borrowUtf8(c)
+            val aSliceMemory = PrimitiveArrayTools.borrow(a)
+            val bSliceMemory = PrimitiveArrayTools.borrow(b)
+            val cSliceMemory = PrimitiveArrayTools.borrowUtf8(c)
             
-            val returnVal = lib.OpaqueThinVec_create(aSlice, bSlice, cSlice);
+            val returnVal = lib.OpaqueThinVec_create(aSliceMemory.slice, bSliceMemory.slice, cSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = OpaqueThinVec(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
-            if (aMem != null) aMem.close()
-            if (bMem != null) bMem.close()
-            if (cMem != null) cMem.close()
+            aSliceMemory?.close()
+            bSliceMemory?.close()
+            cSliceMemory?.close()
             return returnOpaque
         }
     }

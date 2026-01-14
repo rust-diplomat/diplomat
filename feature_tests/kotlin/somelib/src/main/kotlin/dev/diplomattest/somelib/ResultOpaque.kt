@@ -171,13 +171,13 @@ class ResultOpaque internal constructor (
     *Test that this interacts gracefully with returning a reference type
     */
     fun takesStr(v: String): ResultOpaque {
-        val (vMem, vSlice) = PrimitiveArrayTools.borrowUtf8(v)
+        val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
         
-        val returnVal = lib.ResultOpaque_takes_str(handle, vSlice);
+        val returnVal = lib.ResultOpaque_takes_str(handle, vSliceMemory.slice);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = ResultOpaque(handle, selfEdges)
-        if (vMem != null) vMem.close()
+        vSliceMemory?.close()
         return returnOpaque
     }
     

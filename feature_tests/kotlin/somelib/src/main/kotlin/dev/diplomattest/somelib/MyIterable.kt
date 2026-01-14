@@ -30,14 +30,14 @@ class MyIterable internal constructor (
         @JvmStatic
         
         fun new_(x: UByteArray): MyIterable {
-            val (xMem, xSlice) = PrimitiveArrayTools.borrow(x)
+            val xSliceMemory = PrimitiveArrayTools.borrow(x)
             
-            val returnVal = lib.namespace_MyIterable_new(xSlice);
+            val returnVal = lib.namespace_MyIterable_new(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyIterable(handle, selfEdges)
             CLEANER.register(returnOpaque, MyIterable.MyIterableCleaner(handle, MyIterable.lib));
-            if (xMem != null) xMem.close()
+            xSliceMemory?.close()
             return returnOpaque
         }
     }

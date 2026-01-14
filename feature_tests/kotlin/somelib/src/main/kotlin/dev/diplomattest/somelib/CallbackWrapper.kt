@@ -404,9 +404,9 @@ class CallbackWrapper (var cantBeEmpty: Boolean) {
         @JvmStatic
         
         fun testSliceCbArg(arg: UByteArray, f: (UByteArray)->Unit): Unit {
-            val (argMem, argSlice) = PrimitiveArrayTools.borrow(arg)
+            val argSliceMemory = PrimitiveArrayTools.borrow(arg)
             
-            val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSlice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSliceMemory.slice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
             
         }
     }

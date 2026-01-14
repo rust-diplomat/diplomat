@@ -31,14 +31,14 @@ class Utf16Wrap internal constructor (
         @JvmStatic
         
         fun fromUtf16(input: String): Utf16Wrap {
-            val (inputMem, inputSlice) = PrimitiveArrayTools.borrowUtf16(input)
+            val inputSliceMemory = PrimitiveArrayTools.borrowUtf16(input)
             
-            val returnVal = lib.Utf16Wrap_from_utf16(inputSlice);
+            val returnVal = lib.Utf16Wrap_from_utf16(inputSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Utf16Wrap(handle, selfEdges)
             CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
-            if (inputMem != null) inputMem.close()
+            inputSliceMemory?.close()
             return returnOpaque
         }
     }

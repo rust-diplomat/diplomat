@@ -41,87 +41,87 @@ class Float64Vec internal constructor (
         @JvmStatic
         
         fun newBool(v: BooleanArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_bool(vSlice);
+            val returnVal = lib.Float64Vec_new_bool(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newI16(v: ShortArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_i16(vSlice);
+            val returnVal = lib.Float64Vec_new_i16(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newU16(v: UShortArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_u16(vSlice);
+            val returnVal = lib.Float64Vec_new_u16(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newIsize(v: LongArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_isize(vSlice);
+            val returnVal = lib.Float64Vec_new_isize(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newUsize(v: ULongArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_usize(vSlice);
+            val returnVal = lib.Float64Vec_new_usize(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newF64BeBytes(v: ByteArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+            val vSliceMemory = PrimitiveArrayTools.borrow(v)
             
-            val returnVal = lib.Float64Vec_new_f64_be_bytes(vSlice);
+            val returnVal = lib.Float64Vec_new_f64_be_bytes(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            if (vMem != null) vMem.close()
+            vSliceMemory?.close()
             return returnOpaque
         }
         @JvmStatic
         
         fun newFromOwned(v: DoubleArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.move(v)
+            val vSliceMemory = PrimitiveArrayTools.move(v)
             
-            val returnVal = lib.Float64Vec_new_from_owned(vSlice);
+            val returnVal = lib.Float64Vec_new_from_owned(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
@@ -137,16 +137,16 @@ class Float64Vec internal constructor (
     }
     
     fun fillSlice(v: DoubleArray): Unit {
-        val (vMem, vSlice) = PrimitiveArrayTools.borrow(v)
+        val vSliceMemory = PrimitiveArrayTools.borrow(v)
         
-        val returnVal = lib.Float64Vec_fill_slice(handle, vSlice);
+        val returnVal = lib.Float64Vec_fill_slice(handle, vSliceMemory.slice);
         
     }
     
     fun setValue(newSlice: DoubleArray): Unit {
-        val (newSliceMem, newSliceSlice) = PrimitiveArrayTools.borrow(newSlice)
+        val newSliceSliceMemory = PrimitiveArrayTools.borrow(newSlice)
         
-        val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
+        val returnVal = lib.Float64Vec_set_value(handle, newSliceSliceMemory.slice);
         
     }
     

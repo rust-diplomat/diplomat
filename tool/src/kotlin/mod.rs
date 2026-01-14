@@ -345,11 +345,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(ref s) => {
                 if is_param {
-                    format!("{name}Slice").into()
+                    format!("{name}SliceMemory.slice").into()
                 } else {
                     // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
                     let slice_method = self.slice_method_for(s);
-                    format!("PrimitiveArrayTools.{slice_method}({name}).second").into()
+                    format!("PrimitiveArrayTools.{slice_method}({name}).slice").into()
                 }
             }
             Type::Callback(_) => {
@@ -981,14 +981,12 @@ returnVal.option() ?: return null
         struct SliceConv<'d> {
             slice_method: Cow<'d, str>,
             kt_param_name: Cow<'d, str>,
-            closeable: bool,
         }
         let slice_method = self.slice_method_for(&slice_type).into();
 
         SliceConv {
             kt_param_name,
             slice_method,
-            closeable: true,
         }
         .render()
         .expect("Failed to render slice method")
@@ -1000,18 +998,15 @@ returnVal.option() ?: return null
         param_name: Cow<'cx, str>,
         slice: Slice<P>,
     ) -> Option<Cow<'cx, str>> {
+        // TODO(#1003) Is this actually needed?
         match slice {
-            Slice::Str(Some(_), _) => {
-                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
-            }
+            Slice::Str(Some(_), _) => Some(format!("{param_name}SliceMemory?.close()").into()),
             Slice::Str(_, _) => None,
             Slice::Primitive(MaybeOwn::Borrow(_), _) => {
-                Some(format!("if ({param_name}Mem != null) {param_name}Mem.close()").into())
+                Some(format!("{param_name}SliceMemory?.close()").into())
             }
             Slice::Primitive(_, _) => None,
-            Slice::Strs(_) => {
-                Some(format!("{param_name}Mem.forEach {{if (it != null) it.close()}}").into())
-            }
+            Slice::Strs(_) => Some(format!("{param_name}SliceMemory?.close()").into()),
             _ => todo!(),
         }
     }

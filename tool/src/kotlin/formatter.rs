@@ -214,7 +214,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         };
         match ty {
             LifetimeEdgeKind::OpaqueParam => format!("listOf({param_name})").into(),
-            LifetimeEdgeKind::SliceParam => format!("listOf({param_name}Mem)").into(),
+            LifetimeEdgeKind::SliceParam => format!("listOf({param_name}SliceMemory.mem)").into(),
             LifetimeEdgeKind::StructLifetime(lt_env, lt, is_option) => {
                 assert!(
                     !is_option,

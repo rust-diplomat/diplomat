@@ -33,16 +33,16 @@ class AnotherOpaque internal constructor (
     }
     
     fun getRustOwnedBytes(a: UByteArray, b: UByteArray): RustOwnedBytes {
-        val (aMem, aSlice) = PrimitiveArrayTools.borrow(a)
-        val (bMem, bSlice) = PrimitiveArrayTools.borrow(b)
+        val aSliceMemory = PrimitiveArrayTools.borrow(a)
+        val bSliceMemory = PrimitiveArrayTools.borrow(b)
         
-        val returnVal = lib.AnotherOpaque_get_rust_owned_bytes(handle, aSlice, bSlice);
+        val returnVal = lib.AnotherOpaque_get_rust_owned_bytes(handle, aSliceMemory.slice, bSliceMemory.slice);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = RustOwnedBytes(handle, selfEdges)
         CLEANER.register(returnOpaque, RustOwnedBytes.RustOwnedBytesCleaner(handle, RustOwnedBytes.lib));
-        if (aMem != null) aMem.close()
-        if (bMem != null) bMem.close()
+        aSliceMemory?.close()
+        bSliceMemory?.close()
         return returnOpaque
     }
 

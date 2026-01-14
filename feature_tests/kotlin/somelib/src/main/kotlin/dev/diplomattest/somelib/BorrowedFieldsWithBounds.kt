@@ -82,9 +82,9 @@ class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fiel
     }
     internal fun toNative(): BorrowedFieldsWithBoundsNative {
         var native = BorrowedFieldsWithBoundsNative()
-        native.fieldA = PrimitiveArrayTools.borrowUtf16(this.fieldA).second
-        native.fieldB = PrimitiveArrayTools.borrowUtf8(this.fieldB).second
-        native.fieldC = PrimitiveArrayTools.borrowUtf8(this.fieldC).second
+        native.fieldA = PrimitiveArrayTools.borrowUtf16(this.fieldA).slice
+        native.fieldB = PrimitiveArrayTools.borrowUtf8(this.fieldB).slice
+        native.fieldC = PrimitiveArrayTools.borrowUtf8(this.fieldC).slice
         return native
     }
 
