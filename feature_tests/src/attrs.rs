@@ -408,4 +408,39 @@ pub mod ffi {
     pub fn nested_ns_fn(x: bool) -> bool {
         !x
     }
+    
+    /// Testing support for List[str] in Nanobind
+    #[diplomat::opaque]
+    #[diplomat::attr(cpp, include(def="custom_binds/RenamedStringList.d.hpp", imp="custom_binds/RenamedStringList.hpp"))]
+    pub struct StringList(Vec<String>);
+
+    impl StringList {
+        pub fn return_new() -> Box<Self> {
+            Box::new(Self(vec!["Apple".into(), "Banana".into(), "Croissant".into()]))
+        }
+    }
+
+    // TODO:
+    // #[diplomat::opaque]
+    // #[diplomat::attr(cpp, include(def_block="custom_binds/"))]
+    // pub struct BlockOverride();
+
+    // impl BlockOverride {
+    //     #[diplomat::attr(cpp, disable)]
+    //     pub fn test() {
+
+    //     }
+    // }
+
+    #[diplomat::opaque]
+    // TODO:
+    // #[diplomat::attr(cpp, include(imp_block="custom_binds/NonCustomTypeBlock.hpp"))]
+    pub struct NonCustomType();
+    impl NonCustomType {
+        // TODO:
+        // #[diplomat::attr(cpp, disable)]
+        // pub fn return_string_list() -> Box<StringList> {
+        //     Box::new(StringList(vec!["Test".into(), "Testing!".into()]))
+        // }
+    }
 }

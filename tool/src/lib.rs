@@ -49,6 +49,11 @@ pub fn gen(
         );
         std::process::exit(1);
     }
+    
+    // Set the default binding location:
+    if config.shared_config.custom_binding_location.as_os_str().is_empty() {
+        config.shared_config.custom_binding_location = entry.parent().expect("Could not get parent of lib.rs").to_path_buf();
+    }
 
     // The HIR backends used to be named "c2", "js2", etc
     let target_language = target_language.strip_suffix('2').unwrap_or(target_language);

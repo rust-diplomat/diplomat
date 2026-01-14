@@ -7,7 +7,7 @@ pub(crate) use header::Header;
 use std::collections::HashMap;
 
 use crate::{ErrorStore, FileMap};
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, IncludeType};
 pub(crate) use gen::ItemGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
@@ -53,8 +53,16 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
+}
+
+fn read_custom_binding<'a, 'b>(path : String, config : &crate::Config, errors : &'b ErrorStore<'a, String>) -> Result<String, ()> {
+    let path = config.shared_config.custom_binding_location.join(path);
+    std::fs::read_to_string(&path).map_err(|e| {
+        errors.push_error(format!("Cannot find file {}: {}", path.display(), e.to_string()));
+    })
 }
 
 pub(crate) fn run<'tcx>(
@@ -132,8 +140,22 @@ pub(crate) fn run<'tcx>(
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
 
-        files.add_file(decl_header_path, decl_header.to_string());
-        files.add_file(impl_header_path, impl_header.to_string());
+        let binding_info = &ty.attrs().binding_include;
+        if let Some(IncludeType::File(f)) = &binding_info.def_info {
+            if let Ok(s) = read_custom_binding(f.clone(), config, &errors) {
+                files.add_file(decl_header_path, s);
+            }
+        } else {
+            files.add_file(decl_header_path, decl_header.to_string());
+        }
+
+        if let Some(IncludeType::File(f)) = &binding_info.impl_info {
+            if let Ok(s) = read_custom_binding(f.clone(), config, &errors) {
+                files.add_file(impl_header_path, s);
+            }
+        } else {
+            files.add_file(impl_header_path, impl_header.to_string());
+        }
     }
 
     {

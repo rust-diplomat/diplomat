@@ -82,9 +82,9 @@ pub enum IncludeType {
 #[non_exhaustive]
 pub struct IncludeInfo {
     /// Header to include.
-    impl_info : Option<IncludeType>,
+    pub impl_info : Option<IncludeType>,
     /// Definition to include.
-    def_info : Option<IncludeType>,
+    pub def_info : Option<IncludeType>,
 }
 
 // #region: Demo specific attributes.
