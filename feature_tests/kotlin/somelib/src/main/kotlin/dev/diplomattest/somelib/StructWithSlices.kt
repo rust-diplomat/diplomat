@@ -80,8 +80,8 @@ class StructWithSlices (var first: String, var second: UShortArray) {
     }
     internal fun toNative(): StructWithSlicesNative {
         var native = StructWithSlicesNative()
-        native.first = PrimitiveArrayTools.borrowUtf8(this.first).second
-        native.second = PrimitiveArrayTools.borrow(this.second).second
+        native.first = PrimitiveArrayTools.borrowUtf8(this.first).slice
+        native.second = PrimitiveArrayTools.borrow(this.second).slice
         return native
     }
 

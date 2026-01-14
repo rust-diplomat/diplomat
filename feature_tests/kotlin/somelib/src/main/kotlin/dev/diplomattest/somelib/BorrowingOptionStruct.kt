@@ -76,7 +76,7 @@ class BorrowingOptionStruct (var a: String?) {
     }
     internal fun toNative(): BorrowingOptionStructNative {
         var native = BorrowingOptionStructNative()
-        native.a = this.a?.let { OptionSlice.some(PrimitiveArrayTools.borrowUtf8(it).second) } ?: OptionSlice.none()
+        native.a = this.a?.let { OptionSlice.some(PrimitiveArrayTools.borrowUtf8(it).slice) } ?: OptionSlice.none()
         return native
     }
 

@@ -31,14 +31,14 @@ class OptionString internal constructor (
         @JvmStatic
         
         fun new_(diplomatStr: String): OptionString? {
-            val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.borrowUtf8(diplomatStr)
+            val diplomatStrSliceMemory = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
-            val returnVal = lib.OptionString_new(diplomatStrSlice);
+            val returnVal = lib.OptionString_new(diplomatStrSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionString(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
-            if (diplomatStrMem != null) diplomatStrMem.close()
+            diplomatStrSliceMemory?.close()
             return returnOpaque
         }
     }
