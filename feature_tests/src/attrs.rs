@@ -421,9 +421,9 @@ pub mod ffi {
     }
 
     // TODO:
-    // #[diplomat::opaque]
-    // #[diplomat::attr(cpp, include(def_block="custom_binds/"))]
-    // pub struct BlockOverride();
+    #[diplomat::opaque]
+    #[diplomat::attr(cpp, include(def_block="custom_binds/RenamedBlockOverride.d.hpp", imp_block="custom_binds/RenamedBlockOverride.hpp"))]
+    pub struct BlockOverride();
 
     // impl BlockOverride {
     //     #[diplomat::attr(cpp, disable)]

@@ -4,7 +4,7 @@ mod header;
 
 use askama::Template;
 pub(crate) use header::Header;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Write};
 
 use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, IncludeType};
@@ -91,13 +91,15 @@ pub(crate) fn run<'tcx>(
     files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
-        if ty.attrs().disable {
+        let ty_attrs = ty.attrs();
+        if ty_attrs.disable {
             // Skip type if disabled
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
@@ -139,8 +141,15 @@ pub(crate) fn run<'tcx>(
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
+        
+        // Decl headers require some more special logic, but we can write to the impl header body directly:
+        if let Some(IncludeType::Block(b)) = &ty_attrs.binding_include.impl_info {
+            if let Ok(s) = read_custom_binding(b.clone(), config, &errors) {
+                writeln!(impl_header, "{}", s).expect("Could not write to header.");
+            }
+        }
 
-        let binding_info = &ty.attrs().binding_include;
+        let binding_info = &ty_attrs.binding_include;
         if let Some(IncludeType::File(f)) = &binding_info.def_info {
             if let Ok(s) = read_custom_binding(f.clone(), config, &errors) {
                 files.add_file(decl_header_path, s);
