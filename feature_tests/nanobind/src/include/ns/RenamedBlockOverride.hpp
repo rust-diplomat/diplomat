@@ -44,5 +44,8 @@ inline void somelib::ns::RenamedBlockOverride::operator delete(void* ptr) {
     somelib::ns::capi::namespace_BlockOverride_destroy(reinterpret_cast<somelib::ns::capi::RenamedBlockOverride*>(ptr));
 }
 
+std::string somelib::ns::RenamedBlockOverride::special_function() {
+    return "This is a custom binding.";
+}
 
 #endif // SOMELIB_ns_RenamedBlockOverride_HPP

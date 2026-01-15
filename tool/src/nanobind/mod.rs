@@ -181,7 +181,7 @@ pub(crate) fn run<'cx>(
 
         if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationBlock) {
             if let Ok(s) = read_custom_binding(s, &conf, &errors) {
-                writeln!(body, "{}", s).expect("Could not write to body.");
+                writeln!(body, "\n{}", s).expect("Could not write to body.");
             }
         }
 

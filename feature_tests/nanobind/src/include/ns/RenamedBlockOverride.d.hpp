@@ -34,6 +34,10 @@ private:
     RenamedBlockOverride operator=(const somelib::ns::RenamedBlockOverride&) = delete;
     RenamedBlockOverride operator=(somelib::ns::RenamedBlockOverride&&) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
+
+public:
+    const static bool custom_bool = false;
+    static std::string special_function();
 };
 
 } // namespace
