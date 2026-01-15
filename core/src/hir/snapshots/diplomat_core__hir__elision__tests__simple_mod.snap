@@ -62,10 +62,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
-                        binding_include: IncludeInfo {
-                            impl_info: None,
-                            def_info: None,
-                        },
+                        binding_includes: {},
                     },
                 },
             ],
@@ -128,10 +125,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
-                                binding_include: IncludeInfo {
-                                    impl_info: None,
-                                    def_info: None,
-                                },
+                                binding_includes: {},
                             },
                         },
                     ],
@@ -183,10 +177,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
-                        binding_include: IncludeInfo {
-                            impl_info: None,
-                            def_info: None,
-                        },
+                        binding_includes: {},
                     },
                 },
             ],
@@ -215,10 +206,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
-                binding_include: IncludeInfo {
-                    impl_info: None,
-                    def_info: None,
-                },
+                binding_includes: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -288,10 +276,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
-                        binding_include: IncludeInfo {
-                            impl_info: None,
-                            def_info: None,
-                        },
+                        binding_includes: {},
                     },
                 },
             ],
@@ -357,10 +342,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
-                                binding_include: IncludeInfo {
-                                    impl_info: None,
-                                    def_info: None,
-                                },
+                                binding_includes: {},
                             },
                         },
                     ),
@@ -404,10 +386,7 @@ TypeContext {
                                 },
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
-                                binding_include: IncludeInfo {
-                                    impl_info: None,
-                                    def_info: None,
-                                },
+                                binding_includes: {},
                             },
                         },
                     ],
@@ -452,10 +431,7 @@ TypeContext {
                         },
                         generate_mocking_interface: false,
                         abi_compatible: false,
-                        binding_include: IncludeInfo {
-                            impl_info: None,
-                            def_info: None,
-                        },
+                        binding_includes: {},
                     },
                 },
             ],
@@ -484,10 +460,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
-                binding_include: IncludeInfo {
-                    impl_info: None,
-                    def_info: None,
-                },
+                binding_includes: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -539,10 +512,7 @@ TypeContext {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
-                binding_include: IncludeInfo {
-                    impl_info: None,
-                    def_info: None,
-                },
+                binding_includes: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [

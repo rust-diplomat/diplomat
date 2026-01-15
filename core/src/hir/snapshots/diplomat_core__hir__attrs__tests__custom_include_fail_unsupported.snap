@@ -3,3 +3,4 @@ source: core/src/hir/attrs.rs
 expression: output
 ---
 Lowering error in IncludeDef::test: Custom bindings not supported by this language.
+Lowering error in IncludeDef::test: `include` only supported on type declarations.
