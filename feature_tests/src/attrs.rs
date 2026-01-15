@@ -446,16 +446,22 @@ pub mod ffi {
     #[diplomat::attr(
         cpp,
         include(
-            file = "custom_binds/cpp/RenamedBlockOverride.d.hpp",
+            source = "public:
+    const static bool custom_bool = false;
+    static std::string special_function();",
             location = "def_block"
         )
     )]
     #[diplomat::attr(
         cpp,
         include(
-            file = "custom_binds/cpp/RenamedBlockOverride.hpp",
+            source = r#"std::string somelib::ns::RenamedBlockOverride::special_function() {
+    return "This is a custom binding.";
+}"#,
             location = "impl_block"
         )
     )]
+    #[diplomat::attr(nanobind, include(source = "// Test", location="impl_block"))]
+    #[diplomat::attr(nanobind, include(source = "// Test", location="def_block"))]
     pub struct BlockOverride();
 }
