@@ -6,7 +6,7 @@
 
 extern "C" {
     void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
-    
+
     somelib::ns::capi::RenamedStringList* namespace_StringList_return_new(void);
 }
 
