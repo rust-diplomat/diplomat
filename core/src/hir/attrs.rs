@@ -484,8 +484,12 @@ impl Attrs {
                             }
 
                             match (&location, &source) {
-                                (Some(l), Some(s)) => { this.binding_includes.insert(l.clone(), s.clone()); }
-                                _ => { errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}"))); }
+                                (Some(l), Some(s)) => {
+                                    this.binding_includes.insert(l.clone(), s.clone());
+                                }
+                                _ => {
+                                    errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
+                                }
                             }
                         }
                         _ => {
