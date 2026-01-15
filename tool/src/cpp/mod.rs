@@ -65,10 +65,7 @@ fn read_custom_binding<'a, 'b>(
 ) -> Result<String, ()> {
     let path = config.shared_config.custom_binding_location.join(path);
     std::fs::read_to_string(&path).map_err(|e| {
-        errors.push_error(format!(
-            "Cannot find file {}: {e}",
-            path.display()
-        ));
+        errors.push_error(format!("Cannot find file {}: {e}", path.display()));
     })
 }
 
