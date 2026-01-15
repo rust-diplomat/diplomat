@@ -7,8 +7,8 @@ use crate::hir::{
     EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
     TraitDef, Type, TypeDef, TypeId,
 };
-use syn::Meta;
 use syn::spanned::Spanned;
+use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
 
@@ -62,7 +62,7 @@ pub struct Attrs {
     pub abi_compatible: bool,
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
-    pub binding_include : IncludeInfo,
+    pub binding_include: IncludeInfo,
 }
 
 /// Whether the custom binding is included as a file or a block. These are mutually exclusive.
@@ -74,7 +74,7 @@ pub enum IncludeType {
     Block(String),
     /// Include the whole file.
     /// The implicit assumption is that the backend will scrap whatever file it was originally going to include instead.
-    File(String)
+    File(String),
 }
 
 /// Information specifying how a custom binding should be included.
@@ -82,9 +82,9 @@ pub enum IncludeType {
 #[non_exhaustive]
 pub struct IncludeInfo {
     /// Header to include.
-    pub impl_info : Option<IncludeType>,
+    pub impl_info: Option<IncludeType>,
     /// Definition to include.
-    pub def_info : Option<IncludeType>,
+    pub def_info: Option<IncludeType>,
 }
 
 // #region: Demo specific attributes.
@@ -461,9 +461,9 @@ impl Attrs {
                                 Ok(())
                             });
                             if let Err(e) = list {
-                                errors.push(LoweringError::Other(
-                                    format!("Error parsing `include`: {e}")
-                                ));
+                                errors.push(LoweringError::Other(format!(
+                                    "Error parsing `include`: {e}"
+                                )));
                                 continue;
                             }
                         }
@@ -960,21 +960,34 @@ impl Attrs {
 
         if binding_include.def_info.is_some() || binding_include.impl_info.is_some() {
             if !validator.attrs_supported().custom_bindings {
-                errors.push(LoweringError::Other("Custom bindings not supported by this language.".into()));
+                errors.push(LoweringError::Other(
+                    "Custom bindings not supported by this language.".into(),
+                ));
             } else {
                 if !matches!(context, AttributeContext::Type(..)) {
-                    errors.push(LoweringError::Other("Custom binding includes can only be used above `struct` declarations.".into()));
+                    errors.push(LoweringError::Other(
+                        "Custom binding includes can only be used above `struct` declarations."
+                            .into(),
+                    ));
                 }
 
                 // TODO: Does this make sense to do?
-                if matches!(binding_include.def_info, Some(IncludeType::Block(..))) && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
+                if matches!(binding_include.def_info, Some(IncludeType::Block(..)))
+                    && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
                 {
-                    errors.push(LoweringError::Other("Custom binding includes cannot use def_block= on non-opaque types.".into()));
+                    errors.push(LoweringError::Other(
+                        "Custom binding includes cannot use def_block= on non-opaque types.".into(),
+                    ));
                 }
 
-                if (matches!(binding_include.def_info, Some(IncludeType::Block(..))) && matches!(binding_include.impl_info, Some(IncludeType::File(..)))) || 
-                    (matches!(binding_include.def_info, Some(IncludeType::File(..))) && matches!(binding_include.impl_info, Some(IncludeType::Block(..)))) {
-                    errors.push(LoweringError::Other("Cannot have both block and file include types on the same type.".into()));
+                if (matches!(binding_include.def_info, Some(IncludeType::Block(..)))
+                    && matches!(binding_include.impl_info, Some(IncludeType::File(..))))
+                    || (matches!(binding_include.def_info, Some(IncludeType::File(..)))
+                        && matches!(binding_include.impl_info, Some(IncludeType::Block(..))))
+                {
+                    errors.push(LoweringError::Other(
+                        "Cannot have both block and file include types on the same type.".into(),
+                    ));
                 }
             }
         }
@@ -1114,7 +1127,7 @@ pub struct BackendAttrSupport {
     /// Whether the language supports generating functions not associated with any type.
     pub free_functions: bool,
     /// Whether the language supports being able to include custom bindings.
-    pub custom_bindings : bool,
+    pub custom_bindings: bool,
 }
 
 impl BackendAttrSupport {

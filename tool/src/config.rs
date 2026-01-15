@@ -1,4 +1,8 @@
-use std::{collections::HashMap, path::{Path, PathBuf}, str};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    str,
+};
 
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -18,7 +22,7 @@ pub struct SharedConfig {
     /// retain these references on the foreign side.
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
-    pub custom_binding_location : PathBuf,
+    pub custom_binding_location: PathBuf,
 }
 
 impl SharedConfig {

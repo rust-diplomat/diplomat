@@ -58,10 +58,18 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-fn read_custom_binding<'a, 'b>(path : String, config : &crate::Config, errors : &'b ErrorStore<'a, String>) -> Result<String, ()> {
+fn read_custom_binding<'a, 'b>(
+    path: String,
+    config: &crate::Config,
+    errors: &'b ErrorStore<'a, String>,
+) -> Result<String, ()> {
     let path = config.shared_config.custom_binding_location.join(path);
     std::fs::read_to_string(&path).map_err(|e| {
-        errors.push_error(format!("Cannot find file {}: {}", path.display(), e.to_string()));
+        errors.push_error(format!(
+            "Cannot find file {}: {}",
+            path.display(),
+            e.to_string()
+        ));
     })
 }
 
@@ -147,7 +155,7 @@ pub(crate) fn run<'tcx>(
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
-        
+
         // Decl headers require some more special logic, but we can write to the impl header body directly:
         if let Some(IncludeType::Block(b)) = &ty_attrs.binding_include.impl_info {
             if let Ok(s) = read_custom_binding(b.clone(), config, &errors) {

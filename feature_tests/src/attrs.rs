@@ -408,10 +408,16 @@ pub mod ffi {
     pub fn nested_ns_fn(x: bool) -> bool {
         !x
     }
-    
+
     /// Testing support for List[str] in Nanobind
     #[diplomat::opaque]
-    #[diplomat::attr(cpp, include(def="custom_binds/RenamedStringList.d.hpp", imp="custom_binds/RenamedStringList.hpp"))]
+    #[diplomat::attr(
+        cpp,
+        include(
+            def = "custom_binds/RenamedStringList.d.hpp",
+            imp = "custom_binds/RenamedStringList.hpp"
+        )
+    )]
     pub struct StringList<'a>(&'a str);
 
     impl<'a> StringList<'a> {
@@ -422,7 +428,13 @@ pub mod ffi {
 
     // TODO:
     #[diplomat::opaque]
-    #[diplomat::attr(cpp, include(def_block="custom_binds/RenamedBlockOverride.d.hpp", imp_block="custom_binds/RenamedBlockOverride.hpp"))]
+    #[diplomat::attr(
+        cpp,
+        include(
+            def_block = "custom_binds/RenamedBlockOverride.d.hpp",
+            imp_block = "custom_binds/RenamedBlockOverride.hpp"
+        )
+    )]
     pub struct BlockOverride();
 
     // impl BlockOverride {
