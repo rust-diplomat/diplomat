@@ -411,6 +411,7 @@ pub mod ffi {
 
     /// Testing support for List[str] in Nanobind
     #[diplomat::opaque]
+    #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
         cpp,
         include(file = "custom_binds/RenamedStringList.d.hpp", location = "def_file")
@@ -433,6 +434,7 @@ pub mod ffi {
 
     // TODO:
     #[diplomat::opaque]
+    #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
         cpp,
         include(
@@ -457,6 +459,7 @@ pub mod ffi {
     // }
 
     #[diplomat::opaque]
+    #[diplomat::attr(not(supports = custom_bindings), disable)]
     // TODO:
     // #[diplomat::attr(cpp, include(imp_block="custom_binds/NonCustomTypeBlock.hpp"))]
     pub struct NonCustomType();
