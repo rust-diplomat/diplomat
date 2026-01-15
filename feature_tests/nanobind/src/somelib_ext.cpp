@@ -77,7 +77,6 @@ void add_RenamedDeprecatedOpaque_binding(nb::module_);
 void add_RenamedMyIndexer_binding(nb::module_);
 void add_RenamedMyIterable_binding(nb::module_);
 void add_RenamedMyIterator_binding(nb::module_);
-void add_RenamedNonCustomType_binding(nb::module_);
 void add_RenamedOpaqueArithmetic_binding(nb::module_);
 void add_RenamedOpaqueIterable_binding(nb::module_);
 void add_RenamedOpaqueIterator_binding(nb::module_);
@@ -218,7 +217,6 @@ NB_MODULE(somelib, mod)
     ns::add_RenamedMyIndexer_binding(ns_mod);
     ns::add_RenamedMyIterable_binding(ns_mod);
     ns::add_RenamedMyIterator_binding(ns_mod);
-    ns::add_RenamedNonCustomType_binding(ns_mod);
     ns::add_RenamedOpaqueArithmetic_binding(ns_mod);
     ns::add_RenamedOpaqueIterable_binding(ns_mod);
     ns::add_RenamedOpaqueIterator_binding(ns_mod);
