@@ -478,16 +478,14 @@ impl Attrs {
                             if let Err(e) = list {
                                 errors.push(LoweringError::Other(format!(
                                     "Error parsing `{}`: {e}",
-                                    attr.meta.to_token_stream().to_string()
+                                    attr.meta.to_token_stream()
                                 )));
                                 continue;
                             }
 
-                            if source.is_some() && location.is_some() {
-                                this.binding_includes
-                                    .insert(location.unwrap(), source.unwrap());
-                            } else {
-                                errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
+                            match (&location, &source) {
+                                (Some(l), Some(s)) => { this.binding_includes.insert(l.clone(), s.clone()); }
+                                _ => { errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}"))); }
                             }
                         }
                         _ => {
