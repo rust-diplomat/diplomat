@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, IncludeType};
 use formatter::PyFormatter;
 use gen::ItemGenContext;
 use itertools::Itertools;
@@ -51,8 +51,20 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
+}
+
+fn read_custom_binding<'a, 'b>(
+    path: String,
+    config: &crate::Config,
+    errors: &'b ErrorStore<'a, String>,
+) -> Result<String, ()> {
+    let path = config.shared_config.custom_binding_location.join(path);
+    std::fs::read_to_string(&path).map_err(|e| {
+        errors.push_error(format!("Cannot find file {}: {e}", path.display()));
+    })
 }
 
 pub(crate) fn run<'cx>(
@@ -182,7 +194,16 @@ pub(crate) fn run<'cx>(
             body,
             binding_prefix,
         };
-        files.add_file(binding_impl_path, binding_impl.to_string());
+
+        let binding_info = &ty.attrs().binding_include;
+        
+        if let Some(IncludeType::File(f)) = &binding_info.impl_info {
+            if let Ok(s) = read_custom_binding(f.clone(), &conf, &errors) {
+                files.add_file(binding_impl_path, s);
+            }
+        } else {
+            files.add_file(binding_impl_path, binding_impl.to_string());
+        }
     }
 
     let mut ty_context = ItemGenContext {

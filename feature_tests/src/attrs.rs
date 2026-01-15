@@ -418,6 +418,7 @@ pub mod ffi {
             imp = "custom_binds/RenamedStringList.hpp"
         )
     )]
+    #[diplomat::attr(nanobind, include(imp = "custom_binds/RenamedStringList.cpp"))]
     pub struct StringList<'a>(&'a str);
 
     impl<'a> StringList<'a> {
