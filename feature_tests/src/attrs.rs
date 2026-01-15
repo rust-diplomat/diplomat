@@ -414,11 +414,12 @@ pub mod ffi {
     #[diplomat::attr(
         cpp,
         include(
-            def = "custom_binds/RenamedStringList.d.hpp",
-            imp = "custom_binds/RenamedStringList.hpp"
+            file = "custom_binds/RenamedStringList.d.hpp",
+            location = "def_file"
         )
     )]
-    #[diplomat::attr(nanobind, include(imp = "custom_binds/RenamedStringList.cpp"))]
+    #[diplomat::attr(cpp, include(file = "custom_binds/RenamedStringList.hpp", location = "impl_file"))]
+    #[diplomat::attr(nanobind, include(file = "custom_binds/RenamedStringList.cpp", location = "def_file"))]
     pub struct StringList<'a>(&'a str);
 
     impl<'a> StringList<'a> {
@@ -432,10 +433,11 @@ pub mod ffi {
     #[diplomat::attr(
         cpp,
         include(
-            def_block = "custom_binds/RenamedBlockOverride.d.hpp",
-            imp_block = "custom_binds/RenamedBlockOverride.hpp"
+            file = "custom_binds/RenamedBlockOverride.d.hpp",
+            location = "def_block"
         )
     )]
+    #[diplomat::attr(cpp, include(file = "custom_binds/RenamedBlockOverride.hpp", location = "impl_block"))]
     pub struct BlockOverride();
 
     // impl BlockOverride {
