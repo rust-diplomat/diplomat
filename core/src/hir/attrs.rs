@@ -429,7 +429,7 @@ impl Attrs {
                                                 unreachable!()
                                             }
                                         },
-                                        _ => return Err(syn::Error::new(expr.right.span(), format!("Expected equivalence to a file path string."))),
+                                        _ => return Err(syn::Error::new(expr.right.span(), "Expected equivalence to a file path string.")),
                                     };
                                     match expr.left.as_ref() {
                                         syn::Expr::Path(p) => {
