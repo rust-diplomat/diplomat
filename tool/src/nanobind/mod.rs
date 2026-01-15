@@ -2,7 +2,7 @@ mod formatter;
 pub(crate) mod gen;
 mod root_module;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::{collections::{BTreeMap, BTreeSet}, fmt::Write};
 
 use crate::{
     cpp::Header, nanobind::gen::MethodInfo, read_custom_binding, Config, ErrorStore, FileMap,
@@ -176,6 +176,14 @@ pub(crate) fn run<'cx>(
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
+        
+        let binding_info = &ty.attrs().binding_includes;
+
+        if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationBlock) {
+            if let Ok(s) = read_custom_binding(s, &conf, &errors) {
+                writeln!(body, "{}", s).expect("Could not write to body.");
+            }
+        }
 
         let binding_impl = Binding {
             includes: context.cpp.impl_header.includes.clone(),
@@ -186,9 +194,7 @@ pub(crate) fn run<'cx>(
             binding_prefix,
         };
 
-        let binding_info = &ty.attrs().binding_includes;
-
-        if let Some(s) = binding_info.get(&hir::IncludeLocation::ImplFile) {
+        if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationFile) {
             if let Ok(s) = read_custom_binding(s, &conf, &errors) {
                 files.add_file(binding_impl_path, s);
             }

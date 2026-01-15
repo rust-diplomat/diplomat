@@ -90,6 +90,10 @@ pub enum IncludeLocation {
     DefFile,
     /// An overwrite of the implementation of the class.
     ImplFile,
+    /// A file for overriding an initialization function. Intended for backends that build off of C/C++.
+    /// Used by the Nanobind backend to override functionality for Nanobind bindings.
+    InitializationFile,
+    InitializationBlock,
 }
 
 // #region: Demo specific attributes.
@@ -463,6 +467,8 @@ impl Attrs {
                                             "impl_block" => Some(IncludeLocation::ImplBlock),
                                             "def_file" => Some(IncludeLocation::DefFile),
                                             "impl_file" => Some(IncludeLocation::ImplFile),
+                                            "init_block" => Some(IncludeLocation::InitializationBlock),
+                                            "init_file" => Some(IncludeLocation::InitializationFile),
                                             _ => {
                                                 errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
                                                 None
