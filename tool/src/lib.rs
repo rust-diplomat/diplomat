@@ -261,7 +261,7 @@ impl<E> Drop for ErrorContextGuard<'_, '_, E> {
 }
 
 pub(crate) fn read_custom_binding<'a, 'b>(
-    source : &hir::IncludeSource,
+    source: &hir::IncludeSource,
     config: &Config,
     errors: &'b ErrorStore<'a, String>,
 ) -> Result<String, ()> {
@@ -273,6 +273,6 @@ pub(crate) fn read_custom_binding<'a, 'b>(
             })
         }
         hir::IncludeSource::Source(s) => Ok(s.clone()),
-        _ => panic!("Unrecognized IncludeSource: {:?}", source)
+        _ => panic!("Unrecognized IncludeSource: {:?}", source),
     }
 }

@@ -6,7 +6,7 @@ use askama::Template;
 pub(crate) use header::Header;
 use std::{collections::HashMap, fmt::Write};
 
-use crate::{ErrorStore, FileMap, read_custom_binding};
+use crate::{read_custom_binding, ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use gen::ItemGenContext;
 
@@ -114,7 +114,10 @@ pub(crate) fn run<'tcx>(
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
-        let block_source = if let Some(s) = ty_attrs.binding_includes.get(&hir::IncludeLocation::DefBlock) {
+        let block_source = if let Some(s) = ty_attrs
+            .binding_includes
+            .get(&hir::IncludeLocation::DefBlock)
+        {
             read_custom_binding(s, config, &errors).unwrap_or_default()
         } else {
             Default::default()
@@ -142,7 +145,10 @@ pub(crate) fn run<'tcx>(
         context.impl_header.includes.remove(&*decl_header_path);
 
         // Decl headers require some more special logic, but we can write to the impl header body directly:
-        if let Some(s) = ty_attrs.binding_includes.get(&hir::IncludeLocation::ImplBlock) {
+        if let Some(s) = ty_attrs
+            .binding_includes
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
             if let Ok(s) = read_custom_binding(s, config, &errors) {
                 writeln!(impl_header, "{}", s).expect("Could not write to header.");
             }
