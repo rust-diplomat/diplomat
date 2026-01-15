@@ -12,6 +12,7 @@
 #include "../include/nested/ns2/Nested.hpp"
 #include "../include/Float64Vec.hpp"
 #include "../include/ns/RenamedStringList.hpp"
+#include "../include/ns/RenamedBlockOverride.hpp"
 
 using namespace somelib;
 
@@ -114,4 +115,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> vec_bound = ns::RenamedStringList::return_new();
     simple_assert_eq("Custom bindings", vec_bound[0], "Test!");
+
+    simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::special_function(), "This is a custom binding.");
+    simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::custom_bool, false);
 }

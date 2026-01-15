@@ -432,7 +432,6 @@ pub mod ffi {
         }
     }
 
-    // TODO:
     #[diplomat::opaque]
     #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
@@ -450,24 +449,4 @@ pub mod ffi {
         )
     )]
     pub struct BlockOverride();
-
-    // impl BlockOverride {
-    //     #[diplomat::attr(cpp, disable)]
-    //     pub fn test() {
-
-    //     }
-    // }
-
-    #[diplomat::opaque]
-    #[diplomat::attr(not(supports = custom_bindings), disable)]
-    // TODO:
-    // #[diplomat::attr(cpp, include(imp_block="custom_binds/NonCustomTypeBlock.hpp"))]
-    pub struct NonCustomType();
-    impl NonCustomType {
-        // TODO:
-        // #[diplomat::attr(cpp, disable)]
-        // pub fn return_string_list() -> Box<StringList> {
-        //     Box::new(StringList(vec!["Test".into(), "Testing!".into()]))
-        // }
-    }
 }
