@@ -196,7 +196,7 @@ pub(crate) fn run<'cx>(
         };
 
         let binding_info = &ty.attrs().binding_include;
-        
+
         if let Some(IncludeType::File(f)) = &binding_info.impl_info {
             if let Ok(s) = read_custom_binding(f.clone(), &conf, &errors) {
                 files.add_file(binding_impl_path, s);

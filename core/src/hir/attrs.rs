@@ -421,8 +421,8 @@ impl Attrs {
                             this.abi_compatible = true;
                         }
                         "include" => {
-                            let mut source : Option<IncludeSource> = None;
-                            let mut location : Option<IncludeLocation> = None;
+                            let mut source: Option<IncludeSource> = None;
+                            let mut location: Option<IncludeLocation> = None;
                             let list = attr.meta.require_list()
                             .and_then(|l| {
                                 let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
@@ -463,7 +463,7 @@ impl Attrs {
                                             "impl_block" => Some(IncludeLocation::ImplBlock),
                                             "def_file" => Some(IncludeLocation::DefFile),
                                             "impl_file" => Some(IncludeLocation::ImplFile),
-                                            _ => { 
+                                            _ => {
                                                 errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
                                                 None
                                             }
@@ -477,13 +477,15 @@ impl Attrs {
                             });
                             if let Err(e) = list {
                                 errors.push(LoweringError::Other(format!(
-                                    "Error parsing `{}`: {e}", attr.meta.to_token_stream().to_string()
+                                    "Error parsing `{}`: {e}",
+                                    attr.meta.to_token_stream().to_string()
                                 )));
                                 continue;
                             }
-                            
+
                             if source.is_some() && location.is_some() {
-                                this.binding_includes.insert(location.unwrap(), source.unwrap());
+                                this.binding_includes
+                                    .insert(location.unwrap(), source.unwrap());
                             } else {
                                 errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
                             }
@@ -988,7 +990,9 @@ impl Attrs {
                 ));
             }
             if !matches!(context, AttributeContext::Type(..)) {
-                errors.push(LoweringError::Other("`include` only supported on type declarations.".into()));
+                errors.push(LoweringError::Other(
+                    "`include` only supported on type declarations.".into(),
+                ));
             }
         }
     }
