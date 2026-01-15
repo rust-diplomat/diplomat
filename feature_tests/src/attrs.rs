@@ -414,15 +414,24 @@ pub mod ffi {
     #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
         cpp,
-        include(file = "custom_binds/cpp/RenamedStringList.d.hpp", location = "def_file")
+        include(
+            file = "custom_binds/cpp/RenamedStringList.d.hpp",
+            location = "def_file"
+        )
     )]
     #[diplomat::attr(
         cpp,
-        include(file = "custom_binds/cpp/RenamedStringList.hpp", location = "impl_file")
+        include(
+            file = "custom_binds/cpp/RenamedStringList.hpp",
+            location = "impl_file"
+        )
     )]
     #[diplomat::attr(
         nanobind,
-        include(file = "custom_binds/nanobind/RenamedStringList.cpp", location = "impl_file")
+        include(
+            file = "custom_binds/nanobind/RenamedStringList.cpp",
+            location = "impl_file"
+        )
     )]
     pub struct StringList<'a>(&'a str);
 
