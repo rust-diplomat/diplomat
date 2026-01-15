@@ -11,6 +11,7 @@
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
 #include "../include/Float64Vec.hpp"
+#include "../include/ns/RenamedStringList.hpp"
 
 using namespace somelib;
 
@@ -110,4 +111,7 @@ int main(int argc, char* argv[]) {
     v->push(2.0f);
     simple_assert_eq("Macro vector indexing", (*v)[0].value(), 0.0f);
     simple_assert_eq("Macro vector indexing 2", (*v)[2].value(), 2.0f);
+
+    std::vector<std::string> vec_bound = ns::RenamedStringList::return_new();
+    simple_assert_eq("Custom bindings", vec_bound[0], "Test!");
 }

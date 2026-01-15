@@ -9,8 +9,8 @@ namespace somelib::ns {
     }
     class RenamedStringList {
         public:
-            std::vector<std::string> return_new();
-    }
+            static std::vector<std::string> return_new();
+    };
 }
 
 #endif

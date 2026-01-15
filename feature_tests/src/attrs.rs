@@ -412,11 +412,11 @@ pub mod ffi {
     /// Testing support for List[str] in Nanobind
     #[diplomat::opaque]
     #[diplomat::attr(cpp, include(def="custom_binds/RenamedStringList.d.hpp", imp="custom_binds/RenamedStringList.hpp"))]
-    pub struct StringList(Vec<String>);
+    pub struct StringList<'a>(&'a str);
 
-    impl StringList {
+    impl<'a> StringList<'a> {
         pub fn return_new() -> Box<Self> {
-            Box::new(Self(vec!["Apple".into(), "Banana".into(), "Croissant".into()]))
+            Box::new(Self("Test!"))
         }
     }
 
