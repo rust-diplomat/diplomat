@@ -6,8 +6,8 @@ use askama::Template;
 pub(crate) use header::Header;
 use std::{collections::HashMap, fmt::Write};
 
-use crate::{ErrorStore, FileMap};
-use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator, IncludeType};
+use crate::{ErrorStore, FileMap, read_custom_binding};
+use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use gen::ItemGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
@@ -56,17 +56,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.custom_bindings = true;
 
     a
-}
-
-fn read_custom_binding<'a, 'b>(
-    path: String,
-    config: &crate::Config,
-    errors: &'b ErrorStore<'a, String>,
-) -> Result<String, ()> {
-    let path = config.shared_config.custom_binding_location.join(path);
-    std::fs::read_to_string(&path).map_err(|e| {
-        errors.push_error(format!("Cannot find file {}: {e}", path.display()));
-    })
 }
 
 pub(crate) fn run<'tcx>(
@@ -125,8 +114,8 @@ pub(crate) fn run<'tcx>(
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
-        let def_block = if let Some(IncludeType::Block(b)) = &ty_attrs.binding_include.def_info {
-            read_custom_binding(b.clone(), config, &errors).unwrap_or_default()
+        let block_source = if let Some(s) = ty_attrs.binding_includes.get(&hir::IncludeLocation::DefBlock) {
+            read_custom_binding(s, config, &errors).unwrap_or_default()
         } else {
             Default::default()
         };
@@ -134,7 +123,7 @@ pub(crate) fn run<'tcx>(
         let guard = errors.set_context_ty(ty.name().as_str().into());
         match id {
             hir::TypeId::Enum(e_id) => context.gen_enum_def(e_id),
-            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id, def_block),
+            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id, block_source),
             hir::TypeId::Struct(s_id) => context.gen_struct_def::<hir::Everywhere>(s_id),
             hir::TypeId::OutStruct(s_id) => context.gen_struct_def::<hir::OutputOnly>(s_id),
 
@@ -153,23 +142,23 @@ pub(crate) fn run<'tcx>(
         context.impl_header.includes.remove(&*decl_header_path);
 
         // Decl headers require some more special logic, but we can write to the impl header body directly:
-        if let Some(IncludeType::Block(b)) = &ty_attrs.binding_include.impl_info {
-            if let Ok(s) = read_custom_binding(b.clone(), config, &errors) {
+        if let Some(s) = ty_attrs.binding_includes.get(&hir::IncludeLocation::ImplBlock) {
+            if let Ok(s) = read_custom_binding(s, config, &errors) {
                 writeln!(impl_header, "{}", s).expect("Could not write to header.");
             }
         }
 
-        let binding_info = &ty_attrs.binding_include;
-        if let Some(IncludeType::File(f)) = &binding_info.def_info {
-            if let Ok(s) = read_custom_binding(f.clone(), config, &errors) {
+        let binding_info = &ty_attrs.binding_includes;
+        if let Some(s) = binding_info.get(&hir::IncludeLocation::DefFile) {
+            if let Ok(s) = read_custom_binding(s, config, &errors) {
                 files.add_file(decl_header_path, s);
             }
         } else {
             files.add_file(decl_header_path, decl_header.to_string());
         }
 
-        if let Some(IncludeType::File(f)) = &binding_info.impl_info {
-            if let Ok(s) = read_custom_binding(f.clone(), config, &errors) {
+        if let Some(s) = binding_info.get(&hir::IncludeLocation::ImplFile) {
+            if let Ok(s) = read_custom_binding(s, config, &errors) {
                 files.add_file(impl_header_path, s);
             }
         } else {

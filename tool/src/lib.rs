@@ -259,3 +259,20 @@ impl<E> Drop for ErrorContextGuard<'_, '_, E> {
         let _ = mem::replace(&mut *self.0.context.borrow_mut(), mem::take(&mut self.1));
     }
 }
+
+pub(crate) fn read_custom_binding<'a, 'b>(
+    source : &hir::IncludeSource,
+    config: &Config,
+    errors: &'b ErrorStore<'a, String>,
+) -> Result<String, ()> {
+    match source {
+        hir::IncludeSource::File(path) => {
+            let path = config.shared_config.custom_binding_location.join(path);
+            std::fs::read_to_string(&path).map_err(|e| {
+                errors.push_error(format!("Cannot find file {}: {e}", path.display()));
+            })
+        }
+        hir::IncludeSource::Source(s) => Ok(s.clone()),
+        _ => panic!("Unrecognized IncludeSource: {:?}", source)
+    }
+}
