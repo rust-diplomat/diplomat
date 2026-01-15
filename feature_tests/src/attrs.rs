@@ -419,7 +419,7 @@ pub mod ffi {
         )
     )]
     #[diplomat::attr(cpp, include(file = "custom_binds/RenamedStringList.hpp", location = "impl_file"))]
-    #[diplomat::attr(nanobind, include(file = "custom_binds/RenamedStringList.cpp", location = "def_file"))]
+    #[diplomat::attr(nanobind, include(file = "custom_binds/RenamedStringList.cpp", location = "impl_file"))]
     pub struct StringList<'a>(&'a str);
 
     impl<'a> StringList<'a> {
