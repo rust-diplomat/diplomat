@@ -2,7 +2,10 @@ mod formatter;
 pub(crate) mod gen;
 mod root_module;
 
-use std::{collections::{BTreeMap, BTreeSet}, fmt::Write};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::Write,
+};
 
 use crate::{
     cpp::Header, nanobind::gen::MethodInfo, read_custom_binding, Config, ErrorStore, FileMap,
@@ -176,7 +179,7 @@ pub(crate) fn run<'cx>(
             _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
-        
+
         let binding_info = &ty.attrs().binding_includes;
 
         if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationBlock) {
