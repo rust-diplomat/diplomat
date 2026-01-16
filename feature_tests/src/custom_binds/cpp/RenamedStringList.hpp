@@ -13,8 +13,12 @@ extern "C" {
 namespace somelib::ns {
     std::vector<std::string> RenamedStringList::return_new() {
         somelib::ns::capi::RenamedStringList* self = namespace_StringList_return_new();
-        const std::string arr = *reinterpret_cast<std::string*>(self);
+        
+        auto ptr = (somelib::diplomat::capi::DiplomatStringView*) self;
+        std::string arr = std::string(ptr->data, ptr->len);
+        
         namespace_StringList_destroy(self);
+
         return std::vector<std::string>({arr});
     }
 }
