@@ -1,23 +1,22 @@
-#ifndef SOMELIB_STRING_LIST_HPP
-#define SOMELIB_STRING_LIST_HPP
-// We override the default C++ implementation to add our own Nanobind type caster:
+namespace nanobind::detail {
+    template<>
+    struct type_caster<std::unique_ptr<somelib::ns::RenamedStringList>>
+    {
+        Py_ssize_t size;
+        using Caster = list_caster<std::vector<std::string>, std::string>;
+        static constexpr auto Name = Caster::Name;
 
-#include "../diplomat_runtime.hpp"
-#include "RenamedStringList.d.hpp"
+        NB_INLINE bool can_cast() const noexcept { return true; }
 
-extern "C" {
-    void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
+        static handle from_cpp(std::unique_ptr<somelib::ns::RenamedStringList> value, rv_policy p, cleanup_list* cl) noexcept {
+            auto ptr = (somelib::diplomat::capi::DiplomatStringView*) value.release();
+            std::string test = std::string(ptr->data, ptr->len);
+            std::vector<std::string> vec = {test};
+            return Caster::from_cpp(vec, p, cl);
+        }
 
-    somelib::ns::capi::RenamedStringList* namespace_StringList_return_new(void);
+        bool from_python(handle src, uint8_t flags, cleanup_list* cl) noexcept {
+            return false;
+        }
+    };
 }
-
-namespace somelib::ns {
-    std::vector<std::string> RenamedStringList::return_new() {
-        somelib::ns::capi::RenamedStringList* self = namespace_StringList_return_new();
-        const std::string arr = *reinterpret_cast<std::string*>(self);
-        namespace_StringList_destroy(self);
-        return std::vector<std::string>({arr});
-    }
-}
-
-#endif

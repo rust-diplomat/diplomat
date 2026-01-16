@@ -413,7 +413,7 @@ pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
-        any(cpp, nanobind),
+        cpp,
         include(
             file = "custom_binds/cpp/RenamedStringList.d.hpp",
             location = "def_file"
@@ -430,21 +430,24 @@ pub mod ffi {
         nanobind,
         include(
             file = "custom_binds/nanobind/RenamedStringList.cpp",
-            location = "init_block"
+            location = "init_file"
         )
     )]
     #[diplomat::attr(
         nanobind,
         include(
             file = "custom_binds/nanobind/RenamedStringList.hpp",
-            location = "impl_file"
+            location = "impl_block"
         )
     )]
-    pub struct StringList<'a>(&'a str);
 
-    impl<'a> StringList<'a> {
+    #[repr(C)]
+    pub struct StringList(DiplomatOwnedStrSlice);
+
+    impl StringList {
         pub fn return_new() -> Box<Self> {
-            Box::new(Self("Test!"))
+            let sl : Box<[u8]> = Box::new(['T' as u8, 'e' as u8, 's' as u8, 't' as u8, '!' as u8]);
+            Box::new(Self(sl.into()))
         }
     }
 
