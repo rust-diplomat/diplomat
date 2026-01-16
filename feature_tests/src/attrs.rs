@@ -416,14 +416,14 @@ pub mod ffi {
         cpp,
         include(
             file = "custom_binds/cpp/RenamedStringList.d.hpp",
-            location = "def_file"
+            location = "def_block"
         )
     )]
     #[diplomat::attr(
         cpp,
         include(
             file = "custom_binds/cpp/RenamedStringList.hpp",
-            location = "impl_file"
+            location = "impl_block"
         )
     )]
     #[diplomat::attr(
@@ -433,17 +433,12 @@ pub mod ffi {
             location = "impl_block"
         )
     )]
-    #[diplomat::attr(
-        nanobind,
-        include(
-            file = "custom_binds/nanobind/RenamedStringListBinding.cpp",
-            location = "init_file"
-        )
-    )]
     #[repr(C)]
     pub struct StringList(DiplomatOwnedStrSlice);
 
     impl StringList {
+        // We want to generate the bindings for this ourselves:
+        #[diplomat::attr(*, disable)]
         pub fn return_new() -> Box<Self> {
             let sl: Box<[u8]> = Box::new(*b"Test!");
             Box::new(Self(sl.into()))

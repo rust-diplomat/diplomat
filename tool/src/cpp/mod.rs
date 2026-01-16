@@ -154,22 +154,8 @@ pub(crate) fn run<'tcx>(
             }
         }
 
-        let binding_info = &ty_attrs.binding_includes;
-        if let Some(s) = binding_info.get(&hir::IncludeLocation::DefFile) {
-            if let Ok(s) = read_custom_binding(s, config, &errors) {
-                files.add_file(decl_header_path, s);
-            }
-        } else {
-            files.add_file(decl_header_path, decl_header.to_string());
-        }
-
-        if let Some(s) = binding_info.get(&hir::IncludeLocation::ImplFile) {
-            if let Ok(s) = read_custom_binding(s, config, &errors) {
-                files.add_file(impl_header_path, s);
-            }
-        } else {
-            files.add_file(impl_header_path, impl_header.to_string());
-        }
+        files.add_file(decl_header_path, decl_header.to_string());
+        files.add_file(impl_header_path, impl_header.to_string());
     }
 
     {

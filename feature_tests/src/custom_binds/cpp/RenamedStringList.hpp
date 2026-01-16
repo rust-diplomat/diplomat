@@ -1,9 +1,3 @@
-#ifndef SOMELIB_STRING_LIST_HPP
-#define SOMELIB_STRING_LIST_HPP
-
-#include "../diplomat_runtime.hpp"
-#include "RenamedStringList.d.hpp"
-
 extern "C" {
     void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
 
@@ -22,5 +16,3 @@ namespace somelib::ns {
         return std::vector<std::string>({arr});
     }
 }
-
-#endif

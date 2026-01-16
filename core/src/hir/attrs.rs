@@ -85,14 +85,8 @@ pub enum IncludeLocation {
     DefBlock,
     /// An extension to the implementation of the class (i.e., in C++, the .hpp file)
     ImplBlock,
-    /// An overwrite of the definition of the class.
-    /// The implicit assumption is that the backend will scrap whatever file it was originally going to include instead.
-    DefFile,
-    /// An overwrite of the implementation of the class.
-    ImplFile,
-    /// A file for overriding an initialization function. Intended for backends that build off of C/C++.
+    /// A block for adding to an initialization function. Intended for backends that build off of C/C++.
     /// Used by the Nanobind backend to override functionality for Nanobind bindings.
-    InitializationFile,
     InitializationBlock,
 }
 
@@ -465,10 +459,7 @@ impl Attrs {
                                         "location" => location = match assigned.as_str() {
                                             "def_block" => Some(IncludeLocation::DefBlock),
                                             "impl_block" => Some(IncludeLocation::ImplBlock),
-                                            "def_file" => Some(IncludeLocation::DefFile),
-                                            "impl_file" => Some(IncludeLocation::ImplFile),
                                             "init_block" => Some(IncludeLocation::InitializationBlock),
-                                            "init_file" => Some(IncludeLocation::InitializationFile),
                                             _ => {
                                                 errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
                                                 None

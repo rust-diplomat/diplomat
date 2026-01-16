@@ -197,13 +197,7 @@ pub(crate) fn run<'cx>(
             binding_prefix,
         };
 
-        if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationFile) {
-            if let Ok(s) = read_custom_binding(s, &conf, &errors) {
-                files.add_file(binding_impl_path, s);
-            }
-        } else {
-            files.add_file(binding_impl_path, binding_impl.to_string());
-        }
+        files.add_file(binding_impl_path, binding_impl.to_string());
     }
 
     let mut ty_context = ItemGenContext {
