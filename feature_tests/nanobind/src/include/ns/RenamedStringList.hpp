@@ -62,8 +62,12 @@ namespace nanobind::detail {
         NB_INLINE bool can_cast() const noexcept { return true; }
 
         static handle from_cpp(std::unique_ptr<somelib::ns::RenamedStringList> value, rv_policy p, cleanup_list* cl) noexcept {
-            auto ptr = (somelib::diplomat::capi::DiplomatStringView*) value.release();
+            somelib::ns::RenamedStringList* val = value.release();  
+            auto ptr = (somelib::diplomat::capi::DiplomatStringView*) val;
             std::string test = std::string(ptr->data, ptr->len);
+
+            somelib::ns::capi::namespace_StringList_destroy((somelib::ns::capi::RenamedStringList*)val);
+            
             std::vector<std::string> vec = {test};
             for (char c : test) {
                 vec.push_back(std::string{c});
