@@ -15,4 +15,4 @@ void add_RenamedStringList_binding(nb::module_ mod) {
         .def_static("return_new", &somelib::ns::RenamedStringList::return_new);
 }
 
-}
+} 

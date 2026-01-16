@@ -438,7 +438,7 @@ pub mod ffi {
 
     impl StringList {
         // We want to generate the bindings for this ourselves:
-        #[diplomat::attr(*, disable)]
+        #[diplomat::attr(cpp, disable)]
         pub fn return_new() -> Box<Self> {
             let sl: Box<[u8]> = Box::new(*b"Test!");
             Box::new(Self(sl.into()))
