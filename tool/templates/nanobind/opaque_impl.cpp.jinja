@@ -6,7 +6,8 @@ PyType_Slot {{full_name}}_slots[] = {
     {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
     {0, nullptr}};
 
-nb::class_<{{type_name}}>(mod, "{{type_name_unnamespaced}}", nb::type_slots({{full_name}}_slots))
+nb::class_<{{type_name}}> opaque(mod, "{{type_name_unnamespaced}}", nb::type_slots({{full_name}}_slots));
+{% if methods.len() > 0 %}opaque{% endif %}
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
 {%- endfor -%};

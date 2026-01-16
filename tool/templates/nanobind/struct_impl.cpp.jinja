@@ -7,7 +7,8 @@
 nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slice"); 
 {% endif -%}
 
-nb::class_<{{type_name}}>(mod, "{{type_name_unnamespaced}}")
+nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}");
+st
     {%- if !has_constructor %}
     .def(nb::init<>())
 
