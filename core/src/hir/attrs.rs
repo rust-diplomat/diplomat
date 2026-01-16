@@ -1778,12 +1778,12 @@ mod tests {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::attr(tests, include(source="std::string test;", location="impl_block"))]
-                #[diplomat::attr(tests, include(file="test_file.hpp", location="def_file"))]
+                #[diplomat::attr(tests, include(file="test_file.hpp", location="def_block"))]
                 pub struct IncludeDef {}
 
                 impl IncludeDef {}
 
-                #[diplomat::attr(tests, include(file="testing.d.hpp", location="def_file"))]
+                #[diplomat::attr(tests, include(file="testing.d.hpp", location="def_block"))]
                 #[diplomat::attr(tests, include(source="void test() {}", location="impl_block"))]
                 #[diplomat::opaque]
                 pub struct IncludeBlock();
