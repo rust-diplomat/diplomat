@@ -14,7 +14,7 @@ namespace nanobind::detail {
             std::string test = std::string(ptr->data, ptr->len);
 
             somelib::ns::capi::namespace_StringList_destroy((somelib::ns::capi::RenamedStringList*)val);
-            
+
             std::vector<std::string> vec = {test};
             for (char c : test) {
                 vec.push_back(std::string{c});
