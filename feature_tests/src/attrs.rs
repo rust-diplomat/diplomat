@@ -463,5 +463,6 @@ pub mod ffi {
             location = "impl_block"
         )
     )]
+    #[diplomat::attr(nanobind, include(source=r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#, location="init_block"))]
     pub struct BlockOverride();
 }
