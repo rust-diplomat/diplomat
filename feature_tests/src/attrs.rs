@@ -433,7 +433,13 @@ pub mod ffi {
             location = "impl_block"
         )
     )]
-    #[diplomat::attr(nanobind, include(file="custom_binds/nanobind/RenamedStringListBinding.cpp", location="init_file"))]
+    #[diplomat::attr(
+        nanobind,
+        include(
+            file = "custom_binds/nanobind/RenamedStringListBinding.cpp",
+            location = "init_file"
+        )
+    )]
     #[repr(C)]
     pub struct StringList(DiplomatOwnedStrSlice);
 
@@ -464,6 +470,12 @@ pub mod ffi {
             location = "impl_block"
         )
     )]
-    #[diplomat::attr(nanobind, include(source=r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#, location="init_block"))]
+    #[diplomat::attr(
+        nanobind,
+        include(
+            source = r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#,
+            location = "init_block"
+        )
+    )]
     pub struct BlockOverride();
 }
