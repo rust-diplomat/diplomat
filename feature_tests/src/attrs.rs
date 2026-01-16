@@ -433,6 +433,7 @@ pub mod ffi {
             location = "impl_block"
         )
     )]
+    #[diplomat::attr(nanobind, include(file="custom_binds/nanobind/RenamedStringListBinding.cpp", location="init_file"))]
     #[repr(C)]
     pub struct StringList(DiplomatOwnedStrSlice);
 
