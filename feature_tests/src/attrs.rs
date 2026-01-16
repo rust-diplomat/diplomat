@@ -429,13 +429,6 @@ pub mod ffi {
     #[diplomat::attr(
         nanobind,
         include(
-            file = "custom_binds/nanobind/RenamedStringList.cpp",
-            location = "init_file"
-        )
-    )]
-    #[diplomat::attr(
-        nanobind,
-        include(
             file = "custom_binds/nanobind/RenamedStringList.hpp",
             location = "impl_block"
         )

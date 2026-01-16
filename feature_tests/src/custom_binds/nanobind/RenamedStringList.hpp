@@ -12,6 +12,9 @@ namespace nanobind::detail {
             auto ptr = (somelib::diplomat::capi::DiplomatStringView*) value.release();
             std::string test = std::string(ptr->data, ptr->len);
             std::vector<std::string> vec = {test};
+            for (char c : test) {
+                vec.push_back(std::string{c});
+            }
             return Caster::from_cpp(vec, p, cl);
         }
 
