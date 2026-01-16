@@ -1,8 +1,48 @@
-#ifndef SOMELIB_STRING_LIST_HPP
-#define SOMELIB_STRING_LIST_HPP
+#ifndef SOMELIB_ns_RenamedStringList_HPP
+#define SOMELIB_ns_RenamedStringList_HPP
 
-#include "../diplomat_runtime.hpp"
 #include "RenamedStringList.d.hpp"
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <memory>
+#include <functional>
+#include <optional>
+#include <cstdlib>
+#include "../diplomat_runtime.hpp"
+
+
+namespace somelib::ns {
+namespace capi {
+    extern "C" {
+
+    void namespace_StringList_destroy(RenamedStringList* self);
+
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline const somelib::ns::capi::RenamedStringList* somelib::ns::RenamedStringList::AsFFI() const {
+    return reinterpret_cast<const somelib::ns::capi::RenamedStringList*>(this);
+}
+
+inline somelib::ns::capi::RenamedStringList* somelib::ns::RenamedStringList::AsFFI() {
+    return reinterpret_cast<somelib::ns::capi::RenamedStringList*>(this);
+}
+
+inline const somelib::ns::RenamedStringList* somelib::ns::RenamedStringList::FromFFI(const somelib::ns::capi::RenamedStringList* ptr) {
+    return reinterpret_cast<const somelib::ns::RenamedStringList*>(ptr);
+}
+
+inline somelib::ns::RenamedStringList* somelib::ns::RenamedStringList::FromFFI(somelib::ns::capi::RenamedStringList* ptr) {
+    return reinterpret_cast<somelib::ns::RenamedStringList*>(ptr);
+}
+
+inline void somelib::ns::RenamedStringList::operator delete(void* ptr) {
+    somelib::ns::capi::namespace_StringList_destroy(reinterpret_cast<somelib::ns::capi::RenamedStringList*>(ptr));
+}
 
 extern "C" {
     void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
@@ -23,4 +63,4 @@ namespace somelib::ns {
     }
 }
 
-#endif
+#endif // SOMELIB_ns_RenamedStringList_HPP
