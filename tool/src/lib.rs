@@ -50,6 +50,19 @@ pub fn gen(
         std::process::exit(1);
     }
 
+    // Set the default binding location:
+    if config
+        .shared_config
+        .custom_binding_location
+        .as_os_str()
+        .is_empty()
+    {
+        config.shared_config.custom_binding_location = entry
+            .parent()
+            .expect("Could not get parent of lib.rs")
+            .to_path_buf();
+    }
+
     // The HIR backends used to be named "c2", "js2", etc
     let target_language = target_language.strip_suffix('2').unwrap_or(target_language);
     let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
@@ -244,5 +257,22 @@ pub struct ErrorContextGuard<'a, 'tcx, E>(&'a ErrorStore<'tcx, E>, ErrorContext<
 impl<E> Drop for ErrorContextGuard<'_, '_, E> {
     fn drop(&mut self) {
         let _ = mem::replace(&mut *self.0.context.borrow_mut(), mem::take(&mut self.1));
+    }
+}
+
+pub(crate) fn read_custom_binding<'a, 'b>(
+    source: &hir::IncludeSource,
+    config: &Config,
+    errors: &'b ErrorStore<'a, String>,
+) -> Result<String, ()> {
+    match source {
+        hir::IncludeSource::File(path) => {
+            let path = config.shared_config.custom_binding_location.join(path);
+            std::fs::read_to_string(&path).map_err(|e| {
+                errors.push_error(format!("Cannot find file {}: {e}", path.display()));
+            })
+        }
+        hir::IncludeSource::Source(s) => Ok(s.clone()),
+        _ => panic!("Unrecognized IncludeSource: {:?}", source),
     }
 }

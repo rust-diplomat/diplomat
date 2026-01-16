@@ -7,7 +7,8 @@ namespace somelib::ns {
 void add_RenamedDeprecatedEnum_binding(nb::module_ mod) {
     nb::class_<somelib::ns::RenamedDeprecatedEnum> e_class(mod, "RenamedDeprecatedEnum");
     
-        nb::enum_<somelib::ns::RenamedDeprecatedEnum::Value>(e_class, "RenamedDeprecatedEnum")
+        nb::enum_<somelib::ns::RenamedDeprecatedEnum::Value> enumerator(e_class, "RenamedDeprecatedEnum");
+        enumerator
             .value("A", somelib::ns::RenamedDeprecatedEnum::A)
             .export_values();
     

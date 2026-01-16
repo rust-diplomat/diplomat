@@ -408,4 +408,69 @@ pub mod ffi {
     pub fn nested_ns_fn(x: bool) -> bool {
         !x
     }
+
+    /// Testing support for List[str] in Nanobind
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = custom_bindings), disable)]
+    #[diplomat::attr(
+        cpp,
+        include(
+            file = "custom_binds/cpp/RenamedStringList.d.hpp",
+            location = "def_block"
+        )
+    )]
+    #[diplomat::attr(
+        cpp,
+        include(
+            file = "custom_binds/cpp/RenamedStringList.hpp",
+            location = "impl_block"
+        )
+    )]
+    #[diplomat::attr(
+        nanobind,
+        include(
+            file = "custom_binds/nanobind/RenamedStringList.hpp",
+            location = "impl_block"
+        )
+    )]
+    #[repr(C)]
+    pub struct StringList(DiplomatOwnedStrSlice);
+
+    impl StringList {
+        // We want to generate the bindings for this ourselves:
+        #[diplomat::attr(cpp, disable)]
+        pub fn return_new() -> Box<Self> {
+            let sl: Box<[u8]> = Box::new(*b"Test!");
+            Box::new(Self(sl.into()))
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = custom_bindings), disable)]
+    #[diplomat::attr(
+        any(nanobind, cpp),
+        include(
+            source = "public:
+    const static bool custom_bool = false;
+    static std::string special_function();",
+            location = "def_block"
+        )
+    )]
+    #[diplomat::attr(
+        any(nanobind, cpp),
+        include(
+            source = r#"std::string somelib::ns::RenamedBlockOverride::special_function() {
+    return "This is a custom binding.";
+}"#,
+            location = "impl_block"
+        )
+    )]
+    #[diplomat::attr(
+        nanobind,
+        include(
+            source = r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#,
+            location = "init_block"
+        )
+    )]
+    pub struct BlockOverride();
 }

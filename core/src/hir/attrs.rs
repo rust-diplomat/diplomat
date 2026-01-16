@@ -1,5 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
+use std::collections::HashMap;
+
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -7,6 +9,8 @@ use crate::hir::{
     EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
     TraitDef, Type, TypeDef, TypeId,
 };
+use quote::ToTokens;
+use syn::spanned::Spanned;
 use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
@@ -59,6 +63,31 @@ pub struct Attrs {
     pub generate_mocking_interface: bool,
     /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
     pub abi_compatible: bool,
+
+    /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
+    pub binding_includes: HashMap<IncludeLocation, IncludeSource>,
+}
+
+/// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
+#[derive(Clone, Debug)]
+#[non_exhaustive]
+pub enum IncludeSource {
+    /// Include as code written in the string.
+    Source(String),
+    /// A path to a file that contains the full code.
+    File(String),
+}
+
+#[non_exhaustive]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum IncludeLocation {
+    /// An extension to the definition of the class (i.e., in C++, the .d.hpp file)
+    DefBlock,
+    /// An extension to the implementation of the class (i.e., in C++, the .hpp file)
+    ImplBlock,
+    /// A block for adding to an initialization function. Intended for backends that build off of C/C++.
+    /// Used by the Nanobind backend to override functionality for Nanobind bindings.
+    InitializationBlock,
 }
 
 // #region: Demo specific attributes.
@@ -389,9 +418,80 @@ impl Attrs {
                             }
                             this.abi_compatible = true;
                         }
+                        "include" => {
+                            let mut source: Option<IncludeSource> = None;
+                            let mut location: Option<IncludeLocation> = None;
+                            let list = attr.meta.require_list()
+                            .and_then(|l| {
+                                let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
+                                let punc = l.parse_args_with(parser).map_err(|e| {
+                                    syn::Error::new(l.span(), format!("Could not parse comma separated list: {e}"))
+                                })?;
+                                for expr in punc {
+                                    let assigned : String = match expr.right.as_ref() {
+                                        syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
+                                            if let syn::Lit::Str(s) = lit {
+                                                s.value()
+                                            } else {
+                                                unreachable!()
+                                            }
+                                        },
+                                        _ => return Err(syn::Error::new(expr.right.span(), "Expected equivalence to a file path string.")),
+                                    };
+
+                                    let ident = match expr.left.as_ref() {
+                                        syn::Expr::Path(p) => {
+                                            let ident = p.path.get_ident();
+                                            if let Some(i) = ident {
+                                                i
+                                            } else {
+                                                return Err(syn::Error::new(p.path.span(), "Expected ident."));
+                                            }
+                                        },
+                                        _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
+                                    };
+
+                                    let ident_str = ident.to_string();
+
+                                    match ident_str.as_str() {
+                                        "source" => source = Some(IncludeSource::Source(assigned)),
+                                        "file" => source = Some(IncludeSource::File(assigned)),
+                                        "location" => location = match assigned.as_str() {
+                                            "def_block" => Some(IncludeLocation::DefBlock),
+                                            "impl_block" => Some(IncludeLocation::ImplBlock),
+                                            "init_block" => Some(IncludeLocation::InitializationBlock),
+                                            _ => {
+                                                errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
+                                                None
+                                            }
+                                        },
+                                        _ => return Err(syn::Error::new(ident.span(), format!("Unrecognized include ident `{ident_str}`")))
+                                    }
+
+
+                                }
+                                Ok(())
+                            });
+                            if let Err(e) = list {
+                                errors.push(LoweringError::Other(format!(
+                                    "Error parsing `{}`: {e}",
+                                    attr.meta.to_token_stream()
+                                )));
+                                continue;
+                            }
+
+                            match (&location, &source) {
+                                (Some(l), Some(s)) => {
+                                    this.binding_includes.insert(l.clone(), s.clone());
+                                }
+                                _ => {
+                                    errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
+                                }
+                            }
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer, error`"
+                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, include, indexer, error`"
                             )));
                         }
                     },
@@ -496,6 +596,7 @@ impl Attrs {
             demo_attrs: _,
             generate_mocking_interface,
             abi_compatible,
+            binding_includes,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -878,6 +979,21 @@ impl Attrs {
                 "`abi_compatible` can only be used on non-output-only struct types.".into(),
             ));
         }
+
+        if !binding_includes.is_empty() {
+            if !validator.attrs_supported().custom_bindings {
+                // We only validate that the language supports the bindings. We don't validate
+                // anything else, since this is an advanced feature (you have to know what you are doing).
+                errors.push(LoweringError::Other(
+                    "Custom bindings not supported by this language.".into(),
+                ));
+            }
+            if !matches!(context, AttributeContext::Type(..)) {
+                errors.push(LoweringError::Other(
+                    "`include` only supported on type declarations.".into(),
+                ));
+            }
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -915,6 +1031,8 @@ impl Attrs {
             // Not inherited
             generate_mocking_interface: false,
             abi_compatible: false,
+            // Not inherited
+            binding_includes: Default::default(),
         }
     }
 }
@@ -1011,6 +1129,8 @@ pub struct BackendAttrSupport {
     pub struct_refs: bool,
     /// Whether the language supports generating functions not associated with any type.
     pub free_functions: bool,
+    /// Whether the language supports being able to include custom bindings.
+    pub custom_bindings: bool,
 }
 
 impl BackendAttrSupport {
@@ -1047,6 +1167,7 @@ impl BackendAttrSupport {
             abi_compatibles: true,
             struct_refs: true,
             free_functions: true,
+            custom_bindings: true,
         }
     }
 
@@ -1079,6 +1200,7 @@ impl BackendAttrSupport {
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
             "free_functions" => Some(self.free_functions),
+            "custom_bindings" => Some(self.custom_bindings),
             _ => None,
         }
     }
@@ -1222,6 +1344,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 abi_compatibles,
                 struct_refs,
                 free_functions,
+                custom_bindings,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1254,6 +1377,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
                 "free_functions" => free_functions,
+                "custom_bindings" => custom_bindings,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1645,6 +1769,69 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    #[test]
+    fn test_custom_include() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(tests, include(source="std::string test;", location="impl_block"))]
+                #[diplomat::attr(tests, include(file="test_file.hpp", location="def_block"))]
+                pub struct IncludeDef {}
+
+                impl IncludeDef {}
+
+                #[diplomat::attr(tests, include(file="testing.d.hpp", location="def_block"))]
+                #[diplomat::attr(tests, include(source="void test() {}", location="impl_block"))]
+                #[diplomat::opaque]
+                pub struct IncludeBlock();
+
+                impl IncludeBlock {}
+            }
+
+        }
+    }
+
+    #[test]
+    fn test_custom_include_fail() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct IncludeDef {
+                    a : i32
+                }
+
+                impl IncludeDef {
+                    #[diplomat::attr(tests, include(a="", location="unknown"))]
+                    #[diplomat::attr(tests, include(location="unknown", source="test"))]
+                    pub fn test() {
+
+                    }
+                }
+            }
+
+        }
+    }
+
+    #[test]
+    fn test_custom_include_fail_unsupported() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct IncludeDef {
+                    a : i32
+                }
+
+                impl IncludeDef {
+                    #[diplomat::attr(tests, include(source="", location="def_block"))]
+                    pub fn test() {
+
+                    }
+                }
+            }
+
         }
     }
 }

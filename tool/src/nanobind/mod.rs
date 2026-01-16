@@ -2,9 +2,14 @@ mod formatter;
 pub(crate) mod gen;
 mod root_module;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::Write,
+};
 
-use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
+use crate::{
+    cpp::Header, nanobind::gen::MethodInfo, read_custom_binding, Config, ErrorStore, FileMap,
+};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;
@@ -51,6 +56,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
 }
@@ -174,6 +180,14 @@ pub(crate) fn run<'cx>(
         }
         drop(guard);
 
+        let binding_info = &ty.attrs().binding_includes;
+
+        if let Some(s) = binding_info.get(&hir::IncludeLocation::InitializationBlock) {
+            if let Ok(s) = read_custom_binding(s, &conf, &errors) {
+                writeln!(body, "\n{}", s).expect("Could not write to body.");
+            }
+        }
+
         let binding_impl = Binding {
             includes: context.cpp.impl_header.includes.clone(),
             lib_name: lib_name.clone(),
@@ -182,6 +196,7 @@ pub(crate) fn run<'cx>(
             body,
             binding_prefix,
         };
+
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
 

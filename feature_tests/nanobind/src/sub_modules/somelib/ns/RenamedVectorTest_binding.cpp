@@ -10,7 +10,8 @@ void add_RenamedVectorTest_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::RenamedVectorTest>(mod, "RenamedVectorTest", nb::type_slots(somelib_ns_RenamedVectorTest_slots))
+    nb::class_<somelib::ns::RenamedVectorTest> opaque(mod, "RenamedVectorTest", nb::type_slots(somelib_ns_RenamedVectorTest_slots));
+    opaque
         .def("__getitem__", [](somelib::ns::RenamedVectorTest* self, size_t index) {
                 auto out = self->operator[] (index);
                 if (!out.has_value()) {

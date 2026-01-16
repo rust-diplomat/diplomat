@@ -7,7 +7,8 @@
 
 namespace somelib {
 void add_MyStructContainingAnOption_binding(nb::module_ mod) {
-    nb::class_<somelib::MyStructContainingAnOption>(mod, "MyStructContainingAnOption")
+    nb::class_<somelib::MyStructContainingAnOption> st(mod, "MyStructContainingAnOption");
+    st
         .def_rw("a", &somelib::MyStructContainingAnOption::a)
         .def_rw("b", &somelib::MyStructContainingAnOption::b)
         .def_static("filled", &somelib::MyStructContainingAnOption::filled)

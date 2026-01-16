@@ -5,7 +5,8 @@
 
 namespace somelib {
 void add_StructArithmetic_binding(nb::module_ mod) {
-    nb::class_<somelib::StructArithmetic>(mod, "StructArithmetic")
+    nb::class_<somelib::StructArithmetic> st(mod, "StructArithmetic");
+    st
         .def_rw("x", &somelib::StructArithmetic::x)
         .def_rw("y", &somelib::StructArithmetic::y)
         .def_prop_rw_static("ORIGIN", [](nb::handle) -> decltype(somelib::StructArithmetic::ORIGIN()) { return somelib::StructArithmetic::ORIGIN(); },

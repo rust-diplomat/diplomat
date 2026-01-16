@@ -11,7 +11,8 @@ void add_PrimitiveStruct_binding(nb::module_ mod) {
     // bind_vector solves this issue by exposing std::vector<somelib::PrimitiveStruct> as a type that will exist inside of C++, with functions to access its memory from Python.
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::PrimitiveStruct>>(mod, "PrimitiveStructSlice"); 
-    nb::class_<somelib::PrimitiveStruct>(mod, "PrimitiveStruct")
+    nb::class_<somelib::PrimitiveStruct> st(mod, "PrimitiveStruct");
+    st
         .def(nb::init<>())
         .def(nb::init<float, bool, char32_t, int64_t, intptr_t, uint8_t>(), "x"_a.none(),  "a"_a.none(),  "b"_a.none(),  "c"_a.none(),  "d"_a.none(),  "e"_a.none())
         .def_rw("x", &somelib::PrimitiveStruct::x)

@@ -39,3 +39,4 @@
   - [Making Custom Functions](demo_gen/custom_functions.md)
 - [Backend specific documentation](backends/intro.md)
   - [Kotlin](backends/kotlin.md)
+  - [Nanobind](backends/nanobind.md)

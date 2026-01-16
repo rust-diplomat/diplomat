@@ -5,7 +5,8 @@
 
 namespace somelib {
 void add_CallbackTestingStruct_binding(nb::module_ mod) {
-    nb::class_<somelib::CallbackTestingStruct>(mod, "CallbackTestingStruct")
+    nb::class_<somelib::CallbackTestingStruct> st(mod, "CallbackTestingStruct");
+    st
         .def(nb::init<>())
         .def(nb::init<int32_t, int32_t>(), "x"_a.none(),  "y"_a.none())
         .def_rw("x", &somelib::CallbackTestingStruct::x)

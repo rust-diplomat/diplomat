@@ -7,7 +7,8 @@ namespace somelib {
 void add_ErrorEnum_binding(nb::module_ mod) {
     nb::class_<somelib::ErrorEnum> e_class(mod, "ErrorEnum");
     
-        nb::enum_<somelib::ErrorEnum::Value>(e_class, "ErrorEnum")
+        nb::enum_<somelib::ErrorEnum::Value> enumerator(e_class, "ErrorEnum");
+        enumerator
             .value("Foo", somelib::ErrorEnum::Foo)
             .value("Bar", somelib::ErrorEnum::Bar)
             .export_values();

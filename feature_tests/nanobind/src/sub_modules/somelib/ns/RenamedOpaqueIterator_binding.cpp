@@ -10,7 +10,8 @@ void add_RenamedOpaqueIterator_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::RenamedOpaqueIterator>(mod, "RenamedOpaqueIterator", nb::type_slots(somelib_ns_RenamedOpaqueIterator_slots))
+    nb::class_<somelib::ns::RenamedOpaqueIterator> opaque(mod, "RenamedOpaqueIterator", nb::type_slots(somelib_ns_RenamedOpaqueIterator_slots));
+    opaque
         .def("__next__", [](somelib::ns::RenamedOpaqueIterator& self){
                 auto next = self.next();
                 if (!next) {

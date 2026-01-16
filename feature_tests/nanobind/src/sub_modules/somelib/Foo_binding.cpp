@@ -12,7 +12,8 @@ void add_Foo_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Foo>(mod, "Foo", nb::type_slots(somelib_Foo_slots))
+    nb::class_<somelib::Foo> opaque(mod, "Foo", nb::type_slots(somelib_Foo_slots));
+    opaque
         .def("as_returning", &somelib::Foo::as_returning, nb::keep_alive<0, 1>())
         .def_prop_ro("bar", &somelib::Foo::get_bar)
         .def_static("extract_from_bounds", &somelib::Foo::extract_from_bounds, "bounds"_a, "another_string"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>() ) // unsupported special method NamedConstructor(None)

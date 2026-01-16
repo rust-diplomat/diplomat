@@ -10,7 +10,8 @@ void add_Nested_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::nested::ns::Nested>(mod, "Nested", nb::type_slots(somelib_nested_ns_Nested_slots));
+    nb::class_<somelib::nested::ns::Nested> opaque(mod, "Nested", nb::type_slots(somelib_nested_ns_Nested_slots));
+    ;
 }
 
 } 

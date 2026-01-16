@@ -4,9 +4,9 @@ mod header;
 
 use askama::Template;
 pub(crate) use header::Header;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Write};
 
-use crate::{ErrorStore, FileMap};
+use crate::{read_custom_binding, ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use gen::ItemGenContext;
 
@@ -53,6 +53,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
 }
@@ -83,13 +84,15 @@ pub(crate) fn run<'tcx>(
     files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
-        if ty.attrs().disable {
+        let ty_attrs = ty.attrs();
+        if ty_attrs.disable {
             // Skip type if disabled
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
@@ -111,10 +114,19 @@ pub(crate) fn run<'tcx>(
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
+        let block_source = if let Some(s) = ty_attrs
+            .binding_includes
+            .get(&hir::IncludeLocation::DefBlock)
+        {
+            read_custom_binding(s, config, &errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         let guard = errors.set_context_ty(ty.name().as_str().into());
         match id {
             hir::TypeId::Enum(e_id) => context.gen_enum_def(e_id),
-            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id),
+            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id, block_source),
             hir::TypeId::Struct(s_id) => context.gen_struct_def::<hir::Everywhere>(s_id),
             hir::TypeId::OutStruct(s_id) => context.gen_struct_def::<hir::OutputOnly>(s_id),
 
@@ -131,6 +143,16 @@ pub(crate) fn run<'tcx>(
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
+
+        // Decl headers require some more special logic, but we can write to the impl header body directly:
+        if let Some(s) = ty_attrs
+            .binding_includes
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            if let Ok(s) = read_custom_binding(s, config, &errors) {
+                writeln!(impl_header, "{}", s).expect("Could not write to header.");
+            }
+        }
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -252,7 +274,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(id);
+            ty_gen_cx.gen_opaque_def(id, "".into());
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }

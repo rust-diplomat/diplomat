@@ -34,6 +34,9 @@ private:
     {{type_name_unnamespaced}} operator=({{const_ref}}) = delete;
     {{type_name_unnamespaced}} operator=({{move_ref}}) noexcept = delete;
     static void operator delete[](void*, size_t) = delete;
+{% if !def_block.is_empty() %}
+{{ def_block }}
+{% endif -%}
 };
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}

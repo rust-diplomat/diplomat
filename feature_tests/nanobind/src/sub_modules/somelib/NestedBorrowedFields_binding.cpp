@@ -9,7 +9,8 @@
 
 namespace somelib {
 void add_NestedBorrowedFields_binding(nb::module_ mod) {
-    nb::class_<somelib::NestedBorrowedFields>(mod, "NestedBorrowedFields")
+    nb::class_<somelib::NestedBorrowedFields> st(mod, "NestedBorrowedFields");
+    st
         .def(nb::init<>())
         .def(nb::init<somelib::BorrowedFields, somelib::BorrowedFieldsWithBounds, somelib::BorrowedFieldsWithBounds>(), "fields"_a.none(),  "bounds"_a.none(),  "bounds2"_a.none())
         .def_rw("fields", &somelib::NestedBorrowedFields::fields)

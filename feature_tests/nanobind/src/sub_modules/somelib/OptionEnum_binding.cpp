@@ -7,7 +7,8 @@ namespace somelib {
 void add_OptionEnum_binding(nb::module_ mod) {
     nb::class_<somelib::OptionEnum> e_class(mod, "OptionEnum");
     
-        nb::enum_<somelib::OptionEnum::Value>(e_class, "OptionEnum")
+        nb::enum_<somelib::OptionEnum::Value> enumerator(e_class, "OptionEnum");
+        enumerator
             .value("Foo", somelib::OptionEnum::Foo)
             .value("Bar", somelib::OptionEnum::Bar)
             .value("Baz", somelib::OptionEnum::Baz)

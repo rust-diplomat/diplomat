@@ -1,7 +1,8 @@
 {%- let is_self_opaque = false -%}
     nb::class_<{{type_name}}> e_class(mod, "{{type_name_unnamespaced}}");
 
-    nb::enum_<{{type_name}}::Value>(e_class, "{{type_name_unnamespaced}}")
+    nb::enum_<{{type_name}}::Value> enumerator(e_class, "{{type_name_unnamespaced}}");
+    enumerator
         {%- for value in values %}
         .value("{{value}}", {{type_name}}::{{value}})
         {%- endfor %}

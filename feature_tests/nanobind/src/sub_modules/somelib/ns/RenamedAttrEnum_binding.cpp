@@ -7,7 +7,8 @@ namespace somelib::ns {
 void add_RenamedAttrEnum_binding(nb::module_ mod) {
     nb::class_<somelib::ns::RenamedAttrEnum> e_class(mod, "RenamedAttrEnum");
     
-        nb::enum_<somelib::ns::RenamedAttrEnum::Value>(e_class, "RenamedAttrEnum")
+        nb::enum_<somelib::ns::RenamedAttrEnum::Value> enumerator(e_class, "RenamedAttrEnum");
+        enumerator
             .value("A", somelib::ns::RenamedAttrEnum::A)
             .value("B", somelib::ns::RenamedAttrEnum::B)
             .value("Renamed", somelib::ns::RenamedAttrEnum::Renamed)

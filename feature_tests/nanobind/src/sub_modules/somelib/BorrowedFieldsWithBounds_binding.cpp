@@ -6,7 +6,8 @@
 
 namespace somelib {
 void add_BorrowedFieldsWithBounds_binding(nb::module_ mod) {
-    nb::class_<somelib::BorrowedFieldsWithBounds>(mod, "BorrowedFieldsWithBounds")
+    nb::class_<somelib::BorrowedFieldsWithBounds> st(mod, "BorrowedFieldsWithBounds");
+    st
         .def(nb::init<>())
         .def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "field_a"_a.none(),  "field_b"_a.none(),  "field_c"_a.none())
         .def_rw("field_a", &somelib::BorrowedFieldsWithBounds::field_a)

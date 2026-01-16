@@ -11,7 +11,8 @@ void add_RenamedStructWithAttrs_binding(nb::module_ mod) {
     // bind_vector solves this issue by exposing std::vector<somelib::ns::RenamedStructWithAttrs> as a type that will exist inside of C++, with functions to access its memory from Python.
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::ns::RenamedStructWithAttrs>>(mod, "RenamedStructWithAttrsSlice"); 
-    nb::class_<somelib::ns::RenamedStructWithAttrs>(mod, "RenamedStructWithAttrs")
+    nb::class_<somelib::ns::RenamedStructWithAttrs> st(mod, "RenamedStructWithAttrs");
+    st
         .def_rw("a", &somelib::ns::RenamedStructWithAttrs::a)
         .def_rw("b", &somelib::ns::RenamedStructWithAttrs::b)
         .def_prop_ro("c", &somelib::ns::RenamedStructWithAttrs::c)

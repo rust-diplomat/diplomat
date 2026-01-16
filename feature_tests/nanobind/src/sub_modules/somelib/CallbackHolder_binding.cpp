@@ -10,7 +10,8 @@ void add_CallbackHolder_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::CallbackHolder>(mod, "CallbackHolder", nb::type_slots(somelib_CallbackHolder_slots))
+    nb::class_<somelib::CallbackHolder> opaque(mod, "CallbackHolder", nb::type_slots(somelib_CallbackHolder_slots));
+    opaque
         .def("call", &somelib::CallbackHolder::call, "a"_a)
         .def(nb::new_(&somelib::CallbackHolder::new_), "func"_a);
 }

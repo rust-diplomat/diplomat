@@ -206,7 +206,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_opaque_def(&mut self, id: OpaqueId) {
+    pub fn gen_opaque_def(&mut self, id: OpaqueId, def_block: String) {
         let type_name = self.formatter.fmt_type_name(id.into());
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id.into());
         let ctype = self.formatter.fmt_c_type_name(id.into());
@@ -237,6 +237,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header: C2Header,
             docs: &'a str,
             deprecated: Option<&'a str>,
+            def_block: String,
         }
 
         DeclTemplate {
@@ -250,6 +251,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
+            def_block,
         }
         .render_into(self.decl_header)
         .unwrap();

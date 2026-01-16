@@ -10,7 +10,8 @@ void add_OpaqueThinVec_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::OpaqueThinVec>(mod, "OpaqueThinVec", nb::type_slots(somelib_OpaqueThinVec_slots))
+    nb::class_<somelib::OpaqueThinVec> opaque(mod, "OpaqueThinVec", nb::type_slots(somelib_OpaqueThinVec_slots));
+    opaque
         .def("__len__", &somelib::OpaqueThinVec::__len__)
         .def(nb::new_(&somelib::OpaqueThinVec::create), "a"_a, "b"_a, "c"_a)
         .def_prop_ro("first", &somelib::OpaqueThinVec::first)

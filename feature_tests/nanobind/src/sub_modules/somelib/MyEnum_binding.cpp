@@ -7,7 +7,8 @@ namespace somelib {
 void add_MyEnum_binding(nb::module_ mod) {
     nb::class_<somelib::MyEnum> e_class(mod, "MyEnum");
     
-        nb::enum_<somelib::MyEnum::Value>(e_class, "MyEnum")
+        nb::enum_<somelib::MyEnum::Value> enumerator(e_class, "MyEnum");
+        enumerator
             .value("A", somelib::MyEnum::A)
             .value("B", somelib::MyEnum::B)
             .value("C", somelib::MyEnum::C)

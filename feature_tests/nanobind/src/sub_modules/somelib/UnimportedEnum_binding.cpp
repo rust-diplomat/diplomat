@@ -7,7 +7,8 @@ namespace somelib {
 void add_UnimportedEnum_binding(nb::module_ mod) {
     nb::class_<somelib::UnimportedEnum> e_class(mod, "UnimportedEnum");
     
-        nb::enum_<somelib::UnimportedEnum::Value>(e_class, "UnimportedEnum")
+        nb::enum_<somelib::UnimportedEnum::Value> enumerator(e_class, "UnimportedEnum");
+        enumerator
             .value("A", somelib::UnimportedEnum::A)
             .value("B", somelib::UnimportedEnum::B)
             .value("C", somelib::UnimportedEnum::C)

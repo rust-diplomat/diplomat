@@ -10,7 +10,8 @@ void add_OpaqueMutexedString_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::OpaqueMutexedString>(mod, "OpaqueMutexedString", nb::type_slots(somelib_OpaqueMutexedString_slots))
+    nb::class_<somelib::OpaqueMutexedString> opaque(mod, "OpaqueMutexedString", nb::type_slots(somelib_OpaqueMutexedString_slots));
+    opaque
         .def("borrow", &somelib::OpaqueMutexedString::borrow, nb::rv_policy::reference_internal)
         .def_static("borrow_other", &somelib::OpaqueMutexedString::borrow_other, "other"_a, nb::rv_policy::reference)
         .def("borrow_self_or_other", &somelib::OpaqueMutexedString::borrow_self_or_other, "other"_a, nb::rv_policy::reference_internal)

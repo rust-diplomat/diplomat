@@ -7,7 +7,8 @@ namespace somelib {
 void add_ContiguousEnum_binding(nb::module_ mod) {
     nb::class_<somelib::ContiguousEnum> e_class(mod, "ContiguousEnum");
     
-        nb::enum_<somelib::ContiguousEnum::Value>(e_class, "ContiguousEnum")
+        nb::enum_<somelib::ContiguousEnum::Value> enumerator(e_class, "ContiguousEnum");
+        enumerator
             .value("C", somelib::ContiguousEnum::C)
             .value("D", somelib::ContiguousEnum::D)
             .value("E", somelib::ContiguousEnum::E)

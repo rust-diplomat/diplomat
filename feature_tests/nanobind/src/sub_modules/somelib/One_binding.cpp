@@ -11,7 +11,8 @@ void add_One_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::One>(mod, "One", nb::type_slots(somelib_One_slots))
+    nb::class_<somelib::One> opaque(mod, "One", nb::type_slots(somelib_One_slots));
+    opaque
         .def_static("cycle", &somelib::One::cycle, "hold"_a, "nohold"_a, nb::keep_alive<0, 1>() ) // unsupported special method NamedConstructor(None)
         .def_static("diamond_and_nested_types", &somelib::One::diamond_and_nested_types, "a"_a, "b"_a, "c"_a, "d"_a, "nohold"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), nb::keep_alive<0, 3>(), nb::keep_alive<0, 4>() ) // unsupported special method NamedConstructor(None)
         .def_static("diamond_bottom", &somelib::One::diamond_bottom, "top"_a, "left"_a, "right"_a, "bottom"_a, nb::keep_alive<0, 4>() ) // unsupported special method NamedConstructor(None)

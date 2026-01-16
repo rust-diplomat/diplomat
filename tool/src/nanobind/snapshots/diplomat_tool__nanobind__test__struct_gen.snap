@@ -2,7 +2,8 @@
 source: tool/src/nanobind/mod.rs
 expression: struct_gen
 ---
-nb::class_<mylib::Thingy>(mod, "Thingy")
+nb::class_<mylib::Thingy> st(mod, "Thingy");
+st
     .def(nb::init<>())
     .def(nb::init<bool, uint8_t, double>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
     .def_rw("a", &mylib::Thingy::a)
