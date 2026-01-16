@@ -12,7 +12,8 @@ void add_CyclicStructA_binding(nb::module_ mod) {
     // bind_vector solves this issue by exposing std::vector<somelib::CyclicStructA> as a type that will exist inside of C++, with functions to access its memory from Python.
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::CyclicStructA>>(mod, "CyclicStructASlice"); 
-    nb::class_<somelib::CyclicStructA>(mod, "CyclicStructA")
+    nb::class_<somelib::CyclicStructA> st(mod, "CyclicStructA");
+    st
         .def(nb::init<>())
         .def(nb::init<somelib::CyclicStructB>(), "a"_a.none())
         .def_rw("a", &somelib::CyclicStructA::a)

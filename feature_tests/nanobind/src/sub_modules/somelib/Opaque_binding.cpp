@@ -11,7 +11,8 @@ void add_Opaque_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Opaque>(mod, "Opaque", nb::type_slots(somelib_Opaque_slots))
+    nb::class_<somelib::Opaque> opaque(mod, "Opaque", nb::type_slots(somelib_Opaque_slots));
+    opaque
         .def("assert_struct", &somelib::Opaque::assert_struct, "s"_a)
         .def_static("cmp", &somelib::Opaque::cmp)
         .def_static("from_str", &somelib::Opaque::from_str, "input"_a)

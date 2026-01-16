@@ -10,7 +10,8 @@ void add_Float64Vec_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Float64Vec>(mod, "Float64Vec", nb::type_slots(somelib_Float64Vec_slots))
+    nb::class_<somelib::Float64Vec> opaque(mod, "Float64Vec", nb::type_slots(somelib_Float64Vec_slots));
+    opaque
         .def_prop_ro("asSlice", &somelib::Float64Vec::as_slice)
         .def("borrow", &somelib::Float64Vec::borrow)
         .def("fill_slice", &somelib::Float64Vec::fill_slice, "v"_a)

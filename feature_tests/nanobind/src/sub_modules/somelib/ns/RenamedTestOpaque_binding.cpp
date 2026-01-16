@@ -10,7 +10,8 @@ void add_RenamedTestOpaque_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::RenamedTestOpaque>(mod, "RenamedTestOpaque", nb::type_slots(somelib_ns_RenamedTestOpaque_slots));
+    nb::class_<somelib::ns::RenamedTestOpaque> opaque(mod, "RenamedTestOpaque", nb::type_slots(somelib_ns_RenamedTestOpaque_slots));
+    ;
 }
 
 } 

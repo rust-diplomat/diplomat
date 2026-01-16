@@ -7,7 +7,8 @@
 
 namespace somelib {
 void add_OptionStruct_binding(nb::module_ mod) {
-    nb::class_<somelib::OptionStruct>(mod, "OptionStruct")
+    nb::class_<somelib::OptionStruct> st(mod, "OptionStruct");
+    st
         .def(nb::init<>())
         .def(nb::init<std::unique_ptr<somelib::OptionOpaque>, std::unique_ptr<somelib::OptionOpaqueChar>, uint32_t, std::unique_ptr<somelib::OptionOpaque>>(), "a"_a,  "b"_a,  "c"_a.none(),  "d"_a)
         .def_prop_rw("a", 

@@ -10,7 +10,8 @@ void add_Two_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Two>(mod, "Two", nb::type_slots(somelib_Two_slots));
+    nb::class_<somelib::Two> opaque(mod, "Two", nb::type_slots(somelib_Two_slots));
+    ;
 }
 
 } 
