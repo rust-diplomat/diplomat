@@ -439,7 +439,7 @@ pub mod ffi {
 
     impl StringList {
         pub fn return_new() -> Box<Self> {
-            let sl: Box<[u8]> = Box::new(['T' as u8, 'e' as u8, 's' as u8, 't' as u8, '!' as u8]);
+            let sl: Box<[u8]> = Box::new(*b"Test!");
             Box::new(Self(sl.into()))
         }
     }
