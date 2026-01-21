@@ -22,7 +22,7 @@ pub struct SharedConfig {
     /// retain these references on the foreign side.
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
-    pub custom_binding_location: PathBuf,
+    pub custom_extra_code_location: PathBuf,
 }
 
 impl SharedConfig {
@@ -49,11 +49,11 @@ impl SharedConfig {
                     panic!("Config key `unsafe_references_in_callbacks` must be a boolean");
                 }
             }
-            "custom_binding_location" => {
+            "custom_extra_code_location" => {
                 if value.is_str() {
-                    self.custom_binding_location = PathBuf::from(value.as_str().unwrap())
+                    self.custom_extra_code_location = PathBuf::from(value.as_str().unwrap())
                 } else {
-                    panic!("Config key `custom_binding_location` must be a string");
+                    panic!("Config key `custom_extra_code_location` must be a string");
                 }
             }
             _ => (),

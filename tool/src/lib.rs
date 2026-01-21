@@ -53,11 +53,11 @@ pub fn gen(
     // Set the default binding location:
     if config
         .shared_config
-        .custom_binding_location
+        .custom_extra_code_location
         .as_os_str()
         .is_empty()
     {
-        config.shared_config.custom_binding_location = entry
+        config.shared_config.custom_extra_code_location = entry
             .parent()
             .expect("Could not get parent of lib.rs")
             .to_path_buf();
@@ -267,7 +267,7 @@ pub(crate) fn read_custom_binding<'a, 'b>(
 ) -> Result<String, ()> {
     match source {
         hir::IncludeSource::File(path) => {
-            let path = config.shared_config.custom_binding_location.join(path);
+            let path = config.shared_config.custom_extra_code_location.join(path);
             std::fs::read_to_string(&path).map_err(|e| {
                 errors.push_error(format!("Cannot find file {}: {e}", path.display()));
             })
