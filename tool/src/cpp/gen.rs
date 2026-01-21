@@ -357,6 +357,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
+        let extra_def_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::ImplBlock) {
+            read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
@@ -372,6 +378,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             is_sliceable: bool,
             docs: &'a str,
             deprecated: Option<&'a str>,
+            extra_def_code : String,
         }
 
         DeclTemplate {
@@ -387,9 +394,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             is_sliceable: def.attrs.abi_compatible,
             docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
+            extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
+
+        let extra_impl_code = if let Some(s) = def.attrs.custom_extra_code
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
 
         #[derive(Template)]
         #[template(path = "cpp/struct_impl.h.jinja", escape = "none")]
@@ -403,6 +419,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
+            extra_impl_code : String,
         }
 
         ImplTemplate {
@@ -415,6 +432,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             c_header: c_impl_header,
+            extra_impl_code,
         }
         .render_into(self.impl_header)
         .unwrap();
