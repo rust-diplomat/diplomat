@@ -218,6 +218,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let methods = self.gen_all_method_infos(id, def.methods.iter());
 
         self.gen_modules(id.into(), None);
+
+        let extra_init_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -227,6 +234,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
             is_sliceable: bool,
+            extra_init_code : String,
         }
 
         if def.attrs.abi_compatible {
@@ -246,6 +254,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 )
             }),
             is_sliceable: def.attrs.abi_compatible,
+            extra_init_code,
         }
         .render_into(out)
         .unwrap();
