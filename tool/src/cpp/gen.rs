@@ -150,7 +150,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .or(found_zero)
             .unwrap_or(ty.variants.first().unwrap());
 
-        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::ImplBlock) {
+        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -244,7 +244,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::ImplBlock) {
+        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -357,7 +357,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::ImplBlock) {
+        let extra_def_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
