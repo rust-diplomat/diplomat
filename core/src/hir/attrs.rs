@@ -89,6 +89,74 @@ pub enum IncludeLocation {
     /// Used by the Nanobind backend to override functionality for Nanobind bindings.
     InitializationBlock,
 }
+impl IncludeLocation {
+    fn pair_from_meta(meta : &Meta, errors : &mut ErrorStore) -> (Option<IncludeLocation>, Option<IncludeSource>) {
+        let mut source: Option<IncludeSource> = None;
+        let mut location: Option<IncludeLocation> = None;
+        let list = meta.require_list()
+        .and_then(|l| {
+            let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
+            let punc = l.parse_args_with(parser).map_err(|e| {
+                syn::Error::new(l.span(), format!("Could not parse comma separated list: {e}"))
+            })?;
+            for expr in punc {
+                let assigned : String = match expr.right.as_ref() {
+                    syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
+                        if let syn::Lit::Str(s) = lit {
+                            s.value()
+                        } else {
+                            unreachable!()
+                        }
+                    },
+                    _ => return Err(syn::Error::new(expr.right.span(), "Expected equivalence to a file path string.")),
+                };
+
+                let ident = match expr.left.as_ref() {
+                    syn::Expr::Path(p) => {
+                        let ident = p.path.get_ident();
+                        if let Some(i) = ident {
+                            i
+                        } else {
+                            return Err(syn::Error::new(p.path.span(), "Expected ident."));
+                        }
+                    },
+                    _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
+                };
+
+                let ident_str = ident.to_string();
+
+                match ident_str.as_str() {
+                    "location" => location = IncludeLocation::from_assign(&assigned, errors),
+                    "source" => source = Some(IncludeSource::Source(assigned)),
+                    "file" => source = Some(IncludeSource::File(assigned)),
+                    _ => return Err(syn::Error::new(ident.span(), format!("Unrecognized include ident `{ident_str}`")))
+                }
+
+
+            }
+            Ok(())
+        });
+        if let Err(e) = list {
+            errors.push(LoweringError::Other(format!(
+                "Error parsing `{}`: {e}",
+                meta.to_token_stream()
+            )));
+        }
+        (location, source)
+    }
+
+    fn from_assign(assigned : &str, errors : &mut ErrorStore) -> Option<Self> {
+        match assigned {
+            "def_block" => Some(IncludeLocation::DefBlock),
+            "impl_block" => Some(IncludeLocation::ImplBlock),
+            "init_block" => Some(IncludeLocation::InitializationBlock),
+            _ => {
+                errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
+                None
+            }
+        }
+    }
+}
 
 // #region: Demo specific attributes.
 
@@ -419,70 +487,15 @@ impl Attrs {
                             this.abi_compatible = true;
                         }
                         "include" => {
-                            let mut source: Option<IncludeSource> = None;
-                            let mut location: Option<IncludeLocation> = None;
-                            let list = attr.meta.require_list()
-                            .and_then(|l| {
-                                let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
-                                let punc = l.parse_args_with(parser).map_err(|e| {
-                                    syn::Error::new(l.span(), format!("Could not parse comma separated list: {e}"))
-                                })?;
-                                for expr in punc {
-                                    let assigned : String = match expr.right.as_ref() {
-                                        syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
-                                            if let syn::Lit::Str(s) = lit {
-                                                s.value()
-                                            } else {
-                                                unreachable!()
-                                            }
-                                        },
-                                        _ => return Err(syn::Error::new(expr.right.span(), "Expected equivalence to a file path string.")),
-                                    };
-
-                                    let ident = match expr.left.as_ref() {
-                                        syn::Expr::Path(p) => {
-                                            let ident = p.path.get_ident();
-                                            if let Some(i) = ident {
-                                                i
-                                            } else {
-                                                return Err(syn::Error::new(p.path.span(), "Expected ident."));
-                                            }
-                                        },
-                                        _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
-                                    };
-
-                                    let ident_str = ident.to_string();
-
-                                    match ident_str.as_str() {
-                                        "source" => source = Some(IncludeSource::Source(assigned)),
-                                        "file" => source = Some(IncludeSource::File(assigned)),
-                                        "location" => location = match assigned.as_str() {
-                                            "def_block" => Some(IncludeLocation::DefBlock),
-                                            "impl_block" => Some(IncludeLocation::ImplBlock),
-                                            "init_block" => Some(IncludeLocation::InitializationBlock),
-                                            _ => {
-                                                errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
-                                                None
-                                            }
-                                        },
-                                        _ => return Err(syn::Error::new(ident.span(), format!("Unrecognized include ident `{ident_str}`")))
-                                    }
-
-
-                                }
-                                Ok(())
-                            });
-                            if let Err(e) = list {
-                                errors.push(LoweringError::Other(format!(
-                                    "Error parsing `{}`: {e}",
-                                    attr.meta.to_token_stream()
-                                )));
-                                continue;
-                            }
+                            let (location, source) = IncludeLocation::pair_from_meta(&attr.meta, errors);
 
                             match (&location, &source) {
                                 (Some(l), Some(s)) => {
-                                    this.custom_extra_code.insert(l.clone(), s.clone());
+                                    if let Some(s) = this.custom_extra_code.get(l) {
+                                        errors.push(LoweringError::Other(format!("Found existing location-source pair: {l:?} = {s:?}. Duplicates not allowed.")));
+                                    } else {
+                                        this.custom_extra_code.insert(l.clone(), s.clone());
+                                    }
                                 }
                                 _ => {
                                     errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
