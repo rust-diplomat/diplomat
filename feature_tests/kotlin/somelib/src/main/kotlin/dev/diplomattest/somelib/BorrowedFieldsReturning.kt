@@ -74,7 +74,7 @@ class BorrowedFieldsReturning (var bytes: String) {
         }
 
     }
-    internal fun toNative(): BorrowedFieldsReturningNative {
+    internal fun toNative(aAppendArray: Array<MutableList<Any>>): BorrowedFieldsReturningNative {
         var native = BorrowedFieldsReturningNative()
         native.bytes = PrimitiveArrayTools.borrowUtf8(this.bytes).slice
         return native

@@ -80,7 +80,7 @@ class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fiel
         }
 
     }
-    internal fun toNative(): BorrowedFieldsWithBoundsNative {
+    internal fun toNative(aAppendArray: Array<MutableList<Any>>, bAppendArray: Array<MutableList<Any>>, cAppendArray: Array<MutableList<Any>>): BorrowedFieldsWithBoundsNative {
         var native = BorrowedFieldsWithBoundsNative()
         native.fieldA = PrimitiveArrayTools.borrowUtf16(this.fieldA).slice
         native.fieldB = PrimitiveArrayTools.borrowUtf8(this.fieldB).slice

@@ -76,7 +76,7 @@ class {{type_name}} ({%- for field in fields %}var {{field.name}}: {{field.field
 
 {%- if !fields.is_empty() %}
 {%- if !is_out_struct %}
-    internal fun toNative(): {{type_name}}Native {
+    internal fun toNative({% for lt in lifetimes -%}{{lt}}AppendArray: Array<MutableList<Any>>{% if !loop.last%}, {% endif %}{% endfor %}): {{type_name}}Native {
         var native = {{type_name}}Native()
         {%- for field in fields %}
         native.{{field.name}} = {{field.kt_to_native.as_ref().expect("Non-out structs must have conversions")}}
