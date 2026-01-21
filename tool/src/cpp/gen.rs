@@ -2,9 +2,9 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::ItemGenContext as CItemGenContext;
-use crate::ErrorStore;
 use crate::config;
 use crate::read_custom_binding;
+use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::OpaqueId;
@@ -150,7 +150,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .or(found_zero)
             .unwrap_or(ty.variants.first().unwrap());
 
-        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
+        let extra_def_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -171,7 +175,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
-            extra_def_code : String,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -191,7 +195,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-        let extra_impl_code = if let Some(s) = ty.attrs.custom_extra_code
+        let extra_impl_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
             .get(&hir::IncludeLocation::ImplBlock)
         {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
@@ -209,7 +215,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code : String,
+            extra_impl_code: String,
         }
 
         ImplTemplate {
@@ -244,7 +250,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
+        let extra_def_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -282,8 +292,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-    
-        let extra_impl_code = if let Some(s) = ty.attrs.custom_extra_code
+        let extra_impl_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
             .get(&hir::IncludeLocation::ImplBlock)
         {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
@@ -302,7 +313,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code : String,
+            extra_impl_code: String,
         }
 
         ImplTemplate {
@@ -357,7 +368,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::DefBlock) {
+        let extra_def_code = if let Some(s) = def
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
             read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -378,7 +393,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             is_sliceable: bool,
             docs: &'a str,
             deprecated: Option<&'a str>,
-            extra_def_code : String,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -399,7 +414,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-        let extra_impl_code = if let Some(s) = def.attrs.custom_extra_code
+        let extra_impl_code = if let Some(s) = def
+            .attrs
+            .custom_extra_code
             .get(&hir::IncludeLocation::ImplBlock)
         {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
@@ -419,7 +436,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code : String,
+            extra_impl_code: String,
         }
 
         ImplTemplate {

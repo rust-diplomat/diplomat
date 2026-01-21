@@ -51,7 +51,7 @@ pub(super) struct ItemGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub cpp: CppItemGenContext<'cx, 'tcx, 'cx>,
-    pub config : &'cx Config,
+    pub config: &'cx Config,
     pub root_module: &'cx mut RootModule<'tcx>,
     pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
     /// Are we currently generating struct fields?
@@ -95,7 +95,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             .map(|e| self.formatter.cxx.fmt_enum_variant(e))
             .collect::<Vec<_>>();
 
-        let extra_init_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+        let extra_init_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::InitializationBlock)
+        {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -107,7 +111,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name: &'a str,
             values: Vec<Cow<'a, str>>,
             type_name_unnamespaced: &'a str,
-            extra_init_code : String,
+            extra_init_code: String,
         }
 
         ImplTemplate {
@@ -171,7 +175,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
         let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
-        let extra_init_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+        let extra_init_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::InitializationBlock)
+        {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -183,7 +191,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
-            extra_init_code : String,
+            extra_init_code: String,
         }
 
         ImplTemplate {
@@ -219,7 +227,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
         self.gen_modules(id.into(), None);
 
-        let extra_init_code = if let Some(s) = def.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+        let extra_init_code = if let Some(s) = def
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::InitializationBlock)
+        {
             read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
@@ -234,7 +246,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
             is_sliceable: bool,
-            extra_init_code : String,
+            extra_init_code: String,
         }
 
         if def.attrs.abi_compatible {

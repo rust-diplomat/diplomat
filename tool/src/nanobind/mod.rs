@@ -4,9 +4,7 @@ mod root_module;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{
-    cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap,
-};
+use crate::{cpp::Header, nanobind::gen::MethodInfo, Config, ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 use formatter::PyFormatter;

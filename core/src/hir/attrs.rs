@@ -90,7 +90,10 @@ pub enum IncludeLocation {
     InitializationBlock,
 }
 impl IncludeLocation {
-    fn pair_from_meta(meta : &Meta, errors : &mut ErrorStore) -> (Option<IncludeLocation>, Option<IncludeSource>) {
+    fn pair_from_meta(
+        meta: &Meta,
+        errors: &mut ErrorStore,
+    ) -> (Option<IncludeLocation>, Option<IncludeSource>) {
         let mut source: Option<IncludeSource> = None;
         let mut location: Option<IncludeLocation> = None;
         let list = meta.require_list()
@@ -102,15 +105,22 @@ impl IncludeLocation {
         });
         let res = list.and_then(|punc| {
             for expr in punc {
-                let assigned : String = match expr.right.as_ref() {
-                    syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
+                let assigned: String = match expr.right.as_ref() {
+                    syn::Expr::Lit(syn::ExprLit { lit, .. })
+                        if matches!(lit, syn::Lit::Str(..)) =>
+                    {
                         if let syn::Lit::Str(s) = lit {
                             s.value()
                         } else {
                             unreachable!()
                         }
-                    },
-                    _ => return Err(syn::Error::new(expr.right.span(), "Expected equivalence to a file path string.")),
+                    }
+                    _ => {
+                        return Err(syn::Error::new(
+                            expr.right.span(),
+                            "Expected equivalence to a file path string.",
+                        ))
+                    }
                 };
 
                 let ident = match expr.left.as_ref() {
@@ -121,7 +131,7 @@ impl IncludeLocation {
                         } else {
                             return Err(syn::Error::new(p.path.span(), "Expected ident."));
                         }
-                    },
+                    }
                     _ => return Err(syn::Error::new(expr.left.span(), "Expected a path.")),
                 };
 
@@ -131,10 +141,13 @@ impl IncludeLocation {
                     "location" => location = IncludeLocation::from_assign(&assigned, errors),
                     "source" => source = Some(IncludeSource::Source(assigned)),
                     "file" => source = Some(IncludeSource::File(assigned)),
-                    _ => return Err(syn::Error::new(ident.span(), format!("Unrecognized include ident `{ident_str}`")))
+                    _ => {
+                        return Err(syn::Error::new(
+                            ident.span(),
+                            format!("Unrecognized include ident `{ident_str}`"),
+                        ))
+                    }
                 }
-
-
             }
             Ok(())
         });
@@ -147,13 +160,15 @@ impl IncludeLocation {
         (location, source)
     }
 
-    fn from_assign(assigned : &str, errors : &mut ErrorStore) -> Option<Self> {
+    fn from_assign(assigned: &str, errors: &mut ErrorStore) -> Option<Self> {
         match assigned {
             "def_block" => Some(IncludeLocation::DefBlock),
             "impl_block" => Some(IncludeLocation::ImplBlock),
             "init_block" => Some(IncludeLocation::InitializationBlock),
             _ => {
-                errors.push(LoweringError::Other(format!("Include location `{assigned}` unsupported.")));
+                errors.push(LoweringError::Other(format!(
+                    "Include location `{assigned}` unsupported."
+                )));
                 None
             }
         }
@@ -489,7 +504,8 @@ impl Attrs {
                             this.abi_compatible = true;
                         }
                         "include" => {
-                            let (location, source) = IncludeLocation::pair_from_meta(&attr.meta, errors);
+                            let (location, source) =
+                                IncludeLocation::pair_from_meta(&attr.meta, errors);
 
                             match (&location, &source) {
                                 (Some(l), Some(s)) => {
