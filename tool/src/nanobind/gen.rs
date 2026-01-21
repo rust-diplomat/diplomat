@@ -171,18 +171,26 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
         let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
+        let extra_init_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
+            extra_init_code : String,
         }
 
         ImplTemplate {
             type_name: &type_name,
             methods: methods.as_slice(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            extra_init_code,
         }
         .render_into(out)
         .unwrap();
