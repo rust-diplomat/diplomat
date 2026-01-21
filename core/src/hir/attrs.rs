@@ -96,9 +96,11 @@ impl IncludeLocation {
         let list = meta.require_list()
         .and_then(|l| {
             let parser = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
-            let punc = l.parse_args_with(parser).map_err(|e| {
+            l.parse_args_with(parser).map_err(|e| {
                 syn::Error::new(l.span(), format!("Could not parse comma separated list: {e}"))
-            })?;
+            })
+        });
+        let res = list.and_then(|punc| {
             for expr in punc {
                 let assigned : String = match expr.right.as_ref() {
                     syn::Expr::Lit(syn::ExprLit{ lit, .. }) if matches!(lit, syn::Lit::Str(..)) => {
@@ -136,7 +138,7 @@ impl IncludeLocation {
             }
             Ok(())
         });
-        if let Err(e) = list {
+        if let Err(e) = res {
             errors.push(LoweringError::Other(format!(
                 "Error parsing `{}`: {e}",
                 meta.to_token_stream()
