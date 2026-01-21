@@ -3,6 +3,8 @@ use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::ItemGenContext as CItemGenContext;
 use crate::ErrorStore;
+use crate::config;
+use crate::read_custom_binding;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::OpaqueId;
@@ -87,8 +89,8 @@ pub(crate) struct FuncImplTemplate<'a> {
 /// Context for generating a particular type's header
 pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
     pub formatter: &'ccx Cpp2Formatter<'tcx>,
-    #[allow(dead_code)] // Currently unused but could be in the future
-    pub config: &'ccx super::CppConfig,
+    /// Use instead of CppConfig to allow access to SharedConfig.
+    pub config: &'ccx config::Config,
     pub errors: &'ccx ErrorStore<'tcx, String>,
     pub c: CItemGenContext<'ccx, 'tcx, 'header>,
     pub impl_header: &'header mut Header<'ccx>,
@@ -206,7 +208,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .unwrap();
     }
 
-    pub fn gen_opaque_def(&mut self, id: OpaqueId, def_block: String) {
+    pub fn gen_opaque_def(&mut self, id: OpaqueId) {
         let type_name = self.formatter.fmt_type_name(id.into());
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id.into());
         let ctype = self.formatter.fmt_c_type_name(id.into());
@@ -224,6 +226,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
+        let extra_def_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::ImplBlock) {
+            read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "cpp/opaque_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
@@ -237,7 +245,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header: C2Header,
             docs: &'a str,
             deprecated: Option<&'a str>,
-            def_block: String,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -251,10 +259,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
-            def_block,
+            extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
+
+    
+        let extra_impl_code = if let Some(s) = ty.attrs.custom_extra_code
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
 
         #[derive(Template)]
         #[template(path = "cpp/opaque_impl.h.jinja", escape = "none")]
@@ -267,6 +284,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
+            extra_impl_code : String,
         }
 
         ImplTemplate {
@@ -278,6 +296,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
+            extra_impl_code,
         }
         .render_into(self.impl_header)
         .unwrap();

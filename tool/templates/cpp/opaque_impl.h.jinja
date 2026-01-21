@@ -32,4 +32,6 @@ inline void {{type_name}}::operator delete(void* ptr) {
     {{dtor_name}}(reinterpret_cast<{{mut_cptr}}>(ptr));
 }
 
-
+{% if !extra_impl_code.is_empty() %}
+{{ extra_impl_code }}
+{% endif -%}

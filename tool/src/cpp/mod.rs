@@ -4,9 +4,9 @@ mod header;
 
 use askama::Template;
 pub(crate) use header::Header;
-use std::{collections::HashMap, fmt::Write};
+use std::collections::HashMap;
 
-use crate::{read_custom_binding, ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use gen::ItemGenContext;
 
@@ -99,7 +99,7 @@ pub(crate) fn run<'tcx>(
         let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            config: &config.cpp_config,
+            config: &config,
             c: crate::c::ItemGenContext {
                 tcx,
                 formatter: &formatter.c,
@@ -114,19 +114,10 @@ pub(crate) fn run<'tcx>(
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
-        let block_source = if let Some(s) = ty_attrs
-            .binding_includes
-            .get(&hir::IncludeLocation::DefBlock)
-        {
-            read_custom_binding(s, config, &errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
         let guard = errors.set_context_ty(ty.name().as_str().into());
         match id {
             hir::TypeId::Enum(e_id) => context.gen_enum_def(e_id),
-            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id, block_source),
+            hir::TypeId::Opaque(o_id) => context.gen_opaque_def(o_id),
             hir::TypeId::Struct(s_id) => context.gen_struct_def::<hir::Everywhere>(s_id),
             hir::TypeId::OutStruct(s_id) => context.gen_struct_def::<hir::OutputOnly>(s_id),
 
@@ -143,16 +134,6 @@ pub(crate) fn run<'tcx>(
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
-
-        // Decl headers require some more special logic, but we can write to the impl header body directly:
-        if let Some(s) = ty_attrs
-            .binding_includes
-            .get(&hir::IncludeLocation::ImplBlock)
-        {
-            if let Ok(s) = read_custom_binding(s, config, &errors) {
-                writeln!(impl_header, "{}", s).expect("Could not write to header.");
-            }
-        }
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -178,7 +159,7 @@ pub(crate) fn run<'tcx>(
             let mut ty_context = ItemGenContext {
                 formatter: &formatter,
                 errors: &errors,
-                config: &config.cpp_config,
+                config: &config,
                 c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.c,
@@ -260,7 +241,7 @@ mod test {
             let mut ty_gen_cx = ItemGenContext {
                 errors: &error_store,
                 formatter: &formatter,
-                config: &config.cpp_config,
+                config: &config,
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,
@@ -274,7 +255,7 @@ mod test {
                 generating_struct_fields: false,
             };
 
-            ty_gen_cx.gen_opaque_def(id, "".into());
+            ty_gen_cx.gen_opaque_def(id);
             insta::assert_snapshot!(decl_header.body);
             insta::assert_snapshot!(impl_header.body);
         }
