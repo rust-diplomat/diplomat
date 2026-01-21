@@ -14,4 +14,7 @@
         .def("__repr__", [](const {{type_name}}& self){
             return nb::str(nb::cast({{type_name}}::Value(self)));
         });
+{% if !extra_init_code.is_empty() %}
+{{extra_init_code}}
+{% endif -%}
 

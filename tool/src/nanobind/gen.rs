@@ -1,5 +1,7 @@
 use super::root_module::RootModule;
 use super::PyFormatter;
+use crate::config::Config;
+use crate::read_custom_binding;
 use crate::{cpp::ItemGenContext as CppItemGenContext, hir, ErrorStore};
 use askama::Template;
 use diplomat_core::hir::{OpaqueOwner, StructPathLike, SymbolId, TyPosition, Type, TypeId};
@@ -49,6 +51,7 @@ pub(super) struct ItemGenContext<'cx, 'tcx> {
     pub formatter: &'cx PyFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
     pub cpp: CppItemGenContext<'cx, 'tcx, 'cx>,
+    pub config : &'cx Config,
     pub root_module: &'cx mut RootModule<'tcx>,
     pub submodules: &'cx mut BTreeMap<Cow<'tcx, str>, BTreeSet<Cow<'tcx, str>>>,
     /// Are we currently generating struct fields?
@@ -92,18 +95,26 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             .map(|e| self.formatter.cxx.fmt_enum_variant(e))
             .collect::<Vec<_>>();
 
+        let extra_init_code = if let Some(s) = ty.attrs.custom_extra_code.get(&hir::IncludeLocation::InitializationBlock) {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             values: Vec<Cow<'a, str>>,
             type_name_unnamespaced: &'a str,
+            extra_init_code : String,
         }
 
         ImplTemplate {
             type_name: &type_name,
             values,
             type_name_unnamespaced: &type_name_unnamespaced,
+            extra_init_code,
         }
         .render_into(out)
         .unwrap();
