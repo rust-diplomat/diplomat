@@ -11,7 +11,6 @@ void add_Two_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::Two> opaque(mod, "Two", nb::type_slots(somelib_Two_slots));
-    ;
 }
 
 } 

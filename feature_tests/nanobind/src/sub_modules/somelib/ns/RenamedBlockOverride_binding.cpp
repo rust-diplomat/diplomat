@@ -11,7 +11,7 @@ void add_RenamedBlockOverride_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::ns::RenamedBlockOverride> opaque(mod, "RenamedBlockOverride", nb::type_slots(somelib_ns_RenamedBlockOverride_slots));
-    ;
+    
     opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);
 }
 

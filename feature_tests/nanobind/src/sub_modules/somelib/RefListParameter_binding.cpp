@@ -11,7 +11,6 @@ void add_RefListParameter_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::RefListParameter> opaque(mod, "RefListParameter", nb::type_slots(somelib_RefListParameter_slots));
-    ;
 }
 
 } 

@@ -11,7 +11,6 @@ void add_Nested_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::nested::ns2::Nested> opaque(mod, "Nested", nb::type_slots(somelib_nested_ns2_Nested_slots));
-    ;
 }
 
 } 

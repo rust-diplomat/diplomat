@@ -11,7 +11,6 @@ void add_RenamedTestOpaque_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::ns::RenamedTestOpaque> opaque(mod, "RenamedTestOpaque", nb::type_slots(somelib_ns_RenamedTestOpaque_slots));
-    ;
 }
 
 } 

@@ -11,7 +11,6 @@ void add_RenamedAttrOpaque2_binding(nb::module_ mod) {
         {0, nullptr}};
     
     nb::class_<somelib::ns::RenamedAttrOpaque2> opaque(mod, "RenamedAttrOpaque2", nb::type_slots(somelib_ns_RenamedAttrOpaque2_slots));
-    ;
 }
 
 } 
