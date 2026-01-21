@@ -155,7 +155,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .custom_extra_code
             .get(&hir::IncludeLocation::DefBlock)
         {
-            read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
         };
@@ -255,7 +255,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .custom_extra_code
             .get(&hir::IncludeLocation::DefBlock)
         {
-            read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
         };
@@ -373,7 +373,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .custom_extra_code
             .get(&hir::IncludeLocation::DefBlock)
         {
-            read_custom_binding(s, self.config, &self.errors).unwrap_or_default()
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
         };

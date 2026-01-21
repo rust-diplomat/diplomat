@@ -99,7 +99,7 @@ pub(crate) fn run<'tcx>(
         let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            config: &config,
+            config,
             c: crate::c::ItemGenContext {
                 tcx,
                 formatter: &formatter.c,
@@ -159,7 +159,7 @@ pub(crate) fn run<'tcx>(
             let mut ty_context = ItemGenContext {
                 formatter: &formatter,
                 errors: &errors,
-                config: &config,
+                config,
                 c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.c,
