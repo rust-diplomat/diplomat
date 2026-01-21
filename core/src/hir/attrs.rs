@@ -65,7 +65,7 @@ pub struct Attrs {
     pub abi_compatible: bool,
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
-    pub binding_includes: HashMap<IncludeLocation, IncludeSource>,
+    pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
 }
 
 /// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
@@ -482,7 +482,7 @@ impl Attrs {
 
                             match (&location, &source) {
                                 (Some(l), Some(s)) => {
-                                    this.binding_includes.insert(l.clone(), s.clone());
+                                    this.custom_extra_code.insert(l.clone(), s.clone());
                                 }
                                 _ => {
                                     errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
@@ -596,7 +596,7 @@ impl Attrs {
             demo_attrs: _,
             generate_mocking_interface,
             abi_compatible,
-            binding_includes,
+            custom_extra_code,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -980,7 +980,7 @@ impl Attrs {
             ));
         }
 
-        if !binding_includes.is_empty() {
+        if !custom_extra_code.is_empty() {
             if !validator.attrs_supported().custom_bindings {
                 // We only validate that the language supports the bindings. We don't validate
                 // anything else, since this is an advanced feature (you have to know what you are doing).
@@ -1032,7 +1032,7 @@ impl Attrs {
             generate_mocking_interface: false,
             abi_compatible: false,
             // Not inherited
-            binding_includes: Default::default(),
+            custom_extra_code: Default::default(),
         }
     }
 }
