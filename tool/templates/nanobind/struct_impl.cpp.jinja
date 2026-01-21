@@ -44,6 +44,6 @@ st
 {% include "method_impl.cpp.jinja" %}
 {%- endfor %};
 
-{% if !extra_init_code.is_empty() %}
+{%- if !extra_init_code.is_empty() %}
 {{extra_init_code}}
 {% endif -%}
