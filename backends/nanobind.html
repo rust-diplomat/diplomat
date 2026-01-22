@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Configuring Markup - The Diplomat Book</title>
+        <title>Nanobind - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -174,40 +174,69 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="configuring-markup"><a class="header" href="#configuring-markup">Configuring Markup</a></h1>
-<p>Through <a href="../config.html">Diplomat’s configuration interfaces</a>, you can customize some of demo_gen’s output. Here’s a sample .toml file for configuration (with comments for clarity):</p>
-<pre><code class="language-toml">[demo-gen]
-# If false, demo_gen will automatically search all methods for functions it can generate demonstration JS for.
-# If true, demo_gen will look for any methods explicitly flagged with #[diplomat::demo(generate)] to perform generation.
-explicit-generation=true # default = false (bool)
+                        <h1 id="nanobind-backend"><a class="header" href="#nanobind-backend">Nanobind Backend</a></h1>
+<h2 id="debugging"><a class="header" href="#debugging">Debugging</a></h2>
+<p>Nanobind <code>.pyd</code> files can be stepped through using any debugger. As long as you’ve built the <code>.pyd</code> file with debugging symbols, you can attach to any running Python process that has the <code>.pyd</code> imported. Here are the steps:</p>
+<ol>
+<li>Launch a Python process and import the library.</li>
+<li>Get the PID of the Python process (<code>import os; print(os.getpid())</code>)</li>
+<li>Attach the debugger to the process (for LLDB, this is <code>lldb -p PID</code>).</li>
+<li>Add breakpoints as you would normally.</li>
+</ol>
+<h2 id="slices"><a class="header" href="#slices">Slices</a></h2>
+<h3 id="mutable-slices-and-copying-on-the-boundary"><a class="header" href="#mutable-slices-and-copying-on-the-boundary">Mutable Slices and Copying on the Boundary</a></h3>
+<p>Nanobind supports taking mutable slices:</p>
+<pre><code>#[diplomat::bridge]
+mod ffi {
+    #[diplomat::attr(auto, abi_compatible)]
+    pub struct Foo {
+        x: i32,
+        y : i32
+    }
 
-# This removes the rendering/ folder.
-hide-default-renderer=true # default = false (bool)
-
-# Adjusts all imports that demo_gen creates to a specific module. Setting this will not generate the js/ folder.
-#
-# So for instance, this setting will adjust imports to: `import { type } from "icu4x";
-module-name="icu4x" # (string)
-
-# Adjusts all imports that demo_gen creates to a relative path where Diplomat JS output should be. Setting this will not generate the js/ folder.
-# 
-# Setting this will adjust imports to: `import {type} from "../js/folder/here/index.mjs";
-# 
-# Intended to be a mutually exclusive setting with module_name, although you can set both simultaneously to import modules from a relative path. 
-relative-js-path="../js/folder/here" # (string)
+    impl Foo {
+        pub fn takes_mut_slice(sl : &amp;mut [Foo]) {
+            for s in sl.iter() {
+                s.x += 1;
+            }
+        }
+    }
+}
 </code></pre>
+<p>However, if you attempt to mutate the slice in Python:</p>
+<pre><code class="language-python">f = [somelib.Foo(x=10,y=10)]
+print([foo.x for foo in f])
+somelib.Foo.takes_mut_slice(f)
+print([foo.x for foo in f])
+</code></pre>
+<p>You will get an error:</p>
+<pre><code>[10]
+TypeError: takes_mut_slice(): incompatible function arguments. The following argument types are supported:
+    1. mutable_slice(s: collections.abc.Sequence[somelib.somelib.Foo]) -&gt; None
+Invoked with types: list
+</code></pre>
+<p>Diplomat’s bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a <code>TSlice</code> type (i.e., <code>somelib.FooSlice</code>):</p>
+<pre><code class="language-python">f = somelib.FooSlice([somelib.Foo(x=10, y=10)])
+print([foo.x for foo in f])
+somelib.Foo.takes_mut_slice(f)
+print([foo.x for foo in f])
+</code></pre>
+<p>Which prints the correct result:</p>
+<pre><code>[10]
+[11]
+</code></pre>
+<h4 id="explanation"><a class="header" href="#explanation">Explanation</a></h4>
+<p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
+<p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../demo_gen/attributes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../backends/kotlin.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../demo_gen/renderer.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -215,13 +244,10 @@ relative-js-path="../js/folder/here" # (string)
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../demo_gen/attributes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../backends/kotlin.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../demo_gen/renderer.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                    </a>
             </nav>
 
         </div>
