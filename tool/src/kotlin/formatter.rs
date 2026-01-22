@@ -179,8 +179,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
             panic!("Trait methods need a name");
         }
         let name = method.name.clone().unwrap().as_str().to_lower_camel_case();
-        let name = if method.attrs.is_some() {
-            method.attrs.as_ref().unwrap().rename.apply(name.into())
+        let name = if let Some(attrs) = &method.attrs {
+            attrs.rename.apply(name.into())
         } else {
             name.into()
         };
