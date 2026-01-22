@@ -503,7 +503,7 @@ impl Attrs {
                             }
                             this.abi_compatible = true;
                         }
-                        "include" => {
+                        "custom_extra_code" => {
                             let (location, source) =
                                 IncludeLocation::pair_from_meta(&attr.meta, errors);
 
@@ -522,7 +522,7 @@ impl Attrs {
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, include, indexer, error`"
+                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error`"
                             )));
                         }
                     },
@@ -1021,7 +1021,7 @@ impl Attrs {
             }
             if !matches!(context, AttributeContext::Type(..)) {
                 errors.push(LoweringError::Other(
-                    "`include` only supported on type declarations.".into(),
+                    "`custom_extra_code` only supported on type declarations.".into(),
                 ));
             }
         }
@@ -1804,18 +1804,18 @@ mod tests {
     }
 
     #[test]
-    fn test_custom_include() {
+    fn test_custom_extra_code() {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(tests, include(source="std::string test;", location="impl_block"))]
-                #[diplomat::attr(tests, include(file="test_file.hpp", location="def_block"))]
+                #[diplomat::attr(tests, custom_extra_code(source="std::string test;", location="impl_block"))]
+                #[diplomat::attr(tests, custom_extra_code(file="test_file.hpp", location="def_block"))]
                 pub struct IncludeDef {}
 
                 impl IncludeDef {}
 
-                #[diplomat::attr(tests, include(file="testing.d.hpp", location="def_block"))]
-                #[diplomat::attr(tests, include(source="void test() {}", location="impl_block"))]
+                #[diplomat::attr(tests, custom_extra_code(file="testing.d.hpp", location="def_block"))]
+                #[diplomat::attr(tests, custom_extra_code(source="void test() {}", location="impl_block"))]
                 #[diplomat::opaque]
                 pub struct IncludeBlock();
 
@@ -1826,7 +1826,7 @@ mod tests {
     }
 
     #[test]
-    fn test_custom_include_fail() {
+    fn test_custom_extra_code_fail() {
         uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
@@ -1835,8 +1835,8 @@ mod tests {
                 }
 
                 impl IncludeDef {
-                    #[diplomat::attr(tests, include(a="", location="unknown"))]
-                    #[diplomat::attr(tests, include(location="unknown", source="test"))]
+                    #[diplomat::attr(tests, custom_extra_code(a="", location="unknown"))]
+                    #[diplomat::attr(tests, custom_extra_code(location="unknown", source="test"))]
                     pub fn test() {
 
                     }
@@ -1847,7 +1847,7 @@ mod tests {
     }
 
     #[test]
-    fn test_custom_include_fail_unsupported() {
+    fn test_custom_extra_code_fail_unsupported() {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
@@ -1856,7 +1856,7 @@ mod tests {
                 }
 
                 impl IncludeDef {
-                    #[diplomat::attr(tests, include(source="", location="def_block"))]
+                    #[diplomat::attr(tests, custom_extra_code(source="", location="def_block"))]
                     pub fn test() {
 
                     }

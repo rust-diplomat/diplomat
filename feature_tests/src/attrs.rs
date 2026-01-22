@@ -414,21 +414,21 @@ pub mod ffi {
     #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
         cpp,
-        include(
+        custom_extra_code(
             file = "custom_binds/cpp/RenamedStringList.d.hpp",
             location = "def_block"
         )
     )]
     #[diplomat::attr(
         cpp,
-        include(
+        custom_extra_code(
             file = "custom_binds/cpp/RenamedStringList.hpp",
             location = "impl_block"
         )
     )]
     #[diplomat::attr(
         nanobind,
-        include(
+        custom_extra_code(
             file = "custom_binds/nanobind/RenamedStringList.hpp",
             location = "impl_block"
         )
@@ -449,7 +449,7 @@ pub mod ffi {
     #[diplomat::attr(not(supports = custom_bindings), disable)]
     #[diplomat::attr(
         any(nanobind, cpp),
-        include(
+        custom_extra_code(
             source = "public:
     const static bool custom_bool = false;
     static std::string special_function();",
@@ -458,7 +458,7 @@ pub mod ffi {
     )]
     #[diplomat::attr(
         any(nanobind, cpp),
-        include(
+        custom_extra_code(
             source = r#"std::string somelib::ns::RenamedBlockOverride::special_function() {
     return "This is a custom binding.";
 }"#,
@@ -467,7 +467,7 @@ pub mod ffi {
     )]
     #[diplomat::attr(
         nanobind,
-        include(
+        custom_extra_code(
             source = r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#,
             location = "init_block"
         )
