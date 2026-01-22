@@ -10,7 +10,8 @@ void add_RenamedMyIndexer_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::RenamedMyIndexer>(mod, "RenamedMyIndexer", nb::type_slots(somelib_ns_RenamedMyIndexer_slots))
+    nb::class_<somelib::ns::RenamedMyIndexer> opaque(mod, "RenamedMyIndexer", nb::type_slots(somelib_ns_RenamedMyIndexer_slots));
+    opaque
         .def("__getitem__", [](somelib::ns::RenamedMyIndexer* self, size_t index) {
                 auto out = self->operator[] (index);
                 if (!out.has_value()) {

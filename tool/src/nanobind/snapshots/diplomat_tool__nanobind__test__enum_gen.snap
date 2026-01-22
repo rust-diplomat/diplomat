@@ -4,7 +4,8 @@ expression: enum_gen
 ---
 nb::class_<mylib::SpeedSetting> e_class(mod, "SpeedSetting");
 
-    nb::enum_<mylib::SpeedSetting::Value>(e_class, "SpeedSetting")
+    nb::enum_<mylib::SpeedSetting::Value> enumerator(e_class, "SpeedSetting");
+    enumerator
         .value("Fast", mylib::SpeedSetting::Fast)
         .value("Medium", mylib::SpeedSetting::Medium)
         .value("Slow", mylib::SpeedSetting::Slow)

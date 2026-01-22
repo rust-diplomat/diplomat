@@ -12,7 +12,8 @@ void add_AttrOpaque1Renamed_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::AttrOpaque1Renamed>(mod, "AttrOpaque1Renamed", nb::type_slots(somelib_ns_AttrOpaque1Renamed_slots))
+    nb::class_<somelib::ns::AttrOpaque1Renamed> opaque(mod, "AttrOpaque1Renamed", nb::type_slots(somelib_ns_AttrOpaque1Renamed_slots));
+    opaque
         .def_prop_ro("abirenamed", &somelib::ns::AttrOpaque1Renamed::abirenamed)
         .def_static("hello", &somelib::ns::AttrOpaque1Renamed::hello)
         .def_static("mac_test", &somelib::ns::AttrOpaque1Renamed::mac_test)

@@ -59,6 +59,7 @@ Method {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
+                custom_extra_code: {},
             },
         },
     ),
@@ -117,6 +118,7 @@ Method {
                 },
                 generate_mocking_interface: false,
                 abi_compatible: false,
+                custom_extra_code: {},
             },
         },
     ],
@@ -148,5 +150,6 @@ Method {
         },
         generate_mocking_interface: false,
         abi_compatible: false,
+        custom_extra_code: {},
     },
 }

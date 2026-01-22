@@ -10,7 +10,8 @@ void add_Float64VecError_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Float64VecError>(mod, "Float64VecError", nb::type_slots(somelib_Float64VecError_slots))
+    nb::class_<somelib::Float64VecError> opaque(mod, "Float64VecError", nb::type_slots(somelib_Float64VecError_slots));
+    opaque
         .def("__getitem__", [](somelib::Float64VecError* self, size_t index) {
                 auto out = self->operator[] (index);if (!out.is_ok()) {
                     auto errorPyV = nb::cast(std::move(std::move(out).err().value()));

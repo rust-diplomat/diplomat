@@ -6,7 +6,8 @@
 
 namespace somelib {
 void add_CallbackWrapper_binding(nb::module_ mod) {
-    nb::class_<somelib::CallbackWrapper>(mod, "CallbackWrapper")
+    nb::class_<somelib::CallbackWrapper> st(mod, "CallbackWrapper");
+    st
         .def(nb::init<>())
         .def(nb::init<bool>(), "cant_be_empty"_a.none())
         .def_rw("cant_be_empty", &somelib::CallbackWrapper::cant_be_empty)

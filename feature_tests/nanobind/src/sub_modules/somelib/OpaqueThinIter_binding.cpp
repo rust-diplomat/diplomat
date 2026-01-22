@@ -10,7 +10,8 @@ void add_OpaqueThinIter_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::OpaqueThinIter>(mod, "OpaqueThinIter", nb::type_slots(somelib_OpaqueThinIter_slots))
+    nb::class_<somelib::OpaqueThinIter> opaque(mod, "OpaqueThinIter", nb::type_slots(somelib_OpaqueThinIter_slots));
+    opaque
         .def("__next__", [](somelib::OpaqueThinIter& self){
                 auto next = self.next();
                 if (!next) {

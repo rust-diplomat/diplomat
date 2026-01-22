@@ -10,7 +10,8 @@ void add_Bar_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::Bar>(mod, "Bar", nb::type_slots(somelib_Bar_slots))
+    nb::class_<somelib::Bar> opaque(mod, "Bar", nb::type_slots(somelib_Bar_slots));
+    opaque
         .def_prop_ro("foo", &somelib::Bar::foo);
 }
 

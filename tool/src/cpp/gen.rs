@@ -2,6 +2,8 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::ItemGenContext as CItemGenContext;
+use crate::config;
+use crate::read_custom_binding;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
@@ -87,8 +89,8 @@ pub(crate) struct FuncImplTemplate<'a> {
 /// Context for generating a particular type's header
 pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
     pub formatter: &'ccx Cpp2Formatter<'tcx>,
-    #[allow(dead_code)] // Currently unused but could be in the future
-    pub config: &'ccx super::CppConfig,
+    /// Use instead of CppConfig to allow access to SharedConfig.
+    pub config: &'ccx config::Config,
     pub errors: &'ccx ErrorStore<'tcx, String>,
     pub c: CItemGenContext<'ccx, 'tcx, 'header>,
     pub impl_header: &'header mut Header<'ccx>,
@@ -148,6 +150,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .or(found_zero)
             .unwrap_or(ty.variants.first().unwrap());
 
+        let extra_def_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         let default_variant = self.formatter.fmt_enum_variant(default_variant);
         #[derive(Template)]
         #[template(path = "cpp/enum_decl.h.jinja", escape = "none")]
@@ -163,6 +175,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -177,9 +190,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
             default_variant,
+            extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
+
+        let extra_impl_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
 
         #[derive(Template)]
         #[template(path = "cpp/enum_impl.h.jinja", escape = "none")]
@@ -191,6 +215,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
+            extra_impl_code: String,
         }
 
         ImplTemplate {
@@ -201,6 +226,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
+            extra_impl_code,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -224,6 +250,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
+        let extra_def_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "cpp/opaque_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
@@ -237,6 +273,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header: C2Header,
             docs: &'a str,
             deprecated: Option<&'a str>,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -250,9 +287,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header,
             docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
+            extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
+
+        let extra_impl_code = if let Some(s) = ty
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
 
         #[derive(Template)]
         #[template(path = "cpp/opaque_impl.h.jinja", escape = "none")]
@@ -265,6 +313,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
+            extra_impl_code: String,
         }
 
         ImplTemplate {
@@ -276,6 +325,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
+            extra_impl_code,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -318,6 +368,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
+        let extra_def_code = if let Some(s) = def
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::DefBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         #[derive(Template)]
         #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
@@ -333,6 +393,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             is_sliceable: bool,
             docs: &'a str,
             deprecated: Option<&'a str>,
+            extra_def_code: String,
         }
 
         DeclTemplate {
@@ -348,9 +409,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             is_sliceable: def.attrs.abi_compatible,
             docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
+            extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
+
+        let extra_impl_code = if let Some(s) = def
+            .attrs
+            .custom_extra_code
+            .get(&hir::IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
 
         #[derive(Template)]
         #[template(path = "cpp/struct_impl.h.jinja", escape = "none")]
@@ -364,6 +436,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
+            extra_impl_code: String,
         }
 
         ImplTemplate {
@@ -376,6 +449,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             c_header: c_impl_header,
+            extra_impl_code,
         }
         .render_into(self.impl_header)
         .unwrap();

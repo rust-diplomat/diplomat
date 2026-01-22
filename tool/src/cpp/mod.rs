@@ -53,6 +53,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
 }
@@ -83,20 +84,22 @@ pub(crate) fn run<'tcx>(
     files.add_file("diplomat_runtime.hpp".into(), runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
-        if ty.attrs().disable {
+        let ty_attrs = ty.attrs();
+        if ty_attrs.disable {
             // Skip type if disabled
             continue;
         }
         let type_name_unnamespaced = formatter.fmt_type_name(id);
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+
         let impl_header_path = formatter.fmt_impl_header_path(id.into());
         let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
 
         let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
-            config: &config.cpp_config,
+            config,
             c: crate::c::ItemGenContext {
                 tcx,
                 formatter: &formatter.c,
@@ -156,7 +159,7 @@ pub(crate) fn run<'tcx>(
             let mut ty_context = ItemGenContext {
                 formatter: &formatter,
                 errors: &errors,
-                config: &config.cpp_config,
+                config,
                 c: crate::c::ItemGenContext {
                     tcx,
                     formatter: &formatter.c,
@@ -238,7 +241,7 @@ mod test {
             let mut ty_gen_cx = ItemGenContext {
                 errors: &error_store,
                 formatter: &formatter,
-                config: &config.cpp_config,
+                config: &config,
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
                     formatter: &formatter.c,

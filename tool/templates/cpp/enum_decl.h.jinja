@@ -37,6 +37,9 @@ public:
     inline static {{type_name}} FromFFI({{ctype}} c_enum);
 private:
     Value value;
+{% if !extra_def_code.is_empty() %}
+{{ extra_def_code }}
+{% endif -%}
 };
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}

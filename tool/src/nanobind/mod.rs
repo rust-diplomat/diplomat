@@ -51,6 +51,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.custom_bindings = true;
 
     a
 }
@@ -119,6 +120,7 @@ pub(crate) fn run<'cx>(
         let mut context = ItemGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &conf,
             cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx,
@@ -128,7 +130,7 @@ pub(crate) fn run<'cx>(
                     impl_header_path: &cpp_impl_path,
                     is_for_cpp: false,
                 },
-                config: &conf.cpp_config,
+                config: &conf,
                 formatter: &formatter.cxx,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
@@ -182,12 +184,14 @@ pub(crate) fn run<'cx>(
             body,
             binding_prefix,
         };
+
         files.add_file(binding_impl_path, binding_impl.to_string());
     }
 
     let mut ty_context = ItemGenContext {
         formatter: &formatter,
         errors: &errors,
+        config: &conf,
         cpp: crate::cpp::ItemGenContext {
             c: crate::c::ItemGenContext {
                 tcx,
@@ -197,7 +201,7 @@ pub(crate) fn run<'cx>(
                 decl_header_path: "",
                 impl_header_path: "",
             },
-            config: &conf.cpp_config,
+            config: &conf,
             errors: &errors,
             formatter: &formatter.cxx,
             impl_header: &mut Header::default(),
@@ -383,6 +387,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config,
             cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
@@ -394,7 +399,7 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                config: &config.cpp_config,
+                config: &config,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,
@@ -461,6 +466,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config,
             cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
@@ -471,7 +477,7 @@ mod test {
                     impl_header_path: &impl_file_path,
                 },
                 formatter: &formatter.cxx,
-                config: &config.cpp_config,
+                config: &config,
                 errors: &errors,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
@@ -538,6 +544,7 @@ mod test {
         let mut context = crate::nanobind::ItemGenContext {
             formatter: &formatter,
             errors: &errors,
+            config: &config,
             cpp: crate::cpp::ItemGenContext {
                 c: crate::c::ItemGenContext {
                     tcx: &tcx,
@@ -549,7 +556,7 @@ mod test {
                 },
                 formatter: &formatter.cxx,
                 errors: &errors,
-                config: &config.cpp_config,
+                config: &config,
                 impl_header: &mut crate::cpp::Header::default(),
                 decl_header: &mut crate::cpp::Header::default(),
                 generating_struct_fields: false,

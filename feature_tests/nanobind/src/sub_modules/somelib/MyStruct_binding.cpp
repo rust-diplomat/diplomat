@@ -6,7 +6,8 @@
 
 namespace somelib {
 void add_MyStruct_binding(nb::module_ mod) {
-    nb::class_<somelib::MyStruct>(mod, "MyStruct")
+    nb::class_<somelib::MyStruct> st(mod, "MyStruct");
+    st
         .def_rw("a", &somelib::MyStruct::a)
         .def_rw("b", &somelib::MyStruct::b)
         .def_rw("c", &somelib::MyStruct::c)

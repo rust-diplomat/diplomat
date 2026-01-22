@@ -12,7 +12,8 @@ void add_BigStructWithStuff_binding(nb::module_ mod) {
     // bind_vector solves this issue by exposing std::vector<somelib::BigStructWithStuff> as a type that will exist inside of C++, with functions to access its memory from Python.
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::BigStructWithStuff>>(mod, "BigStructWithStuffSlice"); 
-    nb::class_<somelib::BigStructWithStuff>(mod, "BigStructWithStuff")
+    nb::class_<somelib::BigStructWithStuff> st(mod, "BigStructWithStuff");
+    st
         .def(nb::init<>())
         .def(nb::init<uint8_t, uint16_t, uint16_t, somelib::ScalarPairWithPadding, uint8_t>(), "first"_a.none(),  "second"_a.none(),  "third"_a.none(),  "fourth"_a.none(),  "fifth"_a.none())
         .def_rw("first", &somelib::BigStructWithStuff::first)

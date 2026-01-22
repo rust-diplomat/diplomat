@@ -23,4 +23,8 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
 }
 {%- endif %}
 
+{#+ -#}
 
+{% if !extra_impl_code.is_empty() %}
+{{ extra_impl_code }}
+{% endif -%}

@@ -19,3 +19,7 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
 
 {% include "function_defs/method_impl.h.jinja" %}
 {%- endfor %}
+
+{%- if !extra_impl_code.is_empty() %}
+{{ extra_impl_code }}
+{% endif -%}

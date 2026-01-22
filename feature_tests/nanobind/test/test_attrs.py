@@ -46,3 +46,5 @@ def test_attrs():
 
     assert somelib.ns.RenamedOpaqueArithmetic.make(0, 1).x() == 0
     assert somelib.ns.RenamedOpaqueArithmetic.make(0.5, 1.0).x() == 2
+    assert somelib.ns.RenamedStringList.return_new() == ["Test!", 'T', 'e', 's', 't', '!']
+    assert somelib.ns.RenamedBlockOverride.special_function() == "This is a custom binding."
