@@ -28,6 +28,7 @@
     - [Stringifiers](attrs/stringifiers.md)
     - [Slices](attrs/slices.md)
     - [References](attrs/references.md)
+    - [Custom Extra Code](attrs/custom_extra_code.md)
   - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)
 - [demo_gen](demo_gen/intro.md)
