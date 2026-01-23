@@ -1322,8 +1322,8 @@ pub struct BasicAttributeValidator {
     /// override is_name_value()
     #[allow(clippy::type_complexity)] // dyn fn is not that complex
     pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
-    /// The features supported
-    pub features_supported: Option<HashSet<String>>,
+    /// The features enabled. If `None`, all features are enabled.
+    pub features_enabled: Option<HashSet<String>>,
 }
 
 impl BasicAttributeValidator {
@@ -1418,7 +1418,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 }
             }
         } else if name == "feature" {
-            if let Some(h) = &self.features_supported {
+            if let Some(h) = &self.features_enabled {
                 h.contains(value)
             } else {
                 true
