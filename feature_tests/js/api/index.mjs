@@ -2,6 +2,8 @@
 
 export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
 
+export { RenamedFeatureTest } from "./RenamedFeatureTest.mjs"
+
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
 export { RenamedTestMacroStruct } from "./RenamedTestMacroStruct.mjs"
