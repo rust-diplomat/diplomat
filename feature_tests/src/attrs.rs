@@ -131,7 +131,7 @@ pub mod ffi {
     pub struct Nested2;
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = comparators), disable)]
+    #[diplomat::cfg(supports = comparators)]
     pub struct Comparable(u8);
 
     impl Comparable {
@@ -145,11 +145,11 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = indexing), disable)]
+    #[diplomat::cfg(supports = indexing)]
     pub struct MyIndexer(Vec<String>);
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     pub struct MyIterable(Vec<u8>);
 
     impl MyIterable {
@@ -162,14 +162,14 @@ pub mod ffi {
             Box::new(MyIterator(self.0.iter()))
         }
         #[diplomat::attr(nanobind, rename = "__len__")]
-        #[diplomat::attr(not(nanobind), disable)]
+        #[diplomat::cfg(nanobind)]
         pub fn len(&self) -> usize {
             self.0.len()
         }
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
     impl<'a> MyIterator<'a> {
         #[diplomat::attr(auto, iterator)]
@@ -186,7 +186,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
     impl OpaqueIterable {
@@ -202,7 +202,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
     impl<'a> OpaqueIterator<'a> {
         #[diplomat::attr(auto, iterator)]
@@ -212,7 +212,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     struct OpaqueRefIterable(Vec<AttrOpaque1>);
 
     impl OpaqueRefIterable {
@@ -228,7 +228,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = iterators), disable)]
+    #[diplomat::cfg(supports = iterators)]
     struct OpaqueRefIterator<'a>(std::slice::Iter<'a, AttrOpaque1>);
     impl<'a> OpaqueRefIterator<'a> {
         #[diplomat::attr(auto, iterator)]
@@ -238,7 +238,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = arithmetic), disable)]
+    #[diplomat::cfg(supports = arithmetic)]
     pub(crate) struct OpaqueArithmetic {
         x: i32,
         y: i32,
@@ -411,7 +411,7 @@ pub mod ffi {
 
     /// Testing support for List[str] in Nanobind
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = custom_bindings), disable)]
+    #[diplomat::cfg(supports = custom_bindings)]
     #[diplomat::attr(
         cpp,
         custom_extra_code(
@@ -446,7 +446,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(not(supports = custom_bindings), disable)]
+    #[diplomat::cfg(supports = custom_bindings)]
     #[diplomat::attr(
         any(nanobind, cpp),
         custom_extra_code(

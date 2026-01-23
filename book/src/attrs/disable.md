@@ -26,3 +26,27 @@ Here, the class `Foo` will not show up in the C++ backend. It will in the JS bac
 
 
 Currently enum variants cannot be disabled, however this is technically feasible for input-only enums and could be added if people request. It is also not possible to disable struct fields.
+
+## `#[diplomat::cfg(*)]`
+
+You can also use `cfg` to disable based on an implicit `not(*)` condition:
+
+```rs
+#[diplomat::bridge]
+mod ffi {
+    #[diplomat::opaque]
+    #[diplomat::cfg(supports = namespaces)]
+    struct Foo;
+}
+```
+
+Is equivalent to
+
+```rs
+#[diplomat::bridge]
+mod ffi {
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = namespaces), disable)]
+    struct Foo;
+}
+```

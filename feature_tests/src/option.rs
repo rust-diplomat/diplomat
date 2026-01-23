@@ -38,7 +38,7 @@ pub mod ffi {
         d: Box<OptionOpaque>,
     }
 
-    #[diplomat::attr(not(supports = option), disable)]
+    #[diplomat::cfg(supports = option)]
     #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
@@ -46,7 +46,7 @@ pub mod ffi {
         c: DiplomatOption<OptionEnum>,
     }
 
-    #[diplomat::attr(not(supports = option), disable)]
+    #[diplomat::cfg(supports = option)]
     #[derive(Debug)]
     pub struct BorrowingOptionStruct<'a> {
         a: DiplomatOption<&'a DiplomatStr>,
@@ -55,7 +55,7 @@ pub mod ffi {
     impl OptionInputStruct {
         // Specifically test the Dart default constructor generation code
         // around Options
-        #[diplomat::attr(not(dart), disable)]
+        #[diplomat::cfg(dart)]
         #[diplomat::attr(auto, constructor)]
         pub fn default_ctor() -> Self {
             Self {
@@ -64,7 +64,7 @@ pub mod ffi {
                 c: None.into(),
             }
         }
-        #[diplomat::attr(not(kotlin), disable)]
+        #[diplomat::cfg(kotlin)]
         /// Needed until https://github.com/rust-diplomat/diplomat/issues/1001 is fixed
         pub fn new_from_parts(
             a: Option<u8>,
@@ -79,7 +79,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(not(supports = option), disable)]
+    #[diplomat::cfg(supports = option)]
     #[derive(Debug, PartialEq, Eq)]
     pub enum OptionEnum {
         Foo,
@@ -151,24 +151,24 @@ pub mod ffi {
             arg.is_some()
         }
 
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn accepts_option_u8(arg: Option<u8>, sentinel: u8) -> Option<u8> {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
 
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn accepts_option_enum(arg: Option<OptionEnum>, sentinel: u8) -> Option<OptionEnum> {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
 
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn accepts_borrowing_option_struct(arg: BorrowingOptionStruct) {
             assert_eq!(arg.a.into_option(), Some("test string".as_bytes()));
         }
 
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn accepts_multiple_option_enum(
             sentinel1: u8,
             arg1: Option<OptionEnum>,
@@ -183,7 +183,7 @@ pub mod ffi {
             arg3
         }
 
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,
             sentinel: u8,
@@ -191,7 +191,7 @@ pub mod ffi {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg
         }
-        #[diplomat::attr(not(supports = option), disable)]
+        #[diplomat::cfg(supports = option)]
         pub fn returns_option_input_struct() -> OptionInputStruct {
             OptionInputStruct {
                 a: Some(6).into(),

@@ -53,7 +53,7 @@ pub mod ffi {
     struct Float64Vec(Vec<f64>);
 
     impl Float64Vec {
-        #[diplomat::attr(not(supports = memory_sharing), disable)]
+        #[diplomat::cfg(supports = memory_sharing)]
         pub fn new(v: &[f64]) -> Box<Float64Vec> {
             Box::new(Self(v.to_vec()))
         }
@@ -129,11 +129,11 @@ pub mod ffi {
 
     // For testing throwing IndexError:
     #[diplomat::opaque]
-    #[diplomat::attr(not(nanobind), disable)]
+    #[diplomat::cfg(nanobind)]
     struct Float64VecError(Vec<f64>);
 
     impl Float64VecError {
-        #[diplomat::attr(not(supports = memory_sharing), disable)]
+        #[diplomat::cfg(supports = memory_sharing)]
         pub fn new(v: &[f64]) -> Box<Float64VecError> {
             Box::new(Self(v.to_vec()))
         }
