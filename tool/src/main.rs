@@ -35,6 +35,11 @@ struct Opt {
     #[arg(long, value_parser, action=clap::ArgAction::Append)]
     config: Vec<String>,
 
+    /// What features (`#[diplomat::attr(feature=)]`) are supported.
+    /// Backend-specific configs set elsewhere can override this.
+    #[arg(long, value_parser, action=clap::ArgAction::Append)]
+    features_enabled: Vec<String>,
+
     #[clap(short = 's', long)]
     silent: bool,
 }
@@ -53,6 +58,8 @@ fn main() -> std::io::Result<()> {
 
     // Read CLI:
     config.read_cli_settings(opt.config);
+
+    config.shared_config.features_enabled = opt.features_enabled.iter().cloned().collect();
 
     // -- Config Parsing --
 

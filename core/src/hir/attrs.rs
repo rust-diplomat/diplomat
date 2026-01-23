@@ -1,6 +1,6 @@
 //! #[diplomat::attr] and other attributes
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
@@ -1322,6 +1322,8 @@ pub struct BasicAttributeValidator {
     /// override is_name_value()
     #[allow(clippy::type_complexity)] // dyn fn is not that complex
     pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
+    /// The features enabled.
+    pub features_enabled: HashSet<String>,
 }
 
 impl BasicAttributeValidator {
@@ -1415,6 +1417,8 @@ impl AttributeValidator for BasicAttributeValidator {
                     )))
                 }
             }
+        } else if name == "feature" {
+            self.features_enabled.contains(value)
         } else if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {

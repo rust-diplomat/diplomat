@@ -473,4 +473,8 @@ pub mod ffi {
         )
     )]
     pub struct BlockOverride();
+
+    // C++ will not generate this, since it has all features disabled by default (see lib.rs)
+    #[diplomat::attr(not(feature=some_feature), disable)]
+    pub struct FeatureTest();
 }

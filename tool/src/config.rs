@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     str,
 };
@@ -23,6 +23,8 @@ pub struct SharedConfig {
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
     pub custom_extra_code_location: PathBuf,
+    /// List of features to enable/disable generation for.
+    pub features_enabled: HashSet<String>,
 }
 
 impl SharedConfig {
@@ -30,7 +32,13 @@ impl SharedConfig {
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks")
+        matches!(
+            name.as_str(),
+            "lib_name"
+                | "unsafe_references_in_callbacks"
+                | "custom_extra_code_location"
+                | "features_enabled"
+        )
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
@@ -55,6 +63,33 @@ impl SharedConfig {
                 } else {
                     panic!("Config key `custom_extra_code_location` must be a string");
                 }
+            }
+            "features_enabled" => {
+                let hash_set = match &value {
+                    Value::Array(arr) => {
+                        let str_arr : HashSet<String> = arr.iter().map(|v| {
+                            let st = v.as_str().unwrap_or_else(|| panic!("Expected features_enabled=[] to be an array of strings. Got {v:?}"));
+                            st.to_string()
+                        }).collect();
+                        str_arr
+                    }
+                    Value::Table(t) if t.len() == 1 => t.keys().cloned().collect(),
+                    Value::String(st) => {
+                        // Serde Toml has screwed up reading an array:
+                        if st.starts_with("[") && st.ends_with("]") {
+                            let slice = &st[1..st.len() - 1];
+                            let hash = slice
+                                .split(",")
+                                .map(|s| s.replace("\"", "").trim().to_string())
+                                .collect();
+                            hash
+                        } else {
+                            HashSet::from([st.clone()])
+                        }
+                    }
+                    _ => panic!("Config key `features_enabled` must be an array or string."),
+                };
+                self.features_enabled = hash_set;
             }
             _ => (),
         }
