@@ -38,12 +38,12 @@ struct Opt {
     /// What features (`#[diplomat::attr(feature=)]`) are supported. If not set, assumed to be all features.
     /// Backend-specific configs set elsewhere can override this.
     #[arg(long, value_parser, action=clap::ArgAction::Append)]
-    features_enabled : Option<Vec<String>>,
+    features_enabled: Option<Vec<String>>,
 
     /// Explicitly enable all features. Overrides features_enabled.
     /// Backend-specific configs set elsewhere can override this.
     #[arg(long, value_parser)]
-    all_features_enabled : bool,
+    all_features_enabled: bool,
 
     #[clap(short = 's', long)]
     silent: bool,

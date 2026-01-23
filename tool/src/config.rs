@@ -23,8 +23,8 @@ pub struct SharedConfig {
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
     pub custom_extra_code_location: PathBuf,
-    /// List of features to enable/disable generation for. If `None`, all features are enabled. 
-    pub features_enabled : Option<HashSet<String>>,
+    /// List of features to enable/disable generation for. If `None`, all features are enabled.
+    pub features_enabled: Option<HashSet<String>>,
 }
 
 impl SharedConfig {
@@ -32,7 +32,13 @@ impl SharedConfig {
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks" | "custom_extra_code_location" | "features_enabled")
+        matches!(
+            name.as_str(),
+            "lib_name"
+                | "unsafe_references_in_callbacks"
+                | "custom_extra_code_location"
+                | "features_enabled"
+        )
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
@@ -58,9 +64,9 @@ impl SharedConfig {
                     panic!("Config key `custom_extra_code_location` must be a string");
                 }
             }
-            "features_enabled" => { 
+            "features_enabled" => {
                 let hash_set = match value {
-                    Value::Array(ref arr) => { 
+                    Value::Array(ref arr) => {
                         let str_arr : HashSet<String> = arr.iter().map(|v| {
                             let st = v.as_str().expect(&format!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
                             st.to_string()
@@ -74,11 +80,10 @@ impl SharedConfig {
                             Some(HashSet::new())
                         }
                     }
-                    Value::String(st) => {
-                        Some(HashSet::from([st]))
-                    }
-                    _ => panic!("Config key `features_enabled` must be an array, boolean, or string.")
-
+                    Value::String(st) => Some(HashSet::from([st])),
+                    _ => panic!(
+                        "Config key `features_enabled` must be an array, boolean, or string."
+                    ),
                 };
                 self.features_enabled = hash_set;
             }
