@@ -65,15 +65,29 @@ impl SharedConfig {
                 }
             }
             "features_enabled" => {
-                let hash_set = match value {
-                    Value::Array(ref arr) => {
+                let hash_set = match &value {
+                    Value::Array(arr) => {
                         let str_arr : HashSet<String> = arr.iter().map(|v| {
-                            let st = v.as_str().unwrap_or_else(|| panic!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
+                            let st = v.as_str().unwrap_or_else(|| panic!("Expected features_enabled=[] to be an array of strings. Got {v:?}"));
                             st.to_string()
                         }).collect();
                         str_arr
                     }
-                    Value::String(st) => HashSet::from([st]),
+                    Value::Table(t) if t.len() == 1 => {
+                        t.keys().cloned().collect()
+                    }
+                    Value::String(st) => {
+                        // Serde Toml has screwed up reading an array:
+                        if st.starts_with("[") && st.ends_with("]") {
+                            let slice = &st[1..st.len() - 1];
+                            let hash = slice.split(",").map(|s| {
+                                s.replace("\"", "").replace(" ", "").to_string()
+                            }).collect();
+                            hash
+                        } else {
+                            HashSet::from([st.clone()])
+                        }
+                    },
                     _ => panic!(
                         "Config key `features_enabled` must be an array or string."
                     ),

@@ -31,5 +31,6 @@ pub mod traits;
 #[diplomat::config(demo_gen.lib_name = somelib)]
 #[diplomat::config(cpp.lib_name = somelib)]
 // Disable all Diplomat features in C++ for testing generation:
-#[diplomat::config(cpp.features_enabled=[])]
+#[diplomat::config(cpp.features_enabled=["some_feature", "other_feature"])]
+#[diplomat::config(js.features_enabled=["some_feature"])]
 struct KotlinConfig;
