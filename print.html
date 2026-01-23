@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c320c467.js";
+            window.path_to_searchindex_js = "searchindex-1ae1f8d0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-888d0b20.js"></script>
@@ -869,6 +869,23 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <p>Here, the class <code>Foo</code> will not show up in the C++ backend. It will in the JS backend, however it will not have the function <code>bar()</code>.</p>
 <p>Currently enum variants cannot be disabled, however this is technically feasible for input-only enums and could be added if people request. It is also not possible to disable struct fields.</p>
+<h2 id="diplomatcfg"><a class="header" href="#diplomatcfg"><code>#[diplomat::cfg(*)]</code></a></h2>
+<p>You can also use <code>cfg</code> to disable based on an implicit <code>not(*)</code> condition:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    #[diplomat::opaque]
+    #[diplomat::cfg(supports = namespaces)]
+    struct Foo;
+}
+</code></pre>
+<p>Is equivalent to</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = namespaces), disable)]
+    struct Foo;
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="renaming-apis"><a class="header" href="#renaming-apis">Renaming APIs</a></h1>
 <p>(Supported by all backends)</p>
