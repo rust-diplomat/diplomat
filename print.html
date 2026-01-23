@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1ae1f8d0.js";
+            window.path_to_searchindex_js = "searchindex-a09cf4c9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-888d0b20.js"></script>
+        <script src="toc-6f7925f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -885,6 +885,22 @@ mod ffi {
     #[diplomat::attr(not(supports = namespaces), disable)]
     struct Foo;
 }
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="feature-gates"><a class="header" href="#feature-gates">Feature Gates</a></h1>
+<p>Diplomat supports selectively disabling bindings based on a list of features. These features are separate from Cargo features. Enabled features can be specified through <a href="#configuring-diplomat">config</a>, and are NOT tied into <code>Cargo.toml</code> features in any way.</p>
+<p>So:</p>
+<pre><code class="language-rs">#[diplomat::attr(not(feature=some_feature), disable)]
+mod ffi {}
+</code></pre>
+<p>Will only appear for backends which have <code>some_feature</code> enabled. You can do this through the config <code>features_enabled</code>:</p>
+<pre><code class="language-rs">#[diplomat::config(features_enabled=["this_feature", "some_feature"])]
+struct Config;
+</code></pre>
+<p>Which will cause anything tagged with <code>some_feature</code> to generate across all backends.</p>
+<h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
+<p>You can set a list of features that all backends can use (backend-specific configs can override this):</p>
+<pre><code>diplomat_tool cpp . --features-enabled=some,comma,separated,list
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="renaming-apis"><a class="header" href="#renaming-apis">Renaming APIs</a></h1>

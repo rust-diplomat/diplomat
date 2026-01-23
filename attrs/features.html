@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Namespacing - The Diplomat Book</title>
+        <title>Feature Gates - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -174,35 +174,31 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="namespacing"><a class="header" href="#namespacing">Namespacing</a></h1>
-<p>(Supported by <code>cpp</code>, queried with <code>supports = namespacing</code>)</p>
-<p>This attribute can be applied on types and on bridge modules (applying to all types in the module).
-It allows code to be organized under one or more namespaces.</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::bridge]
-#[diplomat::attr(auto, namespace = "mylib")]
-mod ffi {
-    #[diplomat::opaque]
-    struct Foo;
-
-    #[diplomat::opaque]
-    struct Bar;
-}
-<span class="boring">}</span></code></pre>
-<p>Here, in C++ <code>Foo</code> and <code>Bar</code> will both be available as <code>mylib::Foo</code> and <code>mylib::Bar</code>.</p>
-<p>Nested namespaces are technically supported using things like <code>mylib::mymodule</code>, however they’re not tested and support is brittle, so use at your own risk (<a href="https://github.com/rust-diplomat/diplomat/issues/591">#591</a>).</p>
-<p>There is some discussion over separating the concept of a namespace and a library in <a href="https://github.com/rust-diplomat/diplomat/issues/589">#589</a>.</p>
+                        <h1 id="feature-gates"><a class="header" href="#feature-gates">Feature Gates</a></h1>
+<p>Diplomat supports selectively disabling bindings based on a list of features. These features are separate from Cargo features. Enabled features can be specified through <a href="../config.html">config</a>, and are NOT tied into <code>Cargo.toml</code> features in any way.</p>
+<p>So:</p>
+<pre><code class="language-rs">#[diplomat::attr(not(feature=some_feature), disable)]
+mod ffi {}
+</code></pre>
+<p>Will only appear for backends which have <code>some_feature</code> enabled. You can do this through the config <code>features_enabled</code>:</p>
+<pre><code class="language-rs">#[diplomat::config(features_enabled=["this_feature", "some_feature"])]
+struct Config;
+</code></pre>
+<p>Which will cause anything tagged with <code>some_feature</code> to generate across all backends.</p>
+<h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
+<p>You can set a list of features that all backends can use (backend-specific configs can override this):</p>
+<pre><code>diplomat_tool cpp . --features-enabled=some,comma,separated,list
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../attrs/rename.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/disable.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../attrs/constructors.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../attrs/rename.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -212,11 +208,11 @@ mod ffi {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../attrs/rename.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/disable.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../attrs/constructors.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../attrs/rename.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
