@@ -1,6 +1,6 @@
 //! #[diplomat::attr] and other attributes
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
@@ -1250,6 +1250,10 @@ pub trait AttributeValidator {
     /// What backedn attrs does this support?
     fn attrs_supported(&self) -> BackendAttrSupport;
 
+    /// What features does this validator support? Should be `None` if it supports all features.
+    /// FIXME: Intended to be used during validation, but the validator needs access to #[cfg] attributes to do this (copy from AST?)
+    fn features_supported(&self) -> Option<HashSet<String>>;
+
     /// Provided, checks if type satisfies a `DiplomatBackendAttrCfg`
     ///
     /// auto_found helps check for `auto`, which is only allowed within `any` and at the top level. When `None`,
@@ -1322,6 +1326,8 @@ pub struct BasicAttributeValidator {
     /// override is_name_value()
     #[allow(clippy::type_complexity)] // dyn fn is not that complex
     pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
+    /// The features supported
+    pub features_supported : Option<HashSet<String>>,
 }
 
 impl BasicAttributeValidator {
@@ -1415,6 +1421,8 @@ impl AttributeValidator for BasicAttributeValidator {
                     )))
                 }
             }
+        } else if name == "feature" {
+            self.features_supported.as_ref().is_none_or(|h| h.contains(value))
         } else if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {
@@ -1423,6 +1431,9 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
+    }
+    fn features_supported(&self) -> Option<HashSet<String>> {
+        self.features_supported.clone()
     }
 }
 
@@ -1863,6 +1874,17 @@ mod tests {
                 }
             }
 
+        }
+    }
+
+    #[test]
+    fn test_feature_support() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            #[diplomat::attr(not(feature=some_feature), disable)]
+            mod ffi {
+
+            }
         }
     }
 }
