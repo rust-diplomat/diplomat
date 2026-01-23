@@ -23,8 +23,8 @@ pub struct SharedConfig {
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
     pub custom_extra_code_location: PathBuf,
-    /// List of features to enable/disable generation for. If `None`, all features are enabled.
-    pub features_enabled: Option<HashSet<String>>,
+    /// List of features to enable/disable generation for.
+    pub features_enabled: HashSet<String>,
 }
 
 impl SharedConfig {
@@ -71,18 +71,11 @@ impl SharedConfig {
                             let st = v.as_str().unwrap_or_else(|| panic!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
                             st.to_string()
                         }).collect();
-                        Some(str_arr)
+                        str_arr
                     }
-                    Value::Boolean(b) => {
-                        if b {
-                            None
-                        } else {
-                            Some(HashSet::new())
-                        }
-                    }
-                    Value::String(st) => Some(HashSet::from([st])),
+                    Value::String(st) => HashSet::from([st]),
                     _ => panic!(
-                        "Config key `features_enabled` must be an array, boolean, or string."
+                        "Config key `features_enabled` must be an array or string."
                     ),
                 };
                 self.features_enabled = hash_set;

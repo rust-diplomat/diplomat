@@ -96,9 +96,7 @@ pub fn gen(
 
     let lowering_config = config.shared_config.lowering_config();
 
-    if let Some(e) = &config.shared_config.features_enabled {
-        attr_validator.features_enabled = Some(e.clone());
-    }
+    attr_validator.features_enabled = config.shared_config.features_enabled.clone();
 
     let tcx =
         hir::TypeContext::from_syn(&module, lowering_config, attr_validator).unwrap_or_else(|e| {
