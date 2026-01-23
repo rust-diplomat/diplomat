@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     str,
 };
@@ -23,6 +23,10 @@ pub struct SharedConfig {
     pub unsafe_references_in_callbacks: Option<bool>,
     /// The folder to pull custom bindings from. Defaults to the lib.rs folder.
     pub custom_extra_code_location: PathBuf,
+    /// List of features to enable/disable generation for. If `None`, all features are enabled. 
+    pub features_enabled : Option<HashSet<String>>,
+    /// Whether or not to warn if #[cfg(feature=...)] is detected. If `None` or `Some(false)`, warnings are not generated.
+    pub disable_feature_gate_warnings : Option<bool>,
 }
 
 impl SharedConfig {
@@ -54,6 +58,37 @@ impl SharedConfig {
                     self.custom_extra_code_location = PathBuf::from(value.as_str().unwrap())
                 } else {
                     panic!("Config key `custom_extra_code_location` must be a string");
+                }
+            }
+            "features_enabled" => { 
+                let hash_set = match value {
+                    Value::Array(ref arr) => { 
+                        let str_arr : HashSet<String> = arr.iter().map(|v| {
+                            let st = v.as_str().expect(&format!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
+                            st.to_string()
+                        }).collect();
+                        Some(str_arr)
+                    }
+                    Value::Boolean(b) => {
+                        if b {
+                            None
+                        } else {
+                            Some(HashSet::new())
+                        }
+                    }
+                    Value::String(st) => {
+                        Some(HashSet::from([st]))
+                    }
+                    _ => panic!("Config key `features_enabled` must be an array, boolean, or string.")
+
+                };
+                self.features_enabled = hash_set;
+            }
+            "disable_feature_gate_warnings" => {
+                if value.is_bool() {
+                    self.disable_feature_gate_warnings = value.as_bool()
+                } else {
+                    panic!("Config key `disable_feature_gate_warnings` must be a boolean");
                 }
             }
             _ => (),
