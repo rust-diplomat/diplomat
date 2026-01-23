@@ -519,7 +519,7 @@ impl<'ast> LoweringContext<'ast> {
 
         if !attrs.disable && !self.attr_validator.attrs_supported().free_functions {
             self.errors.push(LoweringError::Other(
-                format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::attr(not(supports = free_functions), disable)].", ast_function.item.name.as_str())
+                format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::cfg(supports = free_functions)].", ast_function.item.name.as_str())
             ));
             return Err(());
         }
@@ -1056,7 +1056,7 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(super::MaybeStatic::Static) = new_lifetime {
                     if !self.attr_validator.attrs_supported().static_slices {
                         self.errors.push(LoweringError::Other(
-                            "'static string slice types are not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]".into()
+                            "'static string slice types are not supported. Try #[diplomat::cfg(supports = static_slices)]".into()
                         ));
                     }
                 }
@@ -1075,7 +1075,7 @@ impl<'ast> LoweringContext<'ast> {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
                             self.errors.push(LoweringError::Other(
-                                format!("'static {prim:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                                format!("'static {prim:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
                     }
@@ -1114,7 +1114,7 @@ impl<'ast> LoweringContext<'ast> {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
                             self.errors.push(LoweringError::Other(
-                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
                     }
@@ -1473,7 +1473,7 @@ impl<'ast> LoweringContext<'ast> {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
                             self.errors.push(LoweringError::Other(
-                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::attr(not(supports = static_slices), disable)]")
+                                format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
                     }

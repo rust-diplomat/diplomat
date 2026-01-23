@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 mod ffi {
-    #[diplomat::attr(not(supports = "traits"), disable)]
+    #[diplomat::cfg(supports = "traits")]
     pub struct TraitTestingStruct {
         x: i32,
         y: i32,
@@ -13,7 +13,7 @@ mod ffi {
         fn test_result_output(&self) -> Result<u32, ()>;
     }
 
-    #[diplomat::attr(not(supports = "traits"), disable)]
+    #[diplomat::cfg(supports = "traits")]
     pub struct TraitWrapper {
         cant_be_empty: bool,
     }
