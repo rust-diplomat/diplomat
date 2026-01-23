@@ -25,8 +25,6 @@ pub struct SharedConfig {
     pub custom_extra_code_location: PathBuf,
     /// List of features to enable/disable generation for. If `None`, all features are enabled. 
     pub features_enabled : Option<HashSet<String>>,
-    /// Whether or not to warn if #[cfg(feature=...)] is detected. If `None` or `Some(false)`, warnings are not generated.
-    pub disable_feature_gate_warnings : Option<bool>,
 }
 
 impl SharedConfig {
@@ -34,7 +32,7 @@ impl SharedConfig {
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks" | "custom_extra_code_location" | "features_enabled" | "disable_feature_gate_warnings")
+        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks" | "custom_extra_code_location" | "features_enabled")
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
@@ -83,13 +81,6 @@ impl SharedConfig {
 
                 };
                 self.features_enabled = hash_set;
-            }
-            "disable_feature_gate_warnings" => {
-                if value.is_bool() {
-                    self.disable_feature_gate_warnings = value.as_bool()
-                } else {
-                    panic!("Config key `disable_feature_gate_warnings` must be a boolean");
-                }
             }
             _ => (),
         }
