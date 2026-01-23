@@ -1418,9 +1418,11 @@ impl AttributeValidator for BasicAttributeValidator {
                 }
             }
         } else if name == "feature" {
-            self.features_supported
-                .as_ref()
-                .is_none_or(|h| h.contains(value))
+            if let Some(h) = &self.features_supported {
+                h.contains(value)
+            } else {
+                true
+            }
         } else if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {

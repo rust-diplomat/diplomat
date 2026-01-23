@@ -68,7 +68,7 @@ impl SharedConfig {
                 let hash_set = match value {
                     Value::Array(ref arr) => {
                         let str_arr : HashSet<String> = arr.iter().map(|v| {
-                            let st = v.as_str().expect(&format!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
+                            let st = v.as_str().unwrap_or_else(|| panic!("Expected features_enabled=[] to be an array of strings. Got {value:?}"));
                             st.to_string()
                         }).collect();
                         Some(str_arr)
