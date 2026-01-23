@@ -73,24 +73,21 @@ impl SharedConfig {
                         }).collect();
                         str_arr
                     }
-                    Value::Table(t) if t.len() == 1 => {
-                        t.keys().cloned().collect()
-                    }
+                    Value::Table(t) if t.len() == 1 => t.keys().cloned().collect(),
                     Value::String(st) => {
                         // Serde Toml has screwed up reading an array:
                         if st.starts_with("[") && st.ends_with("]") {
                             let slice = &st[1..st.len() - 1];
-                            let hash = slice.split(",").map(|s| {
-                                s.replace("\"", "").replace(" ", "").to_string()
-                            }).collect();
+                            let hash = slice
+                                .split(",")
+                                .map(|s| s.replace("\"", "").replace(" ", "").to_string())
+                                .collect();
                             hash
                         } else {
                             HashSet::from([st.clone()])
                         }
-                    },
-                    _ => panic!(
-                        "Config key `features_enabled` must be an array or string."
-                    ),
+                    }
+                    _ => panic!("Config key `features_enabled` must be an array or string."),
                 };
                 self.features_enabled = hash_set;
             }
