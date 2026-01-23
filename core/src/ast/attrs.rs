@@ -60,6 +60,10 @@ impl Attrs {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
+            Attr::DiplomatCFGBackend(attr) => self.attrs.push(DiplomatBackendAttr {
+                cfg: DiplomatBackendAttrCfg::Not(Box::new(attr)),
+                meta: Meta::Path(syn::parse_quote!(disable)),
+            }),
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
             Attr::DemoBackend(attr) => self.demo_attrs.push(attr),
             Attr::Deprecated(msg) => self.deprecated = Some(msg),
@@ -119,6 +123,7 @@ impl From<&[Attribute]> for Attrs {
 enum Attr {
     Cfg(Attribute),
     DiplomatBackend(DiplomatBackendAttr),
+    DiplomatCFGBackend(DiplomatBackendAttrCfg),
     CRename(RenameAttr),
     DemoBackend(DemoBackendAttr),
     Deprecated(String),
@@ -128,6 +133,7 @@ enum Attr {
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
+    let diplomat_cfg_path : syn::Path = syn::parse_str("diplomat::cfg").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
     let deprecated: syn::Path = syn::parse_str("deprecated").unwrap();
@@ -139,6 +145,8 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
+        } else if a.path() == &diplomat_cfg_path {
+            Some(Attr::DiplomatCFGBackend(a.parse_args().expect("Failed to parse malformed diplomat::cfg")))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &demo_path {

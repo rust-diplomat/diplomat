@@ -446,6 +446,7 @@ impl AttributeInfo {
                     } else if seg == "rust_link"
                         || seg == "out"
                         || seg == "attr"
+                        || seg == "cfg"
                         || seg == "abi_rename"
                         || seg == "demo"
                     {
