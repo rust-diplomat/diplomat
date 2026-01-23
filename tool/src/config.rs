@@ -80,7 +80,7 @@ impl SharedConfig {
                             let slice = &st[1..st.len() - 1];
                             let hash = slice
                                 .split(",")
-                                .map(|s| s.replace("\"", "").replace(" ", "").to_string())
+                                .map(|s| s.replace("\"", "").trim().to_string())
                                 .collect();
                             hash
                         } else {
