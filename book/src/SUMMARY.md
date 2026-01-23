@@ -17,6 +17,7 @@
   - [ABI naming/renaming](abi.md)
   - [Customizing via attributes](attrs.md)
     - [Disabling APIs](attrs/disable.md)
+    - [Feature Gates](attrs/features.md)
     - [Renaming APIs](attrs/rename.md)
     - [Namespacing](attrs/namespace.md)
     - [Constructors](attrs/constructors.md)
