@@ -34,7 +34,7 @@ impl SharedConfig {
     pub fn overrides_shared(name: &str) -> bool {
         // Expect the first item in the iterator to be the name of the language, so we eliminate that:
         let name: String = name.split(".").skip(1).collect();
-        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks")
+        matches!(name.as_str(), "lib_name" | "unsafe_references_in_callbacks" | "custom_extra_code_location" | "features_enabled" | "disable_feature_gate_warnings")
     }
 
     pub fn set(&mut self, key: &str, value: Value) {
