@@ -54,7 +54,6 @@ part 'RenamedComparable.g.dart';
 part 'RenamedDeprecatedEnum.g.dart';
 part 'RenamedDeprecatedOpaque.g.dart';
 part 'RenamedDeprecatedStruct.g.dart';
-part 'RenamedFeatureTest.g.dart';
 part 'RenamedMyIndexer.g.dart';
 part 'RenamedMyIterable.g.dart';
 part 'RenamedMyIterator.g.dart';
