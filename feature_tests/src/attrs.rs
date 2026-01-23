@@ -473,4 +473,7 @@ pub mod ffi {
         )
     )]
     pub struct BlockOverride();
+
+    #[diplomat::attr(not(feature=some_feature), disable)]
+    pub struct FeatureTest();
 }
