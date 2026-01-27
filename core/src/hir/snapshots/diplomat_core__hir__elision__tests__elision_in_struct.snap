@@ -60,6 +60,7 @@ Method {
                 generate_mocking_interface: false,
                 abi_compatible: false,
                 custom_extra_code: {},
+                default_args: {},
             },
         },
     ),
@@ -119,7 +120,9 @@ Method {
                 generate_mocking_interface: false,
                 abi_compatible: false,
                 custom_extra_code: {},
+                default_args: {},
             },
+            default_value: None,
         },
     ],
     output: Infallible(
@@ -151,5 +154,6 @@ Method {
         generate_mocking_interface: false,
         abi_compatible: false,
         custom_extra_code: {},
+        default_args: {},
     },
 }
