@@ -3,6 +3,11 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use crate::ast::{
+    idents::{FromWithSpan, IntoWithSpan},
+    SpanLocation,
+};
+
 use super::{Attrs, Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
@@ -34,14 +39,16 @@ impl<'de> Deserialize<'de> for NamedLifetime {
     }
 }
 
-impl From<&syn::Lifetime> for NamedLifetime {
-    fn from(lt: &syn::Lifetime) -> Self {
-        Lifetime::from(lt).to_named().expect("cannot be static")
+impl FromWithSpan<&syn::Lifetime> for NamedLifetime {
+    fn spanned_from(lt: &syn::Lifetime, module_location: &SpanLocation) -> Self {
+        Lifetime::spanned_from(lt, module_location)
+            .to_named()
+            .expect("cannot be static")
     }
 }
 
-impl From<&NamedLifetime> for NamedLifetime {
-    fn from(this: &NamedLifetime) -> Self {
+impl FromWithSpan<&NamedLifetime> for NamedLifetime {
+    fn spanned_from(this: &NamedLifetime, _module_location: &SpanLocation) -> Self {
         this.clone()
     }
 }
@@ -100,15 +107,16 @@ impl LifetimeEnv {
         self_param: Option<&SelfParam>,
         params: &[Param],
         return_type: Option<&TypeName>,
+        module_location: &SpanLocation,
     ) -> Self {
         let mut this = LifetimeEnv::new();
         // The impl generics _must_ be loaded into the env first, since the method
         // generics might use lifetimes defined in the impl, and `extend_generics`
         // panics if `'a: 'b` where `'b` isn't declared by the time it finishes.
         if let Some(generics) = impl_generics {
-            this.extend_generics(generics);
+            this.extend_generics(generics, module_location);
         }
-        this.extend_generics(&method.sig.generics);
+        this.extend_generics(&method.sig.generics, module_location);
 
         if let Some(self_param) = self_param {
             this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
@@ -158,9 +166,10 @@ impl LifetimeEnv {
     pub fn from_enum_item(
         enm: &syn::ItemEnum,
         variant_fields: &[(Option<Ident>, TypeName, Docs, Attrs)],
+        module_location: &SpanLocation,
     ) -> Self {
         let mut this = LifetimeEnv::new();
-        this.extend_generics(&enm.generics);
+        this.extend_generics(&enm.generics, module_location);
         for (_, typ, _, _) in variant_fields {
             this.extend_implicit_lifetime_bounds(typ, None);
         }
@@ -173,9 +182,10 @@ impl LifetimeEnv {
     pub fn from_struct_item(
         strct: &syn::ItemStruct,
         fields: &[(Ident, TypeName, Docs, Attrs)],
+        module_location: &SpanLocation,
     ) -> Self {
         let mut this = LifetimeEnv::new();
-        this.extend_generics(&strct.generics);
+        this.extend_generics(&strct.generics, module_location);
         for (_, typ, _, _) in fields {
             this.extend_implicit_lifetime_bounds(typ, None);
         }
@@ -186,9 +196,10 @@ impl LifetimeEnv {
         f: &syn::ItemFn,
         params: &[Param],
         return_type: Option<&TypeName>,
+        module_location: &SpanLocation,
     ) -> Self {
         let mut this = LifetimeEnv::new();
-        this.extend_generics(&f.sig.generics);
+        this.extend_generics(&f.sig.generics, module_location);
         for param in params {
             this.extend_implicit_lifetime_bounds(&param.ty, None);
         }
@@ -246,7 +257,7 @@ impl LifetimeEnv {
     }
 
     /// Add the lifetimes from generic parameters and where bounds.
-    fn extend_generics(&mut self, generics: &syn::Generics) {
+    fn extend_generics(&mut self, generics: &syn::Generics, module_location: &SpanLocation) {
         let generic_bounds = generics.params.iter().map(|generic| match generic {
             syn::GenericParam::Type(_) => panic!("generic types are unsupported"),
             syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
@@ -255,7 +266,7 @@ impl LifetimeEnv {
 
         let generic_defs = generic_bounds.clone().map(|(lifetime, _)| lifetime);
 
-        self.extend_lifetimes(generic_defs);
+        self.extend_lifetimes(generic_defs, module_location);
         self.extend_bounds(generic_bounds);
 
         if let Some(ref where_clause) = generics.where_clause {
@@ -303,9 +314,9 @@ impl LifetimeEnv {
     }
 
     /// Add isolated lifetimes to the graph.
-    fn extend_lifetimes<'a, L, I>(&mut self, iter: I)
+    fn extend_lifetimes<'a, L, I>(&mut self, iter: I, module_location: &SpanLocation)
     where
-        NamedLifetime: PartialEq<L> + From<&'a L>,
+        NamedLifetime: PartialEq<L> + FromWithSpan<&'a L>,
         L: 'a,
         I: IntoIterator<Item = &'a L>,
     {
@@ -313,12 +324,12 @@ impl LifetimeEnv {
             if self.id(lifetime).is_some() {
                 panic!(
                     "lifetime name `{}` declared twice in the same scope",
-                    NamedLifetime::from(lifetime)
+                    NamedLifetime::spanned_from(lifetime, module_location)
                 );
             }
 
             self.nodes.push(LifetimeNode {
-                lifetime: lifetime.into(),
+                lifetime: lifetime.spanned_into(module_location),
                 shorter: vec![],
                 longer: vec![],
             });
@@ -337,7 +348,7 @@ impl LifetimeEnv {
     /// only ever occur when deserializing an invalid [`LifetimeEnv`].
     fn extend_bounds<'a, L, B, I>(&mut self, iter: I)
     where
-        NamedLifetime: PartialEq<L> + From<&'a L>,
+        NamedLifetime: PartialEq<L>,
         L: 'a,
         B: IntoIterator<Item = &'a L>,
         I: IntoIterator<Item = (&'a L, B)>,
@@ -427,8 +438,18 @@ impl<'de> Deserialize<'de> for LifetimeEnv {
         let m: BTreeMap<NamedLifetime, Vec<NamedLifetime>> =
             Deserialize::deserialize(deserializer)?;
 
+        let span_loc = if let Some(k) = m.keys().next() {
+            if let Some(sp) = k.0.span() {
+                sp.span_location
+            } else {
+                SpanLocation::None
+            }
+        } else {
+            SpanLocation::None
+        };
+
         let mut this = LifetimeEnv::new();
-        this.extend_lifetimes(m.keys());
+        this.extend_lifetimes(m.keys(), &span_loc);
         this.extend_bounds(m.iter());
         Ok(this)
     }
@@ -510,19 +531,21 @@ impl ToTokens for Lifetime {
     }
 }
 
-impl From<&syn::Lifetime> for Lifetime {
-    fn from(lt: &syn::Lifetime) -> Self {
+impl FromWithSpan<&syn::Lifetime> for Lifetime {
+    fn spanned_from(lt: &syn::Lifetime, module_location: &SpanLocation) -> Self {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named(NamedLifetime((&lt.ident).into()))
+            Self::Named(NamedLifetime((&lt.ident).spanned_into(module_location)))
         }
     }
 }
 
-impl From<&Option<syn::Lifetime>> for Lifetime {
-    fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(Into::into).unwrap_or(Self::Anonymous)
+impl FromWithSpan<&Option<syn::Lifetime>> for Lifetime {
+    fn spanned_from(lt: &Option<syn::Lifetime>, module_location: &SpanLocation) -> Self {
+        lt.as_ref()
+            .map(|lt| lt.spanned_into(module_location))
+            .unwrap_or(Self::Anonymous)
     }
 }
 

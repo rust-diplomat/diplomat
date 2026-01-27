@@ -64,6 +64,17 @@ pub fn gen(
         std::process::exit(1);
     }
 
+    let parent = entry.parent();
+    if parent.is_none() {
+        eprintln!(
+            "{} {}",
+            "Could not find parent of entry file:".red(),
+            entry.to_string_lossy()
+        );
+        std::process::exit(1);
+    }
+    let entry_parent = parent.unwrap();
+
     // Set the default binding location:
     if config
         .shared_config
@@ -71,10 +82,7 @@ pub fn gen(
         .as_os_str()
         .is_empty()
     {
-        config.shared_config.custom_extra_code_location = entry
-            .parent()
-            .expect("Could not get parent of lib.rs")
-            .to_path_buf();
+        config.shared_config.custom_extra_code_location = entry_parent.to_path_buf();
     }
 
     // The HIR backends used to be named "c2", "js2", etc
@@ -109,9 +117,7 @@ pub fn gen(
         .as_ref()
         .map(std::path::Path::new)
         .unwrap_or(
-            entry
-                .parent()
-                .expect("Could not get parent for entry file.")
+            entry_parent
                 .parent()
                 .expect("Could not get parent folder of entry file."),
         );
@@ -123,6 +129,7 @@ pub fn gen(
         lowering_config,
         attr_validator,
         Some(ModuleIncludeInfo::new(manifest_path, cache)),
+        &diplomat_core::ast::SpanLocation::FilePath(entry_parent.to_string_lossy().into()),
     )
     .unwrap_or_else(|e| {
         for (ctx, err) in e {

@@ -341,7 +341,7 @@ mod test {
             let mut attr_validator = hir::BasicAttributeValidator::new("python");
             attr_validator.support = crate::nanobind::attr_support();
 
-            let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
+            let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None, &diplomat_core::ast::SpanLocation::None)
             {
                 Ok(context) => context,
                 Err(e) => {

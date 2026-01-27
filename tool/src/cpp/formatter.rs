@@ -343,7 +343,13 @@ pub mod test {
         let mut attr_validator = hir::BasicAttributeValidator::new("cpp_test");
         attr_validator.support = super::super::attr_support();
 
-        match TypeContext::from_syn(&file, Default::default(), attr_validator, None) {
+        match TypeContext::from_syn(
+            &file,
+            Default::default(),
+            attr_validator,
+            None,
+            &diplomat_core::ast::SpanLocation::None,
+        ) {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {

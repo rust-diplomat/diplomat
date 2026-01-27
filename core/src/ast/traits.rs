@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use crate::ast::idents::{FromWithSpan, IntoWithSpan, SpanLocation};
+
 use super::docs::Docs;
 use super::{Attrs, Ident, LifetimeEnv, Param, PathType, TraitSelfParam, TypeName};
 
@@ -33,7 +35,7 @@ pub struct TraitMethod {
 
 impl Trait {
     /// Extract a [`Trait`] metadata value from an AST node.
-    pub fn new(trt: &syn::ItemTrait, parent_attrs: &Attrs) -> Self {
+    pub fn new(trt: &syn::ItemTrait, parent_attrs: &Attrs, module_location: &SpanLocation) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&trt.attrs);
 
@@ -41,16 +43,19 @@ impl Trait {
 
         let self_ident = &trt.ident;
         // TODO check this
-        let self_path_trait = PathType::from(&syn::TraitBound {
-            paren_token: None,
-            modifier: syn::TraitBoundModifier::None,
-            lifetimes: None, // todo this is an assumption
-            path: syn::PathSegment {
-                ident: self_ident.clone(),
-                arguments: syn::PathArguments::None,
-            }
-            .into(),
-        });
+        let self_path_trait = PathType::spanned_from(
+            &syn::TraitBound {
+                paren_token: None,
+                modifier: syn::TraitBoundModifier::None,
+                lifetimes: None, // todo this is an assumption
+                path: syn::PathSegment {
+                    ident: self_ident.clone(),
+                    arguments: syn::PathArguments::None,
+                }
+                .into(),
+            },
+            module_location,
+        );
         for trait_item in trt.items.iter() {
             if let syn::TraitItem::Fn(fct) = trait_item {
                 let mut fct_attrs = attrs.clone();
@@ -70,20 +75,20 @@ impl Trait {
                     .filter_map(|a| match a {
                         syn::FnArg::Receiver(_) => None,
                         syn::FnArg::Typed(ref t) => {
-                            Some(Param::from_syn(t, self_path_trait.clone()))
+                            Some(Param::from_syn(t, self_path_trait.clone(), module_location))
                         }
                     })
                     .collect::<Vec<_>>();
 
-                let self_param = fct
-                    .sig
-                    .receiver()
-                    .map(|rec| TraitSelfParam::from_syn(rec, self_path_trait.clone()));
+                let self_param = fct.sig.receiver().map(|rec| {
+                    TraitSelfParam::from_syn(rec, self_path_trait.clone(), module_location)
+                });
 
                 let output_type = match &fct.sig.output {
                     syn::ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
                         return_typ.as_ref(),
                         Some(self_path_trait.clone()),
+                        module_location,
                     )),
                     syn::ReturnType::Default => None,
                 };
@@ -96,8 +101,8 @@ impl Trait {
                 );
 
                 trait_fcts.push(TraitMethod {
-                    name: fct_ident.into(),
-                    abi_name: (&extern_ident).into(),
+                    name: fct_ident.spanned_into(module_location),
+                    abi_name: (&extern_ident).spanned_into(module_location),
                     self_param,
                     params: all_params,
                     output_type,
@@ -136,7 +141,7 @@ impl Trait {
         }
 
         Self {
-            name: (&trt.ident).into(),
+            name: (&trt.ident).spanned_into(module_location),
             methods: trait_fcts,
             docs: Docs::from_attrs(&trt.attrs),
             lifetimes: LifetimeEnv::from_trait(trt), // TODO

@@ -8,7 +8,7 @@
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::*;
+use syn::{spanned::Spanned, *};
 
 use diplomat_core::ast::{self, StdlibOrDiplomat};
 
@@ -492,11 +492,14 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
     let base = std::env::var("CARGO_MANIFEST_DIR")
         .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
     let base_path = std::path::Path::new(&base);
+
+    let module_loc = ast::SpanLocation::FilePath(input.span().file());
     // We do not cache:
     let module = ast::Module::from_syn(
         &input,
         true,
         Some(ast::ModuleIncludeInfo::new(base_path, None)),
+        &module_loc,
     );
     // Clean out any diplomat attributes so Rust doesn't get mad
     let _attrs = AttributeInfo::extract(&mut input.attrs);
@@ -514,7 +517,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 // are early error messages
                 for field in s.fields.iter_mut() {
                     let _attrs = AttributeInfo::extract(&mut field.attrs);
-                    let ty = ast::TypeName::from_syn(&field.ty, None);
+                    let ty = ast::TypeName::from_syn(&field.ty, None, &module_loc);
                     if !ty.is_ffi_safe() {
                         let ffisafe = ty.ffi_safe_version();
                         panic!("Found non-FFI safe type inside struct: {ty}, try {ffisafe}");
