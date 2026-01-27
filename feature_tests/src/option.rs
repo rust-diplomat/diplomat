@@ -41,7 +41,7 @@ pub mod ffi {
     #[diplomat::cfg(supports = option)]
     #[derive(Debug)]
     pub struct OptionInputStruct {
-        a: DiplomatOption<u8>,
+        a: ABC,
         b: DiplomatOption<DiplomatChar>,
         c: DiplomatOption<OptionEnum>,
     }
