@@ -210,7 +210,11 @@ impl PathType {
                     None => panic!(
                         "Could not resolve symbol {} in {}",
                         o,
-                        cur_path.elements.join("::")
+                        if let Some(sp) = elem.span() {
+                            format!("{}.rs:{}:{}", cur_path.elements[0], sp.start_line, sp.column_line)
+                        } else {
+                            cur_path.elements.join("::")
+                        }
                     ),
                 },
             }
