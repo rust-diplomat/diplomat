@@ -9,7 +9,7 @@ use super::{
     TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
-use crate::{ast, Env};
+use crate::{Env, ast};
 use core::fmt;
 use strck::IntoCk;
 
