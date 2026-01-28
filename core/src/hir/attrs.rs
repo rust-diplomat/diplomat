@@ -645,6 +645,10 @@ impl Attrs {
                             }
                         }
                         "default_args" => {
+                            if !support.default_args {
+                                maybe_error_unsupported(auto_found, "default_args", backend, errors);
+                                continue;
+                            }
                             // Note that we do not validate that the args match here.
                             
                             let list = attr.meta.require_list();
@@ -2103,6 +2107,37 @@ mod tests {
                 }
             }
 
+        }
+    }
+
+    #[test]
+    fn test_default_args() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Test;
+
+                impl Test {
+                    #[diplomat::attr(*, default_args(c=100))]
+                    pub fn test(a : i32, b : i64, c : i128) {}
+                }
+            }
+        }
+    }
+    #[test]
+    fn test_default_args_unsupport() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Test;
+
+                impl Test {
+                    #[diplomat::attr(*, default_args(c=100))]
+                    pub fn test(a : i32, b : i64, c : i128) {}
+                }
+            }
         }
     }
 }
