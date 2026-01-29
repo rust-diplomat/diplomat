@@ -15,6 +15,9 @@ def test_slices():
     assert b == "banannas"
     assert s is not b
 
+    from_owned = somelib.MyString.new_owned("This is a test string")
+    assert from_owned.borrow() == "This is a test string"
+
     c = somelib.Float64Vec.new([.1, .2, .3])
     d = somelib.Float64VecError.new([.1, .2, .3])
     
