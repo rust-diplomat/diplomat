@@ -85,7 +85,6 @@ class StructWithAttrs (var a: Boolean, var b: UInt) {
             
             val returnVal = lib.namespace_StructWithAttrs_new_fallible(a, FFIUint32(b));
             if (returnVal.isOk == 1.toByte()) {
-                
                 val returnStruct = StructWithAttrs.fromNative(returnVal.union.ok)
                 return returnStruct.ok()
             } else {

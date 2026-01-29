@@ -41,10 +41,11 @@ class OpaqueRefIterable internal constructor (
     }
     
     override fun iterator(): OpaqueRefIterator {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.namespace_OpaqueRefIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
-        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = OpaqueRefIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, OpaqueRefIterator.OpaqueRefIteratorCleaner(handle, OpaqueRefIterator.lib));

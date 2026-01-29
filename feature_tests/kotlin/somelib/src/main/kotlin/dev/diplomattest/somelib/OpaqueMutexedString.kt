@@ -48,6 +48,8 @@ class OpaqueMutexedString internal constructor (
         @JvmStatic
         
         fun borrowOther(other: OpaqueMutexedString): OpaqueMutexedString {
+            // This lifetime edge depends on lifetimes: 'a
+            val aEdges: MutableList<Any> = mutableListOf(other);
             
             val returnVal = lib.OpaqueMutexedString_borrow_other(other.handle);
             val selfEdges: List<Any> = listOf(other)
@@ -64,6 +66,8 @@ class OpaqueMutexedString internal constructor (
     }
     
     fun borrow(): OpaqueMutexedString {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueMutexedString_borrow(handle);
         val selfEdges: List<Any> = listOf(this)
@@ -73,6 +77,8 @@ class OpaqueMutexedString internal constructor (
     }
     
     fun borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this, other);
         
         val returnVal = lib.OpaqueMutexedString_borrow_self_or_other(handle, other.handle);
         val selfEdges: List<Any> = listOf(this) + listOf(other)
@@ -88,6 +94,8 @@ class OpaqueMutexedString internal constructor (
     }
     
     fun dummyStr(): String {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueMutexedString_dummy_str(handle);
             return PrimitiveArrayTools.getUtf8(returnVal)

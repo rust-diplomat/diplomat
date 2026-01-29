@@ -1,5 +1,7 @@
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
+use diplomat_core::hir::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
+};
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
@@ -289,6 +291,20 @@ struct ItemGenContext<'a, 'cx> {
     errors: &'a ErrorStore<'cx, String>,
     callback_params: &'a mut Vec<CallbackParamInfo>,
     use_finalizers_not_cleaners: bool,
+}
+
+/// Format a `val aEdges = mutableListOf(..)` edges array initializer
+fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
+    let param_name = &edge.param_name;
+    match edge.kind {
+        // Opaque parameters are just retained as edges
+        LifetimeEdgeKind::OpaqueParam => Some(param_name.into()),
+        // Slice parameters make an arena which is retained as an edge
+        LifetimeEdgeKind::SliceParam => Some(format!("{param_name}TODO").into()),
+        // This is handled via append arrays
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => None,
+        _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
+    }
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
@@ -845,7 +861,7 @@ val intermediateOption = {val_name}.option() ?: return null
     fn gen_return_conversion<'d>(
         &'d self,
         method: &'d Method,
-        method_lifetimes_map: MethodLtMap<'d>,
+        method_lifetimes_map: &MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
     ) -> String {
         match &method.output {
@@ -1216,7 +1232,7 @@ returnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
+            .gen_return_conversion(method, &method_lifetimes_map, cleanups.as_ref())
             .into();
 
         // this should only be called in the special method generation below
@@ -1296,6 +1312,8 @@ returnVal.option() ?: return null
             slice_conversions,
             docs: self.formatter.fmt_docs(&method.docs),
             add_override_specifier_for_opaque_self_methods,
+            lifetimes: &method.lifetime_env,
+            method_lifetimes_map,
         }
         .render()
         .expect("Failed to render string for method");
@@ -2116,6 +2134,12 @@ struct MethodTpl<'a> {
     slice_conversions: Vec<Cow<'a, str>>,
     docs: String,
     add_override_specifier_for_opaque_self_methods: bool,
+
+    lifetimes: &'a LifetimeEnv,
+    /// Maps each (used in the output) method lifetime to a list of parameters
+    /// it borrows from. The parameter list may contain the parameter name, or
+    /// a spread of a struct's `_fiellsForLifetimeFoo` getter.
+    method_lifetimes_map: MethodLtMap<'a>,
 }
 
 #[derive(Default)]

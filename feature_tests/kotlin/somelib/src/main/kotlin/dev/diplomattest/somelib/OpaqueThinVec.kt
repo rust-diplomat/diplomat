@@ -50,10 +50,11 @@ class OpaqueThinVec internal constructor (
     }
     
     override fun iterator(): OpaqueThinIter {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueThinVec_iter(handle);
         val selfEdges: List<Any> = listOf()
-        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = OpaqueThinIter(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
@@ -67,6 +68,8 @@ class OpaqueThinVec internal constructor (
     }
     
     internal fun getInternal(idx: ULong): OpaqueThin? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueThinVec_get(handle, FFISizet(idx));
         val selfEdges: List<Any> = listOf(this)
@@ -76,6 +79,8 @@ class OpaqueThinVec internal constructor (
     }
     
     fun first(): OpaqueThin? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueThinVec_first(handle);
         val selfEdges: List<Any> = listOf(this)

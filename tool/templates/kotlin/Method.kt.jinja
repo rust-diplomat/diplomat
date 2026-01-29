@@ -6,6 +6,19 @@
 {% if add_override_specifier_for_opaque_self_methods %}override {% endif -%}
 {{ declaration }} {
 {%- for slice_conv in slice_conversions %}{{slice_conv|indent(4)}}{% endfor %}
+
+    {%- for lifetime in lifetimes.all_lifetimes() %}
+    {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) %}
+    {%- if maybe_lifetime_info.is_some() %}
+    {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
+    // This lifetime edge depends on lifetimes: {% for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%} {%- if !loop.first %}, {% endif -%} '{{lifetimes.fmt_lifetime(longer)}} {%- endfor %}
+    val {{lifetimes.fmt_lifetime(lifetime)}}Edges: MutableList<Any> = mutableListOf(
+      {%- for incoming_edge in lifetime_info.incoming_edges.iter().flat_map(self::display_lifetime_edge) %}
+      {%- if !loop.first %}, {% endif -%} {{incoming_edge}}
+      {%- endfor -%}
+    );
+    {%- endif %}
+    {%- endfor %}
     {% if write_return %}val write = DW.lib.diplomat_buffer_write_create(0){% endif %}
     val returnVal = lib.{{ native_method_name -}}(
         {%- for param in param_conversions %}

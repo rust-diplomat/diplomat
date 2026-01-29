@@ -3,13 +3,6 @@ listOf()
 {%- else %}
 {%- for self_edge in self_edges %}{%- if !loop.first %} + {% endif -%}{{self_edge}}{%- endfor %}
 {%- endif %}
-{%- for borrow in borrows %}
-val {{borrow.lt}}Edges: List<Any?> = {% if borrow.params.is_empty() -%}
-listOf()
-{%- else -%}
-{% for param in borrow.params %}{%- if !loop.first %} + {% endif -%}{{param}}{%- endfor %}
-{%- endif -%}
-{%- endfor %}
 val handle = {{val_name}} {% if optional %}?: return null{% endif %}
 val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
 {%- if is_owned %}

@@ -31,6 +31,8 @@ class OpaqueThinIter internal constructor (
     }
     
     internal fun nextInternal(): OpaqueThin? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OpaqueThinIter_next(handle);
         val selfEdges: List<Any> = listOf(this)

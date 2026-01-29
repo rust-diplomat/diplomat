@@ -52,6 +52,8 @@ class Utf16Wrap internal constructor (
     }
     
     fun borrowCont(): String {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
             return PrimitiveArrayTools.getUtf16(returnVal)

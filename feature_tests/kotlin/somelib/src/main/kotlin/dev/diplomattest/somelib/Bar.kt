@@ -31,10 +31,13 @@ class Bar internal constructor (
     }
     
     fun foo(): Foo {
+        // This lifetime edge depends on lifetimes: 'b, 'a
+        val bEdges: MutableList<Any> = mutableListOf(this);
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Bar_foo(handle);
         val selfEdges: List<Any> = listOf(this)
-        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Foo(handle, selfEdges, aEdges)
         return returnOpaque

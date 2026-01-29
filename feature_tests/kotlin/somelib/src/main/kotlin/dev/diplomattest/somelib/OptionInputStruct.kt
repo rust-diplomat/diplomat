@@ -87,7 +87,6 @@ class OptionInputStruct (var a: UByte?, var b: Int?, var c: OptionEnum?) {
         fun newFromParts(a: UByte?, b: Int?, c: OptionEnum?): OptionInputStruct {
             
             val returnVal = lib.OptionInputStruct_new_from_parts(a?.let { OptionFFIUint8.some(FFIUint8(it)) } ?: OptionFFIUint8.none(), b?.let { OptionInt.some(it) } ?: OptionInt.none(), c?.let { OptionInt.some(it.toNative()) } ?: OptionInt.none());
-            
             val returnStruct = OptionInputStruct.fromNative(returnVal)
             return returnStruct
         }

@@ -82,7 +82,6 @@ class Opaque internal constructor (
         fun returnsImported(): ImportedStruct {
             
             val returnVal = lib.Opaque_returns_imported();
-            
             val returnStruct = ImportedStruct.fromNative(returnVal)
             return returnStruct
         }

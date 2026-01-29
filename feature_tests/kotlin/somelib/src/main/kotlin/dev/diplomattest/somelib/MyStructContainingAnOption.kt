@@ -83,7 +83,6 @@ class MyStructContainingAnOption (var a: MyStruct?, var b: DefaultEnum?) {
         fun new_(): MyStructContainingAnOption {
             
             val returnVal = lib.MyStructContainingAnOption_new();
-            
             val returnStruct = MyStructContainingAnOption.fromNative(returnVal)
             return returnStruct
         }
@@ -92,7 +91,6 @@ class MyStructContainingAnOption (var a: MyStruct?, var b: DefaultEnum?) {
         fun filled(): MyStructContainingAnOption {
             
             val returnVal = lib.MyStructContainingAnOption_filled();
-            
             val returnStruct = MyStructContainingAnOption.fromNative(returnVal)
             return returnStruct
         }

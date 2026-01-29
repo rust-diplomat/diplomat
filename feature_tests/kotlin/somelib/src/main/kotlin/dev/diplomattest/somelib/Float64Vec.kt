@@ -131,6 +131,8 @@ class Float64Vec internal constructor (
     }
     
     fun asSlice(): DoubleArray {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Float64Vec_as_slice(handle);
             return PrimitiveArrayTools.getDoubleArray(returnVal)
@@ -159,6 +161,8 @@ class Float64Vec internal constructor (
     }
     
     fun borrow(): DoubleArray {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Float64Vec_borrow(handle);
             return PrimitiveArrayTools.getDoubleArray(returnVal)

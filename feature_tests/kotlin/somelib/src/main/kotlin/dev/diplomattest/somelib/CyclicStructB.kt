@@ -80,7 +80,6 @@ class CyclicStructB (var field: UByte) {
         fun getA(): CyclicStructA {
             
             val returnVal = lib.CyclicStructB_get_a();
-            
             val returnStruct = CyclicStructA.fromNative(returnVal)
             return returnStruct
         }
@@ -91,7 +90,6 @@ class CyclicStructB (var field: UByte) {
             val returnVal = lib.CyclicStructB_get_a_option();
             
             val intermediateOption = returnVal.option() ?: return null
-
             val returnStruct = CyclicStructA.fromNative(intermediateOption)
             return returnStruct
                                     

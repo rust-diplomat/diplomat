@@ -80,7 +80,6 @@ class CyclicStructC (var a: CyclicStructA) {
         fun takesNestedParameters(c: CyclicStructC): CyclicStructC {
             
             val returnVal = lib.CyclicStructC_takes_nested_parameters(c.toNative());
-            
             val returnStruct = CyclicStructC.fromNative(returnVal)
             return returnStruct
         }

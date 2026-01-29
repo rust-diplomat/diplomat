@@ -87,7 +87,6 @@ class TestMacroStruct (var a: ULong) {
         fun testMeta(): TestMacroStruct {
             
             val returnVal = lib.namespace_TestMacroStruct_test_meta();
-            
             val returnStruct = TestMacroStruct.fromNative(returnVal)
             return returnStruct
         }
