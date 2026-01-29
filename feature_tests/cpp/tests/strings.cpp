@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../include/Opaque.hpp"
 #include "../include/OptionString.hpp"
+#include "../include/MyString.hpp"
 #include "assert.hpp"
 
 using namespace somelib;
@@ -20,4 +21,9 @@ int main(int argc, char* argv[]) {
     output = "prefix ";
     os->write_write(output).ok().value();
     simple_assert_eq("string write with result", output, "prefix hello world");
+
+    std::unique_ptr<MyString> s = MyString::new_owned("ABC");
+    simple_assert_eq("Owned string pass in", s->get_str(), "ABC");
+    s->set_str("123");
+    simple_assert_eq("Owned string pass out", s->get_str(), "123");
 }
