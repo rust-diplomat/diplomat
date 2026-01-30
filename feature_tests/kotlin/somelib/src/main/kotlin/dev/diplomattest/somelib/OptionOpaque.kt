@@ -119,8 +119,9 @@ class OptionOpaque internal constructor (
         @JvmStatic
         
         fun acceptsBorrowingOptionStruct(arg: BorrowingOptionStruct): Unit {
+            val temporaryEdgeArena: MutableList<Any> = mutableListOf()
             
-            val returnVal = lib.OptionOpaque_accepts_borrowing_option_struct(arg.toNative());
+            val returnVal = lib.OptionOpaque_accepts_borrowing_option_struct(arg.toNative(aAppendArray = arrayOf(temporaryEdgeArena)));
             
         }
         @JvmStatic

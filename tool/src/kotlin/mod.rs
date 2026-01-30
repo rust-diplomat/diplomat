@@ -6,7 +6,8 @@ use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
     PrimitiveType, ReturnableStructDef, ReturnableStructPath, SelfType, Slice, SpecialMethod,
-    StringEncoding, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
+    StringEncoding, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext,
+    TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -336,16 +337,74 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
     }
 
+    fn gen_kt_to_c_for_struct(
+        &self,
+        s: &StructPath,
+        name: Cow<str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+        mut needs_temporary: Option<&mut bool>,
+    ) -> String {
+        use std::fmt::Write;
+        let struct_def = s.resolve(self.tcx);
+        let mut params = String::new();
+        let struct_borrow_info = struct_borrow_info.as_ref();
+        if struct_def.lifetimes.num_lifetimes() != 0 {
+            let mut maybe_comma_outer = "";
+            for def_lt in struct_def.lifetimes.all_lifetimes() {
+                write!(
+                    &mut params,
+                    "{maybe_comma_outer}{}AppendArray = ",
+                    struct_def.lifetimes.fmt_lifetime(def_lt)
+                )
+                .unwrap();
+
+                write!(&mut params, "arrayOf(").unwrap();
+                // Check if this lifetime
+                if let Some(use_lts) = struct_borrow_info
+                    .and_then(|i| i.param_info.borrowed_struct_lifetime_map.get(&def_lt))
+                {
+                    let mut maybe_comma = "";
+                    for use_lt in use_lts {
+                        // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
+                        let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
+                        // Params use edges, structs use append arrays
+                        if needs_temporary.is_some() {
+                            write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
+                        } else {
+                            write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
+                        }
+                        maybe_comma = ", ";
+                    }
+                } else {
+                    if let Some(ref mut needs_temporary) = needs_temporary {
+                        **needs_temporary = true;
+                    } else {
+                        panic!("Struct borrow info MUST reference all lifetimes");
+                    }
+                    write!(&mut params, "temporaryEdgeArena").unwrap();
+                }
+
+                write!(&mut params, ")").unwrap();
+
+                maybe_comma_outer = ", ";
+            }
+        }
+        format!("{name}.toNative({params})")
+    }
+
+    /// needs_temporary should be set to an outparam boolean ONLY in the parameter case,
+    /// and will get set to true if thise needs a temporary arena.
+    ///
     /// Booleans are represented differently at the native layer in struct fields and params
-    /// so we have is_param to track that.
-    fn gen_kt_to_c_for_type<P: TyPosition<OpaqueOwnership = Borrow>>(
+    /// so the presence of needs_temporary is also used to tell that.
+    fn gen_kt_to_c_for_type<P: TyPosition<OpaqueOwnership = Borrow, StructPath = StructPath>>(
         &self,
         ty: &Type<P>,
         name: Cow<str>,
         struct_borrow_info: Option<StructBorrowContext<'cx>>,
-        is_param: bool,
+        needs_temporary: Option<&mut bool>,
     ) -> Cow<'cx, str> {
-        use std::fmt::Write;
+        let is_param = needs_temporary.is_some();
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
@@ -358,36 +417,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
-            Type::Struct(_) => {
-                let mut params = String::new();
-                if let Some(info) = struct_borrow_info {
-                    let mut maybe_comma_outer = "";
-                    for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
-                        write!(
-                            &mut params,
-                            "{maybe_comma_outer}{}AppendArray = ",
-                            info.param_info.env.fmt_lifetime(def_lt)
-                        )
-                        .unwrap();
-                        write!(&mut params, "arrayOf(");
-                        let mut maybe_comma = "";
-                        for use_lt in use_lts {
-                            // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
-                            let lt = info.use_env.fmt_lifetime(use_lt);
-                            if is_param {
-                                write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
-                            } else {
-                                write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
-                            }
-                            maybe_comma = ", ";
-                        }
-                        write!(&mut params, ")").unwrap();
-
-                        maybe_comma_outer = ", ";
-                    }
-                }
-                format!("{name}.toNative({params})").into()
-            }
+            Type::Struct(ref s) => self
+                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, needs_temporary)
+                .into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
                 let resolved = self.tcx.resolve_trait(trait_id);
@@ -411,8 +443,12 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::DiplomatOption(ref inner) => {
                 // We pass false for is_params here the type is a struct field
-                let inner_expr =
-                    self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, false);
+                let inner_expr = self.gen_kt_to_c_for_type(
+                    inner,
+                    "it".into(),
+                    struct_borrow_info,
+                    needs_temporary,
+                );
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -1087,6 +1123,7 @@ returnVal.option() ?: return null
         let mut slice_conversions = Vec::with_capacity(method.params.len());
         let mut cleanups = Vec::with_capacity(method.params.len());
 
+        let mut needs_temporary = false;
         match self_type {
             Some(st @ SelfType::Opaque(_)) => {
                 let param_type = "Pointer".into();
@@ -1099,10 +1136,23 @@ returnVal.option() ?: return null
             Some(st @ SelfType::Struct(s)) => {
                 let param_type =
                     format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
-                let param_name: Cow<'_, str> = "this.toNative()".into();
-                visitor.visit_param(&st.clone().into(), "this");
+                let param_borrow_kind = visitor.visit_param(&st.clone().into(), "this");
+                let struct_borrow_info =
+                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
+                        Some(StructBorrowContext {
+                            use_env: &method.lifetime_env,
+                            param_info,
+                        })
+                    } else {
+                        None
+                    };
                 param_types_ffi.push(param_type);
-                param_conversions.push(param_name.clone());
+                param_conversions.push(self.gen_kt_to_c_for_struct(
+                    &s,
+                    "this".into(),
+                    struct_borrow_info,
+                    Some(&mut needs_temporary),
+                ).into());
             }
             Some(SelfType::Enum(_)) => {
                 let param_type = "Int".into();
@@ -1113,7 +1163,6 @@ returnVal.option() ?: return null
             None => (),
             _ => todo!(),
         };
-
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
             let mut additional_name = None;
@@ -1264,7 +1313,7 @@ returnVal.option() ?: return null
                 &param.ty,
                 param_name_to_pass,
                 struct_borrow_info,
-                true,
+                Some(&mut needs_temporary),
             ));
         }
         let write_return = matches!(
@@ -1364,6 +1413,7 @@ returnVal.option() ?: return null
             add_override_specifier_for_opaque_self_methods,
             lifetimes: &method.lifetime_env,
             method_lifetimes_map,
+            needs_temporary,
         }
         .render()
         .expect("Failed to render string for method");
@@ -1654,7 +1704,7 @@ returnVal.option() ?: return null
                         &nonout.fields[i].ty,
                         format!("this.{field_name}").into(),
                         struct_borrow_info,
-                        false,
+                        None,
                     )
                 });
 
@@ -2203,6 +2253,7 @@ struct MethodTpl<'a> {
     /// it borrows from. The parameter list may contain the parameter name, or
     /// a spread of a struct's `_fiellsForLifetimeFoo` getter.
     method_lifetimes_map: MethodLtMap<'a>,
+    needs_temporary: bool,
 }
 
 #[derive(Default)]

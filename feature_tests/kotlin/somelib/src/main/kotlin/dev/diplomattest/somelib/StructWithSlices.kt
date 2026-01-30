@@ -90,8 +90,9 @@ class StructWithSlices (var first: String, var second: UShortArray) {
     }
     
     fun returnLast(): String {
+        val temporaryEdgeArena: MutableList<Any> = mutableListOf()
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.StructWithSlices_return_last(this.toNative(), write);
+        val returnVal = lib.StructWithSlices_return_last(this.toNative(aAppendArray = arrayOf(temporaryEdgeArena)), write);
         
         val returnString = DW.writeToString(write)
         return returnString

@@ -7,6 +7,9 @@
 {{ declaration }} {
 {%- for slice_conv in slice_conversions %}{{slice_conv|indent(4)}}{% endfor %}
 
+    {%- if needs_temporary %}
+    val temporaryEdgeArena: MutableList<Any> = mutableListOf()
+    {%- endif %}
     {%- for lifetime in lifetimes.all_lifetimes() %}
     {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) %}
     {%- if maybe_lifetime_info.is_some() %}
