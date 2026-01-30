@@ -90,9 +90,9 @@ pub(crate) struct FuncImplTemplate<'a> {
 }
 
 pub(crate) struct ExtraCode {
-    pub pre : String,
-    pub post : String,
-    pub inner : String,
+    pub pre: String,
+    pub post: String,
+    pub inner: String,
 }
 
 /// Context for generating a particular type's header
@@ -132,7 +132,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             } else {
                 Default::default()
             };
-        ExtraCode { pre: pre_extra_def_code, post: post_extra_def_code, inner: extra_def_code }
+        ExtraCode {
+            pre: pre_extra_def_code,
+            post: post_extra_def_code,
+            inner: extra_def_code,
+        }
     }
 
     /// Adds an enum definition to the current decl and impl headers.

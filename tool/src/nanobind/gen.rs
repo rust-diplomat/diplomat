@@ -95,7 +95,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 Default::default()
             };
 
-        ExtraCode { pre: pre_extra_init_code, post: Default::default(), inner: extra_init_code }
+        ExtraCode {
+            pre: pre_extra_init_code,
+            post: Default::default(),
+            inner: extra_init_code,
+        }
     }
 
     /// Adds an enum definition to the current implementation.
@@ -119,8 +123,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             .map(|e| self.formatter.cxx.fmt_enum_variant(e))
             .collect::<Vec<_>>();
 
-        let extra_init_code =
-            self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
+        let extra_init_code = self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
@@ -192,8 +195,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
         let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
-        let extra_init_code =
-            self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
+        let extra_init_code = self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "nanobind/opaque_impl.cpp.jinja", escape = "none")]
@@ -237,8 +239,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
         self.gen_modules(id.into(), None);
 
-        let extra_init_code =
-            self.init_extra_code_from_attrs(&def.attrs.custom_extra_code);
+        let extra_init_code = self.init_extra_code_from_attrs(&def.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
