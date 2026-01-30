@@ -592,7 +592,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
         struct OpaqueReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
-            borrows: Vec<ParamsForLt<'b>>,
+            named_lifetimes: Vec<Cow<'b, str>>,
             is_owned: bool,
             self_edges: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
@@ -600,11 +600,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             val_name: &'a str,
             return_type_modifier: &'a str,
             use_finalizers_not_cleaners: bool,
-        }
-
-        struct ParamsForLt<'c> {
-            lt: Cow<'c, str>,
-            params: Vec<Cow<'c, str>>,
         }
 
         let return_type_name = opaque_def.name.to_string().into();
@@ -627,27 +622,17 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         let is_owned = self_edges.is_none();
         let self_edges = self_edges.unwrap_or_else(Vec::new);
 
-        let borrows = lifetimes
+        let named_lifetimes = lifetimes
             .lifetimes()
-            .filter_map(|lt| {
-                let lt = match lt {
-                    MaybeStatic::Static => return None,
-                    MaybeStatic::NonStatic(lt) => lt,
-                };
-                let params = method_lifetimes_map
-                    .get(&lt)
-                    .iter()
-                    .flat_map(|got| got.incoming_edges.iter())
-                    .map(|edge| self.formatter.fmt_borrow(edge))
-                    .collect();
-                let lt = lifetime_env.fmt_lifetime(lt);
-                Some(ParamsForLt { lt, params })
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => return None,
+                MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
 
         let opaque_return = OpaqueReturn {
             return_type_name,
-            borrows,
+            named_lifetimes,
             is_owned,
             self_edges,
             cleanups,
@@ -727,7 +712,6 @@ return string{return_type_modifier}"#
         &'d self,
         struct_def: &'d ReturnableStructDef,
         lifetimes: &'d Lifetimes,
-        method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
@@ -749,40 +733,26 @@ return string{return_type_modifier}"#
             return format!("return {return_type_name}(){return_type_modifier}");
         }
 
-        let borrows = lifetimes
+        let named_lifetimes = lifetimes
             .lifetimes()
-            .filter_map(|lt| {
-                let lt = match lt {
-                    MaybeStatic::Static => return None,
-                    MaybeStatic::NonStatic(lt) => lt,
-                };
-                let params = method_lifetimes_map
-                    .get(&lt)
-                    .iter()
-                    .flat_map(|got| got.incoming_edges.iter())
-                    .map(|edge| self.formatter.fmt_borrow(edge))
-                    .collect();
-                let lt = lifetime_env.fmt_lifetime(lt);
-                Some(ParamsForLt { lt, params })
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => return None,
+                MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
 
-        struct ParamsForLt<'c> {
-            lt: Cow<'c, str>,
-            params: Vec<Cow<'c, str>>,
-        }
         #[derive(Template)]
         #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
         struct StructReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
-            borrows: Vec<ParamsForLt<'b>>,
+            named_lifetimes: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
             val_name: &'a str,
             return_type_modifier: &'a str,
         }
         StructReturn {
             return_type_name,
-            borrows,
+            named_lifetimes,
             cleanups,
             val_name,
             return_type_modifier,
@@ -822,7 +792,6 @@ return string{return_type_modifier}"#
                 self.gen_struct_return_conversion(
                     &strct.resolve(self.tcx),
                     lifetimes,
-                    method_lifetimes_map,
                     &method.lifetime_env,
                     cleanups,
                     val_name,
@@ -875,7 +844,6 @@ val intermediateOption = {val_name}.option() ?: return null
                     self.gen_struct_return_conversion(
                         &strct.resolve(self.tcx),
                         lifetimes,
-                        method_lifetimes_map,
                         &method.lifetime_env,
                         cleanups,
                         "intermediateOption",
@@ -942,7 +910,7 @@ val intermediateOption = {val_name}.option() ?: return null
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
                 res,
                 method,
-                &method_lifetimes_map,
+                method_lifetimes_map,
                 cleanups,
                 "returnVal",
                 "",
@@ -951,7 +919,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 let ok_path = self.gen_success_return_conversion(
                     ok,
                     method,
-                    &method_lifetimes_map,
+                    method_lifetimes_map,
                     cleanups,
                     "returnVal.union.ok",
                     ".ok()",
@@ -999,7 +967,7 @@ val intermediateOption = {val_name}.option() ?: return null
 
                         self.gen_out_type_return_conversion(
                             method,
-                            &method_lifetimes_map,
+                            method_lifetimes_map,
                             cleanups,
                             "returnVal.union.err",
                             err_converter,
@@ -1025,7 +993,7 @@ val intermediateOption = {val_name}.option() ?: return null
             ReturnType::Nullable(SuccessType::OutType(ref res)) => self
                 .gen_nullable_return_conversion(
                     method,
-                    &method_lifetimes_map,
+                    method_lifetimes_map,
                     cleanups,
                     "returnVal",
                     res,
@@ -1147,12 +1115,15 @@ returnVal.option() ?: return null
                         None
                     };
                 param_types_ffi.push(param_type);
-                param_conversions.push(self.gen_kt_to_c_for_struct(
-                    &s,
-                    "this".into(),
-                    struct_borrow_info,
-                    Some(&mut needs_temporary),
-                ).into());
+                param_conversions.push(
+                    self.gen_kt_to_c_for_struct(
+                        s,
+                        "this".into(),
+                        struct_borrow_info,
+                        Some(&mut needs_temporary),
+                    )
+                    .into(),
+                );
             }
             Some(SelfType::Enum(_)) => {
                 let param_type = "Int".into();
