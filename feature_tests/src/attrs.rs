@@ -456,8 +456,14 @@ pub mod ffi {
             location = "def_block"
         )
     )]
-    #[diplomat::attr(any(nanobind, cpp), custom_extra_code(source = "//Pre Test", location="pre_def_block"))]
-    #[diplomat::attr(any(nanobind, cpp), custom_extra_code(source = "//Post Test", location="post_def_block"))]
+    #[diplomat::attr(
+        any(nanobind, cpp),
+        custom_extra_code(source = "//Pre Test", location = "pre_def_block")
+    )]
+    #[diplomat::attr(
+        any(nanobind, cpp),
+        custom_extra_code(source = "//Post Test", location = "post_def_block")
+    )]
     #[diplomat::attr(
         any(nanobind, cpp),
         custom_extra_code(
@@ -474,7 +480,10 @@ pub mod ffi {
             location = "init_block"
         )
     )]
-    #[diplomat::attr(nanobind, custom_extra_code(source="//Pre-Init Test", location="pre_init_block"))]
+    #[diplomat::attr(
+        nanobind,
+        custom_extra_code(source = "//Pre-Init Test", location = "pre_init_block")
+    )]
     pub struct BlockOverride();
 
     // C++ will not generate this, since it has all features disabled by default (see lib.rs)

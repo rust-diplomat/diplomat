@@ -103,24 +103,29 @@ pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
 }
 
 impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
-    fn def_from_attrs(&self, custom_extra_code : &HashMap<IncludeLocation, IncludeSource>) -> (String, String, String) {
+    fn def_from_attrs(
+        &self,
+        custom_extra_code: &HashMap<IncludeLocation, IncludeSource>,
+    ) -> (String, String, String) {
         let extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::DefBlock) {
             read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
         } else {
             Default::default()
         };
 
-        let pre_extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::PreDefBlock) {
-            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        let pre_extra_def_code =
+            if let Some(s) = custom_extra_code.get(&IncludeLocation::PreDefBlock) {
+                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+            } else {
+                Default::default()
+            };
 
-        let post_extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::PostDefBlock) {
-            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        let post_extra_def_code =
+            if let Some(s) = custom_extra_code.get(&IncludeLocation::PostDefBlock) {
+                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+            } else {
+                Default::default()
+            };
         (extra_def_code, pre_extra_def_code, post_extra_def_code)
     }
 
@@ -174,7 +179,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .or(found_zero)
             .unwrap_or(ty.variants.first().unwrap());
 
-        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&ty.attrs.custom_extra_code);
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) =
+            self.def_from_attrs(&ty.attrs.custom_extra_code);
 
         let default_variant = self.formatter.fmt_enum_variant(default_variant);
         #[derive(Template)]
@@ -192,8 +198,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
             extra_def_code: String,
-            pre_extra_def_code : String,
-            post_extra_def_code : String,
+            pre_extra_def_code: String,
+            post_extra_def_code: String,
         }
 
         DeclTemplate {
@@ -210,7 +216,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             default_variant,
             extra_def_code,
             pre_extra_def_code,
-            post_extra_def_code
+            post_extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -270,8 +276,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
-        
-        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&ty.attrs.custom_extra_code);
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) =
+            self.def_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "cpp/opaque_decl.h.jinja", escape = "none")]
@@ -287,8 +293,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             extra_def_code: String,
-            pre_extra_def_code : String,
-            post_extra_def_code : String,
+            pre_extra_def_code: String,
+            post_extra_def_code: String,
         }
 
         DeclTemplate {
@@ -385,8 +391,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
-        
-        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&def.attrs.custom_extra_code);
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) =
+            self.def_from_attrs(&def.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
@@ -404,8 +410,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             extra_def_code: String,
-            pre_extra_def_code : String,
-            post_extra_def_code : String,
+            pre_extra_def_code: String,
+            post_extra_def_code: String,
         }
 
         DeclTemplate {
