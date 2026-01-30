@@ -31,8 +31,6 @@ public:
 
   inline static somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::diplomat::Utf8Error> new_unsafe(std::string_view v);
 
-  inline static std::unique_ptr<somelib::MyString> new_owned(std::string_view v);
-
   inline static std::unique_ptr<somelib::MyString> new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v);
 
   inline void set_str(std::string_view new_str);
