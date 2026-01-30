@@ -1,7 +1,7 @@
 {%- let is_self_opaque = true -%}
 {%- let full_name = type_name.replace("::", "_") -%}
-{% if !pre_extra_init_code.is_empty() %}
-{{pre_extra_init_code}}
+{% if !extra_init_code.pre.is_empty() %}
+{{extra_init_code.pre}}
 {% endif -%}
 
 PyType_Slot {{full_name}}_slots[] = {
@@ -15,6 +15,6 @@ opaque{% endif %}
 {%- for m in methods %}
 {% include "method_impl.cpp.jinja" %}
 {%- endfor -%};
-{% if !extra_init_code.is_empty() %}
-{{extra_init_code}}
+{% if !extra_init_code.inner.is_empty() %}
+{{extra_init_code.inner}}
 {% endif -%}

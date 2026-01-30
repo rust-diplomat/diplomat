@@ -7,8 +7,8 @@
 nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slice"); 
 {% endif -%}
 
-{% if !pre_extra_init_code.is_empty() %}
-{{pre_extra_init_code}}
+{% if !extra_init_code.pre.is_empty() %}
+{{extra_init_code.pre}}
 {% endif -%}
 
 nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}");
@@ -48,6 +48,6 @@ st
 {% include "method_impl.cpp.jinja" %}
 {%- endfor %};
 
-{%- if !extra_init_code.is_empty() %}
-{{extra_init_code}}
+{%- if !extra_init_code.inner.is_empty() %}
+{{extra_init_code.inner}}
 {% endif -%}

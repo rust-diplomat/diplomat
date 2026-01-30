@@ -1,6 +1,7 @@
 use super::root_module::RootModule;
 use super::PyFormatter;
 use crate::config::Config;
+use crate::cpp::ExtraCode;
 use crate::read_custom_binding;
 use crate::{cpp::ItemGenContext as CppItemGenContext, hir, ErrorStore};
 use askama::Template;
@@ -79,7 +80,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     fn init_extra_code_from_attrs(
         &self,
         custom_extra_code: &HashMap<IncludeLocation, IncludeSource>,
-    ) -> (String, String) {
+    ) -> ExtraCode {
         let extra_init_code =
             if let Some(s) = custom_extra_code.get(&IncludeLocation::InitializationBlock) {
                 read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
@@ -94,7 +95,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 Default::default()
             };
 
-        (extra_init_code, pre_extra_init_code)
+        ExtraCode { pre: pre_extra_init_code, post: Default::default(), inner: extra_init_code }
     }
 
     /// Adds an enum definition to the current implementation.
@@ -118,7 +119,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             .map(|e| self.formatter.cxx.fmt_enum_variant(e))
             .collect::<Vec<_>>();
 
-        let (extra_init_code, pre_extra_init_code) =
+        let extra_init_code =
             self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
@@ -127,8 +128,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name: &'a str,
             values: Vec<Cow<'a, str>>,
             type_name_unnamespaced: &'a str,
-            extra_init_code: String,
-            pre_extra_init_code: String,
+            extra_init_code: ExtraCode,
         }
 
         ImplTemplate {
@@ -136,7 +136,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             values,
             type_name_unnamespaced: &type_name_unnamespaced,
             extra_init_code,
-            pre_extra_init_code,
         }
         .render_into(out)
         .unwrap();
@@ -193,7 +192,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
         let methods = self.gen_all_method_infos(id, ty.methods.iter());
 
-        let (extra_init_code, pre_extra_init_code) =
+        let extra_init_code =
             self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
@@ -202,8 +201,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
-            extra_init_code: String,
-            pre_extra_init_code: String,
+            extra_init_code: ExtraCode,
         }
 
         ImplTemplate {
@@ -211,7 +209,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             methods: methods.as_slice(),
             type_name_unnamespaced: &type_name_unnamespaced,
             extra_init_code,
-            pre_extra_init_code,
         }
         .render_into(out)
         .unwrap();
@@ -240,7 +237,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
         self.gen_modules(id.into(), None);
 
-        let (extra_init_code, pre_extra_init_code) =
+        let extra_init_code =
             self.init_extra_code_from_attrs(&def.attrs.custom_extra_code);
 
         #[derive(Template)]
@@ -252,8 +249,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
             is_sliceable: bool,
-            extra_init_code: String,
-            pre_extra_init_code: String,
+            extra_init_code: ExtraCode,
         }
 
         if def.attrs.abi_compatible {
@@ -274,7 +270,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             }),
             is_sliceable: def.attrs.abi_compatible,
             extra_init_code,
-            pre_extra_init_code,
         }
         .render_into(out)
         .unwrap();

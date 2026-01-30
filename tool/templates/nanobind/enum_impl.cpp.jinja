@@ -1,6 +1,6 @@
 {%- let is_self_opaque = false -%}
-{% if !pre_extra_init_code.is_empty() %}
-{{pre_extra_init_code}}
+{% if !extra_init_code.pre.is_empty() %}
+{{extra_init_code.pre}}
 {% endif -%}
     nb::class_<{{type_name}}> e_class(mod, "{{type_name_unnamespaced}}");
 
@@ -17,7 +17,7 @@
         .def("__repr__", [](const {{type_name}}& self){
             return nb::str(nb::cast({{type_name}}::Value(self)));
         });
-{% if !extra_init_code.is_empty() %}
-{{extra_init_code}}
+{% if !extra_init_code.inner.is_empty() %}
+{{extra_init_code.inner}}
 {% endif -%}
 
