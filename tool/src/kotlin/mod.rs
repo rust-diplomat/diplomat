@@ -358,22 +358,33 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 )
                 .unwrap();
 
-                write!(&mut params, "arrayOf(").unwrap();
                 // Check if this lifetime
                 if let Some(use_lts) = struct_borrow_info
                     .and_then(|i| i.param_info.borrowed_struct_lifetime_map.get(&def_lt))
                 {
-                    let mut maybe_comma = "";
-                    for use_lt in use_lts {
-                        // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
-                        let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
-                        // Params use edges, structs use append arrays
-                        if needs_temporary.is_some() {
-                            write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
-                        } else {
-                            write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
+                    // Optimization: don't generate arrayOf(*fooAppendArray) when you can just
+                    // directly use fooAppendArray
+                    if needs_temporary.is_none() && use_lts.len() == 1 {
+                        let lt = struct_borrow_info
+                            .unwrap()
+                            .use_env
+                            .fmt_lifetime(use_lts.iter().next().unwrap());
+                        write!(&mut params, "{lt}AppendArray",).unwrap();
+                    } else {
+                        write!(&mut params, "arrayOf(").unwrap();
+                        let mut maybe_comma = "";
+                        for use_lt in use_lts {
+                            // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
+                            let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
+                            // Params use edges, structs use append arrays
+                            if needs_temporary.is_some() {
+                                write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
+                            } else {
+                                write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
+                            }
+                            maybe_comma = ", ";
                         }
-                        maybe_comma = ", ";
+                        write!(&mut params, ")").unwrap();
                     }
                 } else {
                     if let Some(ref mut needs_temporary) = needs_temporary {
@@ -381,10 +392,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     } else {
                         panic!("Struct borrow info MUST reference all lifetimes");
                     }
-                    write!(&mut params, "temporaryEdgeArena").unwrap();
+                    write!(&mut params, "arrayOf(temporaryEdgeArena)").unwrap();
                 }
-
-                write!(&mut params, ")").unwrap();
 
                 maybe_comma_outer = ", ";
             }
@@ -625,7 +634,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         let named_lifetimes = lifetimes
             .lifetimes()
             .filter_map(|lt| match lt {
-                MaybeStatic::Static => return None,
+                MaybeStatic::Static => None,
                 MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
@@ -736,7 +745,7 @@ return string{return_type_modifier}"#
         let named_lifetimes = lifetimes
             .lifetimes()
             .filter_map(|lt| match lt {
-                MaybeStatic::Static => return None,
+                MaybeStatic::Static => None,
                 MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
