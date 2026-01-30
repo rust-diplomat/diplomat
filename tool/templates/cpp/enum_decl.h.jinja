@@ -5,6 +5,11 @@ namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
 {% else if let Some(lib_name) = &fmt.lib_name -%}
 namespace {{lib_name}} {
 {% endif -%}
+
+{% if !pre_extra_def_code.is_empty() %}
+{{ pre_extra_def_code }}
+{% endif -%}
+
 {% if !docs.is_empty() -%}
 /**
 {{~ docs|prefix_trimmed(" * ")}}
@@ -41,6 +46,10 @@ private:
 {{ extra_def_code }}
 {% endif -%}
 };
+
+{% if !post_extra_def_code.is_empty() %}
+{{ post_extra_def_code }}
+{% endif -%}
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace

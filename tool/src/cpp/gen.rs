@@ -7,6 +7,8 @@ use crate::read_custom_binding;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
+use diplomat_core::hir::IncludeLocation;
+use diplomat_core::hir::IncludeSource;
 use diplomat_core::hir::OpaqueId;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
@@ -14,6 +16,7 @@ use diplomat_core::hir::{
     SymbolId, TyPosition, Type, TypeDef,
 };
 use std::borrow::Cow;
+use std::collections::HashMap;
 
 use crate::c::CAPI_NAMESPACE;
 use crate::filters;
@@ -100,6 +103,27 @@ pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
 }
 
 impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
+    fn def_from_attrs(&self, custom_extra_code : &HashMap<IncludeLocation, IncludeSource>) -> (String, String, String) {
+        let extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::DefBlock) {
+            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
+        let pre_extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::PreDefBlock) {
+            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
+        let post_extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::PostDefBlock) {
+            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+        (extra_def_code, pre_extra_def_code, post_extra_def_code)
+    }
+
     /// Adds an enum definition to the current decl and impl headers.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
@@ -150,15 +174,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .or(found_zero)
             .unwrap_or(ty.variants.first().unwrap());
 
-        let extra_def_code = if let Some(s) = ty
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::DefBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&ty.attrs.custom_extra_code);
 
         let default_variant = self.formatter.fmt_enum_variant(default_variant);
         #[derive(Template)]
@@ -176,6 +192,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
             extra_def_code: String,
+            pre_extra_def_code : String,
+            post_extra_def_code : String,
         }
 
         DeclTemplate {
@@ -191,6 +209,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             deprecated: ty.attrs.deprecated.as_deref(),
             default_variant,
             extra_def_code,
+            pre_extra_def_code,
+            post_extra_def_code
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -250,15 +270,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(id.into(), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = ty
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::DefBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&ty.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "cpp/opaque_decl.h.jinja", escape = "none")]
@@ -274,6 +287,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             extra_def_code: String,
+            pre_extra_def_code : String,
+            post_extra_def_code : String,
         }
 
         DeclTemplate {
@@ -288,6 +303,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             deprecated: ty.attrs.deprecated.as_deref(),
             extra_def_code,
+            pre_extra_def_code,
+            post_extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -368,15 +385,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .flat_map(|method| self.gen_method_info(SymbolId::TypeId(id.into()), method))
             .collect::<Vec<_>>();
 
-        let extra_def_code = if let Some(s) = def
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::DefBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        
+        let (extra_def_code, pre_extra_def_code, post_extra_def_code) = self.def_from_attrs(&def.attrs.custom_extra_code);
 
         #[derive(Template)]
         #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
@@ -394,6 +404,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             extra_def_code: String,
+            pre_extra_def_code : String,
+            post_extra_def_code : String,
         }
 
         DeclTemplate {
@@ -410,6 +422,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
             extra_def_code,
+            pre_extra_def_code,
+            post_extra_def_code,
         }
         .render_into(self.decl_header)
         .unwrap();
