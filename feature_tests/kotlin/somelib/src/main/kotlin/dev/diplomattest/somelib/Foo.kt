@@ -51,7 +51,7 @@ class Foo internal constructor (
             // This lifetime edge depends on lifetimes: 'a
             val aEdges: MutableList<Any> = mutableListOf();
             
-            val returnVal = lib.Foo_extract_from_fields(fields.toNative());
+            val returnVal = lib.Foo_extract_from_fields(fields.toNative(aAppendArray = arrayOf(aEdges)));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)

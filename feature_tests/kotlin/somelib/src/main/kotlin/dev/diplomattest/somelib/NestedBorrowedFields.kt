@@ -82,9 +82,9 @@ class NestedBorrowedFields (var fields: BorrowedFields, var bounds: BorrowedFiel
     }
     internal fun toNative(xAppendArray: Array<MutableList<Any>>, yAppendArray: Array<MutableList<Any>>, zAppendArray: Array<MutableList<Any>>): NestedBorrowedFieldsNative {
         var native = NestedBorrowedFieldsNative()
-        native.fields = this.fields.toNative()
-        native.bounds = this.bounds.toNative()
-        native.bounds2 = this.bounds2.toNative()
+        native.fields = this.fields.toNative(aAppendArray = arrayOf(*xAppendArray))
+        native.bounds = this.bounds.toNative(aAppendArray = arrayOf(*xAppendArray), bAppendArray = arrayOf(*yAppendArray), cAppendArray = arrayOf(*yAppendArray))
+        native.bounds2 = this.bounds2.toNative(aAppendArray = arrayOf(*zAppendArray), bAppendArray = arrayOf(*zAppendArray), cAppendArray = arrayOf(*zAppendArray))
         return native
     }
 

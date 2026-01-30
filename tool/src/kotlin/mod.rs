@@ -1,6 +1,6 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{
-    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
@@ -302,9 +302,15 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
         // Slice parameters make an arena which is retained as an edge
         LifetimeEdgeKind::SliceParam => Some(format!("{param_name}TODO").into()),
         // This is handled via append arrays
-        LifetimeEdgeKind::StructLifetime(def_env, def_lt, is_option) => None,
+        LifetimeEdgeKind::StructLifetime(..) => None,
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
+}
+
+/// Context about a struct being borrowed when doing kotlin-to-c conversions
+struct StructBorrowContext<'tcx> {
+    use_env: &'tcx LifetimeEnv,
+    param_info: StructBorrowInfo<'tcx>,
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
@@ -336,8 +342,10 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         &self,
         ty: &Type<P>,
         name: Cow<str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
         is_param: bool,
     ) -> Cow<'cx, str> {
+        use std::fmt::Write;
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
@@ -350,7 +358,36 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
-            Type::Struct(_) => format!("{name}.toNative()").into(),
+            Type::Struct(_) => {
+                let mut params = String::new();
+                if let Some(info) = struct_borrow_info {
+                    let mut maybe_comma_outer = "";
+                    for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
+                        write!(
+                            &mut params,
+                            "{maybe_comma_outer}{}AppendArray = ",
+                            info.param_info.env.fmt_lifetime(def_lt)
+                        )
+                        .unwrap();
+                        write!(&mut params, "arrayOf(");
+                        let mut maybe_comma = "";
+                        for use_lt in use_lts {
+                            // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
+                            let lt = info.use_env.fmt_lifetime(use_lt);
+                            if is_param {
+                                write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
+                            } else {
+                                write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
+                            }
+                            maybe_comma = ", ";
+                        }
+                        write!(&mut params, ")").unwrap();
+
+                        maybe_comma_outer = ", ";
+                    }
+                }
+                format!("{name}.toNative({params})").into()
+            }
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
                 let resolved = self.tcx.resolve_trait(trait_id);
@@ -374,7 +411,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::DiplomatOption(ref inner) => {
                 // We pass false for is_params here the type is a struct field
-                let inner_expr = self.gen_kt_to_c_for_type(inner, "it".into(), false);
+                let inner_expr =
+                    self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, false);
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -1080,12 +1118,12 @@ returnVal.option() ?: return null
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
             let mut additional_name = None;
 
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
+
             match &param.ty {
                 Type::Slice(slice) => {
                     slice_conversions
                         .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
-
-                    let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
@@ -1101,10 +1139,6 @@ returnVal.option() ?: return null
                         ParamBorrowInfo::NotBorrowed => (),
                         _ => todo!(),
                     };
-                }
-
-                Type::Struct(_) | Type::Opaque(_) => {
-                    visitor.visit_param(&param.ty, &param_name);
                 }
                 Type::Callback(Callback {
                     param_self: _,
@@ -1215,7 +1249,23 @@ returnVal.option() ?: return null
                 param_name.clone()
             };
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass, true));
+
+            let struct_borrow_info = if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind
+            {
+                Some(StructBorrowContext {
+                    use_env: &method.lifetime_env,
+                    param_info,
+                })
+            } else {
+                None
+            };
+
+            param_conversions.push(self.gen_kt_to_c_for_type(
+                &param.ty,
+                param_name_to_pass,
+                struct_borrow_info,
+                true,
+            ));
         }
         let write_return = matches!(
             &method.output,
@@ -1588,13 +1638,26 @@ returnVal.option() ?: return null
                 let field_access = format!("nativeStruct.{field_name}");
                 let field_access = &field_access;
 
+                let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                    StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
+                        |param_info| StructBorrowContext {
+                            use_env: &ty.lifetimes,
+                            param_info,
+                        },
+                    )
+                } else {
+                    None
+                };
+
                 let kt_to_native = non_out_struct.map(|nonout| {
                     self.gen_kt_to_c_for_type(
                         &nonout.fields[i].ty,
                         format!("this.{field_name}").into(),
+                        struct_borrow_info,
                         false,
                     )
                 });
+
                 StructFieldDef {
                     name: field_name.clone(),
                     ffi_type_default: self
