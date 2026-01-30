@@ -63,6 +63,7 @@ TypeContext {
                         generate_mocking_interface: false,
                         abi_compatible: false,
                         custom_extra_code: {},
+                        default_args: {},
                     },
                 },
             ],
@@ -126,7 +127,9 @@ TypeContext {
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
                                 custom_extra_code: {},
+                                default_args: {},
                             },
+                            default_value: None,
                         },
                     ],
                     output: Infallible(
@@ -178,6 +181,7 @@ TypeContext {
                         generate_mocking_interface: false,
                         abi_compatible: false,
                         custom_extra_code: {},
+                        default_args: {},
                     },
                 },
             ],
@@ -207,6 +211,7 @@ TypeContext {
                 generate_mocking_interface: false,
                 abi_compatible: false,
                 custom_extra_code: {},
+                default_args: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -277,6 +282,7 @@ TypeContext {
                         generate_mocking_interface: false,
                         abi_compatible: false,
                         custom_extra_code: {},
+                        default_args: {},
                     },
                 },
             ],
@@ -343,6 +349,7 @@ TypeContext {
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
                                 custom_extra_code: {},
+                                default_args: {},
                             },
                         },
                     ),
@@ -387,7 +394,9 @@ TypeContext {
                                 generate_mocking_interface: false,
                                 abi_compatible: false,
                                 custom_extra_code: {},
+                                default_args: {},
                             },
+                            default_value: None,
                         },
                     ],
                     output: Infallible(
@@ -432,6 +441,7 @@ TypeContext {
                         generate_mocking_interface: false,
                         abi_compatible: false,
                         custom_extra_code: {},
+                        default_args: {},
                     },
                 },
             ],
@@ -461,6 +471,7 @@ TypeContext {
                 generate_mocking_interface: false,
                 abi_compatible: false,
                 custom_extra_code: {},
+                default_args: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -513,6 +524,7 @@ TypeContext {
                 generate_mocking_interface: false,
                 abi_compatible: false,
                 custom_extra_code: {},
+                default_args: {},
             },
             lifetimes: LifetimeEnv {
                 nodes: [
