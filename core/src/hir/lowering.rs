@@ -1051,6 +1051,9 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::StrReference(lifetime, encoding, _stdlib) => {
                 if lifetime.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
+                    if !self.attr_validator.attrs_supported().owned_slices {
+                        self.errors.push(LoweringError::Other("Owned slices are not supported in this backend.".into()));
+                    }
                 }
                 let new_lifetime = lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt));
                 if let Some(super::MaybeStatic::Static) = new_lifetime {
@@ -1066,6 +1069,9 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::PrimitiveSlice(lm, prim, _stdlib) => {
                 if lm.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
+                    if !self.attr_validator.attrs_supported().owned_slices {
+                        self.errors.push(LoweringError::Other("Owned slices are not supported in this backend.".into()));
+                    }
                 }
                 let new_lifetime = lm
                     .as_ref()

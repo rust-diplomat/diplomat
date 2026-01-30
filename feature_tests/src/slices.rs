@@ -17,6 +17,7 @@ pub mod ffi {
             Box::new(Self(v.to_string()))
         }
 
+        #[diplomat::cfg(supports=owned_slices)]
         pub fn new_owned(v: Box<DiplomatStr>) -> Box<MyString> {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
@@ -92,7 +93,7 @@ pub mod ffi {
             ))
         }
 
-        #[diplomat::attr(supports = memory_sharing, disable)]
+        #[diplomat::attr(any(supports = memory_sharing, not(supports = owned_slices)), disable)]
         #[diplomat::attr(auto, constructor)]
         pub fn new_from_owned(v: Box<[f64]>) -> Box<Float64Vec> {
             Box::new(Self(v.into()))

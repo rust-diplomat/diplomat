@@ -72,6 +72,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_send = false;
     a.traits_are_sync = false;
     a.generate_mocking_interface = false;
+    a.owned_slices = true;
 
     a
 }
