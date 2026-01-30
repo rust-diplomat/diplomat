@@ -458,6 +458,14 @@ pub mod ffi {
     )]
     #[diplomat::attr(
         any(nanobind, cpp),
+        custom_extra_code(source = "//Pre Test", location = "pre_def_block")
+    )]
+    #[diplomat::attr(
+        any(nanobind, cpp),
+        custom_extra_code(source = "//Post Test", location = "post_def_block")
+    )]
+    #[diplomat::attr(
+        any(nanobind, cpp),
         custom_extra_code(
             source = r#"std::string somelib::ns::RenamedBlockOverride::special_function() {
     return "This is a custom binding.";
@@ -471,6 +479,10 @@ pub mod ffi {
             source = r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#,
             location = "init_block"
         )
+    )]
+    #[diplomat::attr(
+        nanobind,
+        custom_extra_code(source = "//Pre-Init Test", location = "pre_init_block")
     )]
     pub struct BlockOverride();
 

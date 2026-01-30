@@ -11,6 +11,7 @@ use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 pub(crate) use gen::ItemGenContext;
 
 pub(crate) use formatter::Cpp2Formatter;
+pub(crate) use gen::ExtraCode;
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CppConfig {}

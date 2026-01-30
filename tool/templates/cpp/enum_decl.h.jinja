@@ -5,6 +5,11 @@ namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
 {% else if let Some(lib_name) = &fmt.lib_name -%}
 namespace {{lib_name}} {
 {% endif -%}
+
+{% if !extra_def_code.pre.is_empty() %}
+{{ extra_def_code.pre }}
+{% endif -%}
+
 {% if !docs.is_empty() -%}
 /**
 {{~ docs|prefix_trimmed(" * ")}}
@@ -37,10 +42,14 @@ public:
     inline static {{type_name}} FromFFI({{ctype}} c_enum);
 private:
     Value value;
-{% if !extra_def_code.is_empty() %}
-{{ extra_def_code }}
+{% if !extra_def_code.inner.is_empty() %}
+{{ extra_def_code.inner }}
 {% endif -%}
 };
+
+{% if !extra_def_code.post.is_empty() %}
+{{ extra_def_code.post }}
+{% endif -%}
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}
 } // namespace
