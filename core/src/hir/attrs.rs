@@ -83,11 +83,18 @@ pub enum IncludeSource {
 pub enum IncludeLocation {
     /// An extension to the definition of the class (i.e., in C++, the .d.hpp file)
     DefBlock,
+    /// An extension to the definition of the class BEFORE the class is defined.
+    PreDefBlock,
+    /// An extension to the definition of the class AFTER the class is defined.
+    PostDefBlock,
     /// An extension to the implementation of the class (i.e., in C++, the .hpp file)
     ImplBlock,
     /// A block for adding to an initialization function. Intended for backends that build off of C/C++.
     /// Used by the Nanobind backend to override functionality for Nanobind bindings.
     InitializationBlock,
+    /// The block at the start of an initialization function.
+    /// There is no post initialization block since the InitializationBlock is already after all initializations before.
+    PreInitializationBlock,
 }
 impl IncludeLocation {
     fn pair_from_meta(
@@ -162,8 +169,11 @@ impl IncludeLocation {
 
     fn from_assign(assigned: &str, errors: &mut ErrorStore) -> Option<Self> {
         match assigned {
+            "pre_def_block" => Some(IncludeLocation::PreDefBlock),
             "def_block" => Some(IncludeLocation::DefBlock),
+            "post_def_block" => Some(IncludeLocation::PostDefBlock),
             "impl_block" => Some(IncludeLocation::ImplBlock),
+            "pre_init_block" => Some(IncludeLocation::PreInitializationBlock),
             "init_block" => Some(IncludeLocation::InitializationBlock),
             _ => {
                 errors.push(LoweringError::Other(format!(
