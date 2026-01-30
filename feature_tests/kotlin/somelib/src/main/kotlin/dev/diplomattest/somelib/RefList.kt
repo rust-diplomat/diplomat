@@ -30,10 +30,11 @@ class RefList internal constructor (
         @JvmStatic
         
         fun node(data: RefListParameter): RefList {
+            // This lifetime edge depends on lifetimes: 'b
+            val bEdges: MutableList<Any> = mutableListOf(data);
             
             val returnVal = lib.RefList_node(data.handle);
             val selfEdges: List<Any> = listOf()
-            val bEdges: List<Any?> = listOf(data)
             val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)
             CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));

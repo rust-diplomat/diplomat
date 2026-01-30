@@ -31,6 +31,8 @@ class OpaqueRefIterator internal constructor (
     }
     
     internal fun nextInternal(): AttrOpaque1? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.namespace_OpaqueRefIterator_next(handle);
         val selfEdges: List<Any> = listOf(this)

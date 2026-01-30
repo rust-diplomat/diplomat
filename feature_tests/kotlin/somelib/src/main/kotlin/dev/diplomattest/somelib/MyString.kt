@@ -120,6 +120,8 @@ class MyString internal constructor (
     }
     
     fun borrow(): String {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.MyString_borrow(handle);
             return PrimitiveArrayTools.getUtf8(returnVal)

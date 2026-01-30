@@ -29,6 +29,8 @@ class MyIndexer internal constructor (
     }
     
     internal fun getInternal(i: ULong): String? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.namespace_MyIndexer_get(handle, FFISizet(i));
         

@@ -56,6 +56,8 @@ class OptionString internal constructor (
     }
     
     fun borrow(): String? {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.OptionString_borrow(handle);
         

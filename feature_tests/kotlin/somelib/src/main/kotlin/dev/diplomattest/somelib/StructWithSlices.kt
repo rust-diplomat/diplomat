@@ -78,7 +78,7 @@ class StructWithSlices (var first: String, var second: UShortArray) {
         }
 
     }
-    internal fun toNative(): StructWithSlicesNative {
+    internal fun toNative(aAppendArray: Array<MutableList<Any>>): StructWithSlicesNative {
         var native = StructWithSlicesNative()
         native.first = PrimitiveArrayTools.borrowUtf8(this.first).slice
         native.second = PrimitiveArrayTools.borrow(this.second).slice
@@ -90,8 +90,9 @@ class StructWithSlices (var first: String, var second: UShortArray) {
     }
     
     fun returnLast(): String {
+        val temporaryEdgeArena: MutableList<Any> = mutableListOf()
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.StructWithSlices_return_last(this.toNative(), write);
+        val returnVal = lib.StructWithSlices_return_last(this.toNative(aAppendArray = arrayOf(temporaryEdgeArena)), write);
         
         val returnString = DW.writeToString(write)
         return returnString

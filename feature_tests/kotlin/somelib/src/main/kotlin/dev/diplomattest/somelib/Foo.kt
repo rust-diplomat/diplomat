@@ -34,10 +34,11 @@ class Foo internal constructor (
         
         fun newStatic(x: String): Foo {
             val xSliceMemory = PrimitiveArrayTools.borrowUtf8(x)
+            // This lifetime edge depends on lifetimes: 'a
+            val aEdges: MutableList<Any> = mutableListOf();
             
             val returnVal = lib.Foo_new_static(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any?> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -47,10 +48,11 @@ class Foo internal constructor (
         @JvmStatic
         
         fun extractFromFields(fields: BorrowedFields): Foo {
+            // This lifetime edge depends on lifetimes: 'a
+            val aEdges: MutableList<Any> = mutableListOf();
             
-            val returnVal = lib.Foo_extract_from_fields(fields.toNative());
+            val returnVal = lib.Foo_extract_from_fields(fields.toNative(aAppendArray = arrayOf(aEdges)));
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any?> = fields.aEdges()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -59,11 +61,13 @@ class Foo internal constructor (
     }
     
     fun getBar(): Bar {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
+        // This lifetime edge depends on lifetimes: 'a, 'b
+        val bEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Foo_get_bar(handle);
         val selfEdges: List<Any> = listOf()
-        val bEdges: List<Any?> = listOf(this)
-        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Bar(handle, selfEdges, bEdges, aEdges)
         CLEANER.register(returnOpaque, Bar.BarCleaner(handle, Bar.lib));
@@ -71,10 +75,10 @@ class Foo internal constructor (
     }
     
     fun asReturning(): BorrowedFieldsReturning {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.Foo_as_returning(handle);
-        
-        val aEdges: List<Any?> = listOf(this)
         val returnStruct = BorrowedFieldsReturning.fromNative(returnVal, aEdges)
         return returnStruct
     }

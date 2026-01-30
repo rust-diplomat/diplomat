@@ -70,12 +70,32 @@ internal class GCSlice(val memory: Memory?, val slice: Slice) {
     fun close() {
         memory?.close()
     }
+
+    // Stick the contained memory into a list of edges. Returns `this` for convenient chaining.
+    fun into(edges: List<MutableList<Any>>): GCSlice {
+        memory?.let {
+            for(edge in edges) {
+                edge.add(memory)
+            }
+        }
+        return this
+    }
 }
 
 internal class GCSlices(val memory: Memory?, val subMemory: List<Memory?>, val slice: Slice) {
     fun close() {
         memory?.close()
         subMemory.forEach { it?.close() }
+    }
+
+    // Stick this object into a list of edges. Returns `this` for convenient chaining.
+    fun into(edges: List<MutableList<Any>>): GCSlices {
+        for(edge in edges) {
+            // Don't bother to split this into submemories, just use this object
+            // to tie GC things together
+            edge.add(this)
+        }
+        return this
     }
 }
 

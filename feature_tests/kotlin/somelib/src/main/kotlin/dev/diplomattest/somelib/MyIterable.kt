@@ -43,10 +43,11 @@ class MyIterable internal constructor (
     }
     
     override fun iterator(): MyIterator {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
-        val aEdges: List<Any?> = listOf(this)
         val handle = returnVal 
         val returnOpaque = MyIterator(handle, selfEdges, aEdges)
         CLEANER.register(returnOpaque, MyIterator.MyIteratorCleaner(handle, MyIterator.lib));

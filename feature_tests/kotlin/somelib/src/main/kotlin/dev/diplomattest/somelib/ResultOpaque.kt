@@ -108,7 +108,6 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.ok()
             } else {
-                
                 val returnStruct = ErrorStruct.fromNative(returnVal.union.err)
                 return returnStruct.err()
             }
@@ -172,6 +171,8 @@ class ResultOpaque internal constructor (
     */
     fun takesStr(v: String): ResultOpaque {
         val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSliceMemory.slice);
         val selfEdges: List<Any> = listOf(this)

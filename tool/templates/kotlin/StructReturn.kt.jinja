@@ -1,11 +1,4 @@
-{%- for borrow in borrows %}
-val {{borrow.lt}}Edges: List<Any?> = {% if borrow.params.is_empty() -%}
-listOf()
-{%- else -%}
-{%- for param in borrow.params %}{%- if !loop.first %} + {% endif -%}{{param}}{%- endfor %}
-{%- endif %}
-{%- endfor %}
-val returnStruct = {{return_type_name}}.fromNative({{val_name}}{% if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
+val returnStruct = {{return_type_name}}.fromNative({{val_name}}{% if !named_lifetimes.is_empty() %}{%- for lt in named_lifetimes %}, {{lt}}Edges{%- endfor %}{% endif -%})
 {%- for cleanup in cleanups %}
 {{cleanup|indent(4)}}
 {%- endfor %}

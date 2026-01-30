@@ -100,7 +100,6 @@ class MyStruct (var a: UByte, var b: Boolean, var c: UByte, var d: ULong, var e:
         fun new_(): MyStruct {
             
             val returnVal = lib.MyStruct_new();
-            
             val returnStruct = MyStruct.fromNative(returnVal)
             return returnStruct
         }

@@ -82,7 +82,6 @@ class CyclicStructA (var a: CyclicStructB) {
         fun getB(): CyclicStructB {
             
             val returnVal = lib.CyclicStructA_get_b();
-            
             val returnStruct = CyclicStructB.fromNative(returnVal)
             return returnStruct
         }

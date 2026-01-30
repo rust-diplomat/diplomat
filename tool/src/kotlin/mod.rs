@@ -1,10 +1,13 @@
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
+use diplomat_core::hir::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
+};
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
     Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability, OpaquePath, Optional, OutType, Param,
     PrimitiveType, ReturnableStructDef, ReturnableStructPath, SelfType, Slice, SpecialMethod,
-    StringEncoding, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext, TypeDef,
+    StringEncoding, StructPath, StructPathLike, TraitIdGetter, TyPosition, Type, TypeContext,
+    TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -292,6 +295,26 @@ struct ItemGenContext<'a, 'cx> {
     use_finalizers_not_cleaners: bool,
 }
 
+/// Format a `val aEdges = mutableListOf(..)` edges array initializer
+fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
+    let param_name = &edge.param_name;
+    match edge.kind {
+        // Opaque parameters are just retained as edges
+        LifetimeEdgeKind::OpaqueParam => Some(param_name.into()),
+        // Slice parameters make an arena which is retained as an edge
+        LifetimeEdgeKind::SliceParam => Some(format!("{param_name}TODO").into()),
+        // This is handled via append arrays
+        LifetimeEdgeKind::StructLifetime(..) => None,
+        _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
+    }
+}
+
+/// Context about a struct being borrowed when doing kotlin-to-c conversions
+struct StructBorrowContext<'tcx> {
+    use_env: &'tcx LifetimeEnv,
+    param_info: StructBorrowInfo<'tcx>,
+}
+
 impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
@@ -315,14 +338,83 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
     }
 
+    fn gen_kt_to_c_for_struct(
+        &self,
+        s: &StructPath,
+        name: Cow<str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+        mut needs_temporary: Option<&mut bool>,
+    ) -> String {
+        use std::fmt::Write;
+        let struct_def = s.resolve(self.tcx);
+        let mut params = String::new();
+        let struct_borrow_info = struct_borrow_info.as_ref();
+        if struct_def.lifetimes.num_lifetimes() != 0 {
+            let mut maybe_comma_outer = "";
+            for def_lt in struct_def.lifetimes.all_lifetimes() {
+                write!(
+                    &mut params,
+                    "{maybe_comma_outer}{}AppendArray = ",
+                    struct_def.lifetimes.fmt_lifetime(def_lt)
+                )
+                .unwrap();
+
+                // Check if this lifetime
+                if let Some(use_lts) = struct_borrow_info
+                    .and_then(|i| i.param_info.borrowed_struct_lifetime_map.get(&def_lt))
+                {
+                    // Optimization: don't generate arrayOf(*fooAppendArray) when you can just
+                    // directly use fooAppendArray
+                    if needs_temporary.is_none() && use_lts.len() == 1 {
+                        let lt = struct_borrow_info
+                            .unwrap()
+                            .use_env
+                            .fmt_lifetime(use_lts.iter().next().unwrap());
+                        write!(&mut params, "{lt}AppendArray",).unwrap();
+                    } else {
+                        write!(&mut params, "arrayOf(").unwrap();
+                        let mut maybe_comma = "";
+                        for use_lt in use_lts {
+                            // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
+                            let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
+                            // Params use edges, structs use append arrays
+                            if needs_temporary.is_some() {
+                                write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
+                            } else {
+                                write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
+                            }
+                            maybe_comma = ", ";
+                        }
+                        write!(&mut params, ")").unwrap();
+                    }
+                } else {
+                    if let Some(ref mut needs_temporary) = needs_temporary {
+                        **needs_temporary = true;
+                    } else {
+                        panic!("Struct borrow info MUST reference all lifetimes");
+                    }
+                    write!(&mut params, "arrayOf(temporaryEdgeArena)").unwrap();
+                }
+
+                maybe_comma_outer = ", ";
+            }
+        }
+        format!("{name}.toNative({params})")
+    }
+
+    /// needs_temporary should be set to an outparam boolean ONLY in the parameter case,
+    /// and will get set to true if thise needs a temporary arena.
+    ///
     /// Booleans are represented differently at the native layer in struct fields and params
-    /// so we have is_param to track that.
-    fn gen_kt_to_c_for_type<P: TyPosition<OpaqueOwnership = Borrow>>(
+    /// so the presence of needs_temporary is also used to tell that.
+    fn gen_kt_to_c_for_type<P: TyPosition<OpaqueOwnership = Borrow, StructPath = StructPath>>(
         &self,
         ty: &Type<P>,
         name: Cow<str>,
-        is_param: bool,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+        needs_temporary: Option<&mut bool>,
     ) -> Cow<'cx, str> {
+        let is_param = needs_temporary.is_some();
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
@@ -335,7 +427,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
-            Type::Struct(_) => format!("{name}.toNative()").into(),
+            Type::Struct(ref s) => self
+                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, needs_temporary)
+                .into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
                 let resolved = self.tcx.resolve_trait(trait_id);
@@ -359,7 +453,12 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::DiplomatOption(ref inner) => {
                 // We pass false for is_params here the type is a struct field
-                let inner_expr = self.gen_kt_to_c_for_type(inner, "it".into(), false);
+                let inner_expr = self.gen_kt_to_c_for_type(
+                    inner,
+                    "it".into(),
+                    struct_borrow_info,
+                    needs_temporary,
+                );
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -503,7 +602,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
         struct OpaqueReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
-            borrows: Vec<ParamsForLt<'b>>,
+            named_lifetimes: Vec<Cow<'b, str>>,
             is_owned: bool,
             self_edges: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
@@ -511,11 +610,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             val_name: &'a str,
             return_type_modifier: &'a str,
             use_finalizers_not_cleaners: bool,
-        }
-
-        struct ParamsForLt<'c> {
-            lt: Cow<'c, str>,
-            params: Vec<Cow<'c, str>>,
         }
 
         let return_type_name = opaque_def.name.to_string().into();
@@ -538,27 +632,17 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         let is_owned = self_edges.is_none();
         let self_edges = self_edges.unwrap_or_else(Vec::new);
 
-        let borrows = lifetimes
+        let named_lifetimes = lifetimes
             .lifetimes()
-            .filter_map(|lt| {
-                let lt = match lt {
-                    MaybeStatic::Static => return None,
-                    MaybeStatic::NonStatic(lt) => lt,
-                };
-                let params = method_lifetimes_map
-                    .get(&lt)
-                    .iter()
-                    .flat_map(|got| got.incoming_edges.iter())
-                    .map(|edge| self.formatter.fmt_borrow(edge))
-                    .collect();
-                let lt = lifetime_env.fmt_lifetime(lt);
-                Some(ParamsForLt { lt, params })
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => None,
+                MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
 
         let opaque_return = OpaqueReturn {
             return_type_name,
-            borrows,
+            named_lifetimes,
             is_owned,
             self_edges,
             cleanups,
@@ -638,7 +722,6 @@ return string{return_type_modifier}"#
         &'d self,
         struct_def: &'d ReturnableStructDef,
         lifetimes: &'d Lifetimes,
-        method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
@@ -660,40 +743,26 @@ return string{return_type_modifier}"#
             return format!("return {return_type_name}(){return_type_modifier}");
         }
 
-        let borrows = lifetimes
+        let named_lifetimes = lifetimes
             .lifetimes()
-            .filter_map(|lt| {
-                let lt = match lt {
-                    MaybeStatic::Static => return None,
-                    MaybeStatic::NonStatic(lt) => lt,
-                };
-                let params = method_lifetimes_map
-                    .get(&lt)
-                    .iter()
-                    .flat_map(|got| got.incoming_edges.iter())
-                    .map(|edge| self.formatter.fmt_borrow(edge))
-                    .collect();
-                let lt = lifetime_env.fmt_lifetime(lt);
-                Some(ParamsForLt { lt, params })
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => None,
+                MaybeStatic::NonStatic(lt) => Some(lifetime_env.fmt_lifetime(lt)),
             })
             .collect::<Vec<_>>();
 
-        struct ParamsForLt<'c> {
-            lt: Cow<'c, str>,
-            params: Vec<Cow<'c, str>>,
-        }
         #[derive(Template)]
         #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
         struct StructReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
-            borrows: Vec<ParamsForLt<'b>>,
+            named_lifetimes: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
             val_name: &'a str,
             return_type_modifier: &'a str,
         }
         StructReturn {
             return_type_name,
-            borrows,
+            named_lifetimes,
             cleanups,
             val_name,
             return_type_modifier,
@@ -733,7 +802,6 @@ return string{return_type_modifier}"#
                 self.gen_struct_return_conversion(
                     &strct.resolve(self.tcx),
                     lifetimes,
-                    method_lifetimes_map,
                     &method.lifetime_env,
                     cleanups,
                     val_name,
@@ -786,7 +854,6 @@ val intermediateOption = {val_name}.option() ?: return null
                     self.gen_struct_return_conversion(
                         &strct.resolve(self.tcx),
                         lifetimes,
-                        method_lifetimes_map,
                         &method.lifetime_env,
                         cleanups,
                         "intermediateOption",
@@ -846,14 +913,14 @@ val intermediateOption = {val_name}.option() ?: return null
     fn gen_return_conversion<'d>(
         &'d self,
         method: &'d Method,
-        method_lifetimes_map: MethodLtMap<'d>,
+        method_lifetimes_map: &MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
     ) -> String {
         match &method.output {
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
                 res,
                 method,
-                &method_lifetimes_map,
+                method_lifetimes_map,
                 cleanups,
                 "returnVal",
                 "",
@@ -862,7 +929,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 let ok_path = self.gen_success_return_conversion(
                     ok,
                     method,
-                    &method_lifetimes_map,
+                    method_lifetimes_map,
                     cleanups,
                     "returnVal.union.ok",
                     ".ok()",
@@ -910,7 +977,7 @@ val intermediateOption = {val_name}.option() ?: return null
 
                         self.gen_out_type_return_conversion(
                             method,
-                            &method_lifetimes_map,
+                            method_lifetimes_map,
                             cleanups,
                             "returnVal.union.err",
                             err_converter,
@@ -936,7 +1003,7 @@ val intermediateOption = {val_name}.option() ?: return null
             ReturnType::Nullable(SuccessType::OutType(ref res)) => self
                 .gen_nullable_return_conversion(
                     method,
-                    &method_lifetimes_map,
+                    method_lifetimes_map,
                     cleanups,
                     "returnVal",
                     res,
@@ -1034,6 +1101,7 @@ returnVal.option() ?: return null
         let mut slice_conversions = Vec::with_capacity(method.params.len());
         let mut cleanups = Vec::with_capacity(method.params.len());
 
+        let mut needs_temporary = false;
         match self_type {
             Some(st @ SelfType::Opaque(_)) => {
                 let param_type = "Pointer".into();
@@ -1046,10 +1114,26 @@ returnVal.option() ?: return null
             Some(st @ SelfType::Struct(s)) => {
                 let param_type =
                     format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
-                let param_name: Cow<'_, str> = "this.toNative()".into();
-                visitor.visit_param(&st.clone().into(), "this");
+                let param_borrow_kind = visitor.visit_param(&st.clone().into(), "this");
+                let struct_borrow_info =
+                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
+                        Some(StructBorrowContext {
+                            use_env: &method.lifetime_env,
+                            param_info,
+                        })
+                    } else {
+                        None
+                    };
                 param_types_ffi.push(param_type);
-                param_conversions.push(param_name.clone());
+                param_conversions.push(
+                    self.gen_kt_to_c_for_struct(
+                        s,
+                        "this".into(),
+                        struct_borrow_info,
+                        Some(&mut needs_temporary),
+                    )
+                    .into(),
+                );
             }
             Some(SelfType::Enum(_)) => {
                 let param_type = "Int".into();
@@ -1060,17 +1144,16 @@ returnVal.option() ?: return null
             None => (),
             _ => todo!(),
         };
-
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
             let mut additional_name = None;
+
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
             match &param.ty {
                 Type::Slice(slice) => {
                     slice_conversions
                         .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
-
-                    let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
                     match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => (),
@@ -1086,10 +1169,6 @@ returnVal.option() ?: return null
                         ParamBorrowInfo::NotBorrowed => (),
                         _ => todo!(),
                     };
-                }
-
-                Type::Struct(_) | Type::Opaque(_) => {
-                    visitor.visit_param(&param.ty, &param_name);
                 }
                 Type::Callback(Callback {
                     param_self: _,
@@ -1200,7 +1279,23 @@ returnVal.option() ?: return null
                 param_name.clone()
             };
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name_to_pass, true));
+
+            let struct_borrow_info = if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind
+            {
+                Some(StructBorrowContext {
+                    use_env: &method.lifetime_env,
+                    param_info,
+                })
+            } else {
+                None
+            };
+
+            param_conversions.push(self.gen_kt_to_c_for_type(
+                &param.ty,
+                param_name_to_pass,
+                struct_borrow_info,
+                Some(&mut needs_temporary),
+            ));
         }
         let write_return = matches!(
             &method.output,
@@ -1217,7 +1312,7 @@ returnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
+            .gen_return_conversion(method, &method_lifetimes_map, cleanups.as_ref())
             .into();
 
         // this should only be called in the special method generation below
@@ -1297,6 +1392,9 @@ returnVal.option() ?: return null
             slice_conversions,
             docs: self.formatter.fmt_docs(&method.docs),
             add_override_specifier_for_opaque_self_methods,
+            lifetimes: &method.lifetime_env,
+            method_lifetimes_map,
+            needs_temporary,
         }
         .render()
         .expect("Failed to render string for method");
@@ -1571,13 +1669,26 @@ returnVal.option() ?: return null
                 let field_access = format!("nativeStruct.{field_name}");
                 let field_access = &field_access;
 
+                let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                    StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
+                        |param_info| StructBorrowContext {
+                            use_env: &ty.lifetimes,
+                            param_info,
+                        },
+                    )
+                } else {
+                    None
+                };
+
                 let kt_to_native = non_out_struct.map(|nonout| {
                     self.gen_kt_to_c_for_type(
                         &nonout.fields[i].ty,
                         format!("this.{field_name}").into(),
-                        false,
+                        struct_borrow_info,
+                        None,
                     )
                 });
+
                 StructFieldDef {
                     name: field_name.clone(),
                     ffi_type_default: self
@@ -2117,6 +2228,13 @@ struct MethodTpl<'a> {
     slice_conversions: Vec<Cow<'a, str>>,
     docs: String,
     add_override_specifier_for_opaque_self_methods: bool,
+
+    lifetimes: &'a LifetimeEnv,
+    /// Maps each (used in the output) method lifetime to a list of parameters
+    /// it borrows from. The parameter list may contain the parameter name, or
+    /// a spread of a struct's `_fiellsForLifetimeFoo` getter.
+    method_lifetimes_map: MethodLtMap<'a>,
+    needs_temporary: bool,
 }
 
 #[derive(Default)]

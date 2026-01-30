@@ -178,10 +178,10 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
         @JvmStatic
         
         fun new_(): MyNativeStruct {
+            // This lifetime edge depends on lifetimes: 'b
+            val bEdges: MutableList<Any> = mutableListOf();
             
             val returnVal = lib.MyNativeStruct_new();
-            
-            val bEdges: List<Any?> = listOf()
             val returnStruct = MyNativeStruct.fromNative(returnVal, bEdges)
             return returnStruct
         }
@@ -195,6 +195,8 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
         @JvmStatic
         
         fun getUByteSlice(): UByteArray {
+            // This lifetime edge depends on lifetimes: 'a
+            val aEdges: MutableList<Any> = mutableListOf();
             
             val returnVal = lib.MyNativeStruct_get_u_byte_slice();
                 return PrimitiveArrayTools.getUByteArray(returnVal)
@@ -222,7 +224,7 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
             }
         }
     }
-    internal fun toNative(): MyNativeStructNative {
+    internal fun toNative(bAppendArray: Array<MutableList<Any>>): MyNativeStructNative {
         var native = MyNativeStructNative()
         native.a = if (this.a) 1 else 0
         native.b = this.b
