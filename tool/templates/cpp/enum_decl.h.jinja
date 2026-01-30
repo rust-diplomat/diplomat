@@ -6,8 +6,8 @@ namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
 namespace {{lib_name}} {
 {% endif -%}
 
-{% if !pre_extra_def_code.is_empty() %}
-{{ pre_extra_def_code }}
+{% if !extra_def_code.pre.is_empty() %}
+{{ extra_def_code.pre }}
 {% endif -%}
 
 {% if !docs.is_empty() -%}
@@ -42,13 +42,13 @@ public:
     inline static {{type_name}} FromFFI({{ctype}} c_enum);
 private:
     Value value;
-{% if !extra_def_code.is_empty() %}
-{{ extra_def_code }}
+{% if !extra_def_code.inner.is_empty() %}
+{{ extra_def_code.inner }}
 {% endif -%}
 };
 
-{% if !post_extra_def_code.is_empty() %}
-{{ post_extra_def_code }}
+{% if !extra_def_code.post.is_empty() %}
+{{ extra_def_code.post }}
 {% endif -%}
 
 {% if namespace.is_some() || fmt.lib_name.is_some() -%}
