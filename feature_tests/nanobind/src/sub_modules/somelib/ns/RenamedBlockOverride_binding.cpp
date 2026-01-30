@@ -5,6 +5,8 @@
 
 namespace somelib::ns {
 void add_RenamedBlockOverride_binding(nb::module_ mod) {
+    
+    //Pre-Init Test
     PyType_Slot somelib_ns_RenamedBlockOverride_slots[] = {
         {Py_tp_free, (void *)somelib::ns::RenamedBlockOverride::operator delete },
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},

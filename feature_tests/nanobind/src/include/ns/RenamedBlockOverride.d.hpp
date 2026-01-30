@@ -19,6 +19,8 @@ namespace capi {
 } // namespace
 
 namespace somelib::ns {
+
+//Pre Test
 class RenamedBlockOverride {
 public:
 
@@ -40,5 +42,7 @@ public:
     static std::string special_function();
 };
 
+
+//Post Test
 } // namespace
 #endif // SOMELIB_ns_RenamedBlockOverride_D_HPP
