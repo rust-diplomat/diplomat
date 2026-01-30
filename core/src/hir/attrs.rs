@@ -70,7 +70,7 @@ pub struct Attrs {
     /// A list of default arguments to specify on the backend-side of a function.
     /// Mapped from ParamIdent -> Value.
     /// The validator will update the `Method` with the appropriate values.
-    pub default_args : HashMap<String, DefaultArgValueString>,
+    pub default_args : HashMap<String, DefaultArgValue>,
 }
 
 /// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
@@ -350,54 +350,14 @@ pub struct SpecialMethodPresence {
 }
 
 #[derive(Clone, Debug)]
-pub enum DefaultArgIntType {
-    I8(i8),
-    I16(i16),
-    I32(i32),
-    I64(i64),
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-}
-
-#[derive(Clone, Debug)]
-pub enum DefaultArgIntSizeType {
-    Isize(isize),
-    Usize(usize),
-}
-
-#[derive(Clone, Debug)]
-pub enum DefaultArgInt128Type {
-    I128(i128),
-    U128(u128),
-}
-
-#[derive(Clone, Debug)]
-pub enum DefaultArgFloatType {
-    F32(f32),
-    F64(f64),
-}
-
-#[derive(Clone, Debug)]
 pub enum DefaultArgValue {
     Bool(bool),
-    Char(u8),
-    Byte(u8),
-    Ordering(std::cmp::Ordering),
-    Int(DefaultArgIntType),
-    IntSize(DefaultArgIntSizeType),
-    Int128(DefaultArgInt128Type),
-    Float(DefaultArgFloatType),
+    Char(char),
+    Integer(i128),
+    Float(f64),
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct DefaultArgValueString {
-    value : String,
-    // bytes : Vec<u8>,
-}
-
-impl DefaultArgValueString {
+impl DefaultArgValue {
     fn from_list(m : &syn::MetaList) -> Result<HashMap<String, Self>, LoweringError> {
         let mut out = HashMap::new();
 
@@ -416,33 +376,35 @@ impl DefaultArgValueString {
                     _ => todo!()
                 };
                 let right = i.right;
-                // let byte_repr = match right.as_ref() {
-                //     syn::Expr::Lit(l) => {
-                //         match &l.lit {
-                //             syn::Lit::Bool(b) => [b.value as u8].to_vec(),
-                //             syn::Lit::Byte(b) => [b.value()].to_vec(),
-                //             syn::Lit::Float(f) => {
-                //                 let float_32 = f.base10_parse::<f32>();
-                //                 if let Ok(f) = float_32 {
-                //                     f.to_le_bytes().to_vec()
-                //                 } else {
-                //                     let float_64 = f.base10_parse::<f64>()
-                //                     .map_err(|e| {
-                //                         syn::Error::new(f.span(), format!("Could not convert float to f64: {e}"))
-                //                     })?;
-                //                     float_64.to_le_bytes().to_vec()
-                //                 }
-                //             },
-                //             syn::Lit::Int(i) => {
-                //                 let int_32 = i.base10_parse::<i32>();
+                let value_repr = match right.as_ref() {
+                    syn::Expr::Lit(l) => {
+                        match &l.lit {
+                            syn::Lit::Bool(b) => DefaultArgValue::Bool(b.value),
+                            syn::Lit::Byte(b) => DefaultArgValue::Char(b.value() as char),
+                            syn::Lit::Char(c) => DefaultArgValue::Char(c.value()),
+                            syn::Lit::Float(f) => {
+                                let float_64 = f.base10_parse::<f64>();
+                                if let Ok(f) = float_64 {
+                                    DefaultArgValue::Float(f)
+                                } else {
+                                    return Err(syn::Error::new(f.span(), format!("Could not convert float to f64: {}", float_64.unwrap_err())));
+                                }
+                            },
+                            syn::Lit::Int(i) => {
+                                let int_128 = i.base10_parse::<i128>();
+                                if let Ok(i) = int_128 {
+                                    DefaultArgValue::Integer(i)
+                                } else {
+                                    return Err(syn::Error::new(i.span(), format!("Could not convert int to i128: {}", int_128.unwrap_err())));
+                                }
 
-                //             },
-                //             _ => todo!()
-                //         }
-                //     }
-                //     _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
-                // };
-                out.insert(id.to_string(), DefaultArgValueString { value: right.to_token_stream().to_string() });
+                            },
+                            _ => todo!()
+                        }
+                    }
+                    _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
+                };
+                out.insert(id.to_string(), value_repr);
             }
             Ok(())
         }).map_err(|e| {
@@ -450,22 +412,6 @@ impl DefaultArgValueString {
         })?;
         Ok(out)
     }
-
-    // pub fn to_bool(&self) -> Result<bool, String> {
-    //     if self.bytes.len() == 1 {
-    //         Ok(self.bytes[0] != 0)
-    //     } else {
-    //         Err("Expected bytes of length 1".into())
-    //     }
-    // }
-    
-    // pub fn to_u8(&self) -> Result<u8, String> {
-    //     if self.bytes.len() == 1 {
-    //         Ok(self.bytes[0])
-    //     } else {
-    //         Err("Expected bytes of length 1".into())
-    //     }
-    // }
 }
 
 /// Where the attribute was found. Some attributes are only allowed in some contexts
@@ -476,7 +422,7 @@ pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
     Trait(&'a TraitDef),
     EnumVariant(&'a EnumVariant),
-    Method(&'a Method, Option<TypeId>, &'b mut SpecialMethodPresence, &'b mut Vec<super::Param>),
+    Method(&'a Method, Option<TypeId>, &'b mut SpecialMethodPresence),
     Function(&'a Method),
     Module,
     Param,
@@ -663,9 +609,9 @@ impl Attrs {
                             
                             let list = attr.meta.require_list();
                             let res = list.map_err(|e| {
-                                LoweringError::Other(format!("Expected MetaList: {e}"))
+                                LoweringError::Other(format!("default_args must be a list of arguments: {e}"))
                             }).and_then(|l| {
-                                DefaultArgValueString::from_list(l)
+                                DefaultArgValue::from_list(l)
                             });
 
                             if let Ok(l) = res {
@@ -792,7 +738,7 @@ impl Attrs {
         }
 
         if let Some(ref special) = special_method {
-            if let AttributeContext::Method(method, self_id, ref mut special_method_presence, ref mut params) =
+            if let AttributeContext::Method(method, self_id, ref mut special_method_presence) =
                 context
             {
                 let check_param_count = |name: &str, count: usize, errors: &mut ErrorStore| {
@@ -1094,90 +1040,14 @@ impl Attrs {
                 
                 if validator.attrs_supported().default_args && !default_args.is_empty() {
                     let mut in_defaults = false;
-                    for p in params.iter_mut() {
-                        if let Some(v) = default_args.get(p.name.as_str()) {
+                    for p in method.params.iter() {
+                        if default_args.contains_key(p.name.as_str()) {
+                            // We could validate types, but some languages can accept multiple types for a certain value (i.e., bool in C++ can be an int or a boolean).
                             in_defaults = true;
-
-                            macro_rules! primitive_to_default {
-                                ($t:ident, $rust_type:ty, $namespace:ident) => {
-                                    v.value.parse::<$rust_type>().map(|o| $namespace::$t(o)).map_err(|e| e.to_string())
-                                };
-                                ($t:ident, $rust_type:ty) => {
-                                    primitive_to_default!($t, $rust_type, DefaultArgValue)
-                                };
-                                (int $t:ident, $rust_type:ty) => {
-                                    primitive_to_default!($t, $rust_type, DefaultArgIntType).map(|o| DefaultArgValue::Int(o))
-                                };
-                                (size_int $t:ident, $rust_type:ty) => {
-                                    primitive_to_default!($t, $rust_type, DefaultArgIntSizeType).map(|o| DefaultArgValue::IntSize(o))
-                                };
-                                (int128 $t:ident, $rust_type:ty) => {
-                                    primitive_to_default!($t, $rust_type, DefaultArgInt128Type).map(|o| DefaultArgValue::Int128(o))
-                                };
-                                (float $t:ident, $rust_type:ty) => {
-                                    primitive_to_default!($t, $rust_type, DefaultArgFloatType).map(|o| DefaultArgValue::Float(o))
-                                };
-                            }
-
-                            let val = match p.ty {
-                                Type::Primitive(p) => match &p {
-                                    crate::hir::PrimitiveType::Bool => primitive_to_default!(Bool, bool),
-                                    crate::hir::PrimitiveType::Char => primitive_to_default!(Char, u8),
-                                    crate::hir::PrimitiveType::Byte => primitive_to_default!(Byte, u8),
-                                    crate::hir::PrimitiveType::Ordering => {
-                                        v.value.parse::<i8>()
-                                        .map_err(|e| e.to_string()).and_then(|o| {
-                                            if o == -1 {
-                                                Ok(std::cmp::Ordering::Less)
-                                            } else if o == 0 {
-                                                Ok(std::cmp::Ordering::Equal)
-                                            } else if o == 1 {
-                                                Ok(std::cmp::Ordering::Greater)
-                                            } else {
-                                                Err("Expected -1, 0, 1".into())
-                                            }
-                                        }).map(|o| {
-                                            DefaultArgValue::Ordering(o)
-                                        })
-                                    },
-                                    crate::hir::PrimitiveType::Int(int_ty) => match int_ty {
-                                        crate::hir::IntType::I8 => primitive_to_default!(int I8, i8),
-                                        crate::hir::IntType::I16 => primitive_to_default!(int I16, i16),
-                                        crate::hir::IntType::I32 => primitive_to_default!(int I32, i32),
-                                        crate::hir::IntType::I64 => primitive_to_default!(int I64, i64),
-                                        crate::hir::IntType::U8 => primitive_to_default!(int U8, u8),
-                                        crate::hir::IntType::U16 => primitive_to_default!(int U16, u16),
-                                        crate::hir::IntType::U32 => primitive_to_default!(int U32, u32),
-                                        crate::hir::IntType::U64 => primitive_to_default!(int U64, u64),
-                                    },
-                                    crate::hir::PrimitiveType::IntSize(size_ty) => match size_ty {
-                                        crate::hir::IntSizeType::Isize => primitive_to_default!(size_int Isize, isize),
-                                        crate::hir::IntSizeType::Usize => primitive_to_default!(size_int Usize, usize),
-                                    },
-                                    crate::hir::PrimitiveType::Int128(int128_ty) => match int128_ty {
-                                        crate::hir::Int128Type::I128 => primitive_to_default!(int128 I128, i128),
-                                        crate::hir::Int128Type::U128 => primitive_to_default!(int128 U128, u128),
-                                    },
-                                    crate::hir::PrimitiveType::Float(float_ty) => match float_ty {
-                                        crate::hir::FloatType::F32 => primitive_to_default!(float F32, f32),
-                                        crate::hir::FloatType::F64 => primitive_to_default!(float F64, f64),
-                                    }
-                                },
-                                _ => Err(format!("Found default argument of non-primitive type.")) ,
-                            };
-
-                            if let Ok(v) = val {
-                                p.default_value = Some(v);
-                            } else {
-                                errors.push(LoweringError::Other(val.unwrap_err()));
-                            }
                         } else if in_defaults {
                             errors.push(LoweringError::Other(format!("Found required arg {} after default arguments.", p.name)))
                         }
                     }
-                    // TODO: Validate optional args are the ones in the back
-                    // TODO: Convert arg types.
-
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))

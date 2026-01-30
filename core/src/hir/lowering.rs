@@ -674,7 +674,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
-        let mut hir_method = Method {
+        let hir_method = Method {
             docs: method.docs.clone(),
             name: name?,
             abi_name,
@@ -685,17 +685,13 @@ impl<'ast> LoweringContext<'ast> {
             attrs,
         };
 
-        let mut p = hir_method.params.clone();
-
         let self_type_id = self.lower_self_type(method, in_path);
 
         self.attr_validator.validate(
             &hir_method.attrs,
-            AttributeContext::Method(&hir_method, self_type_id, special_method_presence, &mut p),
+            AttributeContext::Method(&hir_method, self_type_id, special_method_presence),
             &mut self.errors,
         );
-
-        hir_method.params = p;
 
         let is_comparison = matches!(
             hir_method.attrs.special_method,
