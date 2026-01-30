@@ -456,6 +456,8 @@ pub mod ffi {
             location = "def_block"
         )
     )]
+    #[diplomat::attr(any(nanobind, cpp), custom_extra_code(source = "//Pre Test", location="pre_def_block"))]
+    #[diplomat::attr(any(nanobind, cpp), custom_extra_code(source = "//Post Test", location="post_def_block"))]
     #[diplomat::attr(
         any(nanobind, cpp),
         custom_extra_code(
