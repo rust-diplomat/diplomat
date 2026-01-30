@@ -22,8 +22,6 @@ namespace capi {
 
     somelib::capi::MyString* MyString_new_unsafe(somelib::diplomat::capi::DiplomatStringView v);
 
-    somelib::capi::MyString* MyString_new_owned(somelib::diplomat::capi::DiplomatStringView v);
-
     somelib::capi::MyString* MyString_new_from_first(somelib::diplomat::capi::DiplomatStringsView v);
 
     void MyString_set_str(somelib::capi::MyString* self, somelib::diplomat::capi::DiplomatStringView new_str);
@@ -53,11 +51,6 @@ inline somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::di
   }
     auto result = somelib::capi::MyString_new_unsafe({v.data(), v.size()});
     return somelib::diplomat::Ok<std::unique_ptr<somelib::MyString>>(std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result)));
-}
-
-inline std::unique_ptr<somelib::MyString> somelib::MyString::new_owned(std::string_view v) {
-    auto result = somelib::capi::MyString_new_owned({v.data(), v.size()});
-    return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
 }
 
 inline std::unique_ptr<somelib::MyString> somelib::MyString::new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
