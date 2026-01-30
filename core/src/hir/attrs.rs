@@ -1164,7 +1164,7 @@ pub struct BackendAttrSupport {
     pub custom_bindings: bool,
 
     /// Whether the language supports taking in Rust-allocated slices from the given backend.
-    pub owned_slices : bool,
+    pub owned_slices: bool,
 }
 
 impl BackendAttrSupport {

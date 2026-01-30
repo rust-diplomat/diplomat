@@ -1052,7 +1052,9 @@ impl<'ast> LoweringContext<'ast> {
                 if lifetime.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
                     if !self.attr_validator.attrs_supported().owned_slices {
-                        self.errors.push(LoweringError::Other("Owned slices are not supported in this backend.".into()));
+                        self.errors.push(LoweringError::Other(
+                            "Owned slices are not supported in this backend.".into(),
+                        ));
                     }
                 }
                 let new_lifetime = lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt));
@@ -1070,7 +1072,9 @@ impl<'ast> LoweringContext<'ast> {
                 if lm.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
                     if !self.attr_validator.attrs_supported().owned_slices {
-                        self.errors.push(LoweringError::Other("Owned slices are not supported in this backend.".into()));
+                        self.errors.push(LoweringError::Other(
+                            "Owned slices are not supported in this backend.".into(),
+                        ));
                     }
                 }
                 let new_lifetime = lm
