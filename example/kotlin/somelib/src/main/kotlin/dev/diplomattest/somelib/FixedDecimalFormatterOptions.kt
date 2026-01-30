@@ -82,7 +82,6 @@ class FixedDecimalFormatterOptions (var groupingStrategy: FixedDecimalGroupingSt
         fun default_(): FixedDecimalFormatterOptions {
             
             val returnVal = lib.icu4x_FixedDecimalFormatterOptions_default_mv1();
-            
             val returnStruct = FixedDecimalFormatterOptions.fromNative(returnVal)
             return returnStruct
         }
