@@ -114,21 +114,21 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         custom_extra_code: &HashMap<IncludeLocation, IncludeSource>,
     ) -> ExtraCode {
         let extra_def_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::DefBlock) {
-            read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
         } else {
             Default::default()
         };
 
         let pre_extra_def_code =
             if let Some(s) = custom_extra_code.get(&IncludeLocation::PreDefBlock) {
-                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+                read_custom_binding(s, self.config, self.errors).unwrap_or_default()
             } else {
                 Default::default()
             };
 
         let post_extra_def_code =
             if let Some(s) = custom_extra_code.get(&IncludeLocation::PostDefBlock) {
-                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+                read_custom_binding(s, self.config, self.errors).unwrap_or_default()
             } else {
                 Default::default()
             };

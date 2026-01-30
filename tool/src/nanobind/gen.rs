@@ -83,14 +83,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     ) -> ExtraCode {
         let extra_init_code =
             if let Some(s) = custom_extra_code.get(&IncludeLocation::InitializationBlock) {
-                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+                read_custom_binding(s, self.config, self.errors).unwrap_or_default()
             } else {
                 Default::default()
             };
 
         let pre_extra_init_code =
             if let Some(s) = custom_extra_code.get(&IncludeLocation::PreInitializationBlock) {
-                read_custom_binding(s, &self.config, &self.errors).unwrap_or_default()
+                read_custom_binding(s, self.config, self.errors).unwrap_or_default()
             } else {
                 Default::default()
             };
