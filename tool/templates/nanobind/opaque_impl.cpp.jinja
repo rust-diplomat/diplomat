@@ -1,5 +1,8 @@
 {%- let is_self_opaque = true -%}
 {%- let full_name = type_name.replace("::", "_") -%}
+{% if !pre_extra_init_code.is_empty() %}
+{{pre_extra_init_code}}
+{% endif -%}
 
 PyType_Slot {{full_name}}_slots[] = {
     {Py_tp_free, (void *){{type_name}}::operator delete },
