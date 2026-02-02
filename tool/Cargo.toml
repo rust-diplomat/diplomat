@@ -24,7 +24,7 @@ serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.8.0"
 heck = "0.5" # conversion between naming convention
 displaydoc = "0.2"
-askama = "0.14.0"
+askama = "0.15.4"
 itertools = "0.14.0"
 
 [dev-dependencies]
