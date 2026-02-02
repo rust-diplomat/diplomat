@@ -1,4 +1,4 @@
-{% macro method_name_cpp() %}{%- block cpp_method_name -%}{%- endblock -%}{% endmacro %}
+{% macro method_name_cpp() -%}{%- block cpp_method_name -%}{%- endblock -%}{%- endmacro %}
     .{{m.def}}
 {%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
 {%- block special_methods -%}{%- endblock -%}
