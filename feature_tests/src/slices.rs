@@ -8,6 +8,7 @@ pub mod ffi {
 
     impl MyString {
         #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(supports=default_args, default_args(v='T'))]
         pub fn new(v: &DiplomatStr) -> Box<MyString> {
             Box::new(Self(String::from_utf8(v.to_owned()).unwrap()))
         }

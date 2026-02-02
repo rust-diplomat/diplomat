@@ -251,11 +251,13 @@ pub mod ffi {
     }
 
     impl OpaqueArithmetic {
+        #[diplomat::attr(supports=default_args, default_args(y=12))]
         pub fn make(x: i32, y: i32) -> Box<Self> {
             Box::new(Self { x, y })
         }
 
         #[diplomat::attr(supports=method_overloading, rename="make")]
+        #[diplomat::attr(supports=default_args, default_args(y=14.48))]
         pub fn make_overload(x: f32, y: f32) -> Box<Self> {
             Box::new(Self {
                 x: (x as i32) + 2,
@@ -421,6 +423,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(supports = free_functions), disable)]
     #[diplomat::attr(auto, namespace = "nested::ns")]
+    #[diplomat::attr(supports=default_args, default_args(x=true))]
     pub fn nested_ns_fn(x: bool) -> bool {
         !x
     }

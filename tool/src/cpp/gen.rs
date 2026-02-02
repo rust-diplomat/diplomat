@@ -25,6 +25,8 @@ use crate::filters;
 pub struct NamedType<'a> {
     var_name: Cow<'a, str>,
     type_name: Cow<'a, str>,
+    /// Default value (for method params, but could eventually be for structs).
+    default_value : Option<Cow<'a, str>>,
 }
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -538,7 +540,17 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         };
 
         for param in method.params.iter() {
-            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
+            let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
+            if let Some(d) = method.attrs.default_args.get(&param.name.to_string()) {
+                let s = match d {
+                    hir::DefaultArgValue::Bool(b) => b.to_string(),
+                    hir::DefaultArgValue::Char(c) => format!(r#"{{ "{}", {} }}"#, c, c.len_utf8()),
+                    hir::DefaultArgValue::Integer(i) => i.to_string(), 
+                    hir::DefaultArgValue::Float(f) => f.to_string(),
+                    _ => panic!("Default arg value {d:?} not implemented.")
+                };
+                decls.default_value = Some(s.into());
+            }
             let param_name = decls.var_name.clone();
             param_decls.push(decls);
             if matches!(
@@ -741,6 +753,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         NamedType {
             var_name,
             type_name,
+            default_value: None,
         }
     }
 
