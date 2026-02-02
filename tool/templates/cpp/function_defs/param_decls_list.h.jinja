@@ -1,4 +1,4 @@
     {%- for param in m.param_decls %}
         {%- if !loop.first %}, {% endif -%}
-        {{ param.type_name }} {{ param.var_name }}
+        {{ param.type_name }} {{ param.var_name }} {%- if param.default_value.is_some() && declaration %} = {{param.default_value.as_ref().unwrap()-}} {% endif -%}
     {%- endfor -%}
