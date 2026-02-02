@@ -131,7 +131,7 @@ pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
     pub attrs: Attrs,
-    pub default_value : Option<DefaultArgValue>,
+    pub default_value: Option<DefaultArgValue>,
 }
 
 /// A parameter in a callback
@@ -266,7 +266,12 @@ impl TraitParamSelf {
 
 impl Param {
     pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs: Attrs) -> Self {
-        Self { name, ty, attrs, default_value: None }
+        Self {
+            name,
+            ty,
+            attrs,
+            default_value: None,
+        }
     }
 }
 
