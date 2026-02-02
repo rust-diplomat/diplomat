@@ -70,7 +70,7 @@ pub struct Attrs {
     /// A list of default arguments to specify on the backend-side of a function.
     /// Mapped from ParamIdent -> Value.
     /// The validator will update the `Method` with the appropriate values.
-    pub default_args : HashMap<String, DefaultArgValue>,
+    pub default_args: HashMap<String, DefaultArgValue>,
 }
 
 /// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
@@ -362,27 +362,27 @@ pub enum DefaultArgValue {
 }
 
 impl DefaultArgValue {
-    fn from_list(m : &syn::MetaList) -> Result<HashMap<String, Self>, LoweringError> {
+    fn from_list(m: &syn::MetaList) -> Result<HashMap<String, Self>, LoweringError> {
         let mut out = HashMap::new();
 
         let parse_func = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
-        m.parse_args_with(parse_func).and_then(|p| {
-            for i in p {
-                let left = i.left;
-                let id = match left.as_ref() {
-                    syn::Expr::Path(p) => {
-                        if let Some(i) = p.path.get_ident() {
-                            i
-                        } else {
-                            todo!()
+        m.parse_args_with(parse_func)
+            .and_then(|p| {
+                for i in p {
+                    let left = i.left;
+                    let id = match left.as_ref() {
+                        syn::Expr::Path(p) => {
+                            if let Some(i) = p.path.get_ident() {
+                                i
+                            } else {
+                                todo!()
+                            }
                         }
-                    },
-                    _ => todo!()
-                };
-                let right = i.right;
-                let value_repr = match right.as_ref() {
-                    syn::Expr::Lit(l) => {
-                        match &l.lit {
+                        _ => todo!(),
+                    };
+                    let right = i.right;
+                    let value_repr = match right.as_ref() {
+                        syn::Expr::Lit(l) => match &l.lit {
                             syn::Lit::Bool(b) => DefaultArgValue::Bool(b.value),
                             syn::Lit::Byte(b) => DefaultArgValue::Char(b.value() as char),
                             syn::Lit::Char(c) => DefaultArgValue::Char(c.value()),
@@ -391,29 +391,38 @@ impl DefaultArgValue {
                                 if let Ok(f) = float_64 {
                                     DefaultArgValue::Float(f)
                                 } else {
-                                    return Err(syn::Error::new(f.span(), format!("Could not convert float to f64: {}", float_64.unwrap_err())));
+                                    return Err(syn::Error::new(
+                                        f.span(),
+                                        format!(
+                                            "Could not convert float to f64: {}",
+                                            float_64.unwrap_err()
+                                        ),
+                                    ));
                                 }
-                            },
+                            }
                             syn::Lit::Int(i) => {
                                 let int_128 = i.base10_parse::<i128>();
                                 if let Ok(i) = int_128 {
                                     DefaultArgValue::Integer(i)
                                 } else {
-                                    return Err(syn::Error::new(i.span(), format!("Could not convert int to i128: {}", int_128.unwrap_err())));
+                                    return Err(syn::Error::new(
+                                        i.span(),
+                                        format!(
+                                            "Could not convert int to i128: {}",
+                                            int_128.unwrap_err()
+                                        ),
+                                    ));
                                 }
-
-                            },
-                            _ => todo!()
-                        }
-                    }
-                    _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
-                };
-                out.insert(id.to_string(), value_repr);
-            }
-            Ok(())
-        }).map_err(|e| {
-            LoweringError::Other(format!("Could not parse default_args: {}", e))
-        })?;
+                            }
+                            _ => todo!(),
+                        },
+                        _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
+                    };
+                    out.insert(id.to_string(), value_repr);
+                }
+                Ok(())
+            })
+            .map_err(|e| LoweringError::Other(format!("Could not parse default_args: {}", e)))?;
         Ok(out)
     }
 }
@@ -606,17 +615,24 @@ impl Attrs {
                         }
                         "default_args" => {
                             if !support.default_args {
-                                maybe_error_unsupported(auto_found, "default_args", backend, errors);
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "default_args",
+                                    backend,
+                                    errors,
+                                );
                                 continue;
                             }
                             // Note that we do not validate that the args match here.
-                            
+
                             let list = attr.meta.require_list();
-                            let res = list.map_err(|e| {
-                                LoweringError::Other(format!("default_args must be a list of arguments: {e}"))
-                            }).and_then(|l| {
-                                DefaultArgValue::from_list(l)
-                            });
+                            let res = list
+                                .map_err(|e| {
+                                    LoweringError::Other(format!(
+                                        "default_args must be a list of arguments: {e}"
+                                    ))
+                                })
+                                .and_then(DefaultArgValue::from_list);
 
                             if let Ok(l) = res {
                                 this.default_args = l;
@@ -1145,7 +1161,10 @@ impl Attrs {
                         // We could validate types, but some languages can accept multiple types for a certain value (i.e., bool in C++ can be an int or a boolean).
                         in_defaults = true;
                     } else if in_defaults {
-                        errors.push(LoweringError::Other(format!("Found required arg {} after default arguments.", p.name)))
+                        errors.push(LoweringError::Other(format!(
+                            "Found required arg {} after default arguments.",
+                            p.name
+                        )))
                     }
                 }
             }
@@ -1292,7 +1311,7 @@ pub struct BackendAttrSupport {
     /// Whether the language supports taking in Rust-allocated slices from the given backend.
     pub owned_slices: bool,
     /// Whether the language supports default arguments.
-    pub default_args : bool,
+    pub default_args: bool,
 }
 
 impl BackendAttrSupport {

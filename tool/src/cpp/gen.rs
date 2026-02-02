@@ -26,7 +26,7 @@ pub struct NamedType<'a> {
     var_name: Cow<'a, str>,
     type_name: Cow<'a, str>,
     /// Default value (for method params, but could eventually be for structs).
-    default_value : Option<Cow<'a, str>>,
+    default_value: Option<Cow<'a, str>>,
 }
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -545,9 +545,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let s = match d {
                     hir::DefaultArgValue::Bool(b) => b.to_string(),
                     hir::DefaultArgValue::Char(c) => format!(r#"{{ "{}", {} }}"#, c, c.len_utf8()),
-                    hir::DefaultArgValue::Integer(i) => i.to_string(), 
+                    hir::DefaultArgValue::Integer(i) => i.to_string(),
                     hir::DefaultArgValue::Float(f) => f.to_string(),
-                    _ => panic!("Default arg value {d:?} not implemented.")
+                    _ => panic!("Default arg value {d:?} not implemented."),
                 };
                 decls.default_value = Some(s.into());
             }

@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 
     simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::special_function(), "This is a custom binding.");
     simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::custom_bool, false);
-    
+
     auto make_default = ns::RenamedOpaqueArithmetic::make(1);
     simple_assert_eq("Default values int", make_default->y(), 12);
 
