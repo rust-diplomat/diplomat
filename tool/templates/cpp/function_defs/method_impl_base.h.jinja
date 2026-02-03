@@ -44,12 +44,12 @@ inline {##}
     {%- endif %}
 }
 {%- endmacro -%}
-{% call method_body(m.method_name, false, m.return_ty, m.c_to_cpp_return_expression) -%}
+{{ method_body(m.method_name, false, m.return_ty, m.c_to_cpp_return_expression) -}}
 
 {#- Extra method definitions for writeables -#}
 {%- if let Some(m_writeable) = m.writeable_info %}
 template<typename W>
-{% call method_body(m_writeable.method_name, true, m_writeable.return_ty, m_writeable.c_to_cpp_return_expression) %}
+{{ method_body(m_writeable.method_name, true, m_writeable.return_ty, m_writeable.c_to_cpp_return_expression) }}
 {%- endif -%}
 
 {%- block special_methods -%}{%- endblock -%}

@@ -4,6 +4,7 @@ use core::fmt::Write;
 use askama::Values;
 
 /// Indent all but the nonempty lines
+#[askama::filter_fn]
 pub(crate) fn indent_trimmed(
     s: impl fmt::Display,
     values: &dyn Values,
@@ -14,10 +15,12 @@ pub(crate) fn indent_trimmed(
         indented.push(' ');
     }
 
-    prefix_trimmed(s, values, &indented)
+    let p: prefix_trimmed<'_, true> = prefix_trimmed::default().with_prefix(&indented);
+    prefix_trimmed::execute(p, s, values)
 }
 
 /// Apply a prefix to each line, trimming trailing whitespace
+#[askama::filter_fn]
 pub(crate) fn prefix_trimmed(
     s: impl fmt::Display,
     _values: &dyn Values,
