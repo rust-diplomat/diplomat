@@ -257,6 +257,14 @@ pub mod ffi {
             })
         }
 
+        #[diplomat::attr(supports=method_overloading, rename="make")]
+        pub fn make_overload_rename_arg(x: f32, z : bool) -> Box<Self> {
+            Box::new(Self {
+                x: (x as i32) + 2,
+                y: z as i32
+            })
+        }
+
         pub fn x(&self) -> i32 {
             self.x
         }
