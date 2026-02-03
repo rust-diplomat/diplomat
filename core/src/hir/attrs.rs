@@ -372,10 +372,10 @@ impl DefaultArgValue {
                             if let Some(i) = p.path.get_ident() {
                                 i
                             } else {
-                                todo!()
+                                return Err(syn::Error::new(p.span(), format!("Expected an arg identifier. Got {}", p.to_token_stream())));
                             }
                         }
-                        _ => todo!(),
+                        _ => return Err(syn::Error::new(left.span(), format!("Expected a path. Got {}", left.to_token_stream()))),
                     };
                     let right = i.right;
                     let value_repr = match right.as_ref() {
@@ -411,7 +411,7 @@ impl DefaultArgValue {
                                     ));
                                 }
                             }
-                            _ => todo!(),
+                            _ => return Err(syn::Error::new(l.lit.span(), format!("Default arguments does not support value {}. Try a bool, char, integer, or float.", l.lit.to_token_stream()))),
                         },
                         _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
                     };
