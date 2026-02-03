@@ -129,7 +129,6 @@ TypeContext {
                                 custom_extra_code: {},
                                 default_args: {},
                             },
-                            default_value: None,
                         },
                     ],
                     output: Infallible(
@@ -396,7 +395,6 @@ TypeContext {
                                 custom_extra_code: {},
                                 default_args: {},
                             },
-                            default_value: None,
                         },
                     ],
                     output: Infallible(

@@ -122,7 +122,6 @@ Method {
                 custom_extra_code: {},
                 default_args: {},
             },
-            default_value: None,
         },
     ],
     output: Infallible(
