@@ -1,4 +1,5 @@
 {%- extends "function_base.cpp.jinja" -%}
+{% import "method_params.cpp.jinja" as method_params %}
 {%- block cpp_method_name -%}{{- type_name }}::{{ m.cpp_method_name -}}{%- endblock -%}
 {%- block special_methods -%}
     {%- match special_method -%}
@@ -38,11 +39,11 @@
             {%- if m.method.param_self.is_some() -%}
                 , &{{type_name}}::{{setter_name}}
             {%- else -%},
-                [](nb::handle {%- for p in m.param_decls.params -%}, {{p.type_name}} {{p.var_name}}{%- endfor -%})
+                [](nb::handle {%- for p in m.param_decls.params -%}, {{p.type_name}} {{p.name}}{%- endfor -%})
                   { {{type_name}}::{{setter_name}}(
-                    {%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.var_name}}{%- endfor -%}); }
+                    {%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.name}}{%- endfor -%}); }
             {%- endif -%}
-            {%- include "method_params.cpp.jinja" %}
+            {{- method_params::params(m.method.params, m.lifetime_args) }}
         {%- endif -%})
     {%- when crate::hir::SpecialMethod::Constructor -%}
         {%- if is_self_opaque -%}
@@ -50,17 +51,17 @@
         {%- else -%} {#- nanobind's nb::init<> only works for *actual* constructors -#}
             ("__init__", []({{ type_name }}* self
             {%- for p in m.param_decls.params -%}
-            , {{p.type_name}} {{p.var_name}}
+            , {{p.type_name}} {{p.name}}
             {%- endfor -%}
             {%- match m.method.output -%}
             {%- when hir::ReturnType::Infallible(_) -%}
                 ){ *self = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
-                                                {%- if !loop.first -%}, {% endif %}{{p.var_name}}
+                                                {%- if !loop.first -%}, {% endif %}{{p.name}}
                                                 {%- endfor -%}
             ); }
             {%- when hir::ReturnType::Fallible(_, _) -%}
                 ){ auto tmp = {{type_name}}::{{ m.cpp_method_name -}}({% for p in m.param_decls.params -%}
-                                                {%- if !loop.first -%}, {% endif %}{{p.var_name}}
+                                                {%- if !loop.first -%}, {% endif %}{{p.name}}
                                                 {%- endfor -%} );
                 if(tmp.is_ok()) {
                     *self = std::move(tmp).ok().value();
@@ -71,7 +72,7 @@
             static_assert(false, "This is unsupported by diplomat");
             {%- endmatch -%}
         {%- endif -%}
-        {%- include "method_params.cpp.jinja" %})
+        {{- method_params::params(m.method.params, m.lifetime_args) }})
     {%- when crate::hir::SpecialMethod::Indexer -%}
         ("__getitem__", {% match m.method.output -%}
         {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
@@ -96,10 +97,10 @@
         &{{- type_name }}::operator[]
         {%- endmatch -%}
 
-        {%- include "method_params.cpp.jinja" %})
+        {{- method_params::params(m.method.params, m.lifetime_args) }})
     {%- when _ -%}
-        ("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}} 
-        {%- include "method_params.cpp.jinja" %} ) // unsupported special method {{format!("{special_method:?}")}}
+        ("{{m.method_name}}", &{{- type_name }}::{{ m.cpp_method_name -}}
+        {{- method_params::params(m.method.params, m.lifetime_args) }} ) // unsupported special method {{format!("{special_method:?}")}}
         {%- if loop.last ~%}
         {%~ endif -%}
     {%- endmatch -%}

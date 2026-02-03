@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, HashMap};
 
 #[derive(Clone)]
 pub(super) struct ParamInfo<'a> {
-    pub(super) params: Vec<NamedType<'a>>,
+    pub(super) params: Vec<NamedType<'a, hir::InputOnly>>,
 }
 
 /// Everything needed for rendering a method.
@@ -42,9 +42,10 @@ pub(super) struct MethodInfo<'a> {
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 #[derive(Clone)]
-pub(super) struct NamedType<'a> {
-    pub(super) var_name: Cow<'a, str>,
+pub(super) struct NamedType<'a, P: hir::TyPosition> {
+    pub(super) name: Cow<'a, str>,
     pub(super) type_name: Cow<'a, str>,
+    pub(super) ty: &'a hir::Type<P>,
 }
 
 /// Context for generating a particular type's impl
@@ -243,9 +244,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
         #[derive(Template)]
         #[template(path = "nanobind/struct_impl.cpp.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
+        struct ImplTemplate<'a, P: hir::TyPosition> {
             type_name: &'a str,
-            fields: &'a [NamedType<'a>],
+            fields: &'a [NamedType<'a, P>],
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
             has_constructor: bool,
@@ -344,7 +345,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
-    fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
+    fn gen_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        ty: &'a Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a, P>
     where
         'ccx: 'a,
     {
@@ -352,8 +357,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let type_name = self.cpp.gen_type_name(ty);
 
         NamedType {
-            var_name,
+            name: var_name,
             type_name,
+            ty,
         }
     }
 
@@ -523,8 +529,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 .params
                 .iter()
                 .map(|p| NamedType {
-                    var_name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                    name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
                     type_name: self.gen_type_name(&p.ty),
+                    ty: &p.ty,
                 })
                 .collect(),
         };

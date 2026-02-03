@@ -23,7 +23,7 @@ st
     {%- endfor -%}
     >(), 
     {%- for f in fields -%}
-    {%- if !loop.first %}, {% endif %} "{{f.var_name}}"_a
+    {%- if !loop.first %}, {% endif %} "{{f.name}}"_a
     {%- if !f.type_name.starts_with("std::unique_ptr") -%}
     .none()
     {%- endif -%}
@@ -35,11 +35,11 @@ st
 
     {%- for f in fields %}
     {%- if !f.type_name.starts_with("std::unique_ptr") %}
-    .def_rw("{{f.var_name}}", &{{type_name}}::{{f.var_name}})
+    .def_rw("{{f.name}}", &{{type_name}}::{{f.name}})
     {%- else %}
-    .def_prop_rw("{{f.var_name}}", 
-        [](const {{type_name}}& self) { return self.{{f.var_name}}.get(); },
-        []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.var_name}} = std::move(v); }
+    .def_prop_rw("{{f.name}}", 
+        [](const {{type_name}}& self) { return self.{{f.name}}.get(); },
+        []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.name}} = std::move(v); }
     )
     {%- endif -%}
     {%- endfor %}
