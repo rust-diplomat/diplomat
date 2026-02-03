@@ -67,10 +67,8 @@ pub struct Attrs {
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
     pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
 
-    /// A list of default arguments to specify on the backend-side of a function.
-    /// Mapped from ParamIdent -> Value.
-    /// The validator will update the `Method` with the appropriate values.
-    pub default_args: HashMap<String, DefaultArgValue>,
+    /// Default value for a given [`super::methods::Param`].
+    pub default_value: Option<DefaultArgValue>,
 }
 
 /// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
@@ -362,68 +360,44 @@ pub enum DefaultArgValue {
 }
 
 impl DefaultArgValue {
-    fn from_list(m: &syn::MetaList) -> Result<HashMap<String, Self>, LoweringError> {
-        let mut out = HashMap::new();
-
-        let parse_func = syn::punctuated::Punctuated::<syn::ExprAssign, syn::Token![,]>::parse_separated_nonempty;
-        m.parse_args_with(parse_func)
-            .and_then(|p| {
-                for i in p {
-                    let left = i.left;
-                    let id = match left.as_ref() {
-                        syn::Expr::Path(p) => {
-                            if let Some(i) = p.path.get_ident() {
-                                i
-                            } else {
-                                todo!()
-                            }
-                        }
-                        _ => todo!(),
-                    };
-                    let right = i.right;
-                    let value_repr = match right.as_ref() {
-                        syn::Expr::Lit(l) => match &l.lit {
-                            syn::Lit::Bool(b) => DefaultArgValue::Bool(b.value),
-                            syn::Lit::Byte(b) => DefaultArgValue::Char(b.value() as char),
-                            syn::Lit::Char(c) => DefaultArgValue::Char(c.value()),
-                            syn::Lit::Float(f) => {
-                                let float_64 = f.base10_parse::<f64>();
-                                if let Ok(f) = float_64 {
-                                    DefaultArgValue::Float(f)
-                                } else {
-                                    return Err(syn::Error::new(
-                                        f.span(),
-                                        format!(
-                                            "Could not convert float to f64: {}",
-                                            float_64.unwrap_err()
-                                        ),
-                                    ));
-                                }
-                            }
-                            syn::Lit::Int(i) => {
-                                let int_128 = i.base10_parse::<i128>();
-                                if let Ok(i) = int_128 {
-                                    DefaultArgValue::Integer(i)
-                                } else {
-                                    return Err(syn::Error::new(
-                                        i.span(),
-                                        format!(
-                                            "Could not convert int to i128: {}",
-                                            int_128.unwrap_err()
-                                        ),
-                                    ));
-                                }
-                            }
-                            _ => todo!(),
-                        },
-                        _ => return Err(syn::Error::new(right.span(), "Expected literal.")),
-                    };
-                    out.insert(id.to_string(), value_repr);
+    fn from_value(m: &syn::MetaNameValue) -> Result<Self, LoweringError> {
+        let value_repr = match &m.value {
+            syn::Expr::Lit(l) => match &l.lit {
+                syn::Lit::Bool(b) => DefaultArgValue::Bool(b.value),
+                syn::Lit::Byte(b) => DefaultArgValue::Char(b.value() as char),
+                syn::Lit::Char(c) => DefaultArgValue::Char(c.value()),
+                syn::Lit::Float(f) => {
+                    let float_64 = f.base10_parse::<f64>();
+                    if let Ok(f) = float_64 {
+                        DefaultArgValue::Float(f)
+                    } else {
+                        return Err(LoweringError::Other(
+                            format!(
+                                "Could not convert float to f64: {}",
+                                float_64.unwrap_err()
+                            ),
+                        ));
+                    }
                 }
-                Ok(())
-            })
-            .map_err(|e| LoweringError::Other(format!("Could not parse default_args: {}", e)))?;
-        Ok(out)
+                syn::Lit::Int(i) => {
+                    let int_128 = i.base10_parse::<i128>();
+                    if let Ok(i) = int_128 {
+                        DefaultArgValue::Integer(i)
+                    } else {
+                        return Err(LoweringError::Other(
+                            format!(
+                                "Could not convert int to i128: {}",
+                                int_128.unwrap_err()
+                            ),
+                        ));
+                    }
+                }
+                _ => return Err(LoweringError::Other(format!("Default arguments does not support value {}. Try a bool, char, integer, or float.", l.lit.to_token_stream()))),
+            },
+            _ => return Err(LoweringError::Other("Expected literal.".into())),
+        };
+
+        Ok(value_repr)
     }
 }
 
@@ -613,36 +587,31 @@ impl Attrs {
                                 }
                             }
                         }
-                        "default_args" => {
+                        "default_value" => {
                             if !support.default_args {
-                                maybe_error_unsupported(
-                                    auto_found,
-                                    "default_args",
-                                    backend,
-                                    errors,
-                                );
+                                maybe_error_unsupported(auto_found, "default_value", backend, errors);
                                 continue;
                             }
                             // Note that we do not validate that the args match here.
 
-                            let list = attr.meta.require_list();
-                            let res = list
+                            let val = attr.meta.require_name_value();
+                            let res = val
                                 .map_err(|e| {
                                     LoweringError::Other(format!(
-                                        "default_args must be a list of arguments: {e}"
+                                        "default_value must be name value: {e}"
                                     ))
                                 })
-                                .and_then(DefaultArgValue::from_list);
+                                .and_then(DefaultArgValue::from_value);
 
                             if let Ok(l) = res {
-                                this.default_args = l;
+                                this.default_value = Some(l);
                             } else {
                                 errors.push(res.unwrap_err());
                             }
                         }
                         _ => {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error, default_args`"
+                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error, default_value`"
                             )));
                         }
                     },
@@ -748,7 +717,7 @@ impl Attrs {
             generate_mocking_interface,
             abi_compatible,
             custom_extra_code,
-            default_args,
+            default_value,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -1153,19 +1122,22 @@ impl Attrs {
             }
         }
 
+        if default_value.is_some() && !matches!(context, AttributeContext::Param) {
+            errors.push(LoweringError::Other(
+                "default_value can only be placed above parameters.".into(),
+            ));
+        }
+
         if let AttributeContext::Method(m, ..) = context {
-            if validator.attrs_supported().default_args && !default_args.is_empty() {
-                let mut in_defaults = false;
-                for p in m.params.iter() {
-                    if default_args.contains_key(p.name.as_str()) {
-                        // We could validate types, but some languages can accept multiple types for a certain value (i.e., bool in C++ can be an int or a boolean).
-                        in_defaults = true;
-                    } else if in_defaults {
-                        errors.push(LoweringError::Other(format!(
-                            "Found required arg {} after default arguments.",
-                            p.name
-                        )))
-                    }
+            let mut in_defaults = false;
+            for p in &m.params {
+                if p.attrs.default_value.is_some() {
+                    in_defaults = true;
+                } else if in_defaults {
+                    errors.push(LoweringError::Other(format!(
+                        "Found required arg {} after default arguments.",
+                        p.name
+                    )))
                 }
             }
         }
@@ -1209,7 +1181,7 @@ impl Attrs {
             // Not inherited
             custom_extra_code: Default::default(),
             // Not inherited
-            default_args: Default::default(),
+            default_value: None,
         }
     }
 }
@@ -2036,8 +2008,9 @@ mod tests {
                 pub struct Test;
 
                 impl Test {
-                    #[diplomat::attr(*, default_args(c=100))]
-                    pub fn test(a : i32, b : i64, c : i128) {}
+                    pub fn test(a : i32, b : i64,
+                    #[diplomat::attr(*, default_value=100)]
+                    c : i128) {}
                 }
             }
         }
@@ -2051,8 +2024,9 @@ mod tests {
                 pub struct Test;
 
                 impl Test {
-                    #[diplomat::attr(*, default_args(c=100))]
-                    pub fn test(a : i32, b : i64, c : i128) {}
+                    pub fn test(a : i32, b : i64,
+                    #[diplomat::attr(*, default_value=100)]
+                    c : i128) {}
                 }
             }
         }
