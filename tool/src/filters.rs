@@ -15,7 +15,7 @@ pub(crate) fn indent_trimmed(
         indented.push(' ');
     }
 
-    let p : prefix_trimmed::<'_, true> = prefix_trimmed::default().with_prefix(&indented);
+    let p: prefix_trimmed<'_, true> = prefix_trimmed::default().with_prefix(&indented);
     prefix_trimmed::execute(p, s, values)
 }
 
