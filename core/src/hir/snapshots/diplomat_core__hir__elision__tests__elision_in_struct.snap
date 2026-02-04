@@ -3,10 +3,10 @@ source: core/src/hir/elision.rs
 expression: method
 ---
 Method {
-    docs: Docs(
-        "",
-        [],
-    ),
+    docs: Docs {
+        lines: "",
+        rust_links: [],
+    },
     name: "elided",
     abi_name: "Opaque_elided",
     lifetime_env: LifetimeEnv {

@@ -4,7 +4,8 @@ expression: "Method::from_syn(&syn::parse_quote!\n{\n    #[doc = r\" Some docs.\
 ---
 name: foo
 docs:
-  - Some docs.
+  - - cfg: Star
+      lines: Some docs.
   - - path:
         elements:
           - foo
