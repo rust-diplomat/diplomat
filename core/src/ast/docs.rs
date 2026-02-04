@@ -1,3 +1,5 @@
+use crate::ast::attrs::DiplomatBackendAttrCfg;
+
 use super::Path;
 use core::fmt;
 use quote::ToTokens;
@@ -6,8 +8,23 @@ use std::collections::HashMap;
 use syn::parse::{self, Parse, ParseStream};
 use syn::{Attribute, Ident, Meta, Token};
 
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct DocumentationSection {
+    pub cfg : DiplomatBackendAttrCfg,
+    pub lines : String,
+}
+
+impl Default for DocumentationSection {
+    fn default() -> Self {
+        Self {
+            cfg: DiplomatBackendAttrCfg::Star,
+            lines: String::default(),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
-pub struct Docs(String, Vec<RustLink>);
+pub struct Docs(pub Vec<DocumentationSection>, pub Vec<RustLink>);
 
 #[non_exhaustive]
 pub enum TypeReferenceSyntax {
@@ -20,25 +37,38 @@ impl Docs {
         Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs))
     }
 
-    fn get_doc_lines(attrs: &[Attribute]) -> String {
-        let mut lines: String = String::new();
+    fn get_doc_lines(attrs: &[Attribute]) -> Vec<DocumentationSection> {
+        let mut sections : Vec<DocumentationSection> = vec![DocumentationSection::default()];
+        let docs_path : syn::Path = syn::parse_str("diplomat::docs").unwrap();
+        // Assume by default, that we are at #[diplomat::docs(*)]
 
         attrs.iter().for_each(|attr| {
+            let active_section : &mut DocumentationSection = sections.last_mut().unwrap();
+
             if let Meta::NameValue(ref nv) = attr.meta {
                 if nv.path.is_ident("doc") {
                     let node: syn::LitStr = syn::parse2(nv.value.to_token_stream()).unwrap();
                     let line = node.value().trim().to_string();
 
-                    if !lines.is_empty() {
-                        lines.push('\n');
+                    if !active_section.lines.is_empty() {
+                        active_section.lines.push('\n');
                     }
 
-                    lines.push_str(&line);
+                    active_section.lines.push_str(&line);
+                }
+            }
+            if let Meta::List(ref l) = attr.meta {
+                if l.path == docs_path {
+                    let cfg = syn::parse2(l.tokens.clone()).unwrap();
+                    sections.push(DocumentationSection {
+                        lines: String::default(),
+                        cfg,
+                    });
                 }
             }
         });
 
-        lines
+        sections
     }
 
     fn get_rust_link(attrs: &[Attribute]) -> Vec<RustLink> {
@@ -53,59 +83,61 @@ impl Docs {
         self.0.is_empty() && self.1.is_empty()
     }
 
+    // Move to HIR:
     /// Convert to markdown
     pub fn to_markdown(
         &self,
         ref_syntax: TypeReferenceSyntax,
         docs_url_gen: &DocsUrlGenerator,
     ) -> String {
-        use std::fmt::Write;
-        let mut lines = match ref_syntax {
-            TypeReferenceSyntax::SquareBrackets => self.0.replace("[`", "[").replace("`]", "]"),
-            TypeReferenceSyntax::AtLink => self.0.replace("[`", "{@link ").replace("`]", "}"),
-        };
+        // use std::fmt::Write;
+        // let mut lines = match ref_syntax {
+        //     TypeReferenceSyntax::SquareBrackets => self.0.replace("[`", "[").replace("`]", "]"),
+        //     TypeReferenceSyntax::AtLink => self.0.replace("[`", "{@link ").replace("`]", "}"),
+        // };
 
-        let mut has_compact = false;
-        for rust_link in &self.1 {
-            if rust_link.display == RustLinkDisplay::Compact {
-                has_compact = true;
-            } else if rust_link.display == RustLinkDisplay::Normal {
-                if !lines.is_empty() {
-                    write!(lines, "\n\n").unwrap();
-                }
-                write!(
-                    lines,
-                    "See the [Rust documentation for `{name}`]({link}) for more information.",
-                    name = rust_link.path.elements.last().unwrap(),
-                    link = docs_url_gen.gen_for_rust_link(rust_link)
-                )
-                .unwrap();
-            }
-        }
-        if has_compact {
-            if !lines.is_empty() {
-                write!(lines, "\n\n").unwrap();
-            }
-            write!(lines, "Additional information: ").unwrap();
-            for (i, rust_link) in self
-                .1
-                .iter()
-                .filter(|r| r.display == RustLinkDisplay::Compact)
-                .enumerate()
-            {
-                if i != 0 {
-                    write!(lines, ", ").unwrap();
-                }
-                write!(
-                    lines,
-                    "[{}]({})",
-                    i + 1,
-                    docs_url_gen.gen_for_rust_link(rust_link)
-                )
-                .unwrap();
-            }
-        }
-        lines
+        // let mut has_compact = false;
+        // for rust_link in &self.1 {
+        //     if rust_link.display == RustLinkDisplay::Compact {
+        //         has_compact = true;
+        //     } else if rust_link.display == RustLinkDisplay::Normal {
+        //         if !lines.is_empty() {
+        //             write!(lines, "\n\n").unwrap();
+        //         }
+        //         write!(
+        //             lines,
+        //             "See the [Rust documentation for `{name}`]({link}) for more information.",
+        //             name = rust_link.path.elements.last().unwrap(),
+        //             link = docs_url_gen.gen_for_rust_link(rust_link)
+        //         )
+        //         .unwrap();
+        //     }
+        // }
+        // if has_compact {
+        //     if !lines.is_empty() {
+        //         write!(lines, "\n\n").unwrap();
+        //     }
+        //     write!(lines, "Additional information: ").unwrap();
+        //     for (i, rust_link) in self
+        //         .1
+        //         .iter()
+        //         .filter(|r| r.display == RustLinkDisplay::Compact)
+        //         .enumerate()
+        //     {
+        //         if i != 0 {
+        //             write!(lines, ", ").unwrap();
+        //         }
+        //         write!(
+        //             lines,
+        //             "[{}]({})",
+        //             i + 1,
+        //             docs_url_gen.gen_for_rust_link(rust_link)
+        //         )
+        //         .unwrap();
+        //     }
+        // }
+        // lines
+        "".into()
     }
 
     pub fn rust_links(&self) -> &[RustLink] {
