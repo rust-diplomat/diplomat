@@ -449,6 +449,7 @@ impl AttributeInfo {
                         || seg == "cfg"
                         || seg == "abi_rename"
                         || seg == "demo"
+                        || seg == "docs"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
@@ -679,6 +680,14 @@ pub fn bridge(
 // Config is done in [`diplomat_tool::gen`], so we just set things to be ignored here.
 #[proc_macro_attribute]
 pub fn config(
+    _attr: proc_macro::TokenStream,
+    _input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    "".parse().unwrap()
+}
+
+#[proc_macro_attribute]
+pub fn docs(
     _attr: proc_macro::TokenStream,
     _input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
