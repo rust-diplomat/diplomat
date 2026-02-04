@@ -44,8 +44,7 @@ pub use idents::Ident;
 
 mod docs;
 pub use docs::{
-    DocType, Docs, DocsUrlGenerator, RustLink, RustLinkDisplay,
-    TypeReferenceSyntax as DocsTypeReferenceSyntax,
+    DocType, Docs, RustLink, RustLinkDisplay,
 };
 
 mod macros;
