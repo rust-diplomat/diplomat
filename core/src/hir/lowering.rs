@@ -226,7 +226,7 @@ impl<'ast> LoweringContext<'ast> {
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
-                        docs: Docs::from_ast(&docs, self.attr_validator.as_ref(), &mut self.errors),
+                        docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
                         name,
                         discriminant: *discriminant,
                         attrs,
@@ -255,7 +255,11 @@ impl<'ast> LoweringContext<'ast> {
         };
 
         let def = EnumDef::new(
-            Docs::from_ast(&ast_enum.docs, self.attr_validator.as_ref(), &mut self.errors),
+            Docs::from_ast(
+                &ast_enum.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
             name?,
             variants?,
             methods,
@@ -297,7 +301,11 @@ impl<'ast> LoweringContext<'ast> {
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
         let def = OpaqueDef::new(
-            Docs::from_ast(&ast_opaque.docs, self.attr_validator.as_ref(), &mut self.errors),
+            Docs::from_ast(
+                &ast_opaque.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
             name?,
             methods,
             attrs,
@@ -354,7 +362,7 @@ impl<'ast> LoweringContext<'ast> {
 
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
-                        docs: Docs::from_ast(&docs, self.attr_validator.as_ref(), &mut self.errors),
+                        docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
                         name,
                         ty,
                         attrs: field_attrs,
@@ -387,7 +395,11 @@ impl<'ast> LoweringContext<'ast> {
             )?
         };
         let def = StructDef::new(
-            Docs::from_ast(&ast_struct.docs, self.attr_validator.as_ref(), &mut self.errors),
+            Docs::from_ast(
+                &ast_struct.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
             struct_name,
             fields?,
             methods,
@@ -446,7 +458,17 @@ impl<'ast> LoweringContext<'ast> {
             fcts
         };
         let lifetimes = self.lower_type_lifetime_env(&ast_trait.lifetimes);
-        let def = TraitDef::new(Docs::from_ast(&ast_trait.docs, self.attr_validator.as_ref(), &mut self.errors), trait_name, fcts, attrs, lifetimes?);
+        let def = TraitDef::new(
+            Docs::from_ast(
+                &ast_trait.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
+            trait_name,
+            fcts,
+            attrs,
+            lifetimes?,
+        );
 
         self.attr_validator
             .validate(&def.attrs, AttributeContext::Trait(&def), &mut self.errors);
@@ -492,7 +514,11 @@ impl<'ast> LoweringContext<'ast> {
             output: Box::new(return_type),
             name: Some(self.lower_ident(&name, "trait name")?),
             attrs: Some(attrs),
-            docs: Some(Docs::from_ast(&ast_trait_method.docs, self.attr_validator.as_ref(), &mut self.errors)),
+            docs: Some(Docs::from_ast(
+                &ast_trait_method.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            )),
         })
     }
 
@@ -545,7 +571,11 @@ impl<'ast> LoweringContext<'ast> {
         };
 
         let def = Method {
-            docs: Docs::from_ast(&ast_function.item.docs, self.attr_validator.as_ref(), &mut self.errors),
+            docs: Docs::from_ast(
+                &ast_function.item.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
             name: self.lower_ident(&name, "function name")?,
             abi_name: self.lower_ident(&ast_function.item.abi_name, "function abi name")?,
             lifetime_env,
@@ -590,7 +620,11 @@ impl<'ast> LoweringContext<'ast> {
 
                     match (name, ty, &mut fields) {
                         (Ok(name), Ok(ty), Ok(fields)) => fields.push(OutStructField {
-                            docs: Docs::from_ast(&docs, self.attr_validator.as_ref(), &mut self.errors),
+                            docs: Docs::from_ast(
+                                docs,
+                                self.attr_validator.as_ref(),
+                                &mut self.errors,
+                            ),
                             name,
                             ty,
                             attrs: self.attr_validator.attr_from_ast(
@@ -620,7 +654,11 @@ impl<'ast> LoweringContext<'ast> {
 
         let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
         let def = OutStructDef::new(
-            Docs::from_ast(&ast_out_struct.docs, self.attr_validator.as_ref(), &mut self.errors),
+            Docs::from_ast(
+                &ast_out_struct.docs,
+                self.attr_validator.as_ref(),
+                &mut self.errors,
+            ),
             name?,
             fields?,
             methods,

@@ -9,8 +9,8 @@ use syn::{Attribute, Ident, Meta, Token};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct DocumentationSection {
-    pub cfg : DiplomatBackendAttrCfg,
-    pub lines : String,
+    pub cfg: DiplomatBackendAttrCfg,
+    pub lines: String,
 }
 
 impl Default for DocumentationSection {
@@ -23,6 +23,7 @@ impl Default for DocumentationSection {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
+#[non_exhaustive]
 pub struct Docs(pub Vec<DocumentationSection>, pub Vec<RustLink>);
 
 impl Docs {
@@ -31,12 +32,12 @@ impl Docs {
     }
 
     fn get_doc_lines(attrs: &[Attribute]) -> Vec<DocumentationSection> {
-        let mut sections : Vec<DocumentationSection> = vec![DocumentationSection::default()];
-        let docs_path : syn::Path = syn::parse_str("diplomat::docs").unwrap();
+        let mut sections: Vec<DocumentationSection> = vec![DocumentationSection::default()];
+        let docs_path: syn::Path = syn::parse_str("diplomat::docs").unwrap();
         // Assume by default, that we are at #[diplomat::docs(*)]
 
         attrs.iter().for_each(|attr| {
-            let active_section : &mut DocumentationSection = sections.last_mut().unwrap();
+            let active_section: &mut DocumentationSection = sections.last_mut().unwrap();
 
             if let Meta::NameValue(ref nv) = attr.meta {
                 if nv.path.is_ident("doc") {

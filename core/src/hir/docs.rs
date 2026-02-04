@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
-use crate::{ast::{self, RustLink, RustLinkDisplay}, hir::{AttributeValidator, ErrorStore}};
+use crate::{
+    ast::{self, RustLink, RustLinkDisplay},
+    hir::{AttributeValidator, ErrorStore},
+};
 
 #[derive(Debug, Clone)]
 pub struct Docs {
-    lines : String,
-    rust_links : Vec<RustLink>,
+    lines: String,
+    rust_links: Vec<RustLink>,
 }
 
 #[non_exhaustive]
@@ -15,8 +18,12 @@ pub enum TypeReferenceSyntax {
 }
 
 impl Docs {
-    pub(crate) fn from_ast(d : &ast::Docs, validator : &dyn AttributeValidator, errors : &mut ErrorStore) -> Self {
-        let mut out : Docs = Docs {
+    pub(crate) fn from_ast(
+        d: &ast::Docs,
+        validator: &dyn AttributeValidator,
+        errors: &mut ErrorStore,
+    ) -> Self {
+        let mut out: Docs = Docs {
             lines: String::default(),
             rust_links: d.1.clone(),
         };
@@ -25,20 +32,18 @@ impl Docs {
             let satisfies = validator.satisfies_cfg(&b.cfg, None);
             if let Err(e) = satisfies {
                 errors.push(e);
-            } else {
-                if satisfies.unwrap() {
-                    if !out.lines.is_empty() {
-                        out.lines.push('\n');
-                    }
-
-                    out.lines.push_str(&b.lines);
+            } else if satisfies.unwrap() {
+                if !out.lines.is_empty() {
+                    out.lines.push('\n');
                 }
+
+                out.lines.push_str(&b.lines);
             }
         }
 
         out
     }
-    
+
     /// Convert to markdown
     pub fn to_markdown(
         &self,
@@ -93,7 +98,7 @@ impl Docs {
         }
         lines
     }
-    
+
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty() && self.rust_links.is_empty()
     }
@@ -295,7 +300,14 @@ fn test_docs_url_generator() {
 
     for (attr, expected) in test_cases.clone() {
         assert_eq!(
-            DocsUrlGenerator::default().gen_for_rust_link(&Docs::from_ast(&ast::Docs::from_attrs(&[attr]), &BasicAttributeValidator::default(), &mut ErrorStore::default()).rust_links[0]),
+            DocsUrlGenerator::default().gen_for_rust_link(
+                &Docs::from_ast(
+                    &ast::Docs::from_attrs(&[attr]),
+                    &BasicAttributeValidator::default(),
+                    &mut ErrorStore::default()
+                )
+                .rust_links[0]
+            ),
             expected
         );
     }
@@ -307,13 +319,27 @@ fn test_docs_url_generator() {
                 .into_iter()
                 .collect()
         )
-        .gen_for_rust_link(&Docs::from_ast(&ast::Docs::from_attrs(&[test_cases[0].0.clone()]), &BasicAttributeValidator::default(), &mut ErrorStore::default()).rust_links[0]),
+        .gen_for_rust_link(
+            &Docs::from_ast(
+                &ast::Docs::from_attrs(&[test_cases[0].0.clone()]),
+                &BasicAttributeValidator::default(),
+                &mut ErrorStore::default()
+            )
+            .rust_links[0]
+        ),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 
     assert_eq!(
         DocsUrlGenerator::with_base_urls(Some("http://std-docs.biz/".to_string()), HashMap::new())
-            .gen_for_rust_link(&Docs::from_ast(&ast::Docs::from_attrs(&[test_cases[0].0.clone()]), &BasicAttributeValidator::default(), &mut ErrorStore::default()).rust_links[0]),
+            .gen_for_rust_link(
+                &Docs::from_ast(
+                    &ast::Docs::from_attrs(&[test_cases[0].0.clone()]),
+                    &BasicAttributeValidator::default(),
+                    &mut ErrorStore::default()
+                )
+                .rust_links[0]
+            ),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 }
