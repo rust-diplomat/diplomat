@@ -69,7 +69,7 @@ impl DemoConfig {
 pub(crate) fn run<'tcx>(
     entry: &std::path::Path,
     tcx: &'tcx TypeContext,
-    docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
+    docs: &'tcx diplomat_core::hir::DocsUrlGenerator,
     conf: Config,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
