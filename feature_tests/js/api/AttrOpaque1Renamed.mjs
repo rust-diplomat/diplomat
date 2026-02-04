@@ -10,6 +10,8 @@ const AttrOpaque1Renamed_box_destroy_registry = new FinalizationRegistry((ptr) =
 
 /**
  * Some example docs
+ * Some JS example docs
+ * Back to all docs
  */
 export class AttrOpaque1Renamed {
     // Internal ptr reference:

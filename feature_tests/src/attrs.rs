@@ -55,6 +55,12 @@ pub mod ffi {
     #[diplomat::attr(kotlin, generate_mocking_interface)]
     #[diplomat::attr(not(kotlin), rename = "AttrOpaque1Renamed")]
     /// Some example docs
+    #[diplomat::docs(any(nanobind, cpp))]
+    /// Some Nanobind/C++ example docs
+    #[diplomat::docs(js)]
+    /// Some JS example docs
+    #[diplomat::docs(*)]
+    /// Back to all docs
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
