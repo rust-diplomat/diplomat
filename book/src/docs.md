@@ -78,10 +78,17 @@ If you want documentation that only appears in certain backends, you can use `#[
 #[diplomat::bridge]
 mod ffi {
     /// This comment will be shown everywhere.
+    /// This comment will also be shown everywhere.
     #[diplomat::docs(cpp)]
-    /// This comment will only be shown in C++
+    /// This comment will only be shown in C++.
+    /// ```cpp
+    /// void sampleCodeHere();
+    /// ```
     #[diplomat::docs(not(js))]
     /// This comment will be shown everywhere BUT JS.
+    /// ```js
+    /// sampleCodeHere();
+    /// ```
     #[diplomat::docs(*)]
     /// This comment will be shown everywhere, again.
     pub struct MyZST;
