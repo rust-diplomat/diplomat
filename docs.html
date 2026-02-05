@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a09cf4c9.js";
+            window.path_to_searchindex_js = "searchindex-4c2995de.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-6f7925f8.js"></script>
@@ -175,10 +175,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
-<p>Some Diplomat backends support <code>--docs</code>, which will generate additional documentation from your Markdown doc comments</p>
-<pre><code class="language-shell">$ diplomat-tool cpp cpp/ --docs cpp-docs/
-</code></pre>
-<p>The C++ and JS backends generate Sphinx docs. If using TypeScript, the definition files will automatically come with <code>tsdoc</code>-compatible doc comments.</p>
+<p>Some Diplomat backends support converting documentation comments into each language’s native comments. Rust doc syntax will be converted to markdown.</p>
 <p>A limited amount of intra-doc-links are supported: it is possible to link to custom <em>types</em> (but not methods or variants) using <code>[`FooBar`]</code> syntax, like Rust.</p>
 <p>Furthermore, you can use <code>#[diplomat::rust_link(path::to::rust::type, Struct)]</code> to autogenerate links for to published docs, which typically show up as a “For more information see &lt;link&gt;” at the bottom of the docs for the given item. Since Diplomat cannot do resolution on other crates, it relies on the <code>rust_link</code> annotation to provide the kind of Rust item or doc page being linked to. An additional <code>compact</code> parameter can be passed in case you wish to provide multiple <code>rust_link</code>s that are to be collapsed into a single “For more information see 1, 2, 3” line.</p>
 <p>Put together, this might look something like the following:</p>
@@ -245,6 +242,28 @@ mod ffi {
 <li><code>AssociatedTypeInStruct</code></li>
 <li><code>Typedef</code></li>
 </ul>
+<h2 id="backend-specific-documentation"><a class="header" href="#backend-specific-documentation">Backend Specific Documentation</a></h2>
+<p>If you want documentation that only appears in certain backends, you can use <code>#[diplomat::docs(*)]</code> and <a href="./config.html">config language</a> to specify which comments will appear in which backend:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    /// This comment will be shown everywhere.
+    /// This comment will also be shown everywhere.
+    #[diplomat::docs(cpp)]
+    /// This comment will only be shown in C++.
+    /// ```cpp
+    /// void sampleCodeHere();
+    /// ```
+    #[diplomat::docs(not(js))]
+    /// This comment will be shown everywhere BUT JS.
+    /// ```js
+    /// sampleCodeHere();
+    /// ```
+    #[diplomat::docs(*)]
+    /// This comment will be shown everywhere, again.
+    pub struct MyZST;
+}
+
+</code></pre>
 
                     </main>
 
