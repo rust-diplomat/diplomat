@@ -1,14 +1,6 @@
 # Documentation
 
-
-Some Diplomat backends support `--docs`, which will generate additional documentation from your Markdown doc comments
-
-```shell
-$ diplomat-tool cpp cpp/ --docs cpp-docs/
-```
-
-The C++ and JS backends generate Sphinx docs. If using TypeScript, the definition files will automatically come with `tsdoc`-compatible doc comments.
-
+Some Diplomat backends support converting documentation comments into each language's native comments. Rust doc syntax will be converted to markdown.
 
 A limited amount of intra-doc-links are supported: it is possible to link to custom _types_ (but not methods or variants) using ``[`FooBar`]`` syntax, like Rust.
 
@@ -78,3 +70,28 @@ The full list of item kinds recognized by `rust_link` is:
  - `AssociatedTypeInTrait`
  - `AssociatedTypeInStruct`
  - `Typedef`
+
+## Backend Specific Documentation
+If you want documentation that only appears in certain backends, you can use `#[diplomat::docs(*)]` and [config language](./config.md) to specify which comments will appear in which backend:
+
+```rs
+#[diplomat::bridge]
+mod ffi {
+    /// This comment will be shown everywhere.
+    /// This comment will also be shown everywhere.
+    #[diplomat::docs(cpp)]
+    /// This comment will only be shown in C++.
+    /// ```cpp
+    /// void sampleCodeHere();
+    /// ```
+    #[diplomat::docs(not(js))]
+    /// This comment will be shown everywhere BUT JS.
+    /// ```js
+    /// sampleCodeHere();
+    /// ```
+    #[diplomat::docs(*)]
+    /// This comment will be shown everywhere, again.
+    pub struct MyZST;
+}
+
+```

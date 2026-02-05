@@ -33,6 +33,8 @@ namespace capi {
 namespace somelib::ns {
 /**
  * Some example docs
+ * Some Nanobind/C++ example docs
+ * Back to all docs
  */
 class AttrOpaque1Renamed {
 public:

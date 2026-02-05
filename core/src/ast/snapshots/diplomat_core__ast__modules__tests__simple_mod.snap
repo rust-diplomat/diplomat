@@ -9,13 +9,15 @@ declared_types:
     Struct:
       name: NonOpaqueStruct
       docs:
-        - ""
+        - - cfg: Star
+            lines: ""
         - []
       lifetimes: {}
       fields:
         - - a
           - Primitive: i32
-          - - ""
+          - - - cfg: Star
+                lines: ""
             - []
           - {}
         - - b
@@ -25,13 +27,15 @@ declared_types:
                   elements:
                     - NonOpaqueStruct
                 lifetimes: []
-          - - ""
+          - - - cfg: Star
+                lines: ""
             - []
           - {}
       methods:
         - name: new
           docs:
-            - ""
+            - - cfg: Star
+                lines: ""
             - []
           abi_name: NonOpaqueStruct_new
           self_param: ~
@@ -55,7 +59,8 @@ declared_types:
           attrs: {}
         - name: set_a
           docs:
-            - ""
+            - - cfg: Star
+                lines: ""
             - []
           abi_name: NonOpaqueStruct_set_a
           self_param:
@@ -87,13 +92,15 @@ declared_types:
     Opaque:
       name: OpaqueStruct
       docs:
-        - ""
+        - - cfg: Star
+            lines: ""
         - []
       lifetimes: {}
       methods:
         - name: new
           docs:
-            - ""
+            - - cfg: Star
+                lines: ""
             - []
           abi_name: OpaqueStruct_new
           self_param: ~
@@ -114,7 +121,8 @@ declared_types:
           attrs: {}
         - name: get_string
           docs:
-            - ""
+            - - cfg: Star
+                lines: ""
             - []
           abi_name: OpaqueStruct_get_string
           self_param:
@@ -163,7 +171,8 @@ declared_functions:
     lifetimes: {}
     attrs: {}
     docs:
-      - ""
+      - - cfg: Star
+          lines: ""
       - []
   test_function:
     name: test_function
@@ -173,7 +182,8 @@ declared_functions:
     lifetimes: {}
     attrs: {}
     docs:
-      - ""
+      - - cfg: Star
+          lines: ""
       - []
 sub_modules: []
 attrs: {}

@@ -22,6 +22,7 @@ internal interface AttrOpaque1Interface {
     fun useNamespaced(n: AttrEnum): Unit
 }
 /** Some example docs
+*Back to all docs
 */
 class AttrOpaque1 internal constructor (
     internal val handle: Pointer,

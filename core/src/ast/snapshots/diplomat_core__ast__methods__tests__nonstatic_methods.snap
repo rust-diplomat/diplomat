@@ -4,7 +4,8 @@ expression: "Method::from_syn(&syn::parse_quote!\n{ fn foo(&self, x: u64, y: MyC
 ---
 name: foo
 docs:
-  - ""
+  - - cfg: Star
+      lines: ""
   - []
 abi_name: MyStructContainingMethod_foo
 self_param:

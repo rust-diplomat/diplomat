@@ -4,6 +4,7 @@
 part of 'lib.g.dart';
 
 /// Some example docs
+/// Back to all docs
 final class AttrOpaque1Renamed implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 

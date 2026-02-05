@@ -1,7 +1,7 @@
 //! This module contains utilities for dealing with Rust attributes
 
 use serde::ser::{SerializeStruct, Serializer};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
@@ -226,7 +226,7 @@ where
     quote::quote!(#m).to_string().serialize(s)
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum DiplomatBackendAttrCfg {
     Not(Box<DiplomatBackendAttrCfg>),

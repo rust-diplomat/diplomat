@@ -4,7 +4,8 @@ expression: "Method::from_syn(&syn::parse_quote!\n{\n    #[diplomat::rust_link(f
 ---
 name: foo
 docs:
-  - ""
+  - - cfg: Star
+      lines: ""
   - - path:
         elements:
           - foo
