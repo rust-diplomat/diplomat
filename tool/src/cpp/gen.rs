@@ -71,6 +71,7 @@ pub struct MethodInfo<'a> {
     writeable_info: Option<MethodWriteableInfo<'a>>,
     docs: String,
     deprecated: Option<&'a str>,
+    extra_impl_code: ExtraCode,
 }
 
 /// An expression with a corresponding variable name, such as a struct field or a function parameter.
@@ -681,6 +682,26 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             None => vec![],
         };
 
+        let extra_impl_code = if let Some(s) = method
+            .attrs
+            .custom_extra_code
+            .get(&IncludeLocation::ImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
+        let pre_extra_impl_code = if let Some(s) = method
+            .attrs
+            .custom_extra_code
+            .get(&IncludeLocation::PreImplBlock)
+        {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         Some(MethodInfo::<'ccx> {
             method,
             return_ty,
@@ -697,6 +718,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             writeable_info,
             docs: self.formatter.fmt_docs(&method.docs, &method.attrs),
             deprecated: method.attrs.deprecated.as_deref(),
+            extra_impl_code: ExtraCode {
+                pre: pre_extra_impl_code,
+                post: Default::default(),
+                inner: extra_impl_code,
+            },
         })
     }
 

@@ -413,6 +413,8 @@ pub mod ffi {
     } f64, pub, const IT:usize = 0;}
 
     #[diplomat::attr(not(supports = free_functions), disable)]
+    #[diplomat::attr(cpp, custom_extra_code(source = "//Test", location = "pre_impl_block"))]
+    #[diplomat::attr(cpp, custom_extra_code(source = "//End Test", location = "impl_block"))]
     pub fn free_func_test(x: i32) -> i32 {
         x + 5
     }

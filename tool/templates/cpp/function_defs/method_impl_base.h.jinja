@@ -1,4 +1,9 @@
 {%- macro method_body(method_name, is_generic_writeable, return_ty, c_to_cpp_return_expression) -%}
+
+{%- if !m.extra_impl_code.pre.is_empty() %}
+{{m.extra_impl_code.pre}}
+{% endif -%}
+
 inline {##}
 {{- return_ty }} {##}
 {%- block domain -%}{%- endblock -%}{{ method_name -}}
@@ -43,6 +48,9 @@ inline {##}
     return {{ statement }};
     {%- endif %}
 }
+{%- if !m.extra_impl_code.inner.is_empty() %}
+{{m.extra_impl_code.inner}}
+{% endif -%}
 {%- endmacro -%}
 {{ method_body(m.method_name, false, m.return_ty, m.c_to_cpp_return_expression) -}}
 
