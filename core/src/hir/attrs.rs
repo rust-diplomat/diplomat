@@ -1035,9 +1035,12 @@ impl Attrs {
 
             // Cannot verify that a given function is free or not, so we just leave it up to the backend to only add
             // extra code to free functions specifically.
-            if !(matches!(context, AttributeContext::Type(..)) || matches!(context, AttributeContext::Function(..))) {
+            if !(matches!(context, AttributeContext::Type(..))
+                || matches!(context, AttributeContext::Function(..)))
+            {
                 errors.push(LoweringError::Other(
-                    "`custom_extra_code` only supported on type declarations or free functions.".into(),
+                    "`custom_extra_code` only supported on type declarations or free functions."
+                        .into(),
                 ));
             }
         }
