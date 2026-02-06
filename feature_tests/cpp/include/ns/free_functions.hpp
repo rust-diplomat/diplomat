@@ -24,10 +24,14 @@ namespace capi {
 
 namespace somelib::ns {
 
+
+//Test
 inline int32_t Renamedfree_func_test(int32_t x) {
     auto result = somelib::ns::capi::namespace_free_func_test(x);
     return result;
 }
+//End Test
+
 
 } // namespace
 #endif // SOMELIB_ns_free_functions_HPP
