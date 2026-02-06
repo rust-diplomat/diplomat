@@ -24,7 +24,7 @@ namespace capi {
 
 namespace somelib::nested::ns {
 
-inline bool Renamednested_ns_fn(bool x) {
+inline bool Renamednested_ns_fn(bool x = true) {
     auto result = somelib::nested::ns::capi::namespace_nested_ns_fn(x);
     return result;
 }

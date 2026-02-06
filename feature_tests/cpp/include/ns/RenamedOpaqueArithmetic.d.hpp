@@ -29,9 +29,9 @@ namespace somelib::ns {
 class RenamedOpaqueArithmetic {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y);
+  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y = 12);
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, float y);
+  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, float y = 14.48);
 
   inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, bool z);
 

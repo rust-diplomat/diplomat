@@ -10,6 +10,7 @@
 #include "../include/Unnamespaced.hpp"
 #include "../include/nested/ns/Nested.hpp"
 #include "../include/nested/ns2/Nested.hpp"
+#include "../include/nested/ns/free_functions.hpp"
 #include "../include/Float64Vec.hpp"
 #include "../include/ns/RenamedStringList.hpp"
 #include "../include/ns/RenamedBlockOverride.hpp"
@@ -118,4 +119,12 @@ int main(int argc, char* argv[]) {
 
     simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::special_function(), "This is a custom binding.");
     simple_assert_eq("Custom block bindings", ns::RenamedBlockOverride::custom_bool, false);
+
+    auto make_default = ns::RenamedOpaqueArithmetic::make(1);
+    simple_assert_eq("Default values int", make_default->y(), 12);
+
+    auto make_default_f = ns::RenamedOpaqueArithmetic::make(2.0f);
+    simple_assert_eq("Default values float", make_default_f->y(), 14);
+
+    simple_assert_eq("Default values bool", nested::ns::Renamednested_ns_fn(), false);
 }

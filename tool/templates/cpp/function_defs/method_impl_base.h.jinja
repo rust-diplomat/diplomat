@@ -1,3 +1,10 @@
+{%- decl declaration -%}
+
+{# Currently used by func_block_function.h.jinja to display default args: #}
+{%- block defines -%}
+{% let declaration = false %}
+{%- endblock -%}
+
 {%- macro method_body(method_name, is_generic_writeable, return_ty, c_to_cpp_return_expression) -%}
 
 {%- if !m.extra_impl_code.pre.is_empty() %}
