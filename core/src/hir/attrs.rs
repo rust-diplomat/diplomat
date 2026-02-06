@@ -89,6 +89,8 @@ pub enum IncludeLocation {
     PostDefBlock,
     /// An extension to the implementation of the class (i.e., in C++, the .hpp file)
     ImplBlock,
+    /// Before the impl block. Used only for free functions.
+    PreImplBlock,
     /// A block for adding to an initialization function. Intended for backends that build off of C/C++.
     /// Used by the Nanobind backend to override functionality for Nanobind bindings.
     InitializationBlock,
@@ -173,6 +175,7 @@ impl IncludeLocation {
             "def_block" => Some(IncludeLocation::DefBlock),
             "post_def_block" => Some(IncludeLocation::PostDefBlock),
             "impl_block" => Some(IncludeLocation::ImplBlock),
+            "pre_impl_block" => Some(IncludeLocation::PreImplBlock),
             "pre_init_block" => Some(IncludeLocation::PreInitializationBlock),
             "init_block" => Some(IncludeLocation::InitializationBlock),
             _ => {
@@ -1029,9 +1032,12 @@ impl Attrs {
                     "Custom bindings not supported by this language.".into(),
                 ));
             }
-            if !matches!(context, AttributeContext::Type(..)) {
+
+            // Cannot verify that a given function is free or not, so we just leave it up to the backend to only add
+            // extra code to free functions specifically.
+            if !(matches!(context, AttributeContext::Type(..)) || matches!(context, AttributeContext::Function(..))) {
                 errors.push(LoweringError::Other(
-                    "`custom_extra_code` only supported on type declarations.".into(),
+                    "`custom_extra_code` only supported on type declarations or free functions.".into(),
                 ));
             }
         }
