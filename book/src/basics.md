@@ -66,21 +66,15 @@ struct MyFFIStruct {
 };
 ```
 
-If we want to generate Sphinx documentation to cpp-docs, we can run with that as an additional parameter:
-
-```shell
-$ diplomat-tool cpp cpp/ --docs cpp-docs/
-```
-
 ## WASM
 
 For WASM JS/TypeScript bindings, you can use the following options, with similarly named directories:
 
 ```shell
-$ diplomat-tool js js/ --docs js/docs/
+$ diplomat-tool js js/
 ```
 
-This will generate JS that has a `MyFFIStruct` class, with a static `create()` method, a `do_a_thing()` method, and getters for the fields. This JS will require there to be a `wasm.mjs` file that loads in the built wasm file (See [issue #80](https://github.com/rust-diplomat/diplomat/issues/80) for improving this), which you can base off of [this file](https://github.com/rust-diplomat/diplomat/blob/38cffa9bc2ef21d0aba89ed7d76236de4153248a/example/js/wasm.mjs).
+This will generate JS that has a `MyFFIStruct` class, with a static `create()` method, a `do_a_thing()` method, and getters for the fields.
 
 
 ## C
