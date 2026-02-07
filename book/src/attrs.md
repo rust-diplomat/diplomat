@@ -19,7 +19,7 @@ All backend attributes are applied via the `#[diplomat::attr(...)]` directive. A
 So, for example, to  rename a type for everyone, one may use something like `#[diplomat::attr(*, rename = "FancyNewName")]` on the type. However if the rename is only intended for a select set of backends, one may do something like `#[diplomat::attr(any(js, cpp), rename = "FancyNewName")]`.
 
 
-Similarly, if one wishes to only expose a type to backends that support iterators, one may do something like `#[diplomat::attr(not(supports = iterators), disable)]`.
+Similarly, if one wishes to only expose a type to backends that support iterators, one may do something like `#[diplomat::cfg(supports = iterators)]` or `#[diplomat::attr(not(supports=iterators), disable)]` (both are equivalent).
 
 
 A lot of attributes (basically all of them except for `rename` and `disable`) represent features that need not be present in all backends. For example, not every backend wishes to, or can, support iteration, or namespacing, or accessors. By default when an unsupported attribute is passed to a backend, Diplomat will error as a lint. However, this has the unfortunate effect of sprinkling the code with a lot of stuff that looks like `#[diplomat::attr(supports = iterators, iterator)]`.
