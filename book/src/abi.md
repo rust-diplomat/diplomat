@@ -36,7 +36,7 @@ The attribute can be applied directly on methods, but it can also be applied on 
 
 ```rust
 #[diplomat::bridge]
-#[diplomat::abi_rename = "mylibrary_{}"]
+#[diplomat::abi_rename = "mylibrary_{0}"]
 mod ffi {
 
     #[diplomat::opaque]
