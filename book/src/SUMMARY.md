@@ -11,7 +11,7 @@
     - [Options](./option.md)
     - [Results](./result.md)
     - [Callbacks](./callbacks.md)
-    - [Returning Strings: Writeable](./writeable.md)
+    - [Returning Strings: Writeable](./write.md)
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
   - [Macros](macros.md)
