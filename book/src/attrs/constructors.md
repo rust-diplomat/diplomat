@@ -1,6 +1,6 @@
 # Constructors
 
-(Supported by `dart`, queried with `supports = constructors`. Intended to be supported in `kotlin`, `js`, and `cpp`)
+(Supported by `dart`, `js`, and `nanobind`, queried with `supports = constructors`. Intended to be supported in `kotlin` and `cpp`)
 
 Methods that return `Self` can be marked as a constructor:
 
