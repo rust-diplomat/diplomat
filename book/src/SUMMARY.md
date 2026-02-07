@@ -3,7 +3,7 @@
 - [Introduction](./intro.md)
 - [User Guide](user.md)
   - [Basics](./basics.md)
-  - [Configuration](./config.md)
+  - [Configuring Backends](./config.md)
   - [Types](./types.md)
     - [Opaque types](./opaque.md)
     - [Structs and enums](./structs.md)
