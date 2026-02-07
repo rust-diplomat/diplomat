@@ -9,3 +9,5 @@ Diplomat has support for generating bindings with macro_rules!, with quite a few
 3. Macros can exist only in `#[diplomat::bridge] mod ... { ... }` blocks or `impl` blocks.
 4. Macros exist solely in the file you've defined them in. They must also be defined first.
 5. Macros do not use interpolation matchers, nor do they allow recursive usage of other `#[diplomat::macro_rules]` macros.
+
+[Macro feature parity compared to Rust is currently being tracked in this issue](https://github.com/rust-diplomat/diplomat/issues/935).
