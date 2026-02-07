@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4c2995de.js";
+            window.path_to_searchindex_js = "searchindex-8c2a5dc3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6f7925f8.js"></script>
+        <script src="toc-3258c0a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -188,7 +188,7 @@
 <li><code>all(...)</code> containing one or more comma separated configuration specifications</li>
 </ul>
 <p>So, for example, to  rename a type for everyone, one may use something like <code>#[diplomat::attr(*, rename = "FancyNewName")]</code> on the type. However if the rename is only intended for a select set of backends, one may do something like <code>#[diplomat::attr(any(js, cpp), rename = "FancyNewName")]</code>.</p>
-<p>Similarly, if one wishes to only expose a type to backends that support iterators, one may do something like <code>#[diplomat::attr(not(supports = iterators), disable)]</code>.</p>
+<p>Similarly, if one wishes to only expose a type to backends that support iterators, one may do something like <code>#[diplomat::cfg(supports = iterators)]</code> or <code>#[diplomat::attr(not(supports=iterators), disable)]</code> (both are equivalent).</p>
 <p>A lot of attributes (basically all of them except for <code>rename</code> and <code>disable</code>) represent features that need not be present in all backends. For example, not every backend wishes to, or can, support iteration, or namespacing, or accessors. By default when an unsupported attribute is passed to a backend, Diplomat will error as a lint. However, this has the unfortunate effect of sprinkling the code with a lot of stuff that looks like <code>#[diplomat::attr(supports = iterators, iterator)]</code>.</p>
 <p>To aid in that, <code>auto</code> can be used instead. <code>auto</code> is roughly equivalent to <code>supports = whichever attribute this is attempting to apply</code>.</p>
 <h2 id="when-to-configure"><a class="header" href="#when-to-configure">When to configure</a></h2>

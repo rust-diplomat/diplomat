@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4c2995de.js";
+            window.path_to_searchindex_js = "searchindex-8c2a5dc3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6f7925f8.js"></script>
+        <script src="toc-3258c0a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -227,14 +227,11 @@ extern "C" fn MyFFIStruct_do_a_thing(this: &amp;MyFFIStruct) {
   void do_a_thing();
 };
 </code></pre>
-<p>If we want to generate Sphinx documentation to cpp-docs, we can run with that as an additional parameter:</p>
-<pre><code class="language-shell">$ diplomat-tool cpp cpp/ --docs cpp-docs/
-</code></pre>
 <h2 id="wasm"><a class="header" href="#wasm">WASM</a></h2>
 <p>For WASM JS/TypeScript bindings, you can use the following options, with similarly named directories:</p>
-<pre><code class="language-shell">$ diplomat-tool js js/ --docs js/docs/
+<pre><code class="language-shell">$ diplomat-tool js js/
 </code></pre>
-<p>This will generate JS that has a <code>MyFFIStruct</code> class, with a static <code>create()</code> method, a <code>do_a_thing()</code> method, and getters for the fields. This JS will require there to be a <code>wasm.mjs</code> file that loads in the built wasm file (See <a href="https://github.com/rust-diplomat/diplomat/issues/80">issue #80</a> for improving this), which you can base off of <a href="https://github.com/rust-diplomat/diplomat/blob/38cffa9bc2ef21d0aba89ed7d76236de4153248a/example/js/wasm.mjs">this file</a>.</p>
+<p>This will generate JS that has a <code>MyFFIStruct</code> class, with a static <code>create()</code> method, a <code>do_a_thing()</code> method, and getters for the fields.</p>
 <h2 id="c-1"><a class="header" href="#c-1">C</a></h2>
 <p>While low-level C headers are generated in the process of running <code>diplomat-tool cpp</code>, you can also generate just the C headers with</p>
 <pre><code class="language-shell">$ diplomat-tool c c/

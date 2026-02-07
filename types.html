@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4c2995de.js";
+            window.path_to_searchindex_js = "searchindex-8c2a5dc3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6f7925f8.js"></script>
+        <script src="toc-3258c0a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -211,10 +211,11 @@
 <ul>
 <li>Custom <a href="./opaque.html">opaque types</a> (passed as references or via <code>Box&lt;T&gt;</code>)</li>
 <li>Custom <a href="./structs.html">structs and C-like enums</a></li>
+<li>Custom <a href="./traits.html">traits</a></li>
 </ul>
 </li>
 </ul>
-<p>More types can be supported in the future (We have an issue open for <a href="https://github.com/rust-diplomat/diplomat/pull/621">traits</a>)</p>
+<p>More types can be supported in the future.</p>
 <p>The <em>main</em> distinction to keep track of is between “opaque types” and “structs”: opaque types are for when you want to wrap a Rust object that has its own semantics, whereas “structs” are for when you want to transparently pass around multiple values at once (usually when you want to make an options struct as an argument, or return multiple values at once).</p>
 
                     </main>
