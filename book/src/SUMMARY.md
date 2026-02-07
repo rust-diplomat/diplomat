@@ -7,6 +7,7 @@
   - [Types](./types.md)
     - [Opaque types](./opaque.md)
     - [Structs and enums](./structs.md)
+    - [Traits](./traits.md)
     - [Options](./option.md)
     - [Results](./result.md)
     - [Callbacks](./callbacks.md)
