@@ -1,6 +1,6 @@
 # Getters and setters
 
-(Supported by `dart`, `js`, queried with `supports = accessors`)
+(Supported by `dart`, `js`, and `nanobind`, queried with `supports = accessors`)
 
 
 ## Getters

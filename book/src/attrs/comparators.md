@@ -1,6 +1,6 @@
 # Comparators
 
-(Supported by `dart`, queried with `supports = comparators`. Intended to be supported in `cpp` and `kotlin`)
+(Supported by `dart`, `cpp`, and `nanobind`, queried with `supports = comparators`. Intended to be supported in `cpp` and `kotlin`)
 
 Some languages allow for overloading the `<`/`>`/`=`/etc operators, similar to Rust's `PartialOrd`.
 
