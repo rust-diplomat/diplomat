@@ -529,6 +529,7 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
+            inner_zst: false,
             dtor_abi_name: "Opaque_destroy",
         },
     ],

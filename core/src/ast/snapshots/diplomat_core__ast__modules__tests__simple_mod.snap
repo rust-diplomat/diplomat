@@ -144,6 +144,7 @@ declared_types:
       mutability: Immutable
       attrs: {}
       dtor_abi_name: OpaqueStruct_destroy
+      inner_zst: false
 declared_traits: {}
 declared_functions:
   other_test_function:
