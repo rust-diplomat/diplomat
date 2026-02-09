@@ -59,6 +59,7 @@ pub mod ffi {
 
     impl AttrOpaque1 {
         #[diplomat::attr(not(kotlin), rename = "totally_not_{0}")]
+        #[diplomat::attr(nanobind, disable)]
         #[diplomat::attr(auto, constructor)]
         /// More example docs
         pub fn new() -> Box<AttrOpaque1> {
@@ -113,6 +114,7 @@ pub mod ffi {
 
     impl Unnamespaced {
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(nanobind, disable)]
         pub fn make(_e: AttrEnum) -> Box<Self> {
             Box::new(Self)
         }
@@ -195,6 +197,7 @@ pub mod ffi {
             Box::new(Self(vec![AttrOpaque1; size]))
         }
 
+        #[diplomat::attr(nanobind, disable)]
         #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
             Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
@@ -203,6 +206,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::cfg(supports = iterators)]
+    #[diplomat::attr(nanobind, disable)]
     struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
     impl<'a> OpaqueIterator<'a> {
         #[diplomat::attr(auto, iterator)]
