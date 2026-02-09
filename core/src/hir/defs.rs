@@ -66,6 +66,8 @@ pub struct OpaqueDef {
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
     pub special_method_presence: SpecialMethodPresence,
+    /// If the opaque has no inner type.
+    pub inner_zst : bool,
 
     /// The ABI name of the generated destructor
     pub dtor_abi_name: IdentBuf,
@@ -155,6 +157,7 @@ impl OpaqueDef {
         lifetimes: LifetimeEnv,
         special_method_presence: SpecialMethodPresence,
         dtor_abi_name: IdentBuf,
+        inner_zst : bool,
     ) -> Self {
         Self {
             docs,
@@ -164,6 +167,7 @@ impl OpaqueDef {
             lifetimes,
             special_method_presence,
             dtor_abi_name,
+            inner_zst,
         }
     }
 }

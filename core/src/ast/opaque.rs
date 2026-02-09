@@ -17,6 +17,8 @@ pub struct OpaqueType {
     pub attrs: Attrs,
     /// The ABI name of the generated destructor
     pub dtor_abi_name: Ident,
+    /// If the Opaque has no inner type.
+    pub inner_zst : bool,
 }
 
 impl OpaqueType {
@@ -37,6 +39,7 @@ impl OpaqueType {
             methods: vec![],
             mutability,
             attrs,
+            inner_zst: strct.fields.is_empty()
         }
     }
 
@@ -53,6 +56,7 @@ impl OpaqueType {
             methods: vec![],
             mutability,
             attrs,
+            inner_zst: enm.variants.is_empty(),
         }
     }
 

@@ -303,6 +303,7 @@ impl<'ast> LoweringContext<'ast> {
             lifetimes?,
             special_method_presence,
             dtor_abi_name?,
+            ast_opaque.inner_zst,
         );
         self.attr_validator.validate(
             &def.attrs,
