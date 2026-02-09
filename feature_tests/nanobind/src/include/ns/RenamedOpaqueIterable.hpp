@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
-#include "RenamedOpaqueIterator.hpp"
 
 
 namespace somelib::ns {
@@ -20,8 +19,6 @@ namespace capi {
     extern "C" {
 
     somelib::ns::capi::RenamedOpaqueIterable* namespace_OpaqueIterable_new(size_t size);
-
-    somelib::ns::capi::RenamedOpaqueIterator* namespace_OpaqueIterable_iter(const somelib::ns::capi::RenamedOpaqueIterable* self);
 
     void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);
 
@@ -32,15 +29,6 @@ namespace capi {
 inline std::unique_ptr<somelib::ns::RenamedOpaqueIterable> somelib::ns::RenamedOpaqueIterable::new_(size_t size) {
     auto result = somelib::ns::capi::namespace_OpaqueIterable_new(size);
     return std::unique_ptr<somelib::ns::RenamedOpaqueIterable>(somelib::ns::RenamedOpaqueIterable::FromFFI(result));
-}
-
-inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> somelib::ns::RenamedOpaqueIterable::iter() const {
-    auto result = somelib::ns::capi::namespace_OpaqueIterable_iter(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueIterator>(somelib::ns::RenamedOpaqueIterator::FromFFI(result));
-}
-
-inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator>somelib::ns::RenamedOpaqueIterable::begin() const {
-    return iter();
 }
 
 inline const somelib::ns::capi::RenamedOpaqueIterable* somelib::ns::RenamedOpaqueIterable::AsFFI() const {

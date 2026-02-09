@@ -16,8 +16,6 @@ class Unnamespaced;
 } // namespace somelib
 namespace somelib {
 namespace ns {
-namespace capi { struct AttrOpaque1Renamed; }
-class AttrOpaque1Renamed;
 class RenamedAttrEnum;
 } // namespace ns
 } // namespace somelib
@@ -36,11 +34,6 @@ namespace somelib::ns {
  */
 class AttrOpaque1Renamed {
 public:
-
-  /**
-   * More example docs
-   */
-  inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> totally_not_new();
 
   inline static void test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t);
 

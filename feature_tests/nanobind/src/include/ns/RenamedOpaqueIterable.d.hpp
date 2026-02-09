@@ -14,8 +14,6 @@ namespace somelib {
 namespace ns {
 namespace capi { struct RenamedOpaqueIterable; }
 class RenamedOpaqueIterable;
-namespace capi { struct RenamedOpaqueIterator; }
-class RenamedOpaqueIterator;
 } // namespace ns
 } // namespace somelib
 
@@ -32,10 +30,6 @@ class RenamedOpaqueIterable {
 public:
 
   inline static std::unique_ptr<somelib::ns::RenamedOpaqueIterable> new_(size_t size);
-
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> iter() const;
-  inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator> begin() const;
-  inline std::nullopt_t end() const { return std::nullopt; }
 
     inline const somelib::ns::capi::RenamedOpaqueIterable* AsFFI() const;
     inline somelib::ns::capi::RenamedOpaqueIterable* AsFFI();

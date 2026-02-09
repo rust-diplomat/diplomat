@@ -79,7 +79,6 @@ void add_RenamedMyIterable_binding(nb::module_);
 void add_RenamedMyIterator_binding(nb::module_);
 void add_RenamedOpaqueArithmetic_binding(nb::module_);
 void add_RenamedOpaqueIterable_binding(nb::module_);
-void add_RenamedOpaqueIterator_binding(nb::module_);
 void add_RenamedOpaqueRefIterable_binding(nb::module_);
 void add_RenamedOpaqueRefIterator_binding(nb::module_);
 void add_RenamedStringList_binding(nb::module_);
@@ -219,7 +218,6 @@ NB_MODULE(somelib, mod)
     ns::add_RenamedMyIterator_binding(ns_mod);
     ns::add_RenamedOpaqueArithmetic_binding(ns_mod);
     ns::add_RenamedOpaqueIterable_binding(ns_mod);
-    ns::add_RenamedOpaqueIterator_binding(ns_mod);
     ns::add_RenamedOpaqueRefIterable_binding(ns_mod);
     ns::add_RenamedOpaqueRefIterator_binding(ns_mod);
     ns::add_RenamedStringList_binding(ns_mod);

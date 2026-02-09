@@ -19,7 +19,6 @@ void add_AttrOpaque1Renamed_binding(nb::module_ mod) {
         .def_static("mac_test", &somelib::ns::AttrOpaque1Renamed::mac_test)
         .def_prop_ro("method", &somelib::ns::AttrOpaque1Renamed::method_renamed)
         .def_static("test_namespaced_callback", &somelib::ns::AttrOpaque1Renamed::test_namespaced_callback, "_t"_a)
-        .def(nb::new_(&somelib::ns::AttrOpaque1Renamed::totally_not_new))
         .def("use_namespaced", &somelib::ns::AttrOpaque1Renamed::use_namespaced, "_n"_a)
         .def("use_unnamespaced", &somelib::ns::AttrOpaque1Renamed::use_unnamespaced, "_un"_a);
 }

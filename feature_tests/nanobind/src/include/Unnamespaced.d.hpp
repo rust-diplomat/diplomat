@@ -11,14 +11,9 @@
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
 namespace somelib {
-namespace capi { struct Unnamespaced; }
-class Unnamespaced;
-} // namespace somelib
-namespace somelib {
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
-class RenamedAttrEnum;
 } // namespace ns
 } // namespace somelib
 
@@ -33,8 +28,6 @@ namespace capi {
 namespace somelib {
 class Unnamespaced {
 public:
-
-  inline static std::unique_ptr<somelib::Unnamespaced> make(somelib::ns::RenamedAttrEnum _e);
 
   inline void use_namespaced(const somelib::ns::AttrOpaque1Renamed& _n) const;
 

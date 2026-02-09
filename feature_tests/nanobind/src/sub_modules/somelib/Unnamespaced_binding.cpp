@@ -3,7 +3,6 @@
 
 #include "Unnamespaced.hpp"
 #include "ns/AttrOpaque1Renamed.hpp"
-#include "ns/RenamedAttrEnum.hpp"
 
 namespace somelib {
 void add_Unnamespaced_binding(nb::module_ mod) {
@@ -14,7 +13,6 @@ void add_Unnamespaced_binding(nb::module_ mod) {
     
     nb::class_<somelib::Unnamespaced> opaque(mod, "Unnamespaced", nb::type_slots(somelib_Unnamespaced_slots));
     opaque
-        .def_static("make", &somelib::Unnamespaced::make, "_e"_a ) // unsupported special method NamedConstructor(None)
         .def("use_namespaced", &somelib::Unnamespaced::use_namespaced, "_n"_a);
 }
 
