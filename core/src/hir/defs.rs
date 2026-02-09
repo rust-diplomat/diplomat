@@ -148,6 +148,7 @@ impl<P: TyPosition> StructDef<P> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 impl OpaqueDef {
     pub(super) fn new(
         docs: Docs,
