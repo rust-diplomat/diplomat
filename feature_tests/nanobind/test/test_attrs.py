@@ -5,6 +5,8 @@ def test_attrs():
     assert r.method == 77, "property should call"
     assert r.abirenamed == 123, "method should call"
 
+    other_r = somelib.ns.AttrOpaque1Renamed()
+
     e = somelib.ns.RenamedAttrEnum.A
 
     un = somelib.Unnamespaced.make(e)
