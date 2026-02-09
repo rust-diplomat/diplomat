@@ -490,8 +490,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             return None;
         }
         match method.output.success_type().as_type() {
-            Some(hir::OutType::Opaque(op)) => if op.is_owned() && op.resolve(self.cpp.c.tcx).inner_zst {
-                self.errors.push_error(format!("Nanobind error on {}::{}, Nanobind does not support returning owned opaques whose inner types are ZST (Box<{2}>). See https://github.com/rust-diplomat/diplomat/issues/1050", self.cpp.formatter.fmt_symbol_name(id), method.name, self.cpp.formatter.fmt_type_name(op.tcx_id.into())));
+            Some(hir::OutType::Opaque(op)) => {
+                if op.is_owned() && op.resolve(self.cpp.c.tcx).inner_zst {
+                    self.errors.push_error(format!("Nanobind error on {}::{}, Nanobind does not support returning owned opaques whose inner types are ZST (Box<{2}>). See https://github.com/rust-diplomat/diplomat/issues/1050", self.cpp.formatter.fmt_symbol_name(id), method.name, self.cpp.formatter.fmt_type_name(op.tcx_id.into())));
+                }
             }
             _ => {}
         }
