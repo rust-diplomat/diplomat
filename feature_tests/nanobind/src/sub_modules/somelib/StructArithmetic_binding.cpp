@@ -15,7 +15,7 @@ void add_StructArithmetic_binding(nb::module_ mod) {
         .def(nb::self + nb::self)
         .def(nb::self / nb::self)
         .def(nb::self * nb::self)
-        .def("__init__", [](somelib::StructArithmetic* self, int32_t x, int32_t y){ *self = somelib::StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
+        .def("__init__",[](somelib::StructArithmetic* self, int32_t x, int32_t y){ *self = somelib::StructArithmetic::new_(x, y); }, "x"_a, "y"_a)
         .def(nb::self - nb::self);
 }
 

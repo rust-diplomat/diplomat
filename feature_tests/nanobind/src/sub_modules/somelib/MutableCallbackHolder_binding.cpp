@@ -13,7 +13,7 @@ void add_MutableCallbackHolder_binding(nb::module_ mod) {
     nb::class_<somelib::MutableCallbackHolder> opaque(mod, "MutableCallbackHolder", nb::type_slots(somelib_MutableCallbackHolder_slots));
     opaque
         .def("call", &somelib::MutableCallbackHolder::call, "a"_a)
-        .def(nb::new_(&somelib::MutableCallbackHolder::new_), "func"_a);
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::MutableCallbackHolder::new_))), "func"_a);
 }
 
 } 

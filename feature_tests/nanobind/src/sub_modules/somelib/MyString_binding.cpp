@@ -14,8 +14,8 @@ void add_MyString_binding(nb::module_ mod) {
     opaque
         .def("borrow", &somelib::MyString::borrow)
         .def_static("get_static_str", &somelib::MyString::get_static_str)
-        .def(nb::new_(&somelib::MyString::new_), "v"_a)
-        .def_static("new_from_first", &somelib::MyString::new_from_first, "v"_a)
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::MyString::new_))), "v"_a)
+        .def_static("new_from_first", std::move(maybe_op_unwrap(&somelib::MyString::new_from_first)), "v"_a)
         .def_static("new_unsafe", &somelib::MyString::new_unsafe, "v"_a ) // unsupported special method NamedConstructor(Some("unsafe"))
         .def_prop_rw("str", &somelib::MyString::get_str, &somelib::MyString::set_str)
         .def_static("string_transform", &somelib::MyString::string_transform, "foo"_a);

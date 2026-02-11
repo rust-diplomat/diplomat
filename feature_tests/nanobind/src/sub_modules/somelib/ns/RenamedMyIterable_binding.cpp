@@ -14,7 +14,7 @@ void add_RenamedMyIterable_binding(nb::module_ mod) {
     opaque
         .def("__len__", &somelib::ns::RenamedMyIterable::__len__)
         .def("__iter__", &somelib::ns::RenamedMyIterable::iter, nb::keep_alive<0, 1>())
-        .def(nb::new_(&somelib::ns::RenamedMyIterable::new_), "x"_a);
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedMyIterable::new_))), "x"_a);
 }
 
 } 

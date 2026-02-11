@@ -12,7 +12,7 @@ void add_RenamedStringList_binding(nb::module_ mod) {
     
     nb::class_<somelib::ns::RenamedStringList> opaque(mod, "RenamedStringList", nb::type_slots(somelib_ns_RenamedStringList_slots));
     opaque
-        .def_static("return_new", &somelib::ns::RenamedStringList::return_new);
+        .def_static("return_new", std::move(maybe_op_unwrap(&somelib::ns::RenamedStringList::return_new)));
 }
 
 } 

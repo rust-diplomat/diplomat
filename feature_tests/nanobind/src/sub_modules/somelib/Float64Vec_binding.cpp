@@ -23,7 +23,7 @@ void add_Float64Vec_binding(nb::module_ mod) {
                     return out;
                 }
             }, "i"_a)
-        .def_static("new", &somelib::Float64Vec::new_, "v"_a)
+        .def_static("new", std::move(maybe_op_unwrap(&somelib::Float64Vec::new_)), "v"_a)
         .def_static("new_bool", &somelib::Float64Vec::new_bool, "v"_a ) // unsupported special method NamedConstructor(Some("bool"))
         .def_static("new_f64_be_bytes", &somelib::Float64Vec::new_f64_be_bytes, "v"_a ) // unsupported special method NamedConstructor(Some("f64BeBytes"))
         .def_static("new_i16", &somelib::Float64Vec::new_i16, "v"_a ) // unsupported special method NamedConstructor(Some("i16"))

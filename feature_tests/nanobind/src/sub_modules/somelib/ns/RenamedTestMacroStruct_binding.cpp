@@ -9,7 +9,7 @@ void add_RenamedTestMacroStruct_binding(nb::module_ mod) {
     st
         .def_rw("a", &somelib::ns::RenamedTestMacroStruct::a)
         .def_static("test_func", &somelib::ns::RenamedTestMacroStruct::test_func)
-        .def("__init__", [](somelib::ns::RenamedTestMacroStruct* self){ *self = somelib::ns::RenamedTestMacroStruct::test_meta(); });
+        .def("__init__",[](somelib::ns::RenamedTestMacroStruct* self){ *self = somelib::ns::RenamedTestMacroStruct::test_meta(); });
 }
 
 } 
