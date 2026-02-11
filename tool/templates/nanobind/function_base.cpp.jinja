@@ -1,22 +1,60 @@
-{% macro method_name_cpp() -%}{%- block cpp_method_name -%}{%- endblock -%}{%- endmacro -%}
+{% macro method_name_cpp_inner() -%}{%- block cpp_method_name -%}{%- endblock -%}{%- endmacro -%}
+{%- macro overload_method_name_cpp(overload_params) -%}
+{%- if overload_params.len() > 0 -%}
+nb::overload_cast<{% for p in overload_params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor
+    -%}>(
+{%- endif -%}
+&{{- method_name_cpp_inner() -}}
+{%- if m.overloads.len() > 0 -%} ) {%- endif -%}
+{%- endmacro -%}
+{%- macro method_name_cpp(pre_call="std::move(maybe_op_unwrap(", post_call="))") -%}
+    {%- decl success_is_owned_op -%}
+    {%- if let hir::SuccessType::OutType(hir::Type::Opaque(op)) = m.method.output.success_type() -%}
+    {%- let success_is_owned_op = op.is_owned() -%}
+    {%- else -%}
+    {%- let success_is_owned_op = false -%}
+    {%- endif -%}
+    {%- if success_is_owned_op -%}
+    {{-pre_call-}}{{- caller() -}}{{- post_call -}}
+    {%- else -%}
+    {%- decl failure_is_owned_op -%}
+    {%- if let hir::ReturnType::Fallible(_s, Some(hir::Type::Opaque(op))) = m.method.output -%}
+    {%- let failure_is_owned_op = true -%}
+    {%- else -%}
+    {%- let failure_is_owned_op = false -%}
+    {%- endif -%}
+    
+    {%- if success_is_owned_op || failure_is_owned_op -%}
+    {{-pre_call-}}{{- caller() -}}{{- post_call -}}
+    {%- else -%}
+    {{- caller() -}}
+    {%- endif -%}
+
+    {%- endif -%}
+{%- endmacro -%}
 {% import "method_params.cpp.jinja" as method_params %}
     .{{m.def}}
 {%- if let Some(special_method) = m.method.attrs.special_method.as_ref() -%}
 {%- block special_methods -%}{%- endblock -%}
 {%- else -%}
-("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
-nb::overload_cast<{% for p in m.param_decls.params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor
-    -%}>(
+("{{m.method_name}}", {#+ -#}
+    {%- decl main_overload_params -%}
+    {%- if m.overloads.len() > 0 -%}
+    {%- let main_overload_params = m.param_decls.params.clone() -%}
+    {%- else -%}
+    {%- let main_overload_params = vec![] -%}
     {%- endif -%}
-    &{{- method_name_cpp() -}}
-    {%- if m.overloads.len() > 0 -%} ) {%- endif -%}
+
+    {%- call method_name_cpp()-%}
+    {{-overload_method_name_cpp(main_overload_params)-}}
+    {%- endcall -%}
     {{- method_params::params(m.method.params, m.lifetime_args) -}})
     {%- endif -%}
 
     {%- if m.overloads.len() > 0 %}
     {%- for o in m.overloads %}
-    .{{m.def}}("{{m.method_name}}", nb::overload_cast<{% for p in o.params -%} {{- p.type_name -}} {%- if !loop.last
-        -%}, {% endif %} {%- endfor -%}>(&{{- method_name_cpp() -}})
+    .{{m.def}}("{{m.method_name}}", {% call method_name_cpp()-%} {{-overload_method_name_cpp(o.params.clone())-}}
+    {%- endcall -%}
         {{- method_params::params(o.params, m.lifetime_args) -}})
         {%- endfor -%}
 
