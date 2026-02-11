@@ -12,16 +12,16 @@ void add_RenamedOpaqueArithmetic_binding(nb::module_ mod) {
     
     nb::class_<somelib::ns::RenamedOpaqueArithmetic> opaque(mod, "RenamedOpaqueArithmetic", nb::type_slots(somelib_ns_RenamedOpaqueArithmetic_slots));
     opaque
-        .def(nb::self + nb::self)
+        .def("__add__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueArithmetic::operator+)), nb::is_operator())
         .def(nb::self += nb::self, nb::rv_policy::none)
-        .def(nb::self / nb::self)
+        .def("__truediv__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueArithmetic::operator/)), nb::is_operator())
         .def(nb::self /= nb::self, nb::rv_policy::none)
         .def_static("make", std::move(maybe_op_unwrap(nb::overload_cast<int32_t, int32_t>(&somelib::ns::RenamedOpaqueArithmetic::make))), "x"_a, "y"_a)
         .def_static("make", std::move(maybe_op_unwrap(nb::overload_cast<float, float>(&somelib::ns::RenamedOpaqueArithmetic::make))), "x"_a, "y"_a)
         .def_static("make", std::move(maybe_op_unwrap(nb::overload_cast<float, bool>(&somelib::ns::RenamedOpaqueArithmetic::make))), "x"_a, "z"_a)
-        .def(nb::self * nb::self)
+        .def("__mul__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueArithmetic::operator*)), nb::is_operator())
         .def(nb::self *= nb::self, nb::rv_policy::none)
-        .def(nb::self - nb::self)
+        .def("__sub__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueArithmetic::operator-)), nb::is_operator())
         .def(nb::self -= nb::self, nb::rv_policy::none)
         .def("x", &somelib::ns::RenamedOpaqueArithmetic::x)
         .def("y", &somelib::ns::RenamedOpaqueArithmetic::y);

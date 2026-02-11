@@ -82,6 +82,8 @@ void add_RenamedOpaqueIterable_binding(nb::module_);
 void add_RenamedOpaqueIterator_binding(nb::module_);
 void add_RenamedOpaqueRefIterable_binding(nb::module_);
 void add_RenamedOpaqueRefIterator_binding(nb::module_);
+void add_RenamedOpaqueZST_binding(nb::module_);
+void add_RenamedOpaqueZSTIterator_binding(nb::module_);
 void add_RenamedStringList_binding(nb::module_);
 void add_RenamedTestOpaque_binding(nb::module_);
 void add_RenamedVectorTest_binding(nb::module_);
@@ -222,6 +224,8 @@ NB_MODULE(somelib, mod)
     ns::add_RenamedOpaqueIterator_binding(ns_mod);
     ns::add_RenamedOpaqueRefIterable_binding(ns_mod);
     ns::add_RenamedOpaqueRefIterator_binding(ns_mod);
+    ns::add_RenamedOpaqueZST_binding(ns_mod);
+    ns::add_RenamedOpaqueZSTIterator_binding(ns_mod);
     ns::add_RenamedStringList_binding(ns_mod);
     ns::add_RenamedTestOpaque_binding(ns_mod);
     ns::add_RenamedVectorTest_binding(ns_mod);
