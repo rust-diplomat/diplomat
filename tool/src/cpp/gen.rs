@@ -541,7 +541,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         for param in method.params.iter() {
             let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
-            if let Some(d) = method.attrs.default_args.get(&param.name.to_string()) {
+            if let Some(d) = &param.attrs.default_value {
                 let s = match d {
                     hir::DefaultArgValue::Bool(b) => b.to_string(),
                     hir::DefaultArgValue::Char(c) => format!(r#"{{ "{}", {} }}"#, c, c.len_utf8()),
