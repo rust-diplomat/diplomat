@@ -500,6 +500,10 @@ pub mod ffi {
 
     #[diplomat::attr(not(nanobind), disable)]
     #[diplomat::opaque]
+    /// Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
+    /// C++ generates unique_ptrs for Opaque ZSTs, and Nanobind
+    /// expects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.
+    /// This is not the case, as in Rust pointers to ZSTs are always the same address.
     pub struct OpaqueZST;
 
     impl OpaqueZST {
@@ -606,6 +610,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(nanobind), disable)]
     #[diplomat::opaque]
+    /// Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
     pub struct OpaqueZSTIterator;
 
     impl OpaqueZSTIterator {
