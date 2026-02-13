@@ -28,6 +28,12 @@ namespace capi {
 } // namespace
 
 namespace somelib::ns {
+/**
+ * Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
+ * C++ generates unique_ptrs for Opaque ZSTs, and Nanobind
+ * expects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.
+ * This is not the case, as in Rust pointers to ZSTs are always the same address.
+ */
 class RenamedOpaqueZST {
 public:
 

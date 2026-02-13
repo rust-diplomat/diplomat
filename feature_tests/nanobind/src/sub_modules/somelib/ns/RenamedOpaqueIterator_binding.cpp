@@ -13,7 +13,7 @@ void add_RenamedOpaqueIterator_binding(nb::module_ mod) {
     nb::class_<somelib::ns::RenamedOpaqueIterator> opaque(mod, "RenamedOpaqueIterator", nb::type_slots(somelib_ns_RenamedOpaqueIterator_slots));
     opaque
         .def("__next__", [](somelib::ns::RenamedOpaqueIterator& self){
-                auto next = wrap_func(self.next());
+                auto next = map_inner(self.next());
                 if (!next) {
                     throw nb::stop_iteration();
                 }

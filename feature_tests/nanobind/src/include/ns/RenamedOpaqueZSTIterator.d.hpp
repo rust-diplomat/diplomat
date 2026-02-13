@@ -28,6 +28,9 @@ namespace capi {
 } // namespace
 
 namespace somelib::ns {
+/**
+ * Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
+ */
 class RenamedOpaqueZSTIterator {
 public:
 

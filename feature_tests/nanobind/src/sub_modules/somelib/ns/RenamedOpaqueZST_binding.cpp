@@ -25,7 +25,7 @@ void add_RenamedOpaqueZST_binding(nb::module_ mod) {
         .def("mut_member", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::mut_member)))
         .def_static("optional_zst", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::optional_zst)), "is_some"_a)
         .def_prop_ro_static("out_string", [](nb::handle) -> decltype(somelib::ns::RenamedOpaqueZST::out_string()) { return somelib::ns::RenamedOpaqueZST::out_string(); })
-        .def_prop_rw_static("static_getter", [](nb::handle) -> decltype(somelib::ns::RenamedOpaqueZST::static_getter()) { return wrap_func(somelib::ns::RenamedOpaqueZST::static_getter()); },
+        .def_prop_rw_static("static_getter", [](nb::handle) -> decltype(somelib::ns::RenamedOpaqueZST::static_getter()) { return map_inner(somelib::ns::RenamedOpaqueZST::static_getter()); },
                     [](nb::handle, const somelib::ns::RenamedOpaqueZST& _a)
                       { somelib::ns::RenamedOpaqueZST::static_setter(_a); })
         .def("__sub__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator-)), nb::is_operator())

@@ -14,7 +14,7 @@ void add_RenamedOpaqueZSTIterator_binding(nb::module_ mod) {
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZSTIterator::ctor))))
         .def("__next__", [](somelib::ns::RenamedOpaqueZSTIterator& self){
-                auto next = wrap_func(self.next());
+                auto next = map_inner(self.next());
                 if (!next) {
                     throw nb::stop_iteration();
                 }

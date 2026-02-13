@@ -329,16 +329,19 @@ inline std::unique_ptr<Return> maybe_alloc_zst(std::unique_ptr<Return> pointer) 
     }
 }
 
+
+// Helper for determining if we have a unique_ptr type.
 template <class T>
 struct get_unique_ptr : std::false_type {};
 
 template <class T>
 struct get_unique_ptr<std::unique_ptr<T>> : std::true_type{};
 
+// Given a Return type, map that inner type with maybe_alloc_zst (by unwrapping and re-wrapping the Return type).
 // Default implementation for plain unique_ptr types.
 template<typename Return>
 inline typename std::enable_if_t<get_unique_ptr<Return>::value, Return>
-wrap_func(Return to_wrap) {
+map_inner(Return to_wrap) {
     return maybe_alloc_zst(std::move(to_wrap));
 }
 
@@ -356,7 +359,7 @@ struct get_diplomat_result<somelib::diplomat::result<T, E>> : std::true_type {
 
 template<typename Return, typename... Args>
 inline typename std::enable_if_t<get_diplomat_result<Return>::value, Return>
-wrap_func(Return to_wrap) {
+map_inner(Return to_wrap) {
     using Result = get_diplomat_result<Return>;
     // Either the success type, the error type, or both are unique_ptrs.
     if (to_wrap.is_ok()) {
@@ -374,72 +377,59 @@ wrap_func(Return to_wrap) {
     }
 }
 
-// TODO: I think this could be simplified, but I don't want to bother for now.
-// I think we could move most of these helper functions below into the same struct.
+// Helper for taking a function of a signature and returning a new function which 
+// potentially modifies the returned type (if it's a ZST opaque).
+template<typename Func>
+struct maybe_op_unwrapper {};
 
-// Get the output of the old function. Call wrap_func to unwrap and then re-wrap the inner unique_ptrs.
+// Static function:
 template<typename Return, typename... Args>
-struct maybe_op_unwrapper {
-    static Return unwrap_func(Return (*f)(Args...), Args... args) {
+struct maybe_op_unwrapper<Return(*)(Args...)> {
+    typedef std::function<Return(Args...)> result;
+
+    // Get the output of the old function. Call map_inner to unwrap and then re-wrap the inner unique_ptrs.
+    static Return bound_map(Return (*f)(Args...), Args... args) {
         auto out = f(args...);
-        return wrap_func<Return>(std::move(out));
+        return map_inner<Return>(std::move(out));
+    }
+
+    // Return a std::function for nanobind to parse. This new function will be bound with the old function to call.
+    static std::function<Return(Args...)> get_bound_mapper(Return (*f)(Args...)) {
+        std::function<Return(Args...)> out = std::bind_front(bound_map, f);
+        return out;
     }
 };
 
+// Class member function:
 template<typename Return, class Class, typename... Args>
 struct maybe_op_unwrapper<Return(Class::*)(Args...)> {
-    static Return unwrap_func(Return (Class::*f)(Args...), Class* c, Args... args) {
+    typedef std::function<Return(Class*, Args...)> result;
+
+    static Return bound_map(Return (Class::*f)(Args...), Class* c, Args... args) {
         auto out = (c->*f)(args...);
-        return wrap_func<Return>(std::move(out));
+        return map_inner<Return>(std::move(out));
+    }
+    
+    static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...)) {
+        std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...)>::bound_map, f);
+        return out;
     }
 };
 
+// Const member function:
 template<typename Return, class Class, typename... Args>
 struct maybe_op_unwrapper<Return(Class::*)(Args...) const> {
-    static Return unwrap_func(Return (Class::*f)(Args...) const, const Class* c, Args... args) {
+    typedef std::function<Return(Class*, Args...)> result;
+
+    static Return bound_map(Return (Class::*f)(Args...) const, const Class* c, Args... args) {
         auto out = (c->*f)(args...);
-        return wrap_func<Return>(std::move(out));
+        return map_inner<Return>(std::move(out));
     }
-};
-
-// Return a std::function for nanobind to parse. This new function will be bound with the old function to call.
-template<typename Return, typename... Args>
-std::function<Return(Args...)> maybe_op_unwrap_inner(Return (*f)(Args...)) {
-    std::function<Return(Args...)> out = std::bind_front(maybe_op_unwrapper<Return, Args...>::unwrap_func, f);
-    return out;
-}
-
-template<typename Return, typename Class, typename... Args>
-std::function<Return(Class*, Args...)> maybe_op_unwrap_inner(Return (Class::*f)(Args...)) {
-    std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...)>::unwrap_func, f);
-    return out;
-}
-
-template<typename Return, typename Class, typename... Args>
-std::function<Return(Class*, Args...)> maybe_op_unwrap_inner(Return (Class::*f)(Args...) const) {
-    std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...) const>::unwrap_func, f);
-    return out;
-}
-
-template<typename Func>
-struct unwrapped_func {};
-
-// We're passed a class member function:
-template<typename Return, typename Class, typename... Args>
-struct unwrapped_func<Return(Class::*)(Args...)> {
-    typedef std::function<Return(Class*, Args...)> result;
-};
-
-// We're passed a class const member function:
-template<typename Return, typename Class, typename... Args>
-struct unwrapped_func<Return(Class::*)(Args...) const> {
-    typedef std::function<Return(Class*, Args...)> result;
-};
-
-// We're passed a non-member function (i.e., static):
-template<typename Return, typename... Args>
-struct unwrapped_func<Return(*)(Args...)> {
-    typedef std::function<Return(Args...)> result;
+    
+    static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...) const) {
+        std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...) const>::bound_map, f);
+        return out;
+    }
 };
 
 // Given a function that is guaranteed to at some point return a std::unique_ptr (either bare, through optional, or through result).
@@ -447,12 +437,12 @@ struct unwrapped_func<Return(*)(Args...)> {
 // See maybe_alloc_zst for explanation as to why we call this function.
 // Check to see if we're unwrapping a lambda first:
 template<typename Func>
-typename std::enable_if_t<nanobind::detail::is_lambda_v<std::remove_reference_t<Func>>, typename unwrapped_func<decltype(&Func::operator())>::result> maybe_op_unwrap(Func&& f) {
-    return maybe_op_unwrap_inner((nanobind::detail::forward_t<decltype(&Func::operator())>)f);
+typename std::enable_if_t<nanobind::detail::is_lambda_v<std::remove_reference_t<Func>>, typename maybe_op_unwrapper<decltype(&Func::operator())>::result> maybe_op_unwrap(Func&& f) {
+    return maybe_op_unwrapper<decltype(&Func::operator())>::get_bound_mapper((nanobind::detail::forward_t<decltype(&Func::operator())>)f);
 }
 
 // Then the general case:
 template<typename Func>
-unwrapped_func<Func>::result maybe_op_unwrap(Func&& f) {
-    return maybe_op_unwrap_inner((nanobind::detail::forward_t<Func>)f);
+maybe_op_unwrapper<Func>::result maybe_op_unwrap(Func&& f) {
+    return maybe_op_unwrapper<Func>::get_bound_mapper((nanobind::detail::forward_t<Func>)f);
 }
