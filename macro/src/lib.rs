@@ -557,6 +557,14 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 }
             }
         }
+        Item::Fn(f) => {
+            for i in f.sig.inputs.iter_mut() {
+                let _attrs = match i {
+                    syn::FnArg::Receiver(s) => AttributeInfo::extract(&mut s.attrs),
+                    syn::FnArg::Typed(t) => AttributeInfo::extract(&mut t.attrs),
+                };
+            }
+        }
         _ => (),
     });
 
