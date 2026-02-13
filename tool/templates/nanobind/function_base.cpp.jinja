@@ -8,28 +8,24 @@ nb::overload_cast<{% for p in overload_params -%} {{- p.type_name -}} {%- if !lo
 {%- if m.overloads.len() > 0 -%} ) {%- endif -%}
 {%- endmacro -%}
 {%- macro method_name_cpp(pre_call="std::move(maybe_op_unwrap(", post_call="))") -%}
-    {%- decl success_is_owned_op -%}
+    {%- decl success_owned_op -%}
     {%- if let hir::SuccessType::OutType(hir::Type::Opaque(op)) = m.method.output.success_type() -%}
-    {%- let success_is_owned_op = op.is_owned() -%}
+    {%- let success_owned_op = op.is_owned() -%}
     {%- else -%}
-    {%- let success_is_owned_op = false -%}
+    {%- let success_owned_op = false -%}
     {%- endif -%}
-    {%- if success_is_owned_op -%}
-    {{-pre_call-}}{{- caller() -}}{{- post_call -}}
-    {%- else -%}
-    {%- decl failure_is_owned_op -%}
+
+    {%- decl failure_owned_op -%}
     {%- if let hir::ReturnType::Fallible(_s, Some(hir::Type::Opaque(op))) = m.method.output -%}
-    {%- let failure_is_owned_op = true -%}
+    {%- let failure_owned_op = op.is_owned() -%}
     {%- else -%}
-    {%- let failure_is_owned_op = false -%}
+    {%- let failure_owned_op = false -%}
     {%- endif -%}
-    
-    {%- if success_is_owned_op || failure_is_owned_op -%}
+
+    {%- if success_owned_op || failure_owned_op -%}
     {{-pre_call-}}{{- caller() -}}{{- post_call -}}
     {%- else -%}
     {{- caller() -}}
-    {%- endif -%}
-
     {%- endif -%}
 {%- endmacro -%}
 {% import "method_params.cpp.jinja" as method_params %}

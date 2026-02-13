@@ -30,7 +30,7 @@
         ("__iter__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
     {%- when crate::hir::SpecialMethod::Iterator -%}
         ("__next__", []({{- type_name }}& self){
-            auto next = {% call method_name_cpp("wrap_func(", ")") %}self.{{m.cpp_method_name}}(){% endcall %};
+            auto next = {% call method_name_cpp("map_inner(", ")") %}self.{{m.cpp_method_name}}(){% endcall %};
             if (!next) {
                 throw nb::stop_iteration();
             }
@@ -40,7 +40,7 @@
     {%- when crate::hir::SpecialMethod::Getter(_) -%}
         ("{{m.prop_name.as_ref().unwrap()}}", 
         {%- if m.method.param_self.is_some() %} {% call method_name_cpp() %}&{{type_name}}::{{m.cpp_method_name}}{% endcall %}
-        {%- else %} [](nb::handle) -> decltype({{type_name}}::{{m.cpp_method_name}}()) { return {% call method_name_cpp("wrap_func(", ")") %}{{type_name}}::{{m.cpp_method_name}}(){%- endcall -%}; }
+        {%- else %} [](nb::handle) -> decltype({{type_name}}::{{m.cpp_method_name}}()) { return {% call method_name_cpp("map_inner(", ")") %}{{type_name}}::{{m.cpp_method_name}}(){%- endcall -%}; }
         {%- endif -%}
         {#- Setter is always associated with a getter, nanobind does not allow set-only properties -#}
         {%- if let Some(setter_name) = m.setter_name -%}
@@ -86,7 +86,7 @@
         ("__getitem__", {% match m.method.output -%}
         {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
         []({{type_name}}* self, {{m.param_decls.params[0].type_name}} index) {
-            auto out = {% call method_name_cpp("wrap_func(", ")") %}self->operator[] (index){% endcall %};
+            auto out = {% call method_name_cpp("map_inner(", ")") %}self->operator[] (index){% endcall %};
             {%- if let crate::hir::ReturnType::Nullable(..) = m.method.output %}
             if (!out.has_value()) {
                 throw nb::index_error("Could not get index.");
