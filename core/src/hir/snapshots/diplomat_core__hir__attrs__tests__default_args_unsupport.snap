@@ -2,4 +2,4 @@
 source: core/src/hir/attrs.rs
 expression: output
 ---
-Lowering error in Test::test: `default_args` not supported in backend tests
+Lowering error in Test::test: `default_value` not supported in backend tests
