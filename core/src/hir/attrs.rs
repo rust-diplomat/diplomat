@@ -589,7 +589,12 @@ impl Attrs {
                         }
                         "default_value" => {
                             if !support.default_args {
-                                maybe_error_unsupported(auto_found, "default_value", backend, errors);
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "default_value",
+                                    backend,
+                                    errors,
+                                );
                                 continue;
                             }
                             // Note that we do not validate that the args match here.
