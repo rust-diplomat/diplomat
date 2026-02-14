@@ -11,3 +11,14 @@ f.borrow()
 # Test ZST memory leaks:
 a = somelib.ns.RenamedOpaqueZST()
 b = somelib.ns.RenamedOpaqueZST()
+
+a = somelib.ResultOpaque(0)
+try:
+    a.give_self()
+except Exception as e:
+    pass
+
+try:
+    somelib.ResultOpaque.new_failing_struct(109)
+except Exception as e:
+    pass
