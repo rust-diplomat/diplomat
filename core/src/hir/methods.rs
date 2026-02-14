@@ -123,7 +123,7 @@ pub struct TraitParamSelf {
 }
 
 /// A parameter in a method.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,

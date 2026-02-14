@@ -66,6 +66,9 @@ pub struct Attrs {
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
     pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
+
+    /// Default value for a given [`super::methods::Param`].
+    pub default_value: Option<DefaultArgValue>,
 }
 
 /// Whether the custom binding is included as a whole file or a block of code. These are mutually exclusive.
@@ -347,6 +350,57 @@ pub struct SpecialMethodPresence {
     pub iterable: Option<OpaqueId>,
 }
 
+#[derive(Clone, Debug)]
+#[non_exhaustive]
+pub enum DefaultArgValue {
+    Bool(bool),
+    Char(char),
+    Integer(i128),
+    Float(f64),
+}
+
+impl DefaultArgValue {
+    fn from_value(m: &syn::MetaNameValue) -> Result<Self, LoweringError> {
+        let value_repr = match &m.value {
+            syn::Expr::Lit(l) => match &l.lit {
+                syn::Lit::Bool(b) => DefaultArgValue::Bool(b.value),
+                syn::Lit::Byte(b) => DefaultArgValue::Char(b.value() as char),
+                syn::Lit::Char(c) => DefaultArgValue::Char(c.value()),
+                syn::Lit::Float(f) => {
+                    let float_64 = f.base10_parse::<f64>();
+                    if let Ok(f) = float_64 {
+                        DefaultArgValue::Float(f)
+                    } else {
+                        return Err(LoweringError::Other(
+                            format!(
+                                "Could not convert float to f64: {}",
+                                float_64.unwrap_err()
+                            ),
+                        ));
+                    }
+                }
+                syn::Lit::Int(i) => {
+                    let int_128 = i.base10_parse::<i128>();
+                    if let Ok(i) = int_128 {
+                        DefaultArgValue::Integer(i)
+                    } else {
+                        return Err(LoweringError::Other(
+                            format!(
+                                "Could not convert int to i128: {}",
+                                int_128.unwrap_err()
+                            ),
+                        ));
+                    }
+                }
+                _ => return Err(LoweringError::Other(format!("Default arguments does not support value {}. Try a bool, char, integer, or float.", l.lit.to_token_stream()))),
+            },
+            _ => return Err(LoweringError::Other("Expected literal.".into())),
+        };
+
+        Ok(value_repr)
+    }
+}
+
 /// Where the attribute was found. Some attributes are only allowed in some contexts
 /// (e.g. namespaces cannot be specified on methods)
 #[non_exhaustive] // might add module attrs in the future
@@ -533,9 +587,36 @@ impl Attrs {
                                 }
                             }
                         }
+                        "default_value" => {
+                            if !support.default_args {
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "default_value",
+                                    backend,
+                                    errors,
+                                );
+                                continue;
+                            }
+                            // Note that we do not validate that the args match here.
+
+                            let val = attr.meta.require_name_value();
+                            let res = val
+                                .map_err(|e| {
+                                    LoweringError::Other(format!(
+                                        "default_value must be name value: {e}"
+                                    ))
+                                })
+                                .and_then(DefaultArgValue::from_value);
+
+                            if let Ok(l) = res {
+                                this.default_value = Some(l);
+                            } else {
+                                errors.push(res.unwrap_err());
+                            }
+                        }
                         _ => {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error`"
+                                "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error, default_value`"
                             )));
                         }
                     },
@@ -641,6 +722,7 @@ impl Attrs {
             generate_mocking_interface,
             abi_compatible,
             custom_extra_code,
+            default_value,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -1044,6 +1126,26 @@ impl Attrs {
                 ));
             }
         }
+
+        if default_value.is_some() && !matches!(context, AttributeContext::Param) {
+            errors.push(LoweringError::Other(
+                "default_value can only be placed above parameters.".into(),
+            ));
+        }
+
+        if let AttributeContext::Method(m, ..) = context {
+            let mut in_defaults = false;
+            for p in &m.params {
+                if p.attrs.default_value.is_some() {
+                    in_defaults = true;
+                } else if in_defaults {
+                    errors.push(LoweringError::Other(format!(
+                        "Found required arg {} after default arguments.",
+                        p.name
+                    )))
+                }
+            }
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -1083,6 +1185,8 @@ impl Attrs {
             abi_compatible: false,
             // Not inherited
             custom_extra_code: Default::default(),
+            // Not inherited
+            default_value: None,
         }
     }
 }
@@ -1181,9 +1285,10 @@ pub struct BackendAttrSupport {
     pub free_functions: bool,
     /// Whether the language supports being able to include custom bindings.
     pub custom_bindings: bool,
-
     /// Whether the language supports taking in Rust-allocated slices from the given backend.
     pub owned_slices: bool,
+    /// Whether the language supports default arguments.
+    pub default_args: bool,
 }
 
 impl BackendAttrSupport {
@@ -1222,6 +1327,7 @@ impl BackendAttrSupport {
             free_functions: true,
             custom_bindings: true,
             owned_slices: true,
+            default_args: true,
         }
     }
 
@@ -1403,6 +1509,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 free_functions,
                 custom_bindings,
                 owned_slices,
+                default_args,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1437,6 +1544,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "free_functions" => free_functions,
                 "custom_bindings" => custom_bindings,
                 "owned_slices" => owned_slices,
+                "default_args" => default_args,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -1893,6 +2001,39 @@ mod tests {
                 }
             }
 
+        }
+    }
+
+    #[test]
+    fn test_default_args() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Test;
+
+                impl Test {
+                    pub fn test(a : i32, b : i64,
+                    #[diplomat::attr(*, default_value=100)]
+                    c : i128) {}
+                }
+            }
+        }
+    }
+    #[test]
+    fn test_default_args_unsupport() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Test;
+
+                impl Test {
+                    pub fn test(a : i32, b : i64,
+                    #[diplomat::attr(*, default_value=100)]
+                    c : i128) {}
+                }
+            }
         }
     }
 }

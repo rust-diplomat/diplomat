@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../include/Opaque.hpp"
 #include "../include/OptionString.hpp"
+#include "../include/MyString.hpp"
 #include "assert.hpp"
 
 using namespace somelib;
@@ -20,4 +21,7 @@ int main(int argc, char* argv[]) {
     output = "prefix ";
     os->write_write(output).ok().value();
     simple_assert_eq("string write with result", output, "prefix hello world");
+
+    std::unique_ptr<MyString> my_st_default = MyString::new_();
+    simple_assert_eq("Character default", my_st_default->get_str(), "T");
 }
