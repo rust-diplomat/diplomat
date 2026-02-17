@@ -603,6 +603,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         // Keep this just in case our method is returning some initially unknown value to an Opaque.
         // This won't make a difference for methods that return a reference to an already created value.
         if matches!(method.output.success_type(), hir::SuccessType::OutType(hir::Type::Opaque(path)) if !path.is_owned())
+            || matches!(&method.output, hir::ReturnType::Fallible(.., Some(hir::Type::Opaque(path))) if !path.is_owned())
         {
             // For any type -> `Type<'a>`, as long as our self reference `&'a self` has the same lifetime (`'a`), we can assume that `&'a`` self has some kind of ownership of the returned type.
             //  Because `rv_policy` is only applied to unknown types (i.e., newly created references), then we can apply `reference_internal` to any of the cases above, without worrying about unnecessarily increasing the reference count for when we return `self` (since `self` is an already known type to Nanobind).
