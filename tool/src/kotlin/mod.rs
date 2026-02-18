@@ -1367,6 +1367,9 @@ returnVal.option() ?: return null
             }
             Some(SpecialMethod::Stringifier) => {
                 if !special_methods.has_stringifier {
+                    if !matches!(method.output, ReturnType::Infallible(..)) {
+                        panic!("Kotlin does not support Result<(), E> or Option<()> stringifier methods.");
+                    }
                     special_methods.has_stringifier = true;
                     "override fun toString(): String".to_string()
                 } else {

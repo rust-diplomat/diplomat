@@ -30,6 +30,8 @@ export class ResultOpaque {
      */
     takesStr(v: string): ResultOpaque;
 
+    stringifyError(): string;
+
     assertInteger(i: number): void;
 
     constructor(i: number);

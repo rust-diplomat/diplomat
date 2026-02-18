@@ -535,6 +535,22 @@ let termini = Object.assign({
         ]
     },
 
+    "ResultOpaque.stringifyError": {
+        func: (selfI) => new somelib.ResultOpaque(selfI).stringifyError(),
+        // For avoiding webpacking minifying issues:
+        funcName: "ResultOpaque.stringifyError",
+        expr: (selfI) => "new somelib.ResultOpaque(selfI).stringifyError()".replace(/([\( ])selfI([,\) \n])/, '$1' + selfI + '$2'),
+        parameters: [
+            
+            {
+                name: "self_i",
+                type: "number",
+                typeUse: "number"
+            }
+            
+        ]
+    },
+
     "Float64Vec.toString": {
         func: (selfV) => new somelib.Float64Vec(selfV).toString(),
         // For avoiding webpacking minifying issues:

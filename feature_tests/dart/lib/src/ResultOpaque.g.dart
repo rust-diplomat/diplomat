@@ -114,6 +114,21 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result, aEdges);
   }
 
+  ///
+  ///
+  /// Throws [ResultOpaque] on failure.
+  @override
+  String toString() {
+    // This lifetime edge depends on lifetimes: 'a
+    final aEdges = [this];
+    final write = _Write();
+    final result = _ResultOpaque_stringify_error(_ffi, write._ffi);
+    if (!result.isOk) {
+      throw ResultOpaque._fromFfi(result.union.err, aEdges);
+    }
+    return write.finalize();
+  }
+
   void assertInteger(int i) {
     _ResultOpaque_assert_integer(_ffi, i);
   }
@@ -169,6 +184,11 @@ external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'ResultOpaque_takes_str')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _ResultOpaque_takes_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 v);
+
+@_DiplomatFfiUse('ResultOpaque_stringify_error')
+@ffi.Native<_ResultVoidOpaque Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ResultOpaque_stringify_error')
+// ignore: non_constant_identifier_names
+external _ResultVoidOpaque _ResultOpaque_stringify_error(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @_DiplomatFfiUse('ResultOpaque_assert_integer')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_assert_integer')
