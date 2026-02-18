@@ -69,7 +69,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, stringifier)]
-        #[diplomat::attr(kotlin, disable)]
+        #[diplomat::attr(any(kotlin, nanobind), disable)]
         pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {
             Err(self)
         }
