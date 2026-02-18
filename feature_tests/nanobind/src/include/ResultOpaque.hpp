@@ -49,6 +49,9 @@ namespace capi {
 
     somelib::capi::ResultOpaque* ResultOpaque_takes_str(somelib::capi::ResultOpaque* self, somelib::diplomat::capi::DiplomatStringView _v);
 
+    typedef struct ResultOpaque_stringify_error_result {union { const somelib::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_stringify_error_result;
+    ResultOpaque_stringify_error_result ResultOpaque_stringify_error(const somelib::capi::ResultOpaque* self, somelib::diplomat::capi::DiplomatWrite* write);
+
     void ResultOpaque_assert_integer(const somelib::capi::ResultOpaque* self, int32_t i);
 
     void ResultOpaque_destroy(ResultOpaque* self);
@@ -109,6 +112,21 @@ inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8
     auto result = somelib::capi::ResultOpaque_takes_str(this->AsFFI(),
         {_v.data(), _v.size()});
     return somelib::diplomat::Ok<somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result));
+}
+
+inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error() const {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+}
+template<typename W>
+inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
 }
 
 inline void somelib::ResultOpaque::assert_integer(int32_t i) const {
