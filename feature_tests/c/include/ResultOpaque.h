@@ -43,6 +43,9 @@ ResultOpaque_new_in_enum_err_result ResultOpaque_new_in_enum_err(int32_t i);
 
 ResultOpaque* ResultOpaque_takes_str(ResultOpaque* self, DiplomatStringView _v);
 
+typedef struct ResultOpaque_stringify_error_result {union { const ResultOpaque* err;}; bool is_ok;} ResultOpaque_stringify_error_result;
+ResultOpaque_stringify_error_result ResultOpaque_stringify_error(const ResultOpaque* self, DiplomatWrite* write);
+
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 
 void ResultOpaque_destroy(ResultOpaque* self);

@@ -51,6 +51,10 @@ public:
    */
   inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> takes_str(std::string_view _v);
 
+  inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> stringify_error() const;
+  template<typename W>
+  inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> stringify_error_write(W& writeable_output) const;
+
   inline void assert_integer(int32_t i) const;
 
     inline const somelib::capi::ResultOpaque* AsFFI() const;

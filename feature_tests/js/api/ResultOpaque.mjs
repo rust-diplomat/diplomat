@@ -219,6 +219,32 @@ export class ResultOpaque {
         }
     }
 
+    stringifyError() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+
+
+        const result = wasm.ResultOpaque_stringify_error(diplomatReceive.buffer, this.ffiValue, write.buffer);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new ResultOpaque(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), aEdges);
+                throw new globalThis.Error('ResultOpaque: ' + cause.toString(), { cause });
+            }
+            return write.readString8();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+            write.free();
+        }
+    }
+
     assertInteger(i) {
     wasm.ResultOpaque_assert_integer(this.ffiValue, i);
 
