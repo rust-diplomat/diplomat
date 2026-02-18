@@ -17,7 +17,6 @@ internal interface ResultOpaqueLib: Library {
     fun ResultOpaque_new_failing_int(i: Int): ResultUnitInt
     fun ResultOpaque_new_in_enum_err(i: Int): ResultIntPointer
     fun ResultOpaque_takes_str(handle: Pointer, v: Slice): Pointer
-    fun ResultOpaque_stringify_error(handle: Pointer, write: Pointer): ResultUnitPointer
     fun ResultOpaque_assert_integer(handle: Pointer, i: Int): Unit
 }
 
@@ -181,23 +180,6 @@ class ResultOpaque internal constructor (
         val returnOpaque = ResultOpaque(handle, selfEdges)
         vSliceMemory?.close()
         return returnOpaque
-    }
-    
-    override fun toString(): String {
-        // This lifetime edge depends on lifetimes: 'a
-        val aEdges: MutableList<Any> = mutableListOf(this);
-        val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.ResultOpaque_stringify_error(handle, write);
-        if (returnVal.isOk == 1.toByte()) {
-            
-            val returnString = DW.writeToString(write)
-            return returnString.ok()
-        } else {
-            val selfEdges: List<Any> = listOf(this)
-            val handle = returnVal.union.err 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            return returnOpaque.err()
-        }
     }
     
     fun assertInteger(i: Int): Unit {
