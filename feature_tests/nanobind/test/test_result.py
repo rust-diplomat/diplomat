@@ -46,4 +46,13 @@ class TestResult(unittest.TestCase):
             a.give_self()
         a.assert_integer(0)
 
-
+    def test_stringifier_loop(self):
+        a = somelib.ResultOpaque(0)
+        with self.assertRaises(Exception) as cm:
+            str(a)
+        
+        cm.exception.args[0].assert_integer(0)
+        
+        with self.assertRaises(Exception) as cm2:
+            str(cm.exception)
+        cm2.exception.args[0].assert_integer(0)
