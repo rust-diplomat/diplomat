@@ -25,7 +25,7 @@
         .def(nb::self < nb::self)
         .def(nb::self > nb::self)
     {%- when crate::hir::SpecialMethod::Stringifier -%}
-        ("__str__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %})
+        ("__str__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
     {%- when crate::hir::SpecialMethod::Iterable -%}
         ("__iter__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
     {%- when crate::hir::SpecialMethod::Iterator -%}
