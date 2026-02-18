@@ -68,6 +68,11 @@ pub mod ffi {
             self
         }
 
+        #[diplomat::attr(auto, stringifier)]
+        pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {
+            Err(self)
+        }
+
         pub fn assert_integer(&self, i: i32) {
             assert_eq!(i, self.0);
         }
