@@ -48,6 +48,8 @@ struct MyStruct {
 
   inline static somelib::MyStruct new_();
 
+  inline static somelib::MyStruct new_overload(int32_t i);
+
   inline void takes_mut(somelib::MyStruct& o);
 
   inline void takes_const(somelib::MyStruct& o) const;

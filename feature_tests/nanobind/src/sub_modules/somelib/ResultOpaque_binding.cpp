@@ -12,9 +12,9 @@ void add_ResultOpaque_binding(nb::module_ mod) {
     
     nb::class_<somelib::ResultOpaque> opaque(mod, "ResultOpaque", nb::type_slots(somelib_ResultOpaque_slots));
     opaque
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_))), "i"_a)
         .def("assert_integer", &somelib::ResultOpaque::assert_integer, "i"_a)
         .def("give_self", &somelib::ResultOpaque::give_self, nb::rv_policy::reference_internal)
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_))), "i"_a)
         .def_static("new_failing_bar", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_failing_bar)))
         .def_static("new_failing_foo", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_failing_foo)))
         .def_static("new_failing_struct", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_failing_struct)), "i"_a)

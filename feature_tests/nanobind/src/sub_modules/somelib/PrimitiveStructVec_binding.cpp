@@ -16,10 +16,10 @@ void add_PrimitiveStructVec_binding(nb::module_ mod) {
     opaque
         .def("__getitem__", &somelib::PrimitiveStructVec::__getitem__, "idx"_a)
         .def("__len__", &somelib::PrimitiveStructVec::__len__)
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::PrimitiveStructVec::new_))))
         .def("append", &somelib::PrimitiveStructVec::append, "value"_a)
         .def_prop_ro("asSlice", &somelib::PrimitiveStructVec::as_slice)
         .def_prop_ro("asSliceMut", &somelib::PrimitiveStructVec::as_slice_mut)
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::PrimitiveStructVec::new_))))
         .def_static("take_slice_from_other_namespace", &somelib::PrimitiveStructVec::take_slice_from_other_namespace, "_sl"_a);
 }
 
