@@ -232,6 +232,20 @@ pub mod ffi {
             }
         }
 
+        #[diplomat::attr(auto, constructor)]
+        #[diplomat::cfg(supports=method_overloading)]
+        pub fn new_overload(i: i32) -> MyStruct {
+            MyStruct {
+                a: 17,
+                b: true,
+                c: 209,
+                d: 1234,
+                e: i,
+                f: '餐' as DiplomatChar,
+                g: MyEnum::B,
+            }
+        }
+
         #[diplomat::cfg(supports=struct_refs)]
         pub fn takes_mut(&mut self, o: &mut Self) {
             self.a = 0;
