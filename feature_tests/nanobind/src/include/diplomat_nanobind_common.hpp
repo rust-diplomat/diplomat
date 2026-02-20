@@ -304,3 +304,145 @@ struct next_inner_extractor<std::optional<T>> {
 // These are defined in the root module.cpp file.
 extern void (*nb_tp_dealloc)(void *);
 void diplomat_tp_dealloc(PyObject *self);
+
+// Templating for handling Opaque ZSTs.
+// Nanobind cannot handle pointers of Rust ZSTs if they're wrapped behind a std::unique_ptr.
+// By Rust's own standard, pointers to ZSTs are always the same address.
+// Nanobind always assumes that any unique_ptr it sees contains an address that is *never* repeated.
+// So Nanobind handles the first conversion from std::unique_ptr->Python just fine,
+// but if a function returns a std::unique_ptr of the same address as one it has seen before, then Nanobind panics.
+//
+// The solution then (without modifying the rest of Diplomat to provide information on what is/isn't an opaque ZST)
+// is to hijack functions which return std::unique_ptr and check if they have ZSTs. This chain starts with maybe_op_unwrap 
+// and ends with maybe_alloc_zst.
+template<typename Return>
+inline std::unique_ptr<Return> maybe_alloc_zst(std::unique_ptr<Return> pointer) {
+    // Are we at address 1? Then we're a ZST.
+    // Per the Rust allocator (https://github.com/rust-lang/rust/blob/18d13b5332916ffca8eadb9106d54b5b434e9978/library/alloc/src/alloc.rs#L187)
+    if ((void*)pointer.get() == (void*)0x1) {
+        // We don't need to free or drop the pointer, the pointer we allocate below serves the same purpose.
+        pointer.release();
+        // We are a ZST, so C++ expects a 0-sized malloc (guaranteed to be a unique pointer):
+        return std::unique_ptr<Return>((Return*)malloc(0));
+    } else {
+        return pointer;
+    }
+}
+
+
+// Helper for determining if we have a unique_ptr type.
+template <class T>
+struct get_unique_ptr : std::false_type {};
+
+template <class T>
+struct get_unique_ptr<std::unique_ptr<T>> : std::true_type{};
+
+// Given a Return type, map that inner type with maybe_alloc_zst (by unwrapping and re-wrapping the Return type).
+// Default implementation for plain unique_ptr types.
+template<typename Return>
+inline typename std::enable_if_t<get_unique_ptr<Return>::value, Return>
+map_inner(Return to_wrap) {
+    return maybe_alloc_zst(std::move(to_wrap));
+}
+
+template <class Ty>
+struct get_diplomat_result : std::false_type {};
+
+template <class T, class E>
+struct get_diplomat_result<somelib::diplomat::result<T, E>> : std::true_type {
+    typedef somelib::diplomat::Ok<T> ok;
+    typedef somelib::diplomat::Err<E> err;
+
+    typedef T success; 
+    typedef E error;
+};
+
+template<typename Return, typename... Args>
+inline typename std::enable_if_t<get_diplomat_result<Return>::value, Return>
+map_inner(Return to_wrap) {
+    using Result = get_diplomat_result<Return>;
+    // Either the success type, the error type, or both are unique_ptrs.
+    if (to_wrap.is_ok()) {
+        if constexpr(get_unique_ptr<typename Result::success>::value) {
+            return typename Result::ok(maybe_alloc_zst(std::move(to_wrap).ok().value()));
+        } else {
+            return to_wrap;
+        }
+    } else {
+        if constexpr(get_unique_ptr<typename Result::error>::value) {
+            return typename Result::err(maybe_alloc_zst(std::move(to_wrap).err().value()));
+        } else {
+            return to_wrap;
+        }
+    }
+}
+
+// Helper for taking a function of a signature and returning a new function which 
+// potentially modifies the returned type (if it's a ZST opaque).
+template<typename Func>
+struct maybe_op_unwrapper {};
+
+// Static function:
+template<typename Return, typename... Args>
+struct maybe_op_unwrapper<Return(*)(Args...)> {
+    typedef std::function<Return(Args...)> result;
+
+    // Get the output of the old function. Call map_inner to unwrap and then re-wrap the inner unique_ptrs.
+    static Return bound_map(Return (*f)(Args...), Args... args) {
+        auto out = f(args...);
+        return map_inner<Return>(std::move(out));
+    }
+
+    // Return a std::function for nanobind to parse. This new function will be bound with the old function to call.
+    static std::function<Return(Args...)> get_bound_mapper(Return (*f)(Args...)) {
+        std::function<Return(Args...)> out = std::bind_front(bound_map, f);
+        return out;
+    }
+};
+
+// Class member function:
+template<typename Return, class Class, typename... Args>
+struct maybe_op_unwrapper<Return(Class::*)(Args...)> {
+    typedef std::function<Return(Class*, Args...)> result;
+
+    static Return bound_map(Return (Class::*f)(Args...), Class* c, Args... args) {
+        auto out = (c->*f)(args...);
+        return map_inner<Return>(std::move(out));
+    }
+    
+    static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...)) {
+        std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...)>::bound_map, f);
+        return out;
+    }
+};
+
+// Const member function:
+template<typename Return, class Class, typename... Args>
+struct maybe_op_unwrapper<Return(Class::*)(Args...) const> {
+    typedef std::function<Return(Class*, Args...)> result;
+
+    static Return bound_map(Return (Class::*f)(Args...) const, const Class* c, Args... args) {
+        auto out = (c->*f)(args...);
+        return map_inner<Return>(std::move(out));
+    }
+    
+    static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...) const) {
+        std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...) const>::bound_map, f);
+        return out;
+    }
+};
+
+// Given a function that is guaranteed to at some point return a std::unique_ptr (either bare, through optional, or through result).
+// Returns a new function that unwraps and then re-wraps that opaque, applying a filter to reallocate any non-unique opaque ZST pointers.
+// See maybe_alloc_zst for explanation as to why we call this function.
+// Check to see if we're unwrapping a lambda first:
+template<typename Func>
+typename std::enable_if_t<nanobind::detail::is_lambda_v<std::remove_reference_t<Func>>, typename maybe_op_unwrapper<decltype(&Func::operator())>::result> maybe_op_unwrap(Func&& f) {
+    return maybe_op_unwrapper<decltype(&Func::operator())>::get_bound_mapper((nanobind::detail::forward_t<decltype(&Func::operator())>)f);
+}
+
+// Then the general case:
+template<typename Func>
+maybe_op_unwrapper<Func>::result maybe_op_unwrap(Func&& f) {
+    return maybe_op_unwrapper<Func>::get_bound_mapper((nanobind::detail::forward_t<Func>)f);
+}

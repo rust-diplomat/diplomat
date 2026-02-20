@@ -7,3 +7,7 @@ a.borrow_self_or_other(b)
 
 f = somelib.Float64Vec.new([0, 1, 2])
 f.borrow()
+
+# Test ZST memory leaks:
+a = somelib.ns.RenamedOpaqueZST()
+b = somelib.ns.RenamedOpaqueZST()

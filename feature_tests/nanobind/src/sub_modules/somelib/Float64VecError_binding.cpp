@@ -25,7 +25,7 @@ void add_Float64VecError_binding(nb::module_ mod) {
                     return out;
                 }
             }, "i"_a)
-        .def_static("new", &somelib::Float64VecError::new_, "v"_a);
+        .def_static("new", std::move(maybe_op_unwrap(&somelib::Float64VecError::new_)), "v"_a);
 }
 
 } 

@@ -21,7 +21,7 @@ void add_RenamedVectorTest_binding(nb::module_ mod) {
                 }
             }, "idx"_a)
         .def_prop_ro("len", &somelib::ns::RenamedVectorTest::len)
-        .def(nb::new_(&somelib::ns::RenamedVectorTest::new_))
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedVectorTest::new_))))
         .def("push", &somelib::ns::RenamedVectorTest::push, "value"_a);
 }
 
