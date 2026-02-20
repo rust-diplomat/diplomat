@@ -22,6 +22,8 @@ namespace capi {
 
     somelib::capi::MyStruct MyStruct_new(void);
 
+    somelib::capi::MyStruct MyStruct_new_overload(int32_t i);
+
     void MyStruct_takes_mut(somelib::capi::MyStruct* self, somelib::capi::MyStruct* o);
 
     void MyStruct_takes_const(const somelib::capi::MyStruct* self, somelib::capi::MyStruct* o);
@@ -40,6 +42,11 @@ namespace capi {
 
 inline somelib::MyStruct somelib::MyStruct::new_() {
     auto result = somelib::capi::MyStruct_new();
+    return somelib::MyStruct::FromFFI(result);
+}
+
+inline somelib::MyStruct somelib::MyStruct::new_overload(int32_t i) {
+    auto result = somelib::capi::MyStruct_new_overload(i);
     return somelib::MyStruct::FromFFI(result);
 }
 

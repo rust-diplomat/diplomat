@@ -12,6 +12,7 @@ void add_RenamedVectorTest_binding(nb::module_ mod) {
     
     nb::class_<somelib::ns::RenamedVectorTest> opaque(mod, "RenamedVectorTest", nb::type_slots(somelib_ns_RenamedVectorTest_slots));
     opaque
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedVectorTest::new_))))
         .def("__getitem__", [](somelib::ns::RenamedVectorTest* self, size_t index) {
                 auto out = self->operator[] (index);
                 if (!out.has_value()) {
@@ -21,7 +22,6 @@ void add_RenamedVectorTest_binding(nb::module_ mod) {
                 }
             }, "idx"_a)
         .def_prop_ro("len", &somelib::ns::RenamedVectorTest::len)
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedVectorTest::new_))))
         .def("push", &somelib::ns::RenamedVectorTest::push, "value"_a);
 }
 

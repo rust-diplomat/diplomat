@@ -7,6 +7,7 @@ import com.sun.jna.Structure
 
 internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_destroy(handle: Pointer)
+    fun namespace_AttrOpaque1_new_overload(i: Int): Pointer
     fun namespace_AttrOpaque1_new(): Pointer
     fun namespace_AttrOpaque1_mac_test(): Int
     fun namespace_AttrOpaque1_hello(): Int
@@ -40,6 +41,17 @@ class AttrOpaque1 internal constructor (
     companion object {
         internal val libClass: Class<AttrOpaque1Lib> = AttrOpaque1Lib::class.java
         internal val lib: AttrOpaque1Lib = Native.load("diplomat_feature_tests", libClass)
+        @JvmStatic
+        
+        fun newOverload(i: Int): AttrOpaque1 {
+            
+            val returnVal = lib.namespace_AttrOpaque1_new_overload(i);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = AttrOpaque1(handle, selfEdges)
+            CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
+            return returnOpaque
+        }
         @JvmStatic
         
         /** More example docs

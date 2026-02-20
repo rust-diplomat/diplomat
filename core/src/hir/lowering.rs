@@ -809,9 +809,11 @@ impl<'ast> LoweringContext<'ast> {
                         method.attrs.special_method,
                         Some(SpecialMethod::Constructor)
                     ) {
-                        if !has_unnamed_constructor {
-                            methods.push(method);
+                        if self.attr_validator.attrs_supported().method_overloading
+                            || !has_unnamed_constructor
+                        {
                             has_unnamed_constructor = true;
+                            methods.push(method);
                         } else {
                             self.errors.push(LoweringError::Other(format!(
                                 "At most one unnamed constructor is allowed, see https://github.com/rust-diplomat/diplomat/issues/234 if you need overloading (extra abi_name: {})",
