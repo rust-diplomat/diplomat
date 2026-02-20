@@ -62,6 +62,10 @@ pub mod ffi {
             Err(Box::new(ResultOpaque(i)))
         }
 
+        pub fn give_self<'a>(&'a self) -> Result<(), &'a Self> {
+            Err(self)
+        }
+
         /// When we take &str, the return type becomes a Result
         /// Test that this interacts gracefully with returning a reference type
         pub fn takes_str<'a>(&'a mut self, _v: &str) -> &'a mut Self {
@@ -69,7 +73,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, stringifier)]
-        #[diplomat::attr(any(kotlin, nanobind), disable)]
+        #[diplomat::attr(any(kotlin), disable)]
         pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {
             Err(self)
         }

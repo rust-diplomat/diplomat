@@ -111,7 +111,8 @@ namespace nanobind::detail
         bool is_ok;
         Py_ssize_t size;
         using Caster = make_caster<U>;
-        static constexpr auto Name = Caster::Name;
+        using ErrCaster = make_caster<V>;
+        static constexpr auto Name = const_name("result");
 
         static handle from_cpp({{lib_name}}::diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
         {
@@ -119,15 +120,18 @@ namespace nanobind::detail
                 return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
             }
 
-            auto errorPyV = nb::cast(std::move(std::move(value).err().value()));
+            auto errorPyV = ErrCaster::from_cpp(forward_like_<V>(std::move(value).err().value()), p, cl);
             if (errorPyV.is_valid())
             {
-                PyErr_SetString(PyExc_Exception, nb::str(errorPyV).c_str());
+                PyErr_SetObject(PyExc_Exception, errorPyV.ptr());
+                // PyErr_SetObject takes ownership (https://github.com/python/cpython/blob/fa73fd473f00dd231f59e44798a3d00a46322658/Python/errors.c#L151)
+                // but Nanobind expects Python to take ownership directly. So we decref after PyErr_SetObject takes ownership, to remove Nanobind's reference:
+                Py_DECREF(errorPyV.ptr());
             }
             else
             {
                 char error_msg[512];
-                snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to string for python error.", typeid(E).name());
+                snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to python exception.", typeid(E).name());
                 PyErr_SetString(PyExc_Exception, error_msg);
             }
 

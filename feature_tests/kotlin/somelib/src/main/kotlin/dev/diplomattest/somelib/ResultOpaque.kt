@@ -16,6 +16,7 @@ internal interface ResultOpaqueLib: Library {
     fun ResultOpaque_new_int(i: Int): ResultIntUnit
     fun ResultOpaque_new_failing_int(i: Int): ResultUnitInt
     fun ResultOpaque_new_in_enum_err(i: Int): ResultIntPointer
+    fun ResultOpaque_give_self(handle: Pointer): ResultUnitPointer
     fun ResultOpaque_takes_str(handle: Pointer, v: Slice): Pointer
     fun ResultOpaque_assert_integer(handle: Pointer, i: Int): Unit
 }
@@ -163,6 +164,21 @@ class ResultOpaque internal constructor (
                 CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 return returnOpaque.err()
             }
+        }
+    }
+    
+    fun giveSelf(): Result<Unit> {
+        // This lifetime edge depends on lifetimes: 'a
+        val aEdges: MutableList<Any> = mutableListOf(this);
+        
+        val returnVal = lib.ResultOpaque_give_self(handle);
+        if (returnVal.isOk == 1.toByte()) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf(this)
+            val handle = returnVal.union.err 
+            val returnOpaque = ResultOpaque(handle, selfEdges)
+            return returnOpaque.err()
         }
     }
     

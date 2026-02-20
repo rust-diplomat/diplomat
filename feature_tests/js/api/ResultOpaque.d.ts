@@ -24,6 +24,8 @@ export class ResultOpaque {
 
     static newInEnumErr(i: number): ErrorEnum;
 
+    giveSelf(): void;
+
     /**
      * When we take &str, the return type becomes a Result
      * Test that this interacts gracefully with returning a reference type

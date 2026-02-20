@@ -104,6 +104,18 @@ final class ResultOpaque implements ffi.Finalizable {
     return ErrorEnum.values[result.union.ok];
   }
 
+  ///
+  ///
+  /// Throws [ResultOpaque] on failure.
+  void giveSelf() {
+    // This lifetime edge depends on lifetimes: 'a
+    final aEdges = [this];
+    final result = _ResultOpaque_give_self(_ffi);
+    if (!result.isOk) {
+      throw ResultOpaque._fromFfi(result.union.err, aEdges);
+    }
+  }
+
   /// When we take &str, the return type becomes a Result
   /// Test that this interacts gracefully with returning a reference type
   ResultOpaque takesStr(String v) {
@@ -179,6 +191,11 @@ external _ResultInt32Void _ResultOpaque_new_int(int i);
 @ffi.Native<_ResultInt32Opaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_enum_err')
 // ignore: non_constant_identifier_names
 external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
+
+@_DiplomatFfiUse('ResultOpaque_give_self')
+@ffi.Native<_ResultVoidOpaque Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ResultOpaque_give_self')
+// ignore: non_constant_identifier_names
+external _ResultVoidOpaque _ResultOpaque_give_self(ffi.Pointer<ffi.Opaque> self);
 
 @_DiplomatFfiUse('ResultOpaque_takes_str')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'ResultOpaque_takes_str')

@@ -45,11 +45,17 @@ public:
 
   inline static somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>> new_in_enum_err(int32_t i);
 
+  inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> give_self() const;
+
   /**
    * When we take &str, the return type becomes a Result
    * Test that this interacts gracefully with returning a reference type
    */
   inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> takes_str(std::string_view _v);
+
+  inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> stringify_error() const;
+  template<typename W>
+  inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> stringify_error_write(W& writeable_output) const;
 
   inline void assert_integer(int32_t i) const;
 

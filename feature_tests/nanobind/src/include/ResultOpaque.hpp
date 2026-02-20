@@ -44,7 +44,13 @@ namespace capi {
     typedef struct ResultOpaque_new_in_enum_err_result {union {somelib::capi::ErrorEnum ok; somelib::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_enum_err_result;
     ResultOpaque_new_in_enum_err_result ResultOpaque_new_in_enum_err(int32_t i);
 
+    typedef struct ResultOpaque_give_self_result {union { const somelib::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_give_self_result;
+    ResultOpaque_give_self_result ResultOpaque_give_self(const somelib::capi::ResultOpaque* self);
+
     somelib::capi::ResultOpaque* ResultOpaque_takes_str(somelib::capi::ResultOpaque* self, somelib::diplomat::capi::DiplomatStringView _v);
+
+    typedef struct ResultOpaque_stringify_error_result {union { const somelib::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_stringify_error_result;
+    ResultOpaque_stringify_error_result ResultOpaque_stringify_error(const somelib::capi::ResultOpaque* self, somelib::diplomat::capi::DiplomatWrite* write);
 
     void ResultOpaque_assert_integer(const somelib::capi::ResultOpaque* self, int32_t i);
 
@@ -94,6 +100,11 @@ inline somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::Re
     return result.is_ok ? somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Ok<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Err<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err))));
 }
 
+inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::give_self() const {
+    auto result = somelib::capi::ResultOpaque_give_self(this->AsFFI());
+    return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+}
+
 inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) {
     if (!somelib::diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
@@ -101,6 +112,21 @@ inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8
     auto result = somelib::capi::ResultOpaque_takes_str(this->AsFFI(),
         {_v.data(), _v.size()});
     return somelib::diplomat::Ok<somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result));
+}
+
+inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error() const {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+}
+template<typename W>
+inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
+        &write);
+    return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
 }
 
 inline void somelib::ResultOpaque::assert_integer(int32_t i) const {

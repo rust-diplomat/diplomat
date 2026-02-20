@@ -45,6 +45,8 @@ public:
 
   inline static somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>> new_in_enum_err(int32_t i);
 
+  inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> give_self() const;
+
   /**
    * When we take &str, the return type becomes a Result
    * Test that this interacts gracefully with returning a reference type

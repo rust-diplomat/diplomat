@@ -13,6 +13,7 @@ void add_ResultOpaque_binding(nb::module_ mod) {
     nb::class_<somelib::ResultOpaque> opaque(mod, "ResultOpaque", nb::type_slots(somelib_ResultOpaque_slots));
     opaque
         .def("assert_integer", &somelib::ResultOpaque::assert_integer, "i"_a)
+        .def("give_self", &somelib::ResultOpaque::give_self, nb::rv_policy::reference_internal)
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_))), "i"_a)
         .def_static("new_failing_bar", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_failing_bar)))
         .def_static("new_failing_foo", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_failing_foo)))
@@ -21,6 +22,7 @@ void add_ResultOpaque_binding(nb::module_ mod) {
         .def_static("new_in_enum_err", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_in_enum_err)), "i"_a)
         .def_static("new_in_err", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_in_err)), "i"_a)
         .def_static("new_int", &somelib::ResultOpaque::new_int, "i"_a)
+        .def("__str__", &somelib::ResultOpaque::stringify_error, nb::rv_policy::reference_internal)
         .def("takes_str", &somelib::ResultOpaque::takes_str, "_v"_a, nb::rv_policy::reference_internal);
 }
 
