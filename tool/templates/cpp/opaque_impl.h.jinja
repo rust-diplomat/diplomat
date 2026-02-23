@@ -1,5 +1,9 @@
 {% include "c_include.h.jinja" %}
 
+{% if !extra_impl_code.pre.is_empty() -%}
+{{ extra_impl_code.pre }}
+{% endif -%}
+
 {% let const_ptr = fmt.fmt_c_ptr(type_name, Mutability::Immutable) -%}
 {% let mut_ptr = fmt.fmt_c_ptr(type_name, Mutability::Mutable) -%}
 {% let const_cptr = fmt.fmt_c_ptr(ctype, Mutability::Immutable) -%}
@@ -34,6 +38,6 @@ inline void {{type_name}}::operator delete(void* ptr) {
 
 {#+ -#}
 
-{%- if !extra_impl_code.is_empty() -%}
-{{ extra_impl_code }}
+{%- if !extra_impl_code.inner.is_empty() -%}
+{{ extra_impl_code.inner }}
 {% endif -%}

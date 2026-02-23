@@ -1,5 +1,9 @@
 {% include "c_include.h.jinja" %}
 
+{% if !extra_impl_code.pre.is_empty() -%}
+{{ extra_impl_code.pre }}
+{% endif -%}
+
 {% for m in methods -%}
 {%- include "function_defs/method_impl.h.jinja" %}
 
@@ -25,6 +29,6 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
 
 {#+ -#}
 
-{% if !extra_impl_code.is_empty() %}
-{{ extra_impl_code }}
+{% if !extra_impl_code.inner.is_empty() %}
+{{ extra_impl_code.inner }}
 {% endif -%}

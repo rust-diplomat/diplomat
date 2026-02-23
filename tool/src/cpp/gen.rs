@@ -142,6 +142,30 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
     }
 
+    fn impl_extra_code_from_attrs(
+        &self,
+        custom_extra_code: &HashMap<IncludeLocation, IncludeSource>,
+    ) -> ExtraCode {
+        let extra_impl_code = if let Some(s) = custom_extra_code.get(&IncludeLocation::ImplBlock) {
+            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
+        let pre_extra_impl_code =
+            if let Some(s) = custom_extra_code.get(&IncludeLocation::PreImplBlock) {
+                read_custom_binding(s, self.config, self.errors).unwrap_or_default()
+            } else {
+                Default::default()
+            };
+
+        ExtraCode {
+            pre: pre_extra_impl_code,
+            post: Default::default(),
+            inner: extra_impl_code,
+        }
+    }
+
     /// Adds an enum definition to the current decl and impl headers.
     ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
@@ -229,16 +253,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-        let extra_impl_code = if let Some(s) = ty
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::ImplBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
         #[derive(Template)]
         #[template(path = "cpp/enum_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -249,7 +263,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code: String,
+            extra_impl_code: ExtraCode,
         }
 
         ImplTemplate {
@@ -260,7 +274,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
-            extra_impl_code,
+            extra_impl_code: self.impl_extra_code_from_attrs(&ty.attrs.custom_extra_code),
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -318,16 +332,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-        let extra_impl_code = if let Some(s) = ty
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::ImplBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
         #[derive(Template)]
         #[template(path = "cpp/opaque_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -339,7 +343,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code: String,
+            extra_impl_code: ExtraCode,
         }
 
         ImplTemplate {
@@ -351,7 +355,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
-            extra_impl_code,
+            extra_impl_code: self.impl_extra_code_from_attrs(&ty.attrs.custom_extra_code),
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -432,16 +436,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         .render_into(self.decl_header)
         .unwrap();
 
-        let extra_impl_code = if let Some(s) = def
-            .attrs
-            .custom_extra_code
-            .get(&hir::IncludeLocation::ImplBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
         #[derive(Template)]
         #[template(path = "cpp/struct_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -454,7 +448,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
-            extra_impl_code: String,
+            extra_impl_code: ExtraCode,
         }
 
         ImplTemplate {
@@ -467,7 +461,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             c_header: c_impl_header,
-            extra_impl_code,
+            extra_impl_code: self.impl_extra_code_from_attrs(&def.attrs.custom_extra_code),
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -694,26 +688,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             None => vec![],
         };
 
-        let extra_impl_code = if let Some(s) = method
-            .attrs
-            .custom_extra_code
-            .get(&IncludeLocation::ImplBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
-        let pre_extra_impl_code = if let Some(s) = method
-            .attrs
-            .custom_extra_code
-            .get(&IncludeLocation::PreImplBlock)
-        {
-            read_custom_binding(s, self.config, self.errors).unwrap_or_default()
-        } else {
-            Default::default()
-        };
-
         Some(MethodInfo::<'ccx> {
             method,
             return_ty,
@@ -730,11 +704,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             writeable_info,
             docs: self.formatter.fmt_docs(&method.docs, &method.attrs),
             deprecated: method.attrs.deprecated.as_deref(),
-            extra_impl_code: ExtraCode {
-                pre: pre_extra_impl_code,
-                post: Default::default(),
-                inner: extra_impl_code,
-            },
+            extra_impl_code: self.impl_extra_code_from_attrs(&method.attrs.custom_extra_code),
         })
     }
 
