@@ -24,6 +24,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
+//Test!
 inline const somelib::ns::capi::RenamedBlockOverride* somelib::ns::RenamedBlockOverride::AsFFI() const {
     return reinterpret_cast<const somelib::ns::capi::RenamedBlockOverride*>(this);
 }

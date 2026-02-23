@@ -493,6 +493,10 @@ pub mod ffi {
         )
     )]
     #[diplomat::attr(
+        any(nanobind, cpp),
+        custom_extra_code(source = "//Test!", location = "pre_impl_block")
+    )]
+    #[diplomat::attr(
         nanobind,
         custom_extra_code(
             source = r#"opaque.def("special_function", &somelib::ns::RenamedBlockOverride::special_function);"#,
