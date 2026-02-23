@@ -92,7 +92,8 @@ pub enum IncludeLocation {
     PostDefBlock,
     /// An extension to the implementation of the class (i.e., in C++, the .hpp file)
     ImplBlock,
-    /// Before the impl block. Used only for free functions.
+    /// Before the impl block. Used for free functions and classes
+    /// (i.e., if you want to type alias and include no function definitions)
     PreImplBlock,
     /// A block for adding to an initialization function. Intended for backends that build off of C/C++.
     /// Used by the Nanobind backend to override functionality for Nanobind bindings.
